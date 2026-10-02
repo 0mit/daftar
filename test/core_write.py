@@ -9,7 +9,7 @@ grown from v1.0.0, with its gardener, a laptop and a codebase, saved through the
 
 install: the clone's hooks take the law by the pin, and the statement merge is git's driver. save and journal: `at: now`
 is written as the heading's moment, in a statement and in `details`, and today's `as_of: now` is not (the core has no
-such word); `bin/dmsave.py` and `daftar save` are the same tool. safe: statements counted, added, replaced and removed by
+such word); `bin/save.py` and `daftar save` are the same tool. safe: statements counted, added, replaced and removed by
 verb and id, each refused where the count is not the one stated; an edit that loses a statement unsaid is refused; one
 taken out is named by the entry, or the gate refuses it. session: opened in statements, its first save stamped, closed
 with its presence written and merged back through the save, the core's gate passing at every commit. cursor: a file
@@ -26,7 +26,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
-import dmparse, dmpass  # noqa: E402
+import grow  # noqa: E402 — a release of the core, and the release in today's words
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -203,8 +206,8 @@ try:
     check("journal: in a garden of the core, today's `as_of: now` is not stamped — the core's `now` fills `at` alone",
           app['details']['provenance']['as_of'] == 'now', app['details'])
     write('beans/laptop.md', text('beans/laptop.md').replace('The laptop.', 'The laptop, on the desk.'))
-    r = run(PY, 'bin/dmsave.py', 'sam', 'the laptop on the desk', '--body', '- action: [[laptop]] is on the desk')
-    check("save: today's name, bin/dmsave.py, runs the same tool", r.returncode == 0 and clean(), r.out[-600:])
+    r = run(PY, 'bin/save.py', 'sam', 'the laptop on the desk', '--body', '- action: [[laptop]] is on the desk')
+    check("save: today's name, bin/save.py, runs the same tool", r.returncode == 0 and clean(), r.out[-600:])
     write('beans/laptop.md', text('beans/laptop.md').replace('on the desk.', 'on the desk, by the window.'))
     r = run(PY, 'bin/daftar.py', 'save', 'sam', 'the laptop by the window', '--body', '- action: [[laptop]] by the window')
     check("save: `daftar save` runs it too", r.returncode == 0 and clean(), r.out[-600:])

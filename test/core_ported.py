@@ -2,7 +2,7 @@
 """Where each of today's suites went in v1 (part 12), held to what the tree shows (test/ported.yaml).
 
 Part 12 of v1 ported today's suites to the core's statements, or replaced them by suites of the core that hold the same
-promise, so that the release that deletes seed/std-vocab.md and bin/dmcheck.py (part 13) can do so with the whole list
+promise, so that the release that deletes seed/std-vocab.md and bin/check.py (part 13) can do so with the whole list
 green. test/ported.yaml says, for each of today's suites, what became of it, and this holds the file to the tree:
 
   retired   a suite the core's suites replace is gone from the tree, from the workflow's list and from CONTRIBUTING.md;
@@ -11,7 +11,7 @@ green. test/ported.yaml says, for each of today's suites, what became of it, and
   ported    a suite rewritten in a garden of the core is one the release runs, and it grows no garden in today's words,
             runs no today's gate and reads no today's law
   waiting   a suite that still reads today's law is named with the part that takes it and why — and every other suite
-            the release runs reads none of it: no `seed/std-vocab.md`, no `bin/dmcheck.py`, no `seed/germinate.sh`, and
+            the release runs reads none of it: no `seed/std-vocab.md`, no `bin/check.py`, no `seed/germinate.sh`, and
             no garden germinated from this tree's own seed (which pins today's law until part 13)
   the count  the suites part 12 met reading today's words are all accounted for, each once
 
@@ -52,7 +52,7 @@ def source(suite):
 
 # TODAY'S WORDS, AS A SUITE WOULD REACH THEM: today's law, today's gate, a garden germinated in today's words
 TODAY = [("seed/std-vocab.md", re.compile(r"std-vocab\.md")),
-         ("bin/dmcheck.py", re.compile(r"dmcheck\.py|['\"]dmcheck['\"]|import dmcheck")),
+         ("bin/check.py", re.compile(r"check\.py|['\"]check['\"]|import check")),
          ("seed/germinate.sh", re.compile(r"germinate\.sh")),
          ("this tree's seed/germinate.py", re.compile(r"ROOT,\s*['\"]seed['\"],\s*['\"]germinate\.py|"
                                                       r"ROOT,\s*['\"]seed/germinate\.py"))]

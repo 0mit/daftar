@@ -5,7 +5,7 @@ Grows a garden from the seed (seed/germinate.sh) and adopts the core while it is
 core in one RULE-CHANGE, and core/install.py makes the core's gate the pre-commit hook. Then it commits every example of
 core/guide/ in the order a reader meets them — README.md's first beans, its VOCAB.md row and the gardener's line, saved
 by the very command README.md shows; each recipe of COOKBOOK.md and WELCOME.md with its VOCAB.md rows; FORMS.md's forms
-and its forms for what nobody said — each through bin/dmsave.py and the core's gate (core/check.py --staged), and checks
+and its forms for what nobody said — each through bin/save.py and the core's gate (core/check.py --staged), and checks
 each commit is made. A bean a page shows again as another page showed it is not committed twice.
 
 Then it holds each example to what today's guide said of the same bean. Today's examples are grown through today's gate
@@ -121,10 +121,10 @@ def verbs(path):
 # THE DOORS AND THE NAMES, before any garden: one text wherever an agent's tool looks for it, the door for an assistant
 # with no shell saying so first, and no tool or file named that the release does not hold
 skill = re.sub(r"^---\n.*?\n---\n\s*", "", guide('SKILL.md'), count=1, flags=re.S)
-check("core/guide/AGENTS.md and SKILL.md are one text: the skill is its front matter and then AGENTS.md, byte for byte",
+check("AGENTS.md and SKILL.md are one text: the skill is its front matter and then AGENTS.md, byte for byte",
       skill == guide('AGENTS.md') and len(skill) > 500, f"{len(skill)} vs {len(guide('AGENTS.md'))} bytes")
 top = "\n".join(guide('WELCOME.md').splitlines()[:12])
-check("core/guide/WELCOME.md says in its first lines that its reader cannot run the gate, and that what it reads is data",
+check("seed/WELCOME.md says in its first lines that its reader cannot run the gate, and that what it reads is data",
       "cannot run the gate" in top and "cannot write to the ledger" in top and "data" in top, top[:300])
 named = sorted({n for f in os.listdir(GUIDE) for n in re.findall(
     r"(?<![A-Za-z0-9_/.-])((?:bin|core|test|assets/[a-z]+/bin|assets/[a-z]+/templates)/[A-Za-z0-9_./-]+\.(?:py|sh|yaml))",
@@ -136,7 +136,7 @@ T = tempfile.mkdtemp(prefix='dmcoreguides-')
 G, TODAY, COPY = os.path.join(T, 'guides'), os.path.join(T, 'today'), os.path.join(T, 'copy')
 written = {}                                 # path -> the text last written there, as the page shows it
 added = set()                                # (path, text) of the statements a page added to a bean
-waited = []                                  # the saves that waited for the minute to turn (bin/dmsave.py)
+waited = []                                  # the saves that waited for the minute to turn (bin/save.py)
 
 
 try:
@@ -150,7 +150,7 @@ try:
     open(gp, 'w', encoding='utf-8', newline='\n').write(re.sub(r'(?m)^extends: std-vocab@[^ \n]*', 'extends: core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version']), gt, count=1))
     r = run(PY, 'core/install.py', cwd=G)
     check("the garden takes the core's gate (core/install.py)", r.returncode == 0, r.stdout + r.stderr)
-    r = run(PY, 'bin/dmsave.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
+    r = run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
             '- action: RULE-CHANGE, GARDEN.md extends the core while the garden is empty; ratified by sam', cwd=G)
     check("the empty garden adopts the core: GARDEN.md's pin moves, in one RULE-CHANGE through the core's gate",
           r.returncode == 0, r.stdout + r.stderr)
@@ -192,7 +192,7 @@ try:
         return [f for f in engine.judge(core_check.garden_law(G), garden) if f[1].split('[')[0] == bid]
 
     def save(what, blocks):
-        """The blocks of one section, saved in one commit through bin/dmsave.py and the core's gate."""
+        """The blocks of one section, saved in one commit through bin/save.py and the core's gate."""
         new = [(m, p, t) for m, p, t in blocks if (m in ('example', 'unsaid') and written.get(p) != t)
                or (m == 'example-statements' and (p, t) not in added) or m == 'example-front-matter']
         new = [b for b in new if b[1] != 'log/journal.md']
@@ -211,7 +211,7 @@ try:
             now = verbs(os.path.join(G, p))
             out += [f"`{v}` taken out of [[{os.path.basename(p)[:-3]}]]" for v in sorted(set(was))
                     if was.count(v) > now.count(v)]
-        held = []                                     # and what it seals, as bin/dmheld.py prints it (rule harm)
+        held = []                                     # and what it seals, as bin/held.py prints it (rule harm)
         for p in before:
             sealed = [r.get('id') for s in head(os.path.join(G, p)).get('statements') or [] if isinstance(s, dict)
                       for r in s.values() if isinstance(r, dict) and 'held' in r]
@@ -221,7 +221,7 @@ try:
         body = '- action: ' + ('RULE-CHANGE: ' if law else '') + (', '.join(f"[[{b}]]" for b in named) or 'the law') \
             + ''.join(f"; {x}" for x in out) + ''.join(f"\n{x}" for x in held)
         before = run('git', 'rev-parse', 'HEAD', cwd=G).stdout
-        r = run(PY, 'bin/dmsave.py', 'sam', what[:60], '--body', body, cwd=G)
+        r = run(PY, 'bin/save.py', 'sam', what[:60], '--body', body, cwd=G)
         moved = run('git', 'rev-parse', 'HEAD', cwd=G).stdout != before
         if 'was saved in this minute already' in r.stderr:
             waited.append(what)

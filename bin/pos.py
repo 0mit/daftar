@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dmpos — the position index: every entry that takes a stance, ordered so neighbours are adjacent.
+"""pos — the position index: every entry that takes a stance, ordered so neighbours are adjacent.
 
 DERIVED, never authoritative. A key is a function of the vocabulary plus the corpus, so a stored key is
 a second copy that can disagree with the beans; this writes to a gitignored path, stamps what it was
@@ -20,24 +20,23 @@ a filter, not a range. And modal adjacency is not causal adjacency — two rows 
 a STANCE and nothing else, so every reader must dereference the bean.
 
 Usage:
-  python3 bin/dmpos.py --build        rebuild the index (writes log/.position-index/)
-  python3 bin/dmpos.py --scan PREFIX  rows whose key starts with PREFIX
-  python3 bin/dmpos.py --verify       sortedness, prefix-stability under a simulated axis, the named scans
-  python3 bin/dmpos.py                build to stdout, write nothing
+  python3 bin/pos.py --build        rebuild the index (writes log/.position-index/)
+  python3 bin/pos.py --scan PREFIX  rows whose key starts with PREFIX
+  python3 bin/pos.py --verify       sortedness, prefix-stability under a simulated axis, the named scans
+  python3 bin/pos.py                build to stdout, write nothing
 """
 import os, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
-import dmform
+import parse as dmparse
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
+import form as dmform
 try:
     import yaml
 except ImportError:
     print("ERROR: PyYAML required"); sys.exit(2)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STD = os.path.join(ROOT, 'seed', 'std-vocab.md')
 OUT = os.path.join(ROOT, 'log', '.position-index')
 
 # Three separators, all chosen strictly BELOW the field alphabet's minimum byte (`-` is 0x2D), and
@@ -71,23 +70,6 @@ def _head():
         return r.stdout.strip() if r.returncode == 0 else None
     except Exception:
         return None
-
-
-def load_law():
-    """The vocabulary, read from the one path the law has (MODEL.md, The journal and the gate). No fallback: a missing law is an error."""
-    if not os.path.exists(STD):
-        sys.exit(f"std-vocab not found at {STD} — the law has ONE path and there is no fallback")
-    std = dmparse.loads(dmparse.read(STD)[0]) or {}
-    loc = dmparse.loads(dmparse.read(os.path.join(ROOT, 'VOCAB.md'))[0]) or {}
-    profiles = [t for p in (loc.get('extends_profiles') or [])
-                for t in ((std.get('profiles') or {}).get(p, {}).get('terms') or [])]
-    terms = {}
-    for t in (std.get('terms') or []) + profiles + (loc.get('local_terms') or []):
-        if isinstance(t, dict) and t.get('term'):
-            terms[t['term']] = t
-    aspects = {a['aspect']: a for a in ((loc.get('aspects') or std.get('aspects')) or [])
-               if isinstance(a, dict) and a.get('aspect')}
-    return terms, aspects
 
 
 def axis_order(aspects):
@@ -198,9 +180,9 @@ def header(axes, nrows):
     # carries to whoever copies it, and the term's own form_note says "ONE spelling, always".
     return [f"# axis_manifest: {CELL.join(axes)}",
             f"# staleness_key: {os.path.basename(ROOT)}@{_head() or 'NO-INDEX'}",
-            f"# built_by: dmpos {_product()}",
+            f"# built_by: pos {_product()}",
             f"# rows: {nrows}",
-            "# DERIVED — rebuild with `python3 bin/dmpos.py --build`; never edit, never commit."]
+            "# DERIVED — rebuild with `python3 bin/pos.py --build`; never edit, never commit."]
 
 
 def check_manifest(axes):
@@ -276,10 +258,7 @@ def compute_core():
 
 def compute():
     """The whole index, in memory. Cheap by construction: only entries that take a stance appear."""
-    if runs_core():
-        return compute_core()
-    terms, aspects = load_law()
-    return rows(terms, aspects), axis_order(aspects)
+    return compute_core()
 
 
 def build(write):
@@ -291,22 +270,11 @@ def build(write):
             with open(os.path.join(OUT, name), 'w', encoding='utf-8') as f:
                 f.write('\n'.join(header(axes, len(rs))) + '\n')
                 f.write('\n'.join(sorted(r[idx] for r in rs)) + '\n')
-        print(f"dmpos: {len(rs)} rows over axes [{', '.join(axes)}] -> {os.path.relpath(OUT, ROOT)}/")
+        print(f"pos: {len(rs)} rows over axes [{', '.join(axes)}] -> {os.path.relpath(OUT, ROOT)}/")
     else:
         for k, _ in rs:
             print(k)
     return rs, axes
-
-
-SCANS = [
-    ("LIVE RISK — forbidden yet possible", "p*-,+1forbidden,forbidden+1impossible,possible"),
-    ("ALREADY PREVENTED — forbidden and impossible", "p*-,+1forbidden,forbidden+1impossible,impossible"),
-    ("ALL PROHIBITIONS (the parent of both)", "p*-,+1forbidden,forbidden"),
-    ("IN BREACH — required but not the case", "p*-,+1omissible,required+1impossible,possible"),
-    ("REVERSIBLE GUARANTEES — holds only contingently", "p*-,+1omissible,required+1contingent,contingent"),
-    ("WHAT IS UNSTATED — silence, not a claim", "p*0"),
-    ("WHAT IS ACTUALLY CLAIMED", "p*1"),
-]
 
 
 def verify():
@@ -330,7 +298,7 @@ def verify():
     else:
         print("FAIL  a simulated fourth axis moved an existing key"); ok = False
 
-    for name, prefix in (CORE_SCANS if runs_core() else SCANS):
+    for name, prefix in CORE_SCANS:
         n = sum(1 for k in keys if k.startswith(prefix))
         print(f"      {n:>3}  {name}")
     beings = sorted({k.split(SEG)[1].split(CELL)[0] for k in subj})

@@ -1,11 +1,11 @@
 # The units a quantity is written in: each a UCUM code (the one form a bean writes), with the law's English name
-# attached as its text, and the quantity it measures (std-vocab 32.0's `units`). Ratified 2026-10-01: "keep UCUM ...
+# attached as its text, and the quantity it measures. Ratified 2026-10-01: "keep UCUM ...
 # with the english complete names as texts attached to them". Every unit of the law has one row here, which the law's
 # proof checks; the codes are UCUM's (https://ucum.org/ucum), and where UCUM writes none the row says so and why.
 # Currencies are ISO 4217's codes, read from seed/knowledge/currencies.tsv with their names, and are not rows here.
 # Each unit's `factor` (v1 part 7) is two whole numbers, its size in its quantity's coherent unit as a fraction, so a
-# conversion is exact arithmetic and never a rounded float (bin/units.py); they are std-vocab 32.0's factors, carried
-# over unit by unit, which test/core_measure.py holds equal until part 13 retires std-vocab.
+# conversion is exact arithmetic and never a rounded float (bin/units.py). These rows are the law itself: a change to
+# them is a RULE-CHANGE, made here.
 units:
   - { unit: "1",           name: one,                        quantity: ratio, factor: ["1", "1"] }
   - { unit: "%",           name: percent,                    quantity: ratio, factor: ["1", "100"] }

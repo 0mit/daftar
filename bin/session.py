@@ -20,13 +20,13 @@ worse than no session, and this tool refuses to create one.
     python3 bin/session.py close <slug>                   # gate, merge back, retire the worktree
 
 IN A GARDEN OF THE CORE (v1 part 5) the session bean is written in statements, and an agent's acts are `by` it: the
-bean the session ran in, whose start and stop hold the act's moment (core/guide/MODEL.md). `open` writes it with the
+bean the session ran in, whose start and stop hold the act's moment (MODEL.md). `open` writes it with the
 moment it was opened, read from the clock (`open`), its owner (`own`), the machine it runs on (`be`, as habitat), and
 the act that made it (`make`, `at: now`, which the session's first save writes); its working copy and branch stay in
 `details`. `close` writes when it was present, from that opening to the clock's reading as it closes (`be`, as
 presence, derived from the opening), saves that in the session's own copy, and then merges the session back as a merge
 in a garden of the core is committed: `git merge --no-commit`, then bin/save.py, its entry naming every bean the merge
-brings (core/guide/MERGE.md §5). (`bin/dmsession.py`, today's name, runs this too until v1's part 13.)
+brings (MERGE.md §5). (`bin/session.py`, today's name, runs this too until v1's part 13.)
 """
 import argparse
 import datetime
@@ -39,13 +39,13 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
+import parse as dmparse
 
 def _main_working_copy():
     """The MAIN working copy, never whichever one this script happens to be sitting in.
 
     ROOT used to be derived from `__file__`, which is wrong the moment somebody runs
-    `python3 bin/dmsession.py close <slug>` from inside the session worktree — the natural thing to do,
+    `python3 bin/session.py close <slug>` from inside the session worktree — the natural thing to do,
     since that is where they have been working. Every git call then operated on the WORKTREE: the merge
     became the branch merging into itself ("already up to date", exit 0, nothing merged), and
     `worktree remove` deleted the caller's own current directory out from under them. Recovered by
@@ -231,7 +231,7 @@ identity:
   status: confirmed
   anchors:
     - {{ key: identifier, value: "session:{slug}", class: logical, establishing: true, observed: now }}
-provenance: {{ src: observed, by: "agent (fill in), opened by bin/dmsession.py", as_of: now }}
+provenance: {{ src: observed, by: "agent (fill in), opened by bin/session.py", as_of: now }}
 owned_by: {{ owner: {{ bean: {owner} }} }}
 workspace:
   host: {{ bean: {host} }}
@@ -244,12 +244,12 @@ timing:
     system: unix-epoch
     at: "{now}"
     unit: millisecond
-    by: "bin/dmsession.py open — stamped by the tool, not typed by a reader. A session's own start time is the one moment nobody should be estimating."
+    by: "bin/session.py open — stamped by the tool, not typed by a reader. A session's own start time is the one moment nobody should be estimating."
 open:
   - "OPENED, NOT DESCRIBED. Fill `summary`, `owns.opened_with` and `owns.what_it_did` before closing."
 ---
 
-Opened by `bin/dmsession.py`. Replace this body before the session closes: a session bean is how the
+Opened by `bin/session.py`. Replace this body before the session closes: a session bean is how the
 next one learns what happened, and a skeleton left in place teaches it nothing.
 """
 
@@ -311,7 +311,7 @@ def cmd_close(a):
                  f"a shell whose cwd no longer exists and every later command failing with 'Unable to\n"
                  f"read current working directory'. Run it from the main copy:\n"
                  f"  cd {shown(ROOT)}\n"
-                 f"  {PY} bin/dmsession.py close {a.slug}")
+                 f"  {PY} bin/session.py close {a.slug}")
     # THIS interpreter runs the session's gate: `python3` may be no Python at all on Windows (the Store's alias)
     r = subprocess.run([sys.executable, os.path.join('bin', 'check.py')], cwd=path, capture_output=True, text=True,
                        encoding='utf-8', errors='replace')

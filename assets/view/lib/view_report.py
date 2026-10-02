@@ -16,13 +16,13 @@ THE AUTHOR MODE ("Author" in the header) edits, in the browser, what the page's 
 A drawing, its archetype and what its shape reads stay as the page states them. The preview follows every change.
 "Download" saves view-selection.json; bringing it into the ledger is
 
-    python3 assets/view/bin/dmview.py import view-selection.json
+    python3 assets/view/bin/view.py import view-selection.json
 
-which validates it, writes the page through dmsafe, reads it back, and journals it. A draft survives a reload (the
+which validates it, writes the page through safe, reads it back, and journals it. A draft survives a reload (the
 browser's own storage); "Reset" returns to what the page says.
 
 Usage:
-  dmview report --out FILE      (required: a report is written where it is asked for, never inside the garden unasked)
+  view report --out FILE      (required: a report is written where it is asked for, never inside the garden unasked)
 """
 import datetime, html, json, os, subprocess, sys
 
@@ -296,7 +296,7 @@ function renderAuthor(){
   gene.forEach(g => { const terms = [...new Set(Object.values(P.beans).filter(b => b.genos === g).flatMap(b => Object.keys(b.fields)))].sort();
     o += '<div style="overflow-x:auto"><table><thead><tr><th style="width:140px">'+esc(g)+'</th>'+terms.map(t => '<th>'+esc(t)+'</th>').join('')+'</tr></thead><tbody><tr><td class="kd">from lens</td>'+
       terms.map(t => { const f = S.fields.find(x => x.genos === g && x.term === t) || {}; return '<td>'+sel([['','—']].concat((P.levels||[]).map(l => [l.id, l.id])), f.shown_from || '', 'data-kg="'+esc(g)+'" data-kt="'+esc(t)+'"')+'</td>'; }).join('')+'</tr></tbody></table></div><br>'; });
-  o += '<h3>Export</h3><p class="note">Download the selection, then bring it into the ledger: <span class="mono">python3 assets/view/bin/dmview.py import view-selection.json</span> — it validates it, writes the page through dmsafe, reads it back and journals it.</p>'+
+  o += '<h3>Export</h3><p class="note">Download the selection, then bring it into the ledger: <span class="mono">python3 assets/view/bin/view.py import view-selection.json</span> — it validates it, writes the page through safe, reads it back and journals it.</p>'+
        '<button class="btn primary" id="dl">Download view-selection.json</button> <button class="btn" id="cp">Copy</button> <button class="btn" id="reset">Reset to the page</button> <span id="dirty" class="kd"></span><div id="exportbox"></div>';
   $('#author').innerHTML = o;
   const ex = exportOf(S); $('#exportbox').textContent = JSON.stringify(ex, null, 1);
@@ -362,17 +362,17 @@ def build_html(p):
 def main(args):
     bad = [a for a in args if a.startswith("-") and a not in ("--out",)]
     if bad:
-        print("dmview report: unknown arguments %s — nothing written" % bad, file=sys.stderr)
+        print("view report: unknown arguments %s — nothing written" % bad, file=sys.stderr)
         sys.exit(2)
     if "--out" not in args or args.index("--out") + 1 >= len(args):
-        print("dmview report: --out FILE is required — a report is written where it is asked for; nothing written",
+        print("view report: --out FILE is required — a report is written where it is asked for; nothing written",
               file=sys.stderr)
         sys.exit(2)
     errs, warns = vm.check()
     for w in warns:
         print("  warn: " + w)
     if errs:
-        print("dmview report: the page and its drawings disagree — nothing written:", file=sys.stderr)
+        print("view report: the page and its drawings disagree — nothing written:", file=sys.stderr)
         for e in errs:
             print("  - " + e, file=sys.stderr)
         sys.exit(2)
@@ -389,5 +389,5 @@ def main(args):
         p["csv"][key] = os.path.basename(csvs[-1])
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(vm.surface("html").render(p))           # the surface of one file
-    print("dmview report: %d drawings + reference + author mode -> %s%s" % (len(p["views"]), out,
+    print("view report: %d drawings + reference + author mode -> %s%s" % (len(p["views"]), out,
           "" if not csvs else "; %d table(s) as CSV beside it" % len(csvs)))

@@ -5,7 +5,7 @@ An ASSET is a directory of the release named for a profile the law offers (`asse
 templates and the guide that make the profile's facts useful. Opting into the profile is what brings the asset, and
 leaving the profile takes it away. This holds:
 
-  the one reader   seed/LANGUAGE is read by bin/dmpass.py alone: its lines without a profile give, over this release,
+  the one reader   seed/LANGUAGE is read by bin/pass.py alone: its lines without a profile give, over this release,
                    exactly the files the old per-line glob gave; a line naming `<profile>` gives an opted-in garden the
                    asset, takes it away from one that leaves, and never claims a garden's own file beside it; and every
                    tool and suite that opens seed/LANGUAGE hands its text to that reader
@@ -28,7 +28,9 @@ import glob, os, re, shutil, subprocess, sys, tempfile
 import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "bin"))
-import dmparse, dmpass
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')
 FAILS = []
 
 
@@ -81,12 +83,12 @@ check("...a garden's own assets/logo.png, and the directory of a profile the law
 check("...and the keeper of the layer map reads the same line: a file of a profile's asset is kept by the release",
       dmpass.expand(_lines, _offer) == ["bin/dm*.py", "assets/alpha/*", "assets/beta/*"], dmpass.expand(_lines, _offer))
 
-# EVERY READER ASKS IT. A file of the release that opens seed/LANGUAGE hands the text to dmpass.language; none splits it,
+# EVERY READER ASKS IT. A file of the release that opens seed/LANGUAGE hands the text to pass.language; none splits it,
 # and none globs its lines, on its own.
 _opens = re.compile(r"""join\([^\n]*['"]LANGUAGE['"]|open\([^\n]*seed/LANGUAGE""")
-_own = [f for f in FILES if f.endswith(".py") and f != "bin/dmpass.py" and _opens.search(read(f))
-        and not re.search(r"\b_?dmpass\.language\(", read(f))]
-check("every tool and suite that opens seed/LANGUAGE reads it through bin/dmpass.py, and none on its own", not _own, _own)
+_own = [f for f in FILES if f.endswith(".py") and f != "bin/pass.py" and _opens.search(read(f))
+        and not re.search(r"\b(_?|dm)pass\.language\(", read(f))]
+check("every tool and suite that opens seed/LANGUAGE reads it through bin/pass.py, and none on its own", not _own, _own)
 
 # ------------------------------------------------------------------ rule 5
 ASSETS = sorted(d for d in os.listdir(os.path.join(ROOT, "assets"))
@@ -130,7 +132,12 @@ _save = grow.run(sys.executable, "bin/save.py", "sam", "a page", "--body", "- ac
 check(f"2. in a garden of the core taking {', '.join(ASSETED)}, a page of the smallest shape is saved through the core's "
       "gate", _r.returncode == 0 and _save.returncode == 0 and "— 0 error(s)" in _save.out, _r.out[-300:] + _save.out[-500:])
 # 7. NO HARNESS, NO ESTATE, NO RETIRED WORD in an asset's files — asked of the garden grown for check 2 while it stands.
-import dmpublic, dmupgrade  # noqa: E402
+import public as dmpublic  # noqa: E402
+# a word today's law retired as a key, in code (the 22.0 step's own list, which v0.49.0's bin/dmupgrade.py keeps)
+CODE_WORD = re.compile(r"""(['"])(?:kind|kinds|local_kinds|form_kind|physical|metaphysical|living)\1"""
+                       r"""|\b(?:kind|kinds|local_kinds|form_kind):\s|\bnature:\s*['"]?(?:physical|metaphysical|living)\b"""
+                       r"""|\bcrown:\s*['"]?(?:love|nature|god)\b""")
+CODE_EXT = ('.py', '.js', '.mjs', '.cjs', '.ts', '.sh', '.ps1', '.psm1', '.rb', '.go', '.pl', '.php', '.lua')
 _AFILES = [f for f in FILES if f.startswith("assets/")]
 _hidden = sorted({s for f in FILES for s in f.split("/")[:-1] if s.startswith(".")})
 _harness = [(f, d) for f in _AFILES for d in _hidden if re.search(r"(?<![\w.])%s/" % re.escape(d), read(f))] + \
@@ -139,10 +146,10 @@ _fixture_ids = set(re.findall(r'(?m)^    "([a-z0-9][a-z0-9-]*)": \'\'\'(?:bean|m
 _words = (dmpublic.estate_words(_G, dmpublic.public_words(_G)) | {w for w in _fixture_ids if len(w) >= 4}) \
          - dmpublic.public_words(_G)
 _leak = [(f, w) for f in _AFILES for w in dmpublic.hits(read(f), _words)]
-_retired = [(f, n) for f in _AFILES if f.endswith(dmupgrade.Step22.CODE_EXT)
+_retired = [(f, n) for f in _AFILES if f.endswith(CODE_EXT)
             and not f.endswith("_core.py")     # an asset's reader of the core (v1 part 11) writes the core's words, and
             # `kind` is the core's name of today's genos (core/law/kinds.yaml), not the word 22.0 retired
-            for n, line in enumerate(read(f).split("\n"), 1) if dmupgrade.Step22.CODE_WORD.search(line)]
+            for n, line in enumerate(read(f).split("\n"), 1) if CODE_WORD.search(line)]
 check(f"7. an asset's {len(_AFILES)} files name no harness directory and sit in no hidden one, name nothing a garden "
       f"holds ({len(_words)} words: the grown garden's and the fixtures'), and write no retired word as a key",
       _AFILES and len(_fixture_ids) >= 5 and not _harness and not _leak and not _retired,

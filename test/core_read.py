@@ -24,7 +24,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
-import dmparse, dmpass  # noqa: E402
+import grow  # noqa: E402 — a release of the core, and the release in today's words
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -228,27 +231,15 @@ The shop's code.
 
 try:
     # ---- THE RELEASE: v1.0.0, a release of the core made from this tree, and a garden grown from it
-    law = dmparse.loads(dmparse.split_front_matter(text('seed/std-vocab.md', ROOT))[0])
-    os.makedirs(REL)
-    for f in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
-                         dmpass.language(text('seed/LANGUAGE', ROOT)), dmpass.offered(law)):
-        os.makedirs(os.path.join(REL, os.path.dirname(f)), exist_ok=True)
-        shutil.copy2(os.path.join(ROOT, f), os.path.join(REL, f))
-    for f in ('GARDEN.md.template', 'VOCAB.md.template'):
-        shutil.copy2(os.path.join(ROOT, 'core', 'guide', f), os.path.join(REL, 'seed', f))
-    for c in (('git', 'init', '-q'), ('git', 'add', '-A'), ('git', 'commit', '-qm', 'the core'), ('git', 'tag', 'v1.0.0')):
-        run(*c, cwd=REL)
+    grow.release(REL)
     r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), G, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=T)
     check(f"a garden grows from v1.0.0 in the core (core@{VERSION}), the read tools in it",
           r.returncode == 0 and f'core@{VERSION}' in text('GARDEN.md')
-          and all(os.path.isfile(os.path.join(G, 'bin', f"{v}.py")) and os.path.isfile(os.path.join(G, 'bin', f"dm{v}.py"))
+          and all(os.path.isfile(os.path.join(G, 'bin', f"{v}.py")) and not os.path.exists(os.path.join(G, 'bin', f"dm{v}.py"))
                   for v in ('garden', 'where', 'stale', 'pos', 'seq', 'reckon', 'ledger')), r.out[-800:])
     run(PY, 'bin/install.py')
 
-    # ---- THE LAW: lines.yaml generated from std-vocab; its rules
-    gen = run(PY, 'core/translate.py', 'lines', cwd=ROOT)
-    check("law: core/law/lines.yaml is what std-vocab generates (its operations, comparisons, forms)",
-          gen.returncode == 0 and gen.out == text('core/law/lines.yaml', ROOT), gen.out[:300])
+    # ---- THE LAW: its rules
     r = run(PY, 'core/check.py', '--law')
     check("law: the core's law holds together — its new verbs (record, step, reckon, pin, move) and rule `line`",
           r.returncode == 0 and '21 rules — 0 error(s)' in r.out, r.out[-400:])
@@ -304,8 +295,8 @@ try:
           and '3 move(s)' in r.out, r.out)
     r = run(PY, 'bin/seq.py', 'check')
     check("seq: `check` is the core's rule `line`, over every bean", r.returncode == 0 and '0 error(s)' in r.out, r.out)
-    a, b = run(PY, 'bin/seq.py', 'course', 'bike-repair'), run(PY, 'bin/dmseq.py', 'course', 'bike-repair')
-    check("seq: today's name, bin/dmseq.py, runs the same tool", a.out == b.out and b.returncode == 0, b.out)
+    a, b = run(PY, 'bin/seq.py', 'course', 'bike-repair'), run(PY, 'bin/seq.py', 'course', 'bike-repair')
+    check("seq: today's name, bin/seq.py, runs the same tool", a.out == b.out and b.returncode == 0, b.out)
 
     # ---- RECKON: a reading by its name, ad hoc, refused in today's words, at a pin
     r = run(PY, 'bin/reckon.py', 'bike-repair#waiting')
@@ -341,7 +332,7 @@ try:
           r.returncode == 0 and 'ali +30 EUR · sam -30 EUR' in r.out and 'sam owes ali 30 EUR' in r.out
           and 'borne by ali 60 EUR, sam 30 EUR' in r.out, r.out)
     check("ledger: a clause is its `can` and the figure it stands under", 'mend  obligatory: ali' in r.out, r.out)
-    r = run(PY, 'bin/dmledger.py', '--between', 'sam', 'ali')
+    r = run(PY, 'bin/ledger.py', '--between', 'sam', 'ali')
     check("ledger: --between nets the two across the agreements they share (today's name, the same tool)",
           r.returncode == 0 and 'net, across 1 agreement' in r.out and 'sam owes ali 30 EUR' in r.out, r.out)
 

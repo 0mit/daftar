@@ -52,7 +52,7 @@ def commit(text, msg, name="doc.md"):
     return run("git", "-C", R, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", msg)
 
 def dmpublic(*extra):
-    return run(sys.executable, os.path.join(ROOT, "bin", "dmpublic.py"), "--garden", G, "--repo", R, *extra)
+    return run(sys.executable, os.path.join(ROOT, "bin", "public.py"), "--garden", G, "--repo", R, *extra)
 
 commit("an example on host-a, under /home/user/tree\n", "a neutral message")
 r = dmpublic()
@@ -129,7 +129,7 @@ shutil.copytree(os.path.join(ROOT, "bin"), os.path.join(L, "bin"))
 shutil.copytree(os.path.join(ROOT, "seed", "knowledge"), os.path.join(L, "seed", "knowledge"))
 write(os.path.join(L, "seed", "PUBLIC-ALLOW"), "quietbox notes/about.md   # consented to on that page only\n")
 def dmpublic_l(*extra):
-    return run(sys.executable, os.path.join(L, "bin", "dmpublic.py"), "--garden", G, "--repo", R, *extra)
+    return run(sys.executable, os.path.join(L, "bin", "public.py"), "--garden", G, "--repo", R, *extra)
 commit("an example on host-a\n", "neutral")
 commit("quietbox is named here, with consent\n", "neutral", name="notes/about.md")
 r = dmpublic_l()

@@ -129,7 +129,7 @@ def node(x, y, w, h, title, sub="", ipv="", cls=None, bean=None, eid=None, of=No
     the nature of the being it depicts. `ipv` is the part's address: on a public page it is never drawn. On a private one
     (ADDRESSES) it is drawn beside the name, else beside the role line, else on a line of its own under it — the first
     that fits the box — marked with the being it belongs to, so that the host sends it only to a viewer who may see that
-    being. One that fits nowhere is left out and recorded on the element, and `dmview check` names it: the card has it,
+    being. One that fits nowhere is left out and recorded on the element, and `view check` names it: the card has it,
     and a wider box would draw it."""
     kind = cls or ((NATURE_OF(bean) if NATURE_OF and bean else None) or "lekton")
     eid = _rec(["node"] + ([_NODE_MOD[kind]] if kind in _NODE_MOD else []), title, (x, y, w, h), bean, eid, of)

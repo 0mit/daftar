@@ -148,10 +148,10 @@ def install(repo=None, quiet=False):
     #    attribute names a driver that is not configured — it silently text-merges instead. The attribute
     #    and this config must therefore always change together. The interpreter is named by its full path,
     #    because `python3` is not a name every machine has, and not every name on a PATH is a Python.
-    #    bin/merge.py merges a bean in statements by the statement merge (core/merge.py), and one in today's words
-    #    by bin/dmmerge.py, as before; %P is the path, which it names when it refuses.
+    #    bin/merge.py merges a bean by the statement merge (core/merge.py); %P is the path, which it names when it
+    #    refuses.
     driver = os.path.join(repo, 'bin', 'merge.py')
-    git('config', 'merge.daftar.name', 'daftar merge (bin/merge.py: the statement merge, or dmmerge)', cwd=repo)
+    git('config', 'merge.daftar.name', 'daftar merge (bin/merge.py: the statement merge)', cwd=repo)
     git('config', 'merge.daftar.driver', f'"{py or sys.executable}" "{driver}" --file %O %A %B %P', cwd=repo)
     say("configured merge driver 'daftar' -> bin/merge.py")
     if refusal:

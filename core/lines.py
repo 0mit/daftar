@@ -17,7 +17,7 @@ structure in one qualifier of the shape `form`, whose attributes core/law/lines.
   pin       `pin: { of: [<what rests on a reading>], from?: [<bean>#<reading>], at: [<moment>, <repo>@<commit>] }` —
             the moment and the commit of the garden's object graph a reading was read at
 
-THE ONE VIEW. The tools that read a line — bin/dmseq.py, bin/dmreckon.py — read an entry in the shape today's term held
+THE ONE VIEW. The tools that read a line — bin/seq.py, bin/reckon.py — read an entry in the shape today's term held
 it, so this module gives each line as that entry (`series_of`, `steps_of`, `courses_of`, `moves_of`, `readings_of`),
 and `view` gives a whole bean so: its header, its statements by verb, and its lines. One code reads both laws' lines,
 and this is the only place the view is built. `law_view` is the law a line is read by — the reading's grammar from
@@ -215,33 +215,51 @@ def view(b, G):
 _VIEWS = {}
 
 
-def _today(root):
-    """Today's law, read with its types (a factor is two numbers), and a reader of its registries: a section of it, or
-    the data file its `registry_files` names — the bridge until parts 7 and 13 carry these as the core's own."""
-    import csv
-    import dmparse
-    path = os.path.join(root, 'seed', 'std-vocab.md')
-    path = path if os.path.isfile(path) else os.path.join(ROOT, 'seed', 'std-vocab.md')
-    base = os.path.dirname(os.path.dirname(path))
-    with open(path, encoding='utf-8') as fh:
-        law = dmparse.loads(dmparse.split_front_matter(fh.read())[0]) or {}
-    files, cache = {r.get('registry'): r for r in law.get('registry_files') or [] if isinstance(r, dict)}, {}
+WHOLE = re.compile(r'^-?(0|[1-9][0-9]*)$')
+TODAY_NAMES = {'anchor_systems': 'systems', 'net_protocols': 'protocols',    # today's names of the core's tables
+               'value_types': 'types', 'gap_tokens': 'gaps'}
 
-    def registry(name):
-        if name in cache:
-            return cache[name]
-        rows = law.get(name)
-        decl = files.get(name)
-        if rows is None and decl:
-            try:
-                with open(os.path.join(base, decl.get('file', '')), encoding='utf-8') as fh:
-                    rows = dmparse.loads(fh.read()) if decl.get('format') == 'yaml' else list(
-                        csv.DictReader((ln for ln in fh if not ln.startswith('#')), delimiter='\t'))
-            except OSError:
-                rows = None
-        cache[name] = rows
-        return rows
-    return law, registry
+
+def typed(x):
+    """A value of the core's law (every value a string, core/read.py) as the line reader takes it: a whole number an
+    int, `true` and `false` a bool, and every other string as written."""
+    if isinstance(x, dict):
+        return {k: typed(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [typed(v) for v in x]
+    if x in ('true', 'false'):
+        return x == 'true'
+    return int(x) if isinstance(x, str) and WHOLE.match(x) else x
+
+
+def _core_tables(L):
+    """The tables the line reader asks by today's names, from the core's law (v1 part 13): the standards' (systems,
+    protocols, quantities, places, registries), the lines a region or a repetition lies on (measures.yaml `lines`) as
+    its aspects, and the two figures they stand on — a sequence, at whose positions a value is held, and an opposition,
+    at whose positions nothing is."""
+    std = getattr(L, 'std', None)
+    tables = dict(getattr(std, 'tables', None) or {})
+    lines = [r for r in ((getattr(L, 'measure_law', None) or {}).get('lines') or []) if isinstance(r, dict)]
+    aspects = []
+    for r in lines:
+        a = {'aspect': r.get('line'), 'figure': 'sequence' if r.get('region') == 'true' else 'opposition',
+             'meaning': r.get('meaning')}
+        if r.get('systems'):
+            a['domain'] = {'systems': r['systems']}
+        for k in ('metered', 'lines'):
+            if r.get(k) is not None:
+                a[k] = r[k]
+        aspects.append(a)
+    why = next((r.get('why') for r in lines if r.get('region') != 'true' and r.get('why')), None)
+    figures = [{'figure': 'sequence', 'holds': 'possible'},
+               {'figure': 'opposition', 'holds': 'impossible', 'holds_why': why}]
+    out = {k: typed(v) for k, v in tables.items()}
+    for k in ('types', 'gaps'):                     # a value's forms and a cell's gaps (lines.yaml)
+        out[k] = typed((getattr(L, 'line_law', None) or {}).get(k))
+    for old, new in TODAY_NAMES.items():
+        out[old] = out.get(new)
+    out['aspects'], out['figures'] = typed(aspects), figures
+    return out
 
 
 def _typed_compat(c):
@@ -252,25 +270,23 @@ def _typed_compat(c):
 
 
 def law_view(L, root=None):
-    """A dmseq.Law for a garden of the core: the reading's grammar from lines.yaml (its comparisons as the reader's
+    """A seq.Law for a garden of the core: the reading's grammar from lines.yaml (its comparisons as the reader's
     `comparators`), the kinds as the core's, the units by their UCUM codes and their factors (part 7), compatibility and
-    the forms of a mechanism and a coefficient; the quantities and the other tables today's (`_today`), until part 13."""
+    the forms of a mechanism and a coefficient; the quantities, the systems and the other tables the core's
+    (`_core_tables`)."""
     if id(L) in _VIEWS:
         return _VIEWS[id(L)]
-    import dmseq
-    today, registry_today = _today(root or ROOT)
+    import seq as dmseq
+    today = _core_tables(L)
 
     def keyed(rows, key):
         return {r[key]: r for r in rows or [] if isinstance(r, dict) and r.get(key) is not None}
-    by_name = keyed(today.get('units'), 'unit')
     units = {}
     for code, row in L.units.items():
-        old = by_name.get(row.get('name')) or {}
         f = row.get('factor')                       # the core's own factor (part 7): two whole numbers, exactly
         f = [int(f[0]), int(f[1])] if isinstance(f, list) and len(f) == 2 and all(str(x).isdigit() for x in f) \
-            else old.get('factor')
-        units[code] = dict(old, unit=code, name=row.get('name'), quantity=row.get('quantity') or old.get('quantity'),
-                           factor=f)
+            else None
+        units[code] = dict(unit=code, name=row.get('name'), quantity=row.get('quantity'), factor=f)
     ll = L.line_law or {}
     def flagged(ops):                               # a flag the core writes `true` the reader takes as True (FLAGS):
         out = []                                    # its closed list in the reader's words too (part 12b: `digits`)
@@ -293,17 +309,17 @@ def law_view(L, root=None):
     def registry(name):
         if own.get(name) is not None:
             return own[name]
-        try:
-            got = registry_today(name)
-        except Exception:
-            got = None
+        got = today.get(name)
         mine = getattr(L, 'own', None) or {}        # A GARDEN'S OWN SCHEMES AND FILES (VOCAB.md, part 7), read beside
         if name == 'knowledge_schemes':             # today's: an analytic scheme's levels and its codes (part 12b)
             return list(got or []) + [r for r in mine.get('schemes') or [] if isinstance(r, dict)]
-        if not got and any(isinstance(r, dict) and r.get('registry') == name for r in mine.get('files') or []):
-            try:
+        if not got:                                 # a table a file of seed/knowledge/ or the garden's own holds
+            try:                                    # (`registry_files`, VOCAB.md `files`), read as its form says
                 return L.std.knowledge.rows(name)
             except Exception:
+                if os.environ.get('DAFTAR_TRACE_LAW'):
+                    with open(os.environ['DAFTAR_TRACE_LAW'], 'a', encoding='utf-8') as fh:
+                        fh.write(f"{name}\n")
                 return got
         return got
     law = dmseq.Law(units, keyed(today.get('quantities'), 'quantity'), keyed(today.get('anchor_systems'), 'system'),
@@ -381,8 +397,8 @@ def problems(J, b):
     out = []
     if not (forms and b.items):
         return out
-    import dmseq
-    import dmreckon
+    import seq as dmseq
+    import reckon as dmreckon
     law = None
 
     def lw():
@@ -432,7 +448,7 @@ def problems(J, b):
             out += _move_problems(where, r, b, G)
         elif verb == 'pin':
             out += _pin_problems(where, r, b, G)
-    # each course's moves against its walk, in the order written (dmseq.check_moves, the one judge of a course)
+    # each course's moves against its walk, in the order written (seq.check_moves, the one judge of a course)
     courses = courses_of(b, G)
     for cid, c in courses.items():
         moves = [(i, m) for i, m in moves_of(b) if m.get('course') == cid]
@@ -447,10 +463,10 @@ def problems(J, b):
 
 
 def reading_problems(where, reading, law, verbs=None):
-    """A reading's steps against the closed list (dmreckon's check), its conditions in the core's signs, and its paths
+    """A reading's steps against the closed list (reckon's check), its conditions in the core's signs, and its paths
     read over statements: from a bean's header or a verb, or — where the step reads statements (`entries`) — from a
     statement's roles and keys."""
-    import dmreckon
+    import reckon as dmreckon
     out = []
     verbs = verbs or {}
     keys = {'id', 'while', 'why', 'note', 'held', 'by', 'of', 'through', 'to', 'from', 'at', 'as'} | {

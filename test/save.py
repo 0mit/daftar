@@ -2,19 +2,19 @@
 """save — one call saves a change: its journal entry, everything staged, and the commit the gate judges (v1 part 12:
 in a garden of the core, grown by test/grow.py, judged by the core's gate).
 
-An agent saved a bean in three calls — `bin/dmjournal.py`, `git add -A`, `git commit` — and a refused one in two more,
-and each call's words stay in its context for the rest of its session. `bin/dmsave.py` is the one call, held here in a
+An agent saved a bean in three calls — `bin/journal.py`, `git add -A`, `git commit` — and a refused one in two more,
+and each call's words stay in its context for the rest of its session. `bin/save.py` is the one call, held here in a
 freshly grown garden to what its first lines say:
 
   +  a bean and its entry are saved in one call: ONE commit, its message <what>, holding the bean and an entry whose
      heading the clock wrote and the register holds; nothing is left unstaged, and three lines are printed — the gate's
      verdict, the fast suite's count, and the commit saved;
-  +  the body may come on standard input, read as bin/dmjournal.py reads it: Persian on a cp1252 machine, byte for byte;
+  +  the body may come on standard input, read as bin/journal.py reads it: Persian on a cp1252 machine, byte for byte;
   -  a refused save commits nothing: the gate's reason is printed, the entry is written once and the files are staged,
-     and the one command to run after the fix is named — `dmsave.py --again`; the same call run again finishes it too;
+     and the one command to run after the fix is named — `save.py --again`; the same call run again finishes it too;
   +  the same call run again finishes the waiting save and writes no second entry; another entry commits with it;
   +  after the fix, `--again` commits what the working tree holds now — the fix, never the refused copy — under the
-     entry's <what>, and an entry the gate asked for goes with it; an entry written with bin/dmjournal.py alone is
+     entry's <what>, and an entry the gate asked for goes with it; an entry written with bin/journal.py alone is
      committed the same way;
   -  refused before a word is written or staged: nothing to save; `--again` with no entry waiting; an entry the journal
      tool refuses; no --body and a terminal on standard input, which would wait for nobody; no pre-commit gate
@@ -38,7 +38,7 @@ def check(name, ok, detail=''):
     print(("PASS " if ok else "*** FAIL *** ") + name + (f"  [{str(detail)[:600]}]" if detail and not ok else ''))
 
 
-TMP = tempfile.mkdtemp(prefix='dmsave-')
+TMP = tempfile.mkdtemp(prefix='save-')
 G = os.path.join(TMP, 'garden-sam')
 # A MACHINE WITH NO IDENTITY OF ITS OWN: no global or system configuration, and none in the environment, so the one the
 # garden sets is the only one there is — and taking it away takes it away.
@@ -59,7 +59,7 @@ _g = grow.garden(grow.release(os.path.join(TMP, 'release')), G, 'sam', '--garden
 check("(setup) a garden of the core is grown (test/grow.py), with its gardener", _g.returncode == 0, _g.out[-500:])
 git('config', 'user.name', 'agent (test)')
 git('config', 'user.email', 'agent@localhost')
-TOOL = os.path.join(G, 'bin', 'dmsave.py')
+TOOL = os.path.join(G, 'bin', 'save.py')
 JP = os.path.join(G, 'log', 'journal.md')
 _py = 'python' if os.name == 'nt' else 'python3'
 
@@ -159,9 +159,9 @@ check("...the entry is written ONCE, and the bean and the journal stay staged, f
       len(headings(journal()[len(_s[0]):], ' · sam · added friend-b')) == 1
       and {'beans/friend-b.md', 'log/journal.md'} <= set(git('diff', '--cached', '--name-only').stdout.split()),
       git('status', '--porcelain').stdout)
-_close = err[err.find('dmsave: NOT SAVED'):]
-check("...and it names the one command to run after the fix, `dmsave.py --again`, and nothing else to run",
-      f"\n  {_py} bin/dmsave.py --again" in _close and 'git add' not in _close and len(_close) < 300, _close)
+_close = err[err.find('save: NOT SAVED'):]
+check("...and it names the one command to run after the fix, `save.py --again`, and nothing else to run",
+      f"\n  {_py} bin/save.py --again" in _close and 'git add' not in _close and len(_close) < 300, _close)
 
 _j = journal()
 rc, out, err = save('sam', 'added friend-b', '--body', '- action: added [[friend-b]].')
@@ -181,7 +181,7 @@ check("...holding the FIX, never the refused copy, and the entry once, with noth
 _s = state()
 rc, out, err = save('--again')
 check("`--again` with no entry waiting is refused (exit 2), naming the full call", rc == 2 and untouched(_s)
-      and 'every entry in the journal is committed' in err and 'bin/dmsave.py "<who>"' in err, (rc, err))
+      and 'every entry in the journal is committed' in err and 'bin/save.py "<who>"' in err, (rc, err))
 
 # ---- + the same call again, after the fix, saves; a call with another entry commits both ---------------------------------
 bean('friend-e', status='bogus')
@@ -219,7 +219,7 @@ rc, out, err = save('sam', 'added friend-c', '--body', '- action: added [[friend
 check("a save whose entry names one of two beans is refused, the gate asking for an entry that names the other",
       rc == 1 and head() == _s[2] and 'beans/friend-d.md: changed by this commit, and named by no journal entry it adds' in err,
       (rc, err[-600:]))
-subprocess.run([sys.executable, os.path.join(G, 'bin', 'dmjournal.py'), 'sam', 'added friend-d', '--body',
+subprocess.run([sys.executable, os.path.join(G, 'bin', 'journal.py'), 'sam', 'added friend-d', '--body',
                 '- action: added [[friend-d]].'], capture_output=True, cwd=G, env=ENV)
 rc, out, err = save('--again')
 check("...the journal tool writes it, and `--again` commits both entries, its message each <what>",
@@ -227,7 +227,7 @@ check("...the journal tool writes it, and `--again` commits both entries, its me
       and {'beans/friend-c.md', 'beans/friend-d.md'}
       <= set(git('show', '--name-only', '--format=', 'HEAD').stdout.split()),
       (rc, out, err[-600:]))
-subprocess.run([sys.executable, os.path.join(G, 'bin', 'dmjournal.py'), 'sam', 'decided to wait', '--body',
+subprocess.run([sys.executable, os.path.join(G, 'bin', 'journal.py'), 'sam', 'decided to wait', '--body',
                 '- decision: nothing is written until Ali says.'], capture_output=True, cwd=G, env=ENV)
 rc, out, err = save('--again')
 check("an entry written with the journal tool alone, no file changed, is committed by `--again`",
@@ -254,7 +254,7 @@ for _why, _args, _said in (
          ('sam', 'added friend-f', '--body', '- \x1b[2J x'),
          'control character'),
         ("an entry with no body", ('sam', 'added friend-f', '--body', '  '), 'has no body'),
-        ("an option it does not know", ('sam', 'added friend-f', '--bdy', 'x'), "'--bdy' is no option of dmsave"),
+        ("an option it does not know", ('sam', 'added friend-f', '--bdy', 'x'), "'--bdy' is no option of save"),
         ("--again beside anything else", ('--again', 'sam'), '--again takes nothing else'),
         ("--body with nothing after it", ('sam', 'added friend-f', '--body'), '--body takes')):
     rc, out, err = save(*_args)
@@ -333,7 +333,7 @@ check("a bean saved with `at: now` is committed with the moment of its journal e
 now_bean('omar', '  - run: { by: self, of: nobody-here }\n')
 rc, out, err = save('sam', 'added omar', '--body', '- action: added [[omar]].')
 _f = os.path.join(G, 'beans', 'omar.md')
-_t = open(_f, encoding='utf-8').read()          # read, THEN open for writing: opening truncates (dmsafe's incident 4)
+_t = open(_f, encoding='utf-8').read()          # read, THEN open for writing: opening truncates (safe's incident 4)
 open(_f, 'w', encoding='utf-8', newline='\n').write(
     re.sub(r'at: "[^"]*"', 'at: now', _t.replace('  - run: { by: self, of: nobody-here }\n', '')))
 rc2, out2, err2 = save('--again')
@@ -378,7 +378,7 @@ _src = ast.parse(open(os.path.join(ROOT, 'bin', 'save.py'), encoding='utf-8').re
 _doc = _src.body[0].value.value                      # the docstring may say it never does; the code may not do it
 _strs = [n.value for n in ast.walk(_src)
          if isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value != _doc]
-check("bin/save.py (bin/dmsave.py its alias) never passes --no-verify, nor its short form: no string it holds is either",
+check("bin/save.py (bin/save.py its alias) never passes --no-verify, nor its short form: no string it holds is either",
       not any(s in ('--no-verify', '-n') or 'no-verify' in s for s in _strs), [s for s in _strs if 'verify' in s])
 
 shutil.rmtree(TMP, ignore_errors=True)

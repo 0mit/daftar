@@ -18,7 +18,7 @@
 <!-- The change, and what a garden has to do when it adopts it. -->
 
 ## Checked
-- [ ] `python3 bin/dmsafe.py`
+- [ ] `python3 bin/safe.py`
 - [ ] `python3 test/refusals.py`
 - [ ] `python3 test/converge.py`
 - [ ] `python3 test/core_adopt.py`

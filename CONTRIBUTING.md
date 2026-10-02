@@ -11,8 +11,8 @@ parts, changes).
 ## Before you open a pull request
 
 1. **Say which of two things you are proposing, because they are judged differently.**
-   - **A term for a kind of FACT** — something an estate contains (a registration, a rental, a risk). It
-     starts as a `local_terms` entry in your garden's `VOCAB.md`, used by real beans, and is promoted here
+   - **A row for a kind of FACT** — something an estate contains (a registration, a rental, a risk). It
+     starts as a row of your garden's `VOCAB.md` (a kind, a verb, a namespace), used by real beans, and is promoted here
      once it has held real cases. A term for a fact nobody has yet recorded usually generalises wrongly,
      because what it gets wrong is the world, and only the world can correct it.
    - **A MECHANISM** — a figure, a schema construct, a positioning system, a unit, a missing side of a
@@ -30,7 +30,7 @@ parts, changes).
    the vocabulary could not say, and the beans it affected — from the estate, never from a test. For a
    mechanism: the structure it completes, the neighbours it was modelled on, and what was considered and
    rejected. Judgment and common sense are evidence here; say whose. For any change to the law, paste what
-   `python3 bin/dmreview.py --law --against <the tag you started from>` prints: it counts what the change adds,
+   `python3 bin/review.py --law --against <the tag you started from>` prints: it counts what the change adds,
    removes, restates and narrates, and judges nothing — the maintainer who merges judges, beauty included.
 3. **Leave your estate out of it.** Do not paste host names, addresses, paths, people, or findings from
    your own garden into the proposal or into the law. Use neutral examples — `host-a`, `203.0.113.10`,
@@ -42,7 +42,7 @@ parts, changes).
    each ends by saying how many of its checks passed, or how many failed, and every one must be green:
 
    ```sh
-   python3 bin/dmsafe.py
+   python3 bin/safe.py
    python3 test/assets.py
    python3 test/refusals.py
    python3 test/journal.py
@@ -98,7 +98,7 @@ beans — it is the prose around them: an example path in a comment, a measureme
 real names, a commit message, a pull request body. Those are the places nobody greps.
 
     git config daftar.garden /path/to/your/garden     # once per clone
-    python3 bin/dmpublic.py --garden <path> [--range origin/master..HEAD] [--text pr-body.md]
+    python3 bin/public.py --garden <path> [--range origin/master..HEAD] [--text pr-body.md]
 
 `bin/install.sh` installs a **pre-push hook** that runs it over the files and over the messages of the
 commits being pushed. It derives the forbidden names from the garden itself — every bean and mapping id,
@@ -130,21 +130,23 @@ may use the name the contributor is known by, and an address the leak guard does
 no-reply address is one. Commits made before this section was added carry none; they are the
 steward's own. CI refuses a pull request with a commit that carries no sign-off.
 
-## Editing the vocabulary itself
+## Editing the law itself
 
-- The vocabulary is `seed/std-vocab.md`: YAML front matter (the law) and a short Markdown body. Edit the front
-  matter, and add one entry to `seed/CHANGELOG.md`, the law's journal, above the newest, naming the change and why.
+- The law is `core/law/`: the core's face (`core.yaml`), its rows (`verbs.yaml`, `kinds.yaml`, …) and the standards it
+  reads (`systems.yaml`, `units.yaml`, …), every value a string, every table of rows in its form (`python3 bin/check.py
+  --law` proves it whole). Edit the file, move the core's `version` where the change asks it, and add one entry to
+  `seed/CHANGELOG.md`, the law's journal, above the newest, naming the change and why.
 - **The layers** (manifesto: layers; which file sits in which is the law's `layers`, and `MODEL.md` says what each holds). What a reader needs in order to APPLY a rule
   goes in the item's own `meaning:` or `why:`, present tense, no date, no name, with no commentary; why it is that way
-  goes in `seed/RATIONALE.md` under the item's path (`python3 bin/dmwhy.py <name>` reads both; `--check` finds a
+  goes in `seed/RATIONALE.md` under the item's path (`python3 bin/why.py <name>` reads both; `--check` finds a
   reason whose law is gone); the changelog entry says what changed and why; the commits are the record.
 - Bump its `version:` in the same change — minor for additive, major for a changed rule — and nothing else:
   gardens move their own pins when they adopt a release.
-- `python3 bin/dmrules.py` inside a garden prints every rule as the gate reads it; use it to check that your
+- `python3 bin/rules.py` inside a garden prints every rule as the gate reads it; use it to check that your
   term says what you meant.
-- `python3 bin/dmwhy.py <name>` shows why an existing rule is the way it is (`seed/RATIONALE.md`); `HISTORY.md` has
+- `python3 bin/why.py <name>` shows why an existing rule is the way it is (`seed/RATIONALE.md`); `HISTORY.md` has
   the design steps before that. Read the relevant part before proposing to change one.
-- `python3 bin/dmcatalog.py --part <name>` shows what a change to an item touches: every file that mentions, states,
+- `python3 bin/catalog.py --part <name>` shows what a change to an item touches: every file that mentions, states,
   covers or explains it, what it uses and what uses it, and the rules, checklist items and suite checks that name it.
   `--findings` lists the candidates for a reword it sees (an item nothing references, one domain under two names, a
   sibling shaped unlike the rest), for a person to judge.
@@ -181,5 +183,5 @@ next release tag, which each garden adopts with `bin/dmupgrade.py` when its own 
 
 ## Releases
 
-Maintainers tag releases `vMAJOR.MINOR.PATCH` on `master`. The vocabulary's own version lives in
-`seed/std-vocab.md` (`version:`), and its changelog is `seed/CHANGELOG.md`; a release names both.
+Maintainers tag releases `vMAJOR.MINOR.PATCH` on `master`. The law's own version lives in
+`core/law/core.yaml` (`version:`), and its changelog is `seed/CHANGELOG.md`; a release names both.

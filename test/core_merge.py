@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The statement merge (core/guide/MERGE.md), and the gate and the merge each taken by the law a garden runs (v1 part 3).
+"""The statement merge (MERGE.md), and the gate and the merge each taken by the law a garden runs (v1 part 3).
 
 Part one merges beans as texts through core/merge.py: a case for each rule of MERGE.md — a statement's form, the set
 three ways, a disagreement side by side, an id naming one statement, knowing kept, the order, the header key by key,
@@ -9,9 +9,9 @@ its own. The driver's refusal leaves ours as it was.
 
 Part two grows a garden (seed/germinate.sh), which takes the hooks and the merge driver from bin/install.py. While it
 pins std-vocab, its gate is today's; once it pins the core — the adoption judged by the core — `daftar check`,
-bin/dmcheck.py and the hooks run the core's gate. Then two branches change one bean and git merges them for real: the
+bin/check.py and the hooks run the core's gate. Then two branches change one bean and git merges them for real: the
 driver merges the statements, a merge git commits itself is refused until an entry of its own names the bean it merged,
-and `git merge --no-commit` with bin/dmsave.py commits it through the core's gate; a bean only the other side changed
+and `git merge --no-commit` with bin/save.py commits it through the core's gate; a bean only the other side changed
 comes through as it was committed; a true conflict leaves ours for a person, who settles it; sides written in two laws
 are refused; and a bean one side removed and the other changed is git's own conflict.
 
@@ -290,9 +290,9 @@ def text(rel):
 
 
 def commit(what, body):
-    """A save without the wait for the minute (bin/dmsave.py waits where a bean holds this minute's moment): the clock's
-    heading written by bin/dmjournal.py, its moment in place of each `at: now`, and one commit, through the hook."""
-    run(PY, 'bin/dmjournal.py', 'sam', what, '--body', body)
+    """A save without the wait for the minute (bin/save.py waits where a bean holds this minute's moment): the clock's
+    heading written by bin/journal.py, its moment in place of each `at: now`, and one commit, through the hook."""
+    run(PY, 'bin/journal.py', 'sam', what, '--body', body)
     m = [ln for ln in text('log/journal.md').split('\n') if ln.startswith('## ')][-1][3:].split(' · ', 1)[0]
     for f in os.listdir(os.path.join(G, 'beans')):
         t = text(f'beans/{f}')
@@ -352,7 +352,7 @@ try:
 
     # WHILE IT PINS STD-VOCAB, THE GATE IS TODAY'S
     r = run(PY, 'bin/daftar.py', 'check')
-    check("while the garden pins std-vocab, `daftar check` is today's gate (bin/dmcheck.py)",
+    check("while the garden pins std-vocab, `daftar check` is today's gate (bin/check.py)",
           r.returncode == 0 and 'core check' not in r.out and 'docs, 0 error(s)' in r.out.strip().split('\n')[-1], r.out[-400:])
     r = run(PY, 'bin/check.py', '--merge-commit')
     check("...and a merge git commits itself is judged by nothing, as today's gate never judged one",
@@ -365,20 +365,20 @@ try:
         with open(os.path.join(tw, n), 'w', encoding='utf-8') as fh:
             fh.write(t)
     r = run(PY, 'bin/merge.py', '--file', *(os.path.join(tw, n) for n in 'OAB'), 'beans/box.md')
-    check("...and the driver hands a bean in today's words to bin/dmmerge.py, today's merge", 'dmmerge' in r.out, r.out[-400:])
+    check("...and the driver hands a bean in today's words to bin/merge.py, today's merge", 'merge' in r.out, r.out[-400:])
 
     # THE ADOPTION, JUDGED BY THE CORE
     write('GARDEN.md', re.sub(r'(?m)^extends: std-vocab@\S*', 'extends: core@' + str(read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version']), text('GARDEN.md'), count=1)
           .replace('\ngardener:', '\ngardener: sam', 1))
     write('beans/sam.md', SAM)
     write('beans/pot.md', POT)
-    r = run(PY, 'bin/dmsave.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
+    r = run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
             '- action: RULE-CHANGE, GARDEN.md extends the core, sam keeps the garden: [[sam]] and [[pot]]; ratified by sam')
     check("the commit that moves the pin to the core is judged by the core's gate, through the same hook",
           r.returncode == 0 and 'core check --staged: 2 beans, 5 statements — 0 error(s)' in r.out, r.out[-800:])
     r = run(PY, 'bin/daftar.py', 'check')
-    r2 = run(PY, 'bin/dmcheck.py', '--all')
-    check("once it pins the core, `daftar check` is the core's gate, and bin/dmcheck.py hands the garden to it",
+    r2 = run(PY, 'bin/check.py', '--all')
+    check("once it pins the core, `daftar check` is the core's gate, and bin/check.py hands the garden to it",
           r.returncode == 0 and 'core check: g: 2 beans' in r.out and 'core check: g: 2 beans' in r2.out, r.out + r2.out)
     r = run(PY, 'bin/check.py', 'beans/pot.md')
     check("...which judges a whole garden, and says so to a command that names one bean", r.returncode == 2
@@ -405,9 +405,9 @@ try:
     check("a merge git commits itself is refused by the gate (pre-merge-commit) until an entry of its own names the bean "
           "it merged", m.returncode != 0 and 'named by no entry of its own' in m.out
           and run('git', 'rev-parse', '-q', '--verify', 'MERGE_HEAD').returncode == 0, m.out[-800:])
-    r = run(PY, 'bin/dmsave.py', 'sam', 'merged the gift', '--body', '- action: merged [[pot]]: the gift and the rent both stand')
+    r = run(PY, 'bin/save.py', 'sam', 'merged the gift', '--body', '- action: merged [[pot]]: the gift and the rent both stand')
     parents = run('git', 'log', '-1', '--format=%P').stdout.split()
-    check("...and `git merge --no-commit` then bin/dmsave.py commits it, through the core's gate, with two parents",
+    check("...and `git merge --no-commit` then bin/save.py commits it, through the core's gate, with two parents",
           r.returncode == 0 and '— 0 error(s)' in r.out and len(parents) == 2, r.out[-800:])
     check("...its subject the merge's own entry, and not the other side's",
           run('git', 'log', '-1', '--format=%s').stdout.strip() == 'merged the gift', run('git', 'log', '-1', '--format=%s').stdout)
@@ -438,7 +438,7 @@ try:
     check("a true conflict: the driver refuses, names it with both values, and git leaves the bean as ours, unmerged",
           m.returncode != 0 and 'title: ours The kept pot | theirs The shared pot' in m.out and text('beans/pot.md') == ours_text
           and 'beans/pot.md' in run('git', 'ls-files', '--unmerged').stdout, m.out[-800:])
-    r = run(PY, 'bin/dmsave.py', 'sam', 'merged', '--body', '- action: merged [[pot]]')
+    r = run(PY, 'bin/save.py', 'sam', 'merged', '--body', '- action: merged [[pot]]')
     check("...nothing is saved while it stands unsettled", r.returncode != 0 and 'unmerged' in r.out, r.out[-400:])
     write('beans/pot.md', ours_text.replace('"The kept pot"', '"The shared pot, kept"'))
     run('git', 'add', 'beans/pot.md')

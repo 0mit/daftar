@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""dmseq — the reader of a series and of a course: what a line held at each position, and where a being stands on a walk.
+"""seq — the reader of a series and of a course: what a line held at each position, and where a being stands on a walk.
 
-    python3 bin/dmseq.py show <bean> <key>              # each row at its position, every value with its unit
-    python3 bin/dmseq.py rows <bean> <key>              # the rows as one table: the position, then each channel
-    python3 bin/dmseq.py at <bean> <key> <position>     # what each channel holds there: an offset, or a position
-    python3 bin/dmseq.py course <bean> [<course>]         # where the being stands on each walk, since when, who acts next
-    python3 bin/dmseq.py check [<bean> ...]             # every series and course, judged as the gate judges them
-    python3 bin/dmseq.py compare <bean> <key> <bean> <key> [--k 2]   # two recordings of one line, row by row
+    python3 bin/seq.py show <bean> <key>              # each row at its position, every value with its unit
+    python3 bin/seq.py rows <bean> <key>              # the rows as one table: the position, then each channel
+    python3 bin/seq.py at <bean> <key> <position>     # what each channel holds there: an offset, or a position
+    python3 bin/seq.py course <bean> [<course>]         # where the being stands on each walk, since when, who acts next
+    python3 bin/seq.py check [<bean> ...]             # every series and course, judged as the gate judges them
+    python3 bin/seq.py compare <bean> <key> <bean> <key> [--k 2]   # two recordings of one line, row by row
     add --exact to print a value read between two rows exactly, rather than to its uncertainty's digits
 
 (`python` on Windows.) It writes nothing, and nothing it prints is stored anywhere (manifesto: once): a series holds what
@@ -17,7 +17,7 @@ A SERIES (std-vocab `series`) is a line whose positions hold values. Its positio
 whose occurrences are the rows in order — or listed in a `span`, an extent from whose `from` each row writes its
 offset in the series' `unit`. `holds` names the channels, one column each: a measured value (`quantity` and `unit`), a
 position (`system`, written in its one form less a `prefix` and `suffix`, or a whole offset from `from`), or a code of
-a published scheme (`scheme`). The rows are one table (bin/dmparse.py reads it), inline in the bean or in the parts
+a published scheme (`scheme`). The rows are one table (bin/parse.py reads it), inline in the bean or in the parts
 `series/<bean>/<key>/<part>.tsv`. Every number printed comes with the rows it came from.
 
 WHAT IS READ BETWEEN ROWS is what the channel says: a `point` with `between: linear` on a straight line between its two
@@ -32,7 +32,7 @@ fraction. A value a row holds is printed as it was written. A channel with no `u
 `accuracy` is turned into a u here, never by a writer: a bound `a` gives a/√3, a 68 % radius itself, a 95 % radius R/1.96,
 and an accuracy whose kind is `unstated` gives none.
 
-TIME is counted in days of 86400 seconds, as bin/dmcal.py counts it: no leap second is counted, so a grid of seconds
+TIME is counted in days of 86400 seconds, as bin/cal.py counts it: no leap second is counted, so a grid of seconds
 across one reads the second after it.
 
 IN A GARDEN OF THE CORE (v1 part 6) a series is a `record` statement, its `series` the form core/law/lines.yaml gives, named
@@ -61,8 +61,8 @@ from fractions import Fraction
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import dmparse  # noqa: E402 — the one reader of a table, and UTF-8 streams on every platform
-import dmcal    # noqa: E402 — positions in any calendar, and moments below the day
+import parse as dmparse  # noqa: E402 — the one reader of a table, and UTF-8 streams on every platform
+import cal as dmcal    # noqa: E402 — positions in any calendar, and moments below the day
 
 ROOT = os.path.dirname(HERE)
 PY = 'python' if os.name == 'nt' else 'python3'
@@ -85,9 +85,11 @@ class Law:
 
     @classmethod
     def of_garden(cls):
-        import dmcheck                    # the gate's reading of the law, overlays and additions included
-        return cls(dmcheck.UNITS, dmcheck.QUANTITIES, dmcheck.SYSTEMS, dmcheck.ASPECTS, dmcheck.FIGURES,
-                   dmcheck.registry)
+        """The law of this garden as its gate reads it — the core's, with the garden's own rows — in the reader's
+        tables (core/lines.py `law_view`)."""
+        sys.path.insert(0, ROOT)
+        from core import check as core_check, lines
+        return lines.law_view(core_check.garden_law(ROOT), ROOT)
 
     def value_type(self, name):
         return next((r for r in (self.registry('value_types') or []) if isinstance(r, dict) and r.get('type') == name), {})
@@ -1050,27 +1052,16 @@ def parts_of(root, bean, key):
     return out
 
 
-def _series_terms():
-    import dmcheck
-    return [t for t, s in dmcheck.SCHEMAS.items() if s.get('series') is True]
-
-
 def series_of(root, bean, key, law=None):
     if root is not None and os.path.realpath(root) != os.path.realpath(ROOT):
-        raise ValueError(f"dmseq reads the garden whose tools it is ({ROOT}); read {root} with its own bin/dmseq.py")
+        raise ValueError(f"seq reads the garden whose tools it is ({ROOT}); read {root} with its own bin/seq.py")
     if runs_core():
         from core import lines
         node = (_doc(ROOT, bean).get('series') or {}).get(key)
         if node is None:
             raise ValueError(f"bean '{bean}' records no series '{key}' (a `record` statement with that id)")
         return Series(law or lines.law_view(core()[0], ROOT), bean, key, node, parts_of(ROOT, bean, key))
-    law = law or Law.of_garden()
-    fm = _doc(ROOT, bean)
-    for t in _series_terms():
-        node = fm.get(t)
-        if isinstance(node, dict) and key in node:
-            return Series(law, bean, key, node[key], parts_of(ROOT, bean, key))
-    raise ValueError(f"bean '{bean}' holds no series '{key}'")
+    raise ValueError(f"bean '{bean}' holds no series '{key}': this garden runs today's words")
 
 
 def rows(root, bean, key):
@@ -1207,7 +1198,7 @@ def main(argv):
         try:
             k = Fraction(argv[i + 1])
         except (IndexError, ValueError):
-            print("dmseq: --k takes a number, the coverage factor: `--k 2`", file=sys.stderr)
+            print("seq: --k takes a number, the coverage factor: `--k 2`", file=sys.stderr)
             return 2
         argv = argv[:i] + argv[i + 2:]
     if not argv or argv[0] in ('-h', '--help'):
@@ -1291,24 +1282,6 @@ def main(argv):
             print(f"seq check: {n} error(s) in the lines of {len(want)} bean(s) — rule `line`, as the core's gate judges "
                   f"it: `{PY} bin/check.py`")
             return 1 if n else 0
-        if cmd == 'check':
-            import dmcheck
-            law = Law.of_garden()
-            dmcheck.build_docs()
-            dmcheck.build_all_fm_and_targets()
-            want = set(rest) or {b for (ib, b) in dmcheck.docs if ib}
-            n = 0
-            for (ib, b), (fm, _body) in sorted(dmcheck.docs.items()):
-                if not ib or b not in want:
-                    continue
-                for t in _series_terms():
-                    for key, e in ((fm.get(t) or {}).items() if isinstance(fm.get(t), dict) else []):
-                        s = Series(law, b, key, e, parts_of(ROOT, b, key))
-                        _problems_out(b, key, t, s)
-                        n += sum(1 for p in s.problems if p[0] == 'error')
-            print(f"dmseq check: {n} error(s) in the series of {len(want)} bean(s) — the gate judges courses and walks "
-                  f"with the rest: `{PY} bin/dmcheck.py`")
-            return 1 if n else 0
         if cmd == 'compare' and len(rest) == 4:
             a, b = series_of(ROOT, rest[0], rest[1]), series_of(ROOT, rest[2], rest[3])
             ra, rb = rows(ROOT, rest[0], rest[1]), rows(ROOT, rest[2], rest[3])
@@ -1338,9 +1311,9 @@ def main(argv):
                     print(f"  {pos} {n}: {lab} ({x} {a.channels[n].get('unit')} | {y} {b.channels[n].get('unit')})")
             return 0
     except ValueError as e:
-        print(dmparse.said(f"dmseq: {e}"), file=sys.stderr)
+        print(dmparse.said(f"seq: {e}"), file=sys.stderr)
         return 2
-    print(f"dmseq: {' '.join(argv)!r} — see `{PY} bin/dmseq.py --help`", file=sys.stderr)
+    print(f"seq: {' '.join(argv)!r} — see `{PY} bin/seq.py --help`", file=sys.stderr)
     return 2
 
 

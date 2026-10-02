@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The `view` asset's surface for the page SERVED by daftar's own host (`dmview serve`, Python's standard library): it
+"""The `view` asset's surface for the page SERVED by daftar's own host (`view serve`, Python's standard library): it
 signs viewers in, asks the ledger's grants what each may see (`view_serve.Host.may`), sends each the page scoped to
 them, reads live values through the page's monitors and runs what the host enables. Named by the code of the technology
 catalogue it speaks (`python`), one surface among siblings."""

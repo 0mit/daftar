@@ -19,7 +19,7 @@ jobs:
       - run: pip install PyYAML reuse
       - run: git config --global user.name ci && git config --global user.email ci@localhost
       - name: every document parses
-        run: python3 bin/dmsafe.py
+        run: python3 bin/safe.py
       - name: "assets: one reader of what a release ships; an asset is a profile's, and opens no concept of its own"
         run: python3 test/assets.py
       - name: "refusals: what the gate refuses, and that it refuses rather than crashes"
@@ -88,7 +88,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/rationale.py
       - name: "the preconditions of beauty in the law, counted against the last release — evidence for whoever merges"
-        run: python3 bin/dmreview.py --law --against "$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
+        run: python3 bin/review.py --law --against "$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
       - name: "site: the page parses, loads nothing from outside, and every form and refusal is what the release prints"
         run: python3 test/site.py
       - name: "public: a repository carries the language, never a garden"

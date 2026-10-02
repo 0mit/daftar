@@ -7,7 +7,7 @@ moves (N34: the changed-part gate is judged, and not built, until this is read).
 A garden of the core is grown from this tree as a release (test/grow.py, v1 part 12), and one invented bench rig added
 to it; the core's gate (`core/check.py`) is timed on the garden without a series, then with the rig's `record` of a grid
 series of N rows × 2 channels written as one part (`series/<bean>/<id>/<part>.tsv`, core/lines.py's form), each
-with libyaml's loader and with the pure-Python one (dmparse falls back to it where PyYAML has no libyaml; a
+with libyaml's loader and with the pure-Python one (parse falls back to it where PyYAML has no libyaml; a
 `sitecustomize` hides libyaml from the child). The best of `--repeat` runs is kept. Each is appended to
 test/timings.tsv as `date	cost:<loader>:<rows>	seconds	1|0	0|1` (the gate passed, or not), and the cost
 per 10,000 rows printed: (with − without) / N × 10,000.
@@ -18,7 +18,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TSV = os.path.join(ROOT, "test", "timings.tsv")
 PY = sys.executable
 sys.path.insert(0, os.path.join(ROOT, "bin"))
-import dmparse  # noqa: F401 — on the path for the loader probe below
+import parse as dmparse  # noqa: F401 — on the path for the loader probe below
 
 
 def run(*a, cwd=None, env=None):
@@ -56,7 +56,7 @@ def main(argv):
         os.makedirs(shim)
         open(os.path.join(shim, "sitecustomize.py"), "w").write("import yaml\ntry:\n    del yaml.CSafeLoader\nexcept AttributeError:\n    pass\n")
         loaders = {"libyaml": {}, "pure": {"PYTHONPATH": shim}}
-        probe = run(PY, "-c", "import sys; sys.path.insert(0, 'bin'); import dmparse; print(dmparse.FAST)", cwd=g, env=loaders["pure"])
+        probe = run(PY, "-c", "import sys; sys.path.insert(0, 'bin'); import parse; print(parse.FAST)", cwd=g, env=loaders["pure"])
         if probe.stdout.strip() != "False":
             print("cost: the pure-Python loader could not be forced (%s)" % (probe.stdout + probe.stderr).strip())
             return 1

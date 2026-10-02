@@ -4,7 +4,7 @@
 # applies its rules; `python3 core/check.py --law` proves it consistent with itself and with the rows beside it.
 
 # The law's version. A garden that runs this law pins it in GARDEN.md, `extends: core@<version>`, and the gate holds the
-# pin to it; it moves with a change to the law, a RULE-CHANGE, as std-vocab's did (std-vocab's `version`, v1 part 4).
+# pin to it; it moves with a change to the law, a RULE-CHANGE.
 version: "1.0"
 
 # ---------------------------------------------------------------------------------------------------------------- roles
@@ -164,7 +164,7 @@ acquisitions: [bought, rented, given, lent, inherited]
 placements:   [place, order, presence, habitat, location]
 
 # ---------------------------------------------------------------------------------------------------------------- the manifest
-# GARDEN.md: which garden this is, whose, and which law it runs (std-vocab's `manifest`, v1 part 4). Its keys are these and
+# GARDEN.md: which garden this is, whose, and which law it runs. Its keys are these and
 # no other; each is held to its form: `name` is a word in kebab-case, `pin` this law's `core@<version>`, `release` a
 # release's tag or `untagged <commit>`, `bean` a person or an organisation the garden holds a bean for, `zone` a zone of
 # the IANA time zone database, `text` prose, and `texts` prose or prose under names. The gardener is required once the
@@ -173,7 +173,7 @@ manifest:
   - { key: garden,         form: name,    required: "true", meaning: "the garden's name, for people. A name, not an identity: two gardens may carry the same one, and a garden's identity is the root of its history (`garden-id`)" }
   - { key: extends,        form: pin,     required: "true", meaning: "the law it runs: `core@<version>`, this law's version" }
   - { key: daftar_release, form: release, meaning: "the release it runs: a release's tag, or `untagged <commit>` for a garden grown from a checkout on no tag (`untagged unknown` from a copy with no history); bin/dmupgrade.py moves it" }
-  - { key: gardener,       form: bean,    meaning: "the person or organisation who keeps the garden, a bean of it: required once the garden holds a bean (manifesto: parts)" }
+  - { key: gardener,       form: bean,    meaning: "the person or organisation who keeps the garden, a bean of it: required once the garden holds a bean" }
   - { key: zone,           form: zone,    required: "true", meaning: "the civil time zone the garden reckons its days in: the place half of every day and moment it writes without saying where" }
   - { key: test,           form: text,    meaning: "present when the garden is a rehearsal or a test, saying what it rehearses: its beans are not facts about the world" }
   - { key: origin,         form: text,    meaning: "where the garden began, for a reader" }

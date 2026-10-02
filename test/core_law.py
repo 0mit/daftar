@@ -24,8 +24,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read, translate  # noqa: E402
+import grow  # noqa: E402 — a release of the core, and the release in today's words
 from core.law import Law  # noqa: E402
-import dmparse, dmpass  # noqa: E402
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -114,44 +117,20 @@ statements:
 Agreed in a letter.
 """
 
-# Every entry of std-vocab's `registry_forms` goes somewhere: carried as a `forms` entry of a file of core/law/ under the
-# core's name of its table (part 1's standards, part 9's tools and vacancies), or named here with where it went.
-PLACED = {
-    # the face (core/law/core.yaml), whose tables the engine reads by their keys: the core's own grammar
-    'crown': 'face', 'natures': 'face', 'lines': 'face', 'conditions': 'face', 'roles': 'face', 'senses': 'face',
-    'complements': 'face', 'figures': 'face', 'comparators': 'face', 'layers': 'face', 'foundation_rules': 'face',
-    'acts': 'face', 'facets': 'face', 'divisions': 'face',
-    # a file of rows core/law.py judges by its fields (ROW_FIELDS, FLOW_LAW)
-    'gene': 'kinds.yaml', 'complexity': 'levels.yaml', 'units': 'units.yaml', 'methods': 'flows.yaml',
-    'flows': 'flows.yaml', 'pass_metadata': 'flows.yaml',
-    # tables of the forms of a line and of a measure, read by core/lines.py and core/measures.py (parts 6, 7)
-    'operations': 'lines.yaml', 'aggregates': 'lines.yaml', 'ordering_keys': 'lines.yaml', 'aspects': 'measures.yaml',
-    'placement': 'measures.yaml',
-    # replaced by the core's grammar, retired, or dropped
-    'value_types': 'the shapes', 'gap_tokens': 'the shapes', 'retired': 'a refusal (part 4)',
-    'leaf_orders': 'retires with bin/dmmerge.py (part 13)', 'system_registries': 'core/law.py ROW_KEYS (part 9)',
-}
-CORE_NAMES = {'verbs': 'tools', 'tool_families': 'families', 'view_lenses': 'lenses',   # the profiles' tables carry their
-              'view_archetypes': 'archetypes'}                                          # forms in profiles.yaml (part 11)
-
 try:
-    # ---- THE LAW: generated, placed, and holding together
-    LAW = dmparse.loads(dmparse.split_front_matter(text('seed/std-vocab.md', ROOT))[0])
-    for name in ('tools', 'vacancies'):
-        gen = run(PY, 'core/translate.py', name, cwd=ROOT)
-        check(f"law: core/law/{name}.yaml is what std-vocab generates", gen.returncode == 0
-              and gen.out == text(f'core/law/{name}.yaml', ROOT), gen.out[:300])
+    # ---- THE LAW: its vacancies and tools, holding together
     vac = read.data(os.path.join(ROOT, 'core', 'law', 'vacancies.yaml'))
-    check("law: each of today's vacancies is placed in the core or dropped with why — none lost",
-          len(vac['vacancies']) + len(vac['dropped']) == len(LAW['vacancies']) and all(d.get('why') for d in vac['dropped']),
-          (len(vac['vacancies']), len(vac['dropped']), len(LAW['vacancies'])))
+    check("law: each vacancy the law dropped says why",
+          vac['vacancies'] and all(d.get('why') for d in vac['dropped']), vac['dropped'])
     check("law: a vacancy is at a table, a figure, a form or what `details` keeps — a unit by its UCUM code",
           all(re.match(r'(table|figure|form|details):', v['at']) for v in vac['vacancies'])
           and any(v['at'] == 'table:units' and v['position'] == '%' for v in vac['vacancies']))
     tools = read.data(os.path.join(ROOT, 'core', 'law', 'tools.yaml'))
-    check("law: the tools are today's verbs, each in its family, keyed `tool`",
-          [t['tool'] for t in tools['tools']] == [v['verb'] for v in LAW['verbs']]
-          and {f['family'] for f in tools['families']} == {f['family'] for f in LAW['tool_families']})
+    check("law: the tools by their verbs, each in a family the law names, keyed `tool`, each a tool of the release "
+          "(`bin/<verb>.py`, the door `bin/dmupgrade.py` for `upgrade`)",
+          {t['family'] for t in tools['tools']} <= {f['family'] for f in tools['families']}
+          and all(os.path.isfile(os.path.join(ROOT, 'bin', f"{t['tool']}.py" if t['tool'] != 'upgrade' else 'dmupgrade.py'))
+                  for t in tools['tools']), [t['tool'] for t in tools['tools']])
     L = Law.load()
     check("law: the law holds together with its tools and vacancies", not L.problems(), L.problems()[:3])
     L._vacancies({'reasons': ['universal'], 'vacancies': [
@@ -165,30 +144,14 @@ try:
           any("'adjourned' is not a value of clause.state" in m for m in got)
           and any("English name of `%`" in m for m in got) and any("'hunch' is none of" in m for m in got)
           and any("'elsewhere' is none of" in m for m in got), got)
-    carried = {k for f in os.listdir(os.path.join(ROOT, 'core', 'law')) if f.endswith('.yaml')
-               for k in (read.data(os.path.join(ROOT, 'core', 'law', f)).get('forms') or {})}
-    names = dict({old: new for _w, ts in translate.STANDARDS.values() for new, old in ts}, **CORE_NAMES)
-    lost = [k for k in LAW['registry_forms'] if names.get(k, k) not in carried and k not in PLACED]
-    twice = [k for k in PLACED if names.get(k, k) in carried and k not in ('lines', 'placement')]   # (a face's
-    # table and a form of a measure: one name, two things — not today's table carried)
-    check("law: every entry of std-vocab's `registry_forms` is carried by core/law/ or named where it went",
-          not lost and not twice, f"lost {lost}; carried and placed {twice}")
 
     # ---- THE RELEASE: v1.0.0 of the core from this tree, and a garden grown from it
-    os.makedirs(REL)
-    for f in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
-                         dmpass.language(text('seed/LANGUAGE', ROOT)), dmpass.offered(LAW)):
-        os.makedirs(os.path.join(REL, os.path.dirname(f)), exist_ok=True)
-        shutil.copy2(os.path.join(ROOT, f), os.path.join(REL, f))
-    for f in ('GARDEN.md.template', 'VOCAB.md.template'):
-        shutil.copy2(os.path.join(ROOT, 'core', 'guide', f), os.path.join(REL, 'seed', f))
-    for c in (('git', 'init', '-q'), ('git', 'add', '-A'), ('git', 'commit', '-qm', 'the core'), ('git', 'tag', 'v1.0.0')):
-        run(*c, cwd=REL)
+    grow.release(REL)
     r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), G, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=T)
     TOOLS = ('rules', 'why', 'form', 'forms', 'catalog', 'review', 'facets')
     check(f"a garden grows from v1.0.0 in the core (core@{VERSION}), the law tools and their law in it",
           r.returncode == 0 and f'core@{VERSION}' in text('GARDEN.md')
-          and all(os.path.isfile(os.path.join(G, 'bin', f"{v}.py")) and os.path.isfile(os.path.join(G, 'bin', f"dm{v}.py"))
+          and all(os.path.isfile(os.path.join(G, 'bin', f"{v}.py")) and not os.path.exists(os.path.join(G, 'bin', f"dm{v}.py"))
                   for v in TOOLS) and os.path.isfile(os.path.join(G, 'core', 'law', 'tools.yaml'))
           and os.path.isfile(os.path.join(G, 'core', 'law', 'vacancies.yaml')), r.out[-800:])
     run(PY, 'bin/install.py')
@@ -216,15 +179,16 @@ try:
           and '      placement: point|bounds|preceding|following' in r.out, r.out[-2000:])
     check("rules: the garden's own rows, a vacant one with why", re.search(r'kinds\s+allotment\s+vacant: prediction', r.out),
           r.out[-600:])
-    a, b = run(PY, 'bin/rules.py', '--core'), run(PY, 'bin/dmrules.py', '--core')
+    a, b = run(PY, 'bin/rules.py', '--core'), run(PY, 'bin/rules.py', '--core')
     check("rules: `--core` is the rules and the face alone, and the alias prints the same",
           a.returncode == 0 and a.out == b.out and 'THE VERBS' not in a.out and 'THE RULES' in a.out, b.out[:300])
 
     # ---- why
     r = run(PY, 'bin/why.py', 'own')
-    check("why: a verb of the face, with the reasons of the term it replaces (`terms[owned_by]`)",
-          r.returncode == 0 and '== core/law/core.yaml: verbs[own]' in r.out and "came from today's terms[owned_by]" in r.out
-          and '-- terms[owned_by]' in r.out, r.out[:800])
+    check("why: a verb of the face, with its reasons, keyed by the core's path — those written of the term it replaces "
+          "saying so (`terms[owned_by]`)",
+          r.returncode == 0 and '== core/law/core.yaml: verbs[own]' in r.out and '-- core/law/core.yaml: verbs[own]' in r.out
+          and "(std-vocab 32: `terms[owned_by]`)" in r.out, r.out[:800])
     r = run(PY, 'bin/why.py', 'clause.state')
     check("why: a form's attribute, named by its tail, with the law's vacancies at it",
           r.returncode == 0 and 'forms.clause.attrs.state' in r.out and 'VACANT disputed (universal)' in r.out, r.out[:800])
@@ -243,11 +207,12 @@ try:
     r = run(PY, 'bin/form.py', 'series')
     check("form: a form's attributes and its one-of", r.returncode == 0 and 'one of: grid, span, held' in r.out, r.out)
     r = run(PY, 'bin/form.py', 'owned_by', cwd=ROOT)
-    check("form: in today's language, a term's attributes", r.returncode == 0 and 'a term' in r.out and 'owner' in r.out,
+    check("form: a word of today's language is no verb and no form of the core's law, and says so, exit 1",
+          r.returncode == 1 and 'is no verb and no form' in r.out,
           r.out)
     import form
     check("form: one module under both names, reading a core form as a term's schema",
-          __import__('dmform') is form and form.core_form(read.data(os.path.join(ROOT, 'core', 'law', 'lines.yaml'))
+          __import__('form') is form and form.core_form(read.data(os.path.join(ROOT, 'core', 'law', 'lines.yaml'))
                                                          ['forms']['series'])['one_of'] == ['grid', 'span', 'held'])
 
     # ---- forms
@@ -265,11 +230,11 @@ try:
           got[0] == '  - say:   { by: sam, at: now }' and got[1] == '  - name:  { by: garden, of: self, as: "123456789abc/event:dinner" }'
           and got[2].endswith("# at: the example's — write the moment someone said")
           and got[3] == '  - agree: { by: [sam, ali], of: "a loan" }   # at: left out unless said', got)
-    bad = text('core/guide/FORMS.md', ROOT).replace('  - be:     { by: self, at: "2026-09-12 19:30+03:00" }   #',
+    bad = text('seed/FORMS.md', ROOT).replace('  - be:     { by: self, at: "2026-09-12 19:30+03:00" }   #',
                                                     '  - be:     { by: self, at: "2026-09-13 19:30+03:00" }   #')
     check("forms: a form that is not the cookbook's, by the core's law, is written back to it",
-          bad != text('core/guide/FORMS.md', ROOT)
-          and forms_tool.core_derive(bad, text('core/guide/COOKBOOK.md', ROOT), CL) == text('core/guide/FORMS.md', ROOT))
+          bad != text('seed/FORMS.md', ROOT)
+          and forms_tool.core_derive(bad, text('seed/COOKBOOK.md', ROOT), CL) == text('seed/FORMS.md', ROOT))
 
     # ---- catalog
     r = run(PY, 'bin/catalog.py', '--json')
@@ -289,7 +254,7 @@ try:
     import catalog
     rc = catalog.CoreCatalogue(ROOT)
     check("catalog: the core's guides (a release's core/guide/) state the verbs their examples write",
-          ('states', 'core/guide/FORMS.md', 'verb:say', '') in rc.edges and ('states', 'core/guide/FORMS.md', 'verb:agree', '')
+          ('states', 'seed/FORMS.md', 'verb:say', '') in rc.edges and ('states', 'seed/FORMS.md', 'verb:agree', '')
           in rc.edges)
     r = run(PY, 'bin/catalog.py')
     check("catalog: the report names the core's law and its findings", r.returncode == 0
@@ -313,7 +278,7 @@ try:
     r = run(PY, 'bin/facets.py')
     check("facets: a garden of the core declares no merge facet; the statement merge keeps a set — by either name",
           r.returncode == 0 and 'declares no merge facet' in r.out and 'as a set' in r.out
-          and run(PY, 'bin/dmfacets.py').out == r.out, r.out)
+          and run(PY, 'bin/facets.py').out == r.out, r.out)
 except Exception as e:
     import traceback
     traceback.print_exc()

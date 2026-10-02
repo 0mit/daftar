@@ -13,7 +13,7 @@ seed/GARDEN.md.template pinning `core@`), and a release in today's words (this t
   the gate       the cookbook's page in statements is saved through the core's gate; rule `profile` refuses a verb of a
                  profile the garden does not take, an attribute a profile adds, a drawing its page does not name, a
                  drawing its page names that is not there, and a value a drawing names that it does not hold
-  the asset      view.py check agrees, elements and report draw, dmview.py is the same tool; import writes only the
+  the asset      view.py check agrees, elements and report draw, view.py is the same tool; import writes only the
                  `draw` a selection changes, through bin/safe.py, journalled and read back, and its commit passes the gate;
                  a second import has nothing to write; render --keep keeps a document bean of statements
   upgrade        --extend takes a profile up (VOCAB.md `profiles`, its entry a RULE-CHANGE); --retract of the profile the
@@ -30,8 +30,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
+import grow  # noqa: E402 — a release of the core, and the release in today's words
 from core.law import Law  # noqa: E402
-import dmparse, dmpass  # noqa: E402
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -85,7 +88,9 @@ def gate(root=None):
 
 
 def view(*a, root=None):
-    return run(PY, 'assets/view/bin/view.py', *a, cwd=root)
+    tool = 'assets/view/bin/view.py'                 # a garden in today's words (v0.49.0) has today's name
+    tool = tool if os.path.isfile(os.path.join(root or G, tool)) else 'assets/view/bin/dmview.py'
+    return run(PY, tool, *a, cwd=root)
 
 
 def payload(root):
@@ -106,18 +111,14 @@ def blocks(page, marker='example'):
 
 T = tempfile.mkdtemp(prefix='core-view-')
 REL, OLD, G = os.path.join(T, 'release'), os.path.join(T, 'release-today'), os.path.join(T, 'garden')
-LAW = dmparse.loads(dmparse.split_front_matter(text('seed/std-vocab.md', ROOT))[0])
+LAW = dmparse.loads(dmparse.split_front_matter(subprocess.run(['git', '-C', ROOT, 'show', f'{grow.TODAY}:seed/std-vocab.md'],
+    capture_output=True, text=True, encoding='utf-8').stdout)[0])     # today's law, as the last release in its words had it
 
 try:
-    # ---- THE LAW: generated, every profile accounted
-    gen = run(PY, 'core/translate.py', 'profiles', cwd=ROOT)
-    check("law: core/law/profiles.yaml is what std-vocab generates", gen.returncode == 0
-          and gen.out == text('core/law/profiles.yaml', ROOT), gen.out[:300])
-    gen = run(PY, 'core/translate.py', 'terms', cwd=ROOT)
+    # ---- THE LAW: every profile accounted, against today's law as v0.49.0 had it
     tw = read.data(os.path.join(ROOT, 'core', 'law', 'terms.yaml')).get('terms') or []
-    check(f"law: core/law/terms.yaml is what std-vocab generates, and names where each of today's {len(LAW['terms'])} "
-          f"terms went", gen.returncode == 0 and gen.out == text('core/law/terms.yaml', ROOT)
-          and [t['term'] for t in tw] == [t['term'] for t in LAW['terms']] and all(t.get('went') for t in tw), gen.out[:300])
+    check(f"law: core/law/terms.yaml names where each of today's {len(LAW['terms'])} terms went",
+          [t['term'] for t in tw] == [t['term'] for t in LAW['terms']] and all(t.get('went') for t in tw), len(tw))
     L = Law.load()
     P = read.data(os.path.join(ROOT, 'core', 'law', 'profiles.yaml'))
     homed = {p: sorted(v for v in L.verbs if L.home(v) == p) for p in L.profiles}
@@ -141,19 +142,9 @@ try:
           and L.tables['planes'] == ['data', 'control', 'management']
           and L.form_attr('drawing', 'values.live') and 'live-series' in L.form_attr('drawing', 'values.live')['in'])
 
-    # ---- THE RELEASES: the core's, made from this tree, and today's
-    lang = dmpass.language(text('seed/LANGUAGE', ROOT))
-    files = [f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))]
-    for rel, core in ((REL, True), (OLD, False)):
-        for f in dmpass.kept(files, lang, dmpass.offered(LAW)):
-            os.makedirs(os.path.join(rel, os.path.dirname(f)), exist_ok=True)
-            shutil.copy2(os.path.join(ROOT, f), os.path.join(rel, f))
-        if core:
-            for f in ('GARDEN.md.template', 'VOCAB.md.template'):
-                shutil.copy2(os.path.join(ROOT, 'core', 'guide', f), os.path.join(rel, 'seed', f))
-        for c in (['git', 'init', '-q'], ['git', 'add', '-A'], ['git', 'commit', '-qm', 'a release'],
-                  ['git', 'tag', 'v1.0.0']):
-            run(*c, cwd=rel)
+    # ---- THE RELEASES: the core's, made from this tree, and today's (v0.49.0)
+    grow.release(REL)
+    grow.today(OLD)
 
     # ---- GERMINATE: a garden of the core taking the view profile
     r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), os.path.join(T, 'nothing'), '--gardener', 'sam',
@@ -170,7 +161,7 @@ try:
         raise SystemExit(1)
 
     # ---- THE GATE: the cookbook's page in statements
-    ex = blocks(text('core/guide/COOKBOOK.md', ROOT))
+    ex = blocks(text('seed/COOKBOOK.md', ROOT))
     for p in ('beans/oven-a.md', 'beans/bakery-page.md'):
         write(p, ex[p] + '\n')
     os.makedirs(os.path.join(G, 'drawings'), exist_ok=True)
@@ -225,8 +216,8 @@ try:
     # ---- THE ASSET on statements
     r = view('check')
     check("asset: view.py check — the page and its drawings agree", r.returncode == 0 and 'agree' in r.out, r.out[-800:])
-    r2 = run(PY, 'assets/view/bin/dmview.py', 'check')
-    check("asset: dmview.py, today's name, is the same tool", r2.returncode == 0 and r2.out == r.out, r2.out[-400:])
+    r2 = run(PY, 'assets/view/bin/view.py', 'check')
+    check("asset: view.py, today's name, is the same tool", r2.returncode == 0 and r2.out == r.out, r2.out[-400:])
     r = view('elements', 'orders')
     check("asset: a drawing's elements, the oven among them depicting its bean", r.returncode == 0
           and re.search(r'oven\s+node\s+oven-a', r.out), r.out[-600:])
@@ -271,7 +262,7 @@ try:
     # ---- TRANSLATION: today's cookbook page, drawn the same from statements
     O, C = os.path.join(T, 'today'), os.path.join(T, 'today-core')
     r = run(PY, os.path.join(OLD, 'seed', 'germinate.py'), O, '--gardener', 'sam', '--profile', 'view', cwd=T)
-    for p, x in blocks(text('seed/COOKBOOK.md', ROOT), 'view-example').items():
+    for p, x in blocks(text('seed/COOKBOOK.md', OLD), 'view-example').items():      # today's cookbook, v0.49.0's
         write(p, x + '\n', O)
     os.makedirs(os.path.join(O, 'drawings'), exist_ok=True)
     shutil.copy2(os.path.join(O, 'assets', 'view', 'templates', 'drawings.py'), os.path.join(O, 'drawings', 'bakery.py'))

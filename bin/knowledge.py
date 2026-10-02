@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dmknowledge — the one finder: read the knowledge the law points at, and the schemes a garden holds as its own.
+"""knowledge — the one finder: read the knowledge the law points at, and the schemes a garden holds as its own.
 
 Published classifications are UNIVERSAL ANCHORS: ISCED-F 2013 fields of knowledge, ISCO-08 occupations, a curated
 catalogue of established technologies, and every scheme a garden declares in its VOCAB.md — shipped in seed/knowledge/,
@@ -8,15 +8,15 @@ and their files are read from `knowledge_schemes` and `registry_files`, the law'
 reads them, so this tool can never read a different file than the law declares. It writes nothing: it offers
 candidates, and a person picks the code (a model's pick is `inferred`).
 
-    python3 bin/dmknowledge.py show isco-08 2522          # one code, its ancestry, and what it links to
-    python3 bin/dmknowledge.py tree isced-f-2013 06       # a subtree, by `parent`
-    python3 bin/dmknowledge.py find tile setter [--scheme S]   # candidates ranked, each with its ancestry
-    python3 bin/dmknowledge.py label <scheme> <code> <language>   # a label in another language, with its attribution
-    python3 bin/dmknowledge.py at <position>              # COMPUTED anchors (bin/dmwhere.py): the cells it is in, its nearest
-    python3 bin/dmknowledge.py gold <file.tsv>            # recall@k of `find` against a gold set a person chose
-    python3 bin/dmknowledge.py resolve <scheme> <code>    # a lookup at the authority — refused until the flow law grants it
-    python3 bin/dmknowledge.py bean <bean-id>             # a bean's `knowledge:` entries, resolved
-    python3 bin/dmknowledge.py crosswalk 2522             # the fields an occupation draws on
+    python3 bin/knowledge.py show isco-08 2522          # one code, its ancestry, and what it links to
+    python3 bin/knowledge.py tree isced-f-2013 06       # a subtree, by `parent`
+    python3 bin/knowledge.py find tile setter [--scheme S]   # candidates ranked, each with its ancestry
+    python3 bin/knowledge.py label <scheme> <code> <language>   # a label in another language, with its attribution
+    python3 bin/knowledge.py at <position>              # COMPUTED anchors (bin/where.py): the cells it is in, its nearest
+    python3 bin/knowledge.py gold <file.tsv>            # recall@k of `find` against a gold set a person chose
+    python3 bin/knowledge.py resolve <scheme> <code>    # a lookup at the authority — refused until the flow law grants it
+    python3 bin/knowledge.py bean <bean-id>             # a bean's `knowledge:` entries, resolved
+    python3 bin/knowledge.py crosswalk 2522             # the fields an occupation draws on
 
 In a garden of the core (v1 part 7) the schemes are core/law/registries.yaml's and the garden's own rows `schemes` and
 `files` in its VOCAB.md, and a bean's codes are its statements: each `classify`, and each `use` of a code.
@@ -29,9 +29,9 @@ import os, re, sys, csv
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import dmparse
+import parse as dmparse
 
-# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/pass.py --flows` computes the guard).
 GUARDS = {
     'sent-out': {'checks': "a lookup at a remote authority is refused until the gardener grants that party",
                  'proof': 'test/observations.py', 'label': "O-5 a lookup at the authority is REFUSED until the flow law grants that party"},
@@ -99,10 +99,10 @@ def core_entries(root, bean):
 class Knowledge:
     def __init__(self, root, law=None):
         """`law`: the law's `registry_files` and `knowledge_schemes` where a caller has read them already (the core
-        reads them from core/law/registries.yaml); else they are read from the garden's seed/std-vocab.md."""
+        reads them from core/law/registries.yaml); else they are read there."""
         self.root = root
         if law is None:
-            law = _core_law(root) if _runs_core(root) else _fm(os.path.join(root, "seed", "std-vocab.md"))
+            law = _core_law(root)
         garden = _fm(os.path.join(root, "VOCAB.md"))
         adds = garden.get("registry_additions") or {}
         # A GARDEN'S OWN SCHEMES AND THEIR FILES: today's `registry_additions.knowledge_schemes` and `registry_files`, or
@@ -212,14 +212,14 @@ def _gold(k, path, at=5):
 
 
 def _at(k, root, position):
-    """COMPUTED anchors for a position, never stored — read by bin/dmwhere.py, the one reader of a position in either
+    """COMPUTED anchors for a position, never stored — read by bin/where.py, the one reader of a position in either
     dimension: the cells it is in (an age's ICS units, a coordinate's grid cells), what fixes the nearest boundaries,
     and the fixed beings nearest a place."""
-    import dmwhere
+    import where as dmwhere
     try:
         a = dmwhere.anchors(position, root=root)
     except ValueError as e:
-        print("dmwhere: %s" % e); return 1
+        print("where: %s" % e); return 1
     print(dmwhere.show(a))
     return 0
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Calendars and coordinates (std-vocab 16.0; v1 part 12: the core's law, and a garden of the core).
 
-A calendar is one partition of the line of days; every calendar here meets the others at THE DAY, and `bin/dmcal.py`
+A calendar is one partition of the line of days; every calendar here meets the others at THE DAY, and `bin/cal.py`
 converts through it for every calendar that reckons by rule, refusing the ones that do not. A position by coordinates
 names its reference system and its body. The core's law (core/law/systems.yaml, places.yaml) and the two tools are held
 to each other, and a garden of the core (test/grow.py) is judged by the core's gate.
@@ -11,7 +11,8 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "bin"))
-import dmcal, dmgeo
+import cal as dmcal
+import geo as dmgeo
 FAILS = []
 
 def check(name, cond, detail=""):
@@ -163,10 +164,10 @@ check(f"every Hebrew new year from {_lo + 1} to {_hi} reads as the first of Tish
 
 # ---------------------------------------------------------------- the command: UTF-8 through any pipe, and its refusals
 def dmcal_cmd(*a, env=None):
-    r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmcal.py")] + list(a), capture_output=True, env=env)
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "cal.py")] + list(a), capture_output=True, env=env)
     return r.returncode, r.stdout.decode("utf-8", "replace") + r.stderr.decode("utf-8", "replace")
 _code, _out = dmcal_cmd("hebrew:5787-01-09", env=dict(os.environ, PYTHONIOENCODING="ascii"))
-check("dmcal writes UTF-8 through a pipe whose encoding has no `—` (as a Windows pipe in the ANSI code page has none)",
+check("cal writes UTF-8 through a pipe whose encoding has no `—` (as a Windows pipe in the ANSI code page has none)",
       _code == 0 and "Traceback" not in _out and "islamic-umalqura — not reckoned by rule" in _out, _out[-400:])
 _code, _out = dmcal_cmd("persian:1404-12-30")
 check("...refuses a day that does not exist, saying so", _code == 1 and "is not a day of the persian calendar" in _out, _out)
@@ -174,7 +175,7 @@ _code, _out = dmcal_cmd("--day", "x")
 check("...and a day number that is not one, with the form it takes — no traceback", _code == 2 and "Traceback" not in _out
       and "--day takes a day number" in _out, _out)
 import io, contextlib
-import dmparse  # noqa: F401 — what dmcal.main imports, imported before the platform is imitated below
+import parse as dmparse  # noqa: F401 — what cal.main imports, imported before the platform is imitated below
 _buf, _os_name = io.StringIO(), os.name
 try:
     os.name = "nt"
@@ -183,7 +184,7 @@ try:
 finally:
     os.name = _os_name
 check("...and its help names the interpreter as it is named where it runs: `python` on Windows",
-      "    python bin/dmcal.py 2026-09-20" in _buf.getvalue() and "python3 bin/" not in _buf.getvalue(), _buf.getvalue()[:300])
+      "    python bin/cal.py 2026-09-20" in _buf.getvalue() and "python3 bin/" not in _buf.getvalue(), _buf.getvalue()[:300])
 
 # ---------------------------------------------------------------- where, by coordinates
 check("the tool's bodies are the law's, to the metre, read from it",
@@ -199,8 +200,8 @@ for _bad in ("EPSG:4326;1,2,3,4", "EPSG:4326+5773;10.1,20.2"):
     except ValueError:
         ok = True
     check(f"...and {_bad} is refused: four coordinates, or a compound one short of its axes", ok)
-_o = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmgeo.py"), "EPSG:4326;10.1,20.2"], capture_output=True, text=True, encoding="utf-8").stdout
-check("dmgeo prints the law's ensemble accuracy beside a WGS 84 position", "accurate to 2 metre" in _o, _o)
+_o = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "geo.py"), "EPSG:4326;10.1,20.2"], capture_output=True, text=True, encoding="utf-8").stdout
+check("geo prints the law's ensemble accuracy beside a WGS 84 position", "accurate to 2 metre" in _o, _o)
 try:
     dmgeo.parse("35.6892,51.3890"); ok = False
 except ValueError:
@@ -220,7 +221,7 @@ check("every way of saying where BY IDENTIFIER resolves through coordinates, and
 # ---------------------------------------------------------------- the gate: one set of digits, and an example in its own form
 sys.path.insert(0, os.path.join(ROOT, "test"))
 import grow  # noqa: E402
-T = tempfile.mkdtemp(prefix="dmcal-")
+T = tempfile.mkdtemp(prefix="cal-")
 G = os.path.join(T, "g")
 _g = grow.garden(grow.release(os.path.join(T, "release")), G, "keeper")
 check("(setup) a garden of the core grows (test/grow.py)", _g.returncode == 0, _g.out[-400:])

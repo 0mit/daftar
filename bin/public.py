@@ -43,17 +43,17 @@ A GARDEN OF THE CORE (v1 part 10) says the same things in statements, and is rea
 every name a `name` statement gives, whatever its namespace (`name: { by: ssh, of: self, as: … }` is today's anchor),
 a bean's id and its title, every address its statements and its `details` hold, and the roots a host keeps in `details`.
 The law's own words are public in either language while the release carries both: today's kinds of being and anchor
-keys (seed/std-vocab.md), and the core's kinds and namespaces (core/law/). (`bin/dmpublic.py`, today's name, runs this
+keys (seed/std-vocab.md), and the core's kinds and namespaces (core/law/). (`bin/public.py`, today's name, runs this
 too until v1's part 13; the pre-push hook calls it by that name.)
 """
 import functools, ipaddress, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import dmparse
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
+import parse as dmparse
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
 
-# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/pass.py --flows` computes the guard).
 GUARDS = {
     'kept-private': {'checks': "a file, a commit message or a pull-request body naming a being of the garden is refused",
                      'proof': 'test/public.py', 'label': "a file that names a host bean is refused"},
@@ -74,7 +74,7 @@ def _tokens(text):
 
 def own_garden_id(garden):
     """The garden's own id: the first twelve hex digits of the root of its first-parent history, as the gate reads
-    it (`dmcheck.own_garden_id`, std-vocab `garden_id`). Read here rather than imported, because the gate cannot be
+    it (`check.own_garden_id`, std-vocab `garden_id`). Read here rather than imported, because the gate cannot be
     imported outside a garden and this runs from the language's repository. None when git cannot say."""
     try:
         r = subprocess.run(['git', '-C', garden, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD'],
@@ -225,13 +225,6 @@ def _law_words():
     """The law's own names for kinds of being and for the keys a being is identified by (`product` in `product:samba`):
     this repository publishes them."""
     names = []
-    try:
-        law = dmparse.loads(dmparse.read(os.path.join(HERE, '..', 'seed', 'std-vocab.md'))[0]) or {}
-        names += [str(g.get('genos')) for g in law.get('gene') or [] if isinstance(g, dict) and g.get('genos')]
-        names += [str(t.get('term')) for t in law.get('terms') or []
-                  if isinstance(t, dict) and isinstance(t.get('anchor'), dict)]
-    except Exception:
-        pass
     for f, table, key in (('kinds.yaml', 'kinds', 'kind'), ('namespaces.yaml', 'namespaces', 'namespace')):
         try:                                       # the core's: its kinds of being and the namespaces names are given in
             rows = yaml.safe_load(open(os.path.join(HERE, '..', 'core', 'law', f), encoding='utf-8'))[table]
@@ -297,7 +290,7 @@ def main():
         print(__doc__); return 2
     garden = a[a.index('--garden') + 1]
     if not os.path.isdir(os.path.join(garden, 'beans')):
-        print(f"dmpublic: {garden} is not a garden (no beans/)"); return 2
+        print(f"public: {garden} is not a garden (no beans/)"); return 2
     repo = a[a.index('--repo') + 1] if '--repo' in a else os.path.dirname(HERE)
     rng = a[a.index('--range') + 1] if '--range' in a else None
     text_file = a[a.index('--text') + 1] if '--text' in a else None
@@ -335,9 +328,9 @@ def main():
             bad.append((f"{text_file}:{line}", w))
     if not bad:
         if not quiet:
-            print(f"dmpublic: nothing names any of the {len(words)} estate names of {garden}")
+            print(f"public: nothing names any of the {len(words)} estate names of {garden}")
         return 0
-    print(f"dmpublic: REFUSING — this names the estate of {garden}. A public repository carries the "
+    print(f"public: REFUSING — this names the estate of {garden}. A public repository carries the "
           f"LANGUAGE, never a garden:")
     for where, w in sorted(bad):
         print(f"  {where}: '{w}'")

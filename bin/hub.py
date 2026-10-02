@@ -17,7 +17,7 @@ again, commit by commit, oldest first:
      mapping it changes (and for a bean's series files), `ratify:F` for an identity anchor it adds or changes, and
      `ratify:G` for a file in the `law` or `manifesto` layer — and for CODE: a file in the `gate` layer, one a release
      keeps (`seed/LANGUAGE`), any Python or shell file, the drawing module a page names (`view.drawings`) and the
-     name itself (bin/dmpass.py `may`, and the layer map).
+     name itself (bin/pass.py `may`, and the layer map).
   4. THE GATE, in a checkout of the pushed tip — or of every commit, with `--each`.
 
 THE HUB RUNS ONLY CODE THE GARDENER LET IN. The gate it runs is the one the pushed tree carries, because a garden's
@@ -33,14 +33,15 @@ A GARDEN OF THE CORE (v1 part 10) is read at each commit by the law that commit'
 the core is judged as the garden stood before it, and the next by the core. There the writer is the bean whose `name`
 the key's namespace gives (`name: { by: ssh, of: self, as: "SHA256:…" }`, or `openpgp`); class F is a change to a name
 that establishes an identity (a namespace that gives a name once); the rights are `grant` statements (bin/pass.py
-`may`); and the gate is `bin/check.py --all`, the gate of the law the pushed tree pins. (`bin/dmhub.py`, today's name,
+`may`); and the gate is `bin/check.py --all`, the gate of the law the pushed tree pins. (`bin/hub.py`, today's name,
 runs this too until v1's part 13.)
 """
 import io, os, posixpath, re, shutil, subprocess, sys, tarfile, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the core beside it
-import dmparse   # noqa: E402 — bin/parse.py
-import dmpass    # noqa: E402 — bin/pass.py (`pass` is a keyword of Python)
+import parse as dmparse   # noqa: E402 — bin/parse.py
+import importlib
+dmpass = importlib.import_module('pass')    # noqa: E402 — bin/pass.py (`pass` is a keyword of Python)
 
 HERE = os.path.abspath(__file__)
 ZERO = '0' * 40
@@ -282,7 +283,7 @@ def gate(commit, env, tmp):
         c, _o, err = git(*step, env=_e)
         if c != 0:
             raise Refused(f"the hub could not check out {commit[:10]}: {err.strip()[:200]}")
-    gate = next((g for g in ('check.py', 'dmcheck.py') if os.path.isfile(os.path.join(where, 'bin', g))), 'dmcheck.py')
+    gate = next((g for g in ('check.py', 'dmcheck.py') if os.path.isfile(os.path.join(where, 'bin', g))), 'dmcheck.py')   # a commit of a garden in today's words is judged by its own gate
     r = subprocess.run([sys.executable, os.path.join(where, 'bin', gate), '--all'], capture_output=True,
                        cwd=where, env=_e)
     out = (r.stdout + r.stderr).decode('utf-8', 'replace')
@@ -298,7 +299,7 @@ def judge(old, new, only=None, each=False, env=None):
     _c, out, _e = git('rev-list', '--reverse', new, '--not', '--all', env=env)
     commits = [c for c in out.split('\n') if c]
     found = []
-    with tempfile.TemporaryDirectory(prefix='dmhub-') as tmp:
+    with tempfile.TemporaryDirectory(prefix='hub-') as tmp:
         for c in commits:
             _r, raw, _e = git('cat-file', 'commit', c, env=env, text=False)
             payload, sig = split_signature(raw)
@@ -356,7 +357,7 @@ def main(argv):
     only = argv[argv.index('--only') + 1] if '--only' in argv else None
     each = '--each' in argv
     if argv[:1] == ['install'] and len(argv) >= 2:
-        print(f"dmhub: installed {install(os.path.abspath(argv[1]), only, each)}")
+        print(f"hub: installed {install(os.path.abspath(argv[1]), only, each)}")
         return 0
     if argv[:1] == ['pre-receive']:
         refused = []
@@ -365,7 +366,7 @@ def main(argv):
             if len(parts) == 3:
                 refused += [f"{parts[2]} {r}" for r in judge(parts[0], parts[1], only, each)]
         for r in refused:
-            print(f"dmhub: REFUSED {r}", file=sys.stderr)
+            print(f"hub: REFUSED {r}", file=sys.stderr)
         return 1 if refused else 0
     print(__doc__)
     return 2

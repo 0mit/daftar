@@ -42,38 +42,37 @@ cases: a kind of thing it cannot yet name, a rule that is wrong for you. That is
 The notebook is yours: you are its **gardener**, and the first thing in it is you. You tell your agent, in a
 chat: *"the NAS in the hallway is at 192.168.1.20, I set it up last April, the serial on the sticker is
 4XK9-2217."* The agent writes one file and commits it. The file holds the facts, and each fact holds its source
-(abridged — the full file also carries a title, a summary, and who owns and answers for the machine: you):
+(abridged — the full file also carries a title, a summary, and who owns and answers for the machine: you). Every
+fact is a **statement**, a verb and its roles:
 
 ```yaml
 bean: hallway-nas
-genos: host
-nature: soma
-identity:
-  status: confirmed
-  anchors:
-    - { key: serial, value: "4XK9-2217",    class: hardware, establishing: true }
-    - { key: ip,     value: "192.168.1.20", class: network,  establishing: false }
-provenance: { src: asserted-by-human, by: "you", as_of: now }
+kind: host
+statements:
+  - say:  { by: you, at: now }                         # you said it: the save writes the moment it was said
+  - name: { by: synology, of: self, as: "4XK9-2217" }  # the serial its maker gave it, once: who it is
+  - name: { by: lan, of: self, as: "192.168.1.20" }    # its address on your network: where it is, not who
 ```
 
 Six weeks later, in a new session — perhaps with an agent of another make, with none of the first one's
 context — you ask *"is the NAS still on .20?"*. The agent does not guess and does not ask you again. It reads
 the file: the address was **asserted by you, on 2026-09-22**, and it is a corroborating fact, not the machine's
 identity; the serial is. If the agent then pings the machine and finds it on .21, it records that as
-**observed, by itself, today** — beside your assertion, not over it. What a person said is never overwritten
+**read, by itself, today** — beside what you said, not over it. What a person said is never overwritten
 by what an agent measured or inferred; only you can change that. And the change is in the journal, in the
 same commit, with the reason.
 
 That is the whole idea. Everything else in this repository is what makes it hold under many agents, many
 sessions, and time:
 
-- **Provenance is a field, not a sentence.** A memory file says "learned from the user in March" if the writer
-  remembered to. A fact here cannot pass the gate without its source.
-- **Identity is by anchor, not by file name.** A serial, a MAC address, a domain name, a product id. Two
+- **Who knows a fact is a statement, not a sentence.** A memory file says "learned from the user in March" if the
+  writer remembered to. A fact here cannot pass the gate without the act that knows it: said, read, made or derived.
+- **Identity is by name, not by file name.** A serial, a MAC address, a domain name, a product id — a name its giver
+  gives once. Two
   notebooks that never met can be merged object by object, and a disagreement is kept, both values, for a
   person to settle.
 - **The rules are data.** What a machine may say, what a status may be, which decisions an agent may take
-  alone and which a person must ratify — all of it is in a versioned vocabulary, not in code. Changing a rule
+  alone and which a person must ratify — all of it is in a versioned law, data in `core/law/`, not in code. Changing a rule
   is itself a journalled, ratified change.
 - **It reads cold.** Plain YAML and Markdown, small files, absolute dates, explicit units. The tools are
   Python scripts with one dependency, and they work offline. On paper, years later, a fact still says what it
@@ -82,15 +81,15 @@ sessions, and time:
 ## Any thing, and the rules for it, as data
 
 The example is a machine because machines are where this began. The notebook is not about machines. A thing
-is first a **nature**, one of two, named in Greek — `soma`, a body, which takes room in space; `lekton`, what exists
-by being said and agreed, placed in an order — and then a **genos**, its kind, that refines it: a host and a person
-are soma, each standing at its level among bodies (a device, an organism); a domain, a product, a codebase, a design,
-an agreement between people, a document, a dinner where something was agreed, a running instance of a program are
-lekton. Life is no nature: a thing lives while its genos says it does — a machine while it is powered, an agreement
-while it holds, a person while they live — and a life comes from a life, a chain the ledger walks. Money is measured, like a length:
-an amount in the currency it was paid in, exact and never rounded, and what one person owes another is read from
-what was paid and what was agreed — never written down beside them, where it could drift. The rules for what a
-thing may say attach to its nature and every genos beneath inherits them, so a new genos arrives with a coherent
+is first a **nature**, one of two — a **body**, which takes room in space, or the **sayable**, what exists by being said
+and agreed, placed in an order — and then a **kind** that refines it: a host and a person are bodies, each standing at
+its level among bodies (a device, an organism); a domain, a product, a codebase, a design, an agreement between people,
+a document, a dinner where something was agreed, a running instance of a program are sayable. Life is no nature: a
+thing lives while its kind says it does — a machine while it is powered, an agreement while it holds, a person while
+they live — and a life comes from a life, a chain the ledger walks. Money is measured, like a length: an amount in the
+currency it was paid in, exact and never rounded, and what one person owes another is read from what was paid and what
+was agreed — never written down beside them, where it could drift. The rules for what a
+thing may say attach to its nature and every kind beneath inherits them, so a new kind arrives with a coherent
 identity policy for free. The same is true of ownership: every thing has exactly one owner, and every chain ends at
 a person, at someone outside the notebook, or at the crown. Who answers for a thing is its own fact, facet by facet —
 before the law its owner, unless someone else is named; who runs it, who designs how people meet it, who pays — written
@@ -123,7 +122,7 @@ tool, so a garden that needs one uses it whole, and a garden that needs none nev
   made it, when, and what it was of.
 - **Money and agreements.** Parties, the clauses that bind them, the payments between them; what is owed read from what
   was paid and what was agreed, never written beside them; where each amount belongs, along a garden's own plans.
-- **Readings, never stored.** `bin/dmreckon.py` computes what follows from what is recorded — a total, a share, an
+- **Readings, never stored.** `bin/reckon.py` computes what follows from what is recorded — a total, a share, an
   ancestor's roll-up, a published mechanism — each time it is asked, so a result can never drift from its inputs.
 - **Pages.** The `view` profile draws a garden as pages — its parts and how they relate, live values beside them — from
   one drawing module the garden keeps, checked against the law like everything else.
@@ -212,22 +211,23 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 | **bean** | one managed thing, as one Markdown file in `beans/` — facts in the front matter, prose below |
 | **garden** | a git repository of beans: one notebook. Private to whoever keeps it |
 | **gardener** | the person — or organisation — who keeps a garden, named in its `GARDEN.md`: the first bean of a garden grown with `--gardener`. Agents tend a garden; its gardener keeps it and ratifies what an agent may not decide |
-| **seed** | `seed/`: the kit a new garden is grown from — the vocabulary, the templates, `germinate.py` |
-| **vocabulary** | the rules, as data: `seed/std-vocab.md` for every garden, plus a garden's own `VOCAB.md` |
-| **gate** | `bin/dmcheck.py`, run as a pre-commit hook: a commit that breaks a rule is refused |
+| **seed** | `seed/`: the kit a new garden is grown from — the guides, the templates, `germinate.py`, beside the core |
+| **law** | the rules, as data: `core/law/` for every garden — the core's face, its rows and the standards it reads — plus a garden's own rows in its `VOCAB.md` |
+| **statement** | one fact: a verb and its roles (`own: { by: sam, of: self }`), each known by an act — said, read, made or derived |
+| **gate** | `bin/check.py`, run as a pre-commit hook: a commit that breaks a rule is refused |
 | **journal** | `log/journal.md`: every change, who made it and why. The gate refuses an unrecorded change |
-| **anchor** | a fact that identifies an object (a serial, a domain name), so two gardens recognise the same thing |
-| **nature / genos** | what sort of being it is: `soma`, a body, taking room in space, or `lekton`, what exists by being said and agreed — refined by a genos, its kind, such as `host`, which for a body names its level among bodies. The words are Greek, and `MODEL.md` gives each |
+| **name** | a name a giver gives a thing (a serial, a domain name), in a namespace; one given once identifies it, so two gardens recognise the same thing |
+| **nature / kind** | what sort of being it is: a body, taking room in space, or the sayable, what exists by being said and agreed — refined by its kind, such as `host`, which for a body names its level among bodies. `MODEL.md` gives each |
 | **facet** | a way of answering for a thing, e.g. `legal` or `technical`: who answers for it before the law, who runs it. Ownership has none: a thing has one owner |
 | **via** | who a thing came to be through: a person, the one it was born of, or someone reached through a maker. Every such chain ends at the crown |
-| **crown** | where every chain ends: `theone`, the Necessary Existent, whom no bean names, with two faces, love and wisdom. A person is owned by no one: `owned_by: { crown: true }` |
+| **crown** | where every chain ends: `theone`, the Necessary Existent, whom no bean names, with two faces, love and wisdom. A being that states no chain is held at the crown all the same |
 | **profile** | an opt-in group of rules in a field's own words, e.g. `domain` or `accounting`; it adds terms, and adds to the core's terms without rewriting them, so a garden may take every profile at once |
 | **position** | where something is on a line — a day in a calendar, a moment, a path on a machine, the second of a series — in the one form its system declares |
 | **coding** | a code written with the scheme it is a code of, `<scheme>:<code>`: an occupation, a technology, an account |
 | **placement** | how one thing is in, at or among another, from the most general to the most bodily; each says what it takes from its host — nothing, a share, or room |
 | **vacancy** | a value the vocabulary offers that nothing uses yet, stated with a reason |
 | **Contract of Parts** | `MODEL.md`: which decisions an agent may take alone and which a person must ratify |
-| **proposal** | what one garden offers another: one file of beans, laid outside both gardens, which the other garden's gardener takes in by committing it — or does not. Taking it in accepts nothing on the gardener's behalf. `bin/dmpropose.py` |
+| **proposal** | what one garden offers another: one file of beans, laid outside both gardens, which the other garden's gardener takes in by committing it — or does not. Taking it in accepts nothing on the gardener's behalf. `bin/propose.py` |
 | **peering** | how gardens meet: as peers, each configured at its own end, through the agreements between their gardeners and the proposals made under them, in the language they share. Owned by no garden |
 
 ## Adopt a new release
@@ -260,19 +260,19 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | path | what it is |
 |---|---|
 | `INSTALL.md` | how a garden is grown, written for the agent that will grow it |
-| `seed/std-vocab.md` | the vocabulary — the law every garden pins |
+| `core/law/`, `core/` | the law every garden pins (`core@<version>`), and the engine that reads it and the gate |
 | `seed/germinate.py`, `seed/LANGUAGE` | how a garden is grown (Python, so on Windows too; `germinate.sh` hands over to it), and what it receives |
-| `bin/dmcheck.py` | the gate |
+| `bin/check.py` | the gate |
 | `bin/daftar.py` | the one entry: `daftar catalog` (the language and its relations), `daftar why`, `daftar rules`, `daftar form` |
-| `bin/dm*.py` | the other tools — merge, proposals between gardens (`dmpropose`), what is owed (`dmledger`), readings computed from what is recorded (`dmreckon`), upgrade, rules (`dmrules`), reasons (`dmwhy`), safe edits, the journal entry (`dmjournal`), a change saved in one command (`dmsave`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
+| `bin/<verb>.py` | the other tools — merge, proposals between gardens (`propose`), what is owed (`ledger`), readings computed from what is recorded (`reckon`), upgrade, rules (`rules`), reasons (`why`), safe edits, the journal entry (`journal`), a change saved in one command (`save`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
 | `assets/<profile>/` | what a profile brings besides its rules — the `view` profile's page drawer and server, `assets/view/README.md` |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
-| `seed/RATIONALE.md` | why each rule is as it is, keyed by the rule's own path; `python3 bin/dmwhy.py <name>` reads law and reason together |
+| `seed/RATIONALE.md` | why each rule is as it is, keyed by the law item's own path; `python3 bin/why.py <name>` reads law and reason together |
 | `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules. The second is one tool's adapter, which loads the door by itself; another tool's adapter would stand beside it |
 | `seed/WELCOME.md` | the door for an assistant with no shell, written to be pasted into a chat |
 | `seed/README.md`, `seed/COOKBOOK.md` | worked beans that pass the gate as written: the gardener, a host, a domain and the agreement it is held under, a service, a rented server, a cost shared between two people, an agreement paid in instalments, a statement, an event, another person's garden, a series, a course on its walk, a workshop's staff and bookings, a co-op's own codes, analytic accounts, a rack and what it holds |
 | `seed/FORMS.md` | what an agent reads before writing: six of the cookbook's recipes, byte for byte, and what to write when nobody said |
-| `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command); `fast.py` runs in every garden's hook |
+| `test/` | the release suites, all run in CI (`CONTRIBUTING.md` has the command) |
 
 ## A seed, on a notebook
 

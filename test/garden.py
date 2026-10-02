@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The one garden model, bin/dmgarden.py, and the one entry, bin/daftar.py.
+"""The one garden model, bin/garden.py, and the one entry, bin/daftar.py.
 
 In a garden of the core grown from this checkout (test/grow.py, v1 part 12):
   1. `paths` lists what a glob of `beans/*.md` and `mappings/*.md` lists, in the same order — a hidden file, a file of
@@ -15,8 +15,8 @@ import glob, json, os, shutil, subprocess, sys, tempfile, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
-sys.path.insert(0, os.path.join(ROOT, 'test'))
-import dmgarden  # noqa: E402
+sys.path.append(os.path.join(ROOT, 'test'))           # after bin/: test/garden.py is no tool
+import garden as dmgarden  # noqa: E402
 import grow  # noqa: E402
 FAILS = []
 
@@ -86,7 +86,7 @@ try:
     open(p, 'w', encoding='utf-8').write('---\nbean: [unclosed\n---\n')
     d3 = dmgarden.document(p)
     check("a document that does not parse is given with its reason, never a traceback", d3.fm is None and d3.error, d3)
-    r = run(sys.executable, os.path.join(G, 'bin', 'dmgarden.py'), '--paths', 'mappings', cwd=G)
+    r = run(sys.executable, os.path.join(G, 'bin', 'garden.py'), '--paths', 'mappings', cwd=G)
     check("the command lists a space's paths, as the tools read them", r.stdout.split() == ['mappings/m-one.md'],
           r.stdout + r.stderr)
 finally:
@@ -120,9 +120,9 @@ finally:
     shutil.rmtree(TR, ignore_errors=True)
 
 # ---- 5. every tool reads through the model
-r = run(sys.executable, os.path.join(ROOT, 'bin', 'dmcatalog.py'), '--json', cwd=ROOT)
+r = run(sys.executable, os.path.join(ROOT, 'bin', 'catalog.py'), '--json', cwd=ROOT)
 walks = json.loads(r.stdout)['findings']['own_bean_walks'] if r.returncode == 0 else ['(no catalogue)']
-check("no tool of this checkout lists the beans itself: each reads them through bin/dmgarden.py", not walks, walks[:5])
+check("no tool of this checkout lists the beans itself: each reads them through bin/garden.py", not walks, walks[:5])
 
 print(f"\ngarden: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)

@@ -27,8 +27,7 @@ lines, levels, conditions, the crown), the face's verbs and the twenty-one rules
 A garden's kind, level, namespace, verb or unit may say `vacant: <why>`: a row no bean uses yet (rule vacancy).
 
 A row may not take a name the face or another row has: the law is one, and a second row of one name is two laws.
-Every value is a string (core/read.py): a flag is the string `true`. A key of VOCAB.md that is none of these is today's
-law's (std-vocab 32.0), which today's gate reads; this law passes it by."""
+Every value is a string (core/read.py): a flag is the string `true`."""
 import os
 import re
 import sys
@@ -38,10 +37,9 @@ sys.path.insert(0, os.path.dirname(HERE))
 from core import read, standards  # noqa: E402
 
 LAW_DIR = os.path.join(HERE, 'law')
-GENERATED = ('levels.yaml', 'layers.yaml', 'kinds.yaml')   # rows generated from today's law: the bodies' levels, the
-                                                           # layers and standing, and the kinds (the standards' tables,
-                                                           # generated too, are read by core/standards.py)
-ROW_FILES = GENERATED + ('units.yaml', 'namespaces.yaml', 'flows.yaml')  # and the units in UCUM, each with the law's
+ROW_FILES = ('levels.yaml', 'layers.yaml', 'kinds.yaml',  # the bodies' levels, the layers and standing, the kinds (the
+                                                           # standards' tables are read by core/standards.py),
+             'units.yaml', 'namespaces.yaml', 'flows.yaml')  # and the units in UCUM, each with the law's
                                                            # English name, the namespaces the standards give names in,
                                                            # and the flow law: its methods and rows (v1 part 8)
 FLOW_LAW = ('methods', 'metadata', 'dropped')              # what core/law/flows.yaml holds beside its rows, and a
@@ -93,6 +91,46 @@ def listed(x):
 
 def shapes_of(spec):
     return listed(spec.get('shape')) if isinstance(spec, dict) else []
+
+
+# THE TABLES KEEP THEIR FORMS (today's `registry_forms`, 26.0; the core's since v1 part 13): a table of rows declares its
+# columns, each `required` or `optional`, and a row holds the required ones and no other. A column no form declares is a
+# note riding on the law, or a fact of a new kind the form must first be given; a required one a row lacks leaves a
+# reader of that row without what every sibling gives. The standards' files declare them under `forms`, the files of a
+# line, a measure and the flow law under `columns` (their `forms` are the forms a qualifier holds).
+COLUMNED = (('systems.yaml', 'forms'), ('places.yaml', 'forms'), ('protocols.yaml', 'forms'), ('quantities.yaml', 'forms'),
+            ('registries.yaml', 'forms'), (LINES, 'columns'), (MEASURES, 'columns'), ('flows.yaml', 'columns'))
+
+
+def columns_problems(law_dir, std_dir=None):
+    """[(where, message)]: each table of rows in the files whose tables have forms, held to its form."""
+    out = []
+    for name, key in COLUMNED:
+        d = std_dir if std_dir and key == 'forms' else law_dir
+        path = os.path.join(d, name)
+        if not os.path.isfile(path):
+            continue
+        data = read.data(path)
+        forms = data.get(key) if isinstance(data.get(key), dict) else {}
+        for table, rows in data.items():
+            if table in ('forms', 'columns') or not (isinstance(rows, list) and rows
+                                                     and all(isinstance(r, dict) for r in rows)):
+                continue
+            cols = forms.get(table)
+            if not isinstance(cols, dict):
+                out.append((f"core/law/{name} {table}", f"a table of rows with no form under `{key}`: its columns are "
+                                                        f"declared there, each `required` or `optional`"))
+                continue
+            req = {c for c, v in cols.items() if v == 'required' or (isinstance(v, dict) and v.get('required') == 'true')}
+            for row in rows:
+                n = row.get(next(iter(row)))
+                for k in sorted(set(row) - set(cols)):
+                    out.append((f"core/law/{name} {table} {n!r}", f"column `{k}` is not in the table's form: it holds "
+                                                                  f"{', '.join(cols)} (`{key}.{table}`)"))
+                for k in sorted(req - set(row)):
+                    out.append((f"core/law/{name} {table} {n!r}", f"holds no `{k}`, which every row of `{table}` holds "
+                                                                  f"(`{key}.{table}`)"))
+    return out
 
 
 class Law:
@@ -169,10 +207,12 @@ class Law:
         """The law of the release at `root` (this one, if none is named), extended by each (where, rows) given: a garden's
         VOCAB.md front matter."""
         d = os.path.join(root, 'core', 'law') if root else LAW_DIR
+        _dir = d if os.path.isfile(os.path.join(d, LINES)) else LAW_DIR
         rows = tuple((f"core/law/{n}", read.data(os.path.join(d, n))) for n in ROW_FILES)
         law = cls(read.data(os.path.join(d, 'core.yaml')), read.data(os.path.join(d, 'verbs.yaml')),
                   rows + tuple(extensions), std or (standards.here(root) if root else None))
         lines = os.path.join(d, LINES) if os.path.isfile(os.path.join(d, LINES)) else os.path.join(LAW_DIR, LINES)
+        law.dir = _dir
         law.line_law = read.data(lines)
         measures = os.path.join(d, MEASURES) if os.path.isfile(os.path.join(d, MEASURES)) else os.path.join(LAW_DIR, MEASURES)
         law.measure_law = read.data(measures)
@@ -302,7 +342,10 @@ class Law:
                 self.taken = list(val)
                 continue
             if key not in ROW_KEYS:
-                continue
+                if where == GARDEN:                       # A GARDEN'S VOCAB.md SAYS NOTHING THE LAW DOES NOT READ (v1
+                    self.found.append(('law', f"{where} {key}", f"`{key}` is no key of a garden's VOCAB.md: it holds "
+                                       f"rows of {', '.join(sorted(ROW_KEYS))}, and the profiles it takes"))
+                continue                                  # part 13): a key in today's words was translated at adoption
             if key == 'flow_sources':
                 for s in listed(val):
                     if s in self.flow_sources or s in self.tables['layers']:
@@ -508,6 +551,8 @@ class Law:
                     bad(f"core/law/forms.yaml {name}", f"is held by `{held}`, and no verb's qualifier of that name holds it")
             if f.get('rule') not in self.rules:
                 bad(f"core/law/forms.yaml {name}", f"names no rule of the law to judge it ({f.get('rule')!r})")
+        for where, msg in columns_problems(getattr(self, 'dir', LAW_DIR), getattr(self.std, 'law_dir', None)):
+            bad(where, msg)
         for name, row in (self.systems or {}).items():         # a system's own example is in its own form (16.0)
             pat, ex = row.get('pattern'), row.get('example') if isinstance(row, dict) else None
             if isinstance(pat, str) and isinstance(ex, str):

@@ -2,7 +2,7 @@
 """view_serve — the `view` asset's served page and action executor: the offline report, made live, served from a host.
 
 WHY A SERVER OF ITS OWN. A page served by the asset can do what a static file cannot:
-  - SCOPE what it sends. Who may see what is the LEDGER's — the grants its beings hold, asked of bin/dmpass.py `may`
+  - SCOPE what it sends. Who may see what is the LEDGER's — the grants its beings hold, asked of bin/pass.py `may`
     for the being the host names for the viewer (`bean`) — and one function answers it, `Host.may(user, bean, act,
     positions, write)`: "may this viewer see this bean, or this part of it, run this action, write here?". The
     documentation the page sends (reference rows, part cards, addresses, wiring), a table's lines, a funnel's counts,
@@ -11,7 +11,7 @@ WHY A SERVER OF ITS OWN. A page served by the asset can do what a static file ca
     and the server builds the queries itself.
   - ACT: a button on a drawing runs a tool the host names; an action with `every` runs on its schedule as the being who
     answers for it (`run_scheduled`), asked like a press.
-  - WRITE: a drawing's entry form (`views.writes`) adds an entry of a term the law gives, through bin/dmsave.py as the
+  - WRITE: a drawing's entry form (`views.writes`) adds an entry of a term the law gives, through bin/save.py as the
     viewer's being; the gate judges it, and a refused save is undone and its message shown (`/api/write`).
   - EXPORT: a table's lines as CSV (`/api/csv`), each line scoped as on the page.
 
@@ -29,16 +29,16 @@ says what it would run, and audits that. Every attempt, dry or real or refused, 
 (JSON lines, 0600) with who, what and the result. The viewer must be allowed to act, and to see the being acted on.
 
 SESSIONS. A sign-in form; a signed, expiring, HttpOnly, SameSite=Strict cookie; a CSRF token on every POST. Passwords
-are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git. `dmview serve-init` writes the
+are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git. `view serve-init` writes the
 configuration with a random password in a 0600 file beside it — never printed.
 
 THE LEDGER IS READ AGAIN when the garden's git HEAD moves (asked at most every `recheck_seconds`, 30 by default). When it
-moves, or the release GARDEN.md records moves, the server runs `dmview check` on the new state, and only if it passes
+moves, or the release GARDEN.md records moves, the server runs `view check` on the new state, and only if it passes
 starts itself again on it, so new code and new drawings load together; until then it keeps serving what it had.
 
-Usage (through assets/view/bin/dmview.py):
-  dmview serve-init --config <path> --user <name> [--orgs "*"|org-a,org-b] [--shared] [--no-actions]
-  dmview serve --config <path>
+Usage (through assets/view/bin/view.py):
+  view serve-init --config <path> --user <name> [--orgs "*"|org-a,org-b] [--shared] [--no-actions]
+  view serve --config <path>
 """
 import base64, hashlib, hmac, html, json, os, re, secrets, subprocess, sys, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -48,7 +48,7 @@ sys.path.insert(0, HERE)
 import view_model as vm
 import view_report
 
-# The rows of the flow law this tool checks, and the fixture that shows it (`bin/dmpass.py --flows` computes the guard).
+# The rows of the flow law this tool checks, and the fixture that shows it (`bin/pass.py --flows` computes the guard).
 GUARDS = {
     'served': {'checks': "a page or an action is served only where a grant opens it to the viewer, asked before each",
                'proof': 'test/view.py', 'label': "serve: carol, granted what no organisation owns, sees the radio"},
@@ -130,7 +130,7 @@ class Host:
         self.cfg = json.load(open(config))
         self.key = bytes.fromhex(self.cfg["session_key"])
         self.lock = threading.Lock()
-        self.wlock = threading.Lock()                # one form's save at a time in this host; dmsave's own lock queues others
+        self.wlock = threading.Lock()                # one form's save at a time in this host; save's own lock queues others
         self.head, self.checked, self.payload, self.views = None, 0, None, {}
         self.fails = {}                              # ip or user -> [the moments of its failed sign-ins in the window]
         self.revoked = self._load_revoked()          # the signatures of tokens signed out, until each would expire
@@ -142,7 +142,7 @@ class Host:
     # --- MAY THIS VIEWER SEE THIS BEAN, OR RUN THIS ACTION -----------------------------------------------------------
     # The one place the answer is given (24.0, N33). The host's configuration is a CEILING: it can narrow what a viewer
     # is sent (orgs, shared, beans, actions), and never widen it. What opens a page, a bean or an action is a grant the
-    # law declares, asked of `bin/dmpass.py` for the being the host names for this viewer — before every page, value,
+    # law declares, asked of `bin/pass.py` for the being the host names for this viewer — before every page, value,
     # history and action.
     def may(self, user, bean=None, act=False, tool=None, positions=None, reason=None, write=False):
         """(yes, why) — whether `user` may see `bean` (None: the page itself), at `positions` (None: the whole bean), and,
@@ -164,7 +164,7 @@ class Host:
             return Verdict(True, "this viewer may act, where a grant opens the tool")
         what = ("act:" + tool) if act else "write" if write else "read"
         target = bean if bean is not None else vm.PAGE
-        # AN ANSWER HOLDS FOR THE DAY IT WAS ASKED ON. A grant's `during` is read by the day (dmpass `_during`), and an
+        # AN ANSWER HOLDS FOR THE DAY IT WAS ASKED ON. A grant's `during` is read by the day (pass `_during`), and an
         # answer kept until the next commit went on granting past a grant's last day: the cache is the day's.
         day = int(time.time() // 86400)
         if getattr(self, "answers_day", None) != day:
@@ -172,7 +172,8 @@ class Host:
         k = (actor, what, target, tuple(positions) if positions else None, bool(reason))
         a = self.answers.get(k)
         if a is None:
-            import dmpass
+            import importlib
+            dmpass = importlib.import_module('pass')
             a = dmpass.may(actor, what, target, positions=positions, reason=reason, root=vm.ROOT, beans=self.beans,
                            gardener=self.gardener)
             self.answers[k] = a
@@ -218,28 +219,29 @@ class Host:
             errs, _ = vm.check()
             if errs:
                 if self.payload is None:
-                    raise SystemExit("dmview serve: the page and its drawings disagree:\n  - " + "\n  - ".join(errs))
-                sys.stderr.write("dmview serve: the ledger at %s does not check; still serving %s\n" % (h[:10], (self.head or "")[:10]))
+                    raise SystemExit("view serve: the page and its drawings disagree:\n  - " + "\n  - ".join(errs))
+                sys.stderr.write("view serve: the ledger at %s does not check; still serving %s\n" % (h[:10], (self.head or "")[:10]))
                 return
             self.payload, self.head = view_report.payload(), h
-            import dmpass
+            import importlib
+            dmpass = importlib.import_module('pass')
             self.beans, self.gardener, self.answers = dmpass.beans_here(vm.ROOT), dmpass.gardener_of(vm.ROOT), {}
             self.views = {v["key"]: v for v in self.payload["views"].values()}
 
     def maybe_reexec(self):
         """The code that serves must be the release the garden records, and the drawings the ledger names. When a pull
         brings a new ledger head (which may carry a changed drawing module this process holds an old import of) or a new
-        release, start again on it — only once `dmview check` passes on it; while it does not, keep serving and say why."""
+        release, start again on it — only once `view check` passes on it; while it does not, keep serving and say why."""
         new = self.release()
         head_moved = self.payload is not None and self.git_head() != self.head
         if new == self.release_at_start and not head_moved:
             return
-        probs = subprocess.run([sys.executable, os.path.join(os.path.dirname(HERE), "bin", "dmview.py"), "check",
+        probs = subprocess.run([sys.executable, os.path.join(os.path.dirname(HERE), "bin", "view.py"), "check",
                                 "--garden", vm.ROOT] + (["--page", vm.PAGE] if vm.PAGE else []), capture_output=True, text=True, encoding="utf-8", errors="replace")
         if probs.returncode != 0:
-            sys.stderr.write("dmview serve: the pulled ledger or release does not check; still serving %s\n" % self.release_at_start)
+            sys.stderr.write("view serve: the pulled ledger or release does not check; still serving %s\n" % self.release_at_start)
             return
-        sys.stderr.write("dmview serve: reloading (release %s -> %s, or a new ledger head)\n" % (self.release_at_start, new))
+        sys.stderr.write("view serve: reloading (release %s -> %s, or a new ledger head)\n" % (self.release_at_start, new))
         sys.stderr.flush()
         os.execv(sys.executable, [sys.executable] + self.argv)
 
@@ -405,8 +407,8 @@ class Host:
 
     def write(self, user, key, w, bean, entry, values):
         """Add one entry to a term of `bean` through drawing `key`'s form `w`, for `user`: asked of the law's grants as
-        `write` for the being the host names for the viewer, written through bin/dmsafe.py and saved through
-        bin/dmsave.py with that being as <who> — the gate judges it as any commit, and a refused save is undone here,
+        `write` for the being the host names for the viewer, written through bin/safe.py and saved through
+        bin/save.py with that being as <who> — the gate judges it as any commit, and a refused save is undone here,
         its messages returned to the page. The host writes only from a clone with nothing of its own uncommitted."""
         v = self._bound(user, key)
         forms = (v or {}).get("writes") or []
@@ -464,14 +466,14 @@ class Host:
                 self.audit(dict(base, mode="refused", why="the host's clone has uncommitted changes"))
                 return 409, {"error": "refused: the host's clone holds changes not yet committed — nothing written"}
             path = os.path.join(vm.ROOT, "beans", bean + ".md")
-            import dmsafe
+            import safe as dmsafe
             try:
                 dmsafe.edit(path, lambda text: _add_entry(text, f["term"], line))
             except Exception as e:
                 self.audit(dict(base, mode="refused", why="unsafe edit: %s" % e))
                 return 400, {"error": "refused: the entry does not read as the term's (%s) — nothing written" % e}
             what = "%s %s on %s, entered on the page" % (f["term"], entry or "entry", bean)
-            r = subprocess.run([sys.executable, os.path.join(vm.ROOT, "bin", "dmsave.py"), actor, what, "--body",
+            r = subprocess.run([sys.executable, os.path.join(vm.ROOT, "bin", "save.py"), actor, what, "--body",
                                 "- action: %s entered on the page %s (drawing %s) by viewer %s, granted `write` by the law"
                                 % (f["term"], vm.PAGE, key, user)],
                                cwd=vm.ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
@@ -499,7 +501,7 @@ class Host:
     def run_scheduled(self, at):
         """Every action with `every` whose recurrence falls on `at`'s day, run as the being it names (`answered_by`):
         the host's viewer whose `bean` is that being, asked of the grants like any press. [(view, element, code, answer)]"""
-        import dmstale
+        import stale as dmstale
         day = dmstale.day_of(str(at)[:10])
         out = []
         for key, v in self.views.items():
@@ -640,7 +642,7 @@ def make_handler(F):
     title = view_report.esc(str(vm.page().get("title") or vm.PAGE))
 
     class H(BaseHTTPRequestHandler):
-        server_version = "dmview"
+        server_version = "view"
         sys_version = ""
 
         def log_message(self, fmt, *a):
@@ -788,7 +790,7 @@ def serve(config, argv=None):
     F = Host(config, argv)
     host, _, port = F.cfg.get("listen", "127.0.0.1:8780").rpartition(":")
     srv = ThreadingHTTPServer((host or "127.0.0.1", int(port)), make_handler(F))
-    sys.stderr.write("dmview serve: %s:%s · page %s of %s @ %s · %d viewers · %d tools (%d enabled)\n" % (
+    sys.stderr.write("view serve: %s:%s · page %s of %s @ %s · %d viewers · %d tools (%d enabled)\n" % (
         host, port, vm.PAGE, vm.garden_name(), (F.head or "")[:10], len(F.cfg["users"]), len(F.cfg.get("tools") or {}),
         sum(1 for t in (F.cfg.get("tools") or {}).values() if t.get("enabled"))))
     srv.serve_forever()

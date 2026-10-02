@@ -23,7 +23,7 @@ or derived from recorded evidence, and each file says which.
   Standardized job descriptions come from ESCO instead (see below), which maps every occupation to exactly one
   ISCO-08 unit group.
 - **Other languages are not shipped here.** A garden that needs titles in another language keeps them in its
-  own overlay with a `name_<lang>` column (`bin/dmknowledge.py` reads `label(scheme, code, lang)`), under
+  own overlay with a `name_<lang>` column (`bin/knowledge.py` reads `label(scheme, code, lang)`), under
   whatever terms apply to that translation. For ISCO-08, a translation needs the ILO's permission
   (rights@ilo.org).
 
@@ -83,7 +83,7 @@ Commission." Modified or adapted versions must be marked as such.
 - **Derived:** the rows sorted by zone; the columns renamed `zone`, `countries`, `coordinates`, `comment`.
 - **Licence:** public domain, as the database itself states.
 - **What the file is NOT:** the offsets. A zone's offset at a moment is READ, through Python's `zoneinfo` and the
-  platform's copy of the same database (`bin/dmcal.py offset`), and never stored: an offset changes when a government
+  platform's copy of the same database (`bin/cal.py offset`), and never stored: an offset changes when a government
   changes it, and a stored one would be wrong from that day on without anyone having written anything.
 - **Refreshed** at a release from the tzdb release then current; a zone the database retires stays a row until no
   garden names it, and a link (`backward`) is never a row: a zone is named by its canonical name.
@@ -123,7 +123,7 @@ Commission." Modified or adapted versions must be marked as such.
   `dioxygen` O2, `water` H2O, `glucose` C6H12O6, and `pentacosane` C25H52 (a paraffin wax, the release's invented
   candle's). `charge` is the net charge of one unit, 0 for these.
 - **Licence:** facts; the file is CC0 1.0.
-- **What the file is for:** `conservation` (bin/dmreckon.py) reads a walk's `takes` and `gives` against these formulas
+- **What the file is for:** `conservation` (bin/reckon.py) reads a walk's `takes` and `gives` against these formulas
   and says whether every element and the charge is conserved. A substance with no one formula (a polymer, a mixture)
   is not a row, and a walk that names one is not read for conservation.
 
@@ -142,5 +142,5 @@ Commission." Modified or adapted versions must be marked as such.
   daftar's own.
 - **Licence:** the FHIR crosswalk is CC0, as FHIR is; the Darwin Core crosswalk is CC BY 4.0, as Darwin Core is, with
   TDWG's attribution in NOTICE. The names they cite remain their publishers'.
-- **What the files are for:** `bin/dmcrosswalk.py` reads them, and nothing else, to carry records in and back. A field
+- **What the files are for:** `bin/crosswalk.py` reads them, and nothing else, to carry records in and back. A field
   with no row is listed, never dropped; test/crosswalk.py proves a round trip equal field for field.

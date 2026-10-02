@@ -20,8 +20,8 @@ and this tool is what tells it whether it may.
 import collections, glob, os, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
+import parse as dmparse
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -151,7 +151,7 @@ def audit(path):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('-')]
     if not args:
-        print("usage: python3 bin/dmdigest.py <directory of .md documents> [--dry-run]"); return 2
+        print("usage: python3 bin/digest.py <directory of .md documents> [--dry-run]"); return 2
     root = args[0]
     docs = sorted(glob.glob(os.path.join(root, '*.md')))
     if not docs:

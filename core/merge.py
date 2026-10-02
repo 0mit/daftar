@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""merge — the statement merge (core/guide/MERGE.md): two branches of one garden merge a bean by its statements.
+"""merge — the statement merge (MERGE.md): two branches of one garden merge a bean by its statements.
 
     python3 core/merge.py --file <base> <ours> <theirs>    # git's merge driver (%O %A %B): ours is written in place
     python3 core/merge.py <base> <ours> <theirs>           # the merged bean printed, or each true conflict (exit 1)
 
 (`python` on Windows.) git runs it through bin/merge.py, which `.gitattributes` names for `beans/*.md` and
-`mappings/*.md` and bin/install.py configures; bin/merge.py sends a bean in today's words to bin/dmmerge.py.
+`mappings/*.md` and bin/install.py configures; bin/merge.py sends a bean in today's words to bin/merge.py.
 
 A bean's statements are a set, merged three ways: one either side removed since the base is removed, one either side
 added is kept, one both added is kept once, and two that disagree both stand, each with the act that knows it. Its
@@ -36,7 +36,7 @@ sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
 from core.engine import HEADER  # noqa: E402
 from core.translate import _blocked, block  # noqa: E402 — the one writer of a bean's text in statements
-import dmparse  # noqa: E402 — the one splitter of a front matter, and the one finder of a comment
+import parse as dmparse  # noqa: E402 — the one splitter of a front matter, and the one finder of a comment
 
 MISSING = object()
 

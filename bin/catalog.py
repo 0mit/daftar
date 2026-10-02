@@ -7,9 +7,9 @@
     python3 bin/catalog.py --json            # the whole map, sorted, for a tool: parts, relations, findings
 
 (`python` on Windows.) GENERATED, NEVER KEPT. Every line is read from the sources each time it is asked, and nothing is
-restated here: the law's front matter through bin/dmparse.py, the layer map and what a release keeps through
-bin/dmpass.py, an attribute's domain through bin/dmform.py, the reasons through bin/dmwhy.py, and the rules as
-bin/dmrules.py prints them. So the catalogue of a release cannot disagree with the release, and run again after a
+restated here: the law's front matter through bin/parse.py, the layer map and what a release keeps through
+bin/pass.py, an attribute's domain through bin/form.py, the reasons through bin/why.py, and the rules as
+bin/rules.py prints them. So the catalogue of a release cannot disagree with the release, and run again after a
 change it maps the change.
 
 THE PARTS are the items of the law — each term (the law's own and its profiles'), each registry (a list of the law's
@@ -33,7 +33,7 @@ THE RELATIONS, each read where it is written:
     states     document → term   the term written as a key at the head of a line of an example block
     ships      profile → file    the files of its asset, `assets/<profile>/`
 
-THE CHECKLISTS of a part: the rules bin/dmrules.py prints for it (a term's own block; for a registry or a section, the
+THE CHECKLISTS of a part: the rules bin/rules.py prints for it (a term's own block; for a registry or a section, the
 sections of the rules whose heading names it and the lines naming it in backticks; the core grammar is the gate's own),
 the items of CHECKLIST.md that name it, and the checks of the suites whose names name it.
 
@@ -41,7 +41,7 @@ THE FINDINGS are candidates for a person to judge, never verdicts: a law item th
 suite imports, runs or names; one domain taken under different attribute names whose meanings share their words; a
 sibling whose shape differs from the rest of its group (the terms of one tier or profile, the rows of one registry); a
 name the law gives several items; a file that lists the beans itself — a call that reads a directory of beans, one
-finding a call — instead of reading them through the one garden model, bin/dmgarden.py.
+finding a call — instead of reading them through the one garden model, bin/garden.py.
 
 IN A GARDEN it maps the garden's copy of the language: the law, and the files the release keeps (`seed/LANGUAGE`). The
 garden's own files are the garden's, and no part of the language.
@@ -55,13 +55,14 @@ explains the item it came from (bin/why.py). The profiles are today's words unti
 """
 import ast, html, json, os, re, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse          # the one loader, and UTF-8 streams on every platform
-import dmform           # an attribute's domain, read as the gate reads it
-import dmpass           # the layer map, and what a release keeps
-import dmwhy            # the one reader of the reasons
+import parse as dmparse          # the one loader, and UTF-8 streams on every platform
+import form as dmform           # an attribute's domain, read as the gate reads it
+import importlib
+dmpass = importlib.import_module('pass')           # the layer map, and what a release keeps
+import why as dmwhy            # the one reader of the reasons
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAW, CHECKLIST, RULES = 'seed/std-vocab.md', 'CHECKLIST.md', 'bin/dmrules.py'
+LAW, CHECKLIST, RULES = 'core/law/core.yaml', 'CHECKLIST.md', 'bin/rules.py'
 LAW_KINDS = ('term', 'registry', 'section', 'profile', 'layer')
 RELATIONS = ('imports', 'runs', 'mentions', 'names', 'explains', 'holds', 'uses', 'covers', 'states', 'ships')
 
@@ -206,7 +207,7 @@ class _Env:
 class Py:
     """What one Python file does, read from its syntax tree and never run: what it imports and from where, what it
     loads by path, the commands it runs, the calls that list a directory of beans, and a suite's checks. A name is
-    followed to what its scope, or a scope around it, assigns it, so `os.path.join(ROOT, 'bin', 'dmcheck.py')` named
+    followed to what its scope, or a scope around it, assigns it, so `os.path.join(ROOT, 'bin', 'check.py')` named
     once and run later is still read."""
 
     def __init__(self, text):
@@ -703,7 +704,7 @@ class Catalogue:
 
     @staticmethod
     def _label(domain, facet, rule, rec):
-        """An attribute's domain in words a reader can follow: the gate's sense of it (bin/dmform.py), with the aspect
+        """An attribute's domain in words a reader can follow: the gate's sense of it (bin/form.py), with the aspect
         or the closed list named, and a registry or a system another attribute names said so."""
         if facet == 'aspect':
             return 'aspect:' + str(rule.get('aspect'))
@@ -772,7 +773,7 @@ class Catalogue:
         self._checklist_items()
 
     def _rule_lines(self):
-        # the rules, as bin/dmrules.py prints them for every profile the law offers
+        # the rules, as bin/rules.py prints them for every profile the law offers
         r = subprocess.run([sys.executable, os.path.join(self.root, *RULES.split('/')), '--terms', '--core', '--every-profile'],
                            capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=self.root)
         lines, sections, title = r.stdout.split('\n'), [], None
@@ -796,7 +797,7 @@ class Catalogue:
                 continue
             if title.startswith('CORE'):
                 for ln in body:
-                    self._rule('bin/dmcheck.py', title, ln.strip().lstrip('· '))
+                    self._rule('bin/check.py', title, ln.strip().lstrip('· '))
                 continue
             if title.startswith('NOT READ'):
                 continue
@@ -900,7 +901,7 @@ class Catalogue:
             for domain, where, facet, rule in uses:
                 if facet in (None, 'prose', 'entries'):
                     continue
-                # grouped by the gate's sense of the domain (bin/dmform.py), finer where the sense leaves out what it
+                # grouped by the gate's sense of the domain (bin/form.py), finer where the sense leaves out what it
                 # is a position in: the aspect, the closed list, the term whose keys, the quantity, the system, the gene
                 key = 'values:' + '|'.join(sorted(str(v) for v in rule)) if facet == 'values' else \
                     f'{facet}:{rule.get("aspect")}' if facet == 'aspect' else \
@@ -965,9 +966,9 @@ class Catalogue:
         for f, p in self.py.items():
             # the garden models: today's, by both its names, and the core's (core/engine.py `Garden.read`, v1 part 9)
             if p.walks and self.parts[f]['kind'] in ('tool', 'module', 'hook') \
-                    and f not in ('bin/dmgarden.py', 'bin/garden.py', 'core/engine.py'):
+                    and f not in ('bin/garden.py', 'bin/garden.py', 'core/engine.py'):
                 out.append({'part': f, 'walks': len(p.walks), 'lines': sorted(line for line, _col in p.walks),
-                            'reads_through_dmgarden': ('imports', f, 'bin/dmgarden.py', '') in self.edges})
+                            'reads_through_dmgarden': ('imports', f, 'bin/garden.py', '') in self.edges})
         return sorted(out, key=lambda x: (-x['walks'], x['part']))
 
     # -------------------------------------------------------------- the map, whole
@@ -1001,8 +1002,7 @@ class CoreCatalogue(Catalogue):
         from core.check import garden_law
         self.L = garden_law(self.root)
         self.law, self.version = {}, f"core@{self.L.version}"
-        guide = os.path.join(self.root, 'core', 'guide', 'CHECKLIST.md')
-        self.CHECKLIST = 'core/guide/CHECKLIST.md' if os.path.isfile(guide) else CHECKLIST
+        self.CHECKLIST = CHECKLIST
 
     def _law_parts(self):
         from core import read
@@ -1100,7 +1100,7 @@ class CoreCatalogue(Catalogue):
         why = dmwhy.WHY and os.path.relpath(dmwhy.WHY, ROOT).replace(os.sep, '/')
         if self.root != ROOT or not why or why not in self.parts:
             return
-        today, keys = dmwhy.law(), list(dmwhy.rationale())
+        keys = list(dmwhy.rationale())
         part_of = {'verbs': 'verb:', 'rules': 'rule:', 'forms': 'form:'}
         for where, path, node in dmwhy.core_items(self.root):
             m = re.match(r'([a-z_]+)(?:\[([^\]]+)\]|\.([a-z_]+))?', path)
@@ -1109,10 +1109,10 @@ class CoreCatalogue(Catalogue):
                 ('table:' if 'table:' + head in self.parts else 'section:') + head
             if pid not in self.parts or where == 'VOCAB.md':
                 continue
-            for o in dmwhy.core_from(where, path, node, today):
-                for k in keys:
-                    if k == o or k.startswith(o + '.') or k.startswith(o + '['):
-                        self.edge('explains', why, pid, k)
+            o = f"{where}: {path}"
+            for k in keys:
+                if k == o or k.startswith(o + '.') or k.startswith(o + '['):
+                    self.edge('explains', why, pid, k)
 
     def _rule_lines(self):
         """The rules, as bin/rules.py lists them in a garden of the core: each rule its own words, and each item a rule
@@ -1261,11 +1261,11 @@ def show_findings(cat):
     print(f"\nnames the law gives several items ({len(f['one_name_many_items'])}) — a text naming one cannot say which")
     for x in f['one_name_many_items']:
         print(f"  {x['name']:24} {', '.join(x['parts'])}")
-    print(f"\nfiles that list the beans themselves, rather than read them through bin/dmgarden.py "
+    print(f"\nfiles that list the beans themselves, rather than read them through bin/garden.py "
           f"({len(f['own_bean_walks'])})")
     for x in f['own_bean_walks']:
         print(f"  {x['part']:40} {x['walks']:3}  lines {', '.join(map(str, x['lines']))}"
-              + ("   (imports dmgarden too)" if x['reads_through_dmgarden'] else ''))
+              + ("   (imports garden too)" if x['reads_through_dmgarden'] else ''))
 
 
 def find(cat, name):
@@ -1311,7 +1311,7 @@ def show_part(cat, pid):
         if rel in ins:
             print(f"    {_BY[rel]} ({len(ins[rel])}): {', '.join(ins[rel])}")
     ck = v['checklists']
-    print(f"  rules (bin/dmrules.py): {len(ck['rules'])}")
+    print(f"  rules (bin/rules.py): {len(ck['rules'])}")
     for r in ck['rules']:
         print(f"    [{r['section']}] {r['rule']}")
     print(f"  CHECKLIST.md items that name it: {len(ck['checklist'])}")
@@ -1325,14 +1325,14 @@ def show_part(cat, pid):
 def catalogue(root=ROOT):
     """The catalogue of the tree at `root`, by the law its garden runs: the core's where GARDEN.md pins it."""
     import check                                   # the one reader of a garden's pin (bin/check.py)
-    return CoreCatalogue(root) if check.runs_core(check.pin(root)) else Catalogue(root)
+    return CoreCatalogue(root)
 
 
 def main(argv):
     try:
         cat = catalogue()
     except ValueError as e:
-        print(f"dmcatalog: {e}", file=sys.stderr)
+        print(f"catalog: {e}", file=sys.stderr)
         return 2
     if '--json' in argv:
         print(json.dumps(cat.data(), ensure_ascii=False, indent=1, sort_keys=True, default=str))
@@ -1345,8 +1345,8 @@ def main(argv):
         name = argv[i + 1] if i + 1 < len(argv) else ''
         hit = find(cat, name)
         if not hit:
-            print(f"dmcatalog: no part is named {name!r} — a law item by its name (`units`, `term:view`), a file by its "
-                  f"path or its name (`bin/dmsave.py`, `dmsave`)", file=sys.stderr)
+            print(f"catalog: no part is named {name!r} — a law item by its name (`units`, `term:view`), a file by its "
+                  f"path or its name (`bin/save.py`, `save`)", file=sys.stderr)
             return 1
         for n, pid in enumerate(hit):
             if n:

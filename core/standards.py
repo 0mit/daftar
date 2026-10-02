@@ -1,16 +1,15 @@
 """standards — what the outside standards say, read from the core's law that carries them, by the tools that read them.
 
 The core hardcodes no system of positions, no unit and no code (spec §13). They come from the standards the release
-carries in core/law/ (generated from std-vocab until v1 retires it: core/translate.py), read here once, every value a
-string as written, so the new engine and today's gate cannot disagree about them:
+carries in core/law/, read here once, every value a string as written, so every reader takes them alike:
 
   positions   the systems of `systems.yaml` (ISO 8601 and the CLDR calendars, EPSG, IANA ports, RFC 3986, the
-              filesystems…), each with its one form — judged by dmparse.in_form, the one judge of a form
+              filesystems…), each with its one form — judged by parse.in_form, the one judge of a form
   quantities  the quantities of `quantities.yaml`, whose units are units.yaml's in UCUM, and the currencies of ISO 4217
               (`seed/knowledge/currencies.tsv`, by `registries.yaml`) with their names; a count is read exactly by
-              dmunits.exact
+              units.exact
   protocols   the IANA-named rows of `protocols.yaml`
-  codes       the schemes of our knowledge tree (`registries.yaml`), through dmknowledge (ISCO-08, ISCED-F 2013, the
+  codes       the schemes of our knowledge tree (`registries.yaml`), through knowledge (ISCO-08, ISCED-F 2013, the
               technologies…), with the schemes a garden holds as its own
   zones       the IANA time zones (`seed/knowledge/time-zones.tsv`)
 
@@ -25,9 +24,9 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
-import dmparse      # noqa: E402 — the one judge of a system's form, and the one splitter of a coding
-import dmunits      # noqa: E402 — a count, read exactly
-import dmknowledge  # noqa: E402 — the one finder of a code of a scheme
+import parse as dmparse      # noqa: E402 — the one judge of a system's form, and the one splitter of a coding
+import units as dmunits      # noqa: E402 — a count, read exactly
+import knowledge as dmknowledge  # noqa: E402 — the one finder of a code of a scheme
 
 FILES = ('systems', 'places', 'protocols', 'quantities', 'registries')   # core/law/<name>.yaml: a standard's tables
 
@@ -67,13 +66,16 @@ class Standards:
 
     @property
     def old(self):
-        """Today's law as its own reader reads it, for what has not moved into core/law/ yet (part 13). The garden's,
-        else this release's."""
+        """Today's law as its own reader read it — the garden's own copy (seed/std-vocab.md), which a garden in today's
+        words carries and the translator reads its terms in — or {} where it carries none: a release of the core does
+        not."""
         if self._old is None:
             path = os.path.join(self.root, 'seed', 'std-vocab.md')
-            path = path if os.path.isfile(path) else os.path.join(ROOT, 'seed', 'std-vocab.md')
-            with open(path, encoding='utf-8') as fh:
-                self._old = dmparse.loads(dmparse.split_front_matter(fh.read())[0]) or {}
+            try:
+                with open(path, encoding='utf-8') as fh:
+                    self._old = dmparse.loads(dmparse.split_front_matter(fh.read())[0]) or {}
+            except OSError:
+                self._old = {}
         return self._old
 
     def _tsv(self, rel):
@@ -116,7 +118,7 @@ def here(root=ROOT):
 
 
 def carried(root):
-    """True when the garden at `root` carries a law of its own: the core's (core/law/), or today's (seed/std-vocab.md),
-    beside which its seed/knowledge/ and its own schemes are read."""
+    """True when the garden at `root` carries a law of its own: the core's (core/law/), or today's (seed/std-vocab.md, a
+    garden the adoption translates), beside which its seed/knowledge/ and its own schemes are read."""
     return os.path.isfile(os.path.join(root, 'core', 'law', 'systems.yaml')) \
         or os.path.isfile(os.path.join(root, 'seed', 'std-vocab.md'))

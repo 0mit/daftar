@@ -27,7 +27,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
-import dmparse, dmpass  # noqa: E402
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -119,7 +121,7 @@ try:
     check("a garden grows from v0.1.0 in today's words", r.returncode == 0 and 'std-vocab@' in text('GARDEN.md'), r.out[-600:])
     write('beans/laptop.md', LAPTOP)
     write('GARDEN.md', text('GARDEN.md').replace('\nzone:', '\norigin: "a test of the adoption"\nzone:', 1))
-    r = run(PY, 'bin/dmsave.py', 'sam', 'RULE-CHANGE: the laptop', '--body',
+    r = run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: the laptop', '--body',
             '- action: added [[laptop]]; RULE-CHANGE: GARDEN.md says where the garden began')
     check("...and saves a laptop through today's gate", r.returncode == 0, r.out[-800:])
     head = run('git', 'rev-parse', 'HEAD').out.strip()
@@ -226,7 +228,7 @@ try:
           ada.get('kind') == 'person' and say.get('by') == 'ada' and say.get('at') not in (None, 'now')
           and log[0] == 'the gardener: [[ada]]' and '(fill in' not in text('log/journal.md', N), (ada, log))
     write('beans/box.md', LAPTOP.replace('bean: laptop', 'bean: box'), N)
-    r = run(PY, 'bin/dmsave.py', 'ada', 'a box', '--body', '- action: added [[box]]', cwd=N)
+    r = run(PY, 'bin/save.py', 'ada', 'a box', '--body', '- action: added [[box]]', cwd=N)
     check("...and a bean in today's words is refused by its hook, the core's gate naming the verb that took a word over",
           r.returncode != 0 and 'core check --staged' in r.out and '`owned_by` is the verb `own` of the face' in r.out,
           r.out[-1200:])

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""dmgarden — the one garden model: where a garden's documents are, and what each says, read once.
+"""garden — the one garden model: where a garden's documents are, and what each says, read once.
 
-    python3 bin/dmgarden.py                  # what this garden holds: its law, and each space with how many documents
-    python3 bin/dmgarden.py --paths [SPACE]  # every document's path, a space's or all, in the order every tool reads them
+    python3 bin/garden.py                  # what this garden holds: its law, and each space with how many documents
+    python3 bin/garden.py --paths [SPACE]  # every document's path, a space's or all, in the order every tool reads them
 
 (`python` on Windows.) A garden's documents live in its SPACES — `beans/` and `mappings/`, each one file per document,
 `<id>.md`. Every tool that reads them asks this module for them, so they are listed in one order, by one rule, and a
@@ -15,7 +15,7 @@ WHAT IT GIVES:
     listed(root, spaces, at)     -> ['<space>/<id>.md'] as git holds them: `at='index'` what is staged, or a commit's
     untracked(root, spaces)      -> ['<space>/<id>.md'] new documents git does not track yet, ignored ones left out
     ids(root, space)             -> [id]              each document's id, its file name without `.md`
-    documents(root, spaces)      -> [Doc]             Doc(path, space, id, fm, body, error): parsed by bin/dmparse.py
+    documents(root, spaces)      -> [Doc]             Doc(path, space, id, fm, body, error): parsed by bin/parse.py
     document(path)               -> Doc               one, from the same cache
 
 A document that does not parse is still given, with `fm` None and the reason in `error`: whether that is refused is the
@@ -38,7 +38,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import dmparse  # noqa: E402 — the one front-matter splitter
+import parse as dmparse  # noqa: E402 — the one front-matter splitter
 
 ROOT = os.path.dirname(HERE)
 SPACES = ('beans', 'mappings')
@@ -97,7 +97,7 @@ def ids(root=ROOT, space='beans'):
 
 
 def document(path):
-    """One document, parsed by bin/dmparse.py — from the cache while its size and time are what they were."""
+    """One document, parsed by bin/parse.py — from the cache while its size and time are what they were."""
     path = os.path.abspath(path)
     try:
         st = os.stat(path)
@@ -140,6 +140,22 @@ def core_garden(root=ROOT):
         from core import engine
         _CORE[root] = engine.Garden.read(root)
     return _CORE[root]
+
+
+_TABLES = {}
+
+
+def law_tables(root=ROOT):
+    """The tables the readers of a clause's days ask by today's names — `TERMS` (a clause's form and how it runs out,
+    `clauses`), `UNITS`, `QUANTITIES` and `SYSTEMS` — from the law the garden at `root` runs, the core's (v1 part 13)."""
+    if root not in _TABLES:
+        sys.path.insert(0, os.path.dirname(HERE))
+        from core import check as core_check, lines, measures
+        L = core_check.garden_law(root, root if os.path.isfile(os.path.join(root, 'core', 'law', 'core.yaml')) else None)
+        v = lines.law_view(L, root)
+        _TABLES[root] = {'TERMS': {'clauses': measures.clause_term(L)}, 'UNITS': v.units, 'QUANTITIES': v.quantities,
+                         'SYSTEMS': v.systems}
+    return _TABLES[root]
 
 
 def _split_position(text):

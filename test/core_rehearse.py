@@ -4,13 +4,13 @@ accepts, then translated into statements — nothing lost, and the core's engine
 
 Grows a garden (seed/germinate.sh) and commits seed/README.md's first beans and the gardener's line, then each recipe of
 seed/COOKBOOK.md and seed/WELCOME.md in the order of the pages with its VOCAB.md fragment, journalled through
-bin/dmjournal.py and judged by today's gate, as test/germinate.py does; then seed/FORMS.md's forms and its forms for
+bin/journal.py and judged by today's gate, as test/germinate.py does; then seed/FORMS.md's forms and its forms for
 what nobody said. So every bean here is one today's law accepts. It translates the garden into a copy
 (core/translate.py) and checks that every value of every bean is placed and found where it was put, that the core's
 engine passes the copy, and that the forms the guides teach — a person, a host, money between two people, an agreement
 paid in instalments, an event, another person's garden — each became statements. Last, it adopts the core in place:
 the garden has had core/ since it germinated; the translated beans come into it, and GARDEN.md's pin moves from
-std-vocab to the core, in one commit through bin/dmsave.py and the core's gate, refused until its entry says
+std-vocab to the core, in one commit through bin/save.py and the core's gate, refused until its entry says
 RULE-CHANGE, then granted the moments history recorded — that once, and not the commit after.
 """
 import os, re, shutil, subprocess, sys, tempfile
@@ -42,7 +42,7 @@ def page(name):
 
 
 def commit(G, name, body):
-    run(PY, os.path.join(G, 'bin', 'dmjournal.py'), 'human (test)', name[:60], '--body', body, cwd=G)
+    run(PY, os.path.join(G, 'bin', 'journal.py'), 'human (test)', name[:60], '--body', body, cwd=G)
     run('git', 'add', '-A', cwd=G)
     return run('git', '-c', 'user.name=t', '-c', 'user.email=t@x', 'commit', '-qm', name, cwd=G)
 
@@ -198,14 +198,14 @@ def main():
         check("the garden takes the core's gate (core/install.py)", r.returncode == 0, r.stdout + r.stderr)
         named = ', '.join(f"[[{f[:-3]}]]" for d in ('beans', 'mappings') if os.path.isdir(os.path.join(G, d))
                           for f in sorted(os.listdir(os.path.join(G, d))) if f.endswith('.md'))
-        r = run(PY, 'bin/dmsave.py', 'sam', 'the core adopted', '--body', f"- action: the beans written in statements: {named}",
+        r = run(PY, 'bin/save.py', 'sam', 'the core adopted', '--body', f"- action: the beans written in statements: {named}",
                 cwd=G)
         out = r.stdout + r.stderr
         check("adopting the core with no RULE-CHANGE said is refused: by `ratify`, and the acts' moments are not granted",
               r.returncode == 1 and 'ratify' in out and 'Only the commit that adopts the core' in out, out[-1500:])
-        run(PY, 'bin/dmjournal.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
+        run(PY, 'bin/journal.py', 'sam', 'RULE-CHANGE: the core adopted', '--body',
             '- action: RULE-CHANGE, the core adopted in place; ratified by sam', cwd=G)
-        r = run(PY, 'bin/dmsave.py', '--again', cwd=G)
+        r = run(PY, 'bin/save.py', '--again', cwd=G)
         out = r.stdout + r.stderr
         check("...and saved once an entry says RULE-CHANGE: the gate grants the adoption the moments history recorded",
               r.returncode == 0 and '— 0 error(s)' in out, out[-1500:])
@@ -213,7 +213,7 @@ def main():
                 if next(iter(s)) in ('say', 'read', 'derive', 'make')]
         write(G, 'beans/late.md', "---\nbean: late\nkind: document\ntitle: late\nstatements:\n  - say: { by: sam, at: '%s' }\n---\nA late note."
               % acts[0])
-        r = run(PY, 'bin/dmsave.py', 'sam', 'a late note', '--body', '- action: wrote [[late]]', cwd=G)
+        r = run(PY, 'bin/save.py', 'sam', 'a late note', '--body', '- action: wrote [[late]]', cwd=G)
         out = r.stdout + r.stderr
         check(f"...that once: the next commit giving an act a moment history holds ({acts[0]}) is refused",
               r.returncode == 1 and 'Only the commit that adopts the core' in out, out[-1500:])

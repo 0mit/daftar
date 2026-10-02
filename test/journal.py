@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """journal — the one tool every journal heading goes through writes what it was given, on every platform.
 
-Since std-vocab 20.0 the gate refuses a heading `bin/dmjournal.py` did not write, so every writer — a person, an
+Since std-vocab 20.0 the gate refuses a heading `bin/journal.py` did not write, so every writer — a person, an
 agent, a friend on Windows — writes the journal through it. The journal is append-only: an entry written wrong
 cannot be taken back, only answered by another. So the tool is held here to what the page says of it:
 
@@ -19,9 +19,9 @@ cannot be taken back, only answered by another. So the tool is held here to what
   -  a character some reader takes for a line break (\\x0b, \\x0c, \\x1c-\\x1e, NEL, U+2028, U+2029) is refused, and
      a line break in <who> or <what>: one written line must stay one line to every reader.
 
-And every tool that prints imports dmparse, which is where the UTF-8 streams are set for all of them; every
+And every tool that prints imports parse, which is where the UTF-8 streams are set for all of them; every
 subprocess call that reads a child's output as text, git's included, names UTF-8 rather than the code page; and
-bin/dmsafe.py, which every front-matter edit goes through, reads its block as this tool reads a body — as bytes, UTF-8
+bin/safe.py, which every front-matter edit goes through, reads its block as this tool reads a body — as bytes, UTF-8
 or UTF-16 with its mark, anything else refused — from standard input or from a file with --block, the form PowerShell
 has.
 
@@ -39,15 +39,16 @@ def check(name, ok, detail=''):
     print(("PASS " if ok else "*** FAIL *** ") + name + (f"  [{str(detail)[:500]}]" if detail and not ok else ''))
 
 
-TMP = tempfile.mkdtemp(prefix='dmjournal-')
+TMP = tempfile.mkdtemp(prefix='journal-')
 G = os.path.join(TMP, 'garden-a')
 shutil.copytree(os.path.join(ROOT, 'bin'), os.path.join(G, 'bin'), ignore=shutil.ignore_patterns('__pycache__'))
+shutil.copytree(os.path.join(ROOT, 'core'), os.path.join(G, 'core'), ignore=shutil.ignore_patterns('__pycache__'))
 os.makedirs(os.path.join(G, 'log'))
 JP = os.path.join(G, 'log', 'journal.md')
 with open(JP, 'w', encoding='utf-8', newline='\n') as fh:
     fh.write('# garden-a — journal\n\nAppend-only.\n')
 subprocess.run(['git', 'init', '-q', G], check=True)
-TOOL = os.path.join(G, 'bin', 'dmjournal.py')
+TOOL = os.path.join(G, 'bin', 'journal.py')
 
 # A MACHINE WHOSE STREAMS ARE NOT UTF-8. PYTHONUTF8 would hide exactly what is tested, so it is taken out.
 ENV = {k: v for k, v in os.environ.items() if k not in ('PYTHONUTF8', 'PYTHONIOENCODING')}
@@ -63,7 +64,7 @@ def journal():
 
 def stamps():
     sys.path.insert(0, os.path.join(G, 'bin'))
-    import dmjournal
+    import journal as dmjournal
     p = dmjournal.stamps_path(G)
     return open(p, 'rb').read() if os.path.exists(p) else b''
 
@@ -183,8 +184,8 @@ refused("a line break in <what> is refused: it is one line of the heading",
         ['sam', 'x\n## 2026-09-17 09:30+03:00 · ada · typed', '--body', '- action: x'], says='line break')
 refused("--body with nothing after it is a usage error", ['sam', 'x', '--body'], says='--body')
 
-# ---- dmsafe: a block goes into a bean as it was written, too ------------------------------------------------------
-# AGENTS.md sends every front-matter edit through bin/dmsafe.py, and it read its block from standard input in the
+# ---- safe: a block goes into a bean as it was written, too ------------------------------------------------------
+# AGENTS.md sends every front-matter edit through bin/safe.py, and it read its block from standard input in the
 # machine's code page: on a cp1252 machine a Persian block went into the bean as mojibake, exit 0, and the gate took it.
 os.makedirs(os.path.join(G, 'beans'))
 BEAN = os.path.join(G, 'beans', 'sam.md')
@@ -193,7 +194,7 @@ SAM = ('---\nbean: sam\nkind: person\ntitle: "Sam"\nstatements:\n  - say: { by: 
 NOTE = 'برای سام — ok'
 BLOCK = f'details:\n  note: "{NOTE}"\n'
 sys.path.insert(0, os.path.join(G, 'bin'))
-import dmparse
+import parse as dmparse
 
 
 def safe(*args, stdin=None, block=None):
@@ -203,14 +204,14 @@ def safe(*args, stdin=None, block=None):
         with open(os.path.join(TMP, 'block.yaml'), 'wb') as fh:
             fh.write(block)
         args += ('--block', os.path.join(TMP, 'block.yaml'))
-    r = subprocess.run([sys.executable, os.path.join(G, 'bin', 'dmsafe.py'), 'insert-after', BEAN, 'title']
+    r = subprocess.run([sys.executable, os.path.join(G, 'bin', 'safe.py'), 'insert-after', BEAN, 'title']
                        + list(args), input=stdin, capture_output=True, env=ENV, cwd=G)
     fm = dmparse.loads(dmparse.read(BEAN)[0]) or {}
     return r, (fm.get('details') or {}).get('note'), open(BEAN, 'rb').read()
 
 
 r, note, raw = safe(stdin=BLOCK.encode('utf-8'))
-check("dmsafe on a cp1252 machine: a Persian block on standard input goes into the bean as written, exit 0",
+check("safe on a cp1252 machine: a Persian block on standard input goes into the bean as written, exit 0",
       r.returncode == 0 and note == NOTE, (r.stdout.decode('utf-8', 'replace'), note))
 r, note, raw = safe(block=BLOCK.encode('utf-8'))
 check("...and from a file with --block, the form every shell has, PowerShell included", r.returncode == 0 and note == NOTE,
@@ -230,18 +231,18 @@ for _name, _kw, _says in (("bytes in a code page (cp1252)", {'block': BLOCK.repl
           r.returncode == 1 and _says in _out and raw == SAM.encode('utf-8') and 'Traceback' not in _out, _out[-300:])
 
 # ---- every tool that prints speaks UTF-8 ---------------------------------------------------------------------------
-# dmparse sets the streams once, for every tool that imports it; a tool that prints and never imports it writes in
-# the code page, and its first `—` or Persian letter ends the run in a traceback (dmgeo did, with a Persian argument).
+# parse sets the streams once, for every tool that imports it; a tool that prints and never imports it writes in
+# the code page, and its first `—` or Persian letter ends the run in a traceback (geo did, with a Persian argument).
 _silent = []
 for _f in sorted(os.listdir(os.path.join(ROOT, 'bin'))):
-    if not re.match(r'^dm[a-z]*\.py$', _f) or _f == 'dmparse.py':
+    if not re.match(r'^dm[a-z]*\.py$', _f) or _f == 'parse.py':
         continue
     _src = open(os.path.join(ROOT, 'bin', _f), encoding='utf-8').read()
-    if re.search(r'\bprint\(', _src) and not re.search(r'(?m)^\s*import [^\n]*\bdmparse\b|^\s*from dmparse import', _src):
+    if re.search(r'\bprint\(', _src) and not re.search(r'(?m)^\s*import [^\n]*\bdmparse\b|^\s*from parse import', _src):
         _silent.append(_f)
-check("every tool that prints imports dmparse, so its output is UTF-8 on every platform", not _silent, _silent)
-r = subprocess.run([sys.executable, os.path.join(G, 'bin', 'dmgeo.py'), 'مکان'], capture_output=True, env=ENV)
-check("...dmgeo, given a Persian position on a cp1252 machine, refuses it in words, not a traceback",
+check("every tool that prints imports parse, so its output is UTF-8 on every platform", not _silent, _silent)
+r = subprocess.run([sys.executable, os.path.join(G, 'bin', 'geo.py'), 'مکان'], capture_output=True, env=ENV)
+check("...geo, given a Persian position on a cp1252 machine, refuses it in words, not a traceback",
       r.returncode == 1 and 'مکان' in r.stdout.decode('utf-8', 'replace') and b'Traceback' not in r.stderr,
       r.stderr.decode('utf-8', 'replace')[-300:])
 # ...AND EVERY CALL THAT READS A CHILD'S OUTPUT AS TEXT NAMES UTF-8. With no `encoding`, a text-mode subprocess call
@@ -268,8 +269,8 @@ check("every subprocess call that reads a child's output as text names its encod
 
 # ---- a bean is written WHOLE: judged first, then swapped in, so a crash never leaves half of one --------------------
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
-import dmsafe
-_d = tempfile.mkdtemp(prefix='dmsafe-', dir=TMP)
+import safe as dmsafe
+_d = tempfile.mkdtemp(prefix='safe-', dir=TMP)
 _p = os.path.join(_d, 'b.md')
 with open(_p, 'w', encoding='utf-8', newline='\n') as _fh:
     _fh.write('---\nbean: b\nx: 1\n---\nBody.\n')
@@ -279,7 +280,7 @@ try:
     _refused = False
 except dmsafe.UnsafeEdit as e:
     _refused = 'nothing written' in str(e)
-check("dmsafe: an edit that would lose a key is refused before anything is written — the file's time never moves",
+check("safe: an edit that would lose a key is refused before anything is written — the file's time never moves",
       _refused and os.stat(_p).st_mtime_ns == _m0)
 _real = os.replace
 os.replace = lambda *a: (_ for _ in ()).throw(OSError('the disk is full'))
@@ -296,14 +297,14 @@ check("...and a write that dies before it is swapped in leaves the bean as it wa
       os.listdir(_d))
 
 # ---- a quote is read as YAML reads it, by every scanner of a front matter's lines ---------------------------------
-import dmparse
+import parse as dmparse
 _cs = {l: dmparse.comment_start(l) for l in ('title: "a \\" # b"', "summary: it's here # note", "x: 'it''s # not' # yes",
                                               "k: 'C:\\' # c", 'k: "C:\\\\" # c')}
 check("a comment is found where YAML finds one: not inside a double-quoted scalar past an escaped quote, and after a "
       "plain value an apostrophe stands in", list(_cs.values()) == [-1, 19, 17, 9, 10], _cs)
 _t = "---\nidentity:\n  anchors:\n    - { key: path, value: 'C:\\', class: logical }\n---\nx\n"
 _fs = [_t[a:b] for a, b in dmsafe.flow_spans(_t, "identity.anchors[key=path].class")]
-check("...and dmsafe finds a flow mapping's value past a single-quoted scalar that ends in a backslash, which escapes "
+check("...and safe finds a flow mapping's value past a single-quoted scalar that ends in a backslash, which escapes "
       "nothing there", _fs == ["logical"], _fs)
 
 shutil.rmtree(TMP, ignore_errors=True)

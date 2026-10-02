@@ -3,12 +3,12 @@
 The files a daftar release puts in this garden — exactly those `seed/LANGUAGE` lists — are daftar's, and keep
 daftar's terms:
 
-- **its code** (`bin/`, `seed/germinate.*`, `test/fast.py`, an asset's `assets/<profile>/bin/` and `lib/`): the GNU
+- **its code** (`bin/`, `core/*.py` and `core/hooks/`, `seed/germinate.*`, an asset's `assets/<profile>/bin/` and `lib/`): the GNU
   AGPL 3.0 or later (`seed/LICENSE-AGPL-3.0-or-later.txt`), with the garden exception
   (`seed/LICENSE-LicenseRef-daftar-garden-exception.txt`) and these additional terms (section 7, (c) and (e)): a
   modified version is marked, in reasonable ways, as different from daftar; and no right is granted in the name
   daftar;
-- **its law and guides** (`seed/std-vocab.md`, the other `seed/*.md`, `MANIFESTO.md`, `MODEL.md`, `CHECKLIST.md`,
+- **its law and guides** (`core/law/`, the `seed/*.md`, `MANIFESTO.md`, `MODEL.md`, `CHECKLIST.md`,
   `MERGE.md`, `AGENTS.md`, `.claude/skills/daftar/SKILL.md`, and the law's names in its readers' languages,
   `seed/names/`): CC BY 4.0 (`seed/LICENSE-CC-BY-4.0.txt`), by Omid
   (0mit) and daftar's contributors;

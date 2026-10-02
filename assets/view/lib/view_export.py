@@ -3,8 +3,8 @@
 calendar of a reading's members (24.0: N36, N38, N40).
 
 Each reads what the page declares — `views.<key>.columns` with its `selection` or `series`, `renders`, `feed` — through
-the one grammar (bin/dmreckon.py, bin/dmseq.py) and writes where it is asked to. Nothing enters the ledger but a kept
-render, which is a `document` bean saved through bin/dmsave.py like any other write. Every file is scoped by whoever
+the one grammar (bin/reckon.py, bin/seq.py) and writes where it is asked to. Nothing enters the ledger but a kept
+render, which is a `document` bean saved through bin/save.py like any other write. Every file is scoped by whoever
 runs it: from the command line, the garden's own clone; from the host, the viewer, through `Host.may`.
 """
 import csv, datetime, hashlib, io, os, re, subprocess, sys
@@ -41,7 +41,7 @@ SLOT = re.compile(r"\{\{\s*([a-z_][a-z0-9_.\-\[\]=*]*)\s*\}\}")
 
 def render_text(template, member):
     """The template with each `{{ path }}` replaced by the values at that field path of the member (`bean`: its id)."""
-    import dmreckon
+    import reckon as dmreckon
     f = vm.fm(member)
 
     def one(m):
@@ -87,7 +87,7 @@ def document_bean(bid, title, digest, path, keeper, member):
     """A `document` bean for a kept render: named by its content, where its copy is, and what it was rendered from."""
     return ("---\nbean: %s\ngenos: document\ntitle: \"%s\"\nstatus: active\nsummary: \"%s\"\nnature: lekton\n"
             "identity:\n  status: confirmed\n  anchors:\n    - { key: content_hash, value: \"%s\", class: logical, establishing: true }\n"
-            "provenance: { src: generated-by-tool, by: \"dmview render\", as_of: now }\n"
+            "provenance: { src: generated-by-tool, by: \"view render\", as_of: now }\n"
             "owned_by: { owner: { bean: %s } }\n"
             "refs: { rendered-from: { bean: %s, rel: rendered-from } }\n"
             "located_at:\n  - { system: unix-filesystem, openness: here, at: \"%s\", observed: now }\n"
@@ -192,7 +192,7 @@ def feed_events(key):
 def ics_text(events, garden_id, stamp=None):
     """RFC 5545: one VEVENT per event, its UID the garden's and the member's, a VALARM `notice` before where one is given."""
     stamp = stamp or datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//daftar//dmview ics//EN", "CALSCALE:GREGORIAN"]
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//daftar//view ics//EN", "CALSCALE:GREGORIAN"]
     for m, name, at, title, notice in events:
         kind, when = _ics_time(at)
         lines += ["BEGIN:VEVENT", "UID:%s-%s@%s" % (m, name, garden_id), "DTSTAMP:" + stamp,

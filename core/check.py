@@ -14,7 +14,7 @@ them, and the exit status is 1 when there is one.
 is copied out of the index into a temporary directory and judged there, with the law the commit stages, so what is
 judged is what is committed; then the commit's own rules (core/commit.py): each changed bean named by the entry the
 commit adds, its new statements known at that entry's moment, and a change to the law said to be a RULE-CHANGE. This
-command runs beside today's gate (`bin/dmcheck.py`), which it does not replace until a garden adopts the core."""
+command is the gate bin/check.py runs."""
 import os
 import shutil
 import subprocess
@@ -30,7 +30,7 @@ from core.law import Law       # noqa: E402
 def garden_law(root, release=None):
     """The law of the release at `release` (this one, if none), extended by the rows of the garden at `root` (its
     VOCAB.md, where it has one). The standards are the garden's where it carries a law (`standards.carried`): a scheme of
-    codes it holds as its own is read there, as dmknowledge reads it."""
+    codes it holds as its own is read there, as knowledge reads it."""
     p = os.path.join(root, 'VOCAB.md')
     ext = (('VOCAB.md', read.document(p)[0]),) if os.path.exists(p) else ()
     std = standards.here(root) if standards.carried(root) else None

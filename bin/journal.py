@@ -20,7 +20,7 @@ standard input is read as BYTES and decoded as UTF-8 (a byte-order mark is dropp
 Windows PowerShell 5.1 writes with `>`, is read as UTF-16), and bytes that are not UTF-8 are refused before
 anything is written, never guessed at in the machine's code page. UTF-16 WITHOUT its mark is valid UTF-8 with a
 NUL after every letter, so it is refused by the NUL (below), saying what it looks like. The output goes through
-dmparse's UTF-8 streams. The heading is printed only AFTER the entry is written, and a failure to print it — a
+parse's UTF-8 streams. The heading is printed only AFTER the entry is written, and a failure to print it — a
 closed pipe, or no standard output at all — is not a failure of the write: a run that reported an error after
 writing would be run again, and append the entry twice.
 
@@ -45,7 +45,7 @@ writer typed is left as typed. `bin/save.py` calls this tool, and on `--again` s
 WHICH WORDS ARE STAMPED IS THE LAW'S THE GARDEN RUNS (v1 part 5). In a garden of the core (GARDEN.md `extends: core@…`)
 `now` fills one role, `at` (core/engine.py `CLOCKED`), and the save writes the heading's moment there, in a statement or
 in what `details` keeps; a `now` anywhere else is the gate's to refuse. In a garden in today's words the positions are
-std-vocab's, as above. (`bin/dmjournal.py`, today's name, runs this too until v1's part 13.)
+std-vocab's, as above. (`bin/journal.py`, today's name, runs this too until v1's part 13.)
 """
 import codecs
 import datetime
@@ -56,9 +56,10 @@ import sys
 import unicodedata
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
+import parse as dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
 import safe     # noqa: E402 — a stamp written into a bean is written through the edit that loses nothing
-import dmpass   # noqa: E402 — which positions read the clock: the law's origins, read once
+import importlib
+dmpass = importlib.import_module('pass')   # noqa: E402 — which positions read the clock: the law's origins, read once
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JOURNAL = os.path.join(ROOT, 'log', 'journal.md')
@@ -151,11 +152,11 @@ def decode_body(raw):
         try:
             return raw.decode('utf-16')
         except UnicodeDecodeError as e:
-            raise SystemExit(f"dmjournal: standard input begins as UTF-16 and is not ({e.reason}); nothing written")
+            raise SystemExit(f"journal: standard input begins as UTF-16 and is not ({e.reason}); nothing written")
     try:
         return raw.decode('utf-8')
     except UnicodeDecodeError as e:
-        raise SystemExit(f"dmjournal: standard input is not UTF-8 (byte {e.start}: {raw[e.start:e.start + 1]!r}) — "
+        raise SystemExit(f"journal: standard input is not UTF-8 (byte {e.start}: {raw[e.start:e.start + 1]!r}) — "
                          f"nothing written. Save the entry as UTF-8, or pass it with --body \"…\"")
 
 
@@ -164,25 +165,25 @@ def refuse_breaks(label, text, line_ends_too=False):
     character but a tab (and, in the body, the line feed between its lines)."""
     for ch, name in OTHER_BREAKS.items():
         if ch in text:
-            raise SystemExit(f"dmjournal: {label} holds {name}, which some readers take for a line break — "
+            raise SystemExit(f"journal: {label} holds {name}, which some readers take for a line break — "
                              f"nothing written. Write it as an ordinary line end, or leave it out")
     if line_ends_too and ('\n' in text or '\r' in text):
-        raise SystemExit(f"dmjournal: {label} holds a line break — it is one line of the heading; nothing written")
+        raise SystemExit(f"journal: {label} holds a line break — it is one line of the heading; nothing written")
     # every character Unicode calls a control (Cc: C0, DEL and C1 — U+009B is a terminal's 8-bit CSI), but a tab and
     # the body's line feed
     bad = next((ch for ch in text if unicodedata.category(ch) == 'Cc' and ch not in '\t\n'), None)
     if bad == '\x00':
-        raise SystemExit(f"dmjournal: {label} holds NUL (\\x00), a control character — it looks like UTF-16 without "
+        raise SystemExit(f"journal: {label} holds NUL (\\x00), a control character — it looks like UTF-16 without "
                          f"its byte-order mark, a NUL after every letter; nothing written. Save the entry as UTF-8, "
                          f"or pass it with --body \"…\"")
     if bad is not None:
-        raise SystemExit(f"dmjournal: {label} holds {CONTROL_NAMES.get(bad, 'U+%04X' % ord(bad))}, a control character "
+        raise SystemExit(f"journal: {label} holds {CONTROL_NAMES.get(bad, 'U+%04X' % ord(bad))}, a control character "
                          f"and not text — a terminal acts on it (a bell, a cursor moved, a screen cleared) for whoever "
                          f"reads the journal there; nothing written. Leave it out")
     try:
         text.encode('utf-8')
     except UnicodeEncodeError:
-        raise SystemExit(f"dmjournal: {label} holds a character that is not text (an undecodable byte) — "
+        raise SystemExit(f"journal: {label} holds a character that is not text (an undecodable byte) — "
                          f"nothing written")
 
 
@@ -191,12 +192,12 @@ def append(who, what, body):
     # as one heading and read as another, and refused as unstamped.
     who, what = who.strip(), what.strip()
     if not who or not what:
-        raise SystemExit("dmjournal: <who> and <what> are both needed — who wrote the entry, and one line saying what")
+        raise SystemExit("journal: <who> and <what> are both needed — who wrote the entry, and one line saying what")
     body = body.replace('\r\n', '\n').replace('\r', '\n').rstrip('\n')
     if not body.strip():
-        raise SystemExit("dmjournal: the entry has no body — what was done, and why, is the point of it")
+        raise SystemExit("journal: the entry has no body — what was done, and why, is the point of it")
     if '\n## ' in '\n' + body:
-        raise SystemExit("dmjournal: the body contains a `## ` line — leave the heading out: this tool writes it, "
+        raise SystemExit("journal: the body contains a `## ` line — leave the heading out: this tool writes it, "
                          "from the clock, above the body (one entry per call)")
     refuse_breaks('<who>', who, line_ends_too=True)
     refuse_breaks('<what>', what, line_ends_too=True)
@@ -216,20 +217,17 @@ def append(who, what, body):
 # never types the day of writing, because measured writers typed the nearest date in view instead — the example's, or
 # one read in another bean. This tool reads the clock once, for the heading; the same reading is what every `now` at a
 # position that reads the clock becomes — the day at a date, the moment at a moment. WHICH positions those are is the
-# law's (each position's `origin`, read `by: save`), read by bin/dmpass.py: this tool names none of them. Only a bare `now` (or a quoted one)
+# law's (each position's `origin`, read `by: save`), read by bin/pass.py: this tool names none of them. Only a bare `now` (or a quoted one)
 # that is the whole value.
 STAMPED = dmpass.DOCUMENTS
 
 
 def clocked_in(root):
     """{'day': names, 'moment': names}: where the save writes the clock's reading in place of `now`, by the law the
-    garden at `root` runs — the core's one role (`at`, a moment), or today's positions whose origin reads the clock."""
-    import check                                # the one reader of a garden's pin (bin/check.py)
-    if check.runs_core(check.pin(root)):
-        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        from core.engine import CLOCKED
-        return {'day': set(), 'moment': {CLOCKED}}
-    return dmpass.origins(root).clocked()
+    garden at `root` runs: the core's one role (`at`, a moment)."""
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from core.engine import CLOCKED
+    return {'day': set(), 'moment': {CLOCKED}}
 
 
 def _now_at(names):
@@ -294,7 +292,7 @@ def stamp_now(h, text=None, root=None):
             safe.edit(f, fix)
             done.append(p)
         except Exception as e:                  # never a traceback after the heading is registered
-            print(dmparse.said(f"dmjournal: {p}: its `now` left as it is — {e}"), file=sys.stderr)
+            print(dmparse.said(f"journal: {p}: its `now` left as it is — {e}"), file=sys.stderr)
     return done
 
 
@@ -329,17 +327,17 @@ def main(argv):
         while j < len(argv) and not argv[j].startswith('--'):
             j += 1
         if j == i + 1:
-            print("dmjournal: --body takes the entry's body, in quotes", file=sys.stderr)
+            print("journal: --body takes the entry's body, in quotes", file=sys.stderr)
             return 2
         body = '\n'.join(argv[i + 1:j])
     else:
         stream = getattr(sys.stdin, 'buffer', None)
         if stream is None:
-            print("dmjournal: there is no standard input to read the body from — pass it with --body", file=sys.stderr)
+            print("journal: there is no standard input to read the body from — pass it with --body", file=sys.stderr)
             return 2
         body = decode_body(stream.read())
     if not os.path.exists(JOURNAL):
-        raise SystemExit(f"dmjournal: no {os.path.relpath(JOURNAL, ROOT)} — is this a garden?")
+        raise SystemExit(f"journal: no {os.path.relpath(JOURNAL, ROOT)} — is this a garden?")
     say(append(who, what, body))
     return 0
 

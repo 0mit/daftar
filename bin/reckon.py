@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""dmreckon — the one reckoner: a reading declared in the law's grammar (`selection_form`), read each time it is asked.
+"""reckon — the one reckoner: a reading declared in the law's grammar (`selection_form`), read each time it is asked.
 
-    python3 bin/dmreckon.py <bean>:<selection> [--input name=value ...] [--at <commit> --moment <moment>]
-    python3 bin/dmreckon.py --ad-hoc <file.yaml> [--bean <bean>] [--input name=value ...]   # a reading nobody committed
-    python3 bin/dmreckon.py weigh <bean>:<weighing>          # a weighing's weights and its consistency, read
-    python3 bin/dmreckon.py order <key> <items.tsv>          # items ordered by an ordering key of the law
+    python3 bin/reckon.py <bean>:<selection> [--input name=value ...] [--at <commit> --moment <moment>]
+    python3 bin/reckon.py --ad-hoc <file.yaml> [--bean <bean>] [--input name=value ...]   # a reading nobody committed
+    python3 bin/reckon.py weigh <bean>:<weighing>          # a weighing's weights and its consistency, read
+    python3 bin/reckon.py order <key> <items.tsv>          # items ordered by an ordering key of the law
     add --exact to print every value exactly, rather than to its uncertainty's digits
 
 (`python` on Windows.) A reading is a list of steps, each ONE operation of the law's closed list `operations`, over what
@@ -23,7 +23,7 @@ written back as a fact (manifesto: once). An act that fixes a reading records th
 
 NOT HERE YET, and refused by name rather than guessed: a position in another reference system where PROJ is absent;
 `rotate` until a pole's published rows are held (a vacancy: PLACE carried none); an input read from another garden until AGREE's
-bin/dmacross.py lands.
+bin/across.py lands.
 
 IN A GARDEN OF THE CORE (v1 part 6) a reading is a `reckon` statement, named by its id (`<bean>#<id>`, or `<bean>:<id>`),
 its `reading` the form core/law/lines.yaml gives. Its paths are read over statements: a bean is its header (`kind`,
@@ -53,12 +53,13 @@ from fractions import Fraction
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import dmparse  # noqa: E402 — the one reader of a path, a table and a front matter
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
-import dmcal    # noqa: E402 — positions in any calendar, moments, civil offsets
-import dmseq    # noqa: E402 — a series' rows and what a channel holds between them
-import dmpass   # noqa: E402 — where a value comes from: an input's `origin`
-import dmheld   # noqa: E402 — what a garden keeps off git, read back on the host that holds it
+import parse as dmparse  # noqa: E402 — the one reader of a path, a table and a front matter
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
+import cal as dmcal    # noqa: E402 — positions in any calendar, moments, civil offsets
+import seq as dmseq    # noqa: E402 — a series' rows and what a channel holds between them
+import importlib
+dmpass = importlib.import_module('pass')   # noqa: E402 — where a value comes from: an input's `origin`
+import held as dmheld   # noqa: E402 — what a garden keeps off git, read back on the host that holds it
 
 ROOT = os.path.dirname(HERE)
 PY = 'python' if os.name == 'nt' else 'python3'
@@ -149,7 +150,7 @@ _LAW = []
 
 
 def law():
-    """The gate's reading of the law (dmseq's Law: units, quantities, systems, a registry by name); in a garden of the
+    """The gate's reading of the law (seq's Law: units, quantities, systems, a registry by name); in a garden of the
     core, the law a line is read by (core/lines.py `law_view`)."""
     if not _LAW:
         if dmseq.runs_core(ROOT):
@@ -436,7 +437,7 @@ def _long(x):
 
 
 def _text(x):
-    """A position as a calendar reads it: the long form by its `at` (dmcal.written), anything else as it is — and None
+    """A position as a calendar reads it: the long form by its `at` (cal.written), anything else as it is — and None
     for one placed only by its neighbours, which names no day."""
     try:
         return dmcal.written(x) if _long(x) else x
@@ -752,7 +753,7 @@ class Reckoner:
             elif o.get('act') == 'said' and o.get('by') == dmpass.GARDEN:
                 # ACROSS GARDENS (N35): read at a commit the other garden published and granted, never copied here; a
                 # pin naming that garden reads it again at the pinned commit.
-                import dmacross
+                import across as dmacross
                 commit = self.pin.commit if self.pin and getattr(self.pin, 'garden', None) == d.get('garden') else None
                 try:
                     got = dmacross.read(d.get('garden'), commit, d.get('path'), root=self.g.root)
@@ -1338,7 +1339,7 @@ class Reckoner:
     def _geo(self, position, sid):
         """A place position as a coordinate, a `relative` one resolved through the being it is stated from, at the
         reading's moment — place is read AT a time (24.0, PLACE)."""
-        import dmgeo
+        import geo as dmgeo
         try:
             if dmgeo.RELATIVE.match(str(position)):
                 return dmgeo.resolve_relative(str(position), root=self.g.root, beans=self.g.fm, moment=self.now)
@@ -1352,7 +1353,7 @@ class Reckoner:
 
     def op_within(self, s):
         if 'place' in s:
-            import dmgeo
+            import geo as dmgeo
             pl = s['place'] if isinstance(s['place'], dict) else {}
             if pl.get('at') is None or not isinstance(pl.get('distance'), dict):
                 raise Refused(f"step {s['id']}: `within` a place is {{at: <a place>, distance: {{count, unit}}}}")
@@ -1470,7 +1471,7 @@ class Reckoner:
 
     def op_neighbour_of(self, s):
         if 'distance' in s:
-            import dmgeo
+            import geo as dmgeo
             d, out, ids = self._metres(s['distance'], s['id']), [], set()
             for m in self.arg(s, 'of', 'set'):
                 try:
@@ -1722,7 +1723,7 @@ class Reckoner:
         rows = self._live(ser, ch)
         if not rows:
             # A CHANNEL OF PLACES: the track a being made, each row where it was then — measured leg by leg on the map
-            import dmgeo
+            import geo as dmgeo
             excl = ser.excluded_cells()
             pts = [self._geo(r['cells'][ch], s['id']) for p, a, b, r in ser.places()
                    if r['cells'].get(ch) is not None and (ser._row_key(r), ch) not in excl and (ser._row_key(r), None) not in excl]

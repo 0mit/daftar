@@ -29,11 +29,13 @@ import yaml
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "test"))
 import grow  # noqa: E402
-import dmpass  # noqa: E402 — test/grow.py put bin/ on the path
+import importlib
+dmpass = importlib.import_module('pass')  # noqa: E402 — test/grow.py put bin/ on the path
 
 FAILS = []
 # A GARDEN GROWS THESE: no release ships a file under them, and a new garden holds none until it writes one.
 GROWN = {"captures/*": "what a garden captures from the world",
+         "test/*": "a garden's own tests: the release ships none since v1.0.0 (test/fast.py ran today's hook)",
          "seed/names/*.tsv": "the names a garden gives, written as it gives them",
          "RATIONALE.md": "a garden's own reasons, beside its VOCAB.md, once it writes one",
          "README.md": "a garden's own page about itself, once it writes one",

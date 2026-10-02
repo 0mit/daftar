@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""dmwhere — resolve a bean's recorded LOCATIONS against the machine you are actually standing on.
+"""where — resolve a bean's recorded LOCATIONS against the machine you are actually standing on.
 
 WHY THIS EXISTS. Until std-vocab@5.1 a location in this ledger was a bare absolute path: 69 of them
 across 14 beans, and not one named a host. That is a position in one anchor system written as though it
@@ -33,18 +33,18 @@ something; a reader shown a path that does not resolve has been misled with the 
 THIS TOOL NEVER WRITES. It reports.
 
 Usage:
-  python3 bin/dmwhere.py                 # every located_at position in the garden, resolved for this host
-  python3 bin/dmwhere.py <bean>          # just that bean
-  python3 bin/dmwhere.py --root <name>   # what one logical root means here
-  python3 bin/dmwhere.py <position> [--at <moment>]   # what a position is IN (24.0): its cells, boundaries, nearest
+  python3 bin/where.py                 # every located_at position in the garden, resolved for this host
+  python3 bin/where.py <bean>          # just that bean
+  python3 bin/where.py --root <name>   # what one logical root means here
+  python3 bin/where.py <position> [--at <moment>]   # what a position is IN (24.0): its cells, boundaries, nearest
 
 A POSITION, READ FOR WHAT IT IS IN (24.0, PLACE). Given a position rather than a bean:
-    python3 bin/dmwhere.py bp1950:3.93ka          # an age: the cells it lies in, and the boundary that fixes the finest
-    python3 bin/dmwhere.py b2k:4.25ka             # the same line from another datum (b2k = bp-1950 + 50 a, computed)
-    python3 bin/dmwhere.py ics:Meghalayan         # a cell: its span, its ancestry, and where its base is marked
-    python3 bin/dmwhere.py "EPSG:4326;10.1,20.2"  # a place: its grid cells and the fixed beings nearest it
-    python3 bin/dmwhere.py marker-a+3.2,-1.5      # a place stated from another being, resolved first
-    python3 bin/dmwhere.py "EPSG:4326;10.1,20.2" --at 2026-03-01   # the beings that were fixed there THEN
+    python3 bin/where.py bp1950:3.93ka          # an age: the cells it lies in, and the boundary that fixes the finest
+    python3 bin/where.py b2k:4.25ka             # the same line from another datum (b2k = bp-1950 + 50 a, computed)
+    python3 bin/where.py ics:Meghalayan         # a cell: its span, its ancestry, and where its base is marked
+    python3 bin/where.py "EPSG:4326;10.1,20.2"  # a place: its grid cells and the fixed beings nearest it
+    python3 bin/where.py marker-a+3.2,-1.5      # a place stated from another being, resolved first
+    python3 bin/where.py "EPSG:4326;10.1,20.2" --at 2026-03-01   # the beings that were fixed there THEN
 
 `AT` IS BEING-IN (در بودن). A position is never a point with no size: it names the cell the thing is IN, at the
 level it is held to — a coordinate is in its grid cells, an age in its stage, its epoch, its era; a finer position is
@@ -66,17 +66,17 @@ never read as a standard uncertainty. Where a position lies within a boundary's 
 two datums that the table's own zero leaves open, both cells beside it are named and neither is chosen.
 
 A path on a host and a coordinate on a body are both answers to "where is it": the first is resolved against the machine
-this runs on, the second is read for the cells it is in. The coordinate arithmetic is bin/dmgeo.py's; the tables are
-read as bin/dmknowledge.py reads them.
+this runs on, the second is read for the cells it is in. The coordinate arithmetic is bin/geo.py's; the tables are
+read as bin/knowledge.py reads them.
 """
 import os, re, socket, sys
 from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
-import dmgarden  # noqa: E402 — the one garden model: where its documents are
-import dmknowledge
-import dmcal     # noqa: E402 — a moment, and the offset a zone kept at it
+import parse as dmparse
+import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
+import knowledge as dmknowledge
+import cal as dmcal     # noqa: E402 — a moment, and the offset a zone kept at it
 
 try:
     import yaml
@@ -91,7 +91,7 @@ def load():
     with its locations and names (bin/garden.py `terms`, the one view of them).
 
     Both, because both can carry `located_at` and `.gitattributes` already dispatches both to the same
-    merge driver. This garden has paid for the beans-only glob once already: `dmmerge.load_garden`
+    merge driver. This garden has paid for the beans-only glob once already: `merge.load_garden`
     scanned `beans/*.md` alone, so the corpus merge never saw a mapping, and it was found by a check
     that asserted over the whole corpus rather than over what the tool under test happened to read.
     """
@@ -238,8 +238,8 @@ def classify(entry, roots, names=None, bound=None):
 
     if system not in (host_bound() if bound is None else bound):
         # A COORDINATE, AN AGE, A PARISH NAMES NO MACHINE: `EPSG:4326;…` was once read here as a path on a host
-        # called EPSG. Such a position is in a cell of its own system, and `dmwhere <position>` reads which.
-        return 'PLACED', f"{at} — in {system}; `dmwhere.py {at}` reads what it is in"
+        # called EPSG. Such a position is in a cell of its own system, and `where <position>` reads which.
+        return 'PLACED', f"{at} — in {system}; `where.py {at}` reads what it is in"
 
     if not (str(at).startswith('root:') or HOST_FORM.match(str(at)) or re.match(r'^[a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}$', str(at))):
         # A POSITION ON A HOST THAT IS NO PATH (29.0): a slot in a rack, a repository as a client fetches it. Its datum is
@@ -267,7 +267,10 @@ class Law:
 
     def __init__(self, root=ROOT):
         self.root = root
-        law = dmknowledge._fm(os.path.join(root, 'seed', 'std-vocab.md'))
+        sys.path.insert(0, ROOT)                    # the core's systems and units (core/law/), as the gate reads them
+        from core import standards, read as core_read
+        law = {'anchor_systems': list(standards.here(root).tables.get('systems') or []),
+               'units': list(core_read.data(os.path.join(standards.here(root).law_dir, 'units.yaml')).get('units') or [])}
         garden = dmknowledge._fm(os.path.join(root, 'VOCAB.md'))
         adds = garden.get('registry_additions') or {}
         # a garden's own systems: today's `registry_additions.anchor_systems`, or the core's rows `systems` (v1 part 7)
@@ -404,7 +407,7 @@ def cell_anchors(law, name, position):
 
 # ---- the place line --------------------------------------------------------------------------------------------------
 def place_anchors(law, name, position, moment=None):
-    import dmgeo
+    import geo as dmgeo
     at = dmgeo.resolve_relative(position, root=law.root) if name == 'relative' else position
     p = dmgeo.parse(at, law.root)
     out = {'system': name, 'position': position, 'resolved': at if at != position else None, 'cells': [], 'nearest': []}
@@ -558,7 +561,7 @@ def main():
         try:
             a = anchors(only, moment=moment)
         except ValueError as e:
-            print(f"dmwhere: {e}"); return 1
+            print(f"where: {e}"); return 1
         print(show(a))
         return 0
     print(f"host {me} -> bean {hid or 'NONE (this machine has no bean; every root is unresolvable)'}"

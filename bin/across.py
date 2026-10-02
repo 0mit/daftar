@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""dmacross — a reading across gardens: a value another garden holds, read at a commit it published and granted (24.0, N35).
+"""across — a reading across gardens: a value another garden holds, read at a commit it published and granted (24.0, N35).
 
-    python3 bin/dmacross.py read <garden-bean> <bean>:<field path> [--commit <sha>]
+    python3 bin/across.py read <garden-bean> <bean>:<field path> [--commit <sha>]
 
 A reading here may take an input whose origin is `garden` (`selection_form.inputs`): a value another garden holds —
 a share of a candle two gardens burn, a reading of a series kept there. It is READ, never copied: the other garden's
@@ -15,7 +15,7 @@ A COMMIT IS READ ONLY WHEN IT IS
   PUBLISHED  reachable from what that garden publishes — the branch its repository has checked out, `HEAD` — so a
              commit it kept on a side branch, or never made, is not read (`NotPublished`);
   GRANTED    that garden, AT THAT COMMIT, grants `read` over the bean read to the person its own `garden` bean for THIS
-             garden is owned by — this garden's gardener as that garden knows them (`dmpass.may`, the grant question,
+             garden is owned by — this garden's gardener as that garden knows them (`pass.may`, the grant question,
              asked of the other garden's own beans at that commit) (`NotGranted`).
 
 The act that fixes such a reading records `pin: {commit, at, garden}` (`pin_form`), so the reading can be read again.
@@ -30,8 +30,9 @@ import os, subprocess, sys, tempfile, shutil, tarfile, io
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse
-import dmpass
+import parse as dmparse
+import importlib
+dmpass = importlib.import_module('pass')
 
 
 class NotHere(Exception):
@@ -84,12 +85,12 @@ def repository(garden, *, root=ROOT):
     """The path of the other garden's repository on this host, from its `garden` bean's `located_at`, or NotHere."""
     fm = _bean(root, garden)
     if dmpass.runs_core(root) and isinstance(fm, dict):
-        import dmgarden
+        import garden as dmgarden
         G = dmgarden.core_garden(root)
         fm = dmgarden.terms(G.beans[garden], G.beans) if garden in G.beans else fm   # its locations, as `located_at`
     if not _is_garden(fm):
         raise NotHere(f"'{garden}' is no `garden` bean here — a garden read from is one this garden records")
-    import dmstale
+    import stale as dmstale
     tried = []
     for loc in fm.get('located_at') or []:
         if isinstance(loc, dict) and loc.get('at'):
@@ -119,7 +120,7 @@ def granted(repo, commit, bean, *, root=ROOT):
     """Why the other garden, at `commit`, grants `read` over `bean` to this garden's gardener as it knows them — or
     NotGranted. The grant question is asked of ITS beans at that commit, extracted read-only to a place of this run's."""
     here = dmparse.garden_id(root)
-    tmp = tempfile.mkdtemp(prefix='dmacross-')
+    tmp = tempfile.mkdtemp(prefix='across-')
     try:
         data = _git(repo, 'archive', '--format=tar', commit, 'beans', 'GARDEN.md', 'VOCAB.md', binary=True) or \
             _git(repo, 'archive', '--format=tar', commit, 'beans', 'GARDEN.md', binary=True)
@@ -160,7 +161,7 @@ def read(garden, commit, path, *, root=ROOT):
         from core import engine, lines, read as core_read
         b = engine.Bean(bean, f"beans/{bean}.md", core_read.loads(head or '', bean) or {})
         fm = lines.view(b, engine.Garden({bean: b}, root=repo))
-    import dmreckon
+    import reckon as dmreckon
     try:
         vals = [v for v, _w in dmreckon.walk(None, fm, fpath, at=bean)] if fpath else [fm]
     except (AttributeError, dmreckon.Refused) as e:
@@ -182,7 +183,7 @@ def main(argv):
     try:
         vals = read(argv[1], commit, argv[2])
     except (NotHere, NotPublished, NotGranted) as e:
-        print(f"dmacross: REFUSED ({type(e).__name__}) — {e}")
+        print(f"across: REFUSED ({type(e).__name__}) — {e}")
         return 1
     print(f"read at {vals.commit[:12]}, published and granted:")
     for v in vals:

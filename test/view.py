@@ -40,7 +40,7 @@ def said(out, rule, *words):
             and not ln.startswith("core check")]
 
 
-T = tempfile.mkdtemp(prefix="dmview-")
+T = tempfile.mkdtemp(prefix="view-")
 G = os.path.join(T, "garden-grain")
 
 BEANS = {
@@ -397,7 +397,7 @@ put("beans/silo-controller.md", _ctl)
 # belongs to (following `via`), closed by default; race and correlate; units read from the law; a second adapter beside
 # the first; the opt-in act; the cookbook's recipe.
 out, rc = dmview("check")
-check("dmview check: the page and its drawings agree", rc == 0 and "the page and its drawings agree" in out, out[-800:])
+check("view check: the page and its drawings agree", rc == 0 and "the page and its drawings agree" in out, out[-800:])
 _page = get("beans/grain-page.md")
 for _bad in ("file:../drawings.py", "file:/tmp/drawings.py", "file:bin/../../drawings.py", "file:beans/grain-page.md"):
     put("beans/grain-page.md", _page.replace("drawings: 'file:bin/drawings.py'", f"drawings: '{_bad}'", 1))
@@ -406,7 +406,7 @@ for _bad in ("file:../drawings.py", "file:/tmp/drawings.py", "file:bin/../../dra
           f"refused, and nothing of it runs", rc != 0 and "inside the garden" in out, out[-600:])
 put("beans/grain-page.md", _page)
 out, rc = dmview("elements", "silo")
-check("dmview elements: ids are the slugs of labels, and each records the being it depicts",
+check("view elements: ids are the slugs of labels, and each records the being it depicts",
       rc == 0 and re.search(r"(?m)^silo\s+store\s+silo-controller", out) and re.search(r"(?m)^start-fans\s+action", out), out)
 
 DRAWINGS_T = get("bin/drawings.py")
@@ -460,11 +460,11 @@ ASSET_REFUSED = [
 for _name, _rel, _old, _new, _words in ASSET_REFUSED:
     _orig = get(_rel)
     if _old not in _orig:
-        check(f"dmview REFUSES: {_name}", False, f"the probe could not be written: {_old!r} is not in {_rel}")
+        check(f"view REFUSES: {_name}", False, f"the probe could not be written: {_old!r} is not in {_rel}")
         continue
     put(_rel, _orig.replace(_old, _new, 1))
     out, rc = dmview("check")
-    check(f"dmview REFUSES by name: {_name}", rc == 2 and all(w in out for w in _words), out[-900:])
+    check(f"view REFUSES by name: {_name}", rc == 2 and all(w in out for w in _words), out[-900:])
     put(_rel, _orig)
 
 # ZOOM AND FRAME, AS THE GATE AND THE ASSET READ THEM
@@ -666,23 +666,23 @@ put("beans/grain-page.md", PAGE_T)
 # PIPES ALONE ARE WIRING: what a drawing draws may be joined by pipes and run no process of its own.
 put("beans/grain-page.md", PAGE_T.replace("processes: {bean: silo-controller, field: processes}, ", "", 1))
 out, rc = dmview("check")
-check("dmview passes `pipes` without `processes`: pipes alone are wiring enough", rc == 0 and "processes" not in out, out[-700:])
+check("view passes `pipes` without `processes`: pipes alone are wiring enough", rc == 0 and "processes" not in out, out[-700:])
 put("beans/grain-page.md", PAGE_T)
 
 # A REACH IT CANNOT PROBE IS SAID, NEVER DROPPED: a being with no endpoint of the protocol and no address to probe.
 put("beans/yard-monitor.md", YARD_T.replace("  - need: {id: reaches-pump-snmp,", "  - need: {id: reaches-coop-web, by: self, of: [grain-coop], through: http}\n  - need: {id: reaches-pump-snmp,", 1))
 out, rc = dmview("check")
-check("dmview WARNS, and passes: a reach the adapter cannot probe (grain-coop over http: no endpoint, no address)",
+check("view WARNS, and passes: a reach the adapter cannot probe (grain-coop over http: no endpoint, no address)",
       rc == 0 and "warn: monitor yard-monitor: reaches grain-coop over http, and does not probe it" in out, out[-700:])
 put("beans/yard-monitor.md", YARD_T)
 
 # --- the report, and the page it carries
 out, rc = dmview("report")
-check("dmview report without --out is refused, and writes nothing inside the garden unasked", rc == 2 and "--out" in out, out)
+check("view report without --out is refused, and writes nothing inside the garden unasked", rc == 2 and "--out" in out, out)
 REPORT = os.path.join(T, "report.html")
 out, rc = dmview("report", "--out", REPORT)
 HTML = open(REPORT, encoding="utf-8").read() if os.path.isfile(REPORT) else ""
-check("dmview report: one self-contained file with the runtime, the author mode and both drawings",
+check("view report: one self-contained file with the runtime, the author mode and both drawings",
       rc == 0 and "viewMount" in HTML and "authbtn" in HTML and "The silo" in HTML and "The drying run" in HTML, out[-600:])
 import json
 _m = re.search(r'<script type="application/json" id="viewdata">(.*?)</script>', HTML, re.S)
@@ -791,7 +791,7 @@ if _browser and HTML:
 else:
     print("NOTE  the runtime was not driven in a browser: none on this machine")
 
-# --- import: an author-mode selection, written through dmsafe and journalled
+# --- import: an author-mode selection, written through safe and journalled
 SEL = {"order": ["silo", "drying"], "views": P["author"]["views"], "bindings": P["author"]["bindings"],
        "reference": P["author"]["reference"], "fields": P["author"]["fields"]}
 _sp = os.path.join(T, "sel.json")
@@ -811,7 +811,7 @@ json.dump(SEL2, open(_sp, "w", encoding="utf-8"))
 out, rc = dmview("import", _sp, "--who", "tessa")
 _pg = get("beans/grain-page.md")
 _ga = gate()
-check("import: a new order, a relabelled drawing, a YAML word as a label and a new binding are written through dmsafe, "
+check("import: a new order, a relabelled drawing, a YAML word as a label and a new binding are written through safe, "
       "read back as intended, journalled naming the page, and pass the gate", rc == 0 and "of: [drying, silo]" in _pg
       and ("label: 'yes'" in _pg or 'label: "yes"' in _pg) and "silo-load:" in _pg and "[[grain-page]]" in get("log/journal.md")[len(_j0):]
       and _ga[1] == 0 and dmview("check")[1] == 0, out[-600:] + _ga[0][-400:])

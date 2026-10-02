@@ -26,8 +26,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read, translate  # noqa: E402
+import grow  # noqa: E402 — a release of the core, and the release in today's words
 from core.law import Law  # noqa: E402
-import dmparse, dmpass, dmsafe  # noqa: E402
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')
+import safe as dmsafe  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -106,21 +110,12 @@ namespaces:
 
 try:
     # ---- THE RELEASE: v1.0.0 of the core, and two gardens grown from it
-    law = dmparse.loads(dmparse.split_front_matter(text(os.path.join(ROOT, 'seed', 'std-vocab.md')))[0])
-    os.makedirs(REL)
-    for f in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
-                         dmpass.language(text(os.path.join(ROOT, 'seed', 'LANGUAGE'))), dmpass.offered(law)):
-        os.makedirs(os.path.join(REL, os.path.dirname(f)), exist_ok=True)
-        shutil.copy2(os.path.join(ROOT, f), os.path.join(REL, f))
-    for f in ('GARDEN.md.template', 'VOCAB.md.template'):
-        shutil.copy2(os.path.join(ROOT, 'core', 'guide', f), os.path.join(REL, 'seed', f))
-    for c in (('git', 'init', '-q'), ('git', 'add', '-A'), ('git', 'commit', '-qm', 'the core'), ('git', 'tag', 'v1.0.0')):
-        run(*c, cwd=REL)
+    grow.release(REL)
     for g, who, name in ((A, 'ada', 'Ada'), (B, 'ben', 'Ben')):
         r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), g, '--gardener', who, '--gardener-name', name, cwd=T)
         check(f"{who}'s garden grows from v1.0.0 in the core (core@{VERSION}), the four tools between gardens in it",
               r.returncode == 0 and f'core@{VERSION}' in text(os.path.join(g, 'GARDEN.md'))
-              and all(os.path.isfile(os.path.join(g, 'bin', f"{v}.py")) and os.path.isfile(os.path.join(g, 'bin', f"dm{v}.py"))
+              and all(os.path.isfile(os.path.join(g, 'bin', f"{v}.py")) and not os.path.exists(os.path.join(g, 'bin', f"dm{v}.py"))
                       for v in ('propose', 'across', 'pass', 'held')), r.out[-800:])
         run(PY, 'bin/install.py', cwd=g)
     IDA = run(PY, 'bin/propose.py', 'id', cwd=A).out.split('"')[1]
@@ -128,17 +123,13 @@ try:
     check("each garden has an id of its own, which `propose.py id` prints", re.fullmatch(r'[0-9a-f]{12}', IDA) and
           re.fullmatch(r'[0-9a-f]{12}', IDB) and IDA != IDB, (IDA, IDB))
 
-    # ---- THE LAW: the flow law generated, rewritten in the pass's valency, decided by the nearest row
-    gen = run(PY, 'core/translate.py', 'flows', cwd=ROOT)
-    check("law: core/law/flows.yaml is what std-vocab generates (its methods, rows and metadata)",
-          gen.returncode == 0 and gen.out == text(os.path.join(ROOT, 'core', 'law', 'flows.yaml')), gen.out[:300])
+    # ---- THE LAW: the flow law in the pass's valency, decided by the nearest row
     L0 = Law.load()
-    old = [f['flow'] for f in law.get('flows') or []]
-    core_rows = {f.get('flow') for f in L0.flows}
-    check(f"law: each of today's {len(old)} rows is a row of the core or dropped with why ({len(L0.flows)} rows, "
-          f"{len(L0.flows_dropped)} dropped: {', '.join(L0.flows_dropped)})",
-          all(f in core_rows or f in L0.flows_dropped for f in old) and len(L0.flows) + len(L0.flows_dropped) == len(old)
-          and not any('to' in f and isinstance(f['to'], dict) for f in L0.flows), sorted(set(old) - core_rows))
+    check(f"law: the flow law's {len(L0.flows)} rows each a pass `from`, `to` and `through`, none to a mapping, and each "
+          f"row it dropped saying why ({', '.join(L0.flows_dropped)})",
+          len(L0.flows) >= 30 and all(f.get('flow') and f.get('through') for f in L0.flows)
+          and not any('to' in f and isinstance(f['to'], dict) for f in L0.flows)
+          and all((r or {}).get('why') for r in L0.flows_dropped.values()), L0.flows_dropped)
     check("law: today's take-down is the act `say`, pass-on and upgrade `forward` and `adopt`; the methods are a table",
           'take-down' not in L0.methods and {'forward', 'adopt', 'stamp'} <= set(L0.methods)
           and L0.decide('words', 'estate', 'say', 'say')[0] and 'forward' in L0.table('verbs'), sorted(L0.methods))

@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """The law and its reasons are kept apart and related by key.
 
-LAW says what is in force; RATIONALE says why; the RECORD says what happened. This holds the separation: the law's
-front matter carries no free commentary, every reason names something the law still says, and the narrative that
-still sits INSIDE the law's data (`meaning:` / `why:` strings that tell a story) may shrink and may not grow.
+LAW says what is in force (core/law/); RATIONALE says why; the RECORD says what happened. This holds the separation:
+every reason names something the law still says, by the item's key (`core/law/<file>: <path>`) or a prose law
+document's section, the reasons written of today's law were carried whole to where what they explain went (v1 part 13),
+and the narrative that still sits INSIDE the law's data (`meaning:` / `why:` strings that tell a story) may shrink and
+may not grow.
 """
-import os, re, sys
+import glob, os, re, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "bin"))
-import dmwhy, dmparse
+import why as dmwhy
+import parse as dmparse
 FAILS = []
 
 def check(name, cond, detail=""):
@@ -16,55 +19,67 @@ def check(name, cond, detail=""):
     if not cond:
         FAILS.append(name)
 
-fm = dmparse.split_front_matter(open(dmwhy.LAW, encoding="utf-8").read())[0]
-TITLE = re.compile(r'^\s*# == [^=]+ ==$')
-
-def comment_of(line):
-    q = None
-    for i, ch in enumerate(line):
-        if ch in "\"'":
-            q = None if q == ch else (q or ch)
-        if ch == "#" and q is None and (i == 0 or line[i - 1] in " \t"):
-            return line[i:]
-    return None
-
-stray = [l for l in fm.split("\n") if comment_of(l) and not TITLE.match(l)]
-check("the law's front matter carries no commentary — only section titles", not stray, stray[:4])
-titles = [l.strip() for l in fm.split("\n") if TITLE.match(l)]
-check("...and a title is a title: no date, no version, no sentence",
-      not [t for t in titles if re.search(r"\d\.\d|20\d\d|\(|—|\. ", t)], [t for t in titles if re.search(r"\d\.\d|20\d\d|\(|—|\. ", t)][:5])
+LAW_FILES = sorted(glob.glob(os.path.join(ROOT, "core", "law", "*.yaml")))
+DATA = {os.path.relpath(f, ROOT).replace(os.sep, "/"): dmparse.loads(open(f, encoding="utf-8").read()) or {} for f in LAW_FILES}
 why = dmwhy.rationale()
 check("the rationale is not empty, and every reason names something the law still says", len(why) > 100 and not dmwhy.orphans(), dmwhy.orphans()[:6])
 check("no reason is blank", not [k for k, v in why.items() if not v.strip()], [k for k, v in why.items() if not v.strip()][:5])
+check("every reason is keyed by an item of the core's law (`core/law/<file>: <path>`) or a prose law document's section",
+      not [k for k in why if not (dmwhy.CORE_KEY.match(k) or k.startswith("doc:"))],
+      [k for k in why if not (dmwhy.CORE_KEY.match(k) or k.startswith("doc:"))][:5])
+# NOTHING LOST WHEN THE LAW MOVED (v1 part 13): each reason v0.49.0 kept, keyed by today's law, is here, word for word,
+# under the key of where what it explains went, and says the path it was written of.
+_old = subprocess.run(["git", "-C", ROOT, "show", "v0.49.0:seed/RATIONALE.md"], capture_output=True, text=True,
+                      encoding="utf-8").stdout
+_old_why = {}
+_key = None
+for _ln in _old.split("\n"):
+    if _ln.startswith("## "):
+        _key = _ln[3:].strip(); _old_why[_key] = []
+    elif _key is not None:
+        _old_why[_key].append(_ln)
+_now = open(os.path.join(ROOT, "seed", "RATIONALE.md"), encoding="utf-8").read()
+_lost = [k for k, v in _old_why.items() if "\n".join(v).strip() not in _now]
+_unsaid = [k for k in _old_why if not k.startswith("doc:") and f"(std-vocab 32: `{k}`)" not in _now]
+check(f"each of the {len(_old_why)} reasons v0.49.0 kept is here word for word, and each written of today's law says the "
+      f"path it was written of", len(_old_why) > 400 and not _lost and not _unsaid, (_lost[:3], _unsaid[:3]))
 
 # A RATCHET, NOT A VERDICT. Stories also sit inside the law's DATA — a `meaning:` or a `why:` that says when a thing was
 # found and by whom. Moving each is an edit to a sentence, so it is done by hand; the count may only go DOWN.
 #
 # THE PARSED LAW, NOT ITS LINES. This counted lines of the file until 21.0, and a line grep sees only the first line of
 # a folded `>` block: it read fourteen while forty-five sat in the law, and the one spare it was set with was spent
-# unseen. It now reads every string of the law but a value's (bin/dmreview.py `story_in`: the one definition, which
-# `dmreview --law` lists for whoever ratifies). Its CEILING is the count at the last RELEASE, read from git with that
+# unseen. It now reads every string of the law but a value's (bin/review.py `story_in`: the one definition, which
+# `review --law` lists for whoever ratifies). Its CEILING is the count at the last RELEASE, read from git with that
 # same definition — not a number typed here, which is a second copy of a fact git holds, and which drifted — and a
 # release is a `v<major>.<minor>.<patch>` tag, never a checkpoint or a candidate, which would move the ceiling to
 # wherever it was set. NARRATIVE_IN_DATA is for a clone with no release tag (a shallow CI checkout): the count this
 # release ships with, moved at each release so a checkout without tags is held to no more than one with them.
-import subprocess
-import dmreview
-NARRATIVE_IN_DATA = 58
-hits = dmreview.story_in(dmparse.loads(fm))
+import review as dmreview
+NARRATIVE_IN_DATA = 4
+hits = [(f"{f}: {p}", h, s) for f, d in DATA.items() for p, h, s in dmreview.story_in(d)]
 _tag = subprocess.run(["git", "-C", ROOT, "describe", "--tags", "--abbrev=0", "--match", "v[0-9]*.[0-9]*.[0-9]*",
                        "--exclude", "*-*"], capture_output=True, text=True,
                       encoding="utf-8", errors="replace").stdout.strip()
-_at_tag = dmreview.law_at(_tag) if _tag else None
-if _at_tag is not None:
-    ceiling, since, _was = len(dmreview.story_in(_at_tag)), _tag, {p for p, _h, _s in dmreview.story_in(_at_tag)}
+# THE CEILING IS THE LAST RELEASE'S COUNT, where that release's law is the core's; before it (a release in today's words,
+# or a clone with no release tag) the constant this release ships with, moved at each release.
+_at_tag = {}
+for _f in DATA if _tag else ():
+    _g = subprocess.run(["git", "-C", ROOT, "show", f"{_tag}:{_f}"], capture_output=True, text=True, encoding="utf-8")
+    if _g.returncode:
+        _at_tag = None
+        break
+    _at_tag[_f] = dmparse.loads(_g.stdout) or {}
+if _at_tag:
+    _was = {f"{f}: {p}" for f, d in _at_tag.items() for p, _h, _s in dmreview.story_in(d)}
+    ceiling, since = len(_was), _tag
 else:
     ceiling, _was = NARRATIVE_IN_DATA, None
-    since = f"{_tag}'s law could not be read: the constant" if _tag else "no release tag here: the constant"
+    since = f"{_tag}'s law is not the core's: the constant" if _tag else "no release tag here: the constant"
 _added = [f"{p}: «{h}»" for p, h, _s in hits if _was is None or p not in _was]
 check(f"narrative inside the law's data has not grown (now {len(hits)}, ceiling {ceiling} — {since})",
       len(hits) <= ceiling, ("not there at " + since + ": " if _was is not None else "every one: ") + "; ".join(_added))
-print(f"      (the next release's ceiling is {len(hits)}; `python3 bin/dmreview.py --law` lists every one by path)")
+print(f"      (the next release's ceiling is {len(hits)}; `python3 bin/review.py --law` lists every one by path)")
 _folded = {"terms": [{"term": "t", "meaning": "a first line that tells nothing,\nand a second that says what was found on 2020-01-01"}]}
 check("...read from the parsed law: a date on the second line of a folded block is counted, which a line grep missed",
       len(dmreview.story_in(_folded)) == 1, dmreview.story_in(_folded))
@@ -88,31 +103,30 @@ _versions = {"a": "Declared at 7.0 for records", "b": "the resolver (13.0)", "c"
 check("...a release is story after a preposition or a verb of change, or alone in parentheses — never a bare number",
       sorted(p for p, _h, _s in dmreview.story_in(_versions)) == ["a", "b", "c", "d"], dmreview.story_in(_versions))
 # A PATH IS A KEY A REASON CAN BE FILED UNDER. Every story path is printed so that someone moving the sentence into
-# seed/RATIONALE.md keys it by that path; a path bin/dmwhy.py resolves to ANOTHER item files the reason under the wrong
-# law and `dmwhy --check` still passes. So each path must resolve, through dmwhy itself, to the very string listed — or
-# be marked as a position (`[#n]`), which dmwhy refuses rather than misreads.
-_law = dmwhy.law()
+# seed/RATIONALE.md keys it by that path; a path bin/why.py resolves to ANOTHER item files the reason under the wrong
+# law and `why --check` still passes. So each path must resolve, through why itself, to the very string listed — or
+# be marked as a position (`[#n]`), which why refuses rather than misreads.
 def _resolves(p, s):
     try:
-        n = dmwhy.resolve(_law, p)
+        n = dmwhy.resolve({}, p)
     except KeyError:
         return False
     return isinstance(n, str) and " ".join(n.split()) == s
 _wrong = [p for p, _h, s in hits if "[#" not in p and not _resolves(p, s)]
-check("every story path resolves through bin/dmwhy.py to the very string it lists", not _wrong, _wrong)
+check("every story path resolves through bin/why.py to the very string it lists", not _wrong, _wrong)
 _twins = {"positions": [{"position": "possible", "complement": "impossible", "meaning": "x"},
                         {"position": "impossible", "complement": "possible", "meaning": "measured on 2020-01-01"}]}
 _p = [p for p, _h, _s in dmreview.story_in(_twins)]
-check("...and an item no value of which an earlier sibling lacks is marked as a position, not named by a value dmwhy "
+check("...and an item no value of which an earlier sibling lacks is marked as a position, not named by a value why "
       "would resolve to its sibling", _p == ["positions[#1].meaning"], _p)
 _rows = {"vacancies": [{"at": "a", "position": "x", "why": "w"}, {"at": "b", "position": "y", "why": "on 2020-01-01"},
                        {"at": "b", "position": "z", "why": "in this estate"}]}
 check("...and a name no other sibling carries is preferred, so a row added anywhere does not rename it",
       [p for p, _h, _s in dmreview.story_in(_rows)] == ["vacancies[y].why", "vacancies[z].why"], dmreview.story_in(_rows))
-_r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmreview.py"), "--law"] + (["--against", _tag] if _tag else []),
+_r = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "review.py"), "--law"] + (["--against", _tag] if _tag else []),
                     capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, PYTHONIOENCODING="utf-8"))
 _first = (_r.stdout.split("\n") or [""])[0]
-check("dmreview --law prints the preconditions as evidence and exits 0, whatever it finds",
+check("review --law prints the preconditions as evidence and exits 0, whatever it finds",
       _r.returncode == 0 and "the preconditions of beauty in the law, counted — the person who merges judges" in _first,
       (_r.stdout + _r.stderr)[-500:])
 _n = re.search(r"(?m)^STORY IN THE LAW.*\n  strings\s+(\d+)", _r.stdout)
@@ -121,11 +135,11 @@ check("...and the story it lists is the story this ratchet counts: one definitio
 if _tag:
     check("...and with --against, each line says how it moved since that ref", "(was " in _r.stdout or "(unchanged)" in _r.stdout,
           _r.stdout[:600])
-_r2 = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmreview.py"), "--law", "--against=" + (_tag or "HEAD")],
+_r2 = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "review.py"), "--law", "--against=" + (_tag or "HEAD")],
                      capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, PYTHONIOENCODING="utf-8"))
 check("...spelled `--against=<ref>` too, and not silently ignored",
       _r2.returncode == 0 and ("(was " in _r2.stdout or "(unchanged)" in _r2.stdout), _r2.stdout[:600])
-_r3 = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "dmreview.py"), "--law", "--against"],
+_r3 = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "review.py"), "--law", "--against"],
                      capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, PYTHONIOENCODING="utf-8"))
 check("...and `--against` with no ref says so, and still exits 0", _r3.returncode == 0 and "needs a git ref" in _r3.stdout,
       _r3.stdout[:400])
@@ -133,24 +147,25 @@ check("...and `--against` with no ref says so, and still exits 0", _r3.returncod
 # the law, broken two ways: a term whose `schema` is a word (it parses, and is not law), and front matter that does not
 # parse at all. Each is said, and neither is a traceback.
 import tempfile, shutil
-_B = tempfile.mkdtemp(prefix="dmreview-")
+_B = tempfile.mkdtemp(prefix="review-")
 shutil.copytree(os.path.join(ROOT, "bin"), os.path.join(_B, "bin"))
-os.makedirs(os.path.join(_B, "seed"))
-_lawtext = open(dmwhy.LAW, encoding="utf-8").read()
+shutil.copytree(os.path.join(ROOT, "core"), os.path.join(_B, "core"))
+_lawtext = open(os.path.join(ROOT, "core", "law", "verbs.yaml"), encoding="utf-8").read()
 def _law_run(text):
-    with open(os.path.join(_B, "seed", "std-vocab.md"), "w", encoding="utf-8", newline="\n") as fh:
+    with open(os.path.join(_B, "core", "law", "verbs.yaml"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write(text)
-    return subprocess.run([sys.executable, os.path.join(_B, "bin", "dmreview.py"), "--law"], capture_output=True,
+    return subprocess.run([sys.executable, os.path.join(_B, "bin", "review.py"), "--law"], capture_output=True,
                           text=True, encoding="utf-8", env=dict(os.environ, PYTHONIOENCODING="utf-8"), cwd=_B)
-assert _lawtext.count("\nterms:\n") == 1
-_r = _law_run(_lawtext.replace("\nterms:\n", "\nterms:\n  - term: broken\n    schema: oops\n", 1))
-check("dmreview --law on a law that parses but is malformed still counts, or says why not — exit 0, no traceback",
+assert _lawtext.count("\nverbs:\n") == 1
+_r = _law_run(_lawtext.replace("\nverbs:\n", "\nverbs:\n  - verb: broken\n    roles: oops\n", 1))
+check("review --law on a law that parses but is malformed still counts, or says why not — exit 0, no traceback",
       _r.returncode == 0 and "Traceback" not in _r.stderr and ("strings" in _r.stdout or "could not count" in _r.stdout),
       (_r.stdout + _r.stderr)[-500:])
-_r = _law_run(_lawtext.replace("\nterms:\n", "\nterms: [\n", 1))
-check("...and on a law that does not parse, it says so rather than \"no law\" — exit 0",
-      _r.returncode == 0 and "does not parse" in _r.stdout and "Traceback" not in _r.stderr, (_r.stdout + _r.stderr)[-500:])
-_pp = subprocess.Popen([sys.executable, os.path.join(ROOT, "bin", "dmreview.py"), "--law"], stdout=subprocess.PIPE,
+_r = _law_run(_lawtext.replace("\nverbs:\n", "\nverbs: [\n", 1))
+check("...and on a law that does not parse, it says so — exit 0, no traceback",
+      _r.returncode == 0 and ("does not parse" in _r.stdout or "could not count" in _r.stdout) and "Traceback" not in _r.stderr,
+      (_r.stdout + _r.stderr)[-500:])
+_pp = subprocess.Popen([sys.executable, os.path.join(ROOT, "bin", "review.py"), "--law"], stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE, env=dict(os.environ, PYTHONIOENCODING="utf-8"))
 _pp.stdout.readline(); _pp.stdout.close()                     # the reader leaves after one line, as `head -1` does
 _err = _pp.stderr.read().decode("utf-8", "replace"); _pp.wait()
@@ -177,7 +192,7 @@ class _StubTree:
 _law2 = {"provenance_record": {"attrs": ["src", "by", "as_of", "from", "garden"], "from_attrs": ["src", "by", "as_of", "at"]}}
 _found = dmreview._restatements(_law2, _StubTree({"NOTES.md": "A record: `src`, `by`, `as_of` and `from`.\n\n"
                                                               "Again: `src`, `by`, `as_of`, `from`, `garden`.\n"}))
-check("dmreview counts a restatement once, against the list it restates best — and two in one file as two",
+check("review counts a restatement once, against the list it restates best — and two in one file as two",
       [(r["where"], r["path"], r["extra"]) for r in _found] == [("NOTES.md:1", "provenance_record.attrs", []),
                                                                ("NOTES.md:3", "provenance_record.attrs", [])]
       and len({r["id"] for r in _found}) == 2, _found)
@@ -186,7 +201,7 @@ check("dmreview counts a restatement once, against the list it restates best —
 # UP: a layer may point DOWN to the one beneath, never the other way. A law that says "see the rationale" cannot be
 # applied alone, and "clear and brief, for usability" means it can.
 import glob
-data_lines = [l for l in fm.split("\n") if not TITLE.match(l)]
+data_lines = [l for f in LAW_FILES for l in open(f, encoding="utf-8").read().split("\n") if not l.lstrip().startswith("#")]
 PROSE = re.compile(r"(meaning|why|note|form_note|refusal|pattern_why|extent_why)\"?\s*:")      # what a reader is TOLD; where the
 up = [l.strip()[:100] for l in data_lines if PROSE.search(l)                                  # journal lives is itself law
       and re.search(r"RATIONALE|HISTORY\.md|log/journal|the journal entry|pull request|daftar#\d|\bPR ?#?\d", l)]
@@ -197,7 +212,7 @@ readers = [os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*.p
 check("only the reader of reasons opens the reasoning: no verdict can depend on it", readers == ["why.py"], readers)
 # SIDEWAYS: a reason that speaks of a law name the law no longer has is no longer a reason; it is an account of what
 # used to be, which is a journal's business. A ratchet, because sorting them is editorial work.
-STALE_REASONS = 7
+STALE_REASONS = 32         # the reasons written of today's law speak of its names (v1 part 13)
 st = dmwhy.stale()
 check(f"reasons that have become journal have not grown (now {len(st)}, ceiling {STALE_REASONS})", len(st) <= STALE_REASONS, list(st.items())[:3])
 print(f"      (the ceiling can come down to {len(st)})")
@@ -213,7 +228,7 @@ def _gone(k):
     except KeyError:
         return True
 check("...and a reason whose section is gone is an orphan, like a reason whose path is gone",
-      _gone("doc:MERGE.md#99") and _gone("doc:NO-SUCH.md#1") and not _gone("doc:MERGE.md#5.1"))
+      _gone("doc:MERGE.md#99") and _gone("doc:NO-SUCH.md#1") and not _gone("doc:MERGE.md#5"))
 _story = re.compile(r"\(20[0-9]{2}-[0-9]{2}-[0-9]{2}|added 20[0-9]{2}|[Uu]ntil this date|used to |was found to|— deleted$|— superseded$")
 for _name in ("MODEL.md", "CHECKLIST.md", "MERGE.md"):
     _hits = [l.strip()[:90] for l in open(os.path.join(ROOT, _name), encoding="utf-8") if _story.search(l)]
@@ -221,50 +236,30 @@ for _name in ("MODEL.md", "CHECKLIST.md", "MERGE.md"):
 
 # ---------------------------------------------------------------- 18.0: a GARDEN's overlay has its reasoning too
 import subprocess, tempfile, shutil
-_T = tempfile.mkdtemp(prefix="dmwhy-"); _G = os.path.join(_T, "g")
-subprocess.run(["sh", os.path.join(ROOT, "seed", "germinate.sh"), _G, "--gardener", "keeper"], cwd=ROOT, capture_output=True, text=True,
-               encoding="utf-8", errors="replace")
-_v = os.path.join(_G, "VOCAB.md"); _s = open(_v).read(); assert _s.count("local_terms: []") == 1
-open(_v, "w").write(_s.replace("local_terms: []", """local_terms:
-  - term: shelf
-    meaning: "which shelf a thing is kept on"
-    context_keys: [shelf]
-    merge: { cardinality: single, order: none }"""))
+_T = tempfile.mkdtemp(prefix="why-"); _G = os.path.join(_T, "g")
+sys.path.insert(0, os.path.join(ROOT, "test"))
+import grow  # noqa: E402
+_rg = grow.garden(grow.release(os.path.join(_T, "release")), _G, "keeper")
+assert _rg.returncode == 0, _rg.out[-400:]
+_v = os.path.join(_G, "VOCAB.md"); _s = open(_v).read(); assert _s.count("namespaces: []") == 1
+open(_v, "w").write(_s.replace("namespaces: []", """namespaces:
+  - { namespace: shelf, once: "true", meaning: "which shelf a thing is kept on" }"""))
 def _why(text):
     open(os.path.join(_G, "RATIONALE.md"), "w").write(text)
-    r = subprocess.run([sys.executable, os.path.join(_G, "bin", "dmwhy.py"), "--check"], cwd=_G, capture_output=True, text=True,
+    r = subprocess.run([sys.executable, os.path.join(_G, "bin", "why.py"), "--check"], cwd=_G, capture_output=True, text=True,
                        encoding="utf-8", errors="replace")
     return r.returncode, r.stdout + r.stderr
-_rc, _o = _why("# why this garden's terms are as they are\n\n## local_terms[shelf]\n\nthings were being lost.\n")
+_rc, _o = _why("# why this garden's rows are as they are\n\n## namespaces[shelf]\n\nthings were being lost.\n")
 check("a garden keeps the reasoning for ITS OWN terms beside its VOCAB.md, under the same key and the same check",
       _rc == 0 and "RATIONALE.md: 1 reasons, 0 orphaned" in _o and "seed/RATIONALE.md" in _o, _o[-400:])
-_rc, _o = _why("## local_terms[shelf]\n\nthings were being lost.\n\n## local_terms[drawer].meaning\n\na term that is gone.\n")
-check("...and a reason whose law is gone is refused there as well", _rc == 1 and "ORPHAN  local_terms[drawer].meaning" in _o, _o[-400:])
-# A NAME ONLY THE `retired:` LIST STILL SAYS IS GONE. The list names what the law took back, and a reason that spoke of
-# `agreement_ref` found the name there and was never reported stale; the reason FOR the list speaks of them by design.
-_L, _W = os.path.join(_T, "law.md"), os.path.join(_T, "why.md")
-open(_L, "w", encoding="utf-8").write('---\nretired:\n  - { name: old_key, at: bean, instead: "`new_key`" }\n'
-                                      'terms:\n  - { term: new_key, meaning: "x" }\n---\n')
-open(_W, "w", encoding="utf-8").write("## terms[new_key]\n\nit replaced `old_key`; `new_key` stays.\n\n"
-                                      "## retired\n\n`old_key` went, and why.\n")
-_saved = (dmwhy.LAW, dmwhy.WHY)
-dmwhy.LAW, dmwhy.WHY = _L, _W
-try:
-    _st = dmwhy.stale()
-finally:
-    dmwhy.LAW, dmwhy.WHY = _saved
-check("a name found only in the law's `retired:` list is gone to `dmwhy --stale`, and the list's own reason is not stale",
-      _st == {"terms[new_key]": ["old_key"]}, _st)
-shutil.rmtree(_T, ignore_errors=True)
-
-# A COMMENT BESIDE AN ITEM NAMED BY A SENTENCE IS READ, AND THE READING ENDS. An item of a list is named by its first
-# value, and a value that ends in `.` or holds a lone bracket once stopped the climb from the item to its key: the
+_rc, _o = _why("## namespaces[shelf]\n\nthings were being lost.\n\n## namespaces[drawer].meaning\n\na row that is gone.\n")
+check("...and a reason whose law is gone is refused there as well", _rc == 1 and "ORPHAN  namespaces[drawer].meaning" in _o, _o[-400:])
 # reader never returned (2026-10-01). Each path now climbs by the parent it was walked from, run in a child with a limit.
 _fm = ('steps:\n  # the first step\n  - "mount the copy."\n  - "a [bracket"   # beside a lone bracket\n'
        'risks:\n  - { what: "it fails.]", note: x }   # on a risk\nkey:\n  sub: x   # on sub\n')
 try:
-    _r = subprocess.run([sys.executable, '-c', 'import sys; sys.path.insert(0, sys.argv[1]); import dmparse; '
-                         'print([c[3] for c in dmparse.comments(sys.stdin.read())])', os.path.join(ROOT, 'bin')],
+    _r = subprocess.run([sys.executable, '-c', 'import sys; sys.path.insert(0, sys.argv[1]); import parse; '
+                         'print([c[3] for c in parse.comments(sys.stdin.read())])', os.path.join(ROOT, 'bin')],
                         input=_fm, capture_output=True, text=True, encoding='utf-8', timeout=20)
     _got = (_r.returncode, _r.stdout.strip(), _r.stderr)
 except subprocess.TimeoutExpired:

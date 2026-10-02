@@ -5,7 +5,7 @@
     python3 bin/launch.py record [--keep NAME] -- <command> [args...]   # a run's output, kept off git or captured
     python3 bin/launch.py log                                           # the session's passes, and what POST saw
 
-(`python` on Windows; `bin/dmlaunch.py`, today's name, runs this too until v1's part 13.) It runs in a session's own
+(`python` on Windows; `bin/launch.py`, today's name, runs this too until v1's part 13.) It runs in a session's own
 copy, on the branch `session/<slug>` that `bin/session.py open`
 makes, whose bean `beans/session-<slug>.md` it gives a `pass_log` naming `captures/passes/<slug>.jsonl`. Every request is
 made of pieces — this tool's own text, the person's task, a file given or read, the model's own earlier turns, a tool's
@@ -55,8 +55,9 @@ import urllib.error
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dmparse  # noqa: E402,F401 — its import sets UTF-8 on stdout and stderr
-import dmpass  # noqa: E402
+import parse as dmparse  # noqa: E402,F401 — its import sets UTF-8 on stdout and stderr
+import importlib
+dmpass = importlib.import_module('pass')  # noqa: E402
 
 PY = 'python' if os.name == 'nt' else 'python3'
 ME = 'bin/launch.py'
@@ -86,7 +87,7 @@ GUARDS = {
 
 
 def fail(msg):
-    print(dmparse.said(f"dmlaunch: {msg}"), file=sys.stderr)
+    print(dmparse.said(f"launch: {msg}"), file=sys.stderr)
     sys.exit(2)
 
 
@@ -497,7 +498,7 @@ class Launch:
             return f"wrote {rel} ({len(str(a.get('content', '')))} characters)", {'file': ME}, None
         if name == 'save':
             who = f"agent ({self.c['model']}, session {self.slug})"
-            save = 'bin/save.py' if os.path.isfile(os.path.join(self.root, 'bin', 'save.py')) else 'bin/dmsave.py'
+            save = 'bin/save.py' if os.path.isfile(os.path.join(self.root, 'bin', 'save.py')) else 'bin/save.py'
             r = subprocess.run([sys.executable, os.path.join(self.root, *save.split('/')), who,
                                 str(a.get('what', '')).strip() or 'a save', '--body', str(a.get('body', ''))],
                                cwd=self.root, capture_output=True, text=True, encoding='utf-8', errors='replace')
@@ -511,7 +512,7 @@ class Launch:
         hits = dmpass.post_hits(text, self._denied)
         if hits:
             self.store.post({'turn': self.turn, 'tool': name, 'hits': hits})
-            print(dmparse.said(f"dmlaunch: POST — {name}'s result holds lines of "
+            print(dmparse.said(f"launch: POST — {name}'s result holds lines of "
                                f"{', '.join(f'{p} ({n})' for p, n in sorted(hits.items()))}, which a request may not "
                                f"carry; recorded, not refused (POST warns until it is measured)"), file=sys.stderr)
 
@@ -541,7 +542,7 @@ class Launch:
                 self.piece('result', text, src, layer, call=call['id'])
                 print(dmparse.said(f"  {call['name']} {json.dumps(call['input'], ensure_ascii=False)[:100]} → "
                                    f"{text.splitlines()[0][:100] if text else ''}"), file=sys.stderr)
-        print(dmparse.said(f"dmlaunch: stopped after {self.turns} turns, the model still calling tools"), file=sys.stderr)
+        print(dmparse.said(f"launch: stopped after {self.turns} turns, the model still calling tools"), file=sys.stderr)
         return 1
 
 
@@ -557,7 +558,7 @@ def cmd_record(root, keep, argv):
     sha = hashlib.sha256(out).hexdigest()
     with open(os.path.join(runs, sha), 'wb') as fh:
         fh.write(out)
-    print(dmparse.said(f"dmlaunch: the run's output ({len(out)} bytes, exit {r.returncode}) is kept off git, "
+    print(dmparse.said(f"launch: the run's output ({len(out)} bytes, exit {r.returncode}) is kept off git, "
                        f"{os.path.join(runs, sha)}"), file=sys.stderr)
     if keep:
         if not re.fullmatch(r'[a-z0-9][a-z0-9-]*', keep):
@@ -574,7 +575,7 @@ def cmd_record(root, keep, argv):
         if s and s.state.get('log'):
             Log(root, s.state['log']).append({'layer': 'world'}, {'file': rel}, 'capture', characters=len(out), oid=oid)
             s.add(text, {'file': rel}, 'history')
-        print(dmparse.said(f"dmlaunch: captured {rel}" + ('' if s else " — no session here, so no pass is logged")),
+        print(dmparse.said(f"launch: captured {rel}" + ('' if s else " — no session here, so no pass is logged")),
               file=sys.stderr)
     sys.stdout.buffer.write(out)
     return r.returncode

@@ -25,7 +25,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import read  # noqa: E402
-import dmparse, dmpass  # noqa: E402
+import grow  # noqa: E402 — a release of the core, and the release in today's words
+import importlib
+import parse as dmparse
+dmpass = importlib.import_module('pass')  # noqa: E402
 
 FAILS = []
 PY = sys.executable
@@ -193,31 +196,19 @@ FHIR = [{"resourceType": "Observation", "id": "mites-july", "status": "final",
 
 try:
     # ---- THE RELEASE: v1.0.0, a release of the core made from this tree, and a garden grown from it
-    law = dmparse.loads(dmparse.split_front_matter(text('seed/std-vocab.md', ROOT))[0])
-    os.makedirs(REL)
-    for f in dmpass.kept([f for f in dmpass.tracked(ROOT) if os.path.isfile(os.path.join(ROOT, f))],
-                         dmpass.language(text('seed/LANGUAGE', ROOT)), dmpass.offered(law)):
-        os.makedirs(os.path.join(REL, os.path.dirname(f)), exist_ok=True)
-        shutil.copy2(os.path.join(ROOT, f), os.path.join(REL, f))
-    for f in ('GARDEN.md.template', 'VOCAB.md.template'):
-        shutil.copy2(os.path.join(ROOT, 'core', 'guide', f), os.path.join(REL, 'seed', f))
-    for c in (('git', 'init', '-q'), ('git', 'add', '-A'), ('git', 'commit', '-qm', 'the core'), ('git', 'tag', 'v1.0.0')):
-        run(*c, cwd=REL)
+    grow.release(REL)
     r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), G, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=T)
     check(f"a garden grows from v1.0.0 in the core (core@{VERSION}), the measure tools in it",
           r.returncode == 0 and f'core@{VERSION}' in text('GARDEN.md')
-          and all(os.path.isfile(os.path.join(G, 'bin', f"{v}.py")) and os.path.isfile(os.path.join(G, 'bin', f"dm{v}.py"))
+          and all(os.path.isfile(os.path.join(G, 'bin', f"{v}.py")) and not os.path.exists(os.path.join(G, 'bin', f"dm{v}.py"))
                   for v in ('cal', 'geo', 'units', 'knowledge', 'crosswalk')), r.out[-800:])
     run(PY, 'bin/install.py')
 
-    # ---- THE LAW: measures.yaml generated from std-vocab; each unit's factor std-vocab's; the law's rules
-    gen = run(PY, 'core/translate.py', 'measures', cwd=ROOT)
-    check("law: core/law/measures.yaml is what std-vocab generates (its lines, extent, recurrence, uncertainty, forms)",
-          gen.returncode == 0 and gen.out == text('core/law/measures.yaml', ROOT), gen.out[:300])
-    old = {u['unit']: u.get('factor') for u in law.get('units') or []}
-    rows = read.data(os.path.join(ROOT, 'core', 'law', 'units.yaml'))['units']
-    differ = [r['unit'] for r in rows if [int(x) for x in r.get('factor') or []] != old.get(r['name'])]
-    check(f"law: each of the core's {len(rows)} units in UCUM carries std-vocab's factor, exactly", not differ, differ)
+    # ---- THE LAW: the forms of a measure, a clause's expiry, and the law's rules
+    clause = read.data(os.path.join(ROOT, 'core', 'law', 'measures.yaml'))['forms']['clause']
+    check("law: a clause says how it runs out (`expiry`: the day it falls due, lapses, repeats, its notice), which the "
+          "stale reader and the ledger read", (clause.get('expiry') or {}).get('attr') == 'due'
+          and (clause['expiry'].get('notice') or {}).get('measure') == {'count': '7', 'unit': 'd'}, clause.get('expiry'))
     r = run(PY, 'core/check.py', '--law')
     check("law: the core's law holds together — the forms of a measure and rule `measured`",
           r.returncode == 0 and '21 rules — 0 error(s)' in r.out, r.out[-400:])
@@ -264,7 +255,7 @@ try:
 
     # ---- THE TOOLS
     r = run(PY, 'bin/units.py', '90', 'km/h', 'm/s')
-    r2 = run(PY, 'bin/dmunits.py', '90', 'kilometre-per-hour', 'metre-per-second')
+    r2 = run(PY, 'bin/units.py', '90', 'kilometre-per-hour', 'metre-per-second')
     check("units: 90 km/h is 25 m/s exactly — by the UCUM codes, and by the English names through the alias",
           r.returncode == 0 and r.out.startswith('25 m/s') and r2.returncode == 0 and r2.out.startswith('25 '),
           r.out + r2.out)
@@ -278,7 +269,7 @@ try:
     r = run(PY, 'bin/knowledge.py', 'show', 'hive-checks', 'varroa-drop')
     check("knowledge: a code of the garden's own scheme (`schemes`, its file in `files`)",
           r.returncode == 0 and 'mites fallen' in r.out, r.out[-600:])
-    r = run(PY, 'bin/dmknowledge.py', 'bean', 'hive-1')
+    r = run(PY, 'bin/knowledge.py', 'bean', 'hive-1')
     check("knowledge: a bean's codes are its statements — `classify` — read through the alias",
           r.returncode == 0 and 'queen-seen' in r.out and 'classified_as' in r.out, r.out[-600:])
     r = run(PY, 'bin/ledger.py', 'lease')
