@@ -28,7 +28,9 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       its bean. A `while` names a condition or a statement. Everything is read as a string, and text holds no control
       character but a tab — a line feed only in a block scalar (`|`, `>`). `GARDEN.md` holds the manifest's keys alone
       (`core/law/core.yaml`, `manifest`), each in its form, and pins the law's own version, `core@<version>`; once the
-      garden holds a bean, it names its gardener, a person or an organisation it holds a bean for.
+      garden holds a bean, it names its gardener, a person or an organisation it holds a bean for. A `grant` is `to` a
+      being or to every member of a reading (a `reckon`), and its `cover` names parts a bean has: a key of its header,
+      `body`, a verb's statements (`measure`), or a verb's narrowed by their `as` (`be.location`).
 - [ ] **valency** — Each role its verb requires is filled, `unknown` where nobody said; no role is filled that the verb
       does not take; each filler has the shape its role takes — a being of the garden (or `self`, the crown,
       `{ someone: <kind>, at: … }`), a statement's id, a position, a quantity `{ count, unit }`, a row of the table its
@@ -45,7 +47,9 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       tool whose own coming goes on; no chain of `come` returns to where it began.
 - [ ] **necessity** — A `necessary` statement names what it is necessary `through`, except of the crown.
 - [ ] **squares** — Two positions of a square that cannot both stand — contraries, or contradictories — on one
-      statement through one source are refused; subcontraries may both stand.
+      statement through one source are refused; subcontraries may both stand. One observer gives one verdict on one
+      statement (`respond` with an `as`: confirms, disputes, abstains), and a `rule` on statements is given only once
+      every speaker of them — the observer of each — has responded.
 - [ ] **weight** — A mass is a body's: a sayable measured `as` mass is refused.
 - [ ] **frame** — A position is in a system the law declares, in that system's one form, and finds its other half
       by its complement: a day reckoned in the garden's `zone`. A day its calendar does not have (`2026-02-30`), a
@@ -67,7 +71,9 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       its title the id), is kept by name only on their own word: an `agree` of theirs, not declined, to an agreement
       this garden holds, or the garden they keep, met here (a `garden` bean they `own`). And a commit places no such
       person somewhere in the future: a happening wholly after the commit's moment, attended by one, keeps its location
-      sealed.
+      sealed. A `decline` is the word of the one the statement it declines names (the party of an `agree`, the one a
+      booking would hold); one who `represent`s another never represents only itself, and in an agreement acts for a
+      party of it.
 - [ ] **harm** — A private-key block is refused in any file a commit stages. A code of a scheme the garden marks
       special-category is written only sealed. A sealed statement keeps its verb and carries only `held` (its pointer,
       `root:<root>/<32 hexadecimal digits>`), `id`, `while`, `why` and `note`, and where its bean concerns a person who
@@ -105,13 +111,21 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       occurs for (`each`), what uses it (`used_by`) and what brings it into force (`when`) are readings of the garden.
       What a placement takes of its host (`be`'s `placed.takes`) is a quantity, of a placement that takes something;
       and what is placed as room in a host never takes more than it holds (`hold`).
+- [ ] **measured, too** — A payment `charged` in another currency is charged in another unit of the same quantity, never
+      in its own; what it `settles` names a clause of the garden and an occurrence of it, once each. A weighing judges
+      every pair of its criteria once, its consistency ratio at most 0.10 or `why_inconsistent` saying why it stands. A
+      `mark` fixes the base of a cell its system's table lists as marked, in this being where the table names one, and a
+      table that names a being of the garden is marked by it. A clause's `by_role` is a role some party agreed `as`.
 - [ ] **profile** — What a profile gives (core/law/profiles.yaml) is used only where the garden takes the profile, by
       its name in `VOCAB.md`'s `profiles`: a verb whose `home` it is (`serve`, `classify`, `draw`…), and an attribute it
       adds to a form of the core (the code profile's `role` and `scan_policy` on a placement). A page (the `view`
       profile) is the bean whose `draw` holds the form `page`, naming its drawings in the order it shows them — each
       once, and every one; each drawing is a `draw` of what it draws holding the form `drawing`, its live values among it
       (`values`), each named once on its page; what a drawing names is there — a value of its own, a drawing of its page,
-      a reading of its bean.
+      a reading of its bean — and each attribute is in its domain: a unit of the law, a technology of the catalogue, a
+      signal it publishes, a threshold's quantity, a deadline and a repetition in their forms, a frame that is a line.
+      A listening surface's or a link's `channel` (the network profile's) holds its form; a payment's `book`ings (the
+      accounting profile's) name accounts of a scheme, and under one plan are shares all, or amounts all that add up.
 
 **The commit's own rules**, which only a commit can show:
 - [ ] Every bean the commit changes is named in the journal entry it adds (`[[<bean>]]`), and that entry's heading is

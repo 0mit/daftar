@@ -1,0 +1,58 @@
+# The forms v1 part 12b adds (2026-10-02), written by hand rather than generated from today's law: what a statement
+# holds beside its roles where the seven roles do not say it. Each is the value of one qualifier (`held_by`), its
+# attributes in the attribute language of the other forms (core/law/lines.yaml, measures.yaml), and names what of today's
+# law (v0.48.0) it takes over (`replaces`), so the translator has its map. Rule `form` judges a grant's cover, rule
+# `measured` a settlement and a weighing, rule `profile` a channel, which is the network profile's (`home`).
+
+forms:
+  cover:
+    held_by: grant.cover
+    rule: form
+    home: core
+    replaces: [grants.positions, grants.reason]
+    meaning: "which parts of what a grant covers it opens, and whether each use states a reason. A part is a key of the header (`title`, `summary`, `tags`, `details`, or `body`), a verb's statements (`measure`), or a verb's statements narrowed by their `as` (`be.location`) — the words a card's fact is named by (core/law/profiles.yaml). Absent, the whole of each bean: its header, its body and every statement"
+    attrs:
+      parts:  { in: { type: part }, meaning: "the parts it opens, a list: `title`, `measure`, `be.location`" }
+      reason: { in: [asked], meaning: "asked — each use states a reason, which the guard records" }
+
+  settlement:
+    held_by: pay.settles
+    rule: measured
+    home: core
+    replaces: [transactions.settles]
+    meaning: "one occurrence of one clause a payment settles, and how much of it: a payment across two rates settles two, each under its own clause"
+    entries:
+      clause:     { required: true, in: { type: clause }, meaning: "the clause it settles: a `can`, or a position on the permission square holding a `clause`, of this bean (its id) or another (`<bean>#<id>`)" }
+      occurrence: { required: true, in: { pattern: '^[a-z0-9][a-z0-9-]*(:[a-z0-9_][a-z0-9_-]*(\.[a-z0-9_][a-z0-9_-]*)*)?$' }, meaning: "the occurrence: the member of the clause's `each` it is for, by its bean (or a statement's place in it)" }
+      amount:     { in: { quantity: any }, meaning: "how much of the occurrence it settles; absent, alone in its payment, the payment's whole" }
+      note:       { in: prose, meaning: "a remark" }
+    keyed_by: [clause, occurrence]
+
+  weighing:
+    held_by: weigh.weighing
+    rule: measured
+    home: core
+    replaces: [weighings.criteria, weighings.pairwise, weighings.why_inconsistent]
+    meaning: "the criteria a judge weighs and each pair's judgment (Saaty's scale: 1 to 9, or its inverse): every pair judged once, its consistency ratio at most 0.10 or `why_inconsistent` saying why it stands. The weights are read, never stored"
+    attrs:
+      criteria:         { required: true, in: { entries: { name: { required: true, in: { type: kebab } }, what: { required: true, in: prose } }, keyed_by: name }, meaning: "what is weighed, each in the words a person checks it against" }
+      pairwise:         { required: true, in: { entries: { a: { required: true, in: { type: kebab } }, b: { required: true, in: { type: kebab } }, judged: { required: true, in: { pattern: '^(1/)?[1-9]$' } }, why: { in: prose }, note: { in: prose } } }, meaning: "each pair of criteria, judged once: how much more `a` counts than `b`" }
+      why_inconsistent: { in: prose, meaning: "why a consistency ratio above 0.10 stands" }
+
+  channel:
+    held_by: [serve.channel, carry.channel, route.channel, translate.channel, filter.channel]
+    rule: profile
+    home: network
+    replaces: [endpoints.exposure, endpoints.confidentiality, endpoints.plane, endpoints.admitted_from, links.confidentiality, links.plane]
+    meaning: "what a listening surface, a link or a treatment is as a channel: where it is bound, what it protects on the wire, what it is for, and who may reach it. Whether it may exist at all is a position on the permission square of its statement; the day it was checked is its `observed` (as a placement's is: the knowing acts take the moment the journal holds)"
+    attrs:
+      exposure:        { in: [loopback, lan, link, internet], meaning: "loopback (this machine only) | lan (the local segment) | link (reachable only over a named link) | internet (bound to a public address directly)" }
+      confidentiality: { in: [encrypted, cleartext], meaning: "what the channel protects: encrypted, or cleartext — the reading where it is silent, since a channel nobody has said protects anything does not" }
+      plane:           { in: { registry: planes }, meaning: "data | control | management — what it is for (the network profile's `planes`)" }
+      admitted_from:   { in: prose, meaning: "who may reach it, where not everyone who can reach its address may: the named sources the being itself admits, and where that is enforced" }
+      observed:        { in: { type: position }, meaning: "the day it was last checked, or read off the device — an absolute day. A listening surface ages faster than almost anything else" }
+    breaches:                  # today's verdicts: what the channel says is in breach — a fact about the estate, read and
+                               # never refused (the core has no warnings, and a breach recorded is not a record broken)
+      - { when: { permission: forbidden }, why: "a listening surface that must not exist, recorded as existing: the statement that the being answers there is the breach" }
+      - { when: { permission: obligatory, confidentiality: cleartext, exposure: [lan, link, internet] }, why: "a channel the estate requires, which protects nothing on the wire, on a path something else can be on" }
+      - { when: { plane: management, exposure: internet }, unless: admitted_from, why: "a management surface bound to a public address, with nothing said about who may reach it" }

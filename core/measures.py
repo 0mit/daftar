@@ -479,7 +479,142 @@ def problems(J, b):
             out += clause_problems(J, M, b, where, r)
         if verb == 'be' and r.get('placed') is not None:
             out += placement_problems(J, M, b, where, r)
+        if verb == 'pay':
+            out += payment_problems(J, b, where, r)
+        if verb == 'mark':
+            out += mark_problems(J, b, where, r)
+        if verb == 'weigh' and r.get('weighing') is not None:
+            out += weighing_problems(J, where, r)
+        if (verb == 'can' or verb in FIGURE_PERMISSION) and isinstance(r.get('clause'), dict) and \
+                isinstance(r['clause'].get('by_role'), str):
+            roles = {rr.get('as') for _j, v, rr in b.items if v == 'agree' and 'held' not in rr}
+            if r['clause']['by_role'] not in roles:
+                out.append((f"{where}.clause.by_role", f"binds every party that agreed as "
+                                                       f"`{r['clause']['by_role']}`, and no `agree` of this bean is `as` "
+                                                       f"it ({', '.join(sorted(str(x) for x in roles if x)) or 'none says'})"))
     return out
+
+
+def _clause(J, b, ref):
+    """True when `ref` names a clause: a `can`, or a position on the permission square, holding the form `clause` or
+    not — of this bean by its id, or of another, `<bean>#<id>`."""
+    hit = J.statement(ref, b) if isinstance(ref, str) else None
+    return bool(hit) and (hit[2] == 'can' or hit[2] in FIGURE_PERMISSION)
+
+
+def _boundaries(J, system):
+    """{boundary: its row} of the table a system's `boundaries_in` names, or None where it names none."""
+    row = J.systems.get(system) or {}
+    bi = row.get('boundaries_in') if isinstance(row, dict) else None
+    if not isinstance(bi, dict):
+        return None
+    try:
+        rows = J.L.std.knowledge.rows(bi.get('registry'))
+    except Exception:
+        rows = []
+    return {str(r.get(bi.get('take'))): r for r in rows if isinstance(r, dict)}
+
+
+def mark_problems(J, b, where, r):
+    """A boundary marked in a being (v1 part 12b, today's `fixes`): the base of a cell its system's table lists as
+    `marked` — and, where the table names the being, this one — at a position along this being."""
+    of = r.get('of')
+    try:
+        p = frame.read(of, J.systems, J.G.zone) if isinstance(of, str) else None
+    except frame.Refused:
+        p = None
+    if p is None:
+        return []                                 # a boundary in words is a mark the law has no table for
+    table = _boundaries(J, p.system)
+    if table is None:
+        return [(f"{where}.of", f"{of} is a position of {p.system}, which lists no boundaries (`boundaries_in`): a mark "
+                                f"fixes the base of a cell its system's table names")]
+    cell = of.split(':', 1)[1] if ':' in of else of
+    row = table.get(cell)
+    if row is None:
+        return [(f"{where}.of", f"'{cell}' is the base of no cell of {p.system}'s table of boundaries")]
+    out = []
+    if row.get('fixing') != 'marked':
+        out.append((f"{where}.of", f"{p.system}'s table says the base of '{cell}' is fixed `{row.get('fixing')}`: a "
+                                   f"boundary declared as a value is marked in no being"))
+    if row.get('being') and str(row['being']) != b.id:
+        out.append((f"{where}.of", f"{p.system}'s table says the base of '{cell}' is marked in {row['being']}"))
+    at = r.get('at')
+    m = re.match(r'^([a-z0-9][a-z0-9-]*)/', at) if isinstance(at, str) else None
+    if m and m.group(1) != b.id:
+        out.append((f"{where}.at", f"'{at}' is along another being: a mark is in the being that holds it"))
+    return out
+
+
+def marks_held(J):
+    """The other end: a boundary a table says is marked in a being of this garden is marked by it."""
+    marked = set()
+    for b in J.G.beans.values():
+        for _i, v, r in b.items:
+            if v == 'mark' and 'held' not in r and isinstance(r.get('of'), str) and ':' in r['of']:
+                marked.add((b.id, r['of'].split(':', 1)[1]))
+    out = []
+    for name in sorted(J.systems):
+        table = _boundaries(J, name) if isinstance(J.systems.get(name), dict) else None
+        for cell, row in sorted((table or {}).items()):
+            being = str(row.get('being') or '')
+            if being in J.G.beans and (being, cell) not in marked:
+                out.append((f"{name} boundaries", f"the base of '{cell}' is marked in {being}, which holds no `mark` of "
+                                                   f"it: a mark is said at both ends"))
+    return out
+
+
+def payment_problems(J, b, where, r):
+    """What a payment holds beside its roles (v1 part 12b): what it was `charged` in another currency, and what it
+    `settles` — each an occurrence of a clause, and how much of it."""
+    from core import lines
+    out = []
+    q, ch = r.get('of'), r.get('charged')
+    if ch is not None and isinstance(q, dict) and isinstance(ch, dict) and not quantity_why(J.L, ch):
+        qu, cu = str(q.get('unit')), str(ch.get('unit'))
+        cur = J.L.std.currencies
+        if qu == cu:
+            out.append((f"{where}.charged", f"is in {cu}, the unit it was priced in: `charged` is what it came to in "
+                                            f"another currency, from which the rate is read — in the same one it says "
+                                            f"nothing"))
+        elif (qu in cur) != (cu in cur) or (qu not in cur and (unit_row(J.L, qu) or {}).get('quantity') != (unit_row(J.L, cu) or {}).get('quantity')):
+            out.append((f"{where}.charged", f"{qu} and {cu} are not two measures of one quantity: what it was charged "
+                                            f"in is the same thing in another unit"))
+        elif exact(str(ch.get('count'))) == 0 and exact(str(q.get('count'))) != 0:
+            out.append((f"{where}.charged", "is nothing, for a price that is something: no rate is implied by zero"))
+    form = J.L.forms.get('settlement') or {}
+    for n, e in enumerate(listed(r.get('settles'))):
+        w = f"{where}.settles[{n}]"
+        got = lines.attrs_problems(w, e, form)
+        out += got
+        if got or not isinstance(e, dict):
+            continue
+        if not _clause(J, b, e.get('clause')):
+            out.append((f"{w}.clause", f"{e.get('clause')!r} names no clause: a `can`, or a position on the permission "
+                                       f"square, of this bean by its id or of another (`<bean>#<id>`)"))
+        occ = str(e.get('occurrence'))
+        if not re.match((form.get('entries') or {}).get('occurrence', {}).get('in', {}).get('pattern', '.*'), occ):
+            out.append((f"{w}.occurrence", f"{occ!r} is not an occurrence: the member's bean, or a place in it"))
+        if e.get('amount') is not None:
+            why = quantity_why(J.L, e['amount'])
+            if why:
+                out.append((f"{w}.amount", why))
+    keys = [(str(e.get('clause')), str(e.get('occurrence'))) for e in listed(r.get('settles')) if isinstance(e, dict)]
+    for k in sorted({k for k in keys if keys.count(k) > 1}):
+        out.append((f"{where}.settles", f"settles {k[1]} of {k[0]} twice: one entry for each occurrence of each clause"))
+    return out
+
+
+def weighing_problems(J, where, r):
+    """A weighing's form, and its judgments (bin/reckon.py `check_weighing`, the one judge of a weighing): every pair
+    judged once, each naming criteria, consistent or saying why it stands (v1 part 12b)."""
+    from core import lines
+    out = lines.attrs_problems(f"{where}.weighing", r['weighing'], J.L.forms.get('weighing') or {})
+    if out:
+        return out
+    import dmreckon
+    return [(f"{where}.weighing", what.split(': ', 1)[-1]) for level, what in dmreckon.check_weighing('', r['weighing'])
+            if level == 'error']
 
 
 # ------------------------------------------------------------------------------------------------ the view in today's words

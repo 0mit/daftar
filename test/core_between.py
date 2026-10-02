@@ -396,6 +396,83 @@ A reading.
     check("across: refused where the other garden grants nothing over the bean", r.returncode != 0 and 'NotGranted' in r.out,
           r.out[-600:])
 
+    # ---- PART 12b: the tools' other checks, run in gardens of the core
+    # across: a commit the other garden never published — on a branch it has not checked out — is never read
+    br = run('git', 'rev-parse', '--abbrev-ref', 'HEAD', cwd=A).out.strip()
+    run('git', 'checkout', '-q', '-b', 'unpublished', cwd=A)
+    write(os.path.join(A, 'beans', 'draft.md'), NOTES.replace('bean: notes', 'bean: draft').replace(
+        'document:notes', 'document:draft').replace('id: chapter', 'id: draft-of'))
+    save(A, 'ada', 'a draft, not published', '- action: wrote [[draft]] on a branch nobody publishes')
+    side = run('git', 'rev-parse', 'HEAD', cwd=A).out.strip()
+    run('git', 'checkout', '-q', br, cwd=A)
+    r = run(PY, 'bin/across.py', 'read', 'garden-a', 'notes:name.as', '--commit', side, cwd=B)
+    check("across: a read at a commit the other garden never published is refused (a garden of the core)",
+          r.returncode != 0 and ('NotPublished' in r.out or 'not reachable' in r.out), r.out[-600:])
+    # propose: a name used as a file name only in the form of one — a proposal naming a bean `../notes` is refused
+    # before anything is read or written
+    bad = os.path.join(T, 'bad-proposal.md')
+    write(bad, text(prop).replace('daftar-bean notes', 'daftar-bean ../notes', 1))
+    r = run(PY, 'bin/propose.py', 'read', bad, cwd=B)
+    check("propose: a name a proposal carries is used as a file name only in the form of one: `../notes` refused, "
+          "nothing written", r.returncode != 0 and 'never used as a file name' in r.out and clean(B)
+          and not os.path.exists(os.path.join(T, 'notes.md')), (r.returncode, r.out[:1500]))
+    # propose: a third garden — cem's, on this machine too — meets ben's; what ada's garden said is not passed on to it
+    IDC = run(PY, 'bin/propose.py', 'id', cwd=C).out.split('"')[1]
+    run(PY, 'bin/install.py', cwd=C)
+    for g, me, them, gid_them, Them, other in ((B, 'ben', 'cem', IDC, 'Cem', 'garden-c'),
+                                               (C, 'cem', 'ben', IDB, 'Ben', 'garden-b')):
+        write(os.path.join(g, 'beans', other + '.md'), f"""---
+bean: {other}
+kind: garden
+title: "{other} — {Them}'s garden"
+summary: "{Them}'s own garden, on the same machine; what passes between them is proposed."
+statements:
+  - say:  {{ by: {me}, at: now }}
+  - name: {{ by: garden-id, of: self, as: "{gid_them}" }}
+  - own:  {{ by: {them}, of: self }}
+---
+{Them}'s garden.
+""")
+        if not os.path.isfile(os.path.join(g, 'beans', them + '.md')):
+            write(os.path.join(g, 'beans', them + '.md'), f"""---
+bean: {them}
+kind: person
+title: "{Them} — the gardener of {other}"
+summary: "{Them}, who keeps {other}."
+statements:
+  - say:  {{ by: {me}, at: now }}
+  - name: {{ by: garden, of: self, as: "{gid_them}/person:{them}" }}
+  - own:  {{ by: theone, of: self }}
+  - answer: {{ by: self, of: self, as: law }}
+---
+{Them}.
+""")
+    write(os.path.join(B, 'beans', 'pact-c.md'), PACT.replace('bean: pact', 'bean: pact-c').replace(
+        f'{IDA}/contract:pact', f'{IDB}/contract:pact-c').replace('by: [ada, ben]', 'by: [ben, cem]').replace(
+        'say:   { by: ada', 'say:   { by: ben'))
+    r1 = save(B, 'ben', 'met garden-c', '- action: recorded [[garden-c]] and [[cem]]; [[pact-c]] with cem')
+    r2 = save(C, 'cem', 'met garden-b', '- action: recorded [[garden-b]] and [[ben]]')
+    check("propose: a third garden on the same machine meets ben's: each records the other, two gardens of one machine "
+          "apart", r1.returncode == 0 and r2.returncode == 0 and IDC not in (IDA, IDB), r1.out[-600:] + r2.out[-600:])
+    r = run(PY, 'bin/propose.py', 'make', '--to', 'garden-c', '--under', 'pact-c', 'notes', 'pact-c', '--out', T, cwd=B)
+    prop4 = re.search(r'proposal \S+: (\S+)', r.out)
+    r = run(PY, 'bin/propose.py', 'read', prop4.group(1), cwd=C) if prop4 else r
+    check("propose: what a third garden said is not passed on — ben's notes hold acts known in ada's garden, refused "
+          "before they reach cem's", r.returncode != 0 and 'third garden' in r.out, r.out[-900:])
+    # held: an erasure per subject, every pointer to it then `Erased`; a store in cleartext read from afar, warned
+    r = run(PY, 'bin/held.py', 'erase', 'ada', cwd=A)
+    rec = run(PY, 'bin/held.py', 'resolve', ptr.group(0) if ptr else 'x', cwd=A)
+    check("held: an erasure per subject — ada's record goes, and the pointer to it resolves to Erased; git keeps the "
+          "pointer, untouched", r.returncode == 0 and re.search(r'erased [1-9]', r.out) and 'erased for its subject'
+          in rec.out and clean(A), r.out + rec.out)
+    lap = os.path.join(A, 'beans', 'laptop.md')
+    keep = text(lap)
+    write(lap, keep.replace('readable_from: this-host', 'readable_from: lan'))
+    r = run(PY, 'bin/held.py', 'check', cwd=A)
+    write(lap, keep)
+    check("held: a store that keeps special-category material in cleartext, readable from another party, is warned by "
+          "the tool where the store is (the core's gate has no warnings)", 'readable from lan' in r.out, r.out[-600:])
+
     # ---- TRANSLATE: today's `test` on a garden bean, and a record made in another garden
     O = os.path.join(T, 'today')
     os.makedirs(os.path.join(O, 'beans'))

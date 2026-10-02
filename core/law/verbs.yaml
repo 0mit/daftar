@@ -10,6 +10,8 @@ tables:                                   # the small tables these rows name; a 
   sensitivities: [none, personal, special-category]
   presences:     [present, absent]                     # what a reading found: present, or looked for and not found
   jobs:          [router, mail-primary, mail-backup, file-server, dns-resolver, dns-authoritative, monitoring, web, app-host, vpn-gateway, ledger-hub, workstation]
+  verdicts:      [confirms, disputes, abstains]        # what a response to another's statement says of it (v1 part 12b)
+  treatments:    [route, mangle, queue]                # how a forwarding device steers traffic: by a route, a mark, a queue
 standard_tables: [protocols, knowledge, properties, units]   # read from their standards (IANA, our knowledge tree, ISO 19156, SI and UCUM)
 
 verbs:
@@ -32,15 +34,18 @@ verbs:
     replaces: []
     home: core
   - verb: pay
-    meaning: "to give an amount: who paid, how much, to whom, under what"
+    meaning: "to give an amount: who paid, how much, to whom, under what (`through`: the clause it is made under or keeps, or the card, account or agreement it moved through). An amount is any quantity — money, a share in a hundred, hours (the operator's choice, 2026-10-02): what is owed is read per unit, and two units meet only at a rate someone observed. What it came to in another currency is `charged`, the rate it implies read and never stored; which occurrences of which clauses it settles, and how much of each, is `settles` (v1 part 12b)"
     roles:
       by:      { shape: being, nature: [body, sayable], rung: reason }
       of:      { shape: quantity }
       to:      { shape: being }
       through: { shape: [statement, being] }
       at:      { shape: position }
+    qualifiers:
+      charged: { shape: quantity }
+      settles: { shape: form, form: settlement, many: true }
     required: [by, of]
-    replaces: [paid_by, transactions]
+    replaces: [paid_by, transactions, charged, settles, under]
     home: core
   - verb: bear
     meaning: "to bear a cost, in a share: whoever bears what was paid"
@@ -54,17 +59,17 @@ verbs:
     replaces: [borne_by]
     home: core
   - verb: grant
-    meaning: "to open to someone an act on what a garden holds: closed by default, so nobody but the gardener may do what no grant opens"
+    meaning: "to open to someone an act on what a garden holds: closed by default, so nobody but the gardener may do what no grant opens. It covers what its `of` names — a bean, a statement, or a reading (a `reckon` statement), whose members it covers, read each time it is asked — and opens it to whom its `to` names: a being, or every member of a reading. Which parts of each it opens, and whether each use states a reason, is its `cover` (v1 part 12b): absent, the whole of each"
     roles:
       by:      { shape: being }
-      to:      { shape: being, many: true }
+      to:      { shape: [being, statement], many: true }
       of:      { shape: [being, statement], many: true }
       as:      { shape: row, table: grants }
       through: { shape: text }
       at:      { shape: position }
-    qualifiers: { class: { shape: row, table: classes } }
+    qualifiers: { class: { shape: row, table: classes }, cover: { shape: form, form: cover } }
     required: [by, to, as]
-    replaces: [grants]
+    replaces: [grants, audience, positions]
     home: core
   - verb: can
     meaning: "to be able to do something, taken as a position on the permission square: may, or must. A clause of an agreement in its words is one: whom it is owed to, and what it holds beside its words — the day it falls due, how it repeats, when it falls due relative to another position, how long before a reader is told, its window, an allowance, what it occurs for, what brings it into force (`clause`, core/law/measures.yaml), as a position on the square holds them of the statement it asks. A stance on a field is `as` its code (and every code beneath it), and holds `at` a place, within it (v1 part 7)"
@@ -82,13 +87,15 @@ verbs:
 
   # ---------------------------------------------------------------- what a being needs, does and holds
   - verb: need
-    meaning: "to require something to function: how badly is a position on the necessity square"
+    meaning: "to require something to function: how badly is a position on the necessity square. An item of a checklist is one (v1 part 12b): what is asked for (`of`, in words where no being says it), who provides it (`from`, a being or the word for a party), needed `while` a reading holds (absent, always), met by what `meet`s it; the needs of one bean that share an `as` are alternatives, any one of which meets it"
     roles:
       by:      { shape: being }
-      of:      { shape: [being, statement], many: true }
+      of:      { shape: [being, statement, text], many: true }
+      from:    { shape: [being, text] }
       through: { shape: row, table: protocols }
+      as:      { shape: text }
     required: [by, of]
-    replaces: [depends_on, consumes, reaches, needed_when, items]
+    replaces: [depends_on, consumes, reaches, needed_when, items, one_of]
     home: core
   - verb: meet
     meaning: "to meet a need"
@@ -237,7 +244,20 @@ verbs:
     meaning: "a person's ruling on a disagreement: the statements disputed, and the one chosen"
     roles: { by: { shape: being, nature: [body], rung: reason }, of: { shape: statement, many: true }, as: { shape: statement }, at: { shape: position } }
     required: [by, of]
-    replaces: [hearings]
+    replaces: [hearings, ruling]
+    home: core
+  - verb: respond
+    meaning: "to respond to a statement: an observer's verdict on another's reading — it confirms, disputes or abstains (asked, and would not say), once for each statement — or a speaker's own words at a hearing, in its `through`; a `rule` on statements is given once every speaker of them has responded (v1 part 12b)"
+    roles: { by: { shape: being }, of: { shape: statement, many: true }, as: { shape: row, table: verdicts }, through: { shape: text }, at: { shape: position } }
+    required: [by, of]
+    replaces: [answers, heard]
+    home: core
+  - verb: weigh
+    meaning: "to weigh criteria against each other, pair by pair (the analytic hierarchy process): only the judgments are written — the weights and their consistency are read (`python3 bin/daftar.py reckon weigh <bean>#<id>`), never stored. `by` the judge, `to` what it orders; a weighing orders what a person is shown, and never decides, hides or drops anything (v1 part 12b)"
+    roles: { by: { shape: being, nature: [body, sayable], rung: reason }, to: { shape: text } }
+    qualifiers: { weighing: { shape: form, form: weighing } }
+    required: [by, to, weighing]
+    replaces: [weighings]
     home: core
 
   # ---------------------------------------------------------------- between gardens
@@ -269,29 +289,34 @@ verbs:
       through: { shape: row, table: protocols }
       to:      { shape: being, many: true }
     required: [by, at, through]
-    replaces: [endpoints, admitted_from, provides_ip]
+    qualifiers: { channel: { shape: form, form: channel } }
+    replaces: [endpoints, admitted_from, provides_ip, exposure, confidentiality, plane]
     home: network
   - verb: carry
-    meaning: "to carry what rides on it: a link carries a tunnel, a disk a volume"
-    roles: { by: { shape: being }, of: { shape: [being, statement], many: true }, through: { shape: row, table: protocols } }
-    required: [by, of]
-    replaces: [carried_by, links, via_link]
+    meaning: "to carry what rides on it: a link carries a tunnel, a disk a volume. A link a being terminates is a `carry` by it, `through` the protocol that makes it, `to` the other end (a link is mutual: each end records the other); what rides on it — another link, a listening surface, a reach — is its `of`; what the channel protects is its `channel` (v1 part 12b)"
+    roles: { by: { shape: being }, of: { shape: [being, statement], many: true }, through: { shape: row, table: protocols }, to: { shape: [being, statement] } }
+    qualifiers: { channel: { shape: form, form: channel } }
+    required: [by]
+    replaces: [carried_by, links, via_link, peer]
     home: network
   - verb: route
-    meaning: "to send traffic on: from where, to which next hop"
-    roles: { by: { shape: being }, of: { shape: text }, from: { shape: [position, being] }, to: { shape: [position, being] } }
+    meaning: "to send traffic on: from where, to which next hop — by a route, or as a mark that steers it (mangle) or a queue that paces it (`as`, v1 part 12b)"
+    roles: { by: { shape: being }, of: { shape: text }, from: { shape: [position, being] }, to: { shape: [position, being] }, as: { shape: row, table: treatments } }
+    qualifiers: { channel: { shape: form, form: channel } }
     required: [by, to]
     replaces: [treatments]
     home: network
   - verb: translate
-    meaning: "to rewrite an address as traffic crosses: from one, to another"
-    roles: { by: { shape: being }, from: { shape: position }, to: { shape: position } }
+    meaning: "to rewrite an address as traffic crosses: from one, to another (today's treatment `nat`, its words its `of`)"
+    roles: { by: { shape: being }, of: { shape: text }, from: { shape: [position, being] }, to: { shape: [position, being] } }
+    qualifiers: { channel: { shape: form, form: channel } }
     required: [by, from, to]
     replaces: []
     home: network
   - verb: filter
     meaning: "to let traffic cross or stop it: a position on the permission square of the pass it would make"
     roles: { by: { shape: being }, of: { shape: text }, from: { shape: [position, being] }, to: { shape: [position, being] } }
+    qualifiers: { channel: { shape: form, form: channel } }
     required: [by, of]
     replaces: []
     home: network
@@ -311,8 +336,8 @@ verbs:
     replaces: [auto_renew]
     home: domain
   - verb: mark
-    meaning: "to fix a boundary of a system's cells by a mark at a position"
-    roles: { by: { shape: being }, of: { shape: text }, at: { shape: position } }
+    meaning: "to fix a boundary of a system's cells by a mark at a position: a being marks the base of a cell (`of`, the cell in its system's form — `ics:Meghalayan`), at a position along one of its own lines (`at`); the system's table of boundaries says the same, and the two ends are held to each other (v1 part 12b: today's `fixes`)"
+    roles: { by: { shape: being }, of: { shape: [position, text] }, at: { shape: position } }
     required: [by, at]
     replaces: [fixes]
     home: core

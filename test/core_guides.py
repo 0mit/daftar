@@ -55,9 +55,10 @@ DIFFERS = {
     ('card-statement-2026-09', '1790928000000'): "a capture's moment is its `read` act's, which the save writes",
     ('nginx', 'the nginx project'): "the owner outside is a being, the bean nginx-project",
     ('rack-a', 'location'): "what a capacity is for is the `as` of the `be` that takes room in it",
-    ('bee-coop', 'observations'): "a grant opens beings or statements; narrowed to a term of today's, it opens the hive "
-                                  "until part 8 of v1 ports the grants' positions",
-    ('bee-coop', 'located_at'): "as for `observations`: where a hive stands is in its `details` until part 7",
+    ('bee-coop', 'observations'): "a grant's part is the verb that took today's term: the hives' readings, `measure`",
+    ('bee-coop', 'located_at'): "a grant's part narrowed by its `as`: where a hive stands, `be.location`",
+    ('submission-pack', 'agency-noor:translation-asked'): "a reading of another bean is `<bean>#<id>`",
+    ('submission-pack', 'agency-noor:rights-papers'): "as for `translation-asked`: `agency-noor#rights-papers`",
     ('hive-orchard-1', 'hive-orchard-1:observations.mites-june'): "the core takes a statement by its id, `mites-june`",
     ('hive-orchard-1', 'hive-orchard-1:observations.second-count'): "the core takes a statement by its id, `second-count`",
     ('salt-road-heron', 'written'): "the words are the document salt-road-signed, the agreement's `through`",

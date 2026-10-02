@@ -17,7 +17,7 @@ terms:
   - term: provenance_src
     went: "the knowing act's verb — `say`, `read`, `derive`, `make` — and the nature of its `by`"
   - { term: analysis_cache, went: "`details`, kept whole (spec §16 item 7)" }
-  - { term: weighings, went: "`details`, kept whole" }
+  - { term: weighings, went: "the verb `weigh`" }
   - { term: nature, went: "derived: the nature of the bean's kind (core/law/kinds.yaml)" }
   - { term: owned_by, went: "the verb `own` of the face" }
   - { term: responsibility, went: "the verb `answer` of the face" }

@@ -72,6 +72,8 @@ ROW_FIELDS = {
 LINES = 'lines.yaml'                                       # the forms of a line and a reading's grammar (v1 part 6)
 TOOLS, VACANCIES = 'tools.yaml', 'vacancies.yaml'          # the tools by their verbs; what nothing takes up yet (part 9)
 PROFILES = 'profiles.yaml'                                 # what a garden takes up beside the core (v1 part 11)
+FORMS = 'forms.yaml'                                       # the forms part 12b adds, written by hand: a grant's cover,
+                                                           # a settlement, a weighing, a channel
 MEASURES = 'measures.yaml'                                 # the forms of a measure: a region, a repetition, a clause's
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
@@ -120,6 +122,7 @@ class Law:
         self.line_law = {}                                  # core/law/lines.yaml: the forms of a line, a reading's grammar
         self.measure_law = {}                               # core/law/measures.yaml: the forms of a measure (part 7)
         self.forms = {}                                     # the forms a `form` role names, by name
+        self.added_forms = {}                               # core/law/forms.yaml: the forms part 12b adds, by name
         self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
         self.flows, self.flow_sources, self.standing, self.exclusive = [], [], [], []
         self.garden_flows = []                              # the rows of `flows` a garden added (VOCAB.md)
@@ -174,6 +177,9 @@ class Law:
         measures = os.path.join(d, MEASURES) if os.path.isfile(os.path.join(d, MEASURES)) else os.path.join(LAW_DIR, MEASURES)
         law.measure_law = read.data(measures)
         law.forms = dict(law.line_law.get('forms') or {}, **(law.measure_law.get('forms') or {}))
+        forms = os.path.join(d, FORMS) if os.path.isfile(os.path.join(d, FORMS)) else os.path.join(LAW_DIR, FORMS)
+        law.added_forms = {str(k): f for k, f in ((read.data(forms) or {}).get('forms') or {}).items() if isinstance(f, dict)}
+        law.forms.update(law.added_forms)
         for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies), (PROFILES, law._profiles)):
             put(read.data(os.path.join(d, name) if os.path.isfile(os.path.join(d, name)) else os.path.join(LAW_DIR, name)))
         return law
@@ -494,6 +500,14 @@ class Law:
 
         def bad(where, msg):
             out.append(('law', where, msg))
+        for name, f in self.added_forms.items():               # each form part 12b adds is held where it says (forms.yaml)
+            for held in listed(f.get('held_by')):
+                verb, _, q = str(held).partition('.')
+                spec = ((self.verbs.get(verb) or {}).get('qualifiers') or {}).get(q)
+                if not isinstance(spec, dict) or spec.get('form') != name:
+                    bad(f"core/law/forms.yaml {name}", f"is held by `{held}`, and no verb's qualifier of that name holds it")
+            if f.get('rule') not in self.rules:
+                bad(f"core/law/forms.yaml {name}", f"names no rule of the law to judge it ({f.get('rule')!r})")
         for name, row in (self.systems or {}).items():         # a system's own example is in its own form (16.0)
             pat, ex = row.get('pattern'), row.get('example') if isinstance(row, dict) else None
             if isinstance(pat, str) and isinstance(ex, str):

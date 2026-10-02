@@ -1604,7 +1604,12 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
     beans or the statements it covers (an id in its own bean, `<bean>#<id>` in another; none: its own bean); `to` whom;
     `at` the extent it holds over — where its holder may decide it: the gardener; the person the bean is, or concerns;
     an agreement, over its own bean and what a party who agreed to it owns or is. A position on the permission square
-    that forbids the grant (`forbidden: { of: <its id> }`) refuses what any grant opens. Closed by default."""
+    that forbids the grant (`forbidden: { of: <its id> }`) refuses what any grant opens. Closed by default.
+
+    A grant `of` a reading (a `reckon` statement) covers each bean the reading holds, and one `to` a reading opens to
+    each member it holds, read each time it is asked; its `cover` (v1 part 12b) opens only the parts it names — a key of
+    the header, `body`, a verb's statements, a verb's narrowed by their `as` — so the whole bean, asked, is not opened by
+    it, and a part asked is, as is a statement of a verb it names; `reason: asked` asks each use its reason."""
     if actor is None:
         return Answer(False, "nobody named: an actor no one can name is granted nothing")
     if actor == gardener:
@@ -1619,7 +1624,21 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
                {x for _i, v, r in sts if v == 'concern' for x in _list(r.get('of')) if isinstance(x, str)}
     owners = {r.get('by') for _i, v, r in sts if v == 'own' and r.get('of') in (None, 'self', bean)
               and isinstance(r.get('by'), str)}               # an owner nobody names (`{ someone: org }`) decides nothing
-    read, forbid, permit = [], [], []
+    read, forbid, permit, asks = [], [], [], set()
+    verbs_of = {str(r.get('id')): (v, r) for _i, v, r in sts if isinstance(r.get('id'), str)}
+
+    def members(b_, sid):
+        """The beans a reading holds, or None where the statement is no reading or cannot be read."""
+        if not any(v == 'reckon' and r.get('id') == sid for _i, v, r in statements(beans.get(b_) or {})):
+            return None
+        return _select(b_, sid, root)
+
+    def part_holds(p, parts):
+        """Whether the asked position `p` — a part's name, or a statement of the bean by its id — is among `parts`."""
+        if p in parts or any(p.startswith(q + '.') for q in parts if q in ('details',)):
+            return True
+        v, r = verbs_of.get(p, (None, {}))
+        return v is not None and (v in parts or f"{v}.{r.get('as')}" in parts)
     for holder, hfm in sorted(beans.items()):
         hs = statements(hfm)
         agreed = {x for _i, v, r in hs if v == 'agree' for x in _list(r.get('by')) if isinstance(x, str)}
@@ -1639,12 +1658,25 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
                     b_, sid = (holder if x == 'self' else x), ''
                 else:                                       # a statement of the holder's own bean, by its id
                     b_, sid = holder, x
-                if b_ == bean:
+                held_by = members(b_, sid) if sid else None
+                if held_by is not None:                     # a reading: each bean it holds, read now
+                    cover = cover or bean in held_by
+                elif b_ == bean:
                     cover = cover or not sid
                     parts |= {sid} if sid else set()
-            if not cover and not (parts and positions and set(positions) <= parts):
+            cv = r.get('cover') if isinstance(r.get('cover'), dict) else {}
+            named = {str(p) for p in _list(cv.get('parts'))}
+            if cover and named:                             # the parts it opens of each bean it covers
+                if not positions or not all(part_holds(str(p), named) for p in positions):
+                    continue
+            elif not cover and not (parts and positions and set(positions) <= parts):
                 continue
-            if actor not in _list(r.get('to')):
+            to = set()
+            for x in map(str, _list(r.get('to'))):
+                b_, sid = x.split('#', 1) if '#' in x else (holder, x)
+                got = members(b_, sid) if (x not in beans and x != 'self') else None
+                to |= set(got) if got is not None else {x}
+            if actor not in to:
                 continue
             span = str(r.get('at')) if r.get('at') else None
             held = _during({'from': span.split('/')[0] or None, 'to': span.split('/')[1] or None}
@@ -1653,11 +1685,13 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
                 continue
             gid = r.get('id') if isinstance(r.get('id'), str) else f"grant@{i}"
             read.append((holder, gid))
+            if cv.get('reason') == 'asked':
+                asks.add((holder, gid))
             (forbid if gid in refused or f"{holder}#{gid}" in refused else permit).append((holder, gid))
     if forbid:
         return Answer(False, f"{forbid[0][0]}#{forbid[0][1]} would open it, and is forbidden", read)
     if permit:
-        return Answer(True, f"granted by {permit[0][0]}#{permit[0][1]}", read)
+        return Answer(True, f"granted by {permit[0][0]}#{permit[0][1]}", read, permit[0] in asks)
     return Answer(False, f"no grant opens {asked} on {bean}" + (f" at {', '.join(positions)}" if positions else '')
                   + f" to {actor} — closed by default", read)
 

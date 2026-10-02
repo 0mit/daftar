@@ -851,6 +851,12 @@ def core_agreement(b, G, units):
             ag['left_out'].append((f"transaction {esc(key)}", tx['notes'][-1]))
             continue
         tx['whole'], tx['unit'], tx['paid'] = W, str(q.get('unit') if isinstance(q, dict) else '1'), {r['by']: W}
+        ch = r.get('charged')                       # PRICED IN ONE CURRENCY, CHARGED IN ANOTHER (v1 part 12b): what moved
+        C, _why = read_count(ch) if isinstance(ch, dict) else (None, '')     # is what it came to; the price beside it
+        if C is not None and str(ch.get('unit')) != tx['unit'] and W:
+            tx['priced'] = (W, tx['unit'])
+            tx['whole'], tx['unit'], tx['paid'] = C, str(ch.get('unit')), {r['by']: C}
+            W = C
         shares, bad = {}, None
         on = bears.get(key, [])
         for bb in on:
@@ -891,6 +897,18 @@ def core_agreement(b, G, units):
         if not any(c[0] == key for c in ag['clauses']):
             ag['clauses'].append((key, {'by': e.get('by'), 'of': e.get('what')},
                                   [{'required': 'obligatory'}.get(e.get('permission'), e.get('permission'))], e))
+    from core import lines
+    ag['fm'] = lines.view(b, G)                     # what a clause occurs for, and what each payment settles of it
+    said = {}                                       # who acts for another, and who declined (v1 part 12b), as today's
+    for _i, v, r in b.items:                        # parties said it, so one printer says both laws'
+        if 'held' in r or not isinstance(r.get('by'), str):
+            continue
+        if v == 'represent' and isinstance(r.get('of'), str):
+            said.setdefault(r['by'], {})['acting_for'] = r['of']
+        if v == 'decline' and isinstance(r.get('at'), str):
+            said.setdefault(r['by'], {})['declined'] = r['at']
+    if said:
+        ag['fm']['parties'] = said
     kept = sorted(k for k in (b.header.get('details') or {}) if k in ('transactions', 'obligations'))
     if kept:
         ag['notes'].append(f"`details` keeps {', '.join(kept)} — what no statement says (a payment with no payer the "
@@ -917,7 +935,7 @@ def core_print(ag, units):
             emit(f"    {esc(cid or 'can')}  {', '.join(figs) or 'no figure'}: {esc(r.get('by'))} — "
                  f"\"{esc(r.get('of'))}\"" + (f"  ({esc(r.get('note'))})" if r.get('note') else ''))
             if sch and e and any(k in e for k in FORM_SAYS):
-                for l in clause_lines('clauses', cid, e, sch, tunits, systems, today, {}):
+                for l in clause_lines('clauses', cid, e, sch, tunits, systems, today, ag.get('fm') or {}):
                     if not l.startswith(f"    {esc(cid)}"):
                         emit(l)
         emit()

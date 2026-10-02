@@ -108,14 +108,14 @@ and the default it derives where it has one.
 - **The face's 21 verbs** (`core/law/core.yaml`): the knowing acts `say` `read` `derive` `make`; the order `be` (where
   a being is), `stand`, `part`, `name`; the four questions `come` `own` `answer` `acquire`; the layers' `pass`; and
   the two squares' eight positions.
-- **The 35 rows** (`core/law/verbs.yaml`):
+- **The 37 rows** (`core/law/verbs.yaml`):
 
   | Group | Verbs |
   |---|---|
   | agreements, money, permission | `agree` `decline` `pay` `bear` `grant` `can` `represent` |
   | what a being needs, does and holds | `need` `meet` `use` `do` `hold` `run` `open` `move` `attend` `produce` |
-  | knowing about a being | `measure` `classify` `concern` `rate` |
-  | failure and remedy, disagreement | `fail` `repair` `rule` |
+  | knowing about a being | `measure` `classify` `concern` `rate` `weigh` |
+  | failure and remedy, disagreement | `fail` `repair` `respond` `rule` |
   | between gardens | `propose` `take` |
   | the network profile | `serve` `carry` `route` `translate` `filter` |
   | the other profiles | `book` (accounting), `renew` (domain), `mark`, `draw` (view) |
@@ -385,7 +385,9 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   holds it reads (`due`, `check`); the hook checks at each commit that the store here holds what it adds. The gate
   never reads a store: a gate that judged one machine's disk would pass on one and fail on another.
 - **Who may do what is closed by default.** The gardener may; anyone else may what a `grant` opens — `as` read, write,
-  enact or ratify, `of` the beans or statements it covers, `to` whom, `at` the extent it holds over — held by the
+  enact or ratify, `of` the beans or statements it covers — or a reading, every bean it holds, read each time — `to`
+  whom (a being, or every member of a reading), the parts of each it opens and whether each use asks a reason its
+  `cover`, `at` the extent it holds over — held by the
   gardener, by the person a record is of or concerns, or by an agreement over its own bean; a position on the
   permission square that forbids a grant refuses what it would open. `python3 bin/pass.py` reads them (`may`).
 

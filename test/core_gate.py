@@ -202,6 +202,11 @@ try:
     check("hook: a write into another garden is refused, naming a proposal (bin/propose.py)",
           r.returncode == 2 and 'another garden' in r.out and 'bin/propose.py' in r.out, r.out)
     shutil.rmtree(other, ignore_errors=True)
+    r = run(PY, 'bin/hook.py', 'pre', stdin='{not json')
+    check("hook: a hook that cannot read its event fails closed (exit 2) — v1 part 12b", r.returncode == 2, r.out)
+    write('scratch/plan.txt', "The rent we would never say aloud: nine hundred a month, Mill Lane side.\n")
+    r = hookrun('pre', {'tool_name': 'Read', 'tool_input': {'file_path': os.path.join(G, 'scratch', 'plan.txt')}})
+    check("hook: a read of a file in no layer is refused (R4)", r.returncode == 2 and 'no layer' in r.out, r.out)
     r1 = run(PY, 'bin/dmhook.py', 'install', 'claude-code')
     r2 = run(PY, 'bin/hook.py', 'uninstall', 'claude-code')
     check("hook: installed by today's name and removed by the verb's", r1.returncode == 0 and r2.returncode == 0
@@ -287,6 +292,35 @@ flows:
           and 'beans/lease.md' in log_files, (fm.get('details'), log_files))
     r = run(PY, 'bin/check.py', '--all')
     check("the core's gate over the whole garden: 0 errors", r.returncode == 0 and '— 0 error(s)' in r.out, r.out[-800:])
+    # A RE-READ, A FILE IN NO LAYER, A WRITE OUTSIDE (v1 part 12b): each refused to the model, never carried
+    write('scratch/plan.txt', "The rent we would never say aloud: nine hundred a month, Mill Lane side.\n")
+    gate_before = text('bin/check.py')
+    SEEN.clear()
+    SCRIPT[:] = [
+        {'text': '', 'calls': [('read', {'path': 'beans/notes.md'})]},
+        {'text': '', 'calls': [('read', {'path': 'beans/notes.md'}), ('read', {'path': 'scratch/plan.txt'}),
+                               ('write', {'path': '../outside.md', 'content': 'x'}),
+                               ('write', {'path': 'bin/check.py', 'content': 'x'})]},
+        {'text': 'Nothing more to do.', 'calls': []},
+    ]
+    r = run(PY, 'bin/launch.py', 'run', TASK, env=KEY)
+    tr = [blk for m in (SEEN[-1]['messages'] if SEEN else []) for blk in m['content']
+          if isinstance(blk, dict) and blk.get('type') == 'tool_result']
+    words = json.dumps(tr)
+    check("launch: a file read again, unchanged, is refused (`again`)", 'in this request already' in words, words[:1500])
+    check("launch: a file in no layer is refused (R4), and its words are never sent",
+          'in no layer' in words and not any('nine hundred' in json.dumps(b) for b in SEEN), words[:1500])
+    check("launch: a write outside the session's copy, or into the gate, is refused",
+          words.count('writes inside its own copy') == 2 and text('bin/check.py') == gate_before
+          and not os.path.exists(os.path.join(os.path.dirname(G), 'outside.md')), words[:1500])
+    M_ = dmpass.Map.here(G)
+    IDX = dmpass.denied_lines(G, M_, dmpass.flows(G), files=['scratch/plan.txt', 'beans/notes.md'])
+    check("POST by content: its index holds the lines of a file in no layer, and none of a file a request may carry, and "
+          "finds such a line whole in a tool's output", 'scratch/plan.txt' in IDX.values()
+          and 'beans/notes.md' not in IDX.values() and dmpass.post_hits(
+              "grep:\nThe rent we would never say aloud: nine hundred a month, Mill Lane side.\n", IDX)
+          == {'scratch/plan.txt': 1}, IDX)
+    restore()
 
     # ---- THE SAVE, on the session's material: a value found only in a guide is refused before a word is written
     sys.path.insert(0, os.path.join(G, 'bin'))
@@ -437,6 +471,46 @@ flows:
         r2 = push(W)
         check("hub: a commit signed by a key no bean names is refused", r2.returncode != 0 and 'no bean carries' in r2.out,
               r2.out)
+        # A COMMIT WITH NO PARENT names its own writers: a hub that holds the garden refuses it (v1 part 12b)
+        run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
+        signing(W, VIEWK)
+        run('git', 'checkout', '-q', '--orphan', 'stray', cwd=W)
+        write('GARDEN.md', re.sub(r'(?m)^gardener: *\S+', 'gardener: viewhost', open(os.path.join(W, 'GARDEN.md'), encoding='utf-8').read(),
+                                  count=1), root=W)
+        run('git', 'add', '-A', cwd=W)
+        run('git', 'commit', '-q', '--no-verify', '-m', 'a garden of my own', cwd=W)
+        r2 = run('git', 'push', '-q', 'origin', 'HEAD:refs/heads/stray', cwd=W)
+        check("hub: a signed commit with no parent, naming its signer as gardener, is refused by a hub that holds the garden",
+              r2.returncode != 0 and 'no parent' in r2.out, r2.out[-800:])
+        run('git', 'checkout', '-q', '-f', 'master', cwd=W)
+        # OPENPGP, where ssh-keygen cannot check: the hub reads the signature with gpg (v1 part 12b)
+        if not shutil.which('gpg'):
+            print("SKIP  hub: OpenPGP — no gpg on this machine")
+        else:
+            os.environ['GNUPGHOME'] = os.path.join(T, 'gnupg')
+            os.makedirs(os.environ['GNUPGHOME'], mode=0o700, exist_ok=True)
+            subprocess.run(['gpg', '--batch', '--pinentry-mode', 'loopback', '--passphrase', '', '--quick-gen-key',
+                            'viewhost <view@example.org>', 'ed25519', 'sign', 'never'], capture_output=True)
+            out = subprocess.run(['gpg', '--with-colons', '--list-secret-keys', 'view@example.org'], capture_output=True,
+                                 text=True, encoding='utf-8', errors='replace').stdout
+            m = re.search(r'^fpr:+([0-9A-F]{40,64}):', out, re.M)
+            fpr = m.group(1) if m else ''
+            run('git', 'fetch', '-q', 'hub')                # the gardener's clone takes what the view host pushed
+            run('git', 'reset', '-q', '--hard', 'hub/master')
+            dmsafe.add_statements(os.path.join(G, 'beans', 'viewhost.md'),
+                                  f'- name: {{ id: pgp, by: openpgp, of: self, as: "{fpr}" }}\n'
+                                  '- say: { by: sam, of: [pgp], at: now }\n')
+            r0 = save("the view host's OpenPGP key", "- action: [[viewhost]] carries an OpenPGP key; class F, the gardener's own")
+            r1 = push(G)
+            run('git', 'fetch', '-q', 'origin', cwd=W)
+            run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
+            for a in (('gpg.format', 'openpgp'), ('user.signingkey', fpr), ('commit.gpgsign', 'true')):
+                run('git', 'config', *a, cwd=W)
+            writer_edit('signed with OpenPGP', '- say: { by: sam, at: now, note: "entered on the view host, OpenPGP" }\n')
+            r2 = push(W)
+            check("hub: an OpenPGP key a bean names (`name: { by: openpgp }`) — the view host's commit signed with it is "
+                  "read by gpg and accepted", fpr and r0.returncode == 0 and r1.returncode == 0 and r2.returncode == 0,
+                  (fpr, r0.out[-300:], r1.out, r2.out[-800:]))
 finally:
     shutil.rmtree(T, ignore_errors=True)
 
