@@ -1289,7 +1289,7 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
 
 
 # ============================== LEG 2 (24.0): what the save traces, and what POST looks for ==============================
-# The launcher (bin/dmlaunch.py) and the hook (bin/dmhook.py) keep a session's material, per clone and off git; the save
+# The launcher (bin/launch.py) and the hook (bin/hook.py) keep a session's material, per clone and off git; the save
 # (bin/dmsave.py) traces each said value it is about to commit back through it. The judging is here, and reads only
 # what it is handed: it opens no store and writes nothing.
 RELAYS = ('self',)          # material that only carries: the model's own output. A session's own beans are named per call
@@ -1383,7 +1383,7 @@ def trace(fl, value, origin, materials, skip=(), titles=None):
         d = fl.direction(e['layer'], dest)
         if d.granted:
             row = next((r for r in fl.rows if r.get('flow') in d.rows and r.get('grant') == 'granted'), {})
-            return Trace('granted', e['from'], (_list(row.get('method')) or [None])[0], n, d, k)
+            return Trace('granted', e['from'], (_list(row.get('method', row.get('through'))) or [None])[0], n, d, k)
         if k and refused is None:
             refused = Trace('refused', e['from'], None, n, d, k)
     return refused or Trace('nowhere', {'layer': 'instructions'}, 'take-down', 0, None, 0)

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Refuse to push anything that names a garden's estate (bin/dmpublic.py).
+# Refuse to push anything that names a garden's estate (bin/public.py).
 #
 # A public repository carries the LANGUAGE and never a garden, and what leaks is the prose around the
 # code: an example path in a comment, a measurement written with the machines' real names, a commit
@@ -20,7 +20,7 @@ daftar_choose_python || exit 1
 RANGE="origin/master..HEAD"
 git rev-parse --verify -q origin/master >/dev/null 2>&1 || RANGE=""
 if [ -n "$RANGE" ]; then
-  daftar_py "$REPO/bin/dmpublic.py" --garden "$GARDEN" --repo "$REPO" --range "$RANGE" || exit 1
+  daftar_py "$REPO/bin/public.py" --garden "$GARDEN" --repo "$REPO" --range "$RANGE" || exit 1
 else
-  daftar_py "$REPO/bin/dmpublic.py" --garden "$GARDEN" --repo "$REPO" || exit 1
+  daftar_py "$REPO/bin/public.py" --garden "$GARDEN" --repo "$REPO" || exit 1
 fi

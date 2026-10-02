@@ -55,7 +55,11 @@ line (v1 part 6), and `measured` the forms of a measure (v1 part 7).
       garden's id (`garden-id`) is twelve hexadecimal digits, and never this garden's own. A name qualified to cross
       (`garden`) is `<garden_id>/<kind>:<name>`, by this garden or one a `garden` bean here is named by; an identifier
       someone else assigned is never qualified.
-- [ ] **layers** — A file stands in one layer, and a `pass` stands only where a row of the flow table grants it.
+- [ ] **layers** — A file stands in one layer, and a `pass` stands only where a row of the flow table grants it. A
+      session's pass log (`captures/passes/<slug>.jsonl`, named by its bean's `details.pass_log`) only grows, and a
+      commit that stages it claims the session: each pass it gains, `{from, to, through, as?, metadata}`, is granted,
+      each said value the commit adds has a granted pass into it, and a `say` by a person it adds has one from `words`
+      or `instructions` into its bean.
 - [ ] **ratify** — A change to the law (`core/law/`, `VOCAB.md`, `GARDEN.md`, a file the release keeps or one in the
       `law` or `manifesto` layer) has a journal entry that says RULE-CHANGE, for the person who ratifies it. A `grant`
       `as: ratify` is the gardener's own act: on the gardener's bean, `by` the gardener, said by the gardener.
