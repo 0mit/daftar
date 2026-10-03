@@ -28,6 +28,11 @@ def esc(s):
     return html.escape(str(s), quote=True)
 
 
+def plain(s):
+    """The text a reader sees of a title, a caption or a label, each of which is HTML: what a plain-text place shows."""
+    return html.unescape(re.sub(r"<[^>]+>", "", str(s)))
+
+
 def slug(s):
     s = re.sub(r"<[^>]+>|&[a-z#0-9]+;", " ", str(s)).lower()
     return re.sub(r"[^a-z0-9]+", "-", s).strip("-") or "el"

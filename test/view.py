@@ -766,18 +766,24 @@ else:
 _browser = next((b for b in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable") if _sh.which(b)), None)
 DRIVE = """<script>
 window.__errs = []; window.addEventListener('error', e => window.__errs.push(String(e.message)));
-window.addEventListener('load', () => { const out = [];
+window.addEventListener('load', () => { const out = [], twice = []; let shown = [];
  try { const tabs = [...document.querySelectorAll('.tab')].map(b => b.dataset.t), lens = [...document.querySelectorAll('#lens button')].map(b => b.dataset.l);
   for (const t of tabs) for (const l of lens) { document.querySelector('.tab[data-t="' + t + '"]').click(); document.querySelector('#lens button[data-l="' + l + '"]').click();
-   out.push(t + '/' + l + ':' + (document.querySelector('#view').innerText || '').length); }
+   out.push(t + '/' + l + ':' + (document.querySelector('#view').innerText || '').length);
+   if (/&amp;(amp|lt|gt|quot|#[0-9]+);/.test(document.querySelector('#tabs').innerHTML + document.querySelector('#view').innerHTML)) twice.push(t + '/' + l); }
+  document.querySelector('.tab[data-t="drying"]').click(); document.querySelector('#lens button[data-l="understand"]').click();
+  shown = [document.querySelector('.tab[data-t="drying"]').textContent, (document.querySelector('#view h3') || {}).textContent,
+           [...document.querySelectorAll('#view .tb-c')].filter(c => c.querySelector('.tb-k').textContent === 'drawing').map(c => c.querySelector('.tb-v').textContent)[0]];
   document.querySelector('#authbtn').click(); out.push('author:' + (document.querySelector('#author').innerText || '').length);
  } catch (e) { window.__errs.push('driver: ' + e.message); }
- const pre = document.createElement('pre'); pre.id = '__result'; pre.textContent = JSON.stringify({errs: window.__errs, out}); document.body.appendChild(pre); });
+ const pre = document.createElement('pre'); pre.id = '__result'; pre.textContent = JSON.stringify({errs: window.__errs, out, twice, shown}); document.body.appendChild(pre); });
 </script>"""
 if _browser and HTML:
     _dr = os.path.join(T, "drive.html")
     with open(_dr, "w", encoding="utf-8") as fh:
-        fh.write(HTML.replace("<head>", "<head>" + DRIVE, 1))
+        # a drawing's title is HTML, as the drawing module writes it: one with an ampersand shows whether anything escapes it twice
+        fh.write(HTML.replace("<head>", "<head>" + DRIVE, 1).replace('"key": "drying", "title": "The drying run"',
+                                                                    '"key": "drying", "title": "Drying &amp; unloading"', 1))
     try:
         r = subprocess.run([_browser, "--headless=new", "--disable-gpu", "--no-sandbox", "--virtual-time-budget=5000",
                             "--dump-dom", "file://" + _dr], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
@@ -788,6 +794,9 @@ if _browser and HTML:
         _res = {"errs": ["the browser did not run: %s" % e], "out": []}
     check("in a headless browser the runtime draws both drawings at all four lenses, the reference and the author mode, "
           "with no error", not _res["errs"] and len(_res["out"]) == 13 and all(int(x.rsplit(":", 1)[1]) > 40 for x in _res["out"]), _res)
+    check("...and a drawing's title, which is HTML, is shown as its text on its tab, its heading and its title block: nothing "
+          "escapes it twice", not _res.get("twice") and _res.get("shown") == ["Drying & unloading"] * 3,
+          (_res.get("twice"), _res.get("shown")))
 else:
     print("NOTE  the runtime was not driven in a browser: none on this machine")
 
