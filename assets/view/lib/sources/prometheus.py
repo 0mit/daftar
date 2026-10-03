@@ -490,7 +490,7 @@ def drawing_dashboard(view, default_org, folder):
                      "datasource": DS, "targets": [{"expr": query(b, FSEL), "legendFormat": b["name"], "refId": "A"}],
                      "fieldConfig": {"defaults": {"thresholds": _steps(b), "custom": {"thresholdsStyle": {"mode": "line"}}}}})
     panels.append({"type": "row", "title": "History", "collapsed": True, "gridPos": {"x": 0, "y": y, "w": 24, "h": 1}, "panels": hist})
-    return {"title": "%s — %s" % (kit.esc(view["title"]).replace("&amp;", "&"), folder), "uid": view["uid"], "schemaVersion": 39,
+    return {"title": "%s — %s" % (kit.plain(view["title"]), folder), "uid": view["uid"], "schemaVersion": 39,
             "version": 1, "refresh": "30s", "time": {"from": "now-6h", "to": "now"}, "editable": False,
             "tags": ["view", "view-drawing", view["key"]], "links": _links(), "templating": _templating(default_org),
             "description": "The drawing of %s, written by view from the garden's ledger; do not edit it here." % view["source"],
@@ -503,7 +503,7 @@ def index_dashboard(views, default_org, folder):
                                                           "the live values on its own parts. Green: every bound part is up." % folder}}]
     for i, v in enumerate(views):
         names = "|".join(sorted({b["probe"] for b in v["binds"] if b["live"] == "live-state"})) or "none"
-        panels.append({"type": "stat", "title": v["title"].replace("&amp;", "&"),
+        panels.append({"type": "stat", "title": kit.plain(v["title"]),
                        "gridPos": {"x": (i % 4) * 6, "y": 2 + (i // 4) * 4, "w": 6, "h": 4}, "datasource": DS,
                        "targets": [{"expr": 'min(min by (name) (probe_success{name=~"%s", %s, %s}))' % (names, PROBES, FSEL), "refId": "A"}],
                        "links": [{"title": "open the drawing's page", "url": "/d/%s?${__url_time_range}&${__all_variables}" % v["uid"]}],
@@ -513,7 +513,7 @@ def index_dashboard(views, default_org, folder):
                            "thresholds": {"mode": "absolute", "steps": [{"color": "#5a6675", "value": None}]}}},
                        "options": {"colorMode": "background", "graphMode": "none", "textMode": "value"}})
     y = 2 + ((len(views) + 3) // 4) * 4
-    rows = "".join("| [%s](/d/%s) | %s | %s | %s | %d |\n" % (v["title"].replace("&amp;", "&"), v["uid"], v["source"],
+    rows = "".join("| [%s](/d/%s) | %s | %s | %s | %d |\n" % (kit.plain(v["title"]), v["uid"], v["source"],
                    ", ".join(v["patterns"]), ", ".join(v["live_patterns"]), len(v["binds"])) for v in views)
     panels.append({"type": "text", "title": "The drawing → its patterns → its page", "gridPos": {"x": 0, "y": y, "w": 24, "h": 2 + len(views)},
                    "options": {"mode": "markdown", "content": "| page | draws | drawn with | live | bindings |\n|---|---|---|---|---|\n" + rows}})

@@ -181,6 +181,9 @@ function poll(){ if (!LIVE || tab === 'ref') return;
   const corr = (((P.views[tab] || {}).operate || {}).correlate || []).length, age = Date.now() - (HISTT[tab] || 0);
   if (!HIST[tab] || (corr && age > 60000)) { HIST[tab] = HIST[tab] || {}; HISTT[tab] = Date.now(); fetch('/api/history?m=' + encodeURIComponent(tab)).then(r => r.ok ? r.json() : null).then(j => { if (j && j.history) { HIST[tab] = j.history; mountView(); } }).catch(() => {}); } }
 const $ = s => document.querySelector(s), esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// A drawing's title is HTML (the page's label escaped, or the drawing module's own); an author's label is text.
+const plain = s => new DOMParser().parseFromString(String(s==null?'':s), 'text/html').body.textContent,
+      titled = (label, title) => label ? esc(label) : title;
 function save(){ try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
 function ed(k){ S.views[k] = S.views[k] || {}; return S.views[k]; }
 function num(v){ return v == null || v === '' ? null : +v; }
@@ -191,7 +194,7 @@ function viewFor(k){
     const was = v.binds.find(x => x.id === bk) || {}, u = (P.units || {})[b.unit] || {};
     return Object.assign({}, was, {id: bk, el: b.element, live: b.live, name: b.label || byId[b.element].label, short: b.short || '',
       unit: b.unit || '', q: u.q || null, f: u.f || null, warn: num(b.warn), crit: num(b.crit), item_names: b.item_names || {}}); });
-  return Object.assign({}, v, {title: esc(e.label || v.title), binds, story: storyFor(e) || v.story,
+  return Object.assign({}, v, {title: titled(e.label, v.title), binds, story: storyFor(e) || v.story,
     questions: Object.fromEntries((e.questions || []).map(q => [q.lens, q.ask]))});
 }
 function storyFor(e){ if (!e.stages) return null; const F = {};
@@ -201,7 +204,7 @@ function storyFor(e){ if (!e.stages) return null; const F = {};
 }
 function renderTabs(){
   $('#tabs').innerHTML = '<button class="tab'+(tab==='ref'?' active':'')+'" data-t="ref">Reference</button>' +
-    S.order.filter(k => P.views[k]).map(k => '<button class="tab'+(tab===k?' active':'')+'" data-t="'+esc(k)+'">'+esc((S.views[k]||{}).label || P.views[k].title)+'</button>').join('');
+    S.order.filter(k => P.views[k]).map(k => '<button class="tab'+(tab===k?' active':'')+'" data-t="'+esc(k)+'">'+titled((S.views[k]||{}).label, P.views[k].title)+'</button>').join('');
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
 }
 function renderLenses(){
@@ -254,11 +257,11 @@ const csv = v => v.split(',').map(x => x.trim()).filter(Boolean);
 function renderAuthor(){
   let o = '<h3>Drawings — in what order, under what name</h3><table><thead><tr><th>order</th><th>key</th><th>label</th><th>draws</th></tr></thead><tbody>';
   S.order.forEach((k, i) => o += '<tr><td><button class="btn mini" data-mv="'+i+'" data-dir="-1">↑</button> <button class="btn mini" data-mv="'+i+'" data-dir="1">↓</button></td>'+
-    '<td class="mono">'+esc(k)+'</td><td><input class="w" data-label="'+esc(k)+'" value="'+esc((S.views[k]||{}).label || '')+'" placeholder="'+esc(P.views[k] ? P.views[k].title : '')+'"></td><td class="kd">'+esc(P.views[k] ? P.views[k].source : '')+'</td></tr>');
+    '<td class="mono">'+esc(k)+'</td><td><input class="w" data-label="'+esc(k)+'" value="'+esc((S.views[k]||{}).label || '')+'" placeholder="'+esc(P.views[k] ? plain(P.views[k].title) : '')+'"></td><td class="kd">'+esc(P.views[k] ? P.views[k].source : '')+'</td></tr>');
   o += '</tbody></table>';
   if (tab !== 'ref') {
     const e = ed(tab), v = P.views[tab], st = e.stages || [];
-    o += '<h3>'+esc(e.label || v.title)+' — the story (orient)</h3><p class="note">Plain words for a newcomer: what it guarantees, three to five stages in the order work flows, what is true when it works. '+
+    o += '<h3>'+titled(e.label, v.title)+' — the story (orient)</h3><p class="note">Plain words for a newcomer: what it guarantees, three to five stages in the order work flows, what is true when it works. '+
          'A technology is a code of the catalogue ('+Object.keys(P.techcat).length+' known), and opens its own documentation.</p>'+
          '<table><tbody><tr><td style="width:90px">purpose</td><td><input class="w" data-sf="purpose" value="'+esc(e.purpose)+'"></td></tr>'+
          '<tr><td>outcome</td><td><input class="w" data-sf="outcome" value="'+esc(e.outcome)+'"></td></tr></tbody></table>'+
