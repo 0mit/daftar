@@ -495,6 +495,8 @@ def _occurrences(first, rec, systems=None, units=None, skipped=None, near=None):
     units = units if units is not None else _law('UNITS')
     _writable(first)
     times = rec.get('times')
+    if isinstance(times, str) and times.strip().isdigit():
+        times = int(times)                  # the core reads every value as text: `times: "6"` is six
     times = times if isinstance(times, int) and not isinstance(times, bool) and times >= 1 else None
     end = None
     if rec.get('to') is not None:

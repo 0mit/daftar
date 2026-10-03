@@ -848,6 +848,21 @@ def core_analyse(path, as_test=False):
                 ats = [x for x in ats if x != HOME] + ([] if home or not sender else [sender])
                 r['at'] = ats[0] if len(ats) == 1 else ats
             sts.append((v, r))
+        # WHAT CAME FROM HERE COMES HOME AS NOTHING: the sending garden's `take` of this garden's own word records
+        # only that it received it, and the acts that knew no more than that take go with it.
+        gone = {r.get('id') for v, r in sts if v == 'take' and r.get('from') == HOME}
+        if gone:
+            kept = []
+            for v, r in sts:
+                if v == 'take' and r.get('from') == HOME:
+                    continue
+                if v in law.knowing and 'of' in r:
+                    of = [x for x in listed(r['of']) if x not in gone]
+                    if not of:
+                        continue
+                    r = dict(r, of=of if isinstance(r['of'], list) else of[0])
+                kept.append((v, r))
+            sts = kept
         fusing = target in local
         if fusing:
             mine = [(v, r) for _i, v, r in dmpass.statements(local[target][0])]
@@ -867,9 +882,12 @@ def core_analyse(path, as_test=False):
                                          f"`of`, which here would cover {target}'s own", "the sending garden gives it "
                                                                                          "an id"))
                     new[j] = (v, dict(r, of=covered))
+            # AN ACT THAT WOULD KNOW NOTHING NEW HERE IS LEFT OUT: a blanket act whose statements this garden holds
+            # already, or another of the proposal's acts names, would say `of: []`, which says nothing.
+            new = [(v, r) for v, r in new if not (v in law.knowing and r.get('of') == [])]
             sts = new
         n = 1
-        taken_ids = {r.get('id') for _v, r in (mine if fusing else sts)}
+        taken_ids = {r.get('id') for _v, r in (mine if fusing else [])} | {r.get('id') for _v, r in sts}
         while f"taken-{n}" in taken_ids:
             n += 1
         add = sts + [('take', {'id': f"taken-{n}", 'by': g, 'of': 'self', 'from': sender, 'through': fp, 'at': 'now'}),
