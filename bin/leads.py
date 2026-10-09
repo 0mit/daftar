@@ -15,6 +15,11 @@ disagrees with the garden. A lead says what waits, whose it is, and what it is a
              gardener's, saying so
   obligation a clause of an agreement (or any term the law gives an expiry) falling due within its notice, or past
              it, as bin/stale.py reads it: the party it binds — who makes the payment it asks — else the gardener
+  health     a failure a reading shows is happening — a `fail` whose `through` names a `measure` (a probe's
+             reading: a disk's pending sectors, a clock's offset, a certificate's days left), with no `repair` of
+             it: whoever answers for the being in keeping it (`answer … as: keeping`), else its owner, else the
+             gardener. A failure recorded with no reading behind it is a finding, kept in the reading, not a lead
+             (design §14: leads for what someone can act on)
   session    an agent's session left open — a worktree of the garden on a `session/<slug>` branch, as
              bin/session.py lists it (its close retires the worktree; a session bean's own words do not say it,
              since closing leaves `details.status` as it was): the gardener's, to close or to ratify what it did
@@ -144,6 +149,27 @@ def read(root=ROOT):
                     leads.append({'for': who, 'kind': 'obligation', 'about': bid, 'clause': cid, 'due': shown,
                                   'days': days, 'why': (f"{bid} {cid} falls due on {shown}, in {days} day(s)" if days >= 0
                                                         else f"{bid} {cid} fell due on {shown}, {-days} day(s) ago")})
+
+    # HEALTH: a failure a reading shows, not yet repaired — for whoever keeps the being
+    repaired = {(str(r.get('of')) if '#' in str(r.get('of')) else f"{rb}#{r.get('of')}")   # a bare id is its own bean's
+                for rb, b in G.beans.items() for _i, verb, r in b.items if verb == 'repair'}
+    for bid, b in sorted(G.beans.items()):
+        readings = {str(r.get('id')): r for _i, verb, r in b.items if verb == 'measure' and isinstance(r.get('id'), str)}
+        for _i, verb, r in b.items:
+            fid = r.get('id')
+            if verb != 'fail' or 'held' in r or not isinstance(fid, str) or str(r.get('through')) not in readings \
+                    or f"{bid}#{fid}" in repaired:
+                continue
+            keepers = [str(x) for _j, v, a in b.items if v == 'answer' and a.get('as') == 'keeping'
+                       and a.get('of') in (None, 'self', bid) for x in listed(a.get('by')) if isinstance(x, str)]
+            owners = [str(x) for _j, v, a in b.items if v == 'own' and a.get('of') in (None, 'self', bid)
+                      for x in listed(a.get('by')) if isinstance(x, str) and x != 'theone']
+            m = readings[str(r['through'])]
+            value = m.get('value') if isinstance(m.get('value'), dict) else {}
+            seen = f"{m.get('as')} {value.get('count', '')} {value.get('unit', '')}".strip()
+            for who in sorted(set(keepers or owners or ([gardener] if gardener else []))):
+                leads.append({'for': who, 'kind': 'health', 'about': bid, 'fail': fid, 'since': str(r.get('at') or m.get('at') or ''),
+                              'why': f"{bid}: {r.get('as')} — read as {seen}" + (f" on {m.get('at')}" if m.get('at') else '')})
 
     # SESSIONS: an agent's work left open — a session's worktree, as bin/session.py lists it
     import subprocess

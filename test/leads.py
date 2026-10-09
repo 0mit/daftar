@@ -154,9 +154,30 @@ statements:
 ---
 A room let.
 ''')
+    host = """---
+bean: {bean}
+kind: host
+title: "{bean} — a machine"
+statements:
+  - read:    {{ by: sam, at: now }}
+  - own:     {{ by: sam, of: self }}
+  - answer:  {{ by: p-1a2b3c4d, of: self, as: keeping }}
+{more}---
+A machine.
+"""
+    write(G, 'beans/box-slow.md', host.format(bean='box-slow', more=(
+        '  - measure: { id: clock-offset, of: self, as: duration, value: { count: "31", unit: s }, at: 2026-10-09 }\n'
+        '  - fail:    { id: clock-drift, by: self, as: "the clock runs past the 30 s a stamp is taken within", through: clock-offset, at: 2026-10-09 }\n')))
+    write(G, 'beans/box-mended.md', host.format(bean='box-mended', more=(
+        '  - measure: { id: clock-offset, of: self, as: duration, value: { count: "45", unit: s }, at: 2026-10-01 }\n'
+        '  - fail:    { id: clock-drift, by: self, as: "the clock ran slow", through: clock-offset, at: 2026-10-01 }\n'
+        '  - repair:  { by: sam, of: clock-drift }\n')))
+    write(G, 'beans/box-finding.md', host.format(bean='box-finding', more=(
+        '  - fail:    { id: no-firewall, by: self, as: "no firewall is active", at: 2026-09-11 }\n')))
     r = grow.run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: a repair walk, three repairs, a ratify grant and an open session',
                  '--body', '- action: RULE-CHANGE — VOCAB.md adds the kind procedure; wrote [[p-1a2b3c4d]], [[walk-repair]], '
-                 '[[repair-waiting]], [[repair-nobody]], [[repair-done]], [[sam]], [[session-open]], [[session-closed]] and [[flat-lease]]', '- ratified_by: sam', cwd=G)
+                 '[[repair-waiting]], [[repair-nobody]], [[repair-done]], [[sam]], [[session-open]], [[session-closed]], [[flat-lease]], '
+                 '[[box-slow]], [[box-mended]] and [[box-finding]]', '- ratified_by: sam', cwd=G)
     check("the garden holds them, through its gate", r.returncode == 0, r.out[-900:])
 
     grow.run('git', 'worktree', 'add', '-q', '-b', 'session/open-work', os.path.join(T, 'open-work'), cwd=G)
@@ -188,6 +209,10 @@ A room let.
     check("leads: an obligation falling due within its notice is the party's it binds — who pays what it asks — and one "
           "far off is nobody's yet", [(x['for'], x.get('clause')) for x in o] == [('p-1a2b3c4d', 'rent-due')]
           and o[0].get('due') == soon, o)
+    hl = [x for x in leads if x.get('kind') == 'health']
+    check("leads: a failure a reading shows, not yet repaired, is the keeper's — and one repaired, or a finding with no "
+          "reading behind it, is nobody's", [(x['for'], x['about'], x['fail']) for x in hl] == [('p-1a2b3c4d', 'box-slow', 'clock-drift')]
+          and 'duration 31 s' in hl[0]['why'], hl)
     r2 = grow.run(PY, 'bin/leads.py', '--json', '--for', 'p-1a2b3c4d', cwd=G)
     mine = json.loads(r2.out[r2.out.index('['):]) if '[' in r2.out else []
     check("--for reads one person's leads alone", mine and {x['for'] for x in mine} == {'p-1a2b3c4d'}, r2.out[-600:])
