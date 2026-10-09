@@ -241,8 +241,10 @@ def is_code(m, path, drawn=()):
             or path in drawn)
 
 
-def rights(writer, commit, parent, env, tmp):
-    """What the writer changed that its grants at the parent do not open: [(path, act)]."""
+def rights(writer, commit, parent, env, tmp, others=()):
+    """What the writer changed that its grants at the parent do not open: [(path, act)]. A MERGE (`others`, its other
+    parents) brings what each side committed, judged when it was committed: what the merge itself changed — and its
+    writer needs grants for — is a path that differs from every parent (MERGE.md §5, as the gate reads a merge)."""
     before = Tree(parent, env) if parent else None
     if before is None or writer == before.gardener():
         return []
@@ -253,6 +255,11 @@ def rights(writer, commit, parent, env, tmp):
     before.checkout(root)
     beans = before.beans()
     _c, out, _e = git('diff', '--name-only', '--no-renames', parent, commit, env=env)
+    paths = [x for x in out.split('\n') if x]
+    if others:
+        def blob(ref, p):
+            return git('rev-parse', '-q', '--verify', f"{ref}:{p}", env=env)[1].strip()
+        paths = [p for p in paths if all(blob(o, p) != blob(commit, p) for o in others)]
     after = Tree(commit, env)
     once = before.once() | after.once()
     m = dmpass.Map.here(root)
@@ -262,7 +269,7 @@ def rights(writer, commit, parent, env, tmp):
     def ratify_g():
         return dmpass.may(writer, 'ratify:G', before.gardener() or '', root=root, beans=beans).granted
 
-    for p in [x for x in out.split('\n') if x]:
+    for p in paths:
         if m.layer_of(p)[0] in dmpass.RULED or is_code(m, p, drawn):
             if not ratify_g():
                 missing.append((p, 'ratify:G'))
@@ -328,6 +335,7 @@ def judge(old, new, only=None, each=False, env=None, known=('--all',)):
             payload, sig = split_signature(raw)
             _r, parents, _e = git('rev-list', '--parents', '-n', '1', c, env=env)
             parent = (parents.split() + [None, None])[1]
+            others = parents.split()[2:]                     # a merge's other parents
             try:
                 if sig is None:
                     raise Refused("it is not signed: a hub accepts a commit signed by a key a writer's bean carries")
@@ -348,7 +356,7 @@ def judge(old, new, only=None, each=False, env=None, known=('--all',)):
                                   f"it — the gardener adds a writer's key (a class-F change)")
                 if only and who not in (only, gardener):
                     raise Refused(f"it is signed by {who}, and this hub accepts only {gardener} and {only}")
-                miss = rights(who, c, parent, env, tmp)
+                miss = rights(who, c, parent, env, tmp, others)
                 if miss:
                     raise Refused(f"{who} may not make it: " + '; '.join(f"{p} needs a grant of `{a}`" for p, a in miss))
                 if each:

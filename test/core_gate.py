@@ -560,18 +560,48 @@ flows:
               r.returncode == 0 and 'signed, for the peers' in mine and 'merged' in r.out, r.out[-800:] + mine)
         r = run(PY, 'bin/sync.py', 'peer')
         check("sync: and once in step, a sync changes nothing", r.returncode == 0 and 'in step' in r.out, r.out[-400:])
+        if os.name != 'nt':                       # the save lock, held here as a save in progress would hold it
+            import fcntl
+            lockf = open(os.path.join(run('git', 'rev-parse', '--absolute-git-dir').out.strip(), 'daftar-save.lock'), 'a+')
+            fcntl.flock(lockf.fileno(), fcntl.LOCK_EX)
+            r = run(PY, 'bin/sync.py', 'peer', env={'DAFTAR_SAVE_WAIT': '1'})
+            lockf.close()
+            check("sync: while a save holds the clone, a sync waits — nothing fetched, nothing merged",
+                  r.returncode != 0 and 'a save holds this clone' in r.out, r.out[-400:])
         notes = open(os.path.join(G, 'beans', 'notes.md'), encoding='utf-8').read()   # `text` is a loop's name above
         write('beans/notes.md', notes.replace("kept by Sam.", "kept by Sam, here."))
         save('the notes, here', '- action: [[notes]]')
         run('git', 'fetch', '-q', 'origin', cwd=W)
         writer_edit('signed, while the gardener wrote too', '- say: { by: sam, at: now, note: "entered on the view host" }\n')
+        r = run(PY, 'bin/sync.py', '--ff-only', 'peer')
+        check("sync --ff-only: where both moved, a machine syncing on its own merges nothing — the merge commit waits for "
+              "someone who can sign it", r.returncode != 0 and 'diverged' in r.out
+              and 'while the gardener wrote too' not in run('git', 'log', '--format=%s', '-4').out, r.out[-600:])
         r = run(PY, 'bin/sync.py', 'peer')
         log = run('git', 'log', '--format=%s', '-4').out
         check("sync: where both moved, what the peer brings is judged and merged by the garden's driver, saved through the "
               "gate with its entry", r.returncode == 0 and "merged peer's" in log and 'while the gardener wrote too' in log,
               r.out[-800:] + log)
         run('git', 'remote', 'remove', 'peer')
+        # A MERGE IS JUDGED FOR WHAT IT CHANGED ITSELF: the view host, granted the notes alone, merges the gardener's
+        # new bean beside its own note — signed as itself, as a machine merges what needs no person
+        r0 = push(G)
+        run('git', 'fetch', '-q', 'origin', cwd=W)
         run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
+        write('beans/ledger.md', BEAN % ('ledger', 'document', 'the ledger', "The shop's ledger.", '', '', 'The ledger.'))
+        save('the ledger, by the gardener', '- action: wrote [[ledger]]')
+        r1 = push(G)
+        writer_edit('beside the gardener', '- say: { by: sam, at: now, note: "entered on the view host" }\n')
+        r = run(PY, 'bin/sync.py', '--by', 'viewhost', 'origin', cwd=W)
+        merge = run('git', 'cat-file', 'commit', 'HEAD', cwd=W).out
+        r2 = push(W)
+        check("sync --by: the view host merges what the gardener wrote beside its own, signed as itself; the hub takes it, "
+              "judging the merge for what it changed itself — the gardener's ledger needs no grant of the view host's",
+              r0.returncode == 0 and r1.returncode == 0 and r.returncode == 0 and merge.count('\nparent ') == 2
+              and 'gpgsig' in merge and r2.returncode == 0, r0.out + r1.out + r.out[-600:] + r2.out[-800:])
+        run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
+        run('git', 'fetch', '-q', 'hub')
+        run('git', 'merge', '-q', '--ff-only', 'hub/master')      # the gardener's clone in step with the hub again
         # OPENPGP, where ssh-keygen cannot check: the hub reads the signature with gpg (v1 part 12b)
         if not shutil.which('gpg'):
             print("SKIP  hub: OpenPGP — no gpg on this machine")
