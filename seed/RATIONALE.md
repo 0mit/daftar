@@ -4864,3 +4864,14 @@ and saved through the gate with the entry that names each bean it brought. A pee
 out whole and said; a conflict is taken back for a person. It pushes only to a remote marked as a hub, and never into a
 working tree with changes not yet saved. No machine is privileged: whichever is always on relays, and each judges for
 itself.
+## core/law/tools.yaml: tools[act]
+
+AN ACTION IS THE LAW'S OWN WALK, NOT A SECOND SEQUENCE. `bin/act.py` runs what changes a machine the one way the
+garden already records a case: the action a `procedure` mapping whose `step`s are plan, show, check, ratify, apply,
+verify and done, with refused and rolled-back its exits; a run a course of the thing it changes on that walk; each step
+reached a `move`, judged by the rule `line` at its commit, and where a run stands read by bin/seq.py. A step whose `by`
+is the engine is run on the machine whose tool it is (a program the walk `use`s, `be`ing there); a person's step —
+ratifying the plan they were shown, its SHA-256 on its move — stops the run as a lead to them, and a plan changed since
+it was shown is shown again. Nothing was added to the law for it: a second machinery for "steps with approvals" would
+have been a second statement of what the walk already says.
+
