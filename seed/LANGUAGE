@@ -33,6 +33,7 @@ bin/knowledge.py
 bin/fetch.py
 bin/crosswalk.py
 bin/propose.py
+bin/mailbox.py
 bin/across.py
 bin/pass.py
 bin/held.py

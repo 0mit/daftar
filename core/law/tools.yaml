@@ -54,6 +54,7 @@ tools:
   - { tool: knowledge, family: measure }
   - { tool: crosswalk, family: measure }
   - { tool: propose, family: between }
+  - { tool: mailbox, family: between }
   - { tool: merge, family: between }
   - { tool: across, family: between }
   - { tool: pass, family: between }
