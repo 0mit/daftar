@@ -545,6 +545,32 @@ flows:
         r = run(PY, 'bin/hub.py', 'receive', 'refs/remotes/peer/master')
         check("receive: what a fetch brought is never counted as judged — only this clone's own branches are",
               r.returncode != 0 and 'not signed' in r.out, r.out[-600:])
+        # SYNC: fetch each peer into quarantine, judge it, merge what passes (bin/sync.py)
+        run('git', 'remote', 'add', 'peer', W)
+        before = run('git', 'rev-parse', 'HEAD').out.strip()
+        r = run(PY, 'bin/sync.py', 'peer')
+        check("sync: a peer whose new commit is unsigned is judged, refused and left out — this clone as it was",
+              r.returncode != 0 and 'not signed' in r.out and run('git', 'rev-parse', 'HEAD').out.strip() == before,
+              r.out[-800:])
+        run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
+        writer_edit('signed, for the peers', '- say: { by: sam, at: now, note: "entered on the view host" }\n')
+        r = run(PY, 'bin/sync.py', 'peer')
+        mine = run('git', 'log', '--format=%s', '-3').out
+        check("sync: a peer's signed commit within its grant is judged and merged into this clone",
+              r.returncode == 0 and 'signed, for the peers' in mine and 'merged' in r.out, r.out[-800:] + mine)
+        r = run(PY, 'bin/sync.py', 'peer')
+        check("sync: and once in step, a sync changes nothing", r.returncode == 0 and 'in step' in r.out, r.out[-400:])
+        notes = open(os.path.join(G, 'beans', 'notes.md'), encoding='utf-8').read()   # `text` is a loop's name above
+        write('beans/notes.md', notes.replace("kept by Sam.", "kept by Sam, here."))
+        save('the notes, here', '- action: [[notes]]')
+        run('git', 'fetch', '-q', 'origin', cwd=W)
+        writer_edit('signed, while the gardener wrote too', '- say: { by: sam, at: now, note: "entered on the view host" }\n')
+        r = run(PY, 'bin/sync.py', 'peer')
+        log = run('git', 'log', '--format=%s', '-4').out
+        check("sync: where both moved, what the peer brings is judged and merged by the garden's driver, saved through the "
+              "gate with its entry", r.returncode == 0 and "merged peer's" in log and 'while the gardener wrote too' in log,
+              r.out[-800:] + log)
+        run('git', 'remote', 'remove', 'peer')
         run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
         # OPENPGP, where ssh-keygen cannot check: the hub reads the signature with gpg (v1 part 12b)
         if not shutil.which('gpg'):

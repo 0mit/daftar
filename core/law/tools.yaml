@@ -27,6 +27,7 @@ tools:
   - { tool: public, family: gate }
   - { tool: hook, family: gate }
   - { tool: hub, family: gate }
+  - { tool: sync, family: between }
   - { tool: save, family: write }
   - { tool: safe, family: write }
   - { tool: journal, family: write }
