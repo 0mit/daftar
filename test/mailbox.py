@@ -2,11 +2,14 @@
 """Mailboxes: where another garden lays a proposal, by a key that can do nothing else (bin/mailbox.py, design §7.2).
 
 Grows two gardens from this tree. Ana's garden proposes a bean to Ben's (bin/propose.py make); the proposal is laid in
-Ben's mailbox through the forced command a peered garden's key runs (`receive`, standard input to the inbox), and read
-there; the authorized_keys line for such a key allows that one command and nothing else; what is not a proposal, one for
-another garden, one damaged in transit and one too large are refused, nothing kept; `put` hands a proposal to the
-receiver's command over the transport (ssh, here a stand-in that runs it locally); and a mailbox lies outside every
-garden.
+Ben's mailbox (`receive`, standard input to the inbox), and read there; what is not a proposal, one for another garden,
+one damaged in transit and one too large are refused, nothing kept; the authorized_keys line for a peered garden's key
+runs one forced command, `serve`, which answers `receive` and `receipts` for that garden only and refuses anything
+else; `put` hands a proposal over the transport (ssh, here a stand-in that runs the forced command locally). Then
+resume (design §7.3): `deliver` hands what waits in Ana's outbox to Ben's peer until a receipt names it — a transfer cut
+before it arrives, and one whose receipt is lost, both leave it waiting, and the next run delivers it, said "was here
+already" the second time — and once Ben's gardener takes it, the receipts tell Ana's garden it was taken. A mailbox lies
+outside every garden.
 
 Run: python3 test/mailbox.py   (0 = green)
 """
@@ -55,6 +58,25 @@ try:
     with open(os.path.join(A, 'beans', 'note.md'), 'w', encoding='utf-8') as fh:
         fh.write('---\nbean: note\nkind: document\ntitle: "note — a note for Ben"\nstatements:\n  - say: { by: ana, at: now }\n'
                  f'  - name: {{ by: garden, of: self, as: "{IDA}/document:note" }}\n---\nA note.\n')
+    # Ben's garden knows Ana's, and Ana, as she is known beyond her garden: first contact, recorded by its gardener
+    with open(os.path.join(B, 'beans', 'garden-ana.md'), 'w', encoding='utf-8') as fh:
+        fh.write(f'---\nbean: garden-ana\nkind: garden\ntitle: "garden-ana — the garden Ana keeps"\nstatements:\n'
+                 f'  - say: {{ by: ben, at: now }}\n  - name: {{ by: garden-id, of: self, as: "{IDA}" }}\n'
+                 f'  - own: {{ by: ana, of: self }}\n---\nAna\'s garden.\n')
+    with open(os.path.join(B, 'beans', 'ana.md'), 'w', encoding='utf-8') as fh:
+        fh.write(f'---\nbean: ana\nkind: person\ntitle: "Ana"\nstatements:\n  - say: {{ by: ben, at: now }}\n'
+                 f'  - name: {{ by: garden, of: self, as: "{IDA}/person:ana" }}\n  - own: {{ by: theone, of: self }}\n'
+                 f'  - answer: {{ by: self, of: self, as: law }}\n---\nAna.\n')
+    with open(os.path.join(B, 'beans', 'pact.md'), 'w', encoding='utf-8') as fh:
+        fh.write('---\nbean: pact\nkind: contract\ntitle: "pact — Ana and Ben share notes"\nstatements:\n'
+                 '  - say: { by: ben, at: now }\n  - own: { by: theone, of: self }\n'
+                 '  - answer: { by: ana, of: self, as: law }\n  - answer: { by: ben, of: self, as: law }\n'
+                 '  - agree: { id: ana-agrees, by: ana, of: "notes shared", through: spoken }\n'
+                 '  - agree: { id: ben-agrees, by: ben, of: "notes shared", through: spoken }\n'
+                 f'  - name: {{ by: garden, of: self, as: "{IDA}/contract:pact" }}\n---\nA pact.\n')
+    r0 = grow.run(PY, 'bin/save.py', 'ben', "Ana's garden, Ana and the pact", '--body',
+                  '- action: wrote [[garden-ana]], [[ana]] and [[pact]]; Ana is kept here on her own word ([[pact]])', cwd=B)
+    check("Ben's garden records Ana's, first contact", r0.returncode == 0, r0.out[-1200:])
     ana = open(os.path.join(A, 'beans', 'ana.md'), encoding='utf-8').read()
     with open(os.path.join(A, 'beans', 'ana.md'), 'w', encoding='utf-8') as fh:
         fh.write(ana.replace('\n---\n', f'\n  - name: {{ id: qualified, by: garden, of: self, as: "{IDA}/person:ana" }}\n'
@@ -99,22 +121,76 @@ try:
     pub = os.path.join(T, 'ana-key.pub')
     with open(pub, 'w') as fh:
         fh.write('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPL ana@laptop\n')
-    r = grow.run(PY, 'bin/mailbox.py', 'key', IDB, pub, cwd=B, env=env)
+    r = grow.run(PY, 'bin/mailbox.py', 'key', IDB, IDA, pub, cwd=B, env=env)
     line = r.out.strip().splitlines()[-1] if r.out.strip() else ''
-    check("key: a peered garden's key may run the one command — receive, for this garden — and nothing else",
-          r.returncode == 0 and line.startswith('restrict,command="') and f'mailbox.py receive {IDB}"' in line
+    check("key: a peered garden's key may run one forced command — this garden's mailbox, for that garden — and nothing "
+          "else", r.returncode == 0 and line.startswith('restrict,command="') and f'mailbox.py serve {IDB} {IDA}"' in line
           and line.endswith('ana@laptop'), r.out)
-    # put: the transport is ssh to the receiving peer; here a stand-in that runs what the forced command would
-    fake = os.path.join(T, 'fake-ssh')
+
+    def serve(asked, data=b'', sender=IDA):
+        return grow.run(PY, 'bin/mailbox.py', 'serve', IDB, sender, cwd=B, stdin=data.decode('utf-8', 'replace'),
+                        env=dict(env, SSH_ORIGINAL_COMMAND=asked))
+
+    r = serve('cat ~/.ssh/id_ed25519')
+    check("serve: the key may ask for receive or receipts, and anything else is refused", r.returncode != 0
+          and 'may ask for' in r.out, r.out)
+    r = serve('receive', raw, sender='0123456789ab')
+    check("serve: a proposal from a garden other than the one the key was given to is refused", r.returncode != 0
+          and 'this key was given to' in r.out, r.out)
+    # put: the transport is ssh to the receiving peer; here a stand-in that runs the forced command, as sshd would, with
+    # what was asked in SSH_ORIGINAL_COMMAND. A CUT file cuts the link before anything arrives; a LOST file after it
+    # arrived, so its receipt is lost.
+    fake, CUT, LOST = os.path.join(T, 'fake-ssh'), os.path.join(T, 'CUT'), os.path.join(T, 'LOST')
     with open(fake, 'w') as fh:
-        fh.write(f'#!/bin/sh\nexec "{PY}" "{os.path.join(B, "bin", "mailbox.py")}" receive {IDB}\n')
+        fh.write(f'#!/bin/sh\n[ -e "{CUT}" ] && {{ rm "{CUT}"; exit 255; }}\nshift\n'
+                 f'SSH_ORIGINAL_COMMAND="$*" "{PY}" "{os.path.join(B, "bin", "mailbox.py")}" serve {IDB} {IDA}\ns=$?\n'
+                 f'[ -e "{LOST}" ] && {{ rm "{LOST}"; exit 255; }}\nexit $s\n')
     os.chmod(fake, os.stat(fake).st_mode | stat.S_IEXEC)
     shutil.rmtree(inbox)
     r = grow.run(PY, 'bin/mailbox.py', 'put', 'ben@peer', prop, cwd=A, env=dict(env, DAFTAR_SSH=fake))
     check("put: a proposal is handed to the receiving peer's command, which lays it in the inbox",
           r.returncode == 0 and os.listdir(inbox) == props, r.out[-600:])
     r = grow.run(PY, 'bin/mailbox.py', 'list', IDB, cwd=B, env=env)
-    check("list: what waits in a garden's inbox", r.returncode == 0 and props[0] in r.out, r.out)
+    check("list: what lies in a garden's inbox, from whom, waiting", r.returncode == 0 and props[0] in r.out
+          and f'from {IDA}' in r.out and 'waiting' in r.out, r.out)
+
+    # ---- resume: delivered until acknowledged
+    shutil.rmtree(inbox)
+    sender = dict(env, DAFTAR_SSH=fake)
+    ob = grow.run(PY, 'bin/mailbox.py', 'outbox', cwd=A, env=env).out.strip()
+    check("outbox: a garden's outbox is its own mailbox's, outside every garden",
+          ob == os.path.join(BOX, IDA, 'outbox'), ob)
+    os.makedirs(ob, exist_ok=True)
+    shutil.copy(prop, ob)
+
+    def deliver():
+        return grow.run(PY, 'bin/mailbox.py', 'deliver', IDB, 'ben@peer', cwd=A, env=sender)
+
+    open(CUT, 'w').close()
+    r = deliver()
+    check("deliver: a link cut before the proposal arrives leaves it waiting in the outbox, nothing arrived",
+          r.returncode == 1 and os.listdir(ob) == props and not os.path.isdir(inbox) and 'waits for the next run' in r.out,
+          r.out[-600:])
+    open(LOST, 'w').close()
+    r = deliver()
+    check("deliver: one that arrived and whose receipt was lost still waits — nothing names it delivered",
+          r.returncode == 1 and props[0] in os.listdir(ob) and os.listdir(inbox) == props, r.out[-600:])
+    r = deliver()
+    sent = os.path.join(ob, 'sent')
+    check("deliver: the next run delivers it — 'was here already', so delivering again is safe — and moves it to sent/ "
+          "with its receipt", r.returncode == 0 and 'was here already' in r.out and os.listdir(inbox) == props
+          and sorted(os.listdir(sent)) == [props[0], props[0] + '.receipt'], r.out[-600:])
+    rd = grow.run(PY, 'bin/propose.py', 'take', os.path.join(inbox, props[0]), cwd=B, env=env)
+    entry = '\n'.join(ln[4:] for ln in rd.out.split('with the entry:\n', 1)[-1].split('\n') if ln.startswith('    '))
+    sv = grow.run(PY, 'bin/save.py', 'ben', "took Ana's note", cwd=B, stdin=entry + '\n', env=env)
+    check("Ben's gardener takes it, and the save is the ratification", rd.returncode == 0 and sv.returncode == 0,
+          rd.out[-800:] + sv.out[-800:])
+    r = deliver()
+    check("deliver: the receipts read back tell Ana's garden it was taken, and when",
+          r.returncode == 0 and 'taken' in r.out and os.path.isfile(os.path.join(sent, props[0] + '.taken')), r.out[-600:])
+    r = serve('receipts', sender='0123456789ab')
+    check("serve: receipts are given only of the asking garden's own proposals", r.returncode == 0
+          and props[0] not in r.out, r.out)
     check("a mailbox lies outside every garden", not os.path.abspath(BOX).startswith(os.path.abspath(B) + os.sep)
           and grow.run('git', 'status', '--porcelain', cwd=B).out.strip() == '', BOX)
 except Exception as e:  # noqa: BLE001
