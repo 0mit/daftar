@@ -4890,3 +4890,16 @@ bytes once and says "was here already" the second time — so delivering again i
 changes mid-transfer costs one more run. The sender is told when its proposal was taken, read from the receiving
 garden's own `take` statement, never from a flag someone set.
 
+## core/law/tools.yaml: tools[relay]
+
+A MACHINE BEHIND NAT IS REACHED BY DIALLING OUT, AND THE RELAY GIVES ONE PORT AND NOTHING ELSE. A laptop at home or a
+box in a shop cannot be reached, so it reaches: it opens SSH to an always-on peer of the same garden and asks that peer
+to listen on one loopback port and forward it back. `bin/relay.py` reads that from the garden, in the network profile's
+own words — a link is a `carry` through ssh that each end records, and the relay's port is a `serve` its link carries —
+so nothing about a relay is configured apart from the facts that say it exists. It writes what each end is given: the
+peer's ssh that never prompts, exits when its forward cannot be had and is started again until it holds; the relay's
+account of the peer's name, with no shell, and an sshd Match block that allows one remote forward on one loopback
+address and refuses local forwarding, a terminal, agents and tunnels, with keep-alives so a dead link frees its port in
+about ninety seconds. That is the pattern a relay proved in the field before it was written down here; the suite has
+OpenSSH's own sshd read the block back. Any always-on peer may relay; none is privileged. The tool changes no host: what
+it writes, a person applies, or a ratified action plans with.
