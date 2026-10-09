@@ -238,6 +238,35 @@ try:
     refused("a key holding a control character is refused", bean('mark: { by: sam, at: now, "no\\x07te": x }'),
             'U+0007')
 
+    # ---- bidi: a code and a name a namespace gives hold no character of Unicode's Bidi_Control, which makes them read
+    # as another (Trojan Source); free text keeps them as written
+    r = refused("a code holding U+202E (RIGHT-TO-LEFT OVERRIDE) is refused by name",
+                bean('can: { by: sam, of: "teach", as: "isco-08:25\\u202e22" }'), 'U+202E', 'Bidi_Control',
+                rule='valency')
+    check("...and the refusal never echoes it", '\u202e' not in r.out, repr(r.out[-200:]))
+    refused("a name the mail namespace gives, holding U+2066 (LEFT-TO-RIGHT ISOLATE), is refused by name",
+            bean('name: { by: mail, of: sam, as: "sam@exa\\u2066mple.org" }'), 'U+2066', 'Bidi_Control', rule='names')
+    refused("...and one holding U+200F (RIGHT-TO-LEFT MARK), a mark of no explicit bidi class",
+            bean('name: { by: mail, of: sam, as: "s\\u200fam@example.org" }'), 'U+200F', rule='names')
+    # ---- the namespaces' checks: each a well-used validator's (python-stdnum's, the standard library's), never a copy
+    refused("an ORCID iD whose check character is wrong is refused, saying what checks it",
+            bean('name: { by: orcid, of: sam, as: "0000-0002-1825-0098" }'), 'orcid-checksum', rule='names')
+    passes("...and ORCID's own example passes, beside a Wikidata item and a ROR id",
+           bean('name: { by: orcid, of: sam, as: "0000-0002-1825-0097" }',
+                'name: { by: wikidata, of: sam, as: "Q42" }'))
+    refused("a ROR id whose checksum is wrong is refused", bean('name: { by: ror, of: sam, as: "05dxps056" }'),
+            'ror-checksum', rule='names')
+    refused("a DICOM UID under 2.25 past 128 bits is no UUID, and is refused",
+            bean('name: { by: dicom-uid, of: sam, as: "2.25.%d" }' % 2 ** 128), 'uuid-integer', rule='names')
+    refused("a Turkish identity number written in a bean is refused: a government number is kept only held",
+            bean('name: { by: tr-tckn, of: sam, as: "10000000146" }'), 'tr-tckn', 'held', rule='harm')
+    refused("...and an Iranian national code alike",
+            bean('name: { by: ir-national-code, of: sam, as: "0012345678" }'), 'ir-national-code', 'held',
+            rule='harm')
+    passes("free text keeps them: a note holding U+200F, and a person's name holding ZWNJ (U+200C, no bidi control)",
+           bean('mark: { by: sam, at: now, note: "\\u0633\\u0644\\u0627\\u0645\\u200f 12" }',
+                'name: { by: sam, of: sam, as: "\\u0645\\u06cc\\u200c\\u062e\\u0648\\u0627\\u0647\\u0645" }'))
+
     # ---- encodings
     raw = (B % '').encode('utf-8')
     passes("a bean saved with a byte-order mark and CRLF line ends passes: a line end is no control character in text",

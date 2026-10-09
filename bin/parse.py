@@ -138,7 +138,54 @@ def _ip_form(version):
     return check
 
 
-FORM_CHECKS = {'ipaddress-v4': _ip_form(4), 'ipaddress-v6': _ip_form(6)}
+class CheckUnavailable(Exception):
+    """A check the law names whose validator is not installed here: the value is not judged, and the gate says so."""
+
+
+def _stdnum(module):
+    """python-stdnum's `module` (stdnum.<module>), the validator the namespaces' checks reuse: well used, and complete
+    for each check it is named for (measured on each publisher's own example, std-vocab 33.0)."""
+    import importlib
+    try:
+        return importlib.import_module(f'stdnum.{module}')
+    except ImportError:
+        raise CheckUnavailable("python-stdnum is not installed here (`pip install python-stdnum`)") from None
+
+
+def _ror(v):
+    # ROR's checksum is ISO/IEC 7064 MOD 97-10 over the NUMBER its six base32 characters encode (Crockford's alphabet):
+    # that decoding is the one step written here, the check is python-stdnum's.
+    body, check = v[1:7], v[7:]
+    n = 0
+    for c in body:
+        n = n * 32 + '0123456789abcdefghjkmnpqrstvwxyz'.index(c)
+    return _stdnum('iso7064.mod_97_10').is_valid(f'{n}{check}')
+
+
+def _gs1(v):
+    m = _stdnum('gs1_128')
+    try:
+        return len(m.info(v)) == 1 and bool(m.validate(v))    # one element string: one key, never a key and its data
+    except Exception:   # noqa: BLE001 — python-stdnum's ValidationError and its kinds: no element string it reads
+        return False
+
+
+def _uuid_integer(v):
+    import uuid
+    try:
+        uuid.UUID(int=int(v.rsplit('.', 1)[1]))
+        return True
+    except (ValueError, IndexError):
+        return False
+
+
+# Each takes a value its namespace's pattern already holds to; True when the check holds.
+FORM_CHECKS = {'ipaddress-v4': _ip_form(4), 'ipaddress-v6': _ip_form(6),
+               'ror-checksum': _ror,
+               'orcid-checksum': lambda v: _stdnum('iso7064.mod_11_2').is_valid(v.replace('-', '')),
+               'uuid-integer': _uuid_integer,
+               'gs1-element': _gs1,
+               'tckimlik': lambda v: _stdnum('tr.tckimlik').is_valid(v)}
 
 
 def law_match(pattern, value):
@@ -153,11 +200,38 @@ def law_match(pattern, value):
     return m
 
 
+# Unicode's binary property Bidi_Control (PropList.txt; these twelve since Unicode 6.3): the characters that change how
+# the text around them is ordered, Trojan Source's tool (CVE-2021-42574). Python's unicodedata gives no binary property,
+# so its characters are quoted here from the standard, and test/core_law.py holds them to what unicodedata does give:
+# every character of an explicit bidi class, and the three implicit marks. A code and a name a namespace gives hold none
+# (lines.yaml types: coding `holds_no`); free text keeps them as written, isolated where it is shown.
+BIDI_CONTROL = frozenset(chr(c) for c in (0x061C, 0x200E, 0x200F, *range(0x202A, 0x202F), *range(0x2066, 0x206A)))
+
+
+def bidi_controls(value):
+    """The characters of Bidi_Control `value` holds, in order of code point; [] for none, or for no text."""
+    return sorted(set(value) & BIDI_CONTROL) if isinstance(value, str) else []
+
+
+def bidi_said(value):
+    """Why `value` is no code and no name a namespace gives, naming each bidi control character it holds by its code
+    point and Unicode's name, never echoing one; '' when it holds none."""
+    found = bidi_controls(value)
+    if not found:
+        return ''
+    import unicodedata
+    named = ', '.join('U+%04X (%s)' % (ord(c), unicodedata.name(c, '?')) for c in found)
+    return (f"holds {named}, a bidi control "
+            f"character (Unicode Bidi_Control), which reorders what is shown around it: a code and a name a namespace "
+            f"gives hold none, and only free text keeps one")
+
+
 def split_coding(value):
     """(scheme, code) of a CODING (`value_types[coding]`, 29.0): a code written with the scheme it is a code of,
     `<scheme>:<code>`. The first colon ends the scheme, whose name has none; a code may hold one. (None, None) for
-    anything else — a reader that meets another spelling reads no code there, and the gate says why."""
-    if isinstance(value, str) and ':' in value:
+    anything else — a reader that meets another spelling reads no code there, and the gate says why — and for a value
+    holding a bidi control character, which would make it read as another code (`bidi_said`)."""
+    if isinstance(value, str) and ':' in value and not bidi_controls(value):
         s, c = value.split(':', 1)
         if s and c and law_match(r'^[a-z0-9][a-z0-9-]*$', s):
             return s, c

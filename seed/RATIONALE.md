@@ -4750,3 +4750,93 @@ adaptations plans in their place in knowledge in the seed after passing requirem
 where its adapter is a file of the release and a suite of the release proves it; `planned` otherwise — a position held,
 naming nothing. No row is privileged: a monitor's language is one source among siblings, the offline file one surface
 among others.
+
+## core/law/values.yaml: values
+
+(core 1.1)
+
+WHAT A VALUE IS TO A READER, BESIDE HOW IT IS WRITTEN. `lines.yaml` `types` says how a value is written in a bean; it
+never said what a value is to the person who reads it, shows it or types it in, and so every page invented its own
+answer: an amount formatted through a float, a fraction cut to two places, a date shown in one calendar for everyone.
+The tree says it once, rooted in the core's shapes: a number is exact (a count, or a fraction where a read value's
+decimals do not end), money is a quantity in a currency, a moment is a position in a frame, and each value names the
+law it rests on and the one form it is written in. A widget answers to one row of it and keeps no copy of what the row
+names; the tree has one root, and the gate refuses a value that is a kind of no value, a form no type writes, or a
+kind of itself.
+
+## core/law/lines.yaml: types[coding]
+
+(core 1.1: `holds_no`)
+
+A CODE NEVER HOLDS A CHARACTER THAT REORDERS WHAT IS SHOWN AROUND IT. Text refused control characters (`Cc`), but the
+bidi formatting characters are `Cf`, and the code's pattern (`\S+`) admitted U+202E RIGHT-TO-LEFT OVERRIDE, the tool
+of Trojan Source (CVE-2021-42574): a code could be made to read as another. Not every `Cf` is refused — a Persian word
+needs ZWNJ — only Unicode's own property, Bidi_Control (PropList.txt), so the list is the standard's and not a hand's.
+Free text keeps such characters as written, isolated where it is shown, since a writer may mean them.
+
+## core/law/namespaces.yaml: namespace_shape
+
+(core 1.1)
+
+A NAME'S FORM IS CHECKED BY A VALIDATOR THAT ALREADY CHECKS IT COMPLETELY, NEVER BY A SECOND COPY. A pattern holds a
+name to its shape; a check digit needs arithmetic, and the arithmetic of ISO/IEC 7064, GS1 and the Turkish identity
+number is written once, in a well-used library (python-stdnum), each measured against its publisher's own example and
+an altered copy. Where no well-used validator covers a check completely (the Iranian national code), the form alone
+is held, and the law writes no copy. A check that cannot run on a machine refuses the name there, never passes it.
+`kept: held` says where a namespace's names are kept when it is not git: a government number is a secret of its
+person's (MODEL.md, ground rule 7), and a gate can know one by its namespace, so it refuses one written unsealed.
+
+## core/law/namespaces.yaml: namespaces[ror]
+
+(core 1.1)
+
+Eight namespaces come together (ror, wikidata, orcid, ifc-guid, dicom-uid, gs1, tr-tckn, ir-national-code): the names
+an organisation, a researcher, a building's object, an image, a traded thing and a citizen are given by those who
+give them once, so that two gardens that meet at one of them meet at one being. A map's ids and a plus code are not
+among them: both are position systems already, and an OpenStreetMap id never establishes an identity (its features
+split and merge).
+
+## core/law/flows.yaml: flows[refusal-detail-served]
+
+(core 1.1)
+
+A REFUSAL'S DETAIL STAYS WITH THE MACHINE THAT HOLDS IT, AND IS SERVED, NEVER SENT. A tool's log keeps why it refused
+(the history layer); the person who needs it may sit at another machine. The row grants the detail to a remote viewer
+only through `serve`, by the machine that holds it, which judges the one who asks and serves no more than their grants
+reach. Sync, a mailbox's carriage and a notification off the machine already had their rows; this was the one pass no
+row held.
+
+## core/law/flows.yaml: methods[stamp]
+
+(core 1.1)
+
+ONLY A DISCIPLINED CLOCK WRITES `now`. The save writes the clock's reading where `now` stood, and a typed moment is
+refused, so a wrong clock writes false moments into every bean it saves: a machine found six weeks off would have
+dated a ledger by its mistake. A stamp is to the minute, so the clock must be within half a minute of its time sources
+— the kernel's own discipline, the servers the host was given, those its keeper names, all siblings — or the save
+writes nothing and says how to set it right. It is the save's to check and not the gate's: a gate judges files the
+same on every machine, and a clock is a property of one.
+
+## core/law/registries.yaml: fetch_shape
+
+(core 1.1: and `knowledge_scheme_form.fetch`, `holding: fetched`)
+
+DAFTAR SHIPS NO ONE ELSE'S TABLE WHERE ITS TERMS DO NOT LET IT. A scheme held `fetched` is downloaded by each machine
+from its provider, under the provider's terms, kept unchanged outside git under its SHA-256, and read by a named reader
+into the rows its file holds; the save's entry says which copy the codes were read against. ISCO-08 moves first: its
+publisher states no terms of redistribution, and serves its structure as a spreadsheet anyone may fetch. A scheme
+whose provider publishes no machine-readable table (ISCED-F 2013, a PDF) stays shipped where its licence allows it.
+
+## core/law/tools.yaml: tools[clock]
+
+(core 1.1)
+
+`bin/clock.py` says what each of a machine's time sources shows of its clock, and whether it may stamp: the one place
+the save asks, so a person asks the same question the save does.
+
+## core/law/tools.yaml: tools[fetch]
+
+(core 1.1)
+
+`bin/fetch.py` brings a fetched scheme's table from its provider, or from a copy at hand, into this machine's cache,
+and prints the line the save's entry carries.

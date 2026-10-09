@@ -15,6 +15,9 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+sys.path.append(os.path.join(ROOT, 'test'))   # last: test/core.py is no package `core`
+import machine  # noqa: E402
+machine.ensure()      # its time source and standards cache, not the machine's
 from core import engine, frame, read, translate  # noqa: E402
 from core.law import Law, listed, shapes_of  # noqa: E402
 
@@ -84,7 +87,8 @@ again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true
 check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "
       f"garden gives…), each giving once but a mailbox and a line, which may be shared, and a garden that declares one "
       f"again is refused",
-      {'dns', 'mail', 'e164', 'ieee-eui48', 'uuid', 'sha-256', 'openpgp', 'ssh', 'wireguard', 'garden-id', 'garden'} == set(ns)
+      {'dns', 'mail', 'e164', 'ieee-eui48', 'uuid', 'sha-256', 'openpgp', 'ssh', 'wireguard', 'garden-id', 'garden',
+       'ror', 'wikidata', 'orcid', 'ifc-guid', 'dicom-uid', 'gs1', 'tr-tckn', 'ir-national-code'} == set(ns)
       and sorted(n for n, r in ns.items() if r.get('once') != 'true') == ['e164', 'mail']
       and any('`dns` is declared already' in m for _r, _w, m in again),
       (sorted(ns), again))

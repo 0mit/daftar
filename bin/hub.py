@@ -29,6 +29,12 @@ hub, and only from the gardener its own tree names: a root commit read as its ow
 `--only <person>` accepts pushes signed by the gardener and that one writer: the `view` host's own key (F5 (a)).
 It writes nothing to the garden; a refusal names the commit, the writer and what was missing.
 
+A PERSON'S LABELS (Y8) are their own words for the handplace's interface, on `refs/daftar/custom/<person>` beside the
+garden's branch. The hub takes a commit there when it is signed by a key that person's bean carries (as the garden
+stands at the hub's HEAD) and its tree holds only their customisation files (`labels.json`, a JSON object of theirs);
+the ref moves only on top of what it was and is never deleted. Every commit it gains is judged, not only those new to
+the hub; no gate runs, since nothing there is the garden's; and a garden's branch never counts such a commit as judged.
+
 A GARDEN OF THE CORE (v1 part 10) is read at each commit by the law that commit's GARDEN.md pins, so the push that adopts
 the core is judged as the garden stood before it, and the next by the core. There the writer is the bean whose `name`
 the key's namespace gives (`name: { by: ssh, of: self, as: "SHA256:…" }`, or `openpgp`); class F is a change to a name
@@ -36,7 +42,7 @@ that establishes an identity (a namespace that gives a name once); the rights ar
 `may`); and the gate is `bin/check.py --all`, the gate of the law the pushed tree pins. (`bin/hub.py`, today's name,
 runs this too until v1's part 13.)
 """
-import io, os, posixpath, re, shutil, subprocess, sys, tarfile, tempfile
+import io, json, os, posixpath, re, shutil, subprocess, sys, tarfile, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the core beside it
 import parse as dmparse   # noqa: E402 — bin/parse.py
@@ -48,6 +54,10 @@ ZERO = '0' * 40
 KEY_TERMS = ('ssh_key_fingerprint', 'openpgp_fingerprint')
 KEY_NAMESPACES = {'ssh_key_fingerprint': 'ssh', 'openpgp_fingerprint': 'openpgp'}   # the core's namespace of each key
 CODE = ('.py', '.pyc', '.pyw', '.pyd', '.pyz', '.so', '.sh', '.bash', '.ps1', '.psm1', '.cmd', '.bat')   # what runs
+# A PERSON'S CUSTOMISATIONS of the handplace (Y8): their own words for its interface, on a ref of their own beside the
+# garden's branch, never in its tree — so they are never checked out, never judged as the garden, never merged into it.
+CUSTOM_REF = re.compile(r'^refs/daftar/custom/([a-z0-9][a-z0-9-]{0,63})$')
+CUSTOM_FILES = ('labels.json',)        # what such a ref's tree may hold: daftard's labels (internal/custom)
 
 
 class Refused(Exception):
@@ -296,7 +306,9 @@ def judge(old, new, only=None, each=False, env=None):
     env = env or dict(os.environ)
     if new == ZERO:
         return []
-    _c, out, _e = git('rev-list', '--reverse', new, '--not', '--all', env=env)
+    # the commits no garden ref holds yet: a person's labels ref holds commits never judged as the garden, so a commit
+    # it holds is judged again before a garden's branch may hold it
+    _c, out, _e = git('rev-list', '--reverse', new, '--not', '--exclude=refs/daftar/custom/*', '--all', env=env)
     commits = [c for c in out.split('\n') if c]
     found = []
     with tempfile.TemporaryDirectory(prefix='hub-') as tmp:
@@ -341,6 +353,57 @@ def judge(old, new, only=None, each=False, env=None):
     return found
 
 
+def judge_custom(person, old, new, env=None):
+    """[str]: every refusal for an update of `refs/daftar/custom/<person>`; empty when it is taken. Each new commit is
+    signed by a key the person's bean carries, as the garden stands at the hub now (its HEAD), and its tree holds only
+    their customisation files, each a JSON object of theirs; the ref only moves on top of what it was, and is never
+    deleted. No gate runs: nothing on it is the garden's."""
+    env = env or dict(os.environ)
+    if new == ZERO:
+        return ["a person's customisations are never deleted at the hub: a word set back to the page's own is kept, and "
+                "the ref's history keeps what each was"]
+    if old != ZERO and git('merge-base', '--is-ancestor', old, new, env=env)[0] != 0:
+        return [f"{new[:10]}: it is not on top of what the ref held ({old[:10]}): a person's labels move on, merged word "
+                f"by word, and their history keeps every word"]
+    c, tip, _e = git('rev-parse', '--verify', '-q', 'HEAD^{commit}', env=env)
+    if c != 0 or not tip.strip():
+        return [f"{new[:10]}: this hub holds no garden yet, so no bean carries {person}'s key"]
+    beans = Tree(tip.strip(), env).beans()
+    # EVERY COMMIT THE REF GAINS, not only those new to the hub: a chain already on another person's ref, pushed onto
+    # this one, is judged again — by this person's key
+    _c, out, _e = git('rev-list', '--reverse', new, *(['--not', old] if old != ZERO else []), env=env)
+    found = []
+    with tempfile.TemporaryDirectory(prefix='hub-') as tmp:
+        for c in [x for x in out.split('\n') if x]:
+            _r, raw, _e = git('cat-file', 'commit', c, env=env, text=False)
+            payload, sig = split_signature(raw)
+            try:
+                if sig is None:
+                    raise Refused("it is not signed: a person's labels are signed by a key their bean carries")
+                kind, fpr = fingerprint(payload, sig, tmp)
+                who = writer_of(kind, fpr, beans)
+                if who != person:
+                    raise Refused(f"it is signed by {who or fpr}, and {person}'s customisations are signed by "
+                                  f"{person}'s own key")
+                _r, files, _e = git('ls-tree', '-r', '--name-only', c, env=env)
+                stray = [f for f in files.split('\n') if f and f not in CUSTOM_FILES]
+                if stray:
+                    raise Refused(f"its tree holds {', '.join(stray[:5])}: a labels ref holds only "
+                                  f"{', '.join(CUSTOM_FILES)}")
+                for f in [f for f in files.split('\n') if f]:
+                    _r, body, _e = git('show', f'{c}:{f}', env=env)
+                    try:
+                        doc = json.loads(body)
+                    except ValueError:
+                        doc = None
+                    if not isinstance(doc, dict) or doc.get('person') not in (None, person):
+                        raise Refused(f"{f} is no JSON object of {person}'s customisations")
+            except Refused as x:
+                found.append(f"{c[:10]}: {x}")
+                break
+    return found
+
+
 def install(bare, only=None, each=False):
     hook = os.path.join(bare, 'hooks', 'pre-receive')
     os.makedirs(os.path.dirname(hook), exist_ok=True)
@@ -364,7 +427,9 @@ def main(argv):
         for line in sys.stdin.read().split('\n'):
             parts = line.split()
             if len(parts) == 3:
-                refused += [f"{parts[2]} {r}" for r in judge(parts[0], parts[1], only, each)]
+                m = CUSTOM_REF.match(parts[2])
+                refused += [f"{parts[2]} {r}" for r in (judge_custom(m.group(1), parts[0], parts[1]) if m else
+                                                        judge(parts[0], parts[1], only, each))]
         for r in refused:
             print(f"hub: REFUSED {r}", file=sys.stderr)
         return 1 if refused else 0

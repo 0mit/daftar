@@ -8,7 +8,7 @@
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 methods:
   - { method: edit, meaning: "a writer changes a file, by hand or through a tool at the writer's word" }
-  - { method: stamp, meaning: "the save writes the clock's reading where `now` stood" }
+  - { method: stamp, meaning: "the save writes the clock's reading where `now` stood, from a clock within half the stamp's resolution (thirty seconds for a minute's stamp) of its time sources; a save that cannot show it refuses to stamp, and writes nothing (bin/clock.py: the sources are siblings — the kernel's discipline, the servers the host was given, those its keeper names)" }
   - { method: append, meaning: "an entry added after the last, and nothing before it changed" }
   - { method: record, meaning: "a tool writes what it read off the world, with the reading's moment" }
   - { method: capture, meaning: "a command's output kept as it came, its owner and its command named" }
@@ -54,6 +54,7 @@ flows:
   - { flow: composed-here, from: [manifesto, law, reasoning, journal, history, queue, guide, estate, gate, words, work, instructions, self], to: request, through: [render, show], grant: granted, why: "a request composed on this host keeps what it holds on this host, the model's own earlier turns among it" }
   - { flow: sent-out, from: [request, estate], to: remote, through: send, grant: ratified, why: "a hosted or remote party is refused until the gardener grants that party, with the basis the gardener's own law asks for sending there" }
   - { flow: served, from: estate, to: remote, through: serve, grant: granted, why: "a page or an action is served only to a viewer a grant opens it to, asked before each one" }
+  - { flow: refusal-detail-served, from: history, to: remote, through: serve, grant: granted, why: "a refusal's detail — what a tool's log kept of why it refused — is served only to a viewer whose grants reach what it is about, as far as they reach, by the machine that holds it, which judges the one who asks: it is never sent ahead" }
 metadata:
   - { key: characters, in: count, meaning: "how long the material was, counted in characters" }
   - { key: seq, in: count, meaning: "the pass's place in its session, where the log's order is not enough" }

@@ -133,6 +133,95 @@ try:
                   for t in tools['tools']), [t['tool'] for t in tools['tools']])
     L = Law.load()
     check("law: the law holds together with its tools and vacancies", not L.problems(), L.problems()[:3])
+    types = {str(t.get('type')) for t in L.line_law.get('types') or [] if isinstance(t, dict)}
+    vals = getattr(L, 'values', None) or {}
+    check("law: the values tree (core/law/values.yaml) — every value a kind of another up to `value`, money a quantity "
+          "and a quantity a number, and every written form a type of lines.yaml",
+          vals.get('money', {}).get('is') == 'quantity' and vals.get('quantity', {}).get('is') == 'number'
+          and 'is' not in vals.get('value', {'is': '?'})
+          and all(v.get('written') in types for v in vals.values() if v.get('written')),
+          sorted(vals)[:6])
+    L2 = Law.load()
+    L2.values = dict(getattr(L2, 'values', None) or {})
+    L2.values['orphan'] = {'value': 'orphan', 'is': 'nothing', 'meaning': 'x'}
+    L2.values['unwritten'] = {'value': 'unwritten', 'is': 'value', 'written': 'no-such-type', 'meaning': 'x'}
+    L2.values['ring-a'] = {'value': 'ring-a', 'is': 'ring-b', 'meaning': 'x'}
+    L2.values['ring-b'] = {'value': 'ring-b', 'is': 'ring-a', 'meaning': 'x'}
+    got = [f"{w}: {m}" for _r, w, m in L2.problems()]
+    check("law: a value that is a kind of no value, one written in no type of lines.yaml, and two that are kinds of "
+          "each other are refused",
+          any('orphan' in m and 'no value' in m for m in got) and any('no-such-type' in m for m in got)
+          and any('ring-' in m and 'itself' in m for m in got), got)
+    import unicodedata
+    bc = getattr(dmparse, 'BIDI_CONTROL', frozenset())
+    explicit = {chr(c) for c in range(0x110000) if unicodedata.bidirectional(chr(c)) in
+                ('LRE', 'RLE', 'LRO', 'RLO', 'PDF', 'LRI', 'RLI', 'FSI', 'PDI')}
+    check("law: the reader's Bidi_Control is Unicode's (PropList.txt): every character of an explicit bidi class, and "
+          "the three implicit marks, each of category Cf — and the coding row names the property",
+          explicit and explicit <= bc and {unicodedata.name(c) for c in bc - explicit} ==
+          {'LEFT-TO-RIGHT MARK', 'RIGHT-TO-LEFT MARK', 'ARABIC LETTER MARK'}
+          and all(unicodedata.category(c) == 'Cf' for c in bc)
+          and next((t.get('holds_no') for t in L.line_law.get('types') or [] if t.get('type') == 'coding'), None)
+          == 'Bidi_Control', sorted(f"U+{ord(c):04X}" for c in bc))
+    hidden = []
+    for dp, dns, fns in os.walk(ROOT):
+        dns[:] = [d for d in dns if d not in ('.git', '__pycache__')]
+        for fn in fns:
+            try:
+                with open(os.path.join(dp, fn), encoding='utf-8') as fh:
+                    if dmparse.bidi_controls(fh.read()):
+                        hidden.append(os.path.relpath(os.path.join(dp, fn), ROOT))
+            except (UnicodeDecodeError, OSError):
+                pass
+    check("law: no file of this tree holds a bidi control character as itself — a test writes one as an escape "
+          "(Trojan Source, CVE-2021-42574)", not hidden, hidden[:5])
+    ns = L.namespaces
+    shape = getattr(L, 'namespace_shape', None) or {}
+    eight = ('ror', 'wikidata', 'orcid', 'ifc-guid', 'dicom-uid', 'gs1', 'tr-tckn', 'ir-national-code')
+    check("law: the eight namespaces are the law's, each with its form; a `checked_by` one the shape lists and the "
+          "reader has; the two government numbers kept held",
+          all(n in ns and ns[n].get('pattern') for n in eight)
+          and all(ns[n]['checked_by'] in (shape.get('checked_by') or []) and ns[n]['checked_by'] in dmparse.FORM_CHECKS
+                  for n in ns if ns[n].get('checked_by'))
+          and {n for n in ns if ns[n].get('kept') == 'held'} == {'tr-tckn', 'ir-national-code'},
+          {n: (ns.get(n) or {}).get('checked_by') for n in eight})
+    fc = dmparse.FORM_CHECKS
+    cases = [('ror-checksum', '05dxps055', True), ('ror-checksum', '05dxps056', False),
+             ('orcid-checksum', '0000-0002-1825-0097', True), ('orcid-checksum', '0000-0002-1825-0098', False),
+             ('gs1-element', '(01)09520123456788', True), ('gs1-element', '(01)09520123456787', False),
+             ('gs1-element', '(01)09520123456788(10)AB', False),
+             ('tckimlik', '10000000146', True), ('tckimlik', '10000000147', False),
+             ('uuid-integer', f'2.25.{2 ** 128 - 1}', True), ('uuid-integer', f'2.25.{2 ** 128}', False)]
+    got = [(c, v, (fc[c](v) if c in fc else None)) for c, v, _want in cases]
+    check("law: each check takes its publisher's own example and refuses an altered copy (python-stdnum, uuid) — one "
+          "GS1 element string a name, never two",
+          [g[2] for g in got] == [w for _c, _v, w in cases], got)
+    saved = {k: v for k, v in sys.modules.items() if k == 'stdnum' or k.startswith('stdnum.')}
+    for k in saved:
+        del sys.modules[k]
+    sys.modules['stdnum'] = None                     # as where python-stdnum is not installed
+    try:
+        fc['orcid-checksum']('0000-0002-1825-0097')
+        unavailable = None
+    except dmparse.CheckUnavailable as e:
+        unavailable = str(e)
+    finally:
+        del sys.modules['stdnum']
+        sys.modules.update(saved)
+    check("law: where python-stdnum is not installed, its check says so — a name is never passed unchecked",
+          unavailable and 'python-stdnum' in unavailable and 'pip install' in unavailable, unavailable)
+    L3 = Law.load()
+    L3.namespaces = dict(L3.namespaces)
+    L3.namespaces['made-up'] = {'namespace': 'made-up', 'once': 'true', 'pattern': '^x$', 'checked_by': 'no-such-check',
+                                'kept': 'nowhere', 'meaning': 'x'}
+    got = [f"{w}: {m}" for _r, w, m in L3.problems()]
+    check("law: a namespace checked by no check the shape lists, or kept nowhere the shape names, is refused",
+          any('no-such-check' in m for m in got) and any('nowhere' in m for m in got), got)
+    from core import lines as core_lines
+    step = (L.forms.get('step') or {})
+    got = core_lines.attrs_problems('s', {'is': 'isco-08:25\u202e22'}, step) if step else []
+    check("law: a step's code (`is`, a coding) holding U+202E is refused by name, and never echoed",
+          any('U+202E' in m and 'Bidi_Control' in m and '\u202e' not in m for _w, m in got), got)
     L._vacancies({'reasons': ['universal'], 'vacancies': [
         {'at': 'form:clause.state', 'position': 'adjourned', 'reason': 'universal', 'why': 'x'},
         {'at': 'table:units', 'position': 'percent', 'reason': 'universal', 'why': 'x'},

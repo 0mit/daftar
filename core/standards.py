@@ -87,11 +87,19 @@ class Standards:
 
     def code(self, value):
         """'' when `value` is a code of a scheme the knowledge tree holds (`<scheme>:<code>`), else why it is not."""
+        if dmparse.bidi_said(value):
+            return f"a code {dmparse.bidi_said(value)}"
         scheme, code = dmparse.split_coding(value)
         if scheme is None:
             return f"{value!r} is not a code written with its scheme, `<scheme>:<code>`"
         if scheme not in self.knowledge.schemes:
             return f"{scheme!r} is no scheme of the knowledge tree: one of {', '.join(sorted(self.knowledge.schemes))}"
+        row = self.knowledge.schemes[scheme]
+        if row.get('holding') == 'at-authority':         # held at its publisher, looked up there: checked here only by
+            pat = row.get('code_pattern')                 # its form (registries.yaml, knowledge_scheme_form.holding)
+            if not pat:
+                return f"{scheme} is held at its authority and states no `code_pattern`: a code of it cannot be checked here"
+            return '' if dmparse.law_match(pat, code) else f"{code!r} is not in the form of a code of {scheme}: `{pat}`"
         try:
             row = self.knowledge.row(scheme, code)
         except (KeyError, OSError) as e:

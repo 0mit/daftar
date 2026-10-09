@@ -45,6 +45,13 @@ Third-party data, distributed alongside daftar as separate works, each under its
     daftar grants no right in it. The ILO was asked on 2026-09-19 to confirm that this structure may be redistributed
     as data. A claim about it is addressed to the steward (CHARTER.md, section 2).
 
+A font, distributed alongside daftar's widgets as a separate work:
+
+  assets/view/lib/widgets/Vazirmatn.woff2
+    Vazirmatn, Copyright 2015 The Vazirmatn Project Authors (https://github.com/rastikerdar/vazirmatn), under the
+    SIL Open Font License 1.1 (assets/view/lib/widgets/Vazirmatn-OFL.txt, LICENSES/OFL-1.1.txt), served with the widgets
+    unchanged.
+
 daftar's own curated tables (seed/knowledge/technology.tsv, crosswalk-isco-08-isced-f-2013.tsv) are CC BY 4.0.
 daftar's own tables of facts (seed/knowledge/substances.tsv, mechanisms.yaml, coefficients.yaml) and the FHIR R5
 crosswalk (seed/knowledge/crosswalk-fhir-r5-observation.tsv; FHIR is published under CC0) are CC0 1.0.

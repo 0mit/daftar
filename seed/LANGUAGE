@@ -12,6 +12,7 @@ bin/merge.py
 bin/save.py
 bin/safe.py
 bin/journal.py
+bin/clock.py
 bin/session.py
 bin/cursor.py
 bin/digest.py
@@ -27,6 +28,7 @@ bin/cal.py
 bin/geo.py
 bin/units.py
 bin/knowledge.py
+bin/fetch.py
 bin/crosswalk.py
 bin/propose.py
 bin/across.py

@@ -32,7 +32,11 @@ knowledge_schemes:
     sources: "seed/knowledge/SOURCES.md"
   - scheme: isco-08
     classifies: occupations
-    holding: shipped
+    holding: fetched
+    fetch:
+      from: "https://webapps.ilo.org/ilostat-files/ISCO/newdocs-08-2021/ISCO-08/ISCO-08%20EN%20Structure%20and%20definitions.xlsx"
+      reader: ilo-isco-08-xlsx
+      latest: "ISCO-08 has one release, its structure of 2012; the ILO is revising it (ISCO-08 revision, from 2022): a new classification will be a scheme of its own"
     licence: LicenseRef-ILO-ISCO-08
     release: "ISCO-08 (structure, 2012)"
     publisher: "International Labour Organization"
@@ -90,7 +94,8 @@ knowledge_schemes:
     neighbours: none
     sources: "seed/RATIONALE.md"
 knowledge_scheme_form:
-  holding: "shipped | extract | at-authority — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); or held at the publisher and looked up there, checked here only by `code_pattern`"
+  holding: "shipped | extract | at-authority | fetched — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); held at the publisher and looked up there, checked here only by `code_pattern`; or fetched — each machine downloads the provider's own table (`fetch`) into a cache outside git (bin/fetch.py), under the provider's terms, and reads its codes there; while the release still carries a copy, a machine that has fetched none reads that"
+  fetch: "with `fetched`: { from: the provider's own download, reader: how its rows are read, one of `fetch_shape.readers` (bin/fetch.py), latest: how to learn of its latest release }"
   licence: "the SPDX identifier of the terms its rows are under — `LicenseRef-<name>` where the publisher's terms have none"
   release: "the publisher's release the rows are from"
   sensitive: "special-category — every code of it is special-category material wherever it is written (a diagnosis, a procedure; F3); absent, not"
@@ -103,6 +108,7 @@ forms:
     scheme: required
     classifies: required
     holding: optional
+    fetch: optional
     licence: optional
     release: optional
     publisher: required
@@ -117,3 +123,8 @@ forms:
     code_pattern: optional
     relations: optional
     labels: optional
+
+# How a fetched table's rows are read: each reader turns the provider's own file into the rows its `registry_files` file
+# holds, and refuses a file whose columns are not the ones it reads (bin/fetch.py READERS).
+fetch_shape:
+  readers: [ilo-isco-08-xlsx]

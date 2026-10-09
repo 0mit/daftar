@@ -17,7 +17,9 @@ daftar's terms:
 - **the published classifications** in `seed/knowledge/`: their own terms (`seed/knowledge/SOURCES.md`, and
   `seed/LICENSE-Unicode-3.0.txt`, `seed/LICENSE-CC-BY-SA-3.0-IGO.txt`, `seed/LICENSE-LicenseRef-ILO-ISCO-08.txt`,
   `seed/LICENSE-LicenseRef-tzdb-public-domain.txt`, `seed/LICENSE-CC-BY-4.0.txt`), and daftar's own tables of facts
-  there CC0 1.0.
+  there CC0 1.0;
+- **the widgets' font** (`assets/view/lib/widgets/Vazirmatn.woff2`, the `view` profile's asset): the Vazirmatn Project Authors', under the SIL Open
+  Font License 1.1 (`seed/LICENSE-OFL-1.1.txt`, and `Vazirmatn-OFL.txt` beside it).
 
 Nothing else in this garden is daftar's, and none of these licences applies to it. What its gardener or anyone else
 wrote here is theirs, on the terms on which it was written or received.

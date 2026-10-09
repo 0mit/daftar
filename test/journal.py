@@ -51,6 +51,9 @@ subprocess.run(['git', 'init', '-q', G], check=True)
 TOOL = os.path.join(G, 'bin', 'journal.py')
 
 # A MACHINE WHOSE STREAMS ARE NOT UTF-8. PYTHONUTF8 would hide exactly what is tested, so it is taken out.
+sys.path.append(os.path.join(ROOT, 'test'))
+import machine  # noqa: E402
+machine.ensure()      # its time source and standards cache, not the machine's
 ENV = {k: v for k, v in os.environ.items() if k not in ('PYTHONUTF8', 'PYTHONIOENCODING')}
 ENV['PYTHONIOENCODING'] = 'cp1252'
 

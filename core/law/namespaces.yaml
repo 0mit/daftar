@@ -3,7 +3,8 @@
 # rule `names`). A maker's serials, an employer's numbers, a registry's own ids are a garden's rows, in its VOCAB.md
 # under `namespaces`, named for whoever gives them; a garden declares none of these again. A namespace's `pattern` is the
 # one form a name it gives is written in (today's anchors' `value_pattern`, carried in v1 part 12): the rule `names`
-# refuses a name out of it, and a garden's own row may give one.
+# refuses a name out of it, and a garden's own row may give one. A name a namespace gives is an identifier, whatever its
+# pattern admits: it holds no character of Unicode's Bidi_Control (PropList.txt), which would make it read as another.
 namespaces:
   - { namespace: dns,        once: "true", pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$', meaning: "the Domain Name System (RFC 1034, RFC 1123): a fully qualified domain name, written without its final dot" }
   - { namespace: mail,       once: "false", pattern: '^[^@\s]+@[^@\s]+$', meaning: "the mail system: an address as RFC 5322 writes it (its addr-spec). A mailbox may be shared, so it names and does not establish" }
@@ -16,3 +17,19 @@ namespaces:
   - { namespace: wireguard,  once: "true", pattern: '^[A-Za-z0-9+/]{42}[AEIMQUYcgkosw480]=$', meaning: "a WireGuard public key (Curve25519), in base64" }
   - { namespace: garden-id,  once: "true", pattern: '^[0-9a-f]{12}$', meaning: "a garden's id: the first twelve hexadecimal digits of the root of its first-parent history, read from git" }
   - { namespace: garden,     once: "true", meaning: "a name a garden gave, qualified so that it crosses: `<garden_id>/<kind>:<name>`. In its own garden a being's name is its bean, and needs no statement" }
+  - { namespace: ror,        once: "true", pattern: '^0[0-9a-hjkmnp-tv-z]{6}[0-9]{2}$', checked_by: ror-checksum, meaning: "an organisation's id in the Research Organization Registry: `0`, six characters of Crockford's base32, and two digits that are the ISO/IEC 7064 MOD 97-10 check of the number those six encode" }
+  - { namespace: wikidata,   once: "true", pattern: '^Q[1-9][0-9]*$', meaning: "a Wikidata item's id, `Q` and its number" }
+  - { namespace: orcid,      once: "true", pattern: '^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]$', checked_by: orcid-checksum, meaning: "a researcher's ORCID iD, in four groups of four, its last character the ISO/IEC 7064 MOD 11-2 check of the fifteen digits before it" }
+  - { namespace: ifc-guid,   once: "true", pattern: '^[0-3][0-9A-Za-z_$]{21}$', meaning: "an IFC object's GlobalId (ISO 16739): its 128-bit GUID compressed into IFC's 22 characters" }
+  - { namespace: dicom-uid,  once: "true", pattern: '^2\.25\.(0|[1-9][0-9]{0,38})$', checked_by: uuid-integer, meaning: "a DICOM UID under the root 2.25, the decimal integer of a UUID (ISO/IEC 9834-8): less than 2 to the 128th" }
+  - { namespace: gs1,        once: "true", pattern: '^\([0-9]{2,4}\)[!-~]{1,90}$', checked_by: gs1-element, meaning: "a GS1 identification key (a GTIN, a GLN, an SSCC …) as one element string: its application identifier in brackets, then the key, its check digit checked" }
+  - { namespace: tr-tckn,    once: "true", pattern: '^[1-9][0-9]{10}$', checked_by: tckimlik, kept: held, meaning: "a Turkish citizen's identity number (T.C. Kimlik No), its two last digits its check. A government number: kept only in the held store, never in git (MODEL.md, ground rule 7)" }
+  - { namespace: ir-national-code, once: "true", pattern: '^[0-9]{10}$', kept: held, meaning: "an Iranian national code (کد ملی), ten digits. Its check digit is not checked here: no well-used validator covers it, and the law writes no copy of one. A government number: kept only in the held store, never in git (MODEL.md, ground rule 7)" }
+
+# What a row of `namespaces` may name beside its pattern: `checked_by`, a check a well-used validator makes completely
+# (bin/parse.py FORM_CHECKS: python-stdnum's ISO/IEC 7064 checks, its GS1 element strings and its T.C. Kimlik No, and the
+# standard library's uuid), run after the pattern; and `kept`, where the names it gives are kept when it is not git:
+# `held`, the held store alone (bin/held.py), so that a name of it written in a bean is refused (the rule `harm`).
+namespace_shape:
+  checked_by: [ror-checksum, orcid-checksum, uuid-integer, gs1-element, tckimlik]
+  kept: [held]

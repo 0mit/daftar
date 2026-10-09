@@ -139,17 +139,30 @@ CODE_WORD = re.compile(r"""(['"])(?:kind|kinds|local_kinds|form_kind|physical|me
                        r"""|\bcrown:\s*['"]?(?:love|nature|god)\b""")
 CODE_EXT = ('.py', '.js', '.mjs', '.cjs', '.ts', '.sh', '.ps1', '.psm1', '.rb', '.go', '.pl', '.php', '.lua')
 _AFILES = [f for f in FILES if f.startswith("assets/")]
+
+
+def _text(rel):
+    """An asset file's text, or '' for the one kind of file an asset serves that is not text: a font."""
+    try:
+        return read(rel)
+    except UnicodeDecodeError:
+        return ''
+
+
+_binary = [f for f in _AFILES if not _text(f)]
+check("an asset's files are text, but for a font it serves (.woff2), whose licence REUSE.toml names",
+      all(f.endswith('.woff2') and f in read("REUSE.toml") for f in _binary), _binary)
 _hidden = sorted({s for f in FILES for s in f.split("/")[:-1] if s.startswith(".")})
-_harness = [(f, d) for f in _AFILES for d in _hidden if re.search(r"(?<![\w.])%s/" % re.escape(d), read(f))] + \
+_harness = [(f, d) for f in _AFILES for d in _hidden if re.search(r"(?<![\w.])%s/" % re.escape(d), _text(f))] + \
            [(f, "a hidden directory") for f in _AFILES if any(s.startswith(".") for s in f.split("/")[:-1])]
 _fixture_ids = set(re.findall(r'(?m)^    "([a-z0-9][a-z0-9-]*)": \'\'\'(?:bean|mapping): ', read("test/view.py")))
 _words = (dmpublic.estate_words(_G, dmpublic.public_words(_G)) | {w for w in _fixture_ids if len(w) >= 4}) \
          - dmpublic.public_words(_G)
-_leak = [(f, w) for f in _AFILES for w in dmpublic.hits(read(f), _words)]
+_leak = [(f, w) for f in _AFILES for w in dmpublic.hits(_text(f), _words)]
 _retired = [(f, n) for f in _AFILES if f.endswith(CODE_EXT)
             and not f.endswith("_core.py")     # an asset's reader of the core (v1 part 11) writes the core's words, and
             # `kind` is the core's name of today's genos (core/law/kinds.yaml), not the word 22.0 retired
-            for n, line in enumerate(read(f).split("\n"), 1) if CODE_WORD.search(line)]
+            for n, line in enumerate(_text(f).split("\n"), 1) if CODE_WORD.search(line)]
 check(f"7. an asset's {len(_AFILES)} files name no harness directory and sit in no hidden one, name nothing a garden "
       f"holds ({len(_words)} words: the grown garden's and the fixtures'), and write no retired word as a key",
       _AFILES and len(_fixture_ids) >= 5 and not _harness and not _leak and not _retired,

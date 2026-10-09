@@ -19,6 +19,12 @@ or derived from recorded evidence, and each file says which.
 - **Copyright:** © International Labour Organization, 2012. The ILO's pre-2023 works carry no open licence.
   The structure (all 619 codes and English titles) is reproduced here with the source indicated. The ILO has
   been asked (rights@ilo.org, September 2026) to confirm that it may be redistributed as data.
+- **Fetched, from the release after this one's adoption:** the law holds ISCO-08 `fetched` (core/law/registries.yaml):
+  each machine downloads the ILO's own structure file (`ISCO-08 EN Structure and definitions.xlsx`) with
+  `python3 bin/fetch.py isco-08`, keeps it unchanged outside git, and reads its codes there; this copy stays in the
+  release only until gardens hold their own. Measured 2026-10-09: the ILO's file and this copy hold the same 619 codes,
+  levels and parents; 28 titles differ in wording ("Services Managers", "Service Managers"), the ILO's file being the
+  later.
 - **Not included:** the ILO's definitions and task descriptions (not redistributable without permission).
   Standardized job descriptions come from ESCO instead (see below), which maps every occupation to exactly one
   ISCO-08 unit group.

@@ -21,6 +21,9 @@ import os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+sys.path.append(os.path.join(ROOT, 'test'))   # last: test/core.py is no package `core`
+import machine  # noqa: E402
+machine.ensure()      # its time source and standards cache, not the machine's
 from core import merge as M, read  # noqa: E402
 
 FAILS = []

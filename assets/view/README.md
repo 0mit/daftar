@@ -224,3 +224,45 @@ pass through it; where only a part of a bean is granted (`positions`), only that
 
 The server reads the ledger again when its head moves, and starts itself again on a new head or a new release only
 once `check` passes on it.
+
+## The widgets: what shows a value, and takes one in
+
+`lib/widgets/` is the toolbox of the values tree (`core/law/values.yaml`): one widget per value, each answering to
+its row (`implements`), each showing a value exactly, isolated, escaped, in the reader's own digits, separators and
+calendar, and taking in what a person types as the value's written form, or refusing it with a sentence. It is this
+asset's, since a page is how a garden's values are shown (a garden that serves no page shows none); a host serves the
+copy of the release the garden runs, so a value is shown by the law the garden keeps.
+
+| file | value (`values.yaml`) | shows · takes in |
+|---|---|---|
+| `lib/widgets/number.js` | number, count, fraction | exact (BigInt, never a float): `-1950`, `260.50`, `9650/3` shown as a mixed fraction |
+| `lib/widgets/money.js` | money | the number at the currency's places; an uneven amount shown as the fraction it is, and said |
+| `lib/widgets/moment.js` | day, time-of-day | the reader's calendar (any CLDR has); a day typed there searched in that calendar's data and checked back |
+| `lib/widgets/text.js` | text | isolated, direction from its language or its own first letter; bidi controls revealed on request |
+| `lib/widgets/name.js` | name | left to right, as its namespace writes it |
+| `lib/widgets/choice.js` | choice, choices, code | a row by its label, taken by its key |
+| `lib/widgets/being.js` | being | a bean by its title, reached by its id |
+| `lib/widgets/exact.js` | number | sums of written amounts as fractions of two integers |
+| `lib/widgets/safe.js` | — | `h```: the one way HTML is built; `mount`: the one door into a page |
+| `lib/widgets/locale.js` | — | the reader's digits, separators, calendar, direction and words, all CLDR's through `Intl` |
+| `lib/widgets/settings.js` | — | what the garden's host sends with a page: its language, calendar, zone, each currency's places |
+| `lib/widgets/widgets.css`, `lib/widgets/Vazirmatn.woff2` | — | the widgets' style; Vazirmatn (SIL OFL 1.1), for the Arabic script and the Latin |
+
+**No sibling is privileged.** No widget keeps a table of digits, separators, month names or a language's words:
+each is the runtime's CLDR data, read through `Intl` for the reader's language, so Persian is shown in Persian digits
+in the Persian calendar because CLDR says so for `fa`, and Turkish with `.` grouping for `tr`. Nothing is assumed
+where nothing is given: no language, calendar or zone stands in for a missing one. The widgets' own sentences are
+the one table (`locale.js`, `SAID`): English, the law's language, and every language a sentence has been written in.
+
+**Exact on the wire.** A number travels as its written form, or as the exact fraction `n/d` when it was read rather
+than written, never as a JSON float; a widget never rounds a value it takes in.
+
+**What a widget reads comes from the law, sent by the host:** a currency's places (the currencies table), a calendar
+(the reader's or the garden's), a unit's name. Configure with `settings.js` `configure({garden: {lang, calendar, zone,
+gardener}, asOf, currencies})`.
+
+**Every bidi control is an escape in this source**, never the character itself (Trojan Source, CVE-2021-42574):
+`test/core_law.py` refuses a file that holds one.
+
+Tested by `test/widgets.py` (`node test/widgets.test.mjs`): English, Turkish, German, Persian, Sorani and Hebrew
+readers, and ten calendars, each day taken back to the same written day.

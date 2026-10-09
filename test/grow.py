@@ -28,6 +28,8 @@ dmpass = importlib.import_module('pass')  # noqa: E402
 from core import read as _read  # noqa: E402
 
 VERSION = str(_read.data(os.path.join(ROOT, 'core', 'law', 'core.yaml'))['version'])
+import machine  # noqa: E402
+machine.ensure()      # its time source and standards cache, not the machine's
 ENV = dict(os.environ, GIT_AUTHOR_NAME='sam', GIT_AUTHOR_EMAIL='sam@x', GIT_COMMITTER_NAME='sam',
            GIT_COMMITTER_EMAIL='sam@x')
 

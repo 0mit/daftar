@@ -72,6 +72,8 @@ parts, changes).
    python3 test/public.py
    python3 test/docs.py
    python3 test/manifesto.py
+   python3 test/widgets.py
+   python3 test/cases.py
    python3 test/layers.py
    python3 test/view.py
    python3 test/viewcap.py

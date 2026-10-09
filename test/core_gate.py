@@ -478,6 +478,48 @@ flows:
         check("hub: a signed commit with no parent, naming its signer as gardener, is refused by a hub that holds the garden",
               r2.returncode != 0 and 'no parent' in r2.out, r2.out[-800:])
         run('git', 'checkout', '-q', '-f', 'master', cwd=W)
+        # A PERSON'S LABELS (Y8): `refs/daftar/custom/<person>`, signed by a key that person's bean carries, its tree only
+        # their customisation files — never checked out, never judged as the garden, never merged into it
+
+        def custom(files, parent=None, where=W):
+            entries = [f"100644 blob {run('git', 'hash-object', '-w', '--stdin', cwd=where, stdin=b).out.strip()}\t{n}"
+                       for n, b in sorted(files.items())]
+            tree = run('git', 'mktree', cwd=where, stdin=''.join(e + '\n' for e in entries)).out.strip()
+            return run('git', 'commit-tree', '-S', tree, '-m', 'labels', *(['-p', parent] if parent else []),
+                       cwd=where).out.strip()
+        labels = '{"person": "viewhost", "labels": {"menu.notes": {"text": "Notebook", "was": "Notes"}}}\n'
+        c1 = custom({'labels.json': labels})
+        r = run('git', 'push', '-q', 'origin', f'{c1}:refs/daftar/custom/viewhost', cwd=W)
+        check("hub: a person's labels, signed by their own key, on their own ref, are taken — no parent needed, no gate",
+              c1 and r.returncode == 0, (c1, r.returncode, r.out[-600:]))
+        c2 = custom({'labels.json': labels.replace('Notebook', 'Ledger')}, parent=c1)
+        r = run('git', 'push', '-q', 'origin', f'{c2}:refs/daftar/custom/viewhost', cwd=W)
+        check("...and their next change, on top of it", r.returncode == 0, r.out[-600:])
+        r = run('git', 'push', '-q', 'origin', f'{c2}:refs/daftar/custom/sam', cwd=W)
+        check("hub: labels on another person's ref are refused: each signs only their own",
+              r.returncode != 0 and 'sam' in r.out and 'own key' in r.out, r.out[-600:])
+        c3 = custom({'labels.json': labels, 'beans/sam.md': 'x\n'}, parent=c2)
+        r = run('git', 'push', '-q', 'origin', f'{c3}:refs/daftar/custom/viewhost', cwd=W)
+        check("hub: a labels ref whose tree holds anything but a person's customisation files is refused",
+              r.returncode != 0 and 'beans/sam.md' in r.out, r.out[-600:])
+        r = run('git', 'push', '-q', '--force', 'origin', f'{c1}:refs/daftar/custom/viewhost', cwd=W)
+        check("hub: a labels ref moved back (not on top of what it was) is refused: its history keeps every word",
+              r.returncode != 0 and 'on top' in r.out, r.out[-600:])
+        r = run('git', 'push', '-q', 'origin', ':refs/daftar/custom/viewhost', cwd=W)
+        check("hub: a labels ref deleted is refused", r.returncode != 0 and 'deleted' in r.out, r.out[-600:])
+        run('git', 'config', 'commit.gpgsign', 'false', cwd=W)
+        c4 = run('git', 'commit-tree', run('git', 'rev-parse', f'{c2}^{{tree}}', cwd=W).out.strip(), '-p', c2, '-m',
+                 'unsigned', cwd=W).out.strip()
+        run('git', 'config', 'commit.gpgsign', 'true', cwd=W)
+        r = run('git', 'push', '-q', 'origin', f'{c4}:refs/daftar/custom/viewhost', cwd=W)
+        check("hub: an unsigned labels commit is refused", r.returncode != 0 and 'not signed' in r.out, r.out[-600:])
+        r = run('git', 'push', '-q', '--force', 'origin', f'{c2}:refs/heads/master', cwd=W)
+        r2 = run('git', 'push', '-q', 'origin', f'{c2}:refs/heads/elsewhere', cwd=W)
+        check("hub: a labels commit pushed as the garden's branch, or as another, is judged as the garden — and refused",
+              r.returncode != 0 and r2.returncode != 0, r.out[-500:] + r2.out[-500:])
+        run('git', 'fetch', '-q', 'origin', cwd=W)
+        check("hub: the garden's branch is as it was: a labels ref is never merged into it",
+              run('git', 'ls-tree', '-r', '--name-only', 'origin/master', cwd=W).out.count('labels.json') == 0)
         # OPENPGP, where ssh-keygen cannot check: the hub reads the signature with gpg (v1 part 12b)
         if not shutil.which('gpg'):
             print("SKIP  hub: OpenPGP — no gpg on this machine")
