@@ -520,6 +520,32 @@ flows:
         run('git', 'fetch', '-q', 'origin', cwd=W)
         check("hub: the garden's branch is as it was: a labels ref is never merged into it",
               run('git', 'ls-tree', '-r', '--name-only', 'origin/master', cwd=W).out.count('labels.json') == 0)
+        # EVERY PEER JUDGES WHAT IT RECEIVES (design §7.1): a clone fetches another's work into a quarantine ref and judges
+        # it with the hub's own rules — the signature, the writer, the rights, the gate — before anything is merged
+        run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
+        run('git', 'config', 'commit.gpgsign', 'false', cwd=W)
+        writer_edit('unsigned, offered to a peer', '- say: { by: sam, at: now, note: "entered on the view host" }\n')
+        run('git', 'config', 'commit.gpgsign', 'true', cwd=W)
+        run('git', 'fetch', '-q', W, '+HEAD:refs/daftar/incoming/viewhost')
+        r = run(PY, 'bin/hub.py', 'receive', 'refs/daftar/incoming/viewhost')
+        check("receive: a peer's unsigned commit, fetched into quarantine, is refused before it is merged",
+              r.returncode != 0 and 'not signed' in r.out, r.out[-600:])
+        run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
+        writer_edit('signed, offered to a peer', '- say: { by: sam, at: now, note: "entered on the view host" }\n')
+        run('git', 'fetch', '-q', W, '+HEAD:refs/daftar/incoming/viewhost')
+        r = run(PY, 'bin/hub.py', 'receive', 'refs/daftar/incoming/viewhost')
+        check("receive: ...and the view host's signed commit, which a grant opens to it, is taken: judged as the hub "
+              "judges a push", r.returncode == 0 and 'taken' in r.out, r.out[-600:])
+        run('git', 'fetch', '-q', W, '+HEAD:refs/remotes/peer/master')
+        run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
+        run('git', 'config', 'commit.gpgsign', 'false', cwd=W)
+        writer_edit('unsigned again', '- say: { by: sam, at: now, note: "entered on the view host" }\n')
+        run('git', 'config', 'commit.gpgsign', 'true', cwd=W)
+        run('git', 'fetch', '-q', W, '+HEAD:refs/remotes/peer/master')
+        r = run(PY, 'bin/hub.py', 'receive', 'refs/remotes/peer/master')
+        check("receive: what a fetch brought is never counted as judged — only this clone's own branches are",
+              r.returncode != 0 and 'not signed' in r.out, r.out[-600:])
+        run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
         # OPENPGP, where ssh-keygen cannot check: the hub reads the signature with gpg (v1 part 12b)
         if not shutil.which('gpg'):
             print("SKIP  hub: OpenPGP — no gpg on this machine")
