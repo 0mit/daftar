@@ -13,6 +13,8 @@ disagrees with the garden. A lead says what waits, whose it is, and what it is a
              party's whose part the step's `by` names (the `agree … as: <part>` of the case's agreement), said
              overdue where the step's `usually` has passed (bin/seq.py `where`); where nobody took that part, the
              gardener's, saying so
+  obligation a clause of an agreement (or any term the law gives an expiry) falling due within its notice, or past
+             it, as bin/stale.py reads it: the party it binds — who makes the payment it asks — else the gardener
   session    an agent's session left open — a worktree of the garden on a `session/<slug>` branch, as
              bin/session.py lists it (its close retires the worktree; a session bean's own words do not say it,
              since closing leaves `details.status` as it was): the gardener's, to close or to ratify what it did
@@ -110,6 +112,38 @@ def read(root=ROOT):
             elif gardener:
                 leads.append(dict(base, **{'for': gardener, 'why': f"{bid} waits at {w['step']}, whose part "
                                                                    f"({w.get('by') or 'unsaid'}) nobody took{late}"}))
+
+    # OBLIGATIONS: what falls due within its notice, read by bin/stale.py (the one reader of what falls due); bound
+    # on the party who makes the payment the clause asks
+    import datetime
+    import stale as dmstale
+    today = datetime.date.today().toordinal()
+    for fm in dmstale._fronts():
+        bid = str(fm.get('bean') or '')
+        b = G.beans.get(bid)
+        for term, decl in dmstale.expiry_terms().items():
+            try:
+                due = dmstale.due_entries(fm, term, decl)
+            except Exception:   # noqa: BLE001 — what bin/stale.py cannot read it says itself; no lead is made of it
+                continue
+            for label, held, day, shown, _detail, _why in due:
+                if day is None:
+                    continue
+                own = held.get('notice') if isinstance(held, dict) and isinstance(held.get('notice'), dict) else None
+                notice = dmstale.notice_days({'of': 'time', 'measure': own} if own else decl.get('notice'))
+                days = day - today
+                if days > notice:
+                    continue
+                cid = str(held.get('id') or label.strip('[].')) if isinstance(held, dict) else label.strip('[].')
+                bound = []
+                for _i, verb, r in (b.items if b else []):
+                    if r.get('id') == cid and isinstance(r.get('of'), str):
+                        paid = next((pr for _j, pv, pr in b.items if pv == 'pay' and pr.get('id') == r['of']), None)
+                        bound = [str(x) for x in listed((paid or {}).get('by')) if isinstance(x, str)]
+                for who in bound or ([gardener] if gardener else []):
+                    leads.append({'for': who, 'kind': 'obligation', 'about': bid, 'clause': cid, 'due': shown,
+                                  'days': days, 'why': (f"{bid} {cid} falls due on {shown}, in {days} day(s)" if days >= 0
+                                                        else f"{bid} {cid} fell due on {shown}, {-days} day(s) ago")})
 
     # SESSIONS: an agent's work left open — a session's worktree, as bin/session.py lists it
     import subprocess

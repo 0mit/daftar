@@ -133,9 +133,30 @@ details:
 ---
 An agent's session, closed (its status left as it was, as bin/session.py leaves it).
 ''')
+    import datetime
+    soon = (datetime.date.today() + datetime.timedelta(days=3)).isoformat()
+    later = (datetime.date.today() + datetime.timedelta(days=300)).isoformat()
+    write(G, 'beans/flat-lease.md', f'''---
+bean: flat-lease
+kind: contract
+title: "flat-lease — a room let"
+statements:
+  - say:        {{ by: sam, at: now }}
+  - own:        {{ by: theone, of: self }}
+  - answer:     {{ by: sam, of: self, as: law }}
+  - answer:     {{ by: p-1a2b3c4d, of: self, as: law }}
+  - agree:      {{ by: sam, of: "the room", through: spoken, as: landlord }}
+  - agree:      {{ by: p-1a2b3c4d, of: "the room", through: spoken, as: tenant }}
+  - pay:        {{ id: rent, by: p-1a2b3c4d, to: sam, of: {{ count: "100.00", unit: XTS }} }}
+  - obligatory: {{ id: rent-due, of: rent, through: self, clause: {{ due: "{soon}" }} }}
+  - pay:        {{ id: deposit-back, by: sam, to: p-1a2b3c4d, of: {{ count: "200.00", unit: XTS }} }}
+  - obligatory: {{ id: deposit-due, of: deposit-back, through: self, clause: {{ due: "{later}" }} }}
+---
+A room let.
+''')
     r = grow.run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: a repair walk, three repairs, a ratify grant and an open session',
                  '--body', '- action: RULE-CHANGE — VOCAB.md adds the kind procedure; wrote [[p-1a2b3c4d]], [[walk-repair]], '
-                 '[[repair-waiting]], [[repair-nobody]], [[repair-done]], [[sam]], [[session-open]] and [[session-closed]]', '- ratified_by: sam', cwd=G)
+                 '[[repair-waiting]], [[repair-nobody]], [[repair-done]], [[sam]], [[session-open]], [[session-closed]] and [[flat-lease]]', '- ratified_by: sam', cwd=G)
     check("the garden holds them, through its gate", r.returncode == 0, r.out[-900:])
 
     grow.run('git', 'worktree', 'add', '-q', '-b', 'session/open-work', os.path.join(T, 'open-work'), cwd=G)
@@ -163,6 +184,10 @@ An agent's session, closed (its status left as it was, as bin/session.py leaves 
           "ratify; a session bean alone, open or closed in its own words, is no lead",
           [x['for'] for x in by('session', 'session-open-work')] == ['sam'] and not by('session', 'session-open')
           and not by('session', 'session-closed'), leads)
+    o = by('obligation', 'flat-lease')
+    check("leads: an obligation falling due within its notice is the party's it binds — who pays what it asks — and one "
+          "far off is nobody's yet", [(x['for'], x.get('clause')) for x in o] == [('p-1a2b3c4d', 'rent-due')]
+          and o[0].get('due') == soon, o)
     r2 = grow.run(PY, 'bin/leads.py', '--json', '--for', 'p-1a2b3c4d', cwd=G)
     mine = json.loads(r2.out[r2.out.index('['):]) if '[' in r2.out else []
     check("--for reads one person's leads alone", mine and {x['for'] for x in mine} == {'p-1a2b3c4d'}, r2.out[-600:])
