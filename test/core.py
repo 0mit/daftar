@@ -87,11 +87,17 @@ again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true
 check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "
       f"garden gives…), each giving once but a mailbox and a line, which may be shared, and a garden that declares one "
       f"again is refused",
-      {'dns', 'mail', 'e164', 'ieee-eui48', 'uuid', 'sha-256', 'openpgp', 'ssh', 'wireguard', 'garden-id', 'garden',
-       'ror', 'wikidata', 'orcid', 'ifc-guid', 'dicom-uid', 'gs1', 'tr-tckn', 'ir-national-code'} == set(ns)
+      {'dns', 'mail', 'e164', 'ieee-eui48', 'uuid', 'sha-256', 'openpgp', 'ssh', 'passkey', 'wireguard', 'garden-id',
+       'garden', 'ror', 'wikidata', 'orcid', 'ifc-guid', 'dicom-uid', 'gs1', 'tr-tckn', 'ir-national-code'} == set(ns)
       and sorted(n for n, r in ns.items() if r.get('once') != 'true') == ['e164', 'mail']
       and any('`dns` is declared already' in m for _r, _w, m in again),
       (sorted(ns), again))
+import re as _re
+PK = 'kp7Ql1yS0p8xM2dQ4fG6hJ8kL0nP2rT4vX6zB8dF0hJ' + '.' + 'pQECAyYgASFYI' + 'A' * 40 + 'IlggB' + 'B' * 40
+check("...a passkey is named by its credential id and its COSE public key, each in base64url, and nothing else is one",
+      _re.match(ns['passkey']['pattern'], PK) and not _re.match(ns['passkey']['pattern'], 'SHA256:abc')
+      and not _re.match(ns['passkey']['pattern'], PK.replace('.', '+')) and ns['passkey'].get('once') == 'true',
+      ns.get('passkey'))
 check("...a unit written by its English name is refused, naming its code; a currency is ISO 4217's",
       "English name of `kg`" in LAW0.has('units', 'kilogram') and not LAW0.has('units', 'XTS')
       and LAW0.has('units', 'dB/m'), LAW0.has('units', 'kilogram'))
