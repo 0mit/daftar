@@ -347,8 +347,8 @@ try:
     check("bin/install.py installs the gate at pre-commit and pre-merge-commit, and the driver `daftar` as bin/merge.py",
           all('bin/check.py' in open(os.path.join(hooks, h)).read() for h in ('pre-commit', 'pre-merge-commit'))
           and 'bin/merge.py" --file %O %A %B %P' in driver, driver)
-    check("`.gitattributes` sends beans and mappings to the driver `daftar`, and the journal and the queue to git's union",
-          attrs.count('merge: daftar') == 2 and attrs.count('merge: union') == 2, attrs)
+    check("`.gitattributes` sends beans and mappings, the journal and the queue to the driver `daftar`",
+          attrs.count('merge: daftar') == 4 and 'union' not in attrs, attrs)
 
     # THE GATE IS THE CORE'S FROM THE FIRST COMMIT, AND A PIN TO TODAY'S WORDS IS REFUSED
     r = run(PY, 'bin/daftar.py', 'check')
@@ -477,6 +477,47 @@ try:
     t, o, m = branch_and_merge('gone', theirs, ours)
     check("a bean one side removed and the other changed is a true conflict, git's own",
           t.returncode == 0 and m.returncode != 0 and 'CONFLICT (modify/delete)' in m.out, t.out + m.out[-600:])
+    run('git', 'merge', '--abort')
+
+    # THE LOGS, MERGED ENTRY BY ENTRY: two entries made apart that end in the same line keep it each — git's union kept
+    # a line both sides' additions shared once, and an entry lost its status (2026-10-09)
+    p0, j0 = text('log/pending.md').count('- status: proposed'), text('log/journal.md').count('- status: noted')
+
+    def theirs():
+        write('log/pending.md', text('log/pending.md').rstrip('\n') + '\n\n## item-a · parked on the branch · proposed\n'
+              '- found: a\n- status: proposed\n')
+        return commit('theirs: an item parked', '- action: item-a parked\n- status: noted')
+
+    def ours():
+        write('log/pending.md', text('log/pending.md').rstrip('\n') + '\n\n## item-b · parked on master · proposed\n'
+              '- found: b\n- status: proposed\n')
+        return commit('ours: an item parked', '- action: item-b parked\n- status: noted')
+    t, o, m = branch_and_merge('logs', theirs, ours)
+    p, j = text('log/pending.md'), text('log/journal.md')
+    check("the queue and the journal merge entry by entry: both items keep their status, both entries their last line",
+          t.returncode == 0 and o.returncode == 0 and m.returncode == 0 and p.count('- status: proposed') == p0 + 2
+          and j.count('- status: noted') == j0 + 2 and p.index('item-b') < p.index('item-a'),
+          (t.out[-300:], o.out[-300:], m.out[-600:], p[-500:], j[-600:]))
+    run('git', 'checkout', '-q', '-b', 'edit-a')
+    write('log/pending.md', text('log/pending.md').replace('- found: a\n- status: proposed', '- found: a\n- status: done'))
+    run('git', 'commit', '-qam', 'item-a done', '--no-verify')
+    run('git', 'checkout', '-q', 'master')
+    write('log/pending.md', text('log/pending.md').replace('- found: b\n', '- found: b, and more\n'))
+    run('git', 'commit', '-qam', 'item-b said more', '--no-verify')
+    m = run('git', 'merge', '--no-edit', '--no-verify', 'edit-a')
+    p = text('log/pending.md')
+    check("...an entry one side changed comes through changed, beside one the other side changed",
+          m.returncode == 0 and '- found: a\n- status: done' in p and '- found: b, and more' in p, m.out[-600:])
+    run('git', 'checkout', '-q', '-b', 'edit-a2')
+    write('log/pending.md', text('log/pending.md').replace('- status: done', '- status: dropped'))
+    run('git', 'commit', '-qam', 'item-a dropped', '--no-verify')
+    run('git', 'checkout', '-q', 'master')
+    write('log/pending.md', text('log/pending.md').replace('- status: done', '- status: reopened'))
+    run('git', 'commit', '-qam', 'item-a reopened', '--no-verify')
+    m = run('git', 'merge', '--no-edit', '--no-verify', 'edit-a2')
+    p = text('log/pending.md')
+    check("...and one both sides changed apart is a conflict for a person, both versions kept side by side",
+          m.returncode != 0 and '- status: dropped' in p and '- status: reopened' in p and '<<<<<<<' in p, m.out[-600:])
     run('git', 'merge', '--abort')
 except Exception as e:  # noqa: BLE001
     import traceback

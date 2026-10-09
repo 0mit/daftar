@@ -155,8 +155,8 @@ retired:
         held: ["test/core_adopt.py: a garden grown from v1.0.0 pins", "test/core_adopt.py: ...and a bean in today's words is refused by its hook", "test/core_guides.py: a garden germinates, pinning"]
       - promise: "a bean staged without its journal entry is refused; the save commits both"
         held: ["test/core_save.py: a bean the entry does not name is refused", "test/save.py: a save whose entry names one of two beans is refused"]
-      - promise: "a germinated garden merges its beans by the merge driver and its journal by union"
-        held: ["test/converge.py: its beans go to the statement merge and its journal to git's union", "test/core_merge.py: `.gitattributes` sends beans and mappings to the driver"]
+      - promise: "a germinated garden merges its beans by the merge driver and its journal entry by entry"
+        held: ["test/converge.py: its beans go to the statement merge, and its journal to the same driver", "test/core_merge.py: `.gitattributes` sends beans and mappings, the journal and the queue to the driver"]
       - promise: "a name or a profile out of form is refused before anything is made"
         held: ["test/core_view.py: germinate: a profile the core does not offer is refused", "test/refusals.py: a garden name that is not kebab-case is refused"]
       - promise: "the guides' examples commit through the gate of a fresh garden"
