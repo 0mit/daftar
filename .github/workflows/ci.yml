@@ -101,6 +101,8 @@ jobs:
         run: python3 test/widgets.py
       - name: "cases: a consultation, an open-heart surgery, an Arduino blinker and a production line with accounts, each a garden of statements that holds together and refuses what it must"
         run: python3 test/cases.py
+      - name: "leads: what waits, for whom the garden says — a decision, a case at its step, an open session; never configured, never stored"
+        run: python3 test/leads.py
       - name: "layers: each file sits in one layer, placed by the law or by its garden; no tool's path in the law; the changelog is journal"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/layers.py

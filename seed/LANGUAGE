@@ -20,6 +20,7 @@ bin/reform.py
 bin/garden.py
 bin/where.py
 bin/stale.py
+bin/leads.py
 bin/pos.py
 bin/seq.py
 bin/reckon.py

@@ -43,6 +43,7 @@ tools:
   - { tool: pos, family: read }
   - { tool: seq, family: read }
   - { tool: stale, family: read }
+  - { tool: leads, family: read }
   - { tool: where, family: read }
   - { tool: cal, family: measure }
   - { tool: geo, family: measure }
