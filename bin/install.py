@@ -110,6 +110,19 @@ def choose_python(repo):
                   "  git config daftar.python <path-to-python>")
 
 
+def main_worktree(repo):
+    """The repository's main working tree. A clone's config is SHARED by every worktree of it (bin/session.py makes one
+    a session), so the merge driver must be named by a path that outlives them all: installed from a session's worktree
+    — as bin/dmupgrade.py installs after an upgrade — the worktree's own path would point at nothing once the session
+    closed, and every later merge would fail to start its driver. A main tree without bin/merge.py (a bare one) leaves
+    the worktree's own."""
+    for line in git('worktree', 'list', '--porcelain', cwd=repo).stdout.splitlines():
+        if line.startswith('worktree '):
+            main = line[len('worktree '):].strip()
+            return main if os.path.isfile(os.path.join(main, 'bin', 'merge.py')) else repo
+    return repo
+
+
 def install(repo=None, quiet=False):
     say = (lambda *a: None) if quiet else print
     if repo is None:
@@ -150,7 +163,7 @@ def install(repo=None, quiet=False):
     #    because `python3` is not a name every machine has, and not every name on a PATH is a Python.
     #    bin/merge.py merges a bean by the statement merge (core/merge.py); %P is the path, which it names when it
     #    refuses.
-    driver = os.path.join(repo, 'bin', 'merge.py')
+    driver = os.path.join(main_worktree(repo), 'bin', 'merge.py')
     git('config', 'merge.daftar.name', 'daftar merge (bin/merge.py: the statement merge)', cwd=repo)
     git('config', 'merge.daftar.driver', f'"{py or sys.executable}" "{driver}" --file %O %A %B %P', cwd=repo)
     say("configured merge driver 'daftar' -> bin/merge.py")
