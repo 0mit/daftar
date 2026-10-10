@@ -4903,3 +4903,12 @@ address and refuses local forwarding, a terminal, agents and tunnels, with keep-
 about ninety seconds. That is the pattern a relay proved in the field before it was written down here; the suite has
 OpenSSH's own sshd read the block back. Any always-on peer may relay; none is privileged. The tool changes no host: what
 it writes, a person applies, or a ratified action plans with.
+## core/law/namespaces.yaml: namespaces[passkey]
+
+A PERSON SIGNS IN BY A KEY THEY HOLD, AND THE GARDEN NAMES THE KEY (design §10.1: daftard keeps no password). A passkey
+is a key pair whose private half never leaves the person's device; what a page needs to know them again is its
+credential id and its public key. Both go in the person's own bean as one name the namespace gives once — a dot between
+the two, each in base64url — added by the gardener like any identity (class F). So a served page verifies a sign-in
+against what the garden itself says, and the machine serving it keeps no list of its own: a key the gardener takes out
+of the bean signs nobody in. A WebAuthn signature does not carry its key, as an SSH signature carries its fingerprint's
+key, which is why the public key is in the name and not only a digest of it.

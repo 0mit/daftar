@@ -14,6 +14,7 @@ namespaces:
   - { namespace: sha-256,    once: "true", pattern: '^[0-9a-f]{64}$', meaning: "the SHA-256 digest of a content (FIPS 180-4), in lowercase hexadecimal: it names that content" }
   - { namespace: openpgp,    once: "true", pattern: '^[0-9A-F]{40}([0-9A-F]{24})?$', meaning: "an OpenPGP key's fingerprint (RFC 9580), in hexadecimal" }
   - { namespace: ssh,        once: "true", pattern: '^SHA256:[A-Za-z0-9+/]{43}$', meaning: "an SSH public key's fingerprint as OpenSSH prints it, `SHA256:` and its base64" }
+  - { namespace: passkey,    once: "true", pattern: '^[A-Za-z0-9_-]{22,1364}\.[A-Za-z0-9_-]{58,700}$', meaning: "a passkey (W3C Web Authentication): its credential id and its COSE public key, each in base64url without padding, joined by a dot — what a served page verifies a person's sign-in against" }
   - { namespace: wireguard,  once: "true", pattern: '^[A-Za-z0-9+/]{42}[AEIMQUYcgkosw480]=$', meaning: "a WireGuard public key (Curve25519), in base64" }
   - { namespace: garden-id,  once: "true", pattern: '^[0-9a-f]{12}$', meaning: "a garden's id: the first twelve hexadecimal digits of the root of its first-parent history, read from git" }
   - { namespace: garden,     once: "true", meaning: "a name a garden gave, qualified so that it crosses: `<garden_id>/<kind>:<name>`. In its own garden a being's name is its bean, and needs no statement" }
