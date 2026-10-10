@@ -19,6 +19,7 @@ const W=(typeof window!=='undefined')?window:this;
    it points to the reader's line end, mirrored with the script; a body's up is never turned. */
 const GLYPH=m=>(W.daftarDirection?W.daftarDirection.glyph(m):({next:'→',down:'↓'})[m]||'');
 function h(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function plain(s){return new DOMParser().parseFromString(String(s==null?'':s),'text/html').body.textContent;}   // a title is HTML; a text place shows this
 const PCT={unit:'percent',q:'ratio',f:[1,100]},SEC={unit:'second',q:'duration',f:[1,1]};
 function coherent(b,v){return b&&b.f?v*b.f[0]/b.f[1]:v;}
 function dur(s){if(s==null||isNaN(s))return '—';s=Math.max(0,Math.round(+s));
@@ -443,7 +444,7 @@ const FORMS={story:story,schematic:schematic,'health-chain':operate,anatomy:anat
    it, where it is shown, and which sheet of how many. Nothing in it is typed for the page. */
 function titleBlock(view,lv){const s=view.sheet;if(!s)return '';
  const c=(k,v)=>'<div class="tb-c"><span class="tb-k">'+h(k)+'</span><span class="tb-v">'+h(v||'—')+'</span></div>';
- return '<div class="vw-tblock" role="contentinfo">'+c('page',s.page)+c('drawing',view.title&&view.title.replace(/<[^>]+>/g,'')||view.key)+
+ return '<div class="vw-tblock" role="contentinfo">'+c('page',s.page)+c('drawing',plain(view.title)||view.key)+
   c('lens',lv.name||lv.id)+c('sheet',s.n+' of '+s.of)+c('garden',s.garden+(s.release?' · '+s.release:''))+
   c('drawn from',(s.commit||'')+(s.day?' · '+s.day:''))+c('stated by',s.by)+c('shown at',s.shown)+'</div>';}
 /* A DETAIL CLOSED: its region shows how many parts it holds, and opens on a click; the parts inside are hidden */
