@@ -1,0 +1,54 @@
+# The crosswalks: how a foreign system's records are read from a garden's statements — one row a model of one series of
+# that system (FHIR's StructureMap and Darwin Core's mappings, for daftar). The records stay where the garden keeps them;
+# a crosswalk only reads them as the system's own client expects, and nothing it reads is stored again.
+#
+# A ROW's `kind` is the beans it may select, and its `select` narrows them:
+#   with: <path>        the bean holds a statement the path names
+#   without: <path>     ...or holds none
+#   within: { along: <path>, model: <model> }   following the path from the bean, one step or many, reaches a bean the
+#                       row of that model selects (a department, through `part … of`, reaches its company)
+# A FIELD is read from the bean:
+#   from: title | summary | bean       the bean's own title, summary or id
+#   from: <verb>[<role>=<value>,…].<role>   the role of the bean's first own statement of that verb (and those roles)
+#   value: <scalar>                    given, the same for every record
+#   model: <model>                     the field holds the record of that model the path reaches (one), or
+#     inverse: true                    the records of that model whose path reaches this one (many), or
+#     chain: true                      the first record of that model reached by following the path again and again
+#   along: <path>, join: "<sep>"       the titles reached by following the path while each is a record of this row's
+#                                      model, from the farthest down to this one, joined
+# What the garden does not say, no record has: the field is empty (false, or no records).
+# These rows are the law itself: a change to them is a RULE-CHANGE, made here.
+forms:
+  crosswalk: { crosswalk: required, system: required, series: required, model: required, kind: required, select: optional, fields: required, meaning: required }
+  field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional }
+crosswalks:
+  - crosswalk: odoo-17.0-res.company
+    system: odoo
+    series: "17.0"
+    model: res.company
+    kind: org
+    select: { with: represent.by }
+    fields:
+      name: { from: title }
+      display_name: { from: title }
+      email: { from: "name[by=mail].as" }
+      website: { from: "name[by=dns].as" }
+      parent_id: { from: part.of, model: res.company }
+      child_ids: { from: part.of, model: res.company, inverse: true }
+      active: { value: true }
+    meaning: "the companies a garden is kept for: each organisation someone represents in it, as the gardener represents the firm whose garden it is"
+  - crosswalk: odoo-17.0-hr.department
+    system: odoo
+    series: "17.0"
+    model: hr.department
+    kind: org
+    select: { within: { along: part.of, model: res.company }, without: represent.by }
+    fields:
+      name: { from: title }
+      display_name: { from: title, along: part.of, join: " / " }
+      complete_name: { from: title, along: part.of, join: " / " }
+      parent_id: { from: part.of, model: hr.department }
+      child_ids: { from: part.of, model: hr.department, inverse: true }
+      company_id: { from: part.of, model: res.company, chain: true }
+      active: { value: true }
+    meaning: "a company's departments: each organisation that is part of one of the garden's companies, or of a department of one"

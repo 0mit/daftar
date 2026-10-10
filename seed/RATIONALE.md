@@ -5075,3 +5075,20 @@ THE TOMAN IS A UNIT OF THE RIAL (2026-10-10). Iran counts money in tomans every 
 ten rials make a toman, exactly. It is a unit of IRR (`per: IRR`, factor ten), never a currency of its own, so an amount
 in tomans converts into rials by the law and into any other currency only through an observed rate, as every currency
 does.
+
+## core/law/crosswalks.yaml: crosswalks
+
+A FOREIGN SYSTEM'S RECORDS ARE READ FROM STATEMENTS, NEVER KEPT TWICE (2026-10-10, the unified-tools design's P5.3; the
+operator: "go ahead and finish it", then "go ahead with both"). daftard serves Odoo 17's own web client over a
+garden's captured views, and the client asks for records: the companies, the departments. They are the garden's — the
+organisation its gardener represents, the organisations `part` of it — so a crosswalk says, one row a model of one
+series, which beans are its records and where each field is read: the bean's title, a role of one of its own
+statements by a path, or a given value; a field of another model holds the record that path reaches, or (`inverse`)
+the records that reach this one, or (`chain`) the first of that model reached by following the path again. That is
+the mechanism FHIR's StructureMap and Darwin Core's mappings use, and a row is law because it decides what the garden is
+taken to say to a system that will act on it. One reader, core/crosswalk.py, answers every client, so two can never
+disagree; nothing it reads is stored. A company is an organisation someone represents in the garden, not every
+organisation without a parent, which would take in every supplier; a department is one whose `part … of` reaches a
+company. A record's number is the first 31 bits of the SHA-256 of its model and bean — the same everywhere, and two
+beans that meet are refused by name.
+
