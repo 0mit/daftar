@@ -251,6 +251,20 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.1** (2026-10-10, daftar v2.1.0, human-ratified rule-change: the unified-tools design's P5.3, on the
+  operator's word "go ahead with both", #121) — **a foreign system's records read from statements.** MINOR: a law file
+  added, nothing a garden could write refused. `core/law/crosswalks.yaml`: one row a model of one series of a foreign
+  system, which beans are its records and where each field is read — a bean's title, a role of one of its own
+  statements by a path, a given value, or the record of another model the path reaches (`inverse`, `chain`) — the
+  mechanism of FHIR's StructureMap and Darwin Core's mappings. Its first rows: Odoo 17's `res.company` (an organisation
+  someone represents in the garden) and `hr.department` (an organisation whose `part … of` reaches a company).
+  `core/crosswalk.py` is the one reader, so daftard's answers to Odoo's own client and any other reader agree.
+  With it, the view and the hub after the security audit of 2026-10-10 (#123), no change to the law: the view runs a
+  changed drawing module or release only when a person starts it again (a health check starts no work), its audit log
+  is read as the page's grants allow (a viewer their own rows, the gardener everyone's), its connections are bounded (a
+  request timeout, 64 at once), and a CSV cell a spreadsheet would run as a formula is written as text; at the hub a
+  captured view of another program (`captures/views/`) is code, changed only under `ratify:G`.
+
 - **core 2.0** (2026-10-10, daftar v2.0.0, human-ratified rule-change: the unified-tools design, ratified 2026-10-09,
   and the operator's word on each part, the pull requests #110–#118 merged on it) — **what a value is to a reader;
   every peer a judge; the dimensions on the ladder.** MAJOR, by this file's own measure: it refuses what a garden could
