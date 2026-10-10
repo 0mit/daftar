@@ -4874,4 +4874,19 @@ is the engine is run on the machine whose tool it is (a program the walk `use`s,
 ratifying the plan they were shown, its SHA-256 on its move — stops the run as a lead to them, and a plan changed since
 it was shown is shown again. Nothing was added to the law for it: a second machinery for "steps with approvals" would
 have been a second statement of what the walk already says.
+## core/law/tools.yaml: tools[mailbox]
+
+A PEERED GARDEN MAY LAY A PROPOSAL, AND DO NOTHING ELSE. Gardens meet only by proposal, a file laid outside every
+garden; across machines that place is a mailbox on each machine of the receiving garden, and what reaches it is the
+one thing a peered garden's key may do there: run `bin/mailbox.py serve` for that garden (OpenSSH's `restrict` and a
+forced command), which takes a proposal from that garden to this one whose fingerprint holds, whole and once, and says
+which of that garden's own proposals wait and which were taken, and nothing else. A shared folder both gardens could
+write would have let either read, list or change the other's; a key that can only drop a proposal and ask after its
+own cannot.
+
+DELIVERED UNTIL ACKNOWLEDGED. A link cut midway, or a receipt lost on the way back, must lose nothing and double
+nothing: a proposal leaves the sender's outbox only when the receiver's receipt names it, and the receiver lays the same
+bytes once and says "was here already" the second time — so delivering again is always safe, and an address that
+changes mid-transfer costs one more run. The sender is told when its proposal was taken, read from the receiving
+garden's own `take` statement, never from a flag someone set.
 

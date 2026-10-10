@@ -75,6 +75,7 @@ parts, changes).
    python3 test/widgets.py
    python3 test/cases.py
    python3 test/leads.py
+   python3 test/mailbox.py
    python3 test/layers.py
    python3 test/act.py
    python3 test/view.py
