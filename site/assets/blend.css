@@ -1,0 +1,181 @@
+/* The blend's styles. Logical properties only: the stylesheet cannot disagree with the reader's script (DIRECTION.md).
+   The language and the lens are chosen by radio inputs, so both work without script; script adds the page's
+   direction to <html> and the keys. The ladder is a body: drawn foundation-down, never mirrored. */
+:root {
+  --paper: #fbfaf6; --ink: #1e1d1a; --soft: #5f5b52; --rule: #d8d3c6; --card: #ffffff; --hl: #f3efe3;
+  --refused: #a3261b; --refused-bg: #fbecea; --passed: #1d6b3a; --passed-bg: #e9f5ec; --accent: #3b4f8f;
+  --by: #b5482a; --of: #2f6f8f; --through: #7a5a9a; --to: #2f7d55; --from: #9a6b16; --at: #3b4f8f; --as: #8a3c6c;
+  --frame: #6b6b6b; --matter: #8a5a2b; --gravitation: #34507a; --living: #2f7d4f; --reason: #7a4f8a; --made: #5a6b2f; --said: #a3402a;
+  --mono: ui-monospace, "SFMono-Regular", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Vazirmatn", "Noto Sans Arabic", Tahoma, sans-serif;
+  --serif: Georgia, "Noto Serif", "Vazirmatn", "Noto Naskh Arabic", serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #16150f; --ink: #ece8dc; --soft: #a39d8f; --rule: #3a372e; --card: #1f1d16; --hl: #2a271e;
+    --refused: #ff8a7a; --refused-bg: #3a1c18; --passed: #7fd39a; --passed-bg: #16301f; --accent: #9fb2ff;
+  }
+}
+* { box-sizing: border-box; }
+html { background: var(--paper); color: var(--ink); font: 17px/1.6 var(--sans); scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+body { margin: 0; }
+a { color: var(--accent); }
+code, pre { font-family: var(--mono); font-size: 0.86em; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.skip { position: absolute; inset-inline-start: 8px; inset-block-start: 8px; width: 1px; height: 1px; overflow: hidden;
+        clip-path: inset(50%); white-space: nowrap; }                       /* clipped, never pushed off a side */
+.skip:focus { width: auto; height: auto; clip-path: none; background: var(--card); padding: 4px 8px; z-index: 9; }
+
+/* ---------------------------------------------------------------- the choices: language and lens, without script */
+input[name="lang"], input[name="lens"] { position: absolute; opacity: 0; pointer-events: none; }
+#lang-fa:checked ~ * [data-l="en"], #lang-en:checked ~ * [data-l="fa"] { display: none !important; }
+.lens { display: none; }
+#lens-person:checked ~ * .lens[data-lens="person"], #lens-gardener:checked ~ * .lens[data-lens="gardener"],
+#lens-agent:checked ~ * .lens[data-lens="agent"], #lens-keeper:checked ~ * .lens[data-lens="keeper"] { display: block; }
+#lens-person:checked ~ .top label[for="lens-person"], #lens-gardener:checked ~ .top label[for="lens-gardener"],
+#lens-agent:checked ~ .top label[for="lens-agent"], #lens-keeper:checked ~ .top label[for="lens-keeper"],
+#lang-en:checked ~ .top label[for="lang-en"], #lang-fa:checked ~ .top label[for="lang-fa"] { background: var(--ink); color: var(--paper); }
+#lens-person:focus-visible ~ .top label[for="lens-person"], #lens-gardener:focus-visible ~ .top label[for="lens-gardener"],
+#lens-agent:focus-visible ~ .top label[for="lens-agent"], #lens-keeper:focus-visible ~ .top label[for="lens-keeper"],
+#lang-en:focus-visible ~ .top label[for="lang-en"], #lang-fa:focus-visible ~ .top label[for="lang-fa"] { outline: 3px solid var(--accent); }
+.js-only { display: none; }
+.js .js-only { display: block; }
+.js .rail.js-only { display: flex; }
+
+/* ---------------------------------------------------------------- the head */
+.top { position: sticky; inset-block-start: 0; z-index: 5; background: color-mix(in srgb, var(--paper) 94%, transparent);
+       backdrop-filter: blur(6px); border-block-end: 1px solid var(--rule); padding: 10px 16px;
+       display: grid; grid-template-columns: auto 1fr auto; gap: 4px 16px; align-items: center; }
+.brand { font: 600 1.3rem/1 var(--serif); color: var(--ink); text-decoration: none; }
+.tagline { margin: 0; color: var(--soft); font-size: 0.86rem; grid-column: 2; }
+.ver { margin: 0; font: 0.78rem var(--mono); color: var(--soft); }
+.controls { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.lens-pick, .lang-pick { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.cl { color: var(--soft); font-size: 0.8rem; margin-inline-end: 4px; }
+.controls label { border: 1px solid var(--rule); border-radius: 999px; padding: 2px 10px; font-size: 0.84rem; cursor: pointer; }
+.movements { grid-column: 1 / -1; }
+.movements ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.86rem; }
+@media (max-width: 720px) { .top { position: static; grid-template-columns: 1fr auto; } .tagline { grid-column: 1 / -1; } }
+
+/* ---------------------------------------------------------------- movements */
+main { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+.movement { padding-block: 56px 24px; border-block-end: 1px solid var(--rule); scroll-margin-block-start: 120px; }
+.kicker { font: 600 0.8rem var(--sans); letter-spacing: 0.06em; color: var(--soft); margin: 0; }
+.movement h2 { font: 600 clamp(1.7rem, 4vw, 2.6rem)/1.15 var(--serif); margin: 6px 0 12px; }
+.lede { max-width: 70ch; font-size: 1.06rem; color: var(--soft); }
+.sub { font: 600 1rem var(--sans); margin: 28px 0 8px; }
+.story { font: 1.12rem/1.55 var(--serif); max-width: 68ch; }
+.cards { display: grid; gap: 20px; }
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; }
+.mh { display: flex; gap: 10px; align-items: baseline; }
+.mh h3 { margin: 0; font: 600 1.2rem var(--serif); }
+.glyph { font-size: 1.2rem; color: var(--accent); }
+
+/* ① the sentence: a ruled line, and the seven roles each in its own colour */
+.line { position: relative; height: 54px; margin: 18px 0 6px; max-width: 760px; }
+.rule-line { position: absolute; inset-inline: 0; inset-block-end: 12px; border-block-end: 2px solid var(--ink); }
+.caret { position: absolute; inset-inline-start: 0; inset-block-end: 14px; width: 2px; height: 30px; background: var(--accent);
+         animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.roles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.role { border-inline-start: 4px solid var(--c); padding: 6px 10px; background: var(--hl); border-radius: 4px; }
+.role .rw { font-weight: 700; color: var(--c); font-size: 1rem; display: block; }
+.role .rm { display: block; font-size: 0.9rem; }
+.role .rs { display: block; font: italic 0.78rem var(--serif); color: var(--soft); }
+.role-by { --c: var(--by); } .role-of { --c: var(--of); } .role-through { --c: var(--through); } .role-to { --c: var(--to); }
+.role-from { --c: var(--from); } .role-at { --c: var(--at); } .role-as { --c: var(--as); }
+.try { margin: 10px 0; }
+.save { font: inherit; font-size: 0.9rem; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--rule); background: var(--paper);
+        color: var(--ink); cursor: pointer; margin-inline-end: 8px; margin-block-end: 6px; }
+.save.first { border-color: var(--refused); } .save.mended { border-color: var(--passed); }
+.answer { margin: 6px 0; font-weight: 600; }
+.answer.taken { color: var(--passed); } .answer.again { color: var(--refused); }
+
+/* a form, as written and as passed, and the gate's own line */
+.film { margin: 12px 0; }
+.film figcaption { font-size: 0.8rem; color: var(--soft); }
+.film pre { margin: 4px 0 0; padding: 10px 12px; background: var(--hl); border-radius: 6px; overflow-x: auto; text-align: start; }
+.film .ln { display: block; white-space: pre; }
+.film .ln.was { color: var(--refused); text-decoration: line-through; text-decoration-thickness: 1px; }
+.film .ln.now.add, .film .ln.was + .ln.now { color: var(--passed); }
+.film .ln.cmt { color: var(--soft); }
+.frag { font-size: 0.85rem; }
+.refusal { margin-block-start: 6px; border-inline-start: 4px solid var(--refused); background: var(--refused-bg); border-radius: 4px; padding: 6px 10px; }
+.refusal .rl { margin: 0; color: var(--refused); font-weight: 600; font-size: 0.86rem; }
+.refusal pre { margin: 4px 0 0; white-space: pre-wrap; word-break: break-word; background: none; padding: 0; }
+.rule { font-weight: 400; color: var(--soft); }
+/* script on: a sentence card starts as the form, and the reader's save decides what the gate says */
+.js .sentence-card .ln.was, .js .sentence-card .refusal, .js .sentence-card .frag { display: none; }
+.js .sentence-card[data-state="first"] .ln.was { display: block; }
+.js .sentence-card[data-state="first"] .ln.was + .ln.now, .js .sentence-card[data-state="first"] .ln.add { display: none; }
+.js .sentence-card[data-state="first"] .refusal, .js .sentence-card[data-state="first"] .frag { display: block; }
+.js .sentence-card[data-state="mended"] .film pre { box-shadow: inset 4px 0 0 var(--passed); }
+.js .sentence-card:not([data-state="first"]) .ln.was + .ln.now, .js .sentence-card:not([data-state="first"]) .ln.add { color: inherit; }
+.js .sentence-card[data-state="mended"] .ln.was + .ln.now, .js .sentence-card[data-state="mended"] .ln.add { color: var(--passed); }
+
+/* the lenses */
+.lenses { border-block-start: 1px dashed var(--rule); margin-block-start: 12px; padding-block-start: 6px; }
+.lw { font-size: 0.78rem; color: var(--soft); margin: 0; text-transform: lowercase; }
+.items { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 8px; }
+.item { border-inline-start: 3px solid var(--rule); padding-inline-start: 8px; font-size: 0.86rem; }
+.item p { margin: 0; } .item .ix, .item .ir { color: var(--soft); }
+.cmd { background: var(--hl); padding: 8px 10px; border-radius: 6px; overflow-x: auto; }
+
+/* ② the ladder: the places in reading order, and the ladder itself, foundation down */
+.climb { display: grid; grid-template-columns: 1fr 210px; gap: 24px; align-items: start; }
+.places { display: grid; gap: 28px; }
+.place { border-inline-start: 4px solid var(--lc, var(--rule)); padding-inline-start: 14px; scroll-margin-block-start: 140px; }
+.place h3 { font: 600 1.4rem var(--serif); margin: 0 0 6px; color: var(--lc); }
+.line-frame { --lc: var(--frame); } .line-matter { --lc: var(--matter); } .line-gravitation { --lc: var(--gravitation); }
+.line-living { --lc: var(--living); } .line-reason { --lc: var(--reason); } .line-made { --lc: var(--made); } .line-said { --lc: var(--said); }
+.steps-of summary { cursor: pointer; color: var(--soft); font-size: 0.9rem; }
+.lvs { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 6px; }
+.lv { padding: 4px 8px; background: var(--hl); border-radius: 4px; scroll-margin-block-start: 140px; }
+.lv .ln { margin: 0; } .lv .ln code { font-weight: 700; }
+.lv .st { font-size: 0.82rem; color: var(--soft); margin-inline-start: 10px; }
+.lv .lm { margin: 2px 0 0; font-size: 0.86rem; text-align: start; }
+.crown .cr { color: var(--soft); }
+.ladder { position: sticky; inset-block-start: 130px; align-self: start; font-size: 0.8rem; }
+.ladder .here { margin: 0 0 6px; color: var(--soft); font-size: 0.75rem; }
+.rungs, .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; }  /* the body's up */
+.rung { border-inline-start: 4px solid var(--lc); padding: 3px 0 3px 8px; padding-inline-start: 8px; margin-block: 1px; }
+.rung .rl { font-weight: 600; color: var(--lc); text-decoration: none; display: block; }
+.rung .steps { display: none; }
+.rung[data-here] { background: var(--hl); }
+.rung[data-here] .steps { display: flex; }
+.rung .step a { font: 0.72rem var(--mono); color: var(--soft); text-decoration: none; }
+.rung { --lc: var(--rule); }
+.rung.line-frame { --lc: var(--frame); } .rung.line-matter { --lc: var(--matter); } .rung.line-gravitation { --lc: var(--gravitation); }
+.rung.line-living { --lc: var(--living); } .rung.line-reason { --lc: var(--reason); } .rung.line-made { --lc: var(--made); } .rung.line-said { --lc: var(--said); }
+@media (max-width: 860px) {
+  .climb { grid-template-columns: 1fr 64px; gap: 10px; }
+  .ladder .here, .rung .steps, .rung[data-here] .steps { display: none; }
+  .rung .rl { font-size: 0; height: 12px; }            /* a small ladder: seven rungs, still foundation down */
+  .rung[data-here] .rl { background: var(--lc); }
+}
+
+/* ③ time: a timeline is the time line — earlier at the start of the reader's line, later at its end */
+.rail { position: sticky; inset-block-start: 118px; z-index: 3; display: flex; gap: 8px; align-items: center; background: var(--paper);
+        padding: 6px 0; border-block-end: 1px solid var(--rule); }
+.ticks { list-style: none; display: flex; gap: 6px; margin: 0; padding: 0; flex: 1; justify-content: space-between; }
+.ticks button, .step-btn { font: inherit; font-size: 0.86rem; border: 1px solid var(--rule); background: var(--card); color: var(--ink);
+                           border-radius: 999px; min-width: 32px; padding: 3px 10px; cursor: pointer; }
+.ticks button[aria-current="step"] { background: var(--ink); color: var(--paper); }
+.moments { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 24px; }
+.moment { position: relative; background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 18px; }
+.moment.kind-vacant { border-style: dashed; }
+.moment .tick { position: absolute; inset-inline-end: 14px; inset-block-start: 10px; font: 600 1.4rem var(--serif); color: var(--rule); }
+.mi { margin: 0; font-size: 0.78rem; color: var(--soft); }
+.told { font-size: 0.86rem; color: var(--soft); font-style: italic; }
+.js .moments .moment { display: none; }
+.js .moments .moment[data-on] { display: block; }
+
+/* ④ yours */
+.tell { margin: 12px 0; padding: 12px 16px; border-inline-start: 4px solid var(--accent); background: var(--hl); border-radius: 4px; text-align: start; }
+.foot { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; color: var(--soft); font-size: 0.84rem; }
+
+/* a grid item may shrink below its widest line: a long form scrolls in its own box, never the page sideways */
+.cards > *, .places > *, .climb > *, .moments > *, .roles > *, .card, .place, .moment, .film, .lenses { min-width: 0; }
+.film pre, .cmd, .tell { max-width: 100%; }

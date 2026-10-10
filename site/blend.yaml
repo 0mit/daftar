@@ -1,0 +1,263 @@
+# site/blend.yaml — the words of the one page, which site/blend.py renders from the release (site/board.py):
+# a sentence you write, the ladder you climb, a garden played back, and yours. Every form, refusal, rule, count,
+# level and role on the page is read from the release; these are only the story's words, in each language.
+# `moments` are told in order: one that names a `mechanism` shows that board's proved form and refusal; a `vacant`
+# one is a moment the build does not grow yet, told from the law (`items`, as the catalogue names them).
+ui:
+  en:
+    was: written first
+    moment: moment {i} of {n}
+    earlier: earlier
+    later: later
+    you_label: Tell your agent
+    next_time: The next time you sit down, tell it to read `AGENTS.md` in the notebook.
+    skip: Skip to the page
+    movements: The page
+    m1: A sentence
+    m2: A ladder
+    m3: A garden's time
+    m4: Yours
+    lens_group: Read it as
+    lang_group: Language
+    s_kicker: ①  The language
+    s_head: Every fact is one sentence.
+    s_lede: 'A verb, and the roles it fills — the same seven roles in every sentence, whatever it is about. Six are the kārakas Pāṇini named for Sanskrit; the seventh is Aristotle''s “as”. A role is not a place in the sentence: it is what a word does in it.'
+    s_roles: The seven roles
+    s_try: Write it, and let the gate answer
+    s_first: Save it as first written
+    s_mended: Save it as the gate passed it
+    s_taken: Taken. The gate passed this form when the page was built.
+    s_refused: Refused
+    s_again: Fix what it names, and save again.
+    s_nojs: 'As first written, the gate said:'
+    l_kicker: ②  The world
+    l_head: Every being stands somewhere on one ladder.
+    l_lede: From the frame every body takes its room in, through matter, gravitation and the living, to reason, what is made and what is said. Each step stands on the one below it — made of it, or possible on it — and the law keeps every joint. Scroll down the page and you climb.
+    l_here: You are here
+    l_levels: Its steps
+    l_stands: stands on
+    l_made_of: made of
+    l_possible_on: possible on
+    l_while: while
+    l_crown: Above every step
+    l_mechs: What the notebook keeps here
+    t_kicker: ③  The notebook's life
+    t_head: A garden, played back.
+    t_how: 'Step through its history with the buttons or the arrow keys: earlier is where your writing starts, later where it ends.'
+    t_told: 'Not lived by the build yet: told from the law.'
+    y_kicker: ④  Yours
+    y_head: Your notebook.
+    f_counts: '{rules} rules · {verbs} verbs · {tables} tables · {relations} relations · {reasons} reasons, read from release {release}'
+    f_built: Built from the release it describes. Every form on this page was passed, and every refusal printed, by that release's own gate.
+  fa:
+    was: نخست این‌گونه نوشته شد
+    moment: لحظه‌ی {i} از {n}
+    earlier: پیش‌تر
+    later: پس‌تر
+    you_label: به عاملتان بگویید
+    next_time: دفعه‌ی بعد که پشت کار می‌نشینید، به آن بگویید `AGENTS.md` را در دفتر بخواند.
+    skip: رفتن به صفحه
+    movements: صفحه
+    m1: یک جمله
+    m2: یک نردبان
+    m3: زمانِ یک باغ
+    m4: از آنِ شما
+    lens_group: بخوانید همچون
+    lang_group: زبان
+    s_kicker: ①  زبان
+    s_head: هر گزاره یک جمله است.
+    s_lede: 'یک فعل، و نقش‌هایی که پر می‌کند: همان هفت نقش در هر جمله، درباره‌ی هر چه باشد. شش تا کارَکه‌هایی‌اند که پانینی برای سنسکریت نام برد؛ هفتمی «همچونِ» ارسطوست. نقش جایی در جمله نیست: کاری است که واژه در آن می‌کند.'
+    s_roles: هفت نقش
+    s_try: بنویسید، و بگذارید دروازه پاسخ دهد
+    s_first: همان‌گونه که نخست نوشته شد ذخیره کن
+    s_mended: همان‌گونه که دروازه پذیرفت ذخیره کن
+    s_taken: پذیرفته شد. دروازه این شکل را هنگامِ ساختنِ صفحه پذیرفت.
+    s_refused: رد شد
+    s_again: آنچه را نام می‌برد درست کنید، و دوباره ذخیره کنید.
+    s_nojs: 'به شکلِ نخست، دروازه گفت:'
+    l_kicker: ②  جهان
+    l_head: هر هستی جایی بر یک نردبان می‌ایستد.
+    l_lede: از چارچوبی که هر جسم جایش را در آن می‌گیرد، از ماده، گرانش و زندگان، تا خرد، ساخته‌ها و گفته‌ها. هر پله بر پله‌ی زیرینش می‌ایستد (ساخته از آن، یا ممکن بر آن) و قانون هر پیوند را نگه می‌دارد. صفحه را پایین بروید تا بالا بروید.
+    l_here: شما اینجایید
+    l_levels: پله‌هایش
+    l_stands: می‌ایستد بر
+    l_made_of: ساخته از
+    l_possible_on: ممکن بر
+    l_while: تا وقتی
+    l_crown: بالاتر از هر پله
+    l_mechs: آنچه دفتر اینجا نگه می‌دارد
+    t_kicker: ③  زندگیِ دفتر
+    t_head: یک باغ، از نخستین روز.
+    t_how: 'با دکمه‌ها یا کلیدهای جهت در تاریخچه‌اش گام بردارید: پیش‌تر آن‌جاست که نوشتنِ شما آغاز می‌شود، پس‌تر آن‌جا که پایان می‌یابد.'
+    t_told: 'هنوز ساخت آن را نزیسته: از زبانِ قانون گفته شده.'
+    y_kicker: ④  از آنِ شما
+    y_head: دفترِ شما.
+    f_counts: '{rules} قاعده · {verbs} فعل · {tables} جدول · {relations} پیوند · {reasons} دلیل، خوانده از نسخه‌ی {release}'
+    f_built: ساخته از همان نسخه‌ای که توصیفش می‌کند. هر شکلِ این صفحه را دروازه‌ی خودِ آن نسخه پذیرفت، و هر پاسخِ رد را خودش چاپ کرد.
+roles_fa:
+  by: 'کننده: آن که مستقل است و کار را می‌کند'
+  of: آنچه کار به آن می‌رسد، یا آنچه درباره‌ی آن است
+  through: 'وسیله: ابزار، سند، واژه‌ها، پیوند، روند، توافق، علت'
+  to: برای که، یا به سوی چه
+  from: 'نقطه‌ی ثابتی که از آن جدا می‌شود: سرچشمه، دهنده، والد'
+  at: 'جایگاه، زمینه: جایی در یک چارچوب (کجا و کی، برای جسم؛ کدام، در تاکسیس، برای گفته‌ها)، یا آنچه چیزی بر آن می‌ایستد'
+  as: 'در چه مقامی، یا همچون چه: نامی که نام‌دهنده می‌دهد، کاری که هستی می‌کند، شیوه‌ای که چیزی می‌ایستد'
+lines:
+  en:
+    frame: The frame
+    matter: Matter
+    gravitation: Gravitation
+    living: The living
+    reason: Reason
+    made: The made
+    said: The said
+  fa:
+    frame: چارچوب
+    matter: ماده
+    gravitation: گرانش
+    living: زندگان
+    reason: خرد
+    made: ساخته‌ها
+    said: گفته‌ها
+movements:
+  sentence:
+  - who
+  - what
+  - codes
+  ladder:
+    frame:
+    - when
+    - line
+    made:
+    - where
+    said:
+    - money
+    - pages
+  time:
+  - grown
+  - gate
+  - between
+  - law
+  - proposal
+  - you
+moments:
+- id: grown
+  kind: grown
+  items:
+  - rule:form
+  en:
+    title: A garden is grown
+    line: The notebook is grown from release {release}, under the law core {version}. Its first commit is the garden itself; its second plants the gardener, Sam, as its first file — GARDEN.md names Sam and pins the law the gate will apply from now on.
+    person: A garden is a git repository of beans — one notebook, private to whoever keeps it; a bean is one thing, as one file. Whoever keeps it is its gardener, and the gardener is the first thing in it.
+    gardener: You need a coding agent with a shell and git, and a place for a private repository. Tell the agent to read INSTALL.md and follow it; it grows the notebook with you as its gardener, and `GARDEN.md` names you, so every agent that comes after knows whose notebook it is working in.
+    agent: '`python3 seed/germinate.py <target-directory> --gardener <id>`: the first commit is the garden, the second plants the gardener''s bean and names it in `GARDEN.md`, which pins the law the garden runs and records the release.'
+  fa:
+    title: باغی می‌روید
+    line: دفتر از نسخه‌ی {release} می‌روید، زیر قانونِ core {version}. نخستین کامیتش خودِ باغ است؛ دومی باغبان، سام، را نخستین پرونده‌اش می‌کارد. `GARDEN.md` سام را نام می‌برد و قانونی را که دروازه از این پس اعمال می‌کند سنجاق می‌کند.
+    person: 'باغ یک مخزنِ git از پرونده‌هاست: یک دفتر، خصوصی برای هر که نگهش می‌دارد؛ هر پرونده یک چیز است. کسی که آن را نگه می‌دارد باغبانِ آن است، و باغبان نخستین چیزی است که در آن هست.'
+    gardener: به یک عاملِ برنامه‌نویس با پوسته و git نیاز دارید، و جایی برای یک مخزنِ خصوصی. به عامل بگویید INSTALL.md را بخواند و دنبال کند؛ دفتر را با شما به عنوانِ باغبانش می‌رویاند، و `GARDEN.md` شما را نام می‌برد، تا هر عاملی که پس از آن می‌آید بداند در دفترِ چه کسی کار می‌کند.
+    agent: '`python3 seed/germinate.py <target-directory> --gardener <id>`: کامیتِ نخست خودِ باغ است، دومی پرونده‌ی باغبان را می‌کارد و نامش را در `GARDEN.md` می‌آورد، که قانونِ باغ را سنجاق می‌کند و نسخه را ثبت می‌کند.'
+- id: who
+  mechanism: who
+  en:
+    line: 'Sam reads the MAC address off the NAS''s label. The agent writes the name — and the first time, says nobody knows it: no act of saying, reading, making or deriving. The gate refuses; the agent adds Sam''s reading, and it passes.'
+  fa:
+    line: 'سام نشانی MAC را از برچسبِ NAS می‌خواند. عامل نام را می‌نویسد، و بار نخست نمی‌گوید چه کسی آن را می‌داند: نه گفتن، نه خواندن، نه ساختن، نه به دست آوردن. دروازه رد می‌کند؛ عامل خواندنِ سام را می‌افزاید، و می‌گذرد.'
+- id: what
+  mechanism: what
+  en:
+    line: 'The agent says what the NAS is — a host — and whose: Sam owns it and keeps it. Written first with the NAS as its own owner, it is refused: nothing owns itself.'
+  fa:
+    line: 'عامل می‌گوید NAS چیست (یک میزبان، `host`) و از آنِ کیست: سام مالکش است و نگهش می‌دارد. بار نخست NAS مالکِ خودش نوشته می‌شود و رد می‌شود: هیچ چیز مالکِ خودش نیست.'
+- id: codes
+  mechanism: codes
+  en:
+    line: The NAS uses Samba, and a field of knowledge — each written with the scheme it is a code of. Written as `0699`, a code ISCED-F 2013 does not have, it is refused; `0612` is one it has.
+  fa:
+    line: NAS از Samba بهره می‌گیرد، و از یک رشته‌ی دانش؛ هر کدام با طرحی نوشته می‌شود که کدش از آن است. با `0699`، کدی که ISCED-F 2013 ندارد، رد می‌شود؛ `0612` در آن هست.
+- id: where
+  mechanism: where
+  en:
+    line: A rack with 42 slots; web-1 takes two of them, at u17. The agent places web-2 at u17 too — two bodies in one room at once — and the gate refuses; web-2 goes to u19.
+  fa:
+    line: قفسه‌ای با ۴۲ جایگاه؛ web-1 دو تا از آن‌ها را می‌گیرد، در u17. عامل web-2 را هم در u17 می‌گذارد (دو جسم هم‌زمان در یک جا) و دروازه رد می‌کند؛ web-2 به u19 می‌رود.
+- id: between
+  mechanism: between
+  en:
+    line: 'Sam shares costs with Ali, who keeps another garden: `123456789abc`. Ali is kept here by name on Ali''s own word, and named as that garden names Ali. Bea, written the same way with no word of Bea''s, is refused.'
+  fa:
+    line: 'سام هزینه‌ها را با علی شریک است، که باغِ دیگری نگه می‌دارد: `123456789abc`. علی به گفته‌ی خودش با نام در این باغ نگه داشته می‌شود، و همان‌گونه نام برده می‌شود که آن باغ او را نام می‌برد. بئا، که به همین شکل و بی هیچ گفته‌ای از خودش نوشته شد، رد می‌شود.'
+- id: when
+  mechanism: when
+  en:
+    line: A dinner at Sam's, on 2026-09-12 at 19:30, and Sam and Ali at it. Written on `2026-02-30` — no day of the Gregorian calendar — the dinner is refused.
+  fa:
+    line: شامی در خانه‌ی سام، در `2026-09-12` ساعت 19:30، و سام و علی در آن. با تاریخِ `2026-02-30`، که روزی از تقویمِ گریگوری نیست، شام رد می‌شود.
+- id: money
+  mechanism: money
+  en:
+    line: Over that dinner Sam and Ali agree to rent a storage unit. Sam pays September's 100.00, and each bears an equal share. Written as `100.005` — more decimal places than the currency has — the payment is refused.
+  fa:
+    line: سرِ همان شام، سام و علی توافق می‌کنند انباری اجاره کنند. سام اجاره‌ی سپتامبر، `100.00`، را می‌پردازد و هر کدام سهمی برابر بر دوش می‌گیرد. با `100.005` نوشته شود (رقم‌های اعشاری بیش از آنچه آن پول دارد)، پرداخت رد می‌شود.
+- id: line
+  mechanism: line
+  en:
+    line: 'On a Saturday, a counter at the front door: how many came in, hour by hour — 3, 1, 4 — and the whole, 8. Written as 9, the whole disagrees with its rows, and is refused.'
+  fa:
+    line: 'در یک شنبه، شمارنده‌ای کنارِ درِ ورودی: چند نفر آمدند، ساعت به ساعت (۳، ۱، ۴) و جمعِ کل، ۸. اگر ۹ نوشته شود، جمعِ کل با سطرهایش نمی‌خواند و رد می‌شود.'
+- id: pages
+  mechanism: pages
+  en:
+    line: 'A page for the family: where the photos go, and the questions it answers. Asked through a lens the law does not have — `glance` — it is refused; `operate` is one it has.'
+  fa:
+    line: 'صفحه‌ای برای خانواده: عکس‌ها کجا می‌روند، و به چه پرسش‌هایی پاسخ می‌دهد. پرسشی از نگاهی که قانون ندارد (`glance`) رد می‌شود؛ `operate` نگاهی است که دارد.'
+- id: saved
+  mechanism: gate
+  kind: saved
+  en:
+    line: The agent saves. One command writes the journal entry, stages and commits, and the entry names every file it wrote. A change committed without its entry — the NAS's summary, made "the family's photos and films" — is refused.
+  fa:
+    line: عامل ذخیره می‌کند. یک فرمان مدخلِ روزنامه را می‌نویسد، آماده می‌کند و کامیت می‌کند، و مدخل همه‌ی پرونده‌هایی را که نوشته نام می‌برد. تغییری که بی مدخلش کامیت شود (چکیده‌ی NAS، که «the family's photos and films» شد) رد می‌شود.
+- id: law
+  kind: vacant
+  items:
+  - rule:ratify
+  - table:layers
+  en:
+    title: The law changes
+    line: 'The garden needs a word the law does not have. The agent may not decide that: it proposes, parks the question, and carries on with the rest. Sam ratifies, and the change is journalled as a RULE-CHANGE.'
+    person: 'The rules are data: what a thing may say, what a status may be, which decisions an agent may take alone and which a person must ratify — all of it a versioned law, not code. Changing a rule is itself a journalled, ratified change.'
+    gardener: You ratify identity, safety flags, any change to the rules, and what another garden proposes. A garden pins a release, so a change in daftar's own law never reaches you until you adopt it.
+    agent: 'A change to the law — the core, a verb''s row, a kind, a namespace, a flow, `VOCAB.md`, `GARDEN.md` — is class G of the Contract of Parts: a person ratifies it, journalled as a RULE-CHANGE. Park it in `log/pending.md` as `status: proposed`, do everything safe around it, and carry on.'
+  fa:
+    title: قانون تغییر می‌کند
+    line: 'باغ به واژه‌ای نیاز دارد که قانون ندارد. این را عامل نمی‌تواند تصمیم بگیرد: پیشنهاد می‌دهد، پرسش را کنار می‌گذارد و باقی کار را ادامه می‌دهد. سام تأیید می‌کند، و تغییر با برچسبِ RULE-CHANGE در روزنامه ثبت می‌شود.'
+    person: 'قاعده‌ها داده‌اند: یک چیز چه می‌تواند بگوید، یک وضعیت چه می‌تواند باشد، کدام تصمیم را عامل به‌تنهایی می‌گیرد و کدام را یک شخص باید تأیید کند؛ همه‌اش قانونی نسخه‌دار است، نه کد. تغییرِ یک قاعده خودش تغییری است که تأیید و در روزنامه ثبت می‌شود.'
+    gardener: شما هویت، نشانه‌های ایمنی، هر تغییری در قاعده‌ها، و آنچه باغی دیگر پیشنهاد می‌کند را تأیید می‌کنید. هر باغ نسخه‌ای را سنجاق می‌کند، پس تغییری در قانونِ خودِ دفتر تا وقتی آن را نپذیرید به شما نمی‌رسد.
+    agent: 'تغییرِ قانون (هسته، ردیفِ یک فعل، یک گونه، یک فضای نام، یک جریان، `VOCAB.md`، `GARDEN.md`) ردهٔ G از «قراردادِ نقش‌ها» است: یک شخص تأییدش می‌کند و با برچسبِ RULE-CHANGE ثبت می‌شود. آن را در `log/pending.md` با `status: proposed` کنار بگذارید، هر کارِ بی‌خطرِ پیرامونش را انجام دهید و ادامه دهید.'
+- id: proposal
+  kind: vacant
+  items:
+  - verb:propose
+  - verb:take
+  - table:flows
+  en:
+    title: A proposal crosses
+    line: 'Sam offers Ali''s garden what they share: one file of beans, laid outside both gardens, under the agreement the two of them made. Ali''s agent shows Ali what it would change; it is taken in only when Ali commits it.'
+    person: 'Two gardens meet the way two networks do: each its own, and neither reaching inside the other. What passes is only ever a proposal; every fact keeps who said it as it crosses, so what you asserted arrives as your assertion.'
+    gardener: Agree with the other person on what you share; your agent writes the proposal. Taking an agreement in records what was offered; their yes to it is theirs, written in their own notebook, in their own words.
+    agent: '`python3 bin/propose.py make`, `read` and `take`. Reading a proposal writes nothing; taking it in writes in the working tree and never commits; the gardener''s commit is the ratification. A proposal is taken once.'
+  fa:
+    title: پیشنهادی از مرز می‌گذرد
+    line: 'سام آنچه را با علی شریک است به باغِ علی پیشنهاد می‌کند: یک پرونده، بیرون از هر دو باغ، زیر توافقی که آن دو با هم کرده‌اند. عاملِ علی به او نشان می‌دهد چه چیزی را تغییر می‌دهد؛ تنها وقتی علی آن را کامیت کند، به باغش درمی‌آید.'
+    person: 'دو باغ همان‌گونه به هم می‌رسند که دو شبکه: هر کدام از آنِ خود، و هیچ‌یک به درونِ دیگری دست نمی‌برد. آنچه می‌گذرد همیشه فقط یک پیشنهاد است؛ هر گزاره هنگامِ گذر گوینده‌اش را با خود نگه می‌دارد، پس آنچه شما گفتید به عنوانِ گفته‌ی شما می‌رسد.'
+    gardener: با آن شخصِ دیگر بر سرِ آنچه شریک هستید توافق کنید؛ عاملتان پیشنهاد را می‌نویسد. پذیرفتنِ یک توافق به باغ، آنچه را پیشنهاد شده ثبت می‌کند؛ «بله»ی او از آنِ خودش است، در دفترِ خودش و با واژه‌های خودش.
+    agent: '`python3 bin/propose.py make`، `read` و `take`. خواندنِ پیشنهاد چیزی نمی‌نویسد؛ پذیرفتنش در درختِ کاری می‌نویسد و هرگز کامیت نمی‌کند؛ کامیتِ باغبان همان تأیید است. هر پیشنهاد یک بار پذیرفته می‌شود.'
+- id: you
+  kind: you
+  en:
+    title: Your garden
+    line: The next moment is not this garden's. You need a coding agent with a shell and git, and a place for a private repository. The notebook is yours.
+  fa:
+    title: باغِ شما
+    line: لحظه‌ی بعد از آنِ این باغ نیست. به یک عاملِ برنامه‌نویس با پوسته و git نیاز دارید، و جایی برای یک مخزنِ خصوصی. دفتر از آنِ شماست.

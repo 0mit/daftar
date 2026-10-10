@@ -5,8 +5,7 @@
 writes it from the release `site/RELEASE` names: the law's meanings and reasons, the catalogue, and the forms and
 refusals of site/garden.yaml, proved in a garden grown from that release. What can be COMPUTED about the page is
 checked here:
-  1. the page parses: a doctype, `html lang`, `meta charset` and `viewport`, a title, one `main`-less board page with
-     every element closed; it carries a content security policy that runs no script and loads no style but the site's
+  1. the page parses: a doctype, `html lang`, `meta charset` and `viewport`, a title, every element closed; it carries a content security policy that runs no script and loads no style but the site's
      own, and holds no style and no script of its own but its data, a JSON block;
   2. every link and source inside the site resolves to a PUBLISHED file (the page, or a file under assets/);
   3. nothing is loaded from outside: no script, stylesheet, image, font or frame by `http(s):` or `//`, in the page or
@@ -22,7 +21,11 @@ checked here:
   8. no file under site/ or .github/ISSUE_TEMPLATE/ names the estate of the garden `$DAFTAR_GARDEN` or
      `git config daftar.garden` names. It calls bin/public.py's own functions rather than `--text`, which cannot see
      a word seed/PUBLIC-ALLOW makes public in one file only. CI has no garden, and this says so;
-  9. `site/RELEASE` names a tag of this repository.
+  9. `site/RELEASE` names a tag of this repository;
+ 10. the page is the blend (site/blend.py): its four movements — a sentence, the ladder, a garden's time, yours — every
+     step of the release's ladder, every word of site/blend.yaml in each language with the same places to fill, the
+     law's `orientations` rows as the release has them, and site/assets/direction.js the release's own widget, byte
+     for byte, so the page's keys and arrows are the view's.
 Whether the page is clear, and true where no tool speaks, is still a reader's work.
 """
 import json, os, re, shutil, subprocess, sys, tempfile
@@ -383,6 +386,45 @@ def release_tag():
           "no such tag here (a shallow clone has none: git fetch --tags)" if release else "site/RELEASE is absent or empty")
 
 
+# ---- 10. the blend: its movements, its ladder, its words, and the direction module the release holds ----------------
+def blend(p, text):
+    release = read(os.path.join(SITE, "RELEASE")).strip()
+    show = lambda path: run("git", "-C", ROOT, "show", f"{release}:{path}")
+    ids = {a.get("id") for t, a in p.tags if a.get("id")}
+    check("the page's four movements are here: a sentence, the ladder, a garden's time, yours",
+          {"sentence", "ladder", "time", "yours"} <= ids, sorted({"sentence", "ladder", "time", "yours"} - ids))
+    core = yaml.safe_load(show("core/law/core.yaml").stdout or "{}")
+    levels = yaml.safe_load(show("core/law/levels.yaml").stdout or "{}").get("levels") or []
+    want = [lv["level"] for lv in (core.get("levels") or []) + levels]
+    lack = [x for x in want if f"lv-{x}" not in ids]
+    check(f"every step of the release's ladder is on the page ({len(want)}), each in its place", want and not lack, lack)
+    words = yaml.safe_load(read(os.path.join(SITE, "blend.yaml")))
+    ui, miss = words.get("ui") or {}, []
+    for k, v in (ui.get("en") or {}).items():
+        f = (ui.get("fa") or {}).get(k)
+        if not str(f or "").strip():
+            miss.append(f"ui.fa.{k}")
+        elif set(PLACE.findall(f)) != set(PLACE.findall(v)):
+            miss.append(f"ui.fa.{k}: its places {sorted(set(PLACE.findall(f)))} are not {sorted(set(PLACE.findall(v)))}")
+    for mo in words.get("moments") or []:
+        for k, v in (mo.get("en") or {}).items():
+            if not str((mo.get("fa") or {}).get(k) or "").strip():
+                miss.append(f"moments.{mo.get('id')}.fa.{k}")
+    check("every word of site/blend.yaml is written in each language, with the same places to fill", not miss, miss)
+    blocks = {a.get("id"): body for a, body in p.data_of.get("script") or [] if a.get("type") == "application/json"}
+    prof = yaml.safe_load(show("core/law/profiles.yaml").stdout or "{}")
+    law = [{k: r[k] for k in ("order", "axis", "sense", "follows", "commands") if k in r} for r in prof.get("orientations") or []]
+    try:
+        got = json.loads(blocks.get("orientations") or "null")
+    except ValueError:
+        got = None
+    check("the page carries the law's `orientations` rows as the release has them", law and got == law, (got, law))
+    widget = show("assets/view/lib/widgets/direction.js").stdout
+    mine = read(os.path.join(SITE, "assets", "direction.js")) if os.path.isfile(os.path.join(SITE, "assets", "direction.js")) else ""
+    check("site/assets/direction.js is the release's own widget, byte for byte: the page's keys and arrows are the view's",
+          widget and mine == widget, "site/board.py copies it from the release; run it again")
+
+
 # =====================================================================================================================
 HAVE_PAGE = os.path.isfile(PAGE)
 check("site/index.html is here: the page site/board.py writes", HAVE_PAGE, "run python3 site/board.py")
@@ -394,6 +436,7 @@ if HAVE_PAGE:
     page_parses(P, TEXT)
     links_and_loads(P)
     every_crossing(P)
+    blend(P, TEXT)
 workflow_publishes()
 issue_forms()
 leak_guard()
