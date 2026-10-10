@@ -251,9 +251,14 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
-- **core 1.1** (proposed rule-change, ratified in the design it implements; the release that carries it dates it) —
-  **what a value is to a reader, and what a stamp, a code and a name are held to.** MINOR: no rule added and none
-  taken away; a value the law refuses now was never one it meant to admit. The values tree (`core/law/values.yaml`):
+- **core 2.0** (2026-10-10, daftar v2.0.0, human-ratified rule-change: the unified-tools design, ratified 2026-10-09,
+  and the operator's word on each part, the pull requests #110–#118 merged on it) — **what a value is to a reader;
+  every peer a judge; the dimensions on the ladder.** MAJOR, by this file's own measure: it refuses what a garden could
+  write before — a kind at a step the ladder no longer has (rock, organ system, biosphere, installation, corpus), and a
+  quantity stated of what cannot bear it (rule `weight` became `bearer`). Every garden known to this repository passes
+  it unchanged. Proposed as core 1.1 while it was MINOR, and named 2.0 when the ladder made it otherwise.
+
+  **What a value is, and what a stamp, a code and a name are held to** (#111). The values tree (`core/law/values.yaml`):
   what each value is to a person who reads, shows or types it, beside how it is written, rooted in the core's shapes,
   checked whole. No bidi control character (Unicode's Bidi_Control) in a code or in a name a namespace gives (Trojan
   Source); free text keeps its own. Eight namespaces — `ror`, `wikidata`, `orcid`, `ifc-guid`, `dicom-uid`, `gs1`,
@@ -267,6 +272,29 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   every commit the ref gains, and never counts one as the garden's. The view asset carries the values tree's widgets
   (`assets/view/lib/widgets/`): each value shown exactly, in each reader's digits, separators and calendar from CLDR,
   none privileged.
+
+  **Every peer a judge** (#110, #113, #115, #116). A journal and a queue merge entry by entry, never by git's line
+  union. A clone fetches each peer into quarantine and judges what it brought by the hub's own rules — the signature,
+  the writer, the rights, the gate — before anything is merged (`hub.py receive`, `bin/sync.py`); a merge is judged for
+  what it changed itself. A mailbox takes another garden's proposal by a key that can do nothing else, delivered until
+  it is acknowledged, its receipts taken (`bin/mailbox.py`); a peer behind NAT dials out, and an always-on peer relays
+  one loopback port to it (`bin/relay.py`).
+
+  **What waits, and actions on the law's own walk** (#112, #114). Leads — a decision, a case at its step, an
+  obligation within its notice, a failure a reading shows, an open session — are read from the garden each time, never
+  configured or stored (`bin/leads.py`). A ratified action runs on daftar's own sequence machinery — a walk, a course,
+  its moves: planned, shown, checked, ratified by a person, applied, verified, refused or rolled back with its reasons
+  (`bin/act.py`). A person signs in by a passkey they hold, which the garden names (namespace `passkey`, #117).
+
+  **The dimensions on the ladder** (#118). Each dimension stands on the step it needs and is held by what it may be
+  stated of: time and length the frame's faces; mass and charge on the force fields; temperature on mass while an
+  ensemble, held by a material; money on reason; information no dimension but a count held by what is carried, the
+  carrier saying what it holds. Space-time is the gravitational field, the one field that is the frame; the force
+  fields and, resting on them, the matter fields lie beneath the dot; each force binds twice (hadron, nucleus; atom,
+  molecule); material is any bound step in number. A step is told by the organization it adds: five that added none
+  are gone. One path, one statement: the law refuses a stand or a bearer another path already gives. 56 kinds, 155
+  units in UCUM with exact factors (twelve with none, each saying why), the toman, the line `potential`, the Earth's
+  GM, a vertical system's surface.
 
 - **core 1.0** (2026-10-02, daftar v1.0.0, human-ratified rule-change) — **the core becomes the language, and
   std-vocab is retired.** Every fact is a statement — a verb and its roles (`by`, `of`, `through`, `to`, `from`, `at`,
