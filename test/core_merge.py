@@ -352,6 +352,16 @@ try:
           and 'bin/merge.py" --file %O %A %B %P' in driver, driver)
     check("`.gitattributes` sends beans and mappings, the journal and the queue to the driver `daftar`",
           attrs.count('merge: daftar') == 4 and 'union' not in attrs, attrs)
+    # THE DRIVER OUTLIVES A SESSION: installed from a worktree (bin/dmupgrade.py installs after an upgrade, in whatever
+    # tree it runs), the shared config names the main tree's bin/merge.py, never the worktree's
+    WT = os.path.join(T, 'g-session')
+    run('git', 'worktree', 'add', '-q', '-b', 'session/x', WT)
+    r = run(PY, os.path.join(WT, 'bin', 'install.py'), cwd=WT)
+    d2 = run('git', 'config', '--get', 'merge.daftar.driver').stdout
+    run('git', 'worktree', 'remove', '--force', WT)
+    run('git', 'branch', '-q', '-D', 'session/x')
+    check("bin/install.py run in a session's worktree names the main tree's merge driver, which outlives the session",
+          r.returncode == 0 and os.path.join(G, 'bin', 'merge.py') in d2 and WT not in d2, (r.out[-300:], d2))
 
     # THE GATE IS THE CORE'S FROM THE FIRST COMMIT, AND A PIN TO TODAY'S WORDS IS REFUSED
     r = run(PY, 'bin/daftar.py', 'check')
