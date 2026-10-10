@@ -19,7 +19,8 @@ registry:foundation_rules	قواعد بنیاد	قاعده (qā'ede, ق-ع-د, t
 foundation_rules:weight	وزن	و-ز-ن (to weigh: میزان, a balance, a measure) — the operator's word; سنگینی (heaviness)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	مراتب اجسام	مرتبه (martabe, ر-ت-ب: a step one stands firm on); پیچیدگی (pichidegi, from پیچیدن, to twist together); مراتب وجود (the philosophers' grades of being), here of bodies alone	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	فضا∞زمان	فضا (fazā: an open expanse); زمان (zamān) — the operator's form, one thing seen from two sides	proposed	agent (claude opus-5.5), by hand
-complexity:field	میدان	میدان (meydān: an open ground, a square); the physicists' word: what fills space∞time, its quanta the particles	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	میدان نیرو	میدان (meydān: an open ground); نیرو (niru: strength) — a field that binds or gives mass, filling room without excluding	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	میدان ماده	میدان (meydān); ماده (mādde, Arabic: the stuff of a thing) — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	ذره‌ی بنیادی	ذره (zarre, Arabic ḏarra: a mote in a sunbeam); بنیاد (bonyād: the foundation); نقطه (noqte: the dot, undivided)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	هادرون	ἁδρός (stout); کوارک (quark)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	هسته	هسته (haste: the stone of a fruit, the kernel)	proposed	agent (claude opus-5.5), by hand

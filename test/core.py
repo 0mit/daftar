@@ -70,8 +70,8 @@ except frame.Refused as e:
     check("a day with no zone to be reckoned in is refused: its place half is the bearer's", 'names none' in str(e), e)
 
 # ------------------------------------------------------------------------------------------------ the law
-check("the law is whole: the face's 21 verbs, the 42 rows and the 19 levels of bodies, 0 problems",
-      not LAW0.problems() and len(LAW0.verbs) == 63 and len(LAW0.levels) == 25, LAW0.problems())
+check("the law is whole: the face's 21 verbs, the 42 rows and the 20 levels of bodies, 0 problems",
+      not LAW0.problems() and len(LAW0.verbs) == 63 and len(LAW0.levels) == 26, LAW0.problems())
 CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
@@ -87,16 +87,18 @@ check(f"units are UCUM's, the law's English name attached: each of the law's {le
       and all(r.get('why') for r in units.values() if r.get('ucum') == 'false'), len(units))
 dims = {d['dimension']: d for d in LAW0.std.tables['dimensions']}
 check("the dimensions stand on the ladder (2026-10-10): the frame's two faces; mass and charge beside each other on "
-      "the field, charge holding for a body and mass by the foundation weight; temperature on mass while an ensemble, "
+      "the force fields, charge holding for a body and mass by the foundation weight; temperature on mass while an ensemble, "
       "held by a material; "
       "money on reason, held by what is carried, a sayable; information no dimension but a count held by a sayable, as "
       "ISO/IEC 80000-13 gives it dimension one; a rock a material, and the celestial body gravitation's first step",
       set(dims) == {'time', 'length', 'mass', 'charge', 'temperature', 'money'}
-      and dims['charge']['stands'] == [{'at': 'field', 'as': 'possible-on'}]
-      and dims['mass']['stands'] == [{'at': 'field', 'as': 'possible-on'}]
+      and dims['charge']['stands'] == [{'at': 'force-field', 'as': 'possible-on'}]
+      and dims['mass']['stands'] == [{'at': 'force-field', 'as': 'possible-on'}]
       and dims['temperature']['holds_for'] == {'level': 'material'}
       and LAW0.levels['material']['stands'] == [{'at': 'elementary-particle', 'as': 'made-of', 'while': 'ensemble'}]
-      and LAW0.levels['elementary-particle']['stands'] == [{'at': 'field', 'as': 'made-of'}] and dims['charge']['holds_for'] == 'body'
+      and LAW0.levels['elementary-particle']['stands'] == [{'at': 'force-field', 'as': 'made-of'}, {'at': 'matter-field', 'as': 'made-of'}]
+      and LAW0.levels['matter-field']['stands'] == [{'at': 'force-field', 'as': 'possible-on'}]
+      and 'gravitational one' in LAW0.levels['space-time']['meaning'] and dims['charge']['holds_for'] == 'body'
       and dims['temperature']['stands'] == [{'at': 'mass', 'as': 'possible-on', 'while': 'ensemble'}]
       and dims['money']['holds_for'] == 'sayable' and 'holds_for' not in dims['mass']
       and LAW0.std.quantities['information'].get('of') == {} and LAW0.std.quantities['information']['holds_for'] == 'sayable'

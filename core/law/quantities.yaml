@@ -20,10 +20,10 @@ dimensions:
     stands: [ { at: space-time, as: possible-on } ]
     meaning: "how far — with time, the two faces of the one frame, space∞time (`complexity` space-time): neither without the other"
   - dimension: mass
-    stands: [ { at: field, as: possible-on } ]
-    meaning: "how much matter-energy: a field's energy at rest (E = mc²) — given an elementary particle by the Higgs field, and most of a hadron's by the energy of its binding. Every body has it: the foundation `weight` says so, and is its bearer. SI fixes the kilogram through h"
+    stands: [ { at: force-field, as: possible-on } ]
+    meaning: "how much matter-energy: a field's energy at rest (E = mc²) — given an elementary particle by the Higgs field, and most of a hadron's by the energy of the gluons' field binding it. Every body has it: the foundation `weight` says so, and is its bearer. SI fixes the kilogram through h"
   - dimension: charge
-    stands: [ { at: field, as: possible-on } ]
+    stands: [ { at: force-field, as: possible-on } ]
     holds_for: body
     meaning: "how much electric charge: how strongly a field couples to light's field, beside mass and standing on neither — conserved, and counted in elementary charges (e, by which SI fixes the ampere). A current is charge through time; a voltage, energy per charge"
   - dimension: temperature

@@ -19,7 +19,8 @@ registry:foundation_rules	leges fundamenti	fundamentum (fundus, the bottom)	prop
 foundation_rules:weight	pondus	pendere (to hang, to weigh)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	ordo corporum	ordo (a row, a rank); gradus (a step); scala naturae (the ladder of nature)	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	spatium∞tempus	spatium (a stretch, an interval); tempus (a section of time)	proposed	agent (claude opus-5.5), by hand
-complexity:field	campus	campus (open land, a plain) — New Latin for the physicists' field	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	campus virium	campus (open land); vis, viris (force) — New Latin for a force field	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	campus materiae	campus; materia (the stuff a thing is made of) — New Latin for a matter field	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	particula elementaris	particula (a little part); elementum (a first principle); minimum (Bruno: the least, without parts) — New Latin	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadronium	ἁδρός (stout) — New Latin	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	nucleus	nux (a nut): the kernel	proposed	agent (claude opus-5.5), by hand

@@ -19,7 +19,8 @@ registry:foundation_rules	θεμελιώδεις νόμοι	θεμέλιον (a 
 foundation_rules:weight	βάρος	βαρύς (heavy)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	ἡ τάξις τῶν σωμάτων	τάξις (an arrangement, a rank in battle, from τάσσω, to array); Aristotle, History of Animals 588b: nature passes little by little from the lifeless to the living	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	χώρα∞χρόνος	χώρα (room: the receptacle of Timaeus 52a); χρόνος (time: 'a moving image of eternity', Timaeus 37d)	proposed	agent (claude opus-5.5), by hand
-complexity:field	πεδίον	πεδίον (a plain, open ground) — the Modern Greek word for the physicists' field, in the ancient form	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	πεδίον δυνάμεως	πεδίον (a plain); δύναμις (power, force) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	πεδίον ὕλης	πεδίον; ὕλη (wood, then Aristotle's matter: what a thing is made of)	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	στοιχειῶδες σωμάτιον	στοιχεῖον (a member of a row; a letter; Plato's and Aristotle's element); σωμάτιον (a little body); τὰ ἐλάχιστα (Epicurus: the least parts, themselves without parts) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	ἁδρόνιον	ἁδρός (thick, strong, full-grown) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	πυρήν	πυρήν (the stone of a fruit; Modern Greek's nucleus)	proposed	agent (claude opus-5.5), by hand

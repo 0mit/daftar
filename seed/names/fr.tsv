@@ -19,7 +19,8 @@ registry:foundation_rules	règles de fondement	fundamentum (fundus, the bottom)	
 foundation_rules:weight	poids	pensum (what is weighed out, from pendere, to hang, to weigh)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	l'ordre des corps	ordre (ordo); Pascal, Pensées (Lafuma 308): bodies, minds and charity — three orders, the third infinitely above the first	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	espace∞temps	spatium (a stretch); tempus	proposed	agent (claude opus-5.5), by hand
-complexity:field	champ	champ (campus: open land); the physicists' word: what fills space, its quanta the particles	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	champ de force	champ (campus); force (fortis) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	champ de matière	champ; matière (materia) — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	particule élémentaire	particule (particula, a little part); élément (elementum)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadron	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	noyau	noyau (the stone of a fruit, from nux)	proposed	agent (claude opus-5.5), by hand

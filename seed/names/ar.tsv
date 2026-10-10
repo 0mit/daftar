@@ -19,7 +19,8 @@ registry:foundation_rules	القواعد	ق-ع-د (to sit: قاعدة, a base an
 foundation_rules:weight	الوزن	و-ز-ن (to weigh); الميزان (the balance)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	مراتب الأجسام	ر-ت-ب (to stand firm in its place: a rank); Ibn Miskawayh: minerals, plants, animals, the highest of each order touching the lowest of the next	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	الزمكان	زمان + مكان: the Arabic word for spacetime joins the two into one	proposed	agent (claude opus-5.5), by hand
-complexity:field	حَقْل	حقل (ḥaql: a sown field); the physicists' word: what fills space∞time, its quanta the particles	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	حَقْل القُوّة	حقل (ḥaql: a sown field); قوّة (quwwa: strength) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	حَقْل المادّة	حقل; مادّة (mādda: the stuff of a thing) — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	جُسَيْم أوَّلي	جُسَيْم (jusaym: a little body, the diminutive of جسم); الجزء الذي لا يتجزّأ (the part that is not divided: the atom of the kalām)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	هادرون	ἁδρός (stout); كوارك (quark)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	النَّواة	ن-و-ي (a date-stone — and, from the same root, نيّة, an intention: the kernel and the intent)	proposed	agent (claude opus-5.5), by hand

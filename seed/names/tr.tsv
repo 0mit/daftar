@@ -19,7 +19,8 @@ registry:foundation_rules	temel kurallar	temel (foundation, from θεμέλιο�
 foundation_rules:weight	ağırlık	ağır (heavy)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	cisimlerin düzeni	düzen (order, from düzmek, to arrange); karmaşıklık (complexity); mertebe (Arabic: a rank one stands on)	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	uzay∞zaman	uzay (space, from uzamak, to stretch out); zaman (time)	proposed	agent (claude opus-5.5), by hand
-complexity:field	alan	alan (an open ground); the physicists' word: what fills space∞time, its quanta the particles	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	kuvvet alanı	kuvvet (Arabic quwwa: strength); alan (open ground) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	madde alanı	madde (Arabic mādda: stuff); alan — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	temel parçacık	temel (a foundation, from Greek θεμέλιον); parçacık (a little piece); nokta (the dot)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadron	ἁδρός (stout); kuark (quark)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	çekirdek	çekirdek (the seed of a fruit, the kernel)	proposed	agent (claude opus-5.5), by hand

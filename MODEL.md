@@ -135,7 +135,7 @@ and the default it derives where it has one.
 - **stand**: the one relation of the order, `stand: { by: cell, at: molecule, as: made-of }`.
 - **part**: `part: { by: wheel, of: car }`. A part never stands above what its whole is made of.
 - **line**: an ordered run of positions. Time is a line, and so is a walk.
-- **level**: a step of a line. The face keeps the two frames, reason and the said's three levels; the bodies' other 19
+- **level**: a step of a line. The face keeps the two frames, reason and the said's three levels; the bodies' other 20
   are rows of our knowledge tree (`core/law/levels.yaml`).
 - **The squares.** A figure is a square of opposition whose four positions are verbs over a statement:
 

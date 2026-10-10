@@ -19,7 +19,8 @@ registry:foundation_rules	regole di fondamento	fundamentum (fundus, the bottom)	
 foundation_rules:weight	peso	pensum (what is weighed out)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	l'ordine dei corpi	ordine (ordo); scala naturae (the ladder of nature)	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	spazio∞tempo	spatium (a stretch); tempus	proposed	agent (claude opus-5.5), by hand
-complexity:field	campo	campo (campus: open land); the physicists' word: what fills space, its quanta the particles	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	campo di forza	campo (campus); forza (fortis) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	campo di materia	campo; materia — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	particella elementare	particella (a little part); elemento	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	adrone	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	nucleo	nucleus (a kernel)	proposed	agent (claude opus-5.5), by hand

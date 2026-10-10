@@ -79,9 +79,9 @@ conditions:
   - { condition: ensemble,   meaning: "many parts sharing energy, near a balance of it (thermal equilibrium, at least locally): what a temperature is possible on. A step held `while: ensemble` is reached only by a being made of it in number, never by the step itself" }
 foundations:
   - { foundation: weight, holds_for: body, property: mass, meaning: "every body has weight; a sayable has none of its own" }
-levels:                                    # the face's own steps; the bodies' other 19 are rows of our knowledge tree
+levels:                                    # the face's own steps; the bodies' other 20 are rows of our knowledge tree
   # THE TWO FRAMES: where a being takes its place, one for each nature, neither prior (thesis 10)
-  - { level: space-time, line: frame, frame_of: body,    stands: [], meaning: "the frame of bodies: one structure, seen as place and as time; a body takes room in it" }
+  - { level: space-time, line: frame, frame_of: body,    stands: [], meaning: "the frame of bodies: one structure, seen as place and as time; a body takes room in it. It is itself a field, the gravitational one — it bends and it waves — and the only field that is the frame: every other takes its where and when from it, it couples to every energy alike, and it can be neither absent, nor screened, nor located" }
   - { level: taxis,      line: frame, frame_of: sayable, stands: [ { at: reason, as: possible-on } ], meaning: "the frame of sayables: the order a sayable takes its place in. Its positions are the ordinal line's — which: the first clause, article 12, a name in its namespace — no time and no place" }
   - { level: reason,     line: reason, stands: [ { at: organism, as: possible-on, while: proportion } ] }
   # THE SAID: the sayable beings, each made of the one below, all taking their place in the taxis

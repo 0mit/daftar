@@ -1072,6 +1072,35 @@ neither path gives the other; and an ecosystem no longer needs its own stand on 
 now give (one path, one statement). A temperature and a concentration are held by a material and what is made of it: a
 star, a gas, a metal have one, a single molecule none.
 
+SPACE∞TIME IS A FIELD, THE ONE THAT IS THE FRAME; THE OTHERS ARE TWO STEPS (2026-10-10). The operator: "gather concepts
+of all known fields and analyze their position on the ladder and check if the time space itself is a field or not, do it
+philosophically and re arrange the ladder". A field is a value at every point of a frame. The question of the frame is
+old: Aristotle's place is a boundary and his world has no void; the Stoics' pneuma runs through every body and holds it
+by its tension; Descartes makes extension matter, a plenum; Newton makes space and time a container, and calls a pull
+across the empty "so great an absurdity" (to Bentley, 1693); Leibniz makes space the order of what coexists and time
+the order of what succeeds. Faraday's lines of force (1846) and Maxwell's field carrying energy (1865) made the field a
+thing; Einstein's general relativity (1915) made the frame's geometry itself a field, the gravitational one, and found
+that its points have no identity apart from the fields (the hole argument): "space-time does not claim existence on its
+own, but only as a structural quality of the field" (1952). It bends, and it waves (heard in 2015). So space∞time is a
+field. But it is the one field that is the frame, which no other is: every other field takes its where and when — its
+light cone, its order — from it; it couples to every energy alike, having no charge of its own (weight, the
+foundation); it can be neither absent (flat is one of its values) nor screened; and its energy cannot be located, for
+there is no saying where the energy of where is. It stays the frame of bodies, holding no being, and its row says what
+it is. The fields in it are of two organizations, each adding what the one below cannot have. The force fields — the
+electromagnetic, the weak, the strong, and the Higgs, whose value everywhere gives mass — bind or give mass, and fill
+room without excluding: their quanta, bosons, share a state without number, so light crosses light and a field can be
+smooth and classical. The matter fields — six quarks', six leptons' — take room and exclude: no two of their quanta
+share one state (Pauli), which is why matter stands apart, is solid and keeps its size (Dyson and Lenard, 1967); their
+charges are their couplings to the force fields and their mass the Higgs's, so they rest on those, as those do not on
+them. A particle is a quantum of either, so the dot is made of both. Mass and charge stand on the force fields, which
+give the one and are coupled to by the other. Fields not yet known take these places when they are: an inflaton or an
+axion is a force field's kind, a dark matter that takes room a matter field's, a dark energy that is the vacuum's a
+quantity of the frame, and a graviton, if the frame is quantized, the frame's own quantum. What else is called a field
+is no step: a temperature, pressure or velocity field, a phonon or a magnetisation, is a quantity of a material varying
+with place; an embryo's morphogenetic field is its tissues' signalling; a field of vision is an organism's; Trier's
+semantic field and Bourdieu's field are orders of sayables and of persons, reason's; an algebraic field is a structure,
+said.
+
 ## core/law/core.yaml: lines
 
 (std-vocab 32: `lines`)

@@ -19,7 +19,8 @@ registry:foundation_rules	Grundgesetze	Grund (ground) + Gesetz (law); Hartmann's
 foundation_rules:weight	Gewicht	wiegen (to weigh)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	die Ordnung der Körper	Ordnung (order); Schichtenbau (Nicolai Hartmann: the strata of the real world, each higher one resting on the lower, carried by it and free above it)	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	Raum∞Zeit	Raum (room); Zeit; Heidegger's Zeit-Raum, time-space, the open in which beings come to presence	proposed	agent (claude opus-5.5), by hand
-complexity:field	Feld	Feld (open land); Faraday's and Maxwell's field: what fills space, its quanta the particles	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	Kraftfeld	Kraft (strength); Feld (open land) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	Materiefeld	Materie (materia); Feld — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	Elementarteilchen	Element (elementum); Teilchen (a little part, from Teil)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	Hadron	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	Atomkern	Kern (a kernel, a grain)	proposed	agent (claude opus-5.5), by hand
