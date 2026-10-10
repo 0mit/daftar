@@ -4843,7 +4843,7 @@ among others.
 
 ## core/law/values.yaml: values
 
-(core 1.1)
+(core 2.0)
 
 WHAT A VALUE IS TO A READER, BESIDE HOW IT IS WRITTEN. `lines.yaml` `types` says how a value is written in a bean; it
 never said what a value is to the person who reads it, shows it or types it in, and so every page invented its own
@@ -4856,7 +4856,7 @@ kind of itself.
 
 ## core/law/lines.yaml: types[coding]
 
-(core 1.1: `holds_no`)
+(core 2.0: `holds_no`)
 
 A CODE NEVER HOLDS A CHARACTER THAT REORDERS WHAT IS SHOWN AROUND IT. Text refused control characters (`Cc`), but the
 bidi formatting characters are `Cf`, and the code's pattern (`\S+`) admitted U+202E RIGHT-TO-LEFT OVERRIDE, the tool
@@ -4866,7 +4866,7 @@ Free text keeps such characters as written, isolated where it is shown, since a 
 
 ## core/law/namespaces.yaml: namespace_shape
 
-(core 1.1)
+(core 2.0)
 
 A NAME'S FORM IS CHECKED BY A VALIDATOR THAT ALREADY CHECKS IT COMPLETELY, NEVER BY A SECOND COPY. A pattern holds a
 name to its shape; a check digit needs arithmetic, and the arithmetic of ISO/IEC 7064, GS1 and the Turkish identity
@@ -4878,7 +4878,7 @@ person's (MODEL.md, ground rule 7), and a gate can know one by its namespace, so
 
 ## core/law/namespaces.yaml: namespaces[ror]
 
-(core 1.1)
+(core 2.0)
 
 Eight namespaces come together (ror, wikidata, orcid, ifc-guid, dicom-uid, gs1, tr-tckn, ir-national-code): the names
 an organisation, a researcher, a building's object, an image, a traded thing and a citizen are given by those who
@@ -4888,7 +4888,7 @@ split and merge).
 
 ## core/law/flows.yaml: flows[refusal-detail-served]
 
-(core 1.1)
+(core 2.0)
 
 A REFUSAL'S DETAIL STAYS WITH THE MACHINE THAT HOLDS IT, AND IS SERVED, NEVER SENT. A tool's log keeps why it refused
 (the history layer); the person who needs it may sit at another machine. The row grants the detail to a remote viewer
@@ -4898,7 +4898,7 @@ row held.
 
 ## core/law/flows.yaml: methods[stamp]
 
-(core 1.1)
+(core 2.0)
 
 ONLY A DISCIPLINED CLOCK WRITES `now`. The save writes the clock's reading where `now` stood, and a typed moment is
 refused, so a wrong clock writes false moments into every bean it saves: a machine found six weeks off would have
@@ -4909,7 +4909,7 @@ same on every machine, and a clock is a property of one.
 
 ## core/law/registries.yaml: fetch_shape
 
-(core 1.1: and `knowledge_scheme_form.fetch`, `holding: fetched`)
+(core 2.0: and `knowledge_scheme_form.fetch`, `holding: fetched`)
 
 DAFTAR SHIPS NO ONE ELSE'S TABLE WHERE ITS TERMS DO NOT LET IT. A scheme held `fetched` is downloaded by each machine
 from its provider, under the provider's terms, kept unchanged outside git under its SHA-256, and read by a named reader
@@ -4919,14 +4919,14 @@ whose provider publishes no machine-readable table (ISCED-F 2013, a PDF) stays s
 
 ## core/law/tools.yaml: tools[clock]
 
-(core 1.1)
+(core 2.0)
 
 `bin/clock.py` says what each of a machine's time sources shows of its clock, and whether it may stamp: the one place
 the save asks, so a person asks the same question the save does.
 
 ## core/law/tools.yaml: tools[fetch]
 
-(core 1.1)
+(core 2.0)
 
 `bin/fetch.py` brings a fetched scheme's table from its provider, or from a copy at hand, into this machine's cache,
 and prints the line the save's entry carries.

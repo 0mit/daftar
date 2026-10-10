@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The four standing cases (core 1.1's acceptance): a routine consultation, an open-heart surgery, an Arduino blinker
+"""The four standing cases (core 2.0's acceptance): a routine consultation, an open-heart surgery, an Arduino blinker
 and a production line with accounts — each a garden of its own grown from this tree, written in statements, saved
 through its gate, and each refusing what it must.
 
