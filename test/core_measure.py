@@ -288,6 +288,11 @@ try:
     r = run(PY, 'bin/stale.py', '--days', '4000')
     check("stale: a clause that repeats is warned about before its next occurrence, read from its form",
           'lease' in r.out and 'rent' in r.out, r.out[-1200:])
+    r = run(PY, '-c', 'import sys; sys.path.insert(0, "bin"); import stale; '
+            'rec = {"of": "time", "in": "gregorian-civil", "each": "month", "at": "15", "times": "6"}; '
+            'print(len([n for n, _ in zip(stale.occurrences(stale.day_of("2026-10-15"), rec), range(12))]))')
+    check("stale: `times` as the core reads it, as text, is counted — the lease's rent falls due six times, not on",
+          r.returncode == 0 and r.out.strip() == '6', r.out[-600:])
     r = run(PY, 'bin/where.py', 'apiary:EAST-1')
     check("where: a position in the garden's own system (`systems`), its cell from the garden's file",
           r.returncode == 0 and 'orchard' in r.out, r.out[-800:])

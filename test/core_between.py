@@ -373,6 +373,38 @@ A reading.
     check("propose: a second proposal FUSES with the bean the first brought: only what is new to it is added, and saved",
           r.returncode == 0 and 'FUSES WITH notes, 2 statement(s) new to it' in r.out and r2.returncode == 0
           and nb.count('id: appendix') == 1 and nb.count('id: chapter') == 1 and 'taken-2' in nb, r.out[-900:] + r2.out[-900:])
+    # a round trip: ben's copy, with a margin of ben's own, goes back to the garden it came from. What came from there
+    # comes home as nothing — ben's two takes of ada's word, and the acts that knew only them — ada's own acts are ada's
+    # again, and the margin is taken, known in ben's garden
+    add(B, 'notes', 'part: { id: margin, by: self, of: pact }', 'ben')
+    save(B, 'ben', 'a margin', '- action: [[notes]] gets a margin')
+    r = run(PY, 'bin/propose.py', 'make', '--to', 'garden-a', '--under', 'pact', 'notes', '--out', T, cwd=B)
+    back = re.search(r'proposal \S+: (\S+)', r.out)
+    back = back.group(1) if back else ''
+    run('git', 'add', '-A', cwd=B)
+    save(B, 'ben', 'proposed the notes back', '- action: proposed [[notes]] to [[garden-a]]')
+    r = run(PY, 'bin/propose.py', 'take', back, cwd=A)
+    entry = '\n'.join(ln[4:] for ln in r.out.split('with the entry:\n', 1)[-1].split('\n') if ln.startswith('    '))
+    r2 = run(PY, 'bin/save.py', 'ada', 'took the notes back', cwd=A, stdin=entry + '\n')
+    na = text(os.path.join(A, 'beans', 'notes.md'))
+    check("propose: a bean goes back to the garden it came from — the takes of that garden's own word come home as "
+          "nothing, its own acts are its own again, and what is new is taken and saved",
+          r.returncode == 0 and r2.returncode == 0 and 'FUSES WITH notes' in r.out and na.count('id: margin') == 1
+          and 'from: garden-a' not in na and '\x00' not in na and na.count('take: {') == 1
+          and re.search(r"take: \{ ?id: taken-1, by: ada, of: self, from: garden-b", na), r.out[-1500:] + r2.out[-900:])
+    # an act that would know nothing new is left out: a blanket `read` beside an act that names the one new statement
+    dmsafe.add_statements(os.path.join(A, 'beans', 'notes.md'), '- part: { id: errata, by: self, of: pact }\n'
+                          '- say: { by: ada, of: [errata], at: now }\n- read: { by: ada, at: now }\n')
+    r = save(A, 'ada', 'errata, the notes read through', '- action: [[notes]] gets errata; ada read it through')
+    r1 = run(PY, 'bin/propose.py', 'make', '--to', 'garden-b', '--under', 'pact', 'notes', '--out', T, cwd=A)
+    prop5 = re.search(r'proposal \S+: (\S+)', r1.out)
+    prop5 = prop5.group(1) if prop5 else ''
+    run('git', 'add', '-A', cwd=A)
+    save(A, 'ada', 'proposed the errata', '- action: proposed [[notes]] to [[garden-b]]')
+    r2 = run(PY, 'bin/propose.py', 'read', prop5, cwd=B)
+    check("propose: an act that would know nothing new is left out, rather than taken naming nothing (`of: []`)",
+          r.returncode == 0 and r2.returncode == 0 and 'FUSES WITH notes, 2 statement(s) new to it' in r2.out,
+          r.out[-900:] + r1.out[-600:] + r2.out[-1500:])
     # first contact: a garden that has not met the one proposing refuses, and says what to record
     C = os.path.join(T, 'garden-c')
     run(PY, os.path.join(REL, 'seed', 'germinate.py'), C, '--gardener', 'cem', '--gardener-name', 'Cem', cwd=T)
