@@ -4,6 +4,10 @@ on:
     branches: [master]
   pull_request:
   workflow_dispatch:      # the whole list of suites; a push or a pull request runs the brief set
+# A RUNNER'S CLOCK MAY BE UNSYNCHRONISED (core 2.0's stamp rule refuses a save it cannot stamp within 30 s):
+# the gate asks these time servers instead, as a machine without a time daemon is told to.
+env:
+  DAFTAR_TIME_SOURCES: time.cloudflare.com,pool.ntp.org
 permissions:
   contents: read
 jobs:
