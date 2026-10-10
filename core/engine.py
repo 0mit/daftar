@@ -624,19 +624,66 @@ class Judge:
             f"`{p}`: `{rest}` is no `as` of `{head}`" + (f" ({self.L.has(as_['table'], rest)})" if as_.get('table') else
                                                      f" — `{head}` takes no `as` from a table, so it is named whole")
 
-    def weight(self):
-        for f in self.L.foundations:
-            prop, holds = f.get('property'), f.get('holds_for')
-            if not prop:
-                continue
-            for b in self.G.beans.values():
-                for i, verb, r in b.items:
-                    if r.get('as') == prop and 'of' in r:
-                        nat = self.nature(self.kind_of(r['of'], b))
-                        if nat and nat != holds:
-                            self.err('weight', f"{b.id}[{i}] {verb}", f"{f.get('foundation')} holds for a {holds}: a "
-                                                                      f"{prop} is a {holds}'s, and {self.norm(r['of'], b)} "
-                                                                      f"is {nat}")
+    def holds(self, rule, kind):
+        """Why a being of `kind` cannot bear what `rule` (a `holds_for`) names — '' when it can, or when its kind says too
+        little to tell. A nature is matched as written; a level is reached through `made-of` alone (what a being is made
+        of carries its categories up; what it is possible on does not), and `while: ensemble` only by a being made of
+        that level in number, never by the level itself."""
+        nat = self.nature(kind)
+        if rule is None or nat is None:
+            return ''
+        if isinstance(rule, str):
+            return '' if nat == rule else f"it holds for a {rule}, and a {kind} is a {nat}"
+        if not isinstance(rule, dict) or not rule.get('level'):
+            return ''
+        if nat != 'body':
+            return f"it holds for a body made of {rule['level']}, and a {kind} is a {nat}"
+        level = (self.L.kinds.get(kind) or {}).get('level')
+        if not level:
+            return ''
+        made = self.L.below(level, ways=('made-of',))
+        if rule.get('while') == 'ensemble':
+            return '' if rule['level'] in made else \
+                f"it holds for what is made of {rule['level']} in number, and a {kind} ({level}) is not"
+        return '' if level == rule['level'] or rule['level'] in made else \
+            f"it holds for {rule['level']} and what is made of it, and a {kind} ({level}) is neither"
+
+    def bearer(self):
+        """Rule bearer: a quantity stated of a being is one its dimensions and its kind hold for. The kind is the one the
+        statement names (`as`, a quantity of the law) or the one its value's unit is of; the foundations (`weight`) are
+        read as they always were."""
+        q = self.L.std.quantities if self.L.std else {}
+        dims = {str(d.get('dimension')): d for d in (self.L.std.tables.get('dimensions') or []) if isinstance(d, dict)} \
+            if self.L.std else {}
+        for b in self.G.beans.values():
+            for i, verb, r in b.items:
+                if 'of' not in r or isinstance(r.get('of'), (list, dict)) and not isinstance(r.get('of'), dict):
+                    continue
+                kind = self.kind_of(r['of'], b)
+                if kind is None:
+                    continue
+                rules = []                                  # (what holds, why it is asked)
+                for f in self.L.foundations:
+                    if f.get('property') and r.get('as') == f['property']:
+                        rules.append((f.get('holds_for'), f"{f['property']} (the foundation {f.get('foundation')})"))
+                as_role = ((self.L.verbs.get(verb) or {}).get('roles') or {}).get('as') or {}
+                qname = r.get('as') if isinstance(r.get('as'), str) and r['as'] in q \
+                    and as_role.get('table') == 'properties' else None
+                if qname is None and isinstance(r.get('value'), dict) and r['value'].get('unit'):
+                    u = str(r['value']['unit'])
+                    qname = (self.L.units.get(u) or {}).get('quantity') or ('money' if self.L.std and u in self.L.std.currencies else None)
+                if qname in q:
+                    row = q[qname]
+                    rules.append((row.get('holds_for'), qname))
+                    for d, power in (row.get('of') or {}).items():
+                        if str(power) not in ('0', '') and str(d) in dims:
+                            rules.append((dims[str(d)].get('holds_for'), qname if d == qname else f"{qname} (made of {d})"))
+                seen = set()
+                for rule, what in rules:
+                    why = self.holds(rule, kind)
+                    if why and why not in seen:
+                        seen.add(why)
+                        self.err('bearer', f"{b.id}[{i}] {verb}", f"{what} is stated of {self.norm(r['of'], b)}: {why}")
 
     def names(self):
         given = {}
@@ -1116,7 +1163,7 @@ class Judge:
         self.necessity_and_squares()
         self.responses()
         self.covers()
-        self.weight()
+        self.bearer()
         self.names()
         self.layers()
         self.text_and_gardener()

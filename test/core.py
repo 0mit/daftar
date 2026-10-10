@@ -78,10 +78,30 @@ check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namesp
       f"flows)", not LAW.problems(), LAW.problems())
 units = LAW0.units
 check(f"units are UCUM's, the law's English name attached: each of the law's {len(units)} units is a row "
-      f"(kg is kilogram, GiBy gibibyte, {{item}} item), and the two attenuations UCUM cannot write (§22) say why",
-      len(units) == 55 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
-      and units['{item}']['name'] == 'item' and [u for u, r in units.items() if r.get('ucum') == 'false']
-      == ['decibel-per-metre', 'decibel-per-kilometre'], len(units))
+      f"(kg is kilogram, GiBy gibibyte, {{item}} item, Ohm ohm), and those UCUM cannot write say why — the two "
+      f"attenuations (§22), the radio's dBm, the phon and the toman",
+      len(units) == 198 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
+      and units['{item}']['name'] == 'item' and units['Ohm']['name'] == 'ohm'
+      and [u for u, r in units.items() if r.get('ucum') == 'false']
+      == ['decibel-per-metre', 'decibel-per-kilometre', 'dBm', 'phon', 'IRT']
+      and all(r.get('why') for r in units.values() if r.get('ucum') == 'false'), len(units))
+dims = {d['dimension']: d for d in LAW0.std.tables['dimensions']}
+check("the dimensions stand on the ladder (2026-10-10): the frame's two faces; mass and charge beside each other on "
+      "space-time, each holding for a body; temperature on mass while an ensemble; information on temperature; money "
+      "on reason, holding for a sayable",
+      set(dims) == {'time', 'length', 'mass', 'charge', 'temperature', 'information', 'money'}
+      and dims['charge']['stands'] == [{'at': 'space-time', 'as': 'possible-on'}] and dims['charge']['holds_for'] == 'body'
+      and dims['temperature']['stands'] == [{'at': 'mass', 'as': 'possible-on', 'while': 'ensemble'}]
+      and dims['information']['stands'][0]['at'] == 'temperature' and dims['money']['holds_for'] == 'sayable'
+      and 'ensemble' in LAW0.conditions, dims)
+bad_dims = Law.load(('VOCAB.md', {}))
+kept = bad_dims.std.tables['dimensions']             # the standards are read once per process: put them back after
+bad_dims.std.tables['dimensions'] = [dict(d, stands=[{'at': 'information', 'as': 'possible-on'}])
+                                     if d['dimension'] == 'mass' else d for d in kept]
+probs = [m for _r, _w, m in bad_dims.problems() if 'never a circle' in m]
+bad_dims.std.tables['dimensions'] = kept
+check("...and a dimension that stands on itself through those beneath it is refused: the ladder is never a circle",
+      probs, bad_dims.problems())
 ns = LAW0.namespaces
 again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true'}]})).problems()
 check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "

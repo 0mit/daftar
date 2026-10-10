@@ -87,7 +87,11 @@ def count_why(text):
 def power(L, unit, dimension):
     """How many times `unit` meters `dimension` — 1 for a length, 2 for an area — or None where its quantity is of
     another dimension too, or of none."""
-    q = L.std.quantities.get(str((unit_row(L, unit) or {}).get('quantity')))
+    qname = str((unit_row(L, unit) or {}).get('quantity'))
+    if dimension in L.std.quantities and dimension not in {str(d.get('dimension')) for d in
+                                                           L.std.tables.get('dimensions') or [] if isinstance(d, dict)}:
+        return 1 if qname == dimension else None        # a line metered by a kind (`potential`: a voltage), once
+    q = L.std.quantities.get(qname)
     of = (q or {}).get('of') if isinstance((q or {}).get('of'), dict) else {}
     if set(of) != {dimension}:
         return None

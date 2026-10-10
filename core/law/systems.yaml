@@ -612,6 +612,16 @@ systems:
     example: "K:309.55"
     establishes: "false"
     why: "a temperature says how hot, never what"
+  - system: volt-scale
+    dimension: potential
+    neighbours: metered
+    restrictions: { lines: 1, metered: potential-difference }
+    meaning: "a potential in volts against a named ground: the bean of the net that is its zero, after `@`"
+    pattern: "^V:-?\\d+(\\.\\d+)?@[a-z0-9][a-z0-9-]*$"
+    form_note: "`V:<volts>@<ground>`"
+    example: "V:5@gnd"
+    establishes: "false"
+    why: "a potential says how high against its ground, never what the node is"
   - system: celsius-scale
     dimension: temperature
     same_ground_as: [kelvin-scale]

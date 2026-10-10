@@ -56,7 +56,7 @@ ROW_FIELDS = {
     'standing': {'layer', 'holds', 'meaning'},
     'verbs': {'verb', 'meaning', 'roles', 'qualifiers', 'required', 'choice', 'default', 'replaces', 'home', 'figure',
               'vacant'},
-    'units': {'unit', 'name', 'quantity', 'factor', 'ucum', 'why', 'vacant'},
+    'units': {'unit', 'name', 'quantity', 'factor', 'per', 'ucum', 'why', 'vacant'},
     'systems': {'system', 'dimension', 'pattern', 'form_note', 'example', 'levels', 'restrictions', 'neighbours',
                 'complement', 'calendar', 'reckoning', 'day_begins', 'datum', 'boundaries_in', 'cells_in', 'checked_by',
                 'crosswalk', 'establishes', 'resolves_through', 'same_ground_as', 'transport', 'unit_symbols', 'within',
@@ -622,7 +622,7 @@ class Law:
                     pass                                        # a pattern that does not compile is refused where it is read
         if len(self.roles) != 7:
             bad('core.yaml roles', f"the core has seven roles, and this law {len(self.roles)}")
-        known_rules = ['form', 'valency', 'knowing', 'placeholder', 'order', 'life', 'necessity', 'squares', 'weight',
+        known_rules = ['form', 'valency', 'knowing', 'placeholder', 'order', 'life', 'necessity', 'squares', 'bearer',
                        'frame', 'names', 'layers', 'ratify', 'consent', 'harm', 'room', 'vacancy', 'kept', 'line', 'measured',
                        'profile']
         for x in self.exclusive:
@@ -743,11 +743,47 @@ class Law:
             for h in listed(s.get('holds')):
                 if not isinstance(h, str) or not h:
                     bad(f"standing {i}", f"{h!r}: a pattern of a path")
+        # where each dimension and kind stands, and what it holds for (2026-10-10)
+        dim_rows = {str(d.get('dimension')): d for d in (self.std.tables.get('dimensions') or []) if isinstance(d, dict)} \
+            if self.std else {}
+
+        def holds_ok(h):
+            if h is None or (isinstance(h, str) and h in self.natures):
+                return True
+            return isinstance(h, dict) and h.get('level') in self.levels and set(h) <= {'level', 'while'} \
+                and (h.get('while') is None or h.get('while') in self.conditions)
+        for kind_of_row, rows in (('dimension', dim_rows), ('quantity', self.std.quantities if self.std else {})):
+            for name, row in rows.items():
+                for s in listed(row.get('stands')):
+                    if not isinstance(s, dict) or (s.get('at') not in self.levels and s.get('at') not in dim_rows) \
+                            or s.get('as') not in self.tables['ways'] \
+                            or (s.get('while') is not None and s.get('while') not in self.conditions):
+                        bad(f"{kind_of_row} {name}", f"stands on {s!r}: a level or a dimension that exists, by a way of "
+                                                     f"`ways`, while a condition")
+                if not holds_ok(row.get('holds_for')):
+                    bad(f"{kind_of_row} {name}", f"holds for {row.get('holds_for')!r}: a nature, or {{ level, while? }}")
+                if kind_of_row == 'quantity':
+                    for d in (row.get('of') or {}):
+                        if str(d) not in dim_rows:
+                            bad(f"quantity {name}", f"is of {d!r}, which is no dimension of the law")
+        for name in dim_rows:                               # the dimensions stand on one another without a circle
+            seen, todo = set(), [name]
+            while todo:
+                for s in listed(dim_rows.get(todo.pop(), {}).get('stands')):
+                    at = s.get('at') if isinstance(s, dict) else None
+                    if at in dim_rows and at not in seen:
+                        seen.add(at)
+                        todo.append(at)
+            if name in seen:
+                bad(f"dimension {name}", "stands on itself through the dimensions beneath it: never a circle")
         names = {}
         for u, row in self.units.items():
             names.setdefault(row.get('name'), []).append(u)
             if row.get('quantity') not in self.std.quantities:
                 bad(f"unit {u}", f"its quantity {row.get('quantity')!r} is no quantity of the law")
+            if row.get('per') is not None and (not self.std or row['per'] not in self.std.currencies
+                                               or row.get('quantity') != 'money' or not row.get('factor')):
+                bad(f"unit {u}", "`per` names the currency a unit of money is counted against, with its factor")
             if row.get('ucum') not in (None, 'false') or (row.get('ucum') == 'false' and not row.get('why')):
                 bad(f"unit {u}", "a code UCUM does not write says so, `ucum: false`, and why")
         for n, us in names.items():

@@ -260,6 +260,17 @@ try:
           r.out + r2.out)
     r = run(PY, 'bin/units.py', '1', 'h', 'kg')
     check("units: an hour is no mass, refused", r.returncode == 1 and 'nothing converts' in r.out, r.out)
+    r = run(PY, 'bin/units.py', '120', 'mm[Hg]', 'cm[H2O]')
+    r2 = run(PY, 'bin/units.py', '1', '[psi]', 'kPa')
+    r3 = run(PY, 'bin/units.py', '25000', 'IRT', 'IRR')
+    check("units: the ladder's units convert exactly — a column of mercury into one of water, a psi into kilopascals, "
+          "the toman into the rials it is counted in",
+          r.out.startswith('163.1412 cm[H2O]') and r2.out.startswith('8896443230521/1290320000000 kPa')
+          and r3.out.startswith('250000 IRR'), r.out + r2.out + r3.out)
+    r = run(PY, 'bin/units.py', '1', 'rad', 'deg')
+    r2 = run(PY, 'bin/units.py', '1', 'IRT', 'USD')
+    check("units: a radian meets a degree only through π, and the toman another currency only through an observed rate",
+          r.returncode == 1 and 'no factor' in r.out and r2.returncode == 1 and 'rate' in r2.out, r.out + r2.out)
     r = run(PY, 'bin/cal.py', '2026-09-20', 'persian')
     check("cal: 2026-09-20 is persian:1405-06-29", r.returncode == 0 and '1405-06-29' in r.out, r.out)
     r = run(PY, 'bin/geo.py', 'EPSG:4326;35.6892,51.3890', 'EPSG:4326;41.0082,28.9784')

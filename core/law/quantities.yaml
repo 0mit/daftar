@@ -2,16 +2,39 @@
 # a maker states (GUM). Their units are core/law/units.yaml's, in UCUM; currencies are ISO 4217's.
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 dimensions:
+  # WHERE EACH STANDS AND WHAT IT HOLDS FOR: a dimension `stands` on the ladder as a level does — `possible-on`
+  # the step it needs in order to be at all, the way of `ways`, `while` a condition — and `holds_for` says what may bear
+  # it: a nature, or a level the bearer is or is made of. What a being is made of carries its categories up (Hartmann's
+  # Überformung: a person's body still has mass and still falls); what a step is possible on does not (his Überbauung:
+  # reason rests on an organism, and a sayable has no mass), so `holds_for` follows `made-of` alone (rule `bearer`).
   - dimension: time
     face: time
-    meaning: "how long — with length, the two faces of the one frame, space∞time (`complexity` space-time): neither without the other"
+    stands: [ { at: space-time, as: possible-on } ]
+    meaning: "how long — with length, the two faces of the one frame, space∞time (`complexity` space-time): neither without the other. SI fixes the second by the caesium frequency, and the metre from it through c: one frame"
   - dimension: length
     face: place
+    stands: [ { at: space-time, as: possible-on } ]
     meaning: "how far — with time, the two faces of the one frame, space∞time (`complexity` space-time): neither without the other"
-  - { dimension: mass, meaning: "how much matter" }
-  - { dimension: information, meaning: "how much can be stored or carried" }
-  - { dimension: money, meaning: "how much value, in a currency" }
-  - { dimension: temperature, meaning: "how hot: thermodynamic temperature, an SI base quantity" }
+  - dimension: mass
+    stands: [ { at: space-time, as: possible-on } ]
+    holds_for: body
+    meaning: "how much matter-energy: rest energy (E = mc²). It begins with the body's dot, the elementary particle, and holds for every body made of it (`foundations: weight`). SI fixes the kilogram through h"
+  - dimension: charge
+    stands: [ { at: space-time, as: possible-on } ]
+    holds_for: body
+    meaning: "how much electric charge: the particle's other intrinsic property, beside mass and standing on neither — conserved, and counted in elementary charges (e, by which SI fixes the ampere). A current is charge through time; a voltage, energy per charge"
+  - dimension: temperature
+    stands: [ { at: mass, as: possible-on, while: ensemble } ]
+    holds_for: { level: molecule, while: ensemble }
+    meaning: "how hot: energy shared over the many degrees of freedom of an ensemble (SI fixes the kelvin through k). No particle and no single molecule has one; a material, a cell, an organism and a machine do, being made of molecules in number"
+  - dimension: information
+    stands: [ { at: temperature, as: possible-on } ]
+    holds_for: { level: molecule, while: ensemble }
+    meaning: "how much can be stored or carried: the distinguishable states of a carrier, which stands at a temperature — erasing one bit costs at least kT ln 2 (Landauer). What it means is reason's, and no quantity"
+  - dimension: money
+    stands: [ { at: reason, as: possible-on } ]
+    holds_for: sayable
+    meaning: "how much value, in a currency: what persons agree, on the said line. Two currencies meet only through a rate someone observed; a body has no money of its own, an agreement about it does"
 quantities:
   - { quantity: duration, of: { time: 1 } }
   - { quantity: frequency, of: { time: "-1" } }
@@ -47,6 +70,209 @@ quantities:
     units_from: { registry: currencies, take: code, digits: digits }
     crosswalk: observed
     meaning: "an amount in one currency. Each currency is a unit, and no factor joins two of them: two currencies meet only through a rate someone observed at a moment, from a source — a reading, recorded with its provenance, never a law. So every amount stays in the currency it was paid or owed in, and whatever is computed from amounts — a share, a sum, a balance, a conversion at an observed rate — is computed in fractions and read, never stored."
+  # THE KINDS BEYOND THE FIRST ONES: each `of` in the dimensions; one that stands above its dimensions says
+  # where (`stands`) and what it holds for (`holds_for`); one written in another's units says whose (`units_of`)
+  - quantity: rotational-speed
+    of: { time: "-1" }
+    meaning: "how fast a thing turns: turns counted per time — a frequency's exponents, its own kind (a disk's 7200 rpm is no signal's frequency)"
+  - quantity: solid-angle
+    of: {}
+    meaning: "an angle in space: an area on a sphere over its radius squared, dimensionless and its own kind, as `plane-angle` is"
+  - quantity: angular-speed
+    of: { time: "-1" }
+    meaning: "how fast an angle changes: a plane angle per time, its own kind"
+  - quantity: linear-density
+    of: { mass: 1, length: "-1" }
+    meaning: "mass per length: a cable's, a bar's"
+  - quantity: surface-density
+    of: { mass: 1, length: "-2" }
+    meaning: "mass per area: a slab's, a sheet's"
+  - quantity: mass-flow
+    of: { mass: 1, time: "-1" }
+    meaning: "mass through time: what a line carries, a pipe delivers"
+  - quantity: momentum
+    of: { mass: 1, length: 1, time: "-1" }
+    meaning: "mass in motion: mass times speed"
+  - quantity: force
+    of: { mass: 1, length: 1, time: "-2" }
+    meaning: "what changes a body's motion: mass times acceleration"
+  - quantity: energy
+    of: { mass: 1, length: 2, time: "-2" }
+    meaning: "what a body has or gives to do work, heat or light: one quantity, whatever its form"
+  - quantity: torque
+    of: { mass: 1, length: 2, time: "-2" }
+    meaning: "a force's turning about an axis: an energy's exponents, its own kind, never written in joules"
+  - quantity: power
+    of: { mass: 1, length: 2, time: "-3" }
+    meaning: "energy through time"
+  - quantity: moment-of-inertia
+    of: { mass: 1, length: 2 }
+    meaning: "how a body's mass resists turning about an axis"
+  - quantity: linear-stiffness
+    of: { mass: 1, time: "-2" }
+    meaning: "force per displacement: a spring's, a support's"
+  - quantity: absorbed-dose
+    of: { length: 2, time: "-2" }
+    holds_for: body
+    meaning: "energy given to matter per its mass, by radiation: its own kind"
+  - quantity: weight
+    of: { mass: 1, length: 1, time: "-2" }
+    holds_for: body
+    units_of: force
+    meaning: "the pull of gravitation on a body: a force, its own kind (`foundations: weight`). A scale reads a weight and states a mass through the local g, its uncertainty carrying g's"
+  - quantity: gravitational-acceleration
+    of: { length: 1, time: "-2" }
+    holds_for: body
+    units_of: acceleration
+    meaning: "the field's strength where a body is: an acceleration, its own kind — needing only the frame's dimensions, as gravitation is the frame's own geometry"
+  - quantity: gravitational-potential
+    of: { length: 2, time: "-2" }
+    meaning: "energy per mass in the field, against a chosen equipotential: a height above the geoid is a position on it"
+  - quantity: gravitational-parameter
+    of: { length: 3, time: "-2" }
+    holds_for: { level: celestial-body }
+    meaning: "a body's G times its mass (GM), what its gravitation is measured by"
+  - quantity: charge
+    of: { charge: 1 }
+    meaning: "how much electric charge"
+  - quantity: current
+    of: { charge: 1, time: "-1" }
+    meaning: "charge through time"
+  - quantity: potential-difference
+    of: { mass: 1, length: 2, time: "-2", charge: "-1" }
+    meaning: "energy per charge between two points: a voltage, the measure of a region of the `potential` line"
+  - quantity: electric-field
+    of: { mass: 1, length: 1, time: "-2", charge: "-1" }
+    meaning: "a potential difference per length"
+  - quantity: resistance
+    of: { mass: 1, length: 2, time: "-1", charge: "-2" }
+    holds_for: { level: material }
+    meaning: "a potential difference per current: what a material, shaped, puts against a current"
+  - quantity: conductance
+    of: { mass: "-1", length: "-2", time: 1, charge: 2 }
+    holds_for: { level: material }
+    meaning: "a current per potential difference: resistance's inverse"
+  - quantity: resistivity
+    of: { mass: 1, length: 3, time: "-1", charge: "-2" }
+    holds_for: { level: material }
+    meaning: "a material's own resistance, whatever its shape"
+  - quantity: capacitance
+    of: { mass: "-1", length: "-2", time: 2, charge: 2 }
+    holds_for: { level: component }
+    meaning: "charge held per potential difference: a configuration's"
+  - quantity: inductance
+    of: { mass: 1, length: 2, charge: "-2" }
+    holds_for: { level: component }
+    meaning: "magnetic flux per current: a coil's"
+  - quantity: magnetic-flux
+    of: { mass: 1, length: 2, time: "-1", charge: "-1" }
+    meaning: "a magnetic field through a surface"
+  - quantity: magnetic-flux-density
+    of: { mass: 1, time: "-1", charge: "-1" }
+    meaning: "a magnetic field's strength"
+  - quantity: apparent-power
+    of: { mass: 1, length: 2, time: "-3" }
+    meaning: "a potential difference times a current, whatever their phase: what a UPS is rated in, its own kind"
+  - quantity: reactive-power
+    of: { mass: 1, length: 2, time: "-3" }
+    meaning: "the part of an apparent power that goes back and forth and does no work: its own kind"
+  - quantity: activity
+    of: { time: "-1" }
+    holds_for: { level: nucleus }
+    meaning: "decays of nuclei per time: a frequency's exponents, its own kind"
+  - quantity: amount-of-substance
+    of: {}
+    holds_for: { level: atom }
+    meaning: "how many entities of one kind — atoms, molecules, ions — a count, with the mole as its unit of count (N_A of them)"
+  - quantity: substance-concentration
+    of: { length: "-3" }
+    holds_for: { level: molecule, while: ensemble }
+    meaning: "an amount of a substance per volume of a solution: a count per volume"
+  - quantity: mass-concentration
+    of: { mass: 1, length: "-3" }
+    holds_for: { level: molecule, while: ensemble }
+    meaning: "the mass of a substance per volume of a solution: density's exponents, its own kind"
+  - quantity: catalytic-activity
+    of: { time: "-1" }
+    holds_for: { level: molecule }
+    meaning: "an amount of a substance converted per time: an enzyme's"
+  - quantity: osmolality
+    of: { mass: "-1" }
+    holds_for: { level: molecule, while: ensemble }
+    meaning: "dissolved particles per mass of solvent"
+  - quantity: equivalent-concentration
+    of: { length: "-3" }
+    holds_for: { level: molecule, while: ensemble }
+    meaning: "charge-equivalents of an ion per volume"
+  - quantity: ph
+    of: {}
+    scale: logarithmic
+    holds_for: { level: molecule, while: ensemble }
+    meaning: "how acid: the negative logarithm of a solution's hydrogen-ion activity"
+  - quantity: heat-capacity
+    of: { mass: 1, length: 2, time: "-2", temperature: "-1" }
+    meaning: "energy per temperature: what a body takes to warm"
+  - quantity: entropy
+    of: { mass: 1, length: 2, time: "-2", temperature: "-1" }
+    units_of: heat-capacity
+    meaning: "energy per temperature of a state's disorder: information measured thermally (k ln 2 per bit), its own kind"
+  - quantity: specific-heat-capacity
+    of: { length: 2, time: "-2", temperature: "-1" }
+    meaning: "heat capacity per mass: a material's"
+  - quantity: thermal-conductivity
+    of: { mass: 1, length: 1, time: "-3", temperature: "-1" }
+    meaning: "how a material carries heat"
+  - quantity: thermal-transmittance
+    of: { mass: 1, time: "-3", temperature: "-1" }
+    meaning: "heat through an element per area and per temperature difference: a wall's U-value"
+  - quantity: thermal-resistance
+    of: { mass: "-1", time: 3, temperature: 1 }
+    meaning: "a temperature difference per heat flux: an element's resistance to heat"
+  - quantity: heat-flux-density
+    of: { mass: 1, time: "-3" }
+    meaning: "heat through an area per time"
+  - quantity: operation-rate
+    of: { time: "-1" }
+    meaning: "named events counted per time — operations, packets, frames: its own kind, the events named in the unit"
+  - quantity: power-level
+    of: {}
+    scale: logarithmic
+    meaning: "a power as a logarithmic ratio to one milliwatt"
+  - quantity: luminous-intensity
+    of: { mass: 1, length: 2, time: "-3" }
+    stands: [ { at: organism, as: possible-on } ]
+    meaning: "radiant power per solid angle as the standard human eye weighs it (the CIE observer): power's exponents, standing on a perceiver; it holds for the source measured"
+  - quantity: luminous-flux
+    of: { mass: 1, length: 2, time: "-3" }
+    stands: [ { at: organism, as: possible-on } ]
+    meaning: "radiant power as the standard eye weighs it"
+  - quantity: illuminance
+    of: { mass: 1, time: "-3" }
+    stands: [ { at: organism, as: possible-on } ]
+    meaning: "luminous flux falling on an area"
+  - quantity: luminance
+    of: { mass: 1, time: "-3" }
+    stands: [ { at: organism, as: possible-on } ]
+    meaning: "luminous intensity per area of a source, in a direction"
+  - quantity: luminous-efficacy
+    of: {}
+    stands: [ { at: organism, as: possible-on } ]
+    meaning: "luminous flux per power: how much of a lamp's power the eye receives as light"
+  - quantity: loudness-level
+    of: {}
+    scale: logarithmic
+    stands: [ { at: organism, as: possible-on } ]
+    meaning: "a sound's level as the standard listener hears it, in phons"
+  - quantity: dose-equivalent
+    of: { length: 2, time: "-2" }
+    stands: [ { at: tissue, as: possible-on } ]
+    holds_for: { level: tissue }
+    meaning: "an absorbed dose weighted by its harm to living tissue"
+  - quantity: arbitrary-unit
+    of: {}
+    stands: [ { at: reason, as: possible-on } ]
+    holds_for: { level: molecule }
+    meaning: "an amount fixed by an agreed reference preparation (an international unit of WHO's): no factor joins it to anything but through that reference"
 accuracy_kinds:
   - kind: bound
     meaning: "a limit the value lies within either way, as its maker states it: the smallest interval, or circle, that holds it (Darwin Core's coordinateUncertaintyInMeters). Read as a rectangular distribution: u = a/√3 per axis (JCGM 100:2008, 4.3.7)"
@@ -57,11 +283,14 @@ accuracy_kinds:
   - kind: unstated
     meaning: "an accuracy its maker gave with no probability: kept as said, and never read as a standard uncertainty"
 forms:
-  dimensions: { dimension: required, meaning: required, face: optional }
+  dimensions: { dimension: required, meaning: required, face: optional, stands: optional, holds_for: optional }
   quantities:
     quantity: required
     of: required
     scale: optional
+    stands: optional
+    holds_for: optional
+    units_of: optional
     meaning: optional
     units_from: optional
     crosswalk: optional

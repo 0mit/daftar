@@ -11,6 +11,7 @@ vocab:                             # the garden's own rows, as its VOCAB.md woul
     - { kind: clause,    nature: sayable, line: said,   level: statement }
     - { kind: part,      nature: body,    line: made,   level: component }
     - { kind: rack,      nature: body,    line: made,   level: installation }
+    - { kind: grain,     nature: body,    line: matter, level: molecule, vacant: "the cases use it: one molecule, no ensemble" }
   namespaces:
     - { namespace: hpe,      once: true }
     - { namespace: garden-a, once: true }
@@ -122,6 +123,10 @@ garden:
 
 # beans that must pass when added to the garden above (each alone)
 good:
+  # rule bearer (2026-10-10): what a quantity holds for, reached through `made-of` alone
+  - { name: "a document states a person's mass and a machine's temperature: what it is about bears them", bean: y30, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: ada, as: mass, value: { count: "62", unit: kg } } }, { measure: { of: nas, as: temperature-difference, value: { count: "12", unit: K } } } ] }
+  - { name: "a part's 220 ohms, a rack's power and its illuminance: made of material, a body measured", bean: y31, kind: part, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: resistance, value: { count: "220", unit: Ohm } } }, { measure: { of: home-rack, as: power, value: { count: "450", unit: W } } }, { measure: { of: home-rack, as: illuminance, value: { count: "300", unit: lx } } } ] }
+  - { name: "a contract's amount, and a person's weight in newtons", bean: y32, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "100", unit: XTS } } }, { measure: { of: ben, as: weight, value: { count: "690", unit: N } } } ] }
   - { name: "a required role nobody said is `unknown`", bean: y1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: unknown, of: { count: "1", unit: XTS } } } ] }
   - { name: "the payer who bears beside another bearer says more than the default", bean: y2, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: p, by: ada, of: { count: "2", unit: XTS } } }, { bear: { by: ada, of: p } }, { bear: { by: ben, of: p } } ] }
   - { name: "a name nobody has said yet is `unknown`, and two of them in a namespace that gives once name nobody", bean: y10, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: hpe, of: self, as: unknown } }, { name: { by: hpe, of: nas, as: unknown } } ] }
@@ -153,6 +158,12 @@ good:
   - { name: "a name in its namespace's form: a telephone line in E.164, a MAC address, an amount in its currency's places", bean: y16, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: e164, of: self, as: "+982112345678" } }, { name: { by: ieee-eui48, of: self, as: "aa:bb:cc:dd:ee:ff" } }, { pay: { by: sam, of: { count: "100", unit: JPY } } }, { pay: { by: sam, of: { count: "1.25", unit: USD } } } ] }
   - { name: "an acceptance nobody dated is an acceptance, and counts as consent (today's days.py)", bean: y17, kind: person, statements: [ { say: { by: sam, at: now } }, { own: { by: theone, of: self } }, { agree: { by: [y17], of: pot } } ] }
 bad:
+  # rule bearer (2026-10-10): what a quantity holds for, reached through `made-of` alone
+  - { rule: bearer, name: "one molecule has no temperature", says: "made of molecule in number", bean: x12b, kind: grain, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: temperature-difference, value: { count: "3", unit: K } } } ] }
+  - { rule: bearer, name: "a contract has no voltage", says: "a contract is a sayable", bean: x12c, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: potential-difference, value: { count: "5", unit: V } } } ] }
+  - { rule: bearer, name: "a machine has no money of its own: an agreement about it does", says: "it holds for a sayable", bean: x12d, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "100", unit: XTS } } } ] }
+  - { rule: bearer, name: "a machine has no dose equivalent: it holds for tissue", says: "tissue", bean: x12e, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: dose-equivalent, value: { count: "2", unit: mSv } } } ] }
+  - { rule: bearer, name: "a value's unit says its kind where the statement names none of the law's", says: "a contract is a sayable", bean: x12f, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: "isco-08:2511", value: { count: "220", unit: Ohm } } } ] }
   - { rule: consent,     bean: x60, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { id: a, by: [ada], of: self } }, { decline: { by: ben, of: a } } ] }
   - { rule: consent,     bean: x61, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { by: [ada, ben], of: self } }, { represent: { by: ada, of: ada } } ] }
   - { rule: consent,     bean: x62, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { by: [ada], of: self } }, { represent: { by: ada, of: ben } } ] }
@@ -205,7 +216,7 @@ bad:
   - { rule: squares,     bean: x11, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { forbidden: { of: r, through: pot } } ] }
   - { rule: squares,     bean: x11b, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { omissible: { of: r, through: pot } } ] }
   - { rule: squares,     bean: x11c, kind: document, statements: [ { say: { by: sam, at: now } }, { necessary: { of: "nas#needs-rack", through: home-rack } }, { contingent: { of: "nas#needs-rack", through: home-rack } } ] }
-  - { rule: weight,      bean: x12, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: mass, value: { count: "2", unit: kg } } } ] }
+  - { rule: bearer,      bean: x12, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: mass, value: { count: "2", unit: kg } } } ] }
   - { rule: frame,       bean: x13, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: ada, of: { count: "1", unit: XTS }, at: "next tuesday" } } ] }
   - { rule: frame,       bean: x13b, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "445" } } ] }
   - { rule: frame,       bean: x13c, kind: document, statements: [ { say: { by: sam, at: now } }, { mark: { by: sam, at: "persian:1404-12-30" } } ] }

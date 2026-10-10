@@ -2,7 +2,7 @@
 # kinds and frames.
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 bodies:
-  - { body: earth, mean_radius_m: "6371008.8", authority: "IUGG / IERS", meaning: "the Earth" }
+  - { body: earth, mean_radius_m: "6371008.8", gm_m3_s2: "398600441800000", authority: "IUGG / IERS; GM: WGS 84 (NGA)", meaning: "the Earth" }
   - { body: moon, mean_radius_m: "1737400.0", authority: "IAU WGCCRE", meaning: "the Moon" }
   - { body: mars, mean_radius_m: "3389500.0", authority: "IAU WGCCRE", meaning: Mars }
 reference_system_kinds:
@@ -60,6 +60,7 @@ reference_systems:
     kind: vertical
     frame: static
     axes: [H]
+    surface: equipotential
     meaning: "EGM96 height: metres above the geoid, which is what `above sea level` means"
   - crs: "EPSG:9990"
     body: earth
@@ -81,7 +82,7 @@ reference_systems:
     axes: [lat, lon]
     meaning: "Mars (2015), planetocentric latitude and longitude on a sphere"
 forms:
-  bodies: { body: required, mean_radius_m: required, authority: required, meaning: required }
+  bodies: { body: required, mean_radius_m: required, gm_m3_s2: optional, authority: required, meaning: required }
   reference_system_kinds: { kind: required, meaning: required }
   reference_frames: { frame: required, meaning: required }
   reference_systems:
@@ -99,3 +100,6 @@ forms:
     ensemble_accuracy: optional
     meaning: required
     frame_epoch: optional
+    surface:
+      in: [equipotential, geometric]
+      why: "a vertical system's height is against an equipotential (the geoid: gravitation's ordering of above and below) or against a geometric surface (the ellipsoid: the frame's); a height above sea level is the first"

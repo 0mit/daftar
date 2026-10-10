@@ -613,7 +613,18 @@ One observer gives one verdict on one statement, and a ruling waits until every 
 responded (§16 item 19, daftar #103): a disagreement is heard before it is ruled on (`core/law/verbs.yaml:
 verbs[rule]`).
 
-## core/law/core.yaml: rules[weight]
+## core/law/core.yaml: rules[bearer]
+
+WHAT A QUANTITY HOLDS FOR (2026-10-10, the operator: "yes all recommended", the dimensions placed on the ladder). The rule
+was `weight`, one case: a mass is a body's. Placing every dimension on the ladder made it general. A quantity is stated
+only of what its dimensions and its kind hold for (`holds_for`): a nature, or a level the being is or is made of. It
+follows `made-of` alone, because the ladder keeps its two relations apart for exactly this: what a being is made of
+carries its categories up (Hartmann's Überformung, his law of recurrence — a person's body still has mass and still
+falls), and what a step is possible on does not (his Überbauung — reason rests on an organism, and a sayable has no mass;
+followed down `possible-on`, a contract would reach matter through the taxis, reason and the organism). So a mass is a
+body's, a temperature an ensemble's (a single molecule has none), a resistance a material's and what is made of it, money
+an agreement's; and a quantity whose kind stands on a perceiver — an illuminance — still holds for the body it is
+measured of.
 
 A SAYABLE HAS NO WEIGHT OF ITS OWN (the core spec §5; ratified with the core's engine, daftar #81–#84, 2026-10-01).
 Weight is a foundation: it holds at a step and at every step above it, so every body has weight, and a sayable, which
@@ -4912,3 +4923,47 @@ the two, each in base64url — added by the gardener like any identity (class F)
 against what the garden itself says, and the machine serving it keeps no list of its own: a key the gardener takes out
 of the bean signs nobody in. A WebAuthn signature does not carry its key, as an SSH signature carries its fingerprint's
 key, which is why the public key is in the name and not only a digest of it.
+## core/law/quantities.yaml: dimensions
+
+THE DIMENSIONS STAND ON THE LADDER (2026-10-10, the operator: "time x length is a pair, mass is possible on it,
+temperature … is possible on mass, information is possible on them … deconstruct those … and map them onto the right
+organizational order step of our ladder"; ratified "yes all recommended"). The table was flat: six dimensions as
+siblings. Each now says where it **stands** — the step it needs in order to be at all, by the ladder's own ways and
+conditions — and what it **holds for**. Time and length are the frame's two faces (SI fixes the metre from the second
+through c: one frame). Mass and charge are the elementary particle's two intrinsic properties, both on space-time, neither
+on the other. Temperature stands on mass while an ensemble. Information stands on temperature: a distinguishable state
+of a carrier, whose erasure costs at least kT ln 2 (Landauer); its meaning is reason's and no quantity. Money stands on
+reason, on the said line. SI 2019's defining constants are the bridges: Δν(Cs), c, h, e, k. Two of SI's seven are kinds
+here, not dimensions, by reason: an amount of substance is a count of entities (the mole a unit of count), and a
+luminous intensity is power as the standard eye weighs it (a kind standing on a perceiver).
+
+## core/law/quantities.yaml: quantities
+
+KINDS ABOVE THEIR DIMENSIONS, AND KINDS THAT SHARE THEM (2026-10-10). Exponents do not fix a kind: energy and torque
+are both N·m, a frequency and a radioactive activity both s⁻¹. A kind may also stand higher than its dimensions (an
+activity on the nucleus, a resistance on a material, a dose equivalent on tissue, an illuminance on a perceiver) and
+hold for less than they do. A kind that shares another's units says whose (`units_of`): a weight is written in force's
+newtons, an entropy in heat capacity's joules per kelvin. Weight (وزن) is the foundation's force, holding for every
+body; gravitation (گرانش) is a step of the ladder, rock to galaxy, where directions are ordered, and its field kinds
+need only the frame's dimensions, as gravitation is the frame's own geometry.
+
+## core/law/core.yaml: conditions[ensemble]
+
+MANY PARTS SHARING ENERGY (2026-10-10). A temperature is energy shared over the many degrees of freedom of an ensemble
+near a balance of it: no particle and no single molecule has one. Beside `balance` (life's steady state, never
+equilibrium) and `proportion` (reason's), `ensemble` is the third condition a step is reached under; a step held
+`while: ensemble` is reached only by a being made of it in number, never by the step itself.
+
+## core/law/measures.yaml: lines[potential]
+
+A VOLTAGE IS A REGION, A POTENTIAL A POSITION (2026-10-10). As a temperature reading is a position on a line whose
+zero is absolute, a node's potential is a position on a line whose zero is a chosen ground; the voltage between two
+nodes is the measure of the region between them, as a temperature difference is. Its positions are written against the
+ground they are read from (`volt-scale`, `V:5@gnd`). Held vacant until a garden reads a circuit node by node.
+
+## core/law/units.yaml: units[IRT]
+
+THE TOMAN IS A UNIT OF THE RIAL (2026-10-10). Iran counts money in tomans every day and ISO 4217 names only the rial:
+ten rials make a toman, exactly. It is a unit of IRR (`per: IRR`, factor ten), never a currency of its own, so an amount
+in tomans converts into rials by the law and into any other currency only through an observed rate, as every currency
+does.
