@@ -60,6 +60,12 @@ lines:
     lines: 1
     systems: temperature
     meaning: "how hot: a position on the one line of thermodynamic temperature, bounded below by absolute zero"
+  - line: potential
+    region: "true"
+    metered: potential-difference
+    lines: 1
+    systems: potential
+    meaning: "how high an electric potential: a position on the line whose zero is a chosen ground, a net the placement names. A voltage is the measure of a region of it, as a temperature difference is of temperature"
 takes:
   - { placement: place, takes: none }
   - { placement: order, takes: none }

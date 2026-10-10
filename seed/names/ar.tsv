@@ -19,6 +19,8 @@ registry:foundation_rules	القواعد	ق-ع-د (to sit: قاعدة, a base an
 foundation_rules:weight	الوزن	و-ز-ن (to weigh); الميزان (the balance)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	مراتب الأجسام	ر-ت-ب (to stand firm in its place: a rank); Ibn Miskawayh: minerals, plants, animals, the highest of each order touching the lowest of the next	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	الزمكان	زمان + مكان: the Arabic word for spacetime joins the two into one	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	حَقْل القُوّة	حقل (ḥaql: a sown field); قوّة (quwwa: strength) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	حَقْل المادّة	حقل; مادّة (mādda: the stuff of a thing) — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	جُسَيْم أوَّلي	جُسَيْم (jusaym: a little body, the diminutive of جسم); الجزء الذي لا يتجزّأ (the part that is not divided: the atom of the kalām)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	هادرون	ἁδρός (stout); كوارك (quark)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	النَّواة	ن-و-ي (a date-stone — and, from the same root, نيّة, an intention: the kernel and the intent)	proposed	agent (claude opus-5.5), by hand
@@ -27,21 +29,17 @@ complexity:molecule	الجُزَيْء	جُزَيْء (juzayʾ: a little part, t
 complexity:cell	الخَلِيّة	خليّة (a beehive, a cell); خ-ل-و (to be empty: a hollow)	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	النَّسيج	ن-س-ج (to weave)	proposed	agent (claude opus-5.5), by hand
 complexity:organ	العُضْو	ع-ض-و (to part into members); آلة (āla: an instrument — the philosophers' ὄργανον)	proposed	agent (claude opus-5.5), by hand
-complexity:organ-system	الجِهاز	ج-ه-ز (to equip, to make ready: الجهاز الهضمي, the digestive system)	proposed	agent (claude opus-5.5), by hand
 complexity:organism	الكائن الحيّ	ك-و-ن (to be, to come to be); ح-ي-ي (to live); الجسم ذو النفس (the ensouled body, of the philosophers)	proposed	agent (claude opus-5.5), by hand
 complexity:population	الجَماعة	ج-م-ع (to gather); قطيع (qaṭīʿ: a herd)	proposed	agent (claude opus-5.5), by hand
 complexity:community	المُجْتَمَع الأحيائي	ج-م-ع (to gather); ح-ي-ي (to live)	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	النِّظام البيئي	ن-ظ-م (to string pearls on a thread: an order); بيئة (bīʾa, ب-و-أ: a place one settles in)	proposed	agent (claude opus-5.5), by hand
-complexity:biosphere	المُحيط الحيوي	ح-و-ط (to surround: an envelope); ح-ي-ي (to live)	proposed	agent (claude opus-5.5), by hand
 complexity:logos	النطق	ن-ط-ق (to speak: speech and reason at once); الحيوان الناطق (the speaking animal: the philosophers' rendering of ζῷον λογικόν)	proposed	agent (claude opus-5.5), by hand
 complexity:material	الخامة	خامة (raw stuff, a material); المادة (the line it is on)	proposed	agent (claude opus-5.5), by hand
-complexity:rock	الصَّخْر	ص-خ-ر (rock); حَجَر (ḥajar: a stone)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	الجِرْم السَّماوي	جِرْم (a body, the astronomers' word); سماء (samāʾ, س-م-و: what is high)	proposed	agent (claude opus-5.5), by hand
 complexity:planetary-system	النظام الكوكبي	كوكب (a star, a planet); ن-ظ-م (an order, pearls on a thread)	proposed	agent (claude opus-5.5), by hand
 complexity:galaxy	المجرّة	ج-ر-ر (to drag: the trail drawn across the sky); درب التبانة (the straw-sellers' path: the Milky Way)	proposed	agent (claude opus-5.5), by hand
 complexity:component	المُكَوِّن	ك-و-ن (to be: what brings a whole to be); قطعة (qiṭʿa: a piece)	proposed	agent (claude opus-5.5), by hand
 complexity:device	الآلة	آلة (āla: an instrument, a machine — what one works by); جهاز (jihāz: equipment)	proposed	agent (claude opus-5.5), by hand
-complexity:installation	المُنْشَأة	ن-ش-أ (to raise up, to originate)	proposed	agent (claude opus-5.5), by hand
 registry:crown	التاج	تاج (a crown, from Persian)	proposed	agent (claude opus-5.5), by hand
 crown:theone	واجب الوجود	و-ج-ب (to fall due, to be necessary); و-ج-د (to find: وجود, being); ابن سينا: واجب الوجود بذاته — عقل وعاقل ومعقول، وعاشق ومعشوق	proposed	agent (claude opus-5.5), by hand
 crown:love	المَحَبّة	ح-ب-ب (love — and حَبّة, a seed); الرحمة (raḥma, from رَحِم, the womb: the love that gives life; وَرَحْمَتِي وَسِعَتْ كُلَّ شَيْءٍ, my mercy embraces all things, 7:156)	proposed	agent (claude opus-5.5), by hand

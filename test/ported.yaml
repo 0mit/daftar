@@ -306,7 +306,7 @@ retired:
   - suite: test/root.py
     promises:
       - promise: "life, the order of bodies and the crown: a part never above its whole, every chain ending at the crown"
-        held: ["test/core-cases.yaml: rule: life", "test/core-cases.yaml: rule: order", "test/core-cases.yaml: rule: necessity", "test/core-cases.yaml: rule: weight"]
+        held: ["test/core-cases.yaml: rule: life", "test/core-cases.yaml: rule: order", "test/core-cases.yaml: rule: necessity", "test/core-cases.yaml: rule: bearer"]
       - promise: "a sayable on the made and a body on the said are refused"
         held: ["test/core.py: the law refuses a sayable placed on the made"]
       - promise: "a nature the law retired, and a crown chosen by nature, refused naming what took their place"

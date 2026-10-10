@@ -19,6 +19,8 @@ registry:foundation_rules	règles de fondement	fundamentum (fundus, the bottom)	
 foundation_rules:weight	poids	pensum (what is weighed out, from pendere, to hang, to weigh)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	l'ordre des corps	ordre (ordo); Pascal, Pensées (Lafuma 308): bodies, minds and charity — three orders, the third infinitely above the first	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	espace∞temps	spatium (a stretch); tempus	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	champ de force	champ (campus); force (fortis) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	champ de matière	champ; matière (materia) — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	particule élémentaire	particule (particula, a little part); élément (elementum)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadron	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	noyau	noyau (the stone of a fruit, from nux)	proposed	agent (claude opus-5.5), by hand
@@ -27,21 +29,17 @@ complexity:molecule	molécule	moles (a mass)	proposed	agent (claude opus-5.5), b
 complexity:cell	cellule	cellula (a little room)	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	tissu	tisser (texere, to weave)	proposed	agent (claude opus-5.5), by hand
 complexity:organ	organe	ὄργανον (a tool)	proposed	agent (claude opus-5.5), by hand
-complexity:organ-system	système d'organes	σύστημα; appareil (a set made ready: l'appareil digestif)	proposed	agent (claude opus-5.5), by hand
 complexity:organism	organisme	ὄργανον; être vivant (a living being)	proposed	agent (claude opus-5.5), by hand
 complexity:population	population	populus (a people)	proposed	agent (claude opus-5.5), by hand
 complexity:community	communauté	communis; biocénose (βίος + κοινός)	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	écosystème	οἶκος + σύστημα	proposed	agent (claude opus-5.5), by hand
-complexity:biosphere	biosphère	βίος + σφαῖρα (Vernadsky, La Biosphère, Paris 1929)	proposed	agent (claude opus-5.5), by hand
 complexity:logos	raison	ratio (a reckoning, a proportion)	proposed	agent (claude opus-5.5), by hand
 complexity:material	matériau	materia (timber)	proposed	agent (claude opus-5.5), by hand
-complexity:rock	roche	rocca	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	corps céleste	caelum + corpus	proposed	agent (claude opus-5.5), by hand
 complexity:planetary-system	système planétaire	πλανήτης (a wanderer)	proposed	agent (claude opus-5.5), by hand
 complexity:galaxy	galaxie	γάλα (milk); la Voie lactée	proposed	agent (claude opus-5.5), by hand
 complexity:component	composant	componere (to put together)	proposed	agent (claude opus-5.5), by hand
 complexity:device	appareil	apparare (to make ready)	proposed	agent (claude opus-5.5), by hand
-complexity:installation	installation	installare (to seat in place)	proposed	agent (claude opus-5.5), by hand
 registry:crown	la couronne	corona	proposed	agent (claude opus-5.5), by hand
 crown:theone	l'Être nécessaire	nécessaire (necesse); l'Être (being); Avicenna's necesse esse	proposed	agent (claude opus-5.5), by hand
 crown:love	amour	amor; charité (caritas: Pascal's third order, infinitely above bodies and minds)	proposed	agent (claude opus-5.5), by hand

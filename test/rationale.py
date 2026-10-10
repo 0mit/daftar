@@ -75,7 +75,7 @@ TABLES = {
     "view_archetypes": "profiles.yaml: archetypes", "division_form": "core.yaml: shapes[position]",
     "divisions": "core.yaml: shapes[position]", "leaf_orders": "core.yaml: cardinality"}
 MOVED = {
-    "schema_language.exclusive": "core.yaml: rules[room]", "schema_language.of_bodies": "core.yaml: rules[weight]",
+    "schema_language.exclusive": "core.yaml: rules[room]", "schema_language.of_bodies": "core.yaml: rules[bearer]",
     "schema_language.at_most_one_of": "core.yaml: words[choice]", "schema_language.series": "lines.yaml: forms.series",
     "schema_language.moves_along": "verbs.yaml: verbs[move]", "schema_language.origin": "core.yaml: knowing",
     "schema_language.expiry": "measures.yaml: forms.clause", "figures[sequence]": "lines.yaml: forms.series",

@@ -98,7 +98,7 @@ def _core_law():
         f = r.get('factor')
         units[code] = {'unit': code, 'name': r.get('name'), 'quantity': r.get('quantity'),
                        'factor': [int(f[0]), int(f[1])] if isinstance(f, list) and len(f) == 2
-                       and all(str(x).isdigit() for x in f) else None}
+                       and all(str(x).isdigit() for x in f) else None, 'per': r.get('per')}
     quantities = {n: dict(q) for n, q in L.std.quantities.items()}
     for qn, q in quantities.items():
         uf = q.get('units_from') if isinstance(q.get('units_from'), dict) else None
@@ -164,7 +164,22 @@ def convert(count, unit, to, rate=None):
     if a['quantity'] != b['quantity']:
         raise ValueError(f"{unit} measures {a['quantity']} and {to} measures {b['quantity']}: nothing converts one into the other")
     x = count if isinstance(count, Fraction) else exact(count)
+    # A UNIT OF A CURRENCY (`per`: the toman, ten rials) is counted against that currency: carried into it, then on
+    if a.get('per') or b.get('per'):
+        base_a, base_b = a.get('per') or unit, b.get('per') or to
+        fa = Fraction(*a['factor']) if a.get('per') else Fraction(1)
+        fb = Fraction(*b['factor']) if b.get('per') else Fraction(1)
+        if base_a == base_b:
+            if rate is not None:
+                raise ValueError(f"{unit} and {to} are one currency ({base_a}): a rate joins two")
+            return x * fa / fb
+        return convert(x * fa, base_a, base_b, rate) / fb
     if not a.get('from_registry'):
+        if not (a.get('factor') and b.get('factor')):
+            if unit == to:
+                return x
+            raise ValueError(f"{unit if not a.get('factor') else to} has no factor in the law: it converts only through "
+                             f"what defines it (π, a reference, a level's own reference)")
         if rate is not None:
             raise ValueError(f"{a['quantity']} has factors in the law, and a rate would override them: drop --rate")
         return x * Fraction(*a['factor']) / Fraction(*b['factor'])

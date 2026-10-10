@@ -613,7 +613,19 @@ One observer gives one verdict on one statement, and a ruling waits until every 
 responded (§16 item 19, daftar #103): a disagreement is heard before it is ruled on (`core/law/verbs.yaml:
 verbs[rule]`).
 
-## core/law/core.yaml: rules[weight]
+## core/law/core.yaml: rules[bearer]
+
+WHAT A QUANTITY HOLDS FOR (2026-10-10, the operator: "yes all recommended", the dimensions placed on the ladder). The rule
+was `weight`, one case: a mass is a body's. Placing every dimension on the ladder made it general. A quantity is stated
+only of what its dimensions and its kind hold for (`holds_for`): a nature, or a level the being is or is made of. It
+follows `made-of` alone, because the ladder keeps its two relations apart for exactly this: what a being is made of
+carries its categories up (Hartmann's Überformung, his law of recurrence — a person's body still has mass and still
+falls), and what a step is possible on does not (his Überbauung — reason rests on an organism, and a sayable has no mass;
+followed down `possible-on`, a contract would reach matter through the taxis, reason and the organism). So a mass is a
+body's, a temperature an ensemble's (a single molecule has none), a resistance a material's and what is made of it, money
+an agreement's; and a quantity whose kind stands on a perceiver — an illuminance — still holds for the body it is
+measured of. Information, like money, is held by what is carried, never by its carrier (`quantities.yaml:
+dimensions`).
 
 A SAYABLE HAS NO WEIGHT OF ITS OWN (the core spec §5; ratified with the core's engine, daftar #81–#84, 2026-10-01).
 Weight is a foundation: it holds at a step and at every step above it, so every body has weight, and a sayable, which
@@ -1010,6 +1022,84 @@ Life also needs a soul, which is given along the life chain (`via`), not carried
 level of bodies: a person's body stays an organism (Heidegger: the human is not an animal with reason added on top), and
 the gate's own rule agrees — at a level above `organism` a person could not be part of a population or the biosphere.
 The sayable stands on λόγος: λεκτόν and λόγος are one verb, λέγω.
+
+ONE PATH, ONE STATEMENT (2026-10-10). The operator, of the ladder drawn: "their position is logical but they have
+unnecessary siblings". A celestial body stood on rock and on material, though rock is made of material; a galaxy on its
+planetary systems, their bodies and material; an organism on its organ systems, tissues and cells; an atom on its nucleus
+and on the particles the nucleus is made of; an installation on its devices and on the material their components are made
+of. Each second stand said again what the first already carries up, since what a being is made of brings its categories
+with it (Überformung), and drawn, every step fanned out into lines that mean nothing more. They are gone, and every level
+still stands on exactly the steps it stood on before; the law check refuses a stand another of the row's stands already
+gives (`made-of` through `made-of` alone, `possible-on` through either way, its condition on the path). What a step is
+made of directly — a microbe of its one cell, an atom of its electrons — is a fact about a being, written of it, not a
+second foundation of the step. An ecosystem keeps both of its stands, its community and the matter it lives on: no path
+through the living reaches material.
+
+A ROCK IS A MATERIAL; EACH STEP ITS OWN ORGANIZATION (2026-10-10). The operator: "what is the difference between a rock
+and a celestial body?", then "are not the molecular bonds bounding with gravitation and also the celestial bodies? isn't
+the idea same there?", and "recheck all the nodes for the same pattern and remove all the unnecessary". Every force of a
+lower step still acts in a higher one, so a step is not told by which forces are present. It is told by what new
+organization appears there, which the step below cannot have even in number: that is `made-of`, the lower recurring in
+the higher with something added. Molecules in number have a phase, a hardness and a temperature no molecule has; a
+material in number organized by its own gravitation is round and layered, and up and down begin. A rock adds nothing at
+either: its bonds and its bulk are a material's, and its weight is the foundation every body has, pressed on it by its
+world. So the step `rock` is gone, and a celestial body is made of material. Three more steps were the step below
+again, larger: an organ system is organs serving one capacity, as an organ is tissues serving one; a biosphere is every
+ecosystem of a world, an ecosystem at a world's extent; an installation is devices and structure assembled to work as
+one, as a device is components assembled. On the said line, a corpus was discourses gathered into one order, as a
+discourse is statements gathered into one. Each is gone, and its examples are the step below's (an animal's blood is an
+organ of it, a building a device, a law a discourse, and the biosphere the ecosystem of a whole world). Every step left adds its own: confinement (hadron), the nuclear
+bond (nucleus), shells and chemistry (atom), shape (molecule), the ensemble (material); a body's own gravitation, orbits
+about the largest, and stars in number with no ruler (celestial body, planetary system, galaxy); life, one kind working
+as one, a capacity, one being, a lineage, many kinds, the living with its matter (cell to ecosystem); a made part, work
+as one (component, device); a name, truth, one whole (name, statement, discourse).
+
+THE FIELD BENEATH THE DOT, AND MATERIAL AS THE ENSEMBLE (2026-10-10). The operator: "first find the place for fields in
+it, then conceptually analyze nucleus hadron and siblings", and then "yes build the fields and material". What fills the
+frame first is a field: a value at every point of space∞time — the Standard Model's quark, lepton, light, gluon, W and Z
+and Higgs fields — present where no particle is (the vacuum is every field at its least). A particle is one quantum of a
+field, so the dot stands on the field, made of it, and stays the dot: indivisible as a quantum is. Gravitation is no such
+field: it is the frame's own geometry, as weight's foundation and the gravitational kinds already say. Up the bound
+chain, each force binds twice, once itself and once by what it leaves between neutral wholes: the strong force makes the
+hadron (confinement; most of a proton's mass is its binding's energy) and, left between colour-neutral hadrons, the
+nucleus (isotopes, binding, decay); the electromagnetic force makes the atom (shells) and, left between neutral atoms,
+the molecule (shape, chemical identity). The weak force binds nothing: it is the nucleus's decay. Gravitation cannot be
+cancelled, mass being never negative, so it alone keeps building — bigger and smaller. Material was the step above the
+molecule, but matter in bulk is any bound step in number: a star's plasma of nuclei and electrons, a metal's or a salt's
+atoms, a neutron star's nucleons, water's molecules. So material is made of the elementary particle `while: ensemble`,
+beside the chain and not atop it; a cell is made of molecules and of material, a chemistry and a temperature, which
+neither path gives the other; and an ecosystem no longer needs its own stand on material, which its community's cells
+now give (one path, one statement). A temperature and a concentration are held by a material and what is made of it: a
+star, a gas, a metal have one, a single molecule none.
+
+SPACE∞TIME IS A FIELD, THE ONE THAT IS THE FRAME; THE OTHERS ARE TWO STEPS (2026-10-10). The operator: "gather concepts
+of all known fields and analyze their position on the ladder and check if the time space itself is a field or not, do it
+philosophically and re arrange the ladder". A field is a value at every point of a frame. The question of the frame is
+old: Aristotle's place is a boundary and his world has no void; the Stoics' pneuma runs through every body and holds it
+by its tension; Descartes makes extension matter, a plenum; Newton makes space and time a container, and calls a pull
+across the empty "so great an absurdity" (to Bentley, 1693); Leibniz makes space the order of what coexists and time
+the order of what succeeds. Faraday's lines of force (1846) and Maxwell's field carrying energy (1865) made the field a
+thing; Einstein's general relativity (1915) made the frame's geometry itself a field, the gravitational one, and found
+that its points have no identity apart from the fields (the hole argument): "space-time does not claim existence on its
+own, but only as a structural quality of the field" (1952). It bends, and it waves (heard in 2015). So space∞time is a
+field. But it is the one field that is the frame, which no other is: every other field takes its where and when — its
+light cone, its order — from it; it couples to every energy alike, having no charge of its own (weight, the
+foundation); it can be neither absent (flat is one of its values) nor screened; and its energy cannot be located, for
+there is no saying where the energy of where is. It stays the frame of bodies, holding no being, and its row says what
+it is. The fields in it are of two organizations, each adding what the one below cannot have. The force fields — the
+electromagnetic, the weak, the strong, and the Higgs, whose value everywhere gives mass — bind or give mass, and fill
+room without excluding: their quanta, bosons, share a state without number, so light crosses light and a field can be
+smooth and classical. The matter fields — six quarks', six leptons' — take room and exclude: no two of their quanta
+share one state (Pauli), which is why matter stands apart, is solid and keeps its size (Dyson and Lenard, 1967); their
+charges are their couplings to the force fields and their mass the Higgs's, so they rest on those, as those do not on
+them. A particle is a quantum of either, so the dot is made of both. Mass and charge stand on the force fields, which
+give the one and are coupled to by the other. Fields not yet known take these places when they are: an inflaton or an
+axion is a force field's kind, a dark matter that takes room a matter field's, a dark energy that is the vacuum's a
+quantity of the frame, and a graviton, if the frame is quantized, the frame's own quantum. What else is called a field
+is no step: a temperature, pressure or velocity field, a phonon or a magnetisation, is a quantity of a material varying
+with place; an embryo's morphogenetic field is its tissues' signalling; a field of vision is an organism's; Trier's
+semantic field and Bourdieu's field are orders of sayables and of persons, reason's; an algebraic field is a structure,
+said.
 
 ## core/law/core.yaml: lines
 
@@ -4912,3 +5002,76 @@ the two, each in base64url — added by the gardener like any identity (class F)
 against what the garden itself says, and the machine serving it keeps no list of its own: a key the gardener takes out
 of the bean signs nobody in. A WebAuthn signature does not carry its key, as an SSH signature carries its fingerprint's
 key, which is why the public key is in the name and not only a digest of it.
+## core/law/quantities.yaml: dimensions
+
+THE DIMENSIONS STAND ON THE LADDER (2026-10-10, the operator: "time x length is a pair, mass is possible on it,
+temperature … is possible on mass, information is possible on them … deconstruct those … and map them onto the right
+organizational order step of our ladder"; ratified "yes all recommended"). The table was flat: six dimensions as
+siblings. Each now says where it **stands** — the step it needs in order to be at all, by the ladder's own ways and
+conditions — and what it **holds for**. Time and length are the frame's two faces (SI fixes the metre from the second
+through c: one frame). Mass and charge are the elementary particle's two intrinsic properties, both on space-time, neither
+on the other. Temperature stands on mass while an ensemble. Information stands on temperature: a distinguishable state
+of a carrier, whose erasure costs at least kT ln 2 (Landauer); its meaning is reason's and no quantity. Money stands on
+reason, on the said line. SI 2019's defining constants are the bridges: Δν(Cs), c, h, e, k.
+
+A CARRIER AND WHAT LIVES IN IT ARE TWO (2026-10-10). The operator: "we need to relook at money information too, distinct
+the carriers: a person is living in a body, a running instance is living in a host". Information was held for an
+ensemble of molecules — the carrier, which stands at a temperature — and so was a copy of temperature's own bearer, and it
+refused a document's size while letting a machine's used space pass as a measure of the machine. Its bearer is what is
+carried: a pattern of distinguishable states, a document, an instance, a volume, a message — a sayable. The carrier says
+what it can hold and what it holds (`hold: { by: nas, of: 2 TBy }`), as the gardens already wrote it, and what lives in it
+is joined to it by its own verb: a host runs an instance (`run`), a disk carries a volume (`carry`), and a person's body is
+the person's level while reason is its rung — one being, since a person has one body for a life, where an instance moves
+from host to host and is its own. Money was right already: it is measured of the agreement and what is said under it,
+and its carriers — a person, a wallet, an account, a banknote — say what they hold. Mass keeps no bearer of its own: the
+foundation `weight` is its bearer, read wherever a mass is stated, and the law refuses a dimension or a kind that says
+again what a foundation or its dimensions give.
+
+INFORMATION IS A COUNT, HELD IN THE ORDER OF SAYABLES (2026-10-10). The operator: "we need to find the right path for
+information … charge [is] as related as mass; I think it belongs to another table, path or step". Information stood on
+temperature, as if a bit needed heat in particular; but a carrier keeps it as a charge, a magnetisation, a pit or a
+pulse of light alike, and is related to each physical dimension as much as to temperature — so to none in particular.
+What it measures is how many binary choices a sayable takes in its order (the taxis, whose positions are the ordinal
+line's: byte 1024 of a file is a position, its size a region). That is a count, by the reason that made amount of
+substance a kind and not a dimension, and it is how ISO/IEC 80000-13 and UCUM give it: dimension one, the bit and the
+byte its units. So information leaves the dimensions for the kinds, `of: {}`, held by a sayable; a data rate is a count
+per time. Landauer's kT ln 2 stays in its meaning as a bridge between a carrier and what it carries, never a step.
+
+MASS AND CHARGE STAND ON A FIELD (2026-10-10). With the field beneath the dot, the two intrinsic dimensions stand where
+they arise: mass is a field's energy at rest — an elementary particle's given by the Higgs field, most of a hadron's by
+its binding's energy — and charge is how strongly a field couples to light's field. Both stand on `field`, possible-on,
+as the operator foresaw "possible extra steps between"; time and length stay the frame's faces, temperature stands on
+mass while an ensemble, and money on reason. Two of SI's seven are kinds
+here, not dimensions, by reason: an amount of substance is a count of entities (the mole a unit of count), and a
+luminous intensity is power as the standard eye weighs it (a kind standing on a perceiver).
+
+## core/law/quantities.yaml: quantities
+
+KINDS ABOVE THEIR DIMENSIONS, AND KINDS THAT SHARE THEM (2026-10-10). Exponents do not fix a kind: energy and torque
+are both N·m, a frequency and a radioactive activity both s⁻¹. A kind may also stand higher than its dimensions (an
+activity on the nucleus, a resistance on a material, a dose equivalent on tissue, an illuminance on a perceiver) and
+hold for less than they do. A kind that shares another's units says whose (`units_of`): a weight is written in force's
+newtons, an entropy in heat capacity's joules per kelvin. Weight (وزن) is the foundation's force, holding for every
+body; gravitation (گرانش) is a step of the ladder, celestial body to galaxy, where directions are ordered, and its field kinds
+need only the frame's dimensions, as gravitation is the frame's own geometry.
+
+## core/law/core.yaml: conditions[ensemble]
+
+MANY PARTS SHARING ENERGY (2026-10-10). A temperature is energy shared over the many degrees of freedom of an ensemble
+near a balance of it: no particle and no single molecule has one. Beside `balance` (life's steady state, never
+equilibrium) and `proportion` (reason's), `ensemble` is the third condition a step is reached under; a step held
+`while: ensemble` is reached only by a being made of it in number, never by the step itself.
+
+## core/law/measures.yaml: lines[potential]
+
+A VOLTAGE IS A REGION, A POTENTIAL A POSITION (2026-10-10). As a temperature reading is a position on a line whose
+zero is absolute, a node's potential is a position on a line whose zero is a chosen ground; the voltage between two
+nodes is the measure of the region between them, as a temperature difference is. Its positions are written against the
+ground they are read from (`volt-scale`, `V:5@gnd`). Held vacant until a garden reads a circuit node by node.
+
+## core/law/units.yaml: units[IRT]
+
+THE TOMAN IS A UNIT OF THE RIAL (2026-10-10). Iran counts money in tomans every day and ISO 4217 names only the rial:
+ten rials make a toman, exactly. It is a unit of IRR (`per: IRR`, factor ten), never a currency of its own, so an amount
+in tomans converts into rials by the law and into any other currency only through an observed rate, as every currency
+does.

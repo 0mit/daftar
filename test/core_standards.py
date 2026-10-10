@@ -114,9 +114,12 @@ check("...and prose is kept as written, every value a string: `establishes` is t
 quantities = {q['quantity'] for q in read.data(os.path.join(LAW_DIR, 'quantities.yaml'))['quantities']}
 units = read.data(os.path.join(LAW_DIR, 'units.yaml'))['units']
 bad = [u['unit'] for u in units if u.get('quantity') not in quantities or not u.get('name')
-       or not (isinstance(u.get('factor'), list) and len(u['factor']) == 2 and all(str(x).isdigit() for x in u['factor']))]
+       or not ((isinstance(u.get('factor'), list) and len(u['factor']) == 2 and all(str(x).isdigit() for x in u['factor']))
+               or ('factor' not in u and u.get('why')))]
 check(f"every one of the core's {len(units)} units in UCUM measures a quantity of quantities.yaml, by its English name, "
-      f"with a factor of two whole numbers", len(units) >= 55 and not bad, bad)
+      f"with a factor of two whole numbers — or none, saying why (a radian meets a degree only through π; an IU, a "
+      f"referenced level and a count of one thing convert into nothing else)", len(units) >= 55 and not bad
+      and sum(1 for u in units if 'factor' not in u) == 12, bad)
 
 # ------------------------------------------------------------------------------------------- read from core/law/ alone
 S = standards.here()

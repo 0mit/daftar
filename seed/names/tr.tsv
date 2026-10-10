@@ -19,6 +19,8 @@ registry:foundation_rules	temel kurallar	temel (foundation, from θεμέλιο�
 foundation_rules:weight	ağırlık	ağır (heavy)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	cisimlerin düzeni	düzen (order, from düzmek, to arrange); karmaşıklık (complexity); mertebe (Arabic: a rank one stands on)	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	uzay∞zaman	uzay (space, from uzamak, to stretch out); zaman (time)	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	kuvvet alanı	kuvvet (Arabic quwwa: strength); alan (open ground) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	madde alanı	madde (Arabic mādda: stuff); alan — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	temel parçacık	temel (a foundation, from Greek θεμέλιον); parçacık (a little piece); nokta (the dot)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadron	ἁδρός (stout); kuark (quark)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	çekirdek	çekirdek (the seed of a fruit, the kernel)	proposed	agent (claude opus-5.5), by hand
@@ -27,21 +29,17 @@ complexity:molecule	molekül	moles (a mass)	proposed	agent (claude opus-5.5), by
 complexity:cell	hücre	hücre (Arabic ḥujra: a small room, a chamber — as cella is)	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	doku	dokumak (to weave)	proposed	agent (claude opus-5.5), by hand
 complexity:organ	organ	ὄργανον (a tool); uzuv (Arabic ʿuḍw: a limb)	proposed	agent (claude opus-5.5), by hand
-complexity:organ-system	organ sistemi	σύστημα (what stands together); dizge (a line strung together, from dizmek)	proposed	agent (claude opus-5.5), by hand
 complexity:organism	canlı	can (Persian jān: life, soul); organizma	proposed	agent (claude opus-5.5), by hand
 complexity:population	popülasyon	populus (a people); nüfus (Arabic nufūs: souls, as they are counted)	proposed	agent (claude opus-5.5), by hand
 complexity:community	topluluk	toplamak (to gather); biyolojik topluluk	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	ekosistem	οἶκος (a household) + σύστημα	proposed	agent (claude opus-5.5), by hand
-complexity:biosphere	biyosfer	βίος + σφαῖρα; küre (a sphere)	proposed	agent (claude opus-5.5), by hand
 complexity:logos	akıl	akıl (Arabic ʿaql: reason, first a tether); nutuk (Arabic nuṭq: speech and reason at once — hayvân-ı nâtık, the speaking animal)	proposed	agent (claude opus-5.5), by hand
 complexity:material	malzeme	Arabic malzeme (supplies, what is needed); madde (the line it is on)	proposed	agent (claude opus-5.5), by hand
-complexity:rock	kaya	kaya (a rock, a cliff); taş (a stone)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	gök cismi	gök (the sky); cisim (a body)	proposed	agent (claude opus-5.5), by hand
 complexity:planetary-system	gezegen sistemi	gezegen (a planet, from gezmek, to wander) — as πλανήτης is	proposed	agent (claude opus-5.5), by hand
 complexity:galaxy	gökada	gök (sky) + ada (island): a sky-island; Samanyolu (the straw road: the Milky Way)	proposed	agent (claude opus-5.5), by hand
 complexity:component	bileşen	bileşmek (to combine); parça (a piece)	proposed	agent (claude opus-5.5), by hand
 complexity:device	aygıt	aygıt (an apparatus); cihaz (Arabic jihāz: equipment)	proposed	agent (claude opus-5.5), by hand
-complexity:installation	tesis	Arabic taʾsīs (a founding); kurulum (a setting up, from kurmak)	proposed	agent (claude opus-5.5), by hand
 registry:crown	taç	Persian tāj (a crown)	proposed	agent (claude opus-5.5), by hand
 crown:theone	Vâcibü'l-vücûd	Arabic wājib al-wujūd, the Necessary Existent; zorunlu varlık (necessary being, in today's Turkish)	proposed	agent (claude opus-5.5), by hand
 crown:love	sevgi	sevmek (to love); muhabbet (Arabic maḥabba); şefkat (tender care)	proposed	agent (claude opus-5.5), by hand

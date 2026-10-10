@@ -70,18 +70,60 @@ except frame.Refused as e:
     check("a day with no zone to be reckoned in is refused: its place half is the bearer's", 'names none' in str(e), e)
 
 # ------------------------------------------------------------------------------------------------ the law
-check("the law is whole: the face's 21 verbs, the 42 rows and the 22 levels, 0 problems",
-      not LAW0.problems() and len(LAW0.verbs) == 63 and len(LAW0.levels) == 29, LAW0.problems())
+check("the law is whole: the face's 21 verbs, the 42 rows and the 20 levels of bodies, 0 problems",
+      not LAW0.problems() and len(LAW0.verbs) == 63 and len(LAW0.levels) == 26, LAW0.problems())
 CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
       f"flows)", not LAW.problems(), LAW.problems())
 units = LAW0.units
 check(f"units are UCUM's, the law's English name attached: each of the law's {len(units)} units is a row "
-      f"(kg is kilogram, GiBy gibibyte, {{item}} item), and the two attenuations UCUM cannot write (§22) say why",
-      len(units) == 55 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
-      and units['{item}']['name'] == 'item' and [u for u, r in units.items() if r.get('ucum') == 'false']
-      == ['decibel-per-metre', 'decibel-per-kilometre'], len(units))
+      f"(kg is kilogram, GiBy gibibyte, {{item}} item, Ohm ohm), and those UCUM cannot write say why — the two "
+      f"attenuations (§22), the radio's dBm, the phon and the toman",
+      len(units) == 198 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
+      and units['{item}']['name'] == 'item' and units['Ohm']['name'] == 'ohm'
+      and [u for u, r in units.items() if r.get('ucum') == 'false']
+      == ['decibel-per-metre', 'decibel-per-kilometre', 'dBm', 'phon', 'IRT']
+      and all(r.get('why') for r in units.values() if r.get('ucum') == 'false'), len(units))
+dims = {d['dimension']: d for d in LAW0.std.tables['dimensions']}
+check("the dimensions stand on the ladder (2026-10-10): the frame's two faces; mass and charge beside each other on "
+      "the force fields, charge holding for a body and mass by the foundation weight; temperature on mass while an ensemble, "
+      "held by a material; "
+      "money on reason, held by what is carried, a sayable; information no dimension but a count held by a sayable, as "
+      "ISO/IEC 80000-13 gives it dimension one; a rock a material, and the celestial body gravitation's first step",
+      set(dims) == {'time', 'length', 'mass', 'charge', 'temperature', 'money'}
+      and dims['charge']['stands'] == [{'at': 'force-field', 'as': 'possible-on'}]
+      and dims['mass']['stands'] == [{'at': 'force-field', 'as': 'possible-on'}]
+      and dims['temperature']['holds_for'] == {'level': 'material'}
+      and LAW0.levels['material']['stands'] == [{'at': 'elementary-particle', 'as': 'made-of', 'while': 'ensemble'}]
+      and LAW0.levels['elementary-particle']['stands'] == [{'at': 'force-field', 'as': 'made-of'}, {'at': 'matter-field', 'as': 'made-of'}]
+      and LAW0.levels['matter-field']['stands'] == [{'at': 'force-field', 'as': 'possible-on'}]
+      and 'gravitational one' in LAW0.levels['space-time']['meaning'] and dims['charge']['holds_for'] == 'body'
+      and dims['temperature']['stands'] == [{'at': 'mass', 'as': 'possible-on', 'while': 'ensemble'}]
+      and dims['money']['holds_for'] == 'sayable' and 'holds_for' not in dims['mass']
+      and LAW0.std.quantities['information'].get('of') == {} and LAW0.std.quantities['information']['holds_for'] == 'sayable'
+      and LAW0.std.quantities['data-rate']['of'] == {'time': '-1'} and 'rock' not in LAW0.levels
+      and LAW0.levels['celestial-body']['stands'] == [{'at': 'material', 'as': 'made-of'}]
+      and 'ensemble' in LAW0.conditions, dims)
+bad_dims = Law.load(('VOCAB.md', {}))
+kept = bad_dims.std.tables['dimensions']             # the standards are read once per process: put them back after
+bad_dims.std.tables['dimensions'] = [dict(d, stands=[{'at': 'temperature', 'as': 'possible-on'}])
+                                     if d['dimension'] == 'mass' else d for d in kept]
+probs = [m for _r, _w, m in bad_dims.problems() if 'never a circle' in m]
+bad_dims.std.tables['dimensions'] = kept
+check("...and a dimension that stands on itself through those beneath it is refused: the ladder is never a circle",
+      probs, bad_dims.problems())
+kept_levels = dict(bad_dims.levels)                   # one path, one statement: a sibling another path gives is refused
+bad_dims.levels['galaxy'] = dict(kept_levels['galaxy'], stands=listed(kept_levels['galaxy'].get('stands')) +
+                                  [{'at': 'celestial-body', 'as': 'made-of'}])
+bad_dims.std.tables['dimensions'] = [dict(d, holds_for='body') if d['dimension'] == 'temperature' else d for d in kept]
+twice = [m for _r, _w, m in bad_dims.problems() if 'one path, one statement' in m or 'never its carrier' in m]
+bad_dims.levels.clear(); bad_dims.levels.update(kept_levels)
+bad_dims.std.tables['dimensions'] = kept
+check("...and a stand or a bearer another path already gives is refused: a galaxy on celestial bodies beside its "
+      "planetary systems, temperature held for what mass's foundation already holds it for (one path, one statement)",
+      len(twice) == 2 and any('celestial-body as made-of' in m for m in twice)
+      and any('a copy of what mass holds for' in m for m in twice), twice)
 ns = LAW0.namespaces
 again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true'}]})).problems()
 check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "

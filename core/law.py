@@ -56,7 +56,7 @@ ROW_FIELDS = {
     'standing': {'layer', 'holds', 'meaning'},
     'verbs': {'verb', 'meaning', 'roles', 'qualifiers', 'required', 'choice', 'default', 'replaces', 'home', 'figure',
               'vacant'},
-    'units': {'unit', 'name', 'quantity', 'factor', 'ucum', 'why', 'vacant'},
+    'units': {'unit', 'name', 'quantity', 'factor', 'per', 'ucum', 'why', 'vacant'},
     'systems': {'system', 'dimension', 'pattern', 'form_note', 'example', 'levels', 'restrictions', 'neighbours',
                 'complement', 'calendar', 'reckoning', 'day_begins', 'datum', 'boundaries_in', 'cells_in', 'checked_by',
                 'crosswalk', 'establishes', 'resolves_through', 'same_ground_as', 'transport', 'unit_symbols', 'within',
@@ -567,6 +567,82 @@ class Law:
                     todo.append(s.get('at'))
         return out
 
+    def given_twice(self, dim_rows):
+        """ONE PATH, ONE STATEMENT: [(where, message)] for a stand that another of the row's stands already gives through
+        the ladder — `made-of` through `made-of` alone, `possible-on` through either way, its condition on the path — and
+        for a bearer another row already gives: a dimension's that copies what it stands on (`possible-on` lets the lower's
+        categories stop; a copy says they recur), or that a foundation gives; a quantity's that one of its dimensions
+        already gives; and a quantity's stand on the step its own bearer is made of."""
+        out, quantities = [], (self.std.quantities if self.std else {})
+        rows = {('level', n): r for n, r in self.levels.items()}
+        rows.update({('dimension', n): r for n, r in dim_rows.items()})
+        rows.update({('quantity', n): r for n, r in quantities.items()})
+
+        def node(at):
+            return ('dimension', at) if at in dim_rows else ('level', at)
+
+        def stands(key):
+            return [s for s in listed((rows.get(key) or {}).get('stands')) if isinstance(s, dict)]
+
+        for key in rows:
+            mine = stands(key)
+            for e in mine:
+                ways = ('made-of',) if e.get('as') == 'made-of' else ('made-of', 'possible-on')
+                goal, cond = node(e.get('at')), e.get('while')
+                todo = [(node(o.get('at')), cond is None or o.get('while') == cond) for o in mine
+                        if o is not e and o.get('as') in ways]
+                seen = set(todo)
+                while todo:
+                    n, met = todo.pop()
+                    if n == goal and met:
+                        out.append((f"{key[0]} {key[1]}", f"stands on {e.get('at')} as {e.get('as')}"
+                                    f"{' while ' + cond if cond else ''}, which its other stands already give: one path, "
+                                    f"one statement"))
+                        break
+                    for s in stands(n):
+                        nxt = (node(s.get('at')), met or s.get('while') == cond)
+                        if s.get('as') in ways and nxt not in seen:
+                            seen.add(nxt)
+                            todo.append(nxt)
+        found = {str(f['property']): f for f in self.foundations if f.get('property')}
+
+        def bearer_of(d):
+            row = dim_rows.get(d) or {}
+            return row.get('holds_for') if row.get('holds_for') is not None else (found.get(d) or {}).get('holds_for')
+
+        def within(a, b):                                  # every being `a` lets bear is one `b` lets
+            if a == b:
+                return True
+            if isinstance(a, dict) and isinstance(b, str):
+                return b in self.holds(self.level_line(a.get('level')))
+            if isinstance(a, dict) and isinstance(b, dict):
+                return b.get('level') in self.below(a.get('level'), ways=('made-of',)) or \
+                    (b.get('level') == a.get('level') and b.get('while') in (None, a.get('while')))
+            return False
+        for d, row in dim_rows.items():
+            h = row.get('holds_for')
+            if h is not None and d in found:
+                out.append((f"dimension {d}", f"holds for {h!r}, which the foundation {found[d].get('foundation')} "
+                                              f"already gives: one path, one statement"))
+            for s in listed(row.get('stands')):
+                at = s.get('at') if isinstance(s, dict) else None
+                if h is not None and at in dim_rows and s.get('as') == 'possible-on' and bearer_of(at) == h:
+                    out.append((f"dimension {d}", f"holds for {h!r}, a copy of what {at} holds for: standing on it "
+                                                  f"possible-on, its bearer is its own — what it carries, never its "
+                                                  f"carrier"))
+        for q, row in quantities.items():
+            h = row.get('holds_for')
+            for d, power in (row.get('of') or {}).items():
+                if h is not None and str(power) not in ('0', '') and str(d) in dim_rows and within(bearer_of(str(d)), h):
+                    out.append((f"quantity {q}", f"holds for {h!r}, which its dimension {d} already gives: one path, "
+                                                 f"one statement"))
+            for s in listed(row.get('stands')):
+                if isinstance(h, dict) and isinstance(s, dict) and s.get('as') == 'possible-on' and s.get('at') in \
+                        {h.get('level')} | self.below(h.get('level'), ways=('made-of',)):
+                    out.append((f"quantity {q}", f"stands on {s.get('at')}, which its bearer ({h!r}) is made of "
+                                                 f"already: one path, one statement"))
+        return out
+
     # ------------------------------------------------------------------------------------------------ proof
     def problems(self):
         """[(rule, where, message)]: the law's own consistency. Each one is an error: a law that does not hold together
@@ -622,7 +698,7 @@ class Law:
                     pass                                        # a pattern that does not compile is refused where it is read
         if len(self.roles) != 7:
             bad('core.yaml roles', f"the core has seven roles, and this law {len(self.roles)}")
-        known_rules = ['form', 'valency', 'knowing', 'placeholder', 'order', 'life', 'necessity', 'squares', 'weight',
+        known_rules = ['form', 'valency', 'knowing', 'placeholder', 'order', 'life', 'necessity', 'squares', 'bearer',
                        'frame', 'names', 'layers', 'ratify', 'consent', 'harm', 'room', 'vacancy', 'kept', 'line', 'measured',
                        'profile']
         for x in self.exclusive:
@@ -743,11 +819,49 @@ class Law:
             for h in listed(s.get('holds')):
                 if not isinstance(h, str) or not h:
                     bad(f"standing {i}", f"{h!r}: a pattern of a path")
+        # where each dimension and kind stands, and what it holds for (2026-10-10)
+        dim_rows = {str(d.get('dimension')): d for d in (self.std.tables.get('dimensions') or []) if isinstance(d, dict)} \
+            if self.std else {}
+
+        def holds_ok(h):
+            if h is None or (isinstance(h, str) and h in self.natures):
+                return True
+            return isinstance(h, dict) and h.get('level') in self.levels and set(h) <= {'level', 'while'} \
+                and (h.get('while') is None or h.get('while') in self.conditions)
+        for kind_of_row, rows in (('dimension', dim_rows), ('quantity', self.std.quantities if self.std else {})):
+            for name, row in rows.items():
+                for s in listed(row.get('stands')):
+                    if not isinstance(s, dict) or (s.get('at') not in self.levels and s.get('at') not in dim_rows) \
+                            or s.get('as') not in self.tables['ways'] \
+                            or (s.get('while') is not None and s.get('while') not in self.conditions):
+                        bad(f"{kind_of_row} {name}", f"stands on {s!r}: a level or a dimension that exists, by a way of "
+                                                     f"`ways`, while a condition")
+                if not holds_ok(row.get('holds_for')):
+                    bad(f"{kind_of_row} {name}", f"holds for {row.get('holds_for')!r}: a nature, or {{ level, while? }}")
+                if kind_of_row == 'quantity':
+                    for d in (row.get('of') or {}):
+                        if str(d) not in dim_rows:
+                            bad(f"quantity {name}", f"is of {d!r}, which is no dimension of the law")
+        for name in dim_rows:                               # the dimensions stand on one another without a circle
+            seen, todo = set(), [name]
+            while todo:
+                for s in listed(dim_rows.get(todo.pop(), {}).get('stands')):
+                    at = s.get('at') if isinstance(s, dict) else None
+                    if at in dim_rows and at not in seen:
+                        seen.add(at)
+                        todo.append(at)
+            if name in seen:
+                bad(f"dimension {name}", "stands on itself through the dimensions beneath it: never a circle")
+        for where, msg in self.given_twice(dim_rows):
+            bad(where, msg)
         names = {}
         for u, row in self.units.items():
             names.setdefault(row.get('name'), []).append(u)
             if row.get('quantity') not in self.std.quantities:
                 bad(f"unit {u}", f"its quantity {row.get('quantity')!r} is no quantity of the law")
+            if row.get('per') is not None and (not self.std or row['per'] not in self.std.currencies
+                                               or row.get('quantity') != 'money' or not row.get('factor')):
+                bad(f"unit {u}", "`per` names the currency a unit of money is counted against, with its factor")
             if row.get('ucum') not in (None, 'false') or (row.get('ucum') == 'false' and not row.get('why')):
                 bad(f"unit {u}", "a code UCUM does not write says so, `ucum: false`, and why")
         for n, us in names.items():

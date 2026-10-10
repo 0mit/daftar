@@ -19,6 +19,8 @@ registry:foundation_rules	Grundgesetze	Grund (ground) + Gesetz (law); Hartmann's
 foundation_rules:weight	Gewicht	wiegen (to weigh)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	die Ordnung der Körper	Ordnung (order); Schichtenbau (Nicolai Hartmann: the strata of the real world, each higher one resting on the lower, carried by it and free above it)	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	Raum∞Zeit	Raum (room); Zeit; Heidegger's Zeit-Raum, time-space, the open in which beings come to presence	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	Kraftfeld	Kraft (strength); Feld (open land) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	Materiefeld	Materie (materia); Feld — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	Elementarteilchen	Element (elementum); Teilchen (a little part, from Teil)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	Hadron	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	Atomkern	Kern (a kernel, a grain)	proposed	agent (claude opus-5.5), by hand
@@ -27,21 +29,17 @@ complexity:molecule	Molekül	moles (a mass)	proposed	agent (claude opus-5.5), by
 complexity:cell	Zelle	cella (a small room)	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	Gewebe	weben (to weave)	proposed	agent (claude opus-5.5), by hand
 complexity:organ	Organ	ὄργανον; Werkzeug (a tool)	proposed	agent (claude opus-5.5), by hand
-complexity:organ-system	Organsystem	σύστημα; Organ	proposed	agent (claude opus-5.5), by hand
 complexity:organism	Lebewesen	Leben (life) + Wesen (a being); Organismus	proposed	agent (claude opus-5.5), by hand
 complexity:population	Population	populus; Bestand (a stand of trees, what stands together)	proposed	agent (claude opus-5.5), by hand
 complexity:community	Lebensgemeinschaft	Leben + Gemeinschaft (gemein, common); Biozönose (βίος + κοινός, Möbius 1877)	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	Ökosystem	οἶκος; Haushalt der Natur (nature's household: Haeckel's Oekologie, 1866)	proposed	agent (claude opus-5.5), by hand
-complexity:biosphere	Biosphäre	βίος + σφαῖρα	proposed	agent (claude opus-5.5), by hand
 complexity:logos	Vernunft	vernehmen (to perceive, to hear: reason as hearing what is said); Rede (speech)	proposed	agent (claude opus-5.5), by hand
 complexity:material	Stoff	Stoff (stuff); Materie (materia); Werkstoff (a material made to be worked)	proposed	agent (claude opus-5.5), by hand
-complexity:rock	Gestein	Stein (a stone): Gestein, stone in mass	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	Himmelskörper	Himmel (the sky) + Körper	proposed	agent (claude opus-5.5), by hand
 complexity:planetary-system	Planetensystem	πλανήτης (a wanderer)	proposed	agent (claude opus-5.5), by hand
 complexity:galaxy	Galaxie	γάλα (milk); Milchstraße (the milk road)	proposed	agent (claude opus-5.5), by hand
 complexity:component	Bauteil	bauen (to build) + Teil (a part)	proposed	agent (claude opus-5.5), by hand
 complexity:device	Gerät	Old High German girâti (provision, equipment — kin to Rat, what is provided)	proposed	agent (claude opus-5.5), by hand
-complexity:installation	Anlage	anlegen (to lay out, to lay on)	proposed	agent (claude opus-5.5), by hand
 registry:crown	die Krone	corona (a wreath)	proposed	agent (claude opus-5.5), by hand
 crown:theone	das notwendig Seiende	notwendig (die Not wendend: turning need away — necessary); Seiendes (a being); the Latin Avicenna's necesse esse	proposed	agent (claude opus-5.5), by hand
 crown:love	Liebe	Liebe; Agape; sie sucht nicht das Ihre (1 Kor 13:5)	proposed	agent (claude opus-5.5), by hand

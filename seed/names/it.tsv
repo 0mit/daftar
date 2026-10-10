@@ -19,6 +19,8 @@ registry:foundation_rules	regole di fondamento	fundamentum (fundus, the bottom)	
 foundation_rules:weight	peso	pensum (what is weighed out)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	l'ordine dei corpi	ordine (ordo); scala naturae (the ladder of nature)	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	spazio∞tempo	spatium (a stretch); tempus	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	campo di forza	campo (campus); forza (fortis) — a field that binds or gives mass	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	campo di materia	campo; materia — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	particella elementare	particella (a little part); elemento	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	adrone	ἁδρός (stout)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	nucleo	nucleus (a kernel)	proposed	agent (claude opus-5.5), by hand
@@ -27,21 +29,17 @@ complexity:molecule	molecola	moles (a mass)	proposed	agent (claude opus-5.5), by
 complexity:cell	cellula	cellula (a little room)	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	tessuto	tessere (to weave)	proposed	agent (claude opus-5.5), by hand
 complexity:organ	organo	ὄργανον (a tool)	proposed	agent (claude opus-5.5), by hand
-complexity:organ-system	apparato	apparatus (made ready); sistema	proposed	agent (claude opus-5.5), by hand
 complexity:organism	organismo	ὄργανον; essere vivente (a living being)	proposed	agent (claude opus-5.5), by hand
 complexity:population	popolazione	populus (a people)	proposed	agent (claude opus-5.5), by hand
 complexity:community	comunità	communis; biocenosi	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	ecosistema	οἶκος + σύστημα	proposed	agent (claude opus-5.5), by hand
-complexity:biosphere	biosfera	βίος + σφαῖρα	proposed	agent (claude opus-5.5), by hand
 complexity:logos	ragione	ratio (a reckoning, a proportion)	proposed	agent (claude opus-5.5), by hand
 complexity:material	materiale	materia (timber)	proposed	agent (claude opus-5.5), by hand
-complexity:rock	roccia	rocca	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	corpo celeste	caelum + corpus	proposed	agent (claude opus-5.5), by hand
 complexity:planetary-system	sistema planetario	πλανήτης (a wanderer)	proposed	agent (claude opus-5.5), by hand
 complexity:galaxy	galassia	γάλα (milk); la Via Lattea	proposed	agent (claude opus-5.5), by hand
 complexity:component	componente	componere	proposed	agent (claude opus-5.5), by hand
 complexity:device	dispositivo	disponere (to set in order)	proposed	agent (claude opus-5.5), by hand
-complexity:installation	impianto	impiantare (to plant in)	proposed	agent (claude opus-5.5), by hand
 registry:crown	la corona	corona	proposed	agent (claude opus-5.5), by hand
 crown:theone	l'Essere necessario	necessario (necesse); Avicenna's necesse esse	proposed	agent (claude opus-5.5), by hand
 crown:love	carità	caritas (carus, dear); amore (Paradiso XXXIII 145: l'amor che move il sole e l'altre stelle)	proposed	agent (claude opus-5.5), by hand

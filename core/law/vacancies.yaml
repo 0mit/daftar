@@ -232,6 +232,42 @@ vacancies:
     position: along
     reason: universal
     why: "a distance along a line a being lends — down a core, out along a radius, along a transect — the one place position that has a length and travels with its being"
+  - at: "table:quantities"
+    position: momentum
+    reason: universal
+    why: "mass in motion, which IFC's structural measures and any garden of machines may state"
+  - at: "table:quantities"
+    position: moment-of-inertia
+    reason: universal
+    why: "a body's resistance to turning: IFC's, held for the first structure a garden keeps"
+  - at: "table:quantities"
+    position: linear-stiffness
+    reason: universal
+    why: "a support's or a spring's: IFC's, held for the first structure a garden keeps"
+  - at: "table:quantities"
+    position: electric-field
+    reason: universal
+    why: "a field per length: held beside the charge's other kinds"
+  - at: "table:quantities"
+    position: magnetic-flux
+    reason: universal
+    why: "held beside the charge's other kinds, for the first coil or sensor a garden keeps"
+  - at: "table:quantities"
+    position: magnetic-flux-density
+    reason: universal
+    why: "held beside the charge's other kinds, for the first coil or sensor a garden keeps"
+  - at: "table:quantities"
+    position: luminous-efficacy
+    reason: universal
+    why: "a lamp's light per its power: held beside the perceiver's other kinds"
+  - at: "table:quantities"
+    position: loudness-level
+    reason: universal
+    why: "the ear's twin of the eye's luminous kinds: held for the first sound a garden measures as heard"
+  - at: "table:systems"
+    position: volt-scale
+    reason: universal
+    why: "a node's potential against its ground: the `potential` line's positions, held for the first circuit a garden reads node by node"
 dropped:
   - at: "owned_by.entry_one_of"
     position: contract

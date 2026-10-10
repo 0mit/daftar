@@ -19,6 +19,8 @@ registry:foundation_rules	قواعد بنیاد	قاعده (qā'ede, ق-ع-د, t
 foundation_rules:weight	وزن	و-ز-ن (to weigh: میزان, a balance, a measure) — the operator's word; سنگینی (heaviness)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	مراتب اجسام	مرتبه (martabe, ر-ت-ب: a step one stands firm on); پیچیدگی (pichidegi, from پیچیدن, to twist together); مراتب وجود (the philosophers' grades of being), here of bodies alone	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	فضا∞زمان	فضا (fazā: an open expanse); زمان (zamān) — the operator's form, one thing seen from two sides	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	میدان نیرو	میدان (meydān: an open ground); نیرو (niru: strength) — a field that binds or gives mass, filling room without excluding	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	میدان ماده	میدان (meydān); ماده (mādde, Arabic: the stuff of a thing) — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	ذره‌ی بنیادی	ذره (zarre, Arabic ḏarra: a mote in a sunbeam); بنیاد (bonyād: the foundation); نقطه (noqte: the dot, undivided)	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	هادرون	ἁδρός (stout); کوارک (quark)	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	هسته	هسته (haste: the stone of a fruit, the kernel)	proposed	agent (claude opus-5.5), by hand
@@ -27,21 +29,17 @@ complexity:molecule	مولکول	moles (a mass); مولکول (a little mass)	pr
 complexity:cell	یاخته	یاخته (the Persian Academy's word); سلول (cellule, from cella: a little room)	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	بافت	بافتن (bāftan, to weave)	proposed	agent (claude opus-5.5), by hand
 complexity:organ	اندام	اندام (andām, Middle Persian handām: a limb, a member; also stature, form); عضو (ʿozv, Arabic: a member)	proposed	agent (claude opus-5.5), by hand
-complexity:organ-system	دستگاه	دستگاه (dastgāh: dast, the hand + gāh, a place: means gathered at hand; also a mode of Persian music, in which many melodies work as one)	proposed	agent (claude opus-5.5), by hand
 complexity:organism	جاندار	جان (jān: life, soul) + داشتن (to hold): a being that holds a life; موجود زنده (a living being)	proposed	agent (claude opus-5.5), by hand
 complexity:population	جمعیت	ج-م-ع (to gather): a gathering of one kind	proposed	agent (claude opus-5.5), by hand
 complexity:community	جامعه‌ی زیستی	جامعه (jāme'e, ج-م-ع: what gathers); زیستن (zistan, to live)	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	زیست‌بوم	زیست (life) + بوم (bum: the ground one lives on, a homeland)	proposed	agent (claude opus-5.5), by hand
-complexity:biosphere	زیست‌کره	زیست (life) + کره (kore: a sphere)	proposed	agent (claude opus-5.5), by hand
 complexity:logos	نطق	ن-ط-ق (to speak: نطق is speech and reason at once — the philosophers' حیوان ناطق, the speaking animal, for ζῷον λόγον ἔχον); عقل (aql: reason, first a tether)	proposed	agent (claude opus-5.5), by hand
 complexity:material	جنس	جنس (jens: the stuff a thing is of — what is it made of?); ماده (the line it is on)	proposed	agent (claude opus-5.5), by hand
-complexity:rock	سنگ	سنگ (sang, Middle Persian: stone); صخره (sakhre, Arabic: a rock)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	جرم آسمانی	جرم (jerm, Arabic: a body, a bulk — the astronomers' word); آسمان (āsmān, Avestan asman: stone, and the sky — once thought a vault of stone)	proposed	agent (claude opus-5.5), by hand
 complexity:planetary-system	سامانه‌ی سیاره‌ای	سیاره (sayyāre, س-ي-ر, to travel: the wanderer); سامانه (a system)	proposed	agent (claude opus-5.5), by hand
 complexity:galaxy	کهکشان	کاه (straw) + کشان (trailing): the trail of spilled straw across the sky	proposed	agent (claude opus-5.5), by hand
 complexity:component	قطعه	ق-ط-ع (to cut: a piece cut to fit); ساختن (to make)	proposed	agent (claude opus-5.5), by hand
 complexity:device	افزاره	افزار (afzār, Middle Persian abzār: an instrument, a means); the Persian Academy's word for a device	proposed	agent (claude opus-5.5), by hand
-complexity:installation	تأسیسات	أ-س-س (a foundation: اساس)	proposed	agent (claude opus-5.5), by hand
 registry:crown	تاج	تاج (tāj, Middle Persian tāg: a crown); افسر (afsar: a diadem)	proposed	agent (claude opus-5.5), by hand
 crown:theone	واجب الوجود	و-ج-ب (to fall due, to be necessary) + وجود (being, و-ج-د: to find — being is what is found); ابن سینا: واجب الوجود بالذات, necessary by itself, beside ممکن الوجود, possible in itself and necessary only through another	proposed	agent (claude opus-5.5), by hand
 crown:love	مهر	مهر (mehr, Avestan miθra: the covenant, the bond — and love, and the sun, which gives life); عشق (eshq: longing love)	proposed	agent (claude opus-5.5), by hand

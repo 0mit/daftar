@@ -19,6 +19,8 @@ registry:foundation_rules	rules of foundation	found (fundare: to lay the bottom,
 foundation_rules:weight	weight	weight (Old English wiht, from wegan, to carry — kin to weigh and way): every body has weight, standing on space∞time; a sayable being has none of its own	proposed	agent (claude opus-5.5), by hand
 registry:complexity	the order of bodies	order (Latin ordo: a row of threads in a loom, a rank); complexity (com-plectere, to braid together): each level braided of the one it stands on	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	space∞time	space (spatium: a stretch) and time (a span): one structure with two faces; Minkowski, 1908: space by itself and time by itself fade into shadows, and only a union of the two keeps a reality of its own	proposed	agent (claude opus-5.5), by hand
+complexity:force-field	force field	force (Latin fortis, strong); field (Old English feld, open land) — Faraday's lines of force: a field that binds or gives mass, filling room without excluding	proposed	agent (claude opus-5.5), by hand
+complexity:matter-field	matter field	matter (materia, the stuff a thing is made of, from mater); field — a field that takes room and excludes, its quanta the quarks and leptons	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	elementary particle	element (Latin elementum: a first principle; a letter of the alphabet); particle (particula: a little part); the dot of matter: what has no part known today	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadron	ἁδρός (thick, stout, full-grown): particles bound of quarks, named so in 1962	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	nucleus	nucleus (Latin: a kernel, from nux, a nut): the core of an atom	proposed	agent (claude opus-5.5), by hand
@@ -27,21 +29,17 @@ complexity:molecule	molecule	molecula (New Latin: a little mass, from moles, a m
 complexity:cell	cell	cella (Latin: a small room, a store-chamber) — Hooke, 1665, saw cork's little rooms	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	tissue	tissu (Old French: woven, from texere, to weave): cells of one kind woven as one	proposed	agent (claude opus-5.5), by hand
 complexity:organ	organ	ὄργανον (a tool, from ἔργον, work) — yet it is the capacity that has organs, not the organ capacities (Heidegger, 1929/30): a part serving a capacity of the whole	proposed	agent (claude opus-5.5), by hand
-complexity:organ-system	organ system	organ (ὄργανον, a tool); system (σύστημα: what stands together)	proposed	agent (claude opus-5.5), by hand
 complexity:organism	organism	ὄργανον via French organisme: a whole of organs that is one being — a microbe, a tree, an animal, a person	proposed	agent (claude opus-5.5), by hand
 complexity:population	population	populus (a people): organisms of one kind living together — a herd, a stand of trees	proposed	agent (claude opus-5.5), by hand
 complexity:community	community	communis (shared: com + munus, a duty or gift held in common): populations of many kinds living together	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	ecosystem	οἶκος (a house, a household) + σύστημα: a community with the matter it lives on and in (Tansley, 1935)	proposed	agent (claude opus-5.5), by hand
-complexity:biosphere	biosphere	βίος (a life, a way of living) + σφαῖρα (a ball): every ecosystem of a body together (Suess, 1875; Vernadsky, 1926)	proposed	agent (claude opus-5.5), by hand
 complexity:logos	reason	λόγος (the law's word, from λέγω: to gather, to lay in order, to say); reason (ratio: a reckoning, and a proportion — the two senses the ladder parts); possible on living organisation while its proportion holds — no body stands here	proposed	agent (claude opus-5.5), by hand
 complexity:material	material	materia (timber, the hard wood of a tree, from mater, mother: the trunk that bears the shoots): matter in bulk	proposed	agent (claude opus-5.5), by hand
-complexity:rock	rock	rocca (Medieval Latin): materials aggregated by nature	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	celestial body	caelum (the sky): a body of the sky — a planet, a moon	proposed	agent (claude opus-5.5), by hand
 complexity:planetary-system	planetary system	πλανήτης (a wanderer): bodies held in paths about the largest among them	proposed	agent (claude opus-5.5), by hand
 complexity:galaxy	galaxy	γάλα (milk): ὁ γαλαξίας κύκλος, the milky circle	proposed	agent (claude opus-5.5), by hand
 complexity:component	component	componere (to put together): a made part — a chip, a board, a cable	proposed	agent (claude opus-5.5), by hand
 complexity:device	device	devis (Old French: a design, a division, from dividere) — what it does beyond keeping its form is lent it by its makers and keepers	proposed	agent (claude opus-5.5), by hand
-complexity:installation	installation	installare (Medieval Latin: to seat in a stall): devices and structure assembled at a place — a rack, a room of machines, a building	proposed	agent (claude opus-5.5), by hand
 registry:crown	the crown	corona (a wreath, from κορώνη, anything curved): where every chain ends — one, `theone`, with two faces, love and wisdom	proposed	agent (claude opus-5.5), by hand
 crown:theone	the Necessary Existent	THE ONE (the law's code, `theone`); necessary (necesse: ne + cedere, what cannot give way — what cannot not be); Ibn Sina's واجب الوجود, the one whose being is by itself: the end of every chain, named on no bean	proposed	agent (claude opus-5.5), by hand
 crown:love	love	ἀγάπη: love that does not possess — the face of the crown by which every life is given; a person is held by it, and by no bean	proposed	agent (claude opus-5.5), by hand

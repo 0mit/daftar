@@ -64,3 +64,148 @@ units:
   - { unit: 31556925445.Ms, name: giga-annus,                quantity: duration, factor: ["31556925445000000", "1"] }
   - { unit: mm/a_j,        name: millimetre-per-julian-year, quantity: speed, factor: ["1", "31557600000"] }
   - { unit: "{item}",      name: item,                       quantity: number, factor: ["1", "1"] }
+  # THE UNITS OF THE KINDS ON THE LADDER. A unit with no factor is its own: nothing converts into it
+  # but through what it is defined by (π for a radian, a reference preparation for an IU, its reference for a level)
+  - { unit: "kHz", name: kilohertz, quantity: frequency, factor: ["1000", "1"] }
+  - { unit: "MHz", name: megahertz, quantity: frequency, factor: ["1000000", "1"] }
+  - { unit: "GHz", name: gigahertz, quantity: frequency, factor: ["1000000000", "1"] }
+  - { unit: "/min", name: per-minute, quantity: frequency, factor: ["1", "60"] }
+  - { unit: "{rev}/s", name: revolution-per-second, quantity: rotational-speed, factor: ["1", "1"] }
+  - { unit: "{rev}/min", name: revolution-per-minute, quantity: rotational-speed, factor: ["1", "60"] }
+  - { unit: "sr", name: steradian, quantity: solid-angle, factor: ["1", "1"] }
+  - { unit: "'", name: arcminute, quantity: plane-angle, factor: ["1", "60"] }
+  - { unit: "gon", name: gon, quantity: plane-angle, factor: ["9", "10"] }
+  - { unit: "rad", name: radian, quantity: plane-angle, why: "a radian and a degree meet only through π, which no exact factor holds: each is its own" }
+  - { unit: "deg/s", name: degree-per-second, quantity: angular-speed, factor: ["1", "1"] }
+  - { unit: "rad/s", name: radian-per-second, quantity: angular-speed, why: "through π, as the radian" }
+  - { unit: "[in_i]", name: inch, quantity: length, factor: ["127", "5000"] }
+  - { unit: "[ft_i]", name: foot, quantity: length, factor: ["381", "1250"] }
+  - { unit: "[mi_i]", name: mile, quantity: length, factor: ["201168", "125"] }
+  - { unit: "mg", name: milligram, quantity: mass, factor: ["1", "1000000"] }
+  - { unit: "ug", name: microgram, quantity: mass, factor: ["1", "1000000000"] }
+  - { unit: "t", name: tonne, quantity: mass, factor: ["1000", "1"] }
+  - { unit: "[lb_av]", name: pound, quantity: mass, factor: ["45359237", "100000000"] }
+  - { unit: "kg/m", name: kilogram-per-metre, quantity: linear-density, factor: ["1", "1"] }
+  - { unit: "kg/m2", name: kilogram-per-square-metre, quantity: surface-density, factor: ["1", "1"] }
+  - { unit: "kg/s", name: kilogram-per-second, quantity: mass-flow, factor: ["1", "1"] }
+  - { unit: "kg/h", name: kilogram-per-hour, quantity: mass-flow, factor: ["1", "3600"] }
+  - { unit: "mL/h", name: millilitre-per-hour, quantity: volume-flow, factor: ["1", "3600000000"] }
+  - { unit: "m3/h", name: cubic-metre-per-hour, quantity: volume-flow, factor: ["1", "3600"] }
+  - { unit: "kg.m/s", name: kilogram-metre-per-second, quantity: momentum, factor: ["1", "1"] }
+  - { unit: "N", name: newton, quantity: force, factor: ["1", "1"] }
+  - { unit: "kN", name: kilonewton, quantity: force, factor: ["1000", "1"] }
+  - { unit: "gf", name: gram-force, quantity: force, factor: ["196133", "20000000"] }
+  - { unit: "kgf", name: kilogram-force, quantity: force, factor: ["196133", "20000"] }
+  - { unit: "[lbf_av]", name: pound-force, quantity: force, factor: ["8896443230521", "2000000000000"] }
+  - { unit: "bar", name: bar, quantity: pressure, factor: ["100000", "1"] }
+  - { unit: "mbar", name: millibar, quantity: pressure, factor: ["100", "1"] }
+  - { unit: "atm", name: standard-atmosphere, quantity: pressure, factor: ["101325", "1"] }
+  - { unit: "cm[H2O]", name: centimetre-of-water, quantity: pressure, factor: ["196133", "2000"] }
+  - { unit: "m[H2O]", name: metre-of-water, quantity: pressure, factor: ["196133", "20"] }
+  - { unit: "[psi]", name: pound-per-square-inch, quantity: pressure, factor: ["8896443230521", "1290320000"] }
+  - { unit: "J", name: joule, quantity: energy, factor: ["1", "1"] }
+  - { unit: "kJ", name: kilojoule, quantity: energy, factor: ["1000", "1"] }
+  - { unit: "MJ", name: megajoule, quantity: energy, factor: ["1000000", "1"] }
+  - { unit: "W.h", name: watt-hour, quantity: energy, factor: ["3600", "1"] }
+  - { unit: "kW.h", name: kilowatt-hour, quantity: energy, factor: ["3600000", "1"] }
+  - { unit: "cal", name: calorie, quantity: energy, factor: ["523", "125"] }
+  - { unit: "kcal", name: kilocalorie, quantity: energy, factor: ["4184", "1"] }
+  - { unit: "N.m", name: newton-metre, quantity: torque, factor: ["1", "1"] }
+  - { unit: "mW", name: milliwatt, quantity: power, factor: ["1", "1000"] }
+  - { unit: "W", name: watt, quantity: power, factor: ["1", "1"] }
+  - { unit: "kW", name: kilowatt, quantity: power, factor: ["1000", "1"] }
+  - { unit: "MW", name: megawatt, quantity: power, factor: ["1000000", "1"] }
+  - { unit: "[HP]", name: horsepower, quantity: power, factor: ["37284993579113511", "50000000000000"] }
+  - { unit: "kg.m2", name: kilogram-square-metre, quantity: moment-of-inertia, factor: ["1", "1"] }
+  - { unit: "N/m", name: newton-per-metre, quantity: linear-stiffness, factor: ["1", "1"] }
+  - { unit: "Gy", name: gray, quantity: absorbed-dose, factor: ["1", "1"] }
+  - { unit: "mGy", name: milligray, quantity: absorbed-dose, factor: ["1", "1000"] }
+  - { unit: "[g]", name: standard-gravity, quantity: acceleration, factor: ["196133", "20000"] }
+  - { unit: "Gal", name: gal, quantity: acceleration, factor: ["1", "100"] }
+  - { unit: "m2/s2", name: square-metre-per-second-squared, quantity: gravitational-potential, factor: ["1", "1"] }
+  - { unit: "J/kg", name: joule-per-kilogram, quantity: gravitational-potential, factor: ["1", "1"] }
+  - { unit: "m3/s2", name: cubic-metre-per-second-squared, quantity: gravitational-parameter, factor: ["1", "1"] }
+  - { unit: "C", name: coulomb, quantity: charge, factor: ["1", "1"] }
+  - { unit: "mA.h", name: milliampere-hour, quantity: charge, factor: ["18", "5"] }
+  - { unit: "A.h", name: ampere-hour, quantity: charge, factor: ["3600", "1"] }
+  - { unit: "A", name: ampere, quantity: current, factor: ["1", "1"] }
+  - { unit: "mA", name: milliampere, quantity: current, factor: ["1", "1000"] }
+  - { unit: "uA", name: microampere, quantity: current, factor: ["1", "1000000"] }
+  - { unit: "V", name: volt, quantity: potential-difference, factor: ["1", "1"] }
+  - { unit: "mV", name: millivolt, quantity: potential-difference, factor: ["1", "1000"] }
+  - { unit: "kV", name: kilovolt, quantity: potential-difference, factor: ["1000", "1"] }
+  - { unit: "V/m", name: volt-per-metre, quantity: electric-field, factor: ["1", "1"] }
+  - { unit: "Ohm", name: ohm, quantity: resistance, factor: ["1", "1"] }
+  - { unit: "kOhm", name: kiloohm, quantity: resistance, factor: ["1000", "1"] }
+  - { unit: "MOhm", name: megaohm, quantity: resistance, factor: ["1000000", "1"] }
+  - { unit: "S", name: siemens, quantity: conductance, factor: ["1", "1"] }
+  - { unit: "mS", name: millisiemens, quantity: conductance, factor: ["1", "1000"] }
+  - { unit: "Ohm.m", name: ohm-metre, quantity: resistivity, factor: ["1", "1"] }
+  - { unit: "F", name: farad, quantity: capacitance, factor: ["1", "1"] }
+  - { unit: "uF", name: microfarad, quantity: capacitance, factor: ["1", "1000000"] }
+  - { unit: "nF", name: nanofarad, quantity: capacitance, factor: ["1", "1000000000"] }
+  - { unit: "pF", name: picofarad, quantity: capacitance, factor: ["1", "1000000000000"] }
+  - { unit: "H", name: henry, quantity: inductance, factor: ["1", "1"] }
+  - { unit: "mH", name: millihenry, quantity: inductance, factor: ["1", "1000"] }
+  - { unit: "uH", name: microhenry, quantity: inductance, factor: ["1", "1000000"] }
+  - { unit: "Wb", name: weber, quantity: magnetic-flux, factor: ["1", "1"] }
+  - { unit: "T", name: tesla, quantity: magnetic-flux-density, factor: ["1", "1"] }
+  - { unit: "mT", name: millitesla, quantity: magnetic-flux-density, factor: ["1", "1000"] }
+  - { unit: "V.A", name: volt-ampere, quantity: apparent-power, factor: ["1", "1"] }
+  - { unit: "kV.A", name: kilovolt-ampere, quantity: apparent-power, factor: ["1000", "1"] }
+  - { unit: "V.A{reactive}", name: volt-ampere-reactive, quantity: reactive-power, factor: ["1", "1"] }
+  - { unit: "Bq", name: becquerel, quantity: activity, factor: ["1", "1"] }
+  - { unit: "kBq", name: kilobecquerel, quantity: activity, factor: ["1000", "1"] }
+  - { unit: "MBq", name: megabecquerel, quantity: activity, factor: ["1000000", "1"] }
+  - { unit: "mol", name: mole, quantity: amount-of-substance, factor: ["1", "1"] }
+  - { unit: "mmol", name: millimole, quantity: amount-of-substance, factor: ["1", "1000"] }
+  - { unit: "umol", name: micromole, quantity: amount-of-substance, factor: ["1", "1000000"] }
+  - { unit: "mol/L", name: mole-per-litre, quantity: substance-concentration, factor: ["1", "1"] }
+  - { unit: "mmol/L", name: millimole-per-litre, quantity: substance-concentration, factor: ["1", "1000"] }
+  - { unit: "g/L", name: gram-per-litre, quantity: mass-concentration, factor: ["1", "1"] }
+  - { unit: "mg/dL", name: milligram-per-decilitre, quantity: mass-concentration, factor: ["1", "100"] }
+  - { unit: "ug/mL", name: microgram-per-millilitre, quantity: mass-concentration, factor: ["1", "1000"] }
+  - { unit: "kat", name: katal, quantity: catalytic-activity, factor: ["1", "1"] }
+  - { unit: "U", name: enzyme-unit, quantity: catalytic-activity, factor: ["1", "60000000"] }
+  - { unit: "osm/kg", name: osmole-per-kilogram, quantity: osmolality, factor: ["1", "1"] }
+  - { unit: "mosm/kg", name: milliosmole-per-kilogram, quantity: osmolality, factor: ["1", "1000"] }
+  - { unit: "eq/L", name: equivalent-per-litre, quantity: equivalent-concentration, factor: ["1", "1"] }
+  - { unit: "meq/L", name: milliequivalent-per-litre, quantity: equivalent-concentration, factor: ["1", "1000"] }
+  - { unit: "[pH]", name: ph, quantity: ph, factor: ["1", "1"] }
+  - { unit: "J/K", name: joule-per-kelvin, quantity: heat-capacity, factor: ["1", "1"] }
+  - { unit: "J/(kg.K)", name: joule-per-kilogram-kelvin, quantity: specific-heat-capacity, factor: ["1", "1"] }
+  - { unit: "W/(m.K)", name: watt-per-metre-kelvin, quantity: thermal-conductivity, factor: ["1", "1"] }
+  - { unit: "W/(m2.K)", name: watt-per-square-metre-kelvin, quantity: thermal-transmittance, factor: ["1", "1"] }
+  - { unit: "m2.K/W", name: square-metre-kelvin-per-watt, quantity: thermal-resistance, factor: ["1", "1"] }
+  - { unit: "W/m2", name: watt-per-square-metre, quantity: heat-flux-density, factor: ["1", "1"] }
+  - { unit: "KiBy", name: kibibyte, quantity: information, factor: ["1024", "1"] }
+  - { unit: "MiBy", name: mebibyte, quantity: information, factor: ["1048576", "1"] }
+  - { unit: "TiBy", name: tebibyte, quantity: information, factor: ["1099511627776", "1"] }
+  - { unit: "PBy", name: petabyte, quantity: information, factor: ["1000000000000000", "1"] }
+  - { unit: "kbit/s", name: kilobit-per-second, quantity: data-rate, factor: ["125", "1"] }
+  - { unit: "Gbit/s", name: gigabit-per-second, quantity: data-rate, factor: ["125000000", "1"] }
+  - { unit: "kBy/s", name: kilobyte-per-second, quantity: data-rate, factor: ["1000", "1"] }
+  - { unit: "MBy/s", name: megabyte-per-second, quantity: data-rate, factor: ["1000000", "1"] }
+  - { unit: "{operation}/s", name: operation-per-second, quantity: operation-rate, factor: ["1", "1"] }
+  - { unit: "dB[SPL]", name: decibel-sound-pressure-level, quantity: level, why: "a level against its own reference (20 µPa): none converts into another level's" }
+  - { unit: "dB[V]", name: decibel-volt, quantity: level, why: "a level against its own reference (1 V): none converts into another level's" }
+  - { unit: "dB[uV]", name: decibel-microvolt, quantity: level, why: "a level against its own reference (1 µV): none converts into another level's" }
+  - { unit: "dB[W]", name: decibel-watt, quantity: level, why: "a level against its own reference (1 W): none converts into another level's" }
+  - { unit: "dBm", name: decibel-milliwatt, quantity: power-level, factor: ["1", "1"], ucum: "false", why: "UCUM's power bels are against 1 W and 1 kW; a radio's received power is read against 1 mW, so the law names the code, 30 dB below dB[W]" }
+  - { unit: "cd", name: candela, quantity: luminous-intensity, factor: ["1", "1"] }
+  - { unit: "lm", name: lumen, quantity: luminous-flux, factor: ["1", "1"] }
+  - { unit: "lx", name: lux, quantity: illuminance, factor: ["1", "1"] }
+  - { unit: "cd/m2", name: candela-per-square-metre, quantity: luminance, factor: ["1", "1"] }
+  - { unit: "lm/W", name: lumen-per-watt, quantity: luminous-efficacy, factor: ["1", "1"] }
+  - { unit: "phon", name: phon, quantity: loudness-level, factor: ["1", "1"], ucum: "false", why: "UCUM writes no loudness level: the phon is the standard listener's (ISO 226), and the law names the code" }
+  - { unit: "Sv", name: sievert, quantity: dose-equivalent, factor: ["1", "1"] }
+  - { unit: "mSv", name: millisievert, quantity: dose-equivalent, factor: ["1", "1000"] }
+  - { unit: "[iU]", name: international-unit, quantity: arbitrary-unit, why: "fixed by its own reference preparation: no factor joins it to another" }
+  - { unit: "[arb'U]", name: arbitrary-unit, quantity: arbitrary-unit, why: "fixed by its own reference: no factor joins it to another" }
+  - { unit: "[iU]/L", name: international-unit-per-litre, quantity: arbitrary-unit, why: "fixed by its own reference preparation: no factor joins it to another" }
+  - { unit: "[ppm]", name: part-per-million, quantity: ratio, factor: ["1", "1000000"] }
+  - { unit: "[ppb]", name: part-per-billion, quantity: ratio, factor: ["1", "1000000000"] }
+  - { unit: "{px}", name: pixel, quantity: number, why: "a count of pixels: counts of different things never convert into one another" }
+  - { unit: "{sector}", name: sector, quantity: number, why: "a count of a disk's blocks: counts of different things never convert into one another" }
+  - { unit: "{frame}", name: frame, quantity: number, why: "a count of frames: counts of different things never convert into one another" }
+  - { unit: "IRT", name: toman, quantity: money, factor: ["10", "1"], per: IRR, ucum: "false", why: "the toman, the unit the Iranian rial is counted in every day and ISO 4217 does not name: exactly ten rials. A unit of IRR, never a currency of its own" }

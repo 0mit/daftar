@@ -76,18 +76,18 @@ lines:                                     # the ladder's lines; a line is any o
 conditions:
   - { condition: balance,    meaning: "the mean, a steady state, never equilibrium: what life is possible on" }
   - { condition: proportion, meaning: "what reason is possible on, in a living organisation" }
+  - { condition: ensemble,   meaning: "many parts sharing energy, near a balance of it (thermal equilibrium, at least locally): what a temperature is possible on. A step held `while: ensemble` is reached only by a being made of it in number, never by the step itself" }
 foundations:
   - { foundation: weight, holds_for: body, property: mass, meaning: "every body has weight; a sayable has none of its own" }
-levels:                                    # the face's own steps; the bodies' other 22 are rows of our knowledge tree
+levels:                                    # the face's own steps; the bodies' other 20 are rows of our knowledge tree
   # THE TWO FRAMES: where a being takes its place, one for each nature, neither prior (thesis 10)
-  - { level: space-time, line: frame, frame_of: body,    stands: [], meaning: "the frame of bodies: one structure, seen as place and as time; a body takes room in it" }
+  - { level: space-time, line: frame, frame_of: body,    stands: [], meaning: "the frame of bodies: one structure, seen as place and as time; a body takes room in it. It is itself a field, the gravitational one — it bends and it waves — and the only field that is the frame: every other takes its where and when from it, it couples to every energy alike, and it can be neither absent, nor screened, nor located" }
   - { level: taxis,      line: frame, frame_of: sayable, stands: [ { at: reason, as: possible-on } ], meaning: "the frame of sayables: the order a sayable takes its place in. Its positions are the ordinal line's — which: the first clause, article 12, a name in its namespace — no time and no place" }
   - { level: reason,     line: reason, stands: [ { at: organism, as: possible-on, while: proportion } ] }
   # THE SAID: the sayable beings, each made of the one below, all taking their place in the taxis
   - { level: name,      line: said, stands: [ { at: taxis, as: possible-on } ],   meaning: "a word that picks a being out: the least sayable (ὄνομα)" }
   - { level: statement, line: said, stands: [ { at: name, as: made-of } ],        meaning: "a complete sayable, true or false (the Stoics' ἀξίωμα): the core's unit" }
-  - { level: discourse, line: said, stands: [ { at: statement, as: made-of } ],   meaning: "statements gathered into one: a document, a contract, a design, a work" }
-  - { level: corpus,    line: said, stands: [ { at: discourse, as: made-of } ],   meaning: "discourses gathered into one order: a law, a language, a garden" }
+  - { level: discourse, line: said, stands: [ { at: statement, as: made-of } ],   meaning: "statements gathered into one: a document, a contract, a design, a work — or discourses gathered into one order, a law, a language, a garden" }
 ways: [made-of, possible-on]               # the two ways of standing, the `as` of `stand`
 crown:
   - { crown: theone, law: "the Necessary Existent (wājib al-wujūd)", faces: [love, wisdom] }
@@ -198,7 +198,7 @@ rules:
   - { rule: life,       says: "a living being comes through the living; a made or said being comes through hands, a being at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded" }
   - { rule: necessity,  says: "a `necessary` statement names what it is necessary through — except of the crown, necessary by itself (thesis 12)" }
   - { rule: squares,    says: "two positions that cannot both stand — contraries or contradictories — on one statement through one source are refused; subcontraries may both stand. One observer gives one verdict on one statement (`respond` with an `as`), and a `rule` on statements is given once every speaker of them has responded" }
-  - { rule: weight,     says: "a mass is a body's: a statement giving a sayable a mass of its own is refused" }
+  - { rule: bearer,     says: "a quantity is stated only of what its dimensions and its kind hold for (`holds_for`): a nature, or a level the being is or is made of — through `made-of` alone, never `possible-on`. A mass is a body's (the foundation `weight`), a temperature an ensemble's; information and money are what is carried — a document's, an agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a mass of its own, a single molecule a temperature, a machine its bytes or a body money of its own is refused" }
   - { rule: frame,      says: "a position is in a declared system, in its one form, and finds its other half by its complement" }
   - { rule: names,      says: "a name its namespace gives once names one being. A garden's id is twelve hexadecimal digits, and never this garden's own: a `garden` bean is another garden. A name a garden gave, qualified to cross, is `<garden_id>/<kind>:<name>`, by this garden or one a `garden` bean here is named by; an identifier someone else assigned is never qualified. A name a namespace gives holds no bidi control character (Unicode's Bidi_Control), which would make it read as another" }
   - { rule: layers,     says: "a file stands in one layer; a `pass` from a layer to a layer through a method stands only where the flow table grants it: of the rows that hold it the nearest decide — one that names the act what it carries is known by there (`as`) is nearer than one that names only layers — and of two as near, a refusal; `ratified` is granted only to the party a garden's own row names, with the basis it grants on (core/law/flows.yaml); a session's pass log, which its bean names in `details`, only grows, and a commit that stages one claims the session: each pass the log gains, `{from, to, through, as?, metadata}`, stands where the table grants it, each said value the commit adds has a granted pass into it, and a `say` by a person it adds has one from `words` or `instructions` into its bean" }
