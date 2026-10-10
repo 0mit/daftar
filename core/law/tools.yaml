@@ -59,6 +59,7 @@ tools:
   - { tool: across, family: between }
   - { tool: pass, family: between }
   - { tool: held, family: between }
+  - { tool: relay, family: between }
   - { tool: launch, family: launch }
 forms:
   families: { family: required, meaning: required }

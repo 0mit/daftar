@@ -59,6 +59,8 @@ jobs:
       - name: "core_between: between gardens in the core — propose, across, pass, held — and the flow law, the held store's form and its check on the host, and the mark of a garden that rehearses"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_between.py
+      - name: "relay: a peer behind NAT dials out, and an always-on peer relays one port to it and nothing else"
+        run: python3 test/relay.py
       - name: "core_law: the law tools in a garden of the core — rules, why, form, forms, catalog, review, facets — and the law they read: the tools by their verbs, and what nothing takes up yet"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_law.py

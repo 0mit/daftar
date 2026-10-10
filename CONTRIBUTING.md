@@ -58,6 +58,7 @@ parts, changes).
    python3 test/core_read.py
    python3 test/core_measure.py
    python3 test/core_between.py
+   python3 test/relay.py
    python3 test/core_law.py
    python3 test/core_gate.py
    python3 test/core_view.py
