@@ -18,7 +18,7 @@ Nothing is mocked: a garden of the core grown from a release made of this tree, 
     of its own
   + the relay holds the union of what every garden said; the two masses both stand, side by side, each known by its
     garden's act; the bean only site-c wrote arrives whole; the statement nobody edited is untouched, its comment with
-    it; every garden's journal entry survives, the journal merged by union
+    it; every garden's journal entry survives, the journal merged entry by entry
   + the converged garden passes the core's gate whole — and a second remote that pulls the three back in the other
     order holds the same statements
 
@@ -105,8 +105,8 @@ try:
     r = grow.garden(REL, ORIGIN, 'sam', '--name', 'relay-garden')
     check(f"an origin garden of the core grows from this tree (core@{grow.VERSION})", r.returncode == 0, r.out[-600:])
     attrs = text(ORIGIN, '.gitattributes')
-    check("...its beans go to the statement merge and its journal to git's union",
-          re.search(r'(?m)^beans/\*\*?\S* +merge=daftar', attrs) and re.search(r'(?m)^log/journal\.md +merge=union', attrs),
+    check("...its beans go to the statement merge, and its journal to the same driver, entry by entry",
+          re.search(r'(?m)^beans/\*\*?\S* +merge=daftar', attrs) and re.search(r'(?m)^log/journal\.md +merge=daftar', attrs),
           attrs)
     write(ORIGIN, 'beans/relay.md', RELAY)
     r = commit(ORIGIN, 'the relay', '- action: wrote [[relay]]')
@@ -180,7 +180,7 @@ try:
           or '  # the owner: nobody edits this line, and its comment travels with it\n  - own: { by: sam, of: self }' in relay,
           relay)
     journal = text(REMOTE, 'log/journal.md')
-    check("every garden's journal entry survives: the journal merges by union, losing none",
+    check("every garden's journal entry survives: the journal merges entry by entry, losing none",
           all(f'{s}: the relay as seen there' in journal for s in SITES)
           and all(f'merged {s}' in journal for s in SITES), journal[-1500:])
     r = grow.run(PY, 'core/check.py', '.', cwd=REMOTE)

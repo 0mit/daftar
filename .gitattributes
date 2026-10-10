@@ -19,12 +19,13 @@ captures/** -text
 # wearing the appearance of a semantic one.
 beans/*.md     merge=daftar
 mappings/*.md  merge=daftar
-# Append-only logs: git's built-in line-union (lossless).
-log/journal.md merge=union
-# The park-and-proceed queue is append-mostly exactly as the journal is: two agents on two clones
-# add two different items and neither has touched the other. Declared 2026-08-03 after a purely additive
-# pair conflicted textually while log/journal.md absorbed the same shape losslessly.
-log/pending.md merge=union
+# THE TWO LOGS, merged by the same driver ENTRY BY ENTRY (bin/merge.py): each entry of both sides kept whole, those
+# only the other side holds appended after ours. git's line union, which merged them until 2026-10-09, keeps a line both
+# sides' additions share once: two items parked apart, each ending `- status: proposed`, kept that line once, and the
+# first item stood with no status. The journal is append-only; the queue's entries change, and one both sides changed
+# apart is a conflict for a person.
+log/journal.md merge=daftar
+log/pending.md merge=daftar
 # A SERIES' PARTS ARE ITS ROWS, BYTE FOR BYTE: a part is a table written once and never rewritten (a new download is a new
 # part), so git neither turns its line ends nor merges it as text. Two gardens' parts meet as a set of files; the same
 # part written two ways is a conflict for a person, never a text merge of two recordings.

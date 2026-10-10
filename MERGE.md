@@ -56,8 +56,11 @@ merge: they meet by proposal (`MODEL.md`, Between gardens).
   body, and where a side is not written in statements. git hands the driver three blobs and not three commits, so a
   side's words are read from the bean: one in today's words (a branch from before the garden adopted the core) is
   merged once it is written in statements (`bin/reform.py`).
-- `log/journal.md` and `log/pending.md` merge by git's own union (`merge=union`): both sides' entries are kept, none
-  rewritten.
+- `log/journal.md` and `log/pending.md` merge by the same driver, **entry by entry** (`bin/merge.py`): every entry of
+  ours stays where it is, as written, and each entry only theirs holds is appended after them, whole; an entry one
+  side changed (only the queue changes one) comes through changed, and one both sides changed apart is a conflict for
+  a person, both versions side by side. They merged by git's line union until 2026-10-09, which keeps a line both
+  sides' additions share once: two items parked apart, each ending `- status: proposed`, kept that line once.
 - **The gate covers what a merge makes**: the merged bean passes `core/check.py` like any other commit, and the merge
   is committed with the journal entry that names what it merged: `git merge --no-commit`, then `bin/save.py`. A
   merge git commits itself runs the gate too (the `pre-merge-commit` hook): where it merged a bean both sides changed,

@@ -164,9 +164,9 @@ goes on from here, and `FORMS.md` holds what an agent writes most.
 | `WELCOME.md` | the door for an assistant with no shell |
 | `RATIONALE.md` | why each rule is as it is, keyed by the rule's path |
 
-Germination also copies **`.gitattributes`**: it sends a bean's merge to the statement merge (`MERGE.md`) and gives
-`log/journal.md` a union merge. A garden without it merges its beans line by line and conflicts on its own append-only
-log. `.gitignore` travels with it, so no bytecode reaches a new garden's first commit.
+Germination also copies **`.gitattributes`**: it sends a bean's merge to the statement merge (`MERGE.md`), and the
+journal's and the queue's to the same driver, entry by entry. A garden without it merges its beans line by line and
+conflicts on its own append-only log. `.gitignore` travels with it, so no bytecode reaches a new garden's first commit.
 
 **There is no copy of the tools here.** `germinate.py` copies them from the clone, by the patterns in `seed/LANGUAGE`:
 a vendored copy would be a second toolchain that can drift from the one under test.
