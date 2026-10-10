@@ -39,7 +39,9 @@ ONE SAVE AT A TIME (24.0, N34): a save holds an exclusive lock on `<git dir>/daf
 its commit, so two writers in one clone — a person and an agent, two agents, a view host's form — queue, and neither
 journals over the other's staged files. A save that waits longer than `DAFTAR_SAVE_WAIT` seconds (120 unless set) is
 REFUSED, nothing written, naming the wait. The lock is the operating system's (flock, or msvcrt on Windows), so a save
-that dies releases it.
+that dies releases it. A save started by a process that holds the lock for it — bin/sync.py, saving the merge it made
+under the lock it took before it fetched — is told so by DAFTAR_SAVE_LOCK_HELD_BY, its parent's process id, and saves
+under that lock.
 
 IN A GARDEN OF THE CORE (v1 part 5) the save is the same act: the entry, the moment written at each `at: now`
 (bin/journal.py, by the law the garden runs), everything staged, the core's gate at the commit, and a save that waits
@@ -308,6 +310,8 @@ def lock():
                 fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             return f
         except OSError:
+            if os.environ.get('DAFTAR_SAVE_LOCK_HELD_BY') == str(os.getppid()):
+                return f                          # the process that started this save holds the lock for it
             if time.monotonic() >= end:
                 f.close()
                 refuse(f"another save is in progress in this clone, and did not finish within {wait:g}s "

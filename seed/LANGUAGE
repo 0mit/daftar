@@ -46,6 +46,7 @@ bin/parse.py
 bin/public.py
 bin/hook.py
 bin/hub.py
+bin/sync.py
 bin/launch.py
 # The one entry to them all, `daftar <verb>`: its verbs and their families are the law's (`verbs`, `tool_families`).
 bin/daftar.py

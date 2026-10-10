@@ -3,6 +3,7 @@
 
     python3 bin/hub.py install <bare repository> [--only <person>] [--each]
     python3 bin/hub.py pre-receive [--only <person>] [--each]        # what the installed hook runs, reading stdin
+    python3 bin/hub.py receive <ref> [--each]                         # a peer judges what a fetch brought, as a hub
 
 A GARDEN WITH MORE THAN ONE WRITER HAS A HUB, a bare repository everyone pushes to, and the hub judges every push
 again, commit by commit, oldest first:
@@ -25,6 +26,11 @@ gate reads the law beside it; so no push reaches step 4 until every commit in it
 no writer but the gardener, or one granted `ratify:G`, change a line of code. A writer who could change `bin/` could
 make the hub run anything, and pass anything. For the same reason a commit with no parent is taken only by an empty
 hub, and only from the gardener its own tree names: a root commit read as its own parent would name its own writers.
+
+EVERY PEER JUDGES WHAT IT RECEIVES (design §7.1): `receive <ref>` judges what a fetch brought into <ref> — a quarantine
+ref, never a branch — by the same four steps, every commit it holds that this clone's own branches do not, before
+anything is merged; nothing fetched is counted as judged (a remote-tracking ref holds another's word, not this
+clone's). Exit 0 and `taken` where every commit passes; the refusals otherwise, and nothing is merged.
 
 `--only <person>` accepts pushes signed by the gardener and that one writer: the `view` host's own key (F5 (a)).
 It writes nothing to the garden; a refusal names the commit, the writer and what was missing.
@@ -235,8 +241,10 @@ def is_code(m, path, drawn=()):
             or path in drawn)
 
 
-def rights(writer, commit, parent, env, tmp):
-    """What the writer changed that its grants at the parent do not open: [(path, act)]."""
+def rights(writer, commit, parent, env, tmp, others=()):
+    """What the writer changed that its grants at the parent do not open: [(path, act)]. A MERGE (`others`, its other
+    parents) brings what each side committed, judged when it was committed: what the merge itself changed — and its
+    writer needs grants for — is a path that differs from every parent (MERGE.md §5, as the gate reads a merge)."""
     before = Tree(parent, env) if parent else None
     if before is None or writer == before.gardener():
         return []
@@ -247,6 +255,11 @@ def rights(writer, commit, parent, env, tmp):
     before.checkout(root)
     beans = before.beans()
     _c, out, _e = git('diff', '--name-only', '--no-renames', parent, commit, env=env)
+    paths = [x for x in out.split('\n') if x]
+    if others:
+        def blob(ref, p):
+            return git('rev-parse', '-q', '--verify', f"{ref}:{p}", env=env)[1].strip()
+        paths = [p for p in paths if all(blob(o, p) != blob(commit, p) for o in others)]
     after = Tree(commit, env)
     once = before.once() | after.once()
     m = dmpass.Map.here(root)
@@ -256,7 +269,7 @@ def rights(writer, commit, parent, env, tmp):
     def ratify_g():
         return dmpass.may(writer, 'ratify:G', before.gardener() or '', root=root, beans=beans).granted
 
-    for p in [x for x in out.split('\n') if x]:
+    for p in paths:
         if m.layer_of(p)[0] in dmpass.RULED or is_code(m, p, drawn):
             if not ratify_g():
                 missing.append((p, 'ratify:G'))
@@ -285,6 +298,9 @@ def gate(commit, env, tmp):
     objs = [os.path.abspath(env.get('GIT_OBJECT_DIRECTORY') or os.path.join(env.get('GIT_DIR') or '.', 'objects'))]
     objs += [os.path.abspath(p) for p in (env.get('GIT_ALTERNATE_OBJECT_DIRECTORIES') or '').split(os.pathsep) if p]
     objs.append(os.path.abspath(os.path.join(env.get('GIT_DIR') or '.', 'objects')))
+    c, own, _e = git('rev-parse', '--git-path', 'objects', env=env)   # a working clone's are under .git/ (`receive`)
+    if c == 0 and own.strip():
+        objs.append(os.path.abspath(own.strip()))
     _e = {k: v for k, v in env.items() if not k.startswith(('GIT_DIR', 'GIT_QUARANTINE', 'GIT_OBJECT_DIRECTORY',
                                                             'GIT_ALTERNATE', 'GIT_WORK_TREE', 'GIT_INDEX'))}
     _e['GIT_ALTERNATE_OBJECT_DIRECTORIES'] = os.pathsep.join(dict.fromkeys(objs))
@@ -301,14 +317,15 @@ def gate(commit, env, tmp):
         raise Refused("the garden it leaves does not pass the gate:\n" + out.strip()[-1500:])
 
 
-def judge(old, new, only=None, each=False, env=None):
-    """[str]: every refusal for one ref update; empty when the push is accepted."""
+def judge(old, new, only=None, each=False, env=None, known=('--exclude=refs/daftar/custom/*', '--all')):
+    """[str]: every refusal for one ref update; empty when the push is accepted. `known` is what counts as judged
+    already: everything a hub holds but a person's labels; a peer's own branches alone (`receive`)."""
     env = env or dict(os.environ)
     if new == ZERO:
         return []
     # the commits no garden ref holds yet: a person's labels ref holds commits never judged as the garden, so a commit
     # it holds is judged again before a garden's branch may hold it
-    _c, out, _e = git('rev-list', '--reverse', new, '--not', '--exclude=refs/daftar/custom/*', '--all', env=env)
+    _c, out, _e = git('rev-list', '--reverse', new, '--not', *known, env=env)
     commits = [c for c in out.split('\n') if c]
     found = []
     with tempfile.TemporaryDirectory(prefix='hub-') as tmp:
@@ -317,6 +334,7 @@ def judge(old, new, only=None, each=False, env=None):
             payload, sig = split_signature(raw)
             _r, parents, _e = git('rev-list', '--parents', '-n', '1', c, env=env)
             parent = (parents.split() + [None, None])[1]
+            others = parents.split()[2:]                     # a merge's other parents
             try:
                 if sig is None:
                     raise Refused("it is not signed: a hub accepts a commit signed by a key a writer's bean carries")
@@ -337,7 +355,7 @@ def judge(old, new, only=None, each=False, env=None):
                                   f"it — the gardener adds a writer's key (a class-F change)")
                 if only and who not in (only, gardener):
                     raise Refused(f"it is signed by {who}, and this hub accepts only {gardener} and {only}")
-                miss = rights(who, c, parent, env, tmp)
+                miss = rights(who, c, parent, env, tmp, others)
                 if miss:
                     raise Refused(f"{who} may not make it: " + '; '.join(f"{p} needs a grant of `{a}`" for p, a in miss))
                 if each:
@@ -402,6 +420,14 @@ def judge_custom(person, old, new, env=None):
                 found.append(f"{c[:10]}: {x}")
                 break
     return found
+def receive(ref, each=False, env=None):
+    """[str]: every refusal for what a fetch brought into `ref`, judged as a hub judges a push: the commits it holds that
+    this clone's own branches do not."""
+    env = env or dict(os.environ)
+    c, sha, _e = git('rev-parse', '--verify', '-q', ref + '^{commit}', env=env)
+    if c != 0 or not sha.strip():
+        return [f"{ref} names no commit"]
+    return judge(ZERO, sha.strip(), None, each, env, known=('--branches',))
 
 
 def install(bare, only=None, each=False):
@@ -422,6 +448,14 @@ def main(argv):
     if argv[:1] == ['install'] and len(argv) >= 2:
         print(f"hub: installed {install(os.path.abspath(argv[1]), only, each)}")
         return 0
+    if argv[:1] == ['receive'] and len(argv) >= 2:
+        refused = receive(argv[1], each)
+        for r in refused:
+            print(f"hub: REFUSED {argv[1]} {r}", file=sys.stderr)
+        if not refused:
+            print(f"hub: {argv[1]}: taken — every commit it brings is signed by a writer, within their rights, and the "
+                  f"garden passes its gate")
+        return 1 if refused else 0
     if argv[:1] == ['pre-receive']:
         refused = []
         for line in sys.stdin.read().split('\n'):

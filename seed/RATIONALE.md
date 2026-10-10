@@ -4853,3 +4853,14 @@ million head parks told nobody (2026-10-09): a failure a reading shows — a `fa
 that showed it, not yet `repair`ed — is a lead to whoever answers for the being in keeping it, else its owner, else the
 gardener. A failure written with no reading behind it is a finding: it stays in the reading and the register, and is not
 pushed at anyone, since a garden that turns every finding into an alert trains its people to ignore alerts.
+## core/law/tools.yaml: tools[sync]
+
+EVERY MACHINE OF A GARDEN IS A PEER, AND THE RECEIVER JUDGES WHAT IT RECEIVES. A garden kept on several machines had one
+place that judged a push — the hub — and machines that pulled from it trusting what it held. `bin/sync.py` makes every
+clone a receiver: it fetches each peer's branch into a quarantine ref, judges every commit that brings by the hub's own
+rules (`bin/hub.py receive`: signed by a writer's key as the garden stood at its parent, within that writer's rights,
+the gate on its tree), and merges only what passes — a fast-forward, or a merge commit made by the garden's own driver
+and saved through the gate with the entry that names each bean it brought. A peer that brings one bad commit is left
+out whole and said; a conflict is taken back for a person. It pushes only to a remote marked as a hub, and never into a
+working tree with changes not yet saved. No machine is privileged: whichever is always on relays, and each judges for
+itself.
