@@ -567,6 +567,82 @@ class Law:
                     todo.append(s.get('at'))
         return out
 
+    def given_twice(self, dim_rows):
+        """ONE PATH, ONE STATEMENT: [(where, message)] for a stand that another of the row's stands already gives through
+        the ladder — `made-of` through `made-of` alone, `possible-on` through either way, its condition on the path — and
+        for a bearer another row already gives: a dimension's that copies what it stands on (`possible-on` lets the lower's
+        categories stop; a copy says they recur), or that a foundation gives; a quantity's that one of its dimensions
+        already gives; and a quantity's stand on the step its own bearer is made of."""
+        out, quantities = [], (self.std.quantities if self.std else {})
+        rows = {('level', n): r for n, r in self.levels.items()}
+        rows.update({('dimension', n): r for n, r in dim_rows.items()})
+        rows.update({('quantity', n): r for n, r in quantities.items()})
+
+        def node(at):
+            return ('dimension', at) if at in dim_rows else ('level', at)
+
+        def stands(key):
+            return [s for s in listed((rows.get(key) or {}).get('stands')) if isinstance(s, dict)]
+
+        for key in rows:
+            mine = stands(key)
+            for e in mine:
+                ways = ('made-of',) if e.get('as') == 'made-of' else ('made-of', 'possible-on')
+                goal, cond = node(e.get('at')), e.get('while')
+                todo = [(node(o.get('at')), cond is None or o.get('while') == cond) for o in mine
+                        if o is not e and o.get('as') in ways]
+                seen = set(todo)
+                while todo:
+                    n, met = todo.pop()
+                    if n == goal and met:
+                        out.append((f"{key[0]} {key[1]}", f"stands on {e.get('at')} as {e.get('as')}"
+                                    f"{' while ' + cond if cond else ''}, which its other stands already give: one path, "
+                                    f"one statement"))
+                        break
+                    for s in stands(n):
+                        nxt = (node(s.get('at')), met or s.get('while') == cond)
+                        if s.get('as') in ways and nxt not in seen:
+                            seen.add(nxt)
+                            todo.append(nxt)
+        found = {str(f['property']): f for f in self.foundations if f.get('property')}
+
+        def bearer_of(d):
+            row = dim_rows.get(d) or {}
+            return row.get('holds_for') if row.get('holds_for') is not None else (found.get(d) or {}).get('holds_for')
+
+        def within(a, b):                                  # every being `a` lets bear is one `b` lets
+            if a == b:
+                return True
+            if isinstance(a, dict) and isinstance(b, str):
+                return b in self.holds(self.level_line(a.get('level')))
+            if isinstance(a, dict) and isinstance(b, dict):
+                return b.get('level') in self.below(a.get('level'), ways=('made-of',)) or \
+                    (b.get('level') == a.get('level') and b.get('while') in (None, a.get('while')))
+            return False
+        for d, row in dim_rows.items():
+            h = row.get('holds_for')
+            if h is not None and d in found:
+                out.append((f"dimension {d}", f"holds for {h!r}, which the foundation {found[d].get('foundation')} "
+                                              f"already gives: one path, one statement"))
+            for s in listed(row.get('stands')):
+                at = s.get('at') if isinstance(s, dict) else None
+                if h is not None and at in dim_rows and s.get('as') == 'possible-on' and bearer_of(at) == h:
+                    out.append((f"dimension {d}", f"holds for {h!r}, a copy of what {at} holds for: standing on it "
+                                                  f"possible-on, its bearer is its own — what it carries, never its "
+                                                  f"carrier"))
+        for q, row in quantities.items():
+            h = row.get('holds_for')
+            for d, power in (row.get('of') or {}).items():
+                if h is not None and str(power) not in ('0', '') and str(d) in dim_rows and within(bearer_of(str(d)), h):
+                    out.append((f"quantity {q}", f"holds for {h!r}, which its dimension {d} already gives: one path, "
+                                                 f"one statement"))
+            for s in listed(row.get('stands')):
+                if isinstance(h, dict) and isinstance(s, dict) and s.get('as') == 'possible-on' and s.get('at') in \
+                        {h.get('level')} | self.below(h.get('level'), ways=('made-of',)):
+                    out.append((f"quantity {q}", f"stands on {s.get('at')}, which its bearer ({h!r}) is made of "
+                                                 f"already: one path, one statement"))
+        return out
+
     # ------------------------------------------------------------------------------------------------ proof
     def problems(self):
         """[(rule, where, message)]: the law's own consistency. Each one is an error: a law that does not hold together
@@ -776,6 +852,8 @@ class Law:
                         todo.append(at)
             if name in seen:
                 bad(f"dimension {name}", "stands on itself through the dimensions beneath it: never a circle")
+        for where, msg in self.given_twice(dim_rows):
+            bad(where, msg)
         names = {}
         for u, row in self.units.items():
             names.setdefault(row.get('name'), []).append(u)

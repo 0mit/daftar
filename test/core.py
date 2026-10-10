@@ -87,12 +87,13 @@ check(f"units are UCUM's, the law's English name attached: each of the law's {le
       and all(r.get('why') for r in units.values() if r.get('ucum') == 'false'), len(units))
 dims = {d['dimension']: d for d in LAW0.std.tables['dimensions']}
 check("the dimensions stand on the ladder (2026-10-10): the frame's two faces; mass and charge beside each other on "
-      "space-time, each holding for a body; temperature on mass while an ensemble; information on temperature; money "
-      "on reason, holding for a sayable",
+      "space-time, charge holding for a body and mass by the foundation weight; temperature on mass while an ensemble; "
+      "information on temperature and money on reason, each held by what is carried, a sayable, never its carrier",
       set(dims) == {'time', 'length', 'mass', 'charge', 'temperature', 'information', 'money'}
       and dims['charge']['stands'] == [{'at': 'space-time', 'as': 'possible-on'}] and dims['charge']['holds_for'] == 'body'
       and dims['temperature']['stands'] == [{'at': 'mass', 'as': 'possible-on', 'while': 'ensemble'}]
       and dims['information']['stands'][0]['at'] == 'temperature' and dims['money']['holds_for'] == 'sayable'
+      and dims['information']['holds_for'] == 'sayable' and 'holds_for' not in dims['mass']
       and 'ensemble' in LAW0.conditions, dims)
 bad_dims = Law.load(('VOCAB.md', {}))
 kept = bad_dims.std.tables['dimensions']             # the standards are read once per process: put them back after
@@ -102,6 +103,18 @@ probs = [m for _r, _w, m in bad_dims.problems() if 'never a circle' in m]
 bad_dims.std.tables['dimensions'] = kept
 check("...and a dimension that stands on itself through those beneath it is refused: the ladder is never a circle",
       probs, bad_dims.problems())
+kept_levels = dict(bad_dims.levels)                   # one path, one statement: a sibling another path gives is refused
+bad_dims.levels['celestial-body'] = dict(kept_levels['celestial-body'],
+                                         stands=listed(kept_levels['celestial-body'].get('stands')) +
+                                         [{'at': 'material', 'as': 'made-of'}])
+bad_dims.std.tables['dimensions'] = [dict(d, holds_for=dict(level='molecule', **{'while': 'ensemble'}))
+                                     if d['dimension'] == 'information' else d for d in kept]
+twice = [m for _r, _w, m in bad_dims.problems() if 'one path, one statement' in m or 'never its carrier' in m]
+bad_dims.levels.clear(); bad_dims.levels.update(kept_levels)
+bad_dims.std.tables['dimensions'] = kept
+check("...and a stand or a bearer another path already gives is refused: celestial-body on material beside rock, "
+      "information held for its carrier's ensemble (one path, one statement)",
+      len(twice) == 2 and any('celestial-body' in m or 'material as made-of' in m for m in twice), twice)
 ns = LAW0.namespaces
 again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true'}]})).problems()
 check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "

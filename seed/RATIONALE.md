@@ -624,7 +624,8 @@ falls), and what a step is possible on does not (his Überbauung — reason rest
 followed down `possible-on`, a contract would reach matter through the taxis, reason and the organism). So a mass is a
 body's, a temperature an ensemble's (a single molecule has none), a resistance a material's and what is made of it, money
 an agreement's; and a quantity whose kind stands on a perceiver — an illuminance — still holds for the body it is
-measured of.
+measured of. Information, like money, is held by what is carried, never by its carrier (`quantities.yaml:
+dimensions`).
 
 A SAYABLE HAS NO WEIGHT OF ITS OWN (the core spec §5; ratified with the core's engine, daftar #81–#84, 2026-10-01).
 Weight is a foundation: it holds at a step and at every step above it, so every body has weight, and a sayable, which
@@ -1021,6 +1022,18 @@ Life also needs a soul, which is given along the life chain (`via`), not carried
 level of bodies: a person's body stays an organism (Heidegger: the human is not an animal with reason added on top), and
 the gate's own rule agrees — at a level above `organism` a person could not be part of a population or the biosphere.
 The sayable stands on λόγος: λεκτόν and λόγος are one verb, λέγω.
+
+ONE PATH, ONE STATEMENT (2026-10-10). The operator, of the ladder drawn: "their position is logical but they have
+unnecessary siblings". A celestial body stood on rock and on material, though rock is made of material; a galaxy on its
+planetary systems, their bodies and material; an organism on its organ systems, tissues and cells; an atom on its nucleus
+and on the particles the nucleus is made of; an installation on its devices and on the material their components are made
+of. Each second stand said again what the first already carries up, since what a being is made of brings its categories
+with it (Überformung), and drawn, every step fanned out into lines that mean nothing more. They are gone, and every level
+still stands on exactly the steps it stood on before; the law check refuses a stand another of the row's stands already
+gives (`made-of` through `made-of` alone, `possible-on` through either way, its condition on the path). What a step is
+made of directly — a microbe of its one cell, an atom of its electrons — is a fact about a being, written of it, not a
+second foundation of the step. An ecosystem keeps both of its stands, its community and the matter it lives on: no path
+through the living reaches material.
 
 ## core/law/core.yaml: lines
 
@@ -4933,7 +4946,20 @@ conditions — and what it **holds for**. Time and length are the frame's two fa
 through c: one frame). Mass and charge are the elementary particle's two intrinsic properties, both on space-time, neither
 on the other. Temperature stands on mass while an ensemble. Information stands on temperature: a distinguishable state
 of a carrier, whose erasure costs at least kT ln 2 (Landauer); its meaning is reason's and no quantity. Money stands on
-reason, on the said line. SI 2019's defining constants are the bridges: Δν(Cs), c, h, e, k. Two of SI's seven are kinds
+reason, on the said line. SI 2019's defining constants are the bridges: Δν(Cs), c, h, e, k.
+
+A CARRIER AND WHAT LIVES IN IT ARE TWO (2026-10-10). The operator: "we need to relook at money information too, distinct
+the carriers: a person is living in a body, a running instance is living in a host". Information was held for an
+ensemble of molecules — the carrier, which stands at a temperature — and so was a copy of temperature's own bearer, and it
+refused a document's size while letting a machine's used space pass as a measure of the machine. Its bearer is what is
+carried: a pattern of distinguishable states, a document, an instance, a volume, a message — a sayable. The carrier says
+what it can hold and what it holds (`hold: { by: nas, of: 2 TBy }`), as the gardens already wrote it, and what lives in it
+is joined to it by its own verb: a host runs an instance (`run`), a disk carries a volume (`carry`), and a person's body is
+the person's level while reason is its rung — one being, since a person has one body for a life, where an instance moves
+from host to host and is its own. Money was right already: it is measured of the agreement and what is said under it,
+and its carriers — a person, a wallet, an account, a banknote — say what they hold. Mass keeps no bearer of its own: the
+foundation `weight` is its bearer, read wherever a mass is stated, and the law refuses a dimension or a kind that says
+again what a foundation or its dimensions give. Two of SI's seven are kinds
 here, not dimensions, by reason: an amount of substance is a count of entities (the mole a unit of count), and a
 luminous intensity is power as the standard eye weighs it (a kind standing on a perceiver).
 

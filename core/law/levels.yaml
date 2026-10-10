@@ -4,22 +4,22 @@ levels:
   - { level: elementary-particle, line: matter, stands: [{ at: space-time, as: possible-on }], meaning: "the body's dot: what has no part known today. Found divisible, it is divided as every dot is (`division_form`), and keeps its system" }
   - { level: hadron, line: matter, stands: [{ at: elementary-particle, as: made-of }], meaning: "particles bound of quarks: a proton, a neutron" }
   - { level: nucleus, line: matter, stands: [{ at: hadron, as: made-of }], meaning: "hadrons bound into the core of an atom" }
-  - { level: atom, line: matter, stands: [{ at: nucleus, as: made-of }, { at: elementary-particle, as: made-of }], meaning: "a nucleus with its electrons — hydrogen the first" }
+  - { level: atom, line: matter, stands: [{ at: nucleus, as: made-of }], meaning: "a nucleus with its electrons — hydrogen the first" }
   - { level: molecule, line: matter, stands: [{ at: atom, as: made-of }], meaning: "atoms bound: water, a protein" }
   - { level: material, line: matter, stands: [{ at: molecule, as: made-of }], meaning: "matter in bulk, of one kind or a mixture: a mineral, a metal, glass, water" }
   - { level: rock, line: gravitation, stands: [{ at: material, as: made-of }], meaning: "materials aggregated by nature, pressed together under their own weight" }
-  - { level: celestial-body, line: gravitation, stands: [{ at: rock, as: made-of }, { at: material, as: made-of }], meaning: "a body of the sky, gathered by its own gravitation, as the `bodies` rows are: a planet, a moon, a star" }
+  - { level: celestial-body, line: gravitation, stands: [{ at: rock, as: made-of }], meaning: "a body of the sky, gathered by its own gravitation, as the `bodies` rows are: a planet, a moon, a star" }
   - { level: planetary-system, line: gravitation, stands: [{ at: celestial-body, as: made-of }], meaning: "bodies held in paths about the largest among them: a star and its planets, a planet and its moons" }
-  - { level: galaxy, line: gravitation, stands: [{ at: planetary-system, as: made-of }, { at: celestial-body, as: made-of }, { at: material, as: made-of }], meaning: "stars, their systems and the matter between them, held together by gravitation" }
+  - { level: galaxy, line: gravitation, stands: [{ at: planetary-system, as: made-of }], meaning: "stars, their systems and the matter between them, held together by gravitation" }
   - { level: cell, line: living, stands: [{ at: molecule, as: made-of }, { at: celestial-body, as: possible-on, while: balance }], meaning: "the least that lives of itself: it takes in, grows and divides — made of molecules, and possible on a world in balance" }
   - { level: tissue, line: living, stands: [{ at: cell, as: made-of }], meaning: "cells of one kind working as one" }
   - { level: organ, line: living, stands: [{ at: tissue, as: made-of }], meaning: "tissues serving one capacity of a body: a leaf, a heart — it is the capacity that has organs" }
   - { level: organ-system, line: living, stands: [{ at: organ, as: made-of }], meaning: "organs working as one: a plant's roots, an animal's blood" }
-  - { level: organism, line: living, stands: [{ at: cell, as: made-of }, { at: tissue, as: made-of }, { at: organ-system, as: made-of }], meaning: "a living body that is one being: a microbe on its one cell, a tree, an animal, a person" }
+  - { level: organism, line: living, stands: [{ at: organ-system, as: made-of }], meaning: "a living body that is one being: a microbe on its one cell, a tree, an animal, a person" }
   - { level: population, line: living, stands: [{ at: organism, as: made-of }], meaning: "organisms of one kind living together: a herd, a stand of trees" }
   - { level: community, line: living, stands: [{ at: population, as: made-of }], meaning: "populations of many kinds living together" }
   - { level: ecosystem, line: living, stands: [{ at: community, as: made-of }, { at: material, as: made-of }], meaning: "a community with the matter it lives on and in" }
   - { level: biosphere, line: living, stands: [{ at: ecosystem, as: made-of }], meaning: "every ecosystem of a body together" }
   - { level: component, line: made, stands: [{ at: material, as: made-of }, { at: reason, as: possible-on }], meaning: "a made part: a chip, a board, a platter, a cable" }
   - { level: device, line: made, stands: [{ at: component, as: made-of }], meaning: "components assembled to work as one: a machine, a router, a drive, a camera, a sensor. What it does beyond keeping its form is lent by the hands it came through, its vias" }
-  - { level: installation, line: made, stands: [{ at: device, as: made-of }, { at: material, as: made-of }], meaning: "devices and structure assembled at a place: a rack, a room of machines, a building" }
+  - { level: installation, line: made, stands: [{ at: device, as: made-of }], meaning: "devices and structure assembled at a place: a rack, a room of machines, a building" }

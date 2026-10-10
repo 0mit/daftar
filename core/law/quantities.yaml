@@ -7,6 +7,10 @@ dimensions:
   # it: a nature, or a level the bearer is or is made of. What a being is made of carries its categories up (Hartmann's
   # Überformung: a person's body still has mass and still falls); what a step is possible on does not (his Überbauung:
   # reason rests on an organism, and a sayable has no mass), so `holds_for` follows `made-of` alone (rule `bearer`).
+  # ONE PATH, ONE STATEMENT: a stand another stand already gives, or a bearer another row already gives, is not written
+  # (mass's bearer is the foundation `weight`'s). A CARRIER AND WHAT LIVES IN IT ARE TWO: a host runs an instance (`run`),
+  # a disk carries a volume (`carry`), a person's body is its level and reason its rung. The carrier says what it holds
+  # (`hold`); what it carries is measured itself, and its bearer is that, never the carrier.
   - dimension: time
     face: time
     stands: [ { at: space-time, as: possible-on } ]
@@ -17,8 +21,7 @@ dimensions:
     meaning: "how far — with time, the two faces of the one frame, space∞time (`complexity` space-time): neither without the other"
   - dimension: mass
     stands: [ { at: space-time, as: possible-on } ]
-    holds_for: body
-    meaning: "how much matter-energy: rest energy (E = mc²). It begins with the body's dot, the elementary particle, and holds for every body made of it (`foundations: weight`). SI fixes the kilogram through h"
+    meaning: "how much matter-energy: rest energy (E = mc²). It begins with the body's dot, the elementary particle, and holds for every body made of it: the foundation `weight` says so, and is its bearer. SI fixes the kilogram through h"
   - dimension: charge
     stands: [ { at: space-time, as: possible-on } ]
     holds_for: body
@@ -29,12 +32,12 @@ dimensions:
     meaning: "how hot: energy shared over the many degrees of freedom of an ensemble (SI fixes the kelvin through k). No particle and no single molecule has one; a material, a cell, an organism and a machine do, being made of molecules in number"
   - dimension: information
     stands: [ { at: temperature, as: possible-on } ]
-    holds_for: { level: molecule, while: ensemble }
-    meaning: "how much can be stored or carried: the distinguishable states of a carrier, which stands at a temperature — erasing one bit costs at least kT ln 2 (Landauer). What it means is reason's, and no quantity"
+    holds_for: sayable
+    meaning: "how much is carried: a pattern of distinguishable states — a document, a running instance, a volume, a message. It lives in a carrier, as an instance lives in a host and a person in a body; the carrier stands at a temperature (erasing one bit costs at least kT ln 2, Landauer) and says what it can hold (`hold: { by: nas, of: 2 TBy }`), and the pattern is measured itself. What it means is reason's, and no quantity"
   - dimension: money
     stands: [ { at: reason, as: possible-on } ]
     holds_for: sayable
-    meaning: "how much value, in a currency: what persons agree, on the said line. Two currencies meet only through a rate someone observed; a body has no money of its own, an agreement about it does"
+    meaning: "how much value, in a currency: what persons agree, on the said line — measured of the agreement and what is said under it: a contract, a payment, an account. Its carriers say what they hold (`hold`): a person, a wallet, a banknote; a body has no money of its own, an agreement about it does. Two currencies meet only through a rate someone observed"
 quantities:
   - { quantity: duration, of: { time: 1 } }
   - { quantity: frequency, of: { time: "-1" } }
@@ -117,7 +120,6 @@ quantities:
     meaning: "energy given to matter per its mass, by radiation: its own kind"
   - quantity: weight
     of: { mass: 1, length: 1, time: "-2" }
-    holds_for: body
     units_of: force
     meaning: "the pull of gravitation on a body: a force, its own kind (`foundations: weight`). A scale reads a weight and states a mass through the local g, its uncertainty carrying g's"
   - quantity: gravitational-acceleration
@@ -265,9 +267,8 @@ quantities:
     meaning: "a sound's level as the standard listener hears it, in phons"
   - quantity: dose-equivalent
     of: { length: 2, time: "-2" }
-    stands: [ { at: tissue, as: possible-on } ]
     holds_for: { level: tissue }
-    meaning: "an absorbed dose weighted by its harm to living tissue"
+    meaning: "an absorbed dose weighted by its harm to living tissue: held only by what is made of tissue, so standing where tissue is"
   - quantity: arbitrary-unit
     of: {}
     stands: [ { at: reason, as: possible-on } ]

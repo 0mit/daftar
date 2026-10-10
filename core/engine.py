@@ -650,11 +650,12 @@ class Judge:
 
     def bearer(self):
         """Rule bearer: a quantity stated of a being is one its dimensions and its kind hold for. The kind is the one the
-        statement names (`as`, a quantity of the law) or the one its value's unit is of; the foundations (`weight`) are
-        read as they always were."""
+        statement names (`as`, a quantity of the law) or the one its value's unit is of. A foundation is the bearer of the
+        dimension its property names (`weight` of mass), and is read as it always was where `as` names that property."""
         q = self.L.std.quantities if self.L.std else {}
         dims = {str(d.get('dimension')): d for d in (self.L.std.tables.get('dimensions') or []) if isinstance(d, dict)} \
             if self.L.std else {}
+        given = {str(f['property']): f for f in self.L.foundations if f.get('property')}   # mass's bearer is weight's
         for b in self.G.beans.values():
             for i, verb, r in b.items:
                 if 'of' not in r or isinstance(r.get('of'), (list, dict)) and not isinstance(r.get('of'), dict):
@@ -677,7 +678,10 @@ class Judge:
                     rules.append((row.get('holds_for'), qname))
                     for d, power in (row.get('of') or {}).items():
                         if str(power) not in ('0', '') and str(d) in dims:
-                            rules.append((dims[str(d)].get('holds_for'), qname if d == qname else f"{qname} (made of {d})"))
+                            what = qname if d == qname else f"{qname} (made of {d})"
+                            f = given.get(str(d)) if dims[str(d)].get('holds_for') is None else None
+                            rules.append((f.get('holds_for'), f"{what}, the foundation {f.get('foundation')},") if f else
+                                         (dims[str(d)].get('holds_for'), what))
                 seen = set()
                 for rule, what in rules:
                     why = self.holds(rule, kind)
