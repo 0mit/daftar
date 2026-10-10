@@ -44,6 +44,9 @@ G = os.path.join(TMP, 'garden-sam')
 # garden sets is the only one there is — and taking it away takes it away.
 _empty = os.path.join(TMP, 'empty.gitconfig')
 open(_empty, 'w').close()
+sys.path.append(os.path.join(ROOT, 'test'))
+import machine  # noqa: E402
+machine.ensure()      # its time source and standards cache, not the machine's
 ENV = {k: v for k, v in os.environ.items() if not k.startswith(('GIT_AUTHOR_', 'GIT_COMMITTER_')) and k != 'EMAIL'}
 ENV.update(GIT_CONFIG_GLOBAL=_empty, GIT_CONFIG_NOSYSTEM='1')
 

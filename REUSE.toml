@@ -62,3 +62,9 @@ path = "seed/knowledge/isco-08.tsv"
 precedence = "override"
 SPDX-FileCopyrightText = "2012 International Labour Organization"
 SPDX-License-Identifier = "LicenseRef-ILO-ISCO-08"
+
+[[annotations]]
+path = ["assets/view/lib/widgets/Vazirmatn.woff2", "assets/view/lib/widgets/Vazirmatn-OFL.txt"]
+precedence = "override"
+SPDX-FileCopyrightText = "2015 The Vazirmatn Project Authors (https://github.com/rastikerdar/vazirmatn)"
+SPDX-License-Identifier = "OFL-1.1"

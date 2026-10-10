@@ -30,6 +30,7 @@ tools:
   - { tool: save, family: write }
   - { tool: safe, family: write }
   - { tool: journal, family: write }
+  - { tool: clock, family: write }
   - { tool: session, family: write }
   - { tool: cursor, family: write }
   - { tool: digest, family: write }
@@ -46,6 +47,7 @@ tools:
   - { tool: cal, family: measure }
   - { tool: geo, family: measure }
   - { tool: units, family: measure }
+  - { tool: fetch, family: measure }
   - { tool: knowledge, family: measure }
   - { tool: crosswalk, family: measure }
   - { tool: propose, family: between }

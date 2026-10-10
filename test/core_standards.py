@@ -129,5 +129,72 @@ check(f"the standards read from core/law/: {len(S.systems)} systems, {len(S.prot
 check("...and the release carries no today's law: seed/std-vocab.md is gone",
       not os.path.exists(os.path.join(ROOT, 'seed', 'std-vocab.md')))
 
+# ------------------------------------------------------------------------------------------- a table fetched (Y7)
+sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import fetch as dmfetch  # noqa: E402
+import knowledge as dmknowledge  # noqa: E402
+reg = read.data(os.path.join(LAW_DIR, 'registries.yaml'))
+isco = next(r for r in reg['knowledge_schemes'] if r['scheme'] == 'isco-08')
+check("ISCO-08 is held fetched: from the ILO's own download, read by a reader the law's shape lists and this release has",
+      isco['holding'] == 'fetched' and isco['fetch']['from'].startswith('https://webapps.ilo.org/')
+      and isco['fetch']['reader'] in reg['fetch_shape']['readers'] and isco['fetch']['reader'] in dmfetch.READERS
+      and set(reg['fetch_shape']['readers']) <= set(dmfetch.READERS), isco.get('fetch'))
+CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
+os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
+check("...and a machine that fetched none reads the release's copy meanwhile",
+      not dmfetch.fetched('isco-08') and (dmknowledge.Knowledge(ROOT).row('isco-08', '0110') or {}).get('name_en')
+      == 'Commissioned Armed Forces Officers', dmknowledge.Knowledge(ROOT).row('isco-08', '0110'))
+import io  # noqa: E402
+import openpyxl  # noqa: E402 — the provider's file is a spreadsheet; openpyxl writes one as the ILO's is written
+
+
+def xlsx(rows):
+    wb = openpyxl.Workbook()
+    for r in rows:
+        wb.active.append(r)
+    out = io.BytesIO()
+    wb.save(out)
+    return out.getvalue()
+
+
+ilo = xlsx([('Level', 'ISCO 08 Code', 'Title EN', 'Definition'), (1, '0', 'Armed Forces Occupations', 'x'),
+            (2, '01', 'Commissioned Armed Forces Officers', 'x'), (3, '011', 'Commissioned Armed Forces Officers', 'x'),
+            (4, '0110', 'Commissioned Armed Forces Officers, as the provider titles it', 'x')])
+src = os.path.join(CACHE, 'ilo.xlsx')
+with open(src, 'wb') as fh:
+    fh.write(ilo)
+r = subprocess.run([sys.executable, os.path.join(ROOT, 'bin', 'fetch.py'), 'isco-08', '--from', src], capture_output=True,
+                   text=True, encoding='utf-8', env=dict(os.environ))
+got = dmfetch.fetched('isco-08')
+import hashlib  # noqa: E402
+check("fetch: the provider's file is kept unchanged under its SHA-256, read into the rows the scheme's file holds, and the "
+      "line for the save's entry printed",
+      r.returncode == 0 and got and got[0][1] == hashlib.sha256(ilo).hexdigest()
+      and open(got[0][2], encoding='utf-8').readline().strip().split('\t') == ['code', 'level', 'parent', 'name_en']
+      and f"sha-256 {hashlib.sha256(ilo).hexdigest()}" in r.stdout and '- read: isco-08' in r.stdout,
+      r.stdout + r.stderr)
+check("...and the codes are read from this machine's copy, the provider's titles with them",
+      (dmknowledge.Knowledge(ROOT).row('isco-08', '0110') or {}).get('name_en')
+      == 'Commissioned Armed Forces Officers, as the provider titles it'
+      and (dmknowledge.Knowledge(ROOT).row('isco-08', '01') or {}).get('level') == 'sub-major',
+      dmknowledge.Knowledge(ROOT).row('isco-08', '0110'))
+for name, data, says in (("a file whose columns are not the ones read", xlsx([('Code', 'Title'), ('0', 'x')]), 'columns'),
+                         ("a row whose code is not its level's", xlsx([('Level', 'ISCO 08 Code', 'Title EN'),
+                                                                        (2, '0', 'x')]), 'no group read here')):
+    try:
+        dmfetch.keep('isco-08', data, 'test')
+        refused = ''
+    except dmfetch.Refused as e:
+        refused = str(e)
+    check(f"fetch: {name} is refused, and nothing is kept", says in refused and len(dmfetch.fetched('isco-08')) == 1,
+          refused)
+try:
+    dmfetch.keep('isced-f-2013', b'x', 'test')
+    refused = ''
+except dmfetch.Refused as e:
+    refused = str(e)
+check("fetch: a scheme the law holds shipped is not fetched", 'not fetched' in refused, refused)
+shutil.rmtree(CACHE, ignore_errors=True)
+
 print(f"\ncore_standards: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)

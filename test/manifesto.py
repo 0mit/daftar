@@ -120,6 +120,10 @@ net = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*
 TOOL_NET = {   # each with why: never-sells is "never … anywhere its gardener did not send it"
     "dmupgrade.py": "it fetches a release, from where the gardener's pin says",
     "launch.py": "it sends a request only to a party the gardener's own VOCAB.md row grants by name, on a basis",
+    "fetch.py": "it downloads a standard's table from the provider the law's row names, when its person asks: a "
+                "request for that file, and nothing else",
+    "clock.py": "it asks the time servers this host was given, or those its keeper names, for the time: a request of 48 "
+                "bytes whose only content is a random nonce, nothing of the garden or of this clock",
 }
 check("a tool opens a network path only where it is declared to, each with why (manifesto: never-sells)",
       set(net) <= set(TOOL_NET), f"found {net}; declared {sorted(TOOL_NET)}")

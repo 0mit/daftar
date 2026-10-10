@@ -259,6 +259,12 @@ def put_core(bean, sid, *, root=ROOT, host=None, store=None, basis=None, until=N
     verb, roles = hits[0]
     if 'held' in roles:
         raise ValueError(f"{bean}#{sid} is sealed already ({roles['held']})")
+    if verb == 'name' and isinstance(roles.get('by'), str):    # the store judges a name as the gate would: once sealed,
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # no gate sees it again
+        from core.check import garden_law
+        why = garden_law(root).name_why(roles['by'], roles.get('as'))
+        if why:
+            raise ValueError(f"{bean}#{sid}: {why}. Nothing was sealed")
     level = dmpass.sensitivity(fm, None, dmpass.gardener_of(root))[0]
     name, path = _pick(level if level != 'none' else 'personal', root, host, store)
     hexkey = secrets.token_hex(16)

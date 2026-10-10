@@ -251,6 +251,23 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 1.1** (proposed rule-change, ratified in the design it implements; the release that carries it dates it) —
+  **what a value is to a reader, and what a stamp, a code and a name are held to.** MINOR: no rule added and none
+  taken away; a value the law refuses now was never one it meant to admit. The values tree (`core/law/values.yaml`):
+  what each value is to a person who reads, shows or types it, beside how it is written, rooted in the core's shapes,
+  checked whole. No bidi control character (Unicode's Bidi_Control) in a code or in a name a namespace gives (Trojan
+  Source); free text keeps its own. Eight namespaces — `ror`, `wikidata`, `orcid`, `ifc-guid`, `dicom-uid`, `gs1`,
+  `tr-tckn`, `ir-national-code` — with `namespace_shape`: a check digit checked by a well-used validator
+  (python-stdnum, the standard library's uuid), never by a copy, refused where it cannot run; a government number kept
+  only in the held store, refused written in a bean, judged by the store before it seals one. One flow row,
+  `refusal-detail-served`: a refusal's detail served by the machine that holds it, never sent. The method `stamp`: a
+  save stamps only from a clock within half a minute of its time sources (`bin/clock.py`), and writes nothing
+  otherwise. `holding: fetched`: a scheme downloaded by each machine from its provider into a cache outside git
+  (`bin/fetch.py`), ISCO-08 first. The hub takes a person's own signed labels on `refs/daftar/custom/<person>`, judging
+  every commit the ref gains, and never counts one as the garden's. The view asset carries the values tree's widgets
+  (`assets/view/lib/widgets/`): each value shown exactly, in each reader's digits, separators and calendar from CLDR,
+  none privileged.
+
 - **core 1.0** (2026-10-02, daftar v1.0.0, human-ratified rule-change) — **the core becomes the language, and
   std-vocab is retired.** Every fact is a statement — a verb and its roles (`by`, `of`, `through`, `to`, `from`, `at`,
   `as`) — known by an act that says who said, read, made or derived it; the law is `core/law/`, its own source, and

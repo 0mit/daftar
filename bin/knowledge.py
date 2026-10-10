@@ -118,7 +118,16 @@ class Knowledge:
             d = self.decl.get(registry)
             if not d:
                 raise KeyError("no registry %r is declared in registry_files, the law's or this garden's" % registry)
-            with open(os.path.join(self.root, d["file"]), encoding="utf-8") as fh:
+            path = os.path.join(self.root, d["file"])
+            if (self.schemes.get(registry) or {}).get("holding") == "fetched":     # this machine's newest copy of the
+                import fetch as dmfetch                                            # provider's own, else the release's
+                got = dmfetch.fetched(registry)
+                if got:
+                    path = got[0][2]
+                elif not os.path.isfile(path):
+                    raise KeyError("%s is fetched from its provider, and this machine has fetched none: python3 "
+                                   "bin/fetch.py %s" % (registry, registry))
+            with open(path, encoding="utf-8") as fh:
                 if d.get("format") == "yaml":
                     self._rows[registry] = [r for r in (dmparse.loads(fh.read()) or []) if isinstance(r, dict)]
                 else:

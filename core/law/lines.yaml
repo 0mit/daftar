@@ -647,8 +647,9 @@ types:
   - type: coding
     pattern: "^[a-z0-9][a-z0-9-]*:\\S+$"
     scheme_from: knowledge_schemes
+    holds_no: Bidi_Control
     refusal: "must be a CODE WITH ITS SCHEME, written `<scheme>:<code>` — `isco-08:2522`, `technology:samba`, `analytic:orchard` — the scheme a row of `knowledge_schemes` and the code one of its codes"
-    meaning: "a CODE OF A SCHEME, written with the scheme it is a code of: `<scheme>:<code>`. One capsule wherever a code is written — what an observation is of and what it found, what a step is and takes, what a channel holds, what a stance covers, where an amount belongs, what a being draws on, an identity assigned outside every garden. The scheme is a row of `knowledge_schemes`; the code is one of its codes, looked up where the scheme is held here and held to its form where it is held at its authority. The first colon ends the scheme, whose name has none."
+    meaning: "a CODE OF A SCHEME, written with the scheme it is a code of: `<scheme>:<code>`. One capsule wherever a code is written — what an observation is of and what it found, what a step is and takes, what a channel holds, what a stance covers, where an amount belongs, what a being draws on, an identity assigned outside every garden. The scheme is a row of `knowledge_schemes`; the code is one of its codes, looked up where the scheme is held here and held to its form where it is held at its authority. The first colon ends the scheme, whose name has none. It holds no character of the Unicode property `holds_no` (Bidi_Control, PropList.txt): one reorders what is shown around it, and would make a code read as another (Trojan Source, CVE-2021-42574)."
   - type: rows
     separator: "\t"
     inline_most: 100

@@ -15,6 +15,9 @@ import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+sys.path.append(os.path.join(ROOT, 'test'))   # last: test/core.py is no package `core`
+import machine  # noqa: E402
+machine.ensure()      # its time source and standards cache, not the machine's
 from core import read  # noqa: E402
 
 FAILS = []
@@ -115,6 +118,28 @@ try:
     at = (head_bean('sam').get('statements') or [{}])[0].get('say', {}).get('at')
     check(f"a save commits a bean of statements, its `at: now` written as the heading's moment ({moment})",
           r.returncode == 0 and at == moment, (r.returncode, at, moment, r.stdout + r.stderr))
+
+    # THE CLOCK (the method `stamp`): one that cannot be shown within half a minute of its sources stamps nothing
+    import socket
+    head0, journal0 = git('rev-parse', 'HEAD').stdout, text('log/journal.md')
+    bean('cem', 'document', [{'say': {'by': 'sam', 'at': 'now'}}])
+    for label, src in (("60 s behind its source", machine.time_source(60)), ("45 s ahead of it", machine.time_source(-45)),
+                       ("whose source does not answer", machine.time_source(0, answer=False))):
+        r = subprocess.run([PY, 'bin/save.py', 'sam', 'a note', '--body', '- action: wrote [[cem]]'], cwd=G,
+                           capture_output=True, text=True, encoding='utf-8', errors='replace',
+                           env=dict(os.environ, DAFTAR_TIME_SOURCES=src))
+        out = r.stdout + r.stderr
+        check(f"a save on a clock {label} is refused before anything is written, naming this machine, its keeper "
+              f"and what sets it right",
+              r.returncode == 2 and 'NOT STAMPED' in out and socket.gethostname() in out
+              and 'sam keeps this machine' in out and 'bin/clock.py' in out
+              and git('rev-parse', 'HEAD').stdout == head0 and text('log/journal.md') == journal0, out[-900:])
+    r = subprocess.run([PY, 'bin/clock.py'], cwd=G, capture_output=True, text=True, encoding='utf-8', errors='replace',
+                       env=dict(os.environ, DAFTAR_TIME_SOURCES=machine.time_source(60)))
+    check("bin/clock.py says what its source shows — beyond — and exits 1", r.returncode == 1 and 'beyond' in r.stdout
+          and '60.0' in r.stdout and 'may NOT stamp' in r.stdout, r.stdout + r.stderr)
+    r = save('sam', 'a note', '- action: wrote [[cem]]')
+    check("...and on a clock its source shows within, the same save is saved", r.returncode == 0, r.out[-600:])
 
     # A MOMENT TYPED IS REFUSED, AND SAVED ONCE IT IS `now`
     bean('ben', 'person', [{'say': {'by': 'ben', 'at': '2026-10-01 10:00+03:30'}}, {'own': {'by': 'theone', 'of': 'self'}}, BEN_AGREES])

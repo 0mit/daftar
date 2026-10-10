@@ -18,7 +18,11 @@ Ask the person only for what you cannot know:
 3. **the private remote**, or that there is none yet (below: `git@github.com:me/garden.git`);
 4. **the identity you commit under** — a name that says which agent you are, and an address they choose.
 
-Requires Python 3 and PyYAML (`pip install PyYAML`). Nothing else. Nothing here contacts any service.
+Requires Python 3 and PyYAML (`pip install PyYAML`). Nothing else — but where a garden writes a name of a namespace
+whose check python-stdnum makes (`ror`, `orcid`, `gs1`, `tr-tckn`): then `pip install python-stdnum` too, or the gate
+refuses that name as one it cannot check here; and `pip install openpyxl` where `bin/fetch.py` reads a provider's
+spreadsheet (ISCO-08, from the ILO). Nothing here contacts any service but the ones you ask it to: `bin/fetch.py`
+the provider of a table, `bin/clock.py` your machine's time servers.
 
 ## 1. Get the language, pinned to a release
 

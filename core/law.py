@@ -51,7 +51,7 @@ ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flow
 ROW_FIELDS = {
     'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning', 'vacant'},
     'levels': {'level', 'line', 'stands', 'meaning', 'frame_of', 'vacant'},
-    'namespaces': {'namespace', 'once', 'pattern', 'meaning', 'vacant'},
+    'namespaces': {'namespace', 'once', 'pattern', 'checked_by', 'kept', 'meaning', 'vacant'},
     'flows': {'flow', 'from', 'to', 'through', 'as', 'grant', 'keeper', 'party', 'basis', 'why'},
     'standing': {'layer', 'holds', 'meaning'},
     'verbs': {'verb', 'meaning', 'roles', 'qualifiers', 'required', 'choice', 'default', 'replaces', 'home', 'figure',
@@ -72,6 +72,7 @@ TOOLS, VACANCIES = 'tools.yaml', 'vacancies.yaml'          # the tools by their 
 PROFILES = 'profiles.yaml'                                 # what a garden takes up beside the core (v1 part 11)
 FORMS = 'forms.yaml'                                       # the forms part 12b adds, written by hand: a grant's cover,
                                                            # a settlement, a weighing, a channel
+VALUES = 'values.yaml'                                     # what a value is to a reader: the tree the widgets answer to
 MEASURES = 'measures.yaml'                                 # the forms of a measure: a region, a repetition, a clause's
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
@@ -99,7 +100,8 @@ def shapes_of(spec):
 # reader of that row without what every sibling gives. The standards' files declare them under `forms`, the files of a
 # line, a measure and the flow law under `columns` (their `forms` are the forms a qualifier holds).
 COLUMNED = (('systems.yaml', 'forms'), ('places.yaml', 'forms'), ('protocols.yaml', 'forms'), ('quantities.yaml', 'forms'),
-            ('registries.yaml', 'forms'), (LINES, 'columns'), (MEASURES, 'columns'), ('flows.yaml', 'columns'))
+            ('registries.yaml', 'forms'), (LINES, 'columns'), (MEASURES, 'columns'), ('flows.yaml', 'columns'),
+            (VALUES, 'columns'))
 
 
 def columns_problems(law_dir, std_dir=None):
@@ -162,6 +164,7 @@ class Law:
         self.forms = {}                                     # the forms a `form` role names, by name
         self.added_forms = {}                               # core/law/forms.yaml: the forms part 12b adds, by name
         self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
+        self.namespace_shape = {}                           # core/law/namespaces.yaml: its checks, where kept
         self.flows, self.flow_sources, self.standing, self.exclusive = [], [], [], []
         self.garden_flows = []                              # the rows of `flows` a garden added (VOCAB.md)
         self.methods, self.pass_metadata, self.flows_dropped = {}, {}, {}   # core/law/flows.yaml beside its rows
@@ -220,6 +223,9 @@ class Law:
         forms = os.path.join(d, FORMS) if os.path.isfile(os.path.join(d, FORMS)) else os.path.join(LAW_DIR, FORMS)
         law.added_forms = {str(k): f for k, f in ((read.data(forms) or {}).get('forms') or {}).items() if isinstance(f, dict)}
         law.forms.update(law.added_forms)
+        values = os.path.join(d, VALUES) if os.path.isfile(os.path.join(d, VALUES)) else os.path.join(LAW_DIR, VALUES)
+        law.values = {str(v['value']): v for v in listed((read.data(values) or {}).get('values'))
+                      if isinstance(v, dict) and 'value' in v} if os.path.isfile(values) else {}
         for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies), (PROFILES, law._profiles)):
             put(read.data(os.path.join(d, name) if os.path.isfile(os.path.join(d, name)) else os.path.join(LAW_DIR, name)))
         return law
@@ -332,6 +338,9 @@ class Law:
                                                                           'dropped': 'flow'}[key]))] = row
                 if key == 'methods':
                     self.tables['methods'] = list(self.methods)
+                continue
+            if key == 'namespace_shape' and where != GARDEN:   # what a namespace may name beside its pattern
+                self.namespace_shape = val if isinstance(val, dict) else {}
                 continue
             if key == 'profiles' and where == GARDEN:     # THE PROFILES A GARDEN TAKES (v1 part 11): names, judged
                 self.taken_where = where                  # against the profiles the law offers once it is loaded
@@ -475,6 +484,29 @@ class Law:
             self._systems = (own, dict(self.std_systems(), **{str(r['system']): r for r in own}))
         return self._systems[1]
 
+    def name_why(self, namespace, value):
+        """'' when `value` is a name the namespace `namespace` gives — in its form (`pattern`), and holding to the check a
+        validator makes (`checked_by`) — or when the namespace states no form; else why not. The rule `names` judges a
+        name by this, and so does the held store before it seals one: one judge. A name of a namespace kept `held` is
+        never echoed."""
+        row = self.namespaces.get(namespace) or {}
+        pat = row.get('pattern')
+        if not pat:
+            return ''
+        shown = 'the name' if row.get('kept') == 'held' else repr(value)
+        if not (isinstance(value, str) and re.fullmatch(pat, value)):
+            return f"{shown} is not a name {namespace} gives: its form is `{pat}` — {row.get('meaning', '')}"
+        chk = row.get('checked_by')
+        if not chk:
+            return ''
+        import parse as dmparse
+        try:
+            ok = dmparse.FORM_CHECKS[chk](value)
+        except dmparse.CheckUnavailable as e:
+            return f"a name {namespace} gives is checked by {chk}, which cannot run here: {e}"
+        return '' if ok else (f"{shown} is not a name {namespace} gives: it is in its form, and fails its check ({chk}) "
+                              f"— {row.get('meaning', '')}")
+
     def table(self, name):
         """The rows of a table the law keeps (None for a standard's, which `has` asks)."""
         if name == 'levels':
@@ -553,6 +585,33 @@ class Law:
                 bad(f"core/law/forms.yaml {name}", f"names no rule of the law to judge it ({f.get('rule')!r})")
         for where, msg in columns_problems(getattr(self, 'dir', LAW_DIR), getattr(self.std, 'law_dir', None)):
             bad(where, msg)
+        types = {str(t.get('type')) for t in (getattr(self, 'line_law', {}) or {}).get('types') or [] if isinstance(t, dict)}
+        values = getattr(self, 'values', None) or {}
+        for name, v in values.items():                     # the values tree: each a kind of another, up to `value`
+            parent = v.get('is')
+            if parent is not None and str(parent) not in values:
+                bad(f"core/law/values.yaml {name}", f"is a kind of `{parent}`, which is no value of the tree")
+            if v.get('written') is not None and str(v['written']) not in types:
+                bad(f"core/law/values.yaml {name}", f"is written as `{v['written']}`, which is no type of lines.yaml")
+            seen, at = {name}, parent
+            while at is not None and str(at) in values:
+                if str(at) in seen:
+                    bad(f"core/law/values.yaml {name}", "is a kind of itself, through the values it is a kind of")
+                    break
+                seen.add(str(at))
+                at = values[str(at)].get('is')
+        if values and [n for n, v in values.items() if v.get('is') is None] != ['value']:
+            bad('core/law/values.yaml', "the tree has one root, `value`, a kind of nothing")
+        import parse as dmparse                         # the one reader of a check a row names
+        shape = getattr(self, 'namespace_shape', None) or {}
+        for name, row in (self.namespaces or {}).items():  # a namespace's check is one a validator makes, and is named
+            chk, kept = row.get('checked_by'), row.get('kept')
+            if chk is not None and (str(chk) not in listed(shape.get('checked_by')) or str(chk) not in dmparse.FORM_CHECKS):
+                bad(f"namespaces {name}", f"is checked by `{chk}`, which is no check of `namespace_shape.checked_by` "
+                                          f"({', '.join(listed(shape.get('checked_by')))}) the reader has")
+            if kept is not None and str(kept) not in listed(shape.get('kept')):
+                bad(f"namespaces {name}", f"is kept `{kept}`, which is nowhere `namespace_shape.kept` names "
+                                          f"({', '.join(listed(shape.get('kept')))})")
         for name, row in (self.systems or {}).items():         # a system's own example is in its own form (16.0)
             pat, ex = row.get('pattern'), row.get('example') if isinstance(row, dict) else None
             if isinstance(pat, str) and isinstance(ex, str):

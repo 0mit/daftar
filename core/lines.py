@@ -33,6 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import parse as dmparse  # noqa: E402 — the one reader of a coding
 
 KEBAB = re.compile(r'^[a-z0-9]+(-[a-z0-9]+)*$')
 FLAGS = ('exit', 'resumes', 'final', 'digits', 'back', 'convention')   # what a form writes `true`, a tool reads True
@@ -355,6 +356,8 @@ def attrs_problems(where, x, form, depth=0):
             out.append((w, "is prose, written as text"))
         elif isinstance(dom, dict) and dom.get('type') == 'kebab' and not (isinstance(v, str) and KEBAB.match(v)):
             out.append((w, f"{v!r} is not a kebab word"))
+        elif isinstance(dom, dict) and dom.get('type') == 'coding' and dmparse.bidi_said(v):
+            out.append((w, f"a code {dmparse.bidi_said(v)}"))
         elif isinstance(dom, dict) and isinstance(dom.get('map_of'), dict):   # named entries (v1 part 11): a value
             if not isinstance(v, dict):                                        # of a drawing, under its name
                 out.append((w, "is a mapping of names to entries"))

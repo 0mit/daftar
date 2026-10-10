@@ -1,0 +1,15 @@
+/* daftar's widgets (assets/view/lib/widgets/*.js). The font: Vazirmatn, by the Vazirmatn Project Authors, under the SIL Open
+   Font License 1.1 (Vazirmatn-OFL.txt), served beside this file so a page reads well offline. It writes the Arabic
+   script and the Latin; every other script is the reader's own fonts'. */
+@font-face{font-family:Vazirmatn;src:url(Vazirmatn.woff2) format("woff2");font-weight:100 900;font-display:swap}
+.w-root,.w-num,.w-money,.w-moment,.w-text,.w-name,.w-choice,.w-being{font-family:Vazirmatn,system-ui,sans-serif}
+.w-num{unicode-bidi:isolate;white-space:nowrap}
+table .w-num,.num .w-num,.amount .w-num{font-variant-numeric:tabular-nums}
+.w-frac{position:relative;display:inline-block;vertical-align:-.45em;text-align:center;font-size:.78em;line-height:1.1;margin:0 .08em;font-weight:600}
+.w-frac>.w-n{display:block;padding:0 .12em;border-bottom:1px solid currentColor}
+.w-frac>.w-d{display:block;padding:0 .12em}
+.w-frac>.w-x{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.w-uneven{font-size:.7em;vertical-align:super;color:#a0522d;cursor:help;margin-inline-start:.1em}
+.w-unit{font-size:.85em;opacity:.8}
+.w-money{white-space:nowrap}
+.w-bad{color:#a0522d}

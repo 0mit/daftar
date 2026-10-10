@@ -428,6 +428,15 @@ def main():
         sys.exit(f"REFUSING: {a.tag} is OLDER than the release this garden records ({current}). Adopting it would "
                  f"remove whatever changed since. Pass --allow-downgrade if that is really what you mean.")
 
+    try:                                          # the adoption is journalled under a stamp: a clock that cannot be
+        import clock as dmclock                   # shown stamps none, so it is asked before anything is written
+    except ImportError:                           # a release before the clock's check: the release it delegates to asks
+        dmclock = None
+    if dmclock is not None:
+        ok, found = dmclock.may_stamp()
+        if not ok:
+            sys.exit("REFUSING: " + dmclock.refusal(found, ROOT) + "\nNothing was touched.")
+
     tmp = tempfile.mkdtemp(prefix='dmupgrade-')
     try:
         rel = os.path.join(tmp, 'release')

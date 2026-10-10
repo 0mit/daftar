@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install PyYAML reuse
+      - run: pip install PyYAML reuse python-stdnum openpyxl
       - run: git config --global user.name ci && git config --global user.email ci@localhost
       - name: every document parses
         run: python3 bin/safe.py
@@ -97,6 +97,10 @@ jobs:
         run: python3 test/docs.py
       - name: "manifesto: stated once, above the law; every clause carried or said to be only stated; no copy grows"
         run: python3 test/manifesto.py
+      - name: "widgets: each value shown exactly, isolated and escaped, in each reader's own digits, separators and calendar, none privileged"
+        run: python3 test/widgets.py
+      - name: "cases: a consultation, an open-heart surgery, an Arduino blinker and a production line with accounts, each a garden of statements that holds together and refuses what it must"
+        run: python3 test/cases.py
       - name: "layers: each file sits in one layer, placed by the law or by its garden; no tool's path in the law; the changelog is journal"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/layers.py

@@ -137,7 +137,13 @@ def heading(who, what, when=None):
 
 
 def stamp(who, what, root=ROOT):
-    """A heading read from the clock and registered, for a tool that appends its own body (dmupgrade)."""
+    """A heading read from the clock and registered, for a tool that appends its own body (dmupgrade) — and the one
+    place the clock is read for a stamp, so it is asked here whether it may stamp (bin/clock.py: within half a minute of
+    its time sources). A clock that cannot be shown stamps nothing, and nothing is written."""
+    import clock as dmclock
+    ok, found = dmclock.may_stamp()
+    if not ok:
+        raise SystemExit("journal: " + dmclock.refusal(found, root))
     h = heading(who, what)
     register(h, root)
     return h

@@ -1,0 +1,123 @@
+# The values a reader reads, shows and takes in: a tree rooted in the core's shapes (core.yaml `shapes`). Where a value
+# is written in a bean, `written` names the one form it is written in, a row of lines.yaml `types`: that table says how a
+# value is WRITTEN, this one what it IS to a reader, and neither repeats the other. Each value names the law it rests on
+# (`rests_on`). A widget shows and takes in one value and answers to these rows; it keeps no copy of what they name — a
+# currency's places are the currencies table's, a unit is UCUM's, a calendar is systems.yaml's.
+# These rows are the law itself: a change to them is a RULE-CHANGE, made here.
+values:
+  # ------------------------------------------------------------------ the root
+  - { value: value, meaning: "anything a role, a qualifier or a detail holds" }
+
+  # ------------------------------------------------------------------ numbers
+  - value: number
+    is: value
+    rests_on: [ "core.yaml shapes: quantity (a bare number is a count of the unit one)" ]
+    meaning: "an exact rational number: what a count says, or what exact arithmetic on counts gives. Never a float"
+  - value: count
+    is: number
+    rests_on: [ "lines.yaml types: count" ]
+    written: count
+    meaning: "plain decimal digits as a bean writes them: exact, ending, no leading zero, its places as written"
+  - value: fraction
+    is: number
+    rests_on: [ "MODEL.md, money: balances read exactly, in fractions" ]
+    meaning: "a number whose decimals do not end (a third). It is never written as a count: it is READ (a balance, a
+      share of a payment) and shown as the fraction it is, n/d in lowest terms, its sign on n"
+  - value: measured
+    is: number
+    rests_on: [ "measures.yaml uncertainty_form", "quantities.yaml accuracy_kinds" ]
+    meaning: "a value with how well it is known (u, or bounds). Shown to the digits its uncertainty warrants and no
+      more (JCGM 100:2008, 7.2.6): the uncertainty in at most two significant digits, the value to the same place"
+  - value: share
+    is: number
+    rests_on: [ "quantities.yaml quantity: ratio", "core.yaml shapes: quantity" ]
+    meaning: "a part of a whole as written (bear's share: 2 and 1): shown as written, never reduced to a percentage
+      unless asked"
+  - value: quantity
+    is: number
+    rests_on: [ "core.yaml shapes: quantity", "units.yaml (UCUM)", "quantities.yaml quantities" ]
+    meaning: "{ count, unit }: a number and the unit it counts in. Units are converted only by the law's factors,
+      exactly (bin/units.py)"
+  - value: money
+    is: quantity
+    rests_on: [ "quantities.yaml quantity: money (units_from registries.yaml currencies, take code, digits)",
+                "registries.yaml currencies (seed/knowledge/currencies.tsv, ISO 4217)", "MODEL.md, money" ]
+    meaning: "an amount in one currency. Its places are the currency's digits; an amount that does not come out even
+      in them is shown as the fraction it is, never rounded, since rounding decides who takes the remainder, which
+      is a clause. Two currencies never meet except through a rate someone observed"
+
+  # ------------------------------------------------------------------ time
+  - value: moment
+    is: value
+    rests_on: [ "core.yaml shapes: position", "lines.yaml types: position (any calendar)",
+                "systems.yaml systems: gregorian-civil, persian-calendar, …", "registries.yaml time-zones" ]
+    written: position
+    meaning: "a position on the time aspect: a day, or a day and a time with its offset. Shown in a calendar the
+      reader chooses (systems.yaml: gregorian-civil, persian-calendar, …) and in the garden's zone unless another is
+      named; the written form never changes with the showing"
+  - { value: day, is: moment, rests_on: [ "systems.yaml system: gregorian-civil" ], meaning: "a whole civil day, no time of day" }
+  - { value: time-of-day, is: moment, rests_on: [ "systems.yaml system: gregorian-civil" ], meaning: "a moment to the minute or finer, with its offset" }
+  - value: extent
+    is: moment
+    rests_on: [ "core.yaml shapes: position (an extent is two, as ISO 8601 writes an interval)" ]
+    meaning: "from one moment to another: a period, a stay, an opening"
+  - value: duration
+    is: quantity
+    rests_on: [ "quantities.yaml quantity: duration", "units.yaml (UCUM: min, h, d)" ]
+    meaning: "how long: a quantity of time, not a position on it"
+  - value: recurrence
+    is: value
+    rests_on: [ "measures.yaml (a repetition and how it strides; not_a_recurrence)" ]
+    meaning: "a rule of repetition (every Tuesday at 8:30, the 15th of each month), read into its moments, never stored as them"
+
+  # ------------------------------------------------------------------ choices and references
+  - value: choice
+    is: value
+    rests_on: [ "core.yaml shapes: row" ]
+    meaning: "one row of a table the law keeps or a standard's (a role, an account, a status): chosen from that table,
+      shown by its name in the reader's language, written by its key"
+  - value: code
+    is: choice
+    rests_on: [ "lines.yaml types: coding", "registries.yaml knowledge_schemes" ]
+    written: coding
+    meaning: "a code of a scheme, `<scheme>:<code>` (isco-08:2522; a procedure's icd-10-pcs code): shown by the scheme's
+      own label for it, looked up in the scheme's table"
+  - { value: choices, is: choice, meaning: "several rows of one table" }
+  - value: being
+    is: value
+    rests_on: [ "core.yaml shapes: being" ]
+    meaning: "a bean, shown by its title and reached by its id; a lookup searches beans of the kinds the role allows"
+  - { value: statement, is: value, rests_on: [ "core.yaml shapes: statement" ], meaning: "one statement, `<bean>#<id>`" }
+  - value: name
+    is: value
+    rests_on: [ "core.yaml verb: name", "namespaces.yaml" ]
+    meaning: "a name a namespace gives (a domain, an e-mail address, a phone number in E.164): written in its
+      namespace's pattern, shown as the namespace shows it (a phone grouped, left to right)"
+
+  # ------------------------------------------------------------------ text and place
+  - value: text
+    is: value
+    rests_on: [ "core.yaml shapes: text", "lines.yaml types: text" ]
+    written: text
+    meaning: "prose, its language a BCP 47 tag where it is not the garden's; shown isolated (each value in its own isolate),
+      its direction from its language"
+  - value: place
+    is: value
+    rests_on: [ "core.yaml shapes: position", "places.yaml" ]
+    meaning: "where something is: by coordinates in a named system, or by an identifier resolved through them (an
+      address, a map element). Taken in through a place lookup"
+
+  # ------------------------------------------------------------------ many values
+  - value: series
+    is: value
+    rests_on: [ "lines.yaml (a series and its line)", "core.yaml shapes: form" ]
+    meaning: "values along a line (amounts by month, a reading over time): shown as a table or a graph, each point a
+      value of its own type, so a graph's labels are the same widgets as a table's cells"
+
+columns:
+  values:
+    value: required
+    is: optional
+    rests_on: optional
+    written: optional
+    meaning: required

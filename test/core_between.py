@@ -148,6 +148,9 @@ try:
         (("other-garden", "estate", "take", None), True, "a proposal taken: peer-taken"),
         (("other-garden", "estate", "edit", None), False, "a hand copy of another garden's facts: peer-copied"),
         (("world", "law", "read", None), False, "no row holds it: closed"),
+        (("history", "remote", "serve", None), True, "a refusal's detail served to a viewer it reaches: "
+                                                       "refusal-detail-served"),
+        (("history", "remote", "send", None), False, "a refusal's detail sent off the machine: no row holds it"),
     ]
     bad = [(m, want, L0.decide(*m)) for m, want, _w in cases if L0.decide(*m)[0] != want]
     check(f"law: the nearest row decides, and of two as near a refusal — {len(cases)} passes, each as the table says",
@@ -305,6 +308,18 @@ A reading.
           r.returncode != 0 and 'holds nothing here' in r.out, r.out[-800:])
     run('git', 'reset', '-q', 'HEAD', cwd=A)
     run('git', 'checkout', '--', 'beans/notes.md', 'log/journal.md', cwd=A)
+    add(A, 'ada', 'name: { id: tckn, by: tr-tckn, of: ada, as: "10000000147" }', 'ada')
+    r = run(PY, 'bin/held.py', 'put', 'ada', 'tckn', cwd=A)
+    check("held: a government number whose check fails is not sealed — the store judges a name as the gate would, and "
+          "never echoes it", r.returncode != 0 and 'fails its check (tckimlik)' in r.out and '10000000147' not in r.out
+          and '10000000147' in text(os.path.join(A, 'beans', 'ada.md')), r.out[-600:])
+    run('git', 'checkout', '--', 'beans/ada.md', cwd=A)
+    add(A, 'ada', 'name: { id: tckn, by: tr-tckn, of: ada, as: "10000000146" }', 'ada')
+    r = run(PY, 'bin/held.py', 'put', 'ada', 'tckn', cwd=A)
+    r2 = save(A, 'ada', "ada's identity number, sealed", "- action: sealed [[ada]]'s identity number\n- held: ada tckn added")
+    check("held: ...one that holds is sealed, and saved through the gate, which refused it written in the bean",
+          r.returncode == 0 and r2.returncode == 0 and '10000000146' not in text(os.path.join(A, 'beans', 'ada.md')),
+          r.out[-400:] + r2.out[-800:])
     r = run(PY, 'bin/held.py', 'person', 'name=Cem Yilmaz', 'phone=+15555550111', cwd=A)
     pid = re.search(r'p-[0-9a-f]{8}', r.out)
     r2 = save(A, 'ada', "a person held off git", f"- action: wrote [[{pid.group(0) if pid else 'x'}]], a person held off git")

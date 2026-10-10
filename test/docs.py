@@ -30,7 +30,7 @@ GARDEN_ONLY = {"test/fast.py"}
 # measurements, not suites: they run the suites (timings.py) or time the gate (cost.py), and CONTRIBUTING.md says how
 MEASURES = {"test/timings.py", "test/cost.py"}
 # a module the suites import, not a suite: test/grow.py grows a garden of the core (v1 part 12)
-HELPERS = {"test/grow.py"}
+HELPERS = {"test/grow.py", "test/machine.py"}   # and the suites' time source
 
 text = {}
 for d in PROSE:
@@ -40,6 +40,9 @@ for d in PROSE:
 
 sys.path.insert(0, os.path.join(ROOT, "bin"))
 sys.path.insert(0, ROOT)
+sys.path.append(os.path.join(ROOT, 'test'))   # last: test/core.py is no package `core`
+import machine  # noqa: E402
+machine.ensure()      # its time source and standards cache, not the machine's
 # A BEAN IS WRITTEN IN THE CORE'S WORDS (v1 part 13). A bean a document shows holds the core's header — `bean` (or
 # `mapping`), `kind`, `title`, `summary`, `tags`, `details`, `statements` — and nothing else at its head: one of today's
 # terms there (each went somewhere in the core: core/law/terms.yaml) teaches a refusal.

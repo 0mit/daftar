@@ -644,10 +644,13 @@ class Judge:
             for i, verb, r in b.items:
                 pat = (self.L.namespaces.get(r.get('by')) or {}).get('pattern') if verb == 'name' and \
                     isinstance(r.get('by'), str) and 'held' not in r and r.get('as') != 'unknown' else None
-                if pat and r.get('by') not in ('garden-id', 'garden') and not (isinstance(r.get('as'), str)
-                                                                              and re.fullmatch(pat, r['as'])):
-                    self.err('names', f"{b.id}[{i}] name", f"{r.get('as')!r} is not a name {r['by']} gives: its form is "
-                                                          f"`{pat}` — {self.L.namespaces[r['by']].get('meaning', '')}")
+                if verb == 'name' and 'held' not in r and isinstance(r.get('by'), str) and r['by'] in self.L.namespaces \
+                        and dmparse.bidi_said(r.get('as')):     # a name a namespace gives is an identifier: no bidi
+                    self.err('names', f"{b.id}[{i}] name", f"a name {r['by']} gives {dmparse.bidi_said(r['as'])}")
+                    continue
+                why = self.L.name_why(r['by'], r.get('as')) if pat and r.get('by') not in ('garden-id', 'garden') else ''
+                if why:                                     # its form, then the check a validator makes (`name_why`)
+                    self.err('names', f"{b.id}[{i}] name", why)
                 if verb == 'name' and isinstance(r.get('by'), str) and r.get('as') != 'unknown' \
                         and (self.L.namespaces.get(r['by']) or {}).get('once') == TRUE:     # a name nobody said names nobody
                     given.setdefault((r['by'], r.get('as')), []).append((self.norm(r.get('of'), b), f"{b.id}[{i}] name"))
@@ -960,6 +963,12 @@ class Judge:
         marked = self._marked()
         for b in self.G.beans.values():
             for i, verb, r in b.items:
+                if verb == 'name' and 'held' not in r and isinstance(r.get('by'), str) and r.get('as') != 'unknown' \
+                        and (self.L.namespaces.get(r['by']) or {}).get('kept') == 'held':
+                    self.err('harm', f"{b.id}[{i}] name", f"a name {r['by']} gives is a government number, kept only in "
+                                                          f"the held store and never in git: seal the statement before the "
+                                                          f"commit that would carry it (`python3 bin/held.py put {b.id} "
+                                                          f"<statement id>`) — a value committed is in every clone for good")
                 if marked and 'held' not in r and any(s in marked for s in self._codes(r)):
                     self.err('harm', f"{b.id}[{i}] {verb}", "holds a code of a scheme marked special-category, "
                                                             "unsealed: seal it before the commit that would carry it — "
