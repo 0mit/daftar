@@ -4840,3 +4840,16 @@ the save asks, so a person asks the same question the save does.
 
 `bin/fetch.py` brings a fetched scheme's table from its provider, or from a copy at hand, into this machine's cache,
 and prints the line the save's entry carries.
+## core/law/tools.yaml: tools[leads]
+
+WHO IS TOLD IS READ, NEVER CONFIGURED. `bin/leads.py` reads, for each person, what waits for them — a decision parked
+in the queue (the gardener's, and a ratify grant's holder's for its class), a case at a step whose part they took in its
+agreement, an agent's session left open — from what the garden already says: the gardener, a grant, an agreement's
+parts, a walk. A list of whom to tell kept beside the garden would be a second statement of the same thing, and would
+drift from it; a lead is a reading, asked each time and never stored.
+
+HEALTH HAS A KEEPER, AND ONLY WHAT SOMEONE CAN ACT ON IS A LEAD. A machine's disk with eight unreadable sectors and a
+million head parks told nobody (2026-10-09): a failure a reading shows — a `fail` whose `through` names the `measure`
+that showed it, not yet `repair`ed — is a lead to whoever answers for the being in keeping it, else its owner, else the
+gardener. A failure written with no reading behind it is a finding: it stays in the reading and the register, and is not
+pushed at anyone, since a garden that turns every finding into an alert trains its people to ignore alerts.
