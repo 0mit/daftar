@@ -1035,6 +1035,43 @@ made of directly — a microbe of its one cell, an atom of its electrons — is 
 second foundation of the step. An ecosystem keeps both of its stands, its community and the matter it lives on: no path
 through the living reaches material.
 
+A ROCK IS A MATERIAL; EACH STEP ITS OWN ORGANIZATION (2026-10-10). The operator: "what is the difference between a rock
+and a celestial body?", then "are not the molecular bonds bounding with gravitation and also the celestial bodies? isn't
+the idea same there?", and "recheck all the nodes for the same pattern and remove all the unnecessary". Every force of a
+lower step still acts in a higher one, so a step is not told by which forces are present. It is told by what new
+organization appears there, which the step below cannot have even in number: that is `made-of`, the lower recurring in
+the higher with something added. Molecules in number have a phase, a hardness and a temperature no molecule has; a
+material in number organized by its own gravitation is round and layered, and up and down begin. A rock adds nothing at
+either: its bonds and its bulk are a material's, and its weight is the foundation every body has, pressed on it by its
+world. So the step `rock` is gone, and a celestial body is made of material. Three more steps were the step below
+again, larger: an organ system is organs serving one capacity, as an organ is tissues serving one; a biosphere is every
+ecosystem of a world, an ecosystem at a world's extent; an installation is devices and structure assembled to work as
+one, as a device is components assembled. On the said line, a corpus was discourses gathered into one order, as a
+discourse is statements gathered into one. Each is gone, and its examples are the step below's (an animal's blood is an
+organ of it, a building a device, a law a discourse, and the biosphere the ecosystem of a whole world). Every step left adds its own: confinement (hadron), the nuclear
+bond (nucleus), shells and chemistry (atom), shape (molecule), the ensemble (material); a body's own gravitation, orbits
+about the largest, and stars in number with no ruler (celestial body, planetary system, galaxy); life, one kind working
+as one, a capacity, one being, a lineage, many kinds, the living with its matter (cell to ecosystem); a made part, work
+as one (component, device); a name, truth, one whole (name, statement, discourse).
+
+THE FIELD BENEATH THE DOT, AND MATERIAL AS THE ENSEMBLE (2026-10-10). The operator: "first find the place for fields in
+it, then conceptually analyze nucleus hadron and siblings", and then "yes build the fields and material". What fills the
+frame first is a field: a value at every point of space∞time — the Standard Model's quark, lepton, light, gluon, W and Z
+and Higgs fields — present where no particle is (the vacuum is every field at its least). A particle is one quantum of a
+field, so the dot stands on the field, made of it, and stays the dot: indivisible as a quantum is. Gravitation is no such
+field: it is the frame's own geometry, as weight's foundation and the gravitational kinds already say. Up the bound
+chain, each force binds twice, once itself and once by what it leaves between neutral wholes: the strong force makes the
+hadron (confinement; most of a proton's mass is its binding's energy) and, left between colour-neutral hadrons, the
+nucleus (isotopes, binding, decay); the electromagnetic force makes the atom (shells) and, left between neutral atoms,
+the molecule (shape, chemical identity). The weak force binds nothing: it is the nucleus's decay. Gravitation cannot be
+cancelled, mass being never negative, so it alone keeps building — bigger and smaller. Material was the step above the
+molecule, but matter in bulk is any bound step in number: a star's plasma of nuclei and electrons, a metal's or a salt's
+atoms, a neutron star's nucleons, water's molecules. So material is made of the elementary particle `while: ensemble`,
+beside the chain and not atop it; a cell is made of molecules and of material, a chemistry and a temperature, which
+neither path gives the other; and an ecosystem no longer needs its own stand on material, which its community's cells
+now give (one path, one statement). A temperature and a concentration are held by a material and what is made of it: a
+star, a gas, a metal have one, a single molecule none.
+
 ## core/law/core.yaml: lines
 
 (std-vocab 32: `lines`)
@@ -4959,7 +4996,23 @@ the person's level while reason is its rung — one being, since a person has on
 from host to host and is its own. Money was right already: it is measured of the agreement and what is said under it,
 and its carriers — a person, a wallet, an account, a banknote — say what they hold. Mass keeps no bearer of its own: the
 foundation `weight` is its bearer, read wherever a mass is stated, and the law refuses a dimension or a kind that says
-again what a foundation or its dimensions give. Two of SI's seven are kinds
+again what a foundation or its dimensions give.
+
+INFORMATION IS A COUNT, HELD IN THE ORDER OF SAYABLES (2026-10-10). The operator: "we need to find the right path for
+information … charge [is] as related as mass; I think it belongs to another table, path or step". Information stood on
+temperature, as if a bit needed heat in particular; but a carrier keeps it as a charge, a magnetisation, a pit or a
+pulse of light alike, and is related to each physical dimension as much as to temperature — so to none in particular.
+What it measures is how many binary choices a sayable takes in its order (the taxis, whose positions are the ordinal
+line's: byte 1024 of a file is a position, its size a region). That is a count, by the reason that made amount of
+substance a kind and not a dimension, and it is how ISO/IEC 80000-13 and UCUM give it: dimension one, the bit and the
+byte its units. So information leaves the dimensions for the kinds, `of: {}`, held by a sayable; a data rate is a count
+per time. Landauer's kT ln 2 stays in its meaning as a bridge between a carrier and what it carries, never a step.
+
+MASS AND CHARGE STAND ON A FIELD (2026-10-10). With the field beneath the dot, the two intrinsic dimensions stand where
+they arise: mass is a field's energy at rest — an elementary particle's given by the Higgs field, most of a hadron's by
+its binding's energy — and charge is how strongly a field couples to light's field. Both stand on `field`, possible-on,
+as the operator foresaw "possible extra steps between"; time and length stay the frame's faces, temperature stands on
+mass while an ensemble, and money on reason. Two of SI's seven are kinds
 here, not dimensions, by reason: an amount of substance is a count of entities (the mole a unit of count), and a
 luminous intensity is power as the standard eye weighs it (a kind standing on a perceiver).
 
@@ -4970,7 +5023,7 @@ are both N·m, a frequency and a radioactive activity both s⁻¹. A kind may al
 activity on the nucleus, a resistance on a material, a dose equivalent on tissue, an illuminance on a perceiver) and
 hold for less than they do. A kind that shares another's units says whose (`units_of`): a weight is written in force's
 newtons, an entropy in heat capacity's joules per kelvin. Weight (وزن) is the foundation's force, holding for every
-body; gravitation (گرانش) is a step of the ladder, rock to galaxy, where directions are ordered, and its field kinds
+body; gravitation (گرانش) is a step of the ladder, celestial body to galaxy, where directions are ordered, and its field kinds
 need only the frame's dimensions, as gravitation is the frame's own geometry.
 
 ## core/law/core.yaml: conditions[ensemble]

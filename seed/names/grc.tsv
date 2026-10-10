@@ -19,6 +19,7 @@ registry:foundation_rules	θεμελιώδεις νόμοι	θεμέλιον (a 
 foundation_rules:weight	βάρος	βαρύς (heavy)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	ἡ τάξις τῶν σωμάτων	τάξις (an arrangement, a rank in battle, from τάσσω, to array); Aristotle, History of Animals 588b: nature passes little by little from the lifeless to the living	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	χώρα∞χρόνος	χώρα (room: the receptacle of Timaeus 52a); χρόνος (time: 'a moving image of eternity', Timaeus 37d)	proposed	agent (claude opus-5.5), by hand
+complexity:field	πεδίον	πεδίον (a plain, open ground) — the Modern Greek word for the physicists' field, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	στοιχειῶδες σωμάτιον	στοιχεῖον (a member of a row; a letter; Plato's and Aristotle's element); σωμάτιον (a little body); τὰ ἐλάχιστα (Epicurus: the least parts, themselves without parts) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	ἁδρόνιον	ἁδρός (thick, strong, full-grown) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	πυρήν	πυρήν (the stone of a fruit; Modern Greek's nucleus)	proposed	agent (claude opus-5.5), by hand
@@ -27,21 +28,17 @@ complexity:molecule	μόριον	μόριον (a part, a portion — Aristotle's
 complexity:cell	κύτταρον	κύτταρος (the cell of a honeycomb, in Aristotle); κύτος (a hollow, a vessel)	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	ἱστός	ἱστός (the web on a loom; the mast, what stands upright — hence histology); ὑφή (a weave)	proposed	agent (claude opus-5.5), by hand
 complexity:organ	ὄργανον	ἔργον (work); Aristotle, De Anima II.1: the soul is the first actuality of a natural body that has organs (σώματος φυσικοῦ ὀργανικοῦ)	proposed	agent (claude opus-5.5), by hand
-complexity:organ-system	σύστημα ὀργάνων	σύστημα (a whole standing together, from συνίστημι); ὄργανον	proposed	agent (claude opus-5.5), by hand
 complexity:organism	σῶμα ἔμψυχον	ψυχή (breath, life); ἔμψυχος (ensouled, alive); Aristotle: the living body is σῶμα φυσικὸν ὀργανικόν, a natural body with organs	proposed	agent (claude opus-5.5), by hand
 complexity:population	πληθυσμός	πλῆθος (a multitude, a throng); ἀγέλη (a herd: Aristotle's gregarious animals, ἀγελαῖα) — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:community	κοινωνία	κοινός (common); Aristotle's κοινωνία: every partnership of the living, the city among them	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	οἰκοσύστημα	οἶκος (a house, a household); σύστημα — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
-complexity:biosphere	βιόσφαιρα	βίος (a lived life — beside ζωή, life as such); σφαῖρα — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:logos	λόγος	λέγω (to gather, to lay in order, to say); ζῷον λόγον ἔχον (the living being that has λόγος: Aristotle, Politics I.2)	proposed	agent (claude opus-5.5), by hand
 complexity:material	ὑλικόν	ὕλη (wood, timber — matter): the material — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
-complexity:rock	πέτρα	πέτρα (a rock, a cliff); λίθος (a stone)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	οὐράνιον σῶμα	οὐρανός (the sky, heaven); Aristotle's heavenly bodies, of the fifth body, αἰθήρ	proposed	agent (claude opus-5.5), by hand
 complexity:planetary-system	πλανητικὸν σύστημα	πλανάομαι (to wander); σύστημα — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
 complexity:galaxy	γαλαξίας	γάλα (milk): ὁ γαλαξίας κύκλος, the milky circle (Aristotle, Meteorology I.8)	proposed	agent (claude opus-5.5), by hand
 complexity:component	ἐξάρτημα	ἐξαρτάω (to hang from, to fit on); ἐξαρτίζω (to fit out, as a ship is); μέρος (a part)	proposed	agent (claude opus-5.5), by hand
 complexity:device	μηχανή	μηχανή (a contrivance, a means, from μῆχος, a remedy, a way); ὄργανον (a tool)	proposed	agent (claude opus-5.5), by hand
-complexity:installation	κατασκευή	κατασκευάζω (to equip fully, to build, to furnish): a construction, an establishment	proposed	agent (claude opus-5.5), by hand
 registry:crown	στέφανος	στέφω (to encircle, to wreathe)	proposed	agent (claude opus-5.5), by hand
 crown:theone	τὸ ἐξ ἀνάγκης ὄν	ἀνάγκη (necessity) + ὄν (being); Aristotle, Metaphysics Λ.7 1072b: the first mover is ἐξ ἀνάγκης ὄν, being of necessity; τὸ ἕν (the One)	proposed	agent (claude opus-5.5), by hand
 crown:love	ἀγάπη	ἀγαπάω (to welcome, to cherish, to be content with); beside ἔρως (desire) and φιλία (friendship); 1 Corinthians 13:5: οὐ ζητεῖ τὰ ἑαυτῆς, it seeks not its own	proposed	agent (claude opus-5.5), by hand

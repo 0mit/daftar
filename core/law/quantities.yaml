@@ -20,20 +20,16 @@ dimensions:
     stands: [ { at: space-time, as: possible-on } ]
     meaning: "how far — with time, the two faces of the one frame, space∞time (`complexity` space-time): neither without the other"
   - dimension: mass
-    stands: [ { at: space-time, as: possible-on } ]
-    meaning: "how much matter-energy: rest energy (E = mc²). It begins with the body's dot, the elementary particle, and holds for every body made of it: the foundation `weight` says so, and is its bearer. SI fixes the kilogram through h"
+    stands: [ { at: field, as: possible-on } ]
+    meaning: "how much matter-energy: a field's energy at rest (E = mc²) — given an elementary particle by the Higgs field, and most of a hadron's by the energy of its binding. Every body has it: the foundation `weight` says so, and is its bearer. SI fixes the kilogram through h"
   - dimension: charge
-    stands: [ { at: space-time, as: possible-on } ]
+    stands: [ { at: field, as: possible-on } ]
     holds_for: body
-    meaning: "how much electric charge: the particle's other intrinsic property, beside mass and standing on neither — conserved, and counted in elementary charges (e, by which SI fixes the ampere). A current is charge through time; a voltage, energy per charge"
+    meaning: "how much electric charge: how strongly a field couples to light's field, beside mass and standing on neither — conserved, and counted in elementary charges (e, by which SI fixes the ampere). A current is charge through time; a voltage, energy per charge"
   - dimension: temperature
     stands: [ { at: mass, as: possible-on, while: ensemble } ]
-    holds_for: { level: molecule, while: ensemble }
-    meaning: "how hot: energy shared over the many degrees of freedom of an ensemble (SI fixes the kelvin through k). No particle and no single molecule has one; a material, a cell, an organism and a machine do, being made of molecules in number"
-  - dimension: information
-    stands: [ { at: temperature, as: possible-on } ]
-    holds_for: sayable
-    meaning: "how much is carried: a pattern of distinguishable states — a document, a running instance, a volume, a message. It lives in a carrier, as an instance lives in a host and a person in a body; the carrier stands at a temperature (erasing one bit costs at least kT ln 2, Landauer) and says what it can hold (`hold: { by: nas, of: 2 TBy }`), and the pattern is measured itself. What it means is reason's, and no quantity"
+    holds_for: { level: material }
+    meaning: "how hot: energy shared over the many degrees of freedom of an ensemble (SI fixes the kelvin through k). No particle, nucleus, atom or single molecule has one; a material has — a plasma, a gas, a metal — and what is made of it: a cell, an organism, a star, a machine"
   - dimension: money
     stands: [ { at: reason, as: possible-on } ]
     holds_for: sayable
@@ -47,8 +43,14 @@ quantities:
   - { quantity: speed, of: { length: 1, time: "-1" } }
   - { quantity: acceleration, of: { length: 1, time: "-2" } }
   - { quantity: mass, of: { mass: 1 } }
-  - { quantity: information, of: { information: 1 } }
-  - { quantity: data-rate, of: { information: 1, time: "-1" } }
+  - quantity: information
+    of: {}
+    holds_for: sayable
+    meaning: "how many binary choices a sayable takes in its order: a count, as an amount of substance is (ISO/IEC 80000-13 gives it dimension one), counted in bits and bytes. What is carried bears it — a document, a running instance, a volume, a message — never its carrier, which says what it can hold (`hold: { by: nas, of: 2 TBy }`) and may keep it as charge, magnetisation, pits or light alike. Erasing a bit costs a carrier at temperature T at least kT ln 2 (Landauer): a bridge between the carrier and the carried, not a step. What it means is reason's, and no quantity"
+  - quantity: data-rate
+    of: { time: "-1" }
+    holds_for: sayable
+    meaning: "information carried per time: a stream's, a transfer's. A link or a port says the rate it can carry with `hold`"
   - { quantity: level, of: {}, scale: logarithmic }
   - { quantity: attenuation, of: { length: "-1" }, scale: logarithmic }
   - quantity: ratio
@@ -188,11 +190,11 @@ quantities:
     meaning: "how many entities of one kind — atoms, molecules, ions — a count, with the mole as its unit of count (N_A of them)"
   - quantity: substance-concentration
     of: { length: "-3" }
-    holds_for: { level: molecule, while: ensemble }
+    holds_for: { level: material }
     meaning: "an amount of a substance per volume of a solution: a count per volume"
   - quantity: mass-concentration
     of: { mass: 1, length: "-3" }
-    holds_for: { level: molecule, while: ensemble }
+    holds_for: { level: material }
     meaning: "the mass of a substance per volume of a solution: density's exponents, its own kind"
   - quantity: catalytic-activity
     of: { time: "-1" }
@@ -200,16 +202,16 @@ quantities:
     meaning: "an amount of a substance converted per time: an enzyme's"
   - quantity: osmolality
     of: { mass: "-1" }
-    holds_for: { level: molecule, while: ensemble }
+    holds_for: { level: material }
     meaning: "dissolved particles per mass of solvent"
   - quantity: equivalent-concentration
     of: { length: "-3" }
-    holds_for: { level: molecule, while: ensemble }
+    holds_for: { level: material }
     meaning: "charge-equivalents of an ion per volume"
   - quantity: ph
     of: {}
     scale: logarithmic
-    holds_for: { level: molecule, while: ensemble }
+    holds_for: { level: material }
     meaning: "how acid: the negative logarithm of a solution's hydrogen-ion activity"
   - quantity: heat-capacity
     of: { mass: 1, length: 2, time: "-2", temperature: "-1" }

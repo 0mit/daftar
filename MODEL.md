@@ -12,7 +12,7 @@ it. The words the gate knows are the core, `core/law/core.yaml`, and every other
   article 12, a name in its namespace — and are no time and no place. Neither frame is prior.
 - **The ladder.** What stands on what, from the frames to the crown, on seven lines: the frame; matter; gravitation;
   the living, possible on a world in **balance**; reason (λόγος), possible on a living organism in **proportion**; the
-  made; and the said, which runs name → statement → discourse → corpus. Each step stands on another `made-of` (the
+  made; and the said, which runs name → statement → discourse. Each step stands on another `made-of` (the
   lower is in it) or `possible-on` (the lower is its condition, `while` the condition holds). A part never stands above
   what its whole is made of, and nothing stands on itself through others.
 - **Weight.** What holds at a step holds for all that stands on it. Every body has weight; a sayable has none of its
@@ -135,7 +135,7 @@ and the default it derives where it has one.
 - **stand**: the one relation of the order, `stand: { by: cell, at: molecule, as: made-of }`.
 - **part**: `part: { by: wheel, of: car }`. A part never stands above what its whole is made of.
 - **line**: an ordered run of positions. Time is a line, and so is a walk.
-- **level**: a step of a line. The face keeps the two frames, reason and the said's four levels; the bodies' other 22
+- **level**: a step of a line. The face keeps the two frames, reason and the said's three levels; the bodies' other 19
   are rows of our knowledge tree (`core/law/levels.yaml`).
 - **The squares.** A figure is a square of opposition whose four positions are verbs over a statement:
 

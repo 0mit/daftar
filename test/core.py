@@ -70,8 +70,8 @@ except frame.Refused as e:
     check("a day with no zone to be reckoned in is refused: its place half is the bearer's", 'names none' in str(e), e)
 
 # ------------------------------------------------------------------------------------------------ the law
-check("the law is whole: the face's 21 verbs, the 42 rows and the 22 levels, 0 problems",
-      not LAW0.problems() and len(LAW0.verbs) == 63 and len(LAW0.levels) == 29, LAW0.problems())
+check("the law is whole: the face's 21 verbs, the 42 rows and the 19 levels of bodies, 0 problems",
+      not LAW0.problems() and len(LAW0.verbs) == 63 and len(LAW0.levels) == 25, LAW0.problems())
 CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
@@ -87,34 +87,41 @@ check(f"units are UCUM's, the law's English name attached: each of the law's {le
       and all(r.get('why') for r in units.values() if r.get('ucum') == 'false'), len(units))
 dims = {d['dimension']: d for d in LAW0.std.tables['dimensions']}
 check("the dimensions stand on the ladder (2026-10-10): the frame's two faces; mass and charge beside each other on "
-      "space-time, charge holding for a body and mass by the foundation weight; temperature on mass while an ensemble; "
-      "information on temperature and money on reason, each held by what is carried, a sayable, never its carrier",
-      set(dims) == {'time', 'length', 'mass', 'charge', 'temperature', 'information', 'money'}
-      and dims['charge']['stands'] == [{'at': 'space-time', 'as': 'possible-on'}] and dims['charge']['holds_for'] == 'body'
+      "the field, charge holding for a body and mass by the foundation weight; temperature on mass while an ensemble, "
+      "held by a material; "
+      "money on reason, held by what is carried, a sayable; information no dimension but a count held by a sayable, as "
+      "ISO/IEC 80000-13 gives it dimension one; a rock a material, and the celestial body gravitation's first step",
+      set(dims) == {'time', 'length', 'mass', 'charge', 'temperature', 'money'}
+      and dims['charge']['stands'] == [{'at': 'field', 'as': 'possible-on'}]
+      and dims['mass']['stands'] == [{'at': 'field', 'as': 'possible-on'}]
+      and dims['temperature']['holds_for'] == {'level': 'material'}
+      and LAW0.levels['material']['stands'] == [{'at': 'elementary-particle', 'as': 'made-of', 'while': 'ensemble'}]
+      and LAW0.levels['elementary-particle']['stands'] == [{'at': 'field', 'as': 'made-of'}] and dims['charge']['holds_for'] == 'body'
       and dims['temperature']['stands'] == [{'at': 'mass', 'as': 'possible-on', 'while': 'ensemble'}]
-      and dims['information']['stands'][0]['at'] == 'temperature' and dims['money']['holds_for'] == 'sayable'
-      and dims['information']['holds_for'] == 'sayable' and 'holds_for' not in dims['mass']
+      and dims['money']['holds_for'] == 'sayable' and 'holds_for' not in dims['mass']
+      and LAW0.std.quantities['information'].get('of') == {} and LAW0.std.quantities['information']['holds_for'] == 'sayable'
+      and LAW0.std.quantities['data-rate']['of'] == {'time': '-1'} and 'rock' not in LAW0.levels
+      and LAW0.levels['celestial-body']['stands'] == [{'at': 'material', 'as': 'made-of'}]
       and 'ensemble' in LAW0.conditions, dims)
 bad_dims = Law.load(('VOCAB.md', {}))
 kept = bad_dims.std.tables['dimensions']             # the standards are read once per process: put them back after
-bad_dims.std.tables['dimensions'] = [dict(d, stands=[{'at': 'information', 'as': 'possible-on'}])
+bad_dims.std.tables['dimensions'] = [dict(d, stands=[{'at': 'temperature', 'as': 'possible-on'}])
                                      if d['dimension'] == 'mass' else d for d in kept]
 probs = [m for _r, _w, m in bad_dims.problems() if 'never a circle' in m]
 bad_dims.std.tables['dimensions'] = kept
 check("...and a dimension that stands on itself through those beneath it is refused: the ladder is never a circle",
       probs, bad_dims.problems())
 kept_levels = dict(bad_dims.levels)                   # one path, one statement: a sibling another path gives is refused
-bad_dims.levels['celestial-body'] = dict(kept_levels['celestial-body'],
-                                         stands=listed(kept_levels['celestial-body'].get('stands')) +
-                                         [{'at': 'material', 'as': 'made-of'}])
-bad_dims.std.tables['dimensions'] = [dict(d, holds_for=dict(level='molecule', **{'while': 'ensemble'}))
-                                     if d['dimension'] == 'information' else d for d in kept]
+bad_dims.levels['galaxy'] = dict(kept_levels['galaxy'], stands=listed(kept_levels['galaxy'].get('stands')) +
+                                  [{'at': 'celestial-body', 'as': 'made-of'}])
+bad_dims.std.tables['dimensions'] = [dict(d, holds_for='body') if d['dimension'] == 'temperature' else d for d in kept]
 twice = [m for _r, _w, m in bad_dims.problems() if 'one path, one statement' in m or 'never its carrier' in m]
 bad_dims.levels.clear(); bad_dims.levels.update(kept_levels)
 bad_dims.std.tables['dimensions'] = kept
-check("...and a stand or a bearer another path already gives is refused: celestial-body on material beside rock, "
-      "information held for its carrier's ensemble (one path, one statement)",
-      len(twice) == 2 and any('celestial-body' in m or 'material as made-of' in m for m in twice), twice)
+check("...and a stand or a bearer another path already gives is refused: a galaxy on celestial bodies beside its "
+      "planetary systems, temperature held for what mass's foundation already holds it for (one path, one statement)",
+      len(twice) == 2 and any('celestial-body as made-of' in m for m in twice)
+      and any('a copy of what mass holds for' in m for m in twice), twice)
 ns = LAW0.namespaces
 again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true'}]})).problems()
 check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "

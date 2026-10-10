@@ -19,6 +19,7 @@ registry:foundation_rules	leges fundamenti	fundamentum (fundus, the bottom)	prop
 foundation_rules:weight	pondus	pendere (to hang, to weigh)	proposed	agent (claude opus-5.5), by hand
 registry:complexity	ordo corporum	ordo (a row, a rank); gradus (a step); scala naturae (the ladder of nature)	proposed	agent (claude opus-5.5), by hand
 complexity:space-time	spatium∞tempus	spatium (a stretch, an interval); tempus (a section of time)	proposed	agent (claude opus-5.5), by hand
+complexity:field	campus	campus (open land, a plain) — New Latin for the physicists' field	proposed	agent (claude opus-5.5), by hand
 complexity:elementary-particle	particula elementaris	particula (a little part); elementum (a first principle); minimum (Bruno: the least, without parts) — New Latin	proposed	agent (claude opus-5.5), by hand
 complexity:hadron	hadronium	ἁδρός (stout) — New Latin	proposed	agent (claude opus-5.5), by hand
 complexity:nucleus	nucleus	nux (a nut): the kernel	proposed	agent (claude opus-5.5), by hand
@@ -27,21 +28,17 @@ complexity:molecule	molecula	moles (a mass, a heap)	proposed	agent (claude opus-
 complexity:cell	cellula	cella (a small room, a store-chamber)	proposed	agent (claude opus-5.5), by hand
 complexity:tissue	textus	texere (to weave); tela (a web)	proposed	agent (claude opus-5.5), by hand
 complexity:organ	organum	ὄργανον (a tool); membrum (a member)	proposed	agent (claude opus-5.5), by hand
-complexity:organ-system	systema organorum	σύστημα; apparatus (made ready)	proposed	agent (claude opus-5.5), by hand
 complexity:organism	corpus animatum	anima (breath, soul): a body with a soul — Aquinas's rendering of Aristotle's σῶμα ἔμψυχον	proposed	agent (claude opus-5.5), by hand
 complexity:population	populus	pŏpulus (a people) — pōpulus, the poplar, is another word; grex (a herd, a flock)	proposed	agent (claude opus-5.5), by hand
 complexity:community	communitas	communis (shared); munus (a duty, a gift)	proposed	agent (claude opus-5.5), by hand
 complexity:ecosystem	oecosystema	οἶκος (a household); domus (a house) — New Latin	proposed	agent (claude opus-5.5), by hand
-complexity:biosphere	biosphaera	βίος + σφαῖρα — New Latin	proposed	agent (claude opus-5.5), by hand
 complexity:logos	ratio	reri (to reckon); ratio as reason and as proportion — the two senses the ladder parts; oratio (speech)	proposed	agent (claude opus-5.5), by hand
 complexity:material	materiale	materia (timber): the material — scholastic Latin	proposed	agent (claude opus-5.5), by hand
-complexity:rock	saxum	saxum (a rock, a boulder); lapis (a stone)	proposed	agent (claude opus-5.5), by hand
 complexity:celestial-body	corpus caeleste	caelum (the sky) + corpus	proposed	agent (claude opus-5.5), by hand
 complexity:planetary-system	systema planetarium	planeta (a wanderer) — New Latin	proposed	agent (claude opus-5.5), by hand
 complexity:galaxy	galaxias	via lactea (the milky way)	proposed	agent (claude opus-5.5), by hand
 complexity:component	componens	componere (to put together)	proposed	agent (claude opus-5.5), by hand
 complexity:device	machina	μηχανή (a contrivance); instrumentum (what is built in)	proposed	agent (claude opus-5.5), by hand
-complexity:installation	fabrica	faber (a craftsman): a workshop, a structure; struere (to pile up, to build)	proposed	agent (claude opus-5.5), by hand
 registry:crown	corona	corona (a wreath, a garland)	proposed	agent (claude opus-5.5), by hand
 crown:theone	necesse esse	necesse (what cannot give way: ne + cedere) + esse (to be) — the Latin Avicenna's name, necesse esse per se, which Aquinas took up	proposed	agent (claude opus-5.5), by hand
 crown:love	caritas	carus (dear, precious); caritas non quaerit quae sua sunt (1 Cor 13:5)	proposed	agent (claude opus-5.5), by hand
