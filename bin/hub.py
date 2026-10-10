@@ -317,15 +317,14 @@ def gate(commit, env, tmp):
         raise Refused("the garden it leaves does not pass the gate:\n" + out.strip()[-1500:])
 
 
-def judge(old, new, only=None, each=False, env=None, known=('--all',)):
+def judge(old, new, only=None, each=False, env=None, known=('--exclude=refs/daftar/custom/*', '--all')):
     """[str]: every refusal for one ref update; empty when the push is accepted. `known` is what counts as judged
-    already: everything a hub holds; a peer's own branches alone (`receive`)."""
+    already: everything a hub holds but a person's labels; a peer's own branches alone (`receive`)."""
     env = env or dict(os.environ)
     if new == ZERO:
         return []
     # the commits no garden ref holds yet: a person's labels ref holds commits never judged as the garden, so a commit
     # it holds is judged again before a garden's branch may hold it
-    _c, out, _e = git('rev-list', '--reverse', new, '--not', '--exclude=refs/daftar/custom/*', '--all', env=env)
     _c, out, _e = git('rev-list', '--reverse', new, '--not', *known, env=env)
     commits = [c for c in out.split('\n') if c]
     found = []
