@@ -251,6 +251,17 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.2** (2026-10-11, daftar v2.2.0, human-ratified rule-change: the direction design, ratified 2026-10-10 —
+  "Yes, ratify it", #125) — **a drawing keeps the frame of what it draws.** MINOR: a table added to the view profile,
+  nothing a garden could write refused. `core/law/profiles.yaml` `orientations`: a row an order the law knows — the
+  ordinal line, the taxis, time, a routine, a flow, a walk, the ladder, a magnitude, a place, depth — saying on which
+  screen axis it runs, which way, whether it follows the reader's script, and the commands a key means for it. A
+  sayable (a page, a timeline, a flow) runs from the start of the reader's line to its end and turns with the script;
+  a body (the ladder, a map, a magnitude) keeps its own frame, never mirrored. `assets/view/lib/widgets/direction.js`
+  is the one module that reads the rows — axes, keys named by meaning, glyphs, swipes — loaded by the view's page,
+  daftard's pages and the site; the view's flows draw their arrow as the glyph of `next`. The profiles' tables are
+  held to their forms by the gate, as the standards' tables are.
+
 - **core 2.1** (2026-10-10, daftar v2.1.0, human-ratified rule-change: the unified-tools design's P5.3, on the
   operator's word "go ahead with both", #121) — **a foreign system's records read from statements.** MINOR: a law file
   added, nothing a garden could write refused. `core/law/crosswalks.yaml`: one row a model of one series of a foreign
