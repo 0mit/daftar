@@ -32,9 +32,15 @@ SESSIONS. A sign-in form; a signed, expiring, HttpOnly, SameSite=Strict cookie; 
 are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git. `view serve-init` writes the
 configuration with a random password in a 0600 file beside it — never printed.
 
-THE LEDGER IS READ AGAIN when the garden's git HEAD moves (asked at most every `recheck_seconds`, 30 by default). When it
-moves, or the release GARDEN.md records moves, the server runs `view check` on the new state, and only if it passes
-starts itself again on it, so new code and new drawings load together; until then it keeps serving what it had.
+THE LEDGER IS READ AGAIN when the garden's git HEAD moves (asked at most every `recheck_seconds`, 30 by default, and
+only for a signed-in viewer: a health check answers from what is held). When it moves, or the release GARDEN.md records
+moves, and no code moved with it, the server runs `view check` on the new state, and only if it passes starts itself
+again on it; until then it keeps serving what it had. CODE RUNS ONLY WHEN A PERSON STARTS IT: when the drawing module
+the page names, or the release's assets, changed since the server was started, it keeps serving what it started with
+and says that `view serve` must be run again by hand — whoever made the commit.
+
+A CONNECTION IS BOUNDED: one that sends no request within `request_seconds` (15 by default) is closed, and at most 64
+are held at once; past that a new one is closed at once rather than given a thread.
 
 Usage (through assets/view/bin/view.py):
   view serve-init --config <path> --user <name> [--orgs "*"|org-a,org-b] [--shared] [--no-actions]
@@ -137,6 +143,7 @@ class Host:
         self.beans, self.gardener, self.answers = {}, None, {}
         self.argv = argv or sys.argv
         self.release_at_start = self.release()
+        self.head_at_start, self.code_noted = self.git_head(), None
         self.refresh(force=True)
 
     # --- MAY THIS VIEWER SEE THIS BEAN, OR RUN THIS ACTION -----------------------------------------------------------
@@ -228,13 +235,40 @@ class Host:
             self.beans, self.gardener, self.answers = dmpass.beans_here(vm.ROOT), dmpass.gardener_of(vm.ROOT), {}
             self.views = {v["key"]: v for v in self.payload["views"].values()}
 
+    def code_moved(self, old, new):
+        """The files of code this server runs that changed between two ledger heads: the drawing module the page names,
+        and the release's assets. None changed, or no history to tell by: []. An unreadable answer is a change."""
+        if not old or old == "no-git" or old == new:
+            return []
+        try:
+            rel = os.path.relpath(vm.drawings_path() or "", vm.ROOT)
+        except Exception:
+            rel = ""
+        paths = [p for p in (rel, "assets") if p and not p.startswith("..")]
+        r = subprocess.run(["git", "-C", vm.ROOT, "diff", "--name-only", old, new, "--"] + paths, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace")
+        if r.returncode != 0:
+            return ["the ledger's history"]
+        return sorted({f.split("/")[0] if f.startswith("assets/") else f for f in r.stdout.split() if f})
+
     def maybe_reexec(self):
         """The code that serves must be the release the garden records, and the drawings the ledger names. When a pull
         brings a new ledger head (which may carry a changed drawing module this process holds an old import of) or a new
         release, start again on it — only once `view check` passes on it; while it does not, keep serving and say why."""
         new = self.release()
-        head_moved = self.payload is not None and self.git_head() != self.head
+        head = self.git_head()
+        head_moved = self.payload is not None and head != self.head
         if new == self.release_at_start and not head_moved:
+            return
+        # CODE RUNS ONLY WHEN A PERSON STARTS IT (security audit 2026-10-10, 3.4): a pull that changes the drawing module
+        # or the release's assets is not run by this server — not by `view check`, not by starting again — whoever made
+        # the commit; it keeps serving what it started with, and says a person must start it again
+        moved = self.code_moved(self.head_at_start, head)
+        if moved:
+            if moved != self.code_noted:
+                sys.stderr.write("view serve: %s changed since this server was started (now %s): code is run only when a "
+                                 "person starts it — run `view serve` again by hand\n" % (", ".join(moved), head[:10]))
+                self.code_noted = moved
             return
         probs = subprocess.run([sys.executable, os.path.join(os.path.dirname(HERE), "bin", "view.py"), "check",
                                 "--garden", vm.ROOT] + (["--page", vm.PAGE] if vm.PAGE else []), capture_output=True, text=True, encoding="utf-8", errors="replace")
@@ -536,7 +570,9 @@ class Host:
         except OSError:
             return []
         rows = [json.loads(l) for l in lines if l.strip()]
-        if self.scope(user) is not None:
+        # a viewer reads their own rows; only the one who keeps the garden reads everyone's (security audit 3.1): the
+        # `orgs` ceiling narrows what a viewer sees and never decides who may read what others did
+        if (self.cfg["users"].get(user) or {}).get("bean") != self.gardener:
             rows = [r for r in rows if r.get("user") == user]
         return rows[-n:]
 
@@ -642,6 +678,7 @@ def make_handler(F):
     title = view_report.esc(str(vm.page().get("title") or vm.PAGE))
 
     class H(BaseHTTPRequestHandler):
+        timeout = float(F.cfg.get("request_seconds", 15))   # a connection that sends nothing is closed (audit 3.3)
         server_version = "view"
         sys_version = ""
 
@@ -680,8 +717,7 @@ def make_handler(F):
 
         def do_GET(self):
             u = urllib.parse.urlparse(self.path)
-            if u.path == "/healthz":
-                F.refresh()      # a health check also notices a new ledger head or a new release
+            if u.path == "/healthz":   # answered from what is held; a stranger's request starts no work (audit 3.4)
                 return self._send(200, "ok", "text/plain", headers={"X-View-Release": F.release_at_start})
             if u.path == "/login":
                 return self._send(200, LOGIN % {"title": title, "err": ""})
@@ -727,7 +763,9 @@ def make_handler(F):
                          "mode": "csv", "head": (F.head or "")[:12]})
                 return self._send(200, view_export.csv_text(t, keep=lambda b: F.line_ok(user, b, t)), "text/csv; charset=utf-8",
                                   headers={"Content-Disposition": 'attachment; filename="%s.csv"' % re.sub(r"[^A-Za-z0-9_.-]", "", key)})
-            if u.path == "/api/audit":
+            if u.path == "/api/audit":     # asked of the law like the page itself (security audit 2026-10-10, 3.1)
+                if not F.may(user)[0]:
+                    return self._json(403, {"error": "no grant opens this page to you"})
                 return self._json(200, {"entries": F.audit_tail(user)})
             return self._send(404, "not found", "text/plain")
 
@@ -786,10 +824,34 @@ def make_handler(F):
     return H
 
 
+class Bounded(ThreadingHTTPServer):
+    """A threaded server that holds at most 64 connections at once: past that, a new one is closed at once rather than
+    given a thread (security audit 2026-10-10, 3.3)."""
+    daemon_threads = True
+    request_queue_size = 128            # the kernel's queue of connections not yet taken, in the order they came
+    slots = threading.BoundedSemaphore(64)
+
+    def process_request(self, request, client_address):
+        if not self.slots.acquire(blocking=False):
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except Exception:
+            self.slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self.slots.release()
+
+
 def serve(config, argv=None):
     F = Host(config, argv)
     host, _, port = F.cfg.get("listen", "127.0.0.1:8780").rpartition(":")
-    srv = ThreadingHTTPServer((host or "127.0.0.1", int(port)), make_handler(F))
+    srv = Bounded((host or "127.0.0.1", int(port)), make_handler(F))
     sys.stderr.write("view serve: %s:%s · page %s of %s @ %s · %d viewers · %d tools (%d enabled)\n" % (
         host, port, vm.PAGE, vm.garden_name(), (F.head or "")[:10], len(F.cfg["users"]), len(F.cfg.get("tools") or {}),
         sum(1 for t in (F.cfg.get("tools") or {}).values() if t.get("enabled"))))

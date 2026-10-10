@@ -18,7 +18,8 @@ again, commit by commit, oldest first:
      mapping it changes (and for a bean's series files), `ratify:F` for an identity anchor it adds or changes, and
      `ratify:G` for a file in the `law` or `manifesto` layer — and for CODE: a file in the `gate` layer, one a release
      keeps (`seed/LANGUAGE`), any Python or shell file, the drawing module a page names (`view.drawings`) and the
-     name itself (bin/pass.py `may`, and the layer map).
+     name itself, and a captured view of another program (`captures/views/`), whose templates its client compiles into
+     script (bin/pass.py `may`, and the layer map).
   4. THE GATE, in a checkout of the pushed tip — or of every commit, with `--each`.
 
 THE HUB RUNS ONLY CODE THE GARDENER LET IN. The gate it runs is the one the pushed tree carries, because a garden's
@@ -60,6 +61,9 @@ ZERO = '0' * 40
 KEY_TERMS = ('ssh_key_fingerprint', 'openpgp_fingerprint')
 KEY_NAMESPACES = {'ssh_key_fingerprint': 'ssh', 'openpgp_fingerprint': 'openpgp'}   # the core's namespace of each key
 CODE = ('.py', '.pyc', '.pyw', '.pyd', '.pyz', '.so', '.sh', '.bash', '.ps1', '.psm1', '.cmd', '.bat')   # what runs
+# what runs though it is kept as history: a captured view of another program, whose client compiles its templates into
+# script where it runs (Odoo's Owl: an expression in a kanban card is JavaScript) — security audit 2026-10-10, 2.1
+CODE_FOLDERS = ('captures/views/',)
 # A PERSON'S CUSTOMISATIONS of the handplace (Y8): their own words for its interface, on a ref of their own beside the
 # garden's branch, never in its tree — so they are never checked out, never judged as the garden, never merged into it.
 CUSTOM_REF = re.compile(r'^refs/daftar/custom/([a-z0-9][a-z0-9-]{0,63})$')
@@ -235,10 +239,10 @@ def _drawn(fm):
 
 def is_code(m, path, drawn=()):
     """True for a file whose change can make a machine run something: what the `gate` layer holds, what a release keeps,
-    a Python or shell file wherever it is, and a drawing module a page names. Only the gardener, or a writer granted
-    `ratify:G`, changes one at the hub."""
+    a Python or shell file wherever it is, a drawing module a page names, and a captured view another program's client
+    compiles into script. Only the gardener, or a writer granted `ratify:G`, changes one at the hub."""
     return (m.layer_of(path)[0] == 'gate' or m.keeper_of(path) == 'release' or path.lower().endswith(CODE)
-            or path in drawn)
+            or path in drawn or path.startswith(CODE_FOLDERS))
 
 
 def rights(writer, commit, parent, env, tmp, others=()):

@@ -21,11 +21,20 @@ def csv_text(table, keep=None):
     """The table's lines as CSV: a header of its column labels, one line per row whose being `keep` lets through."""
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\n")
-    w.writerow(table["columns"])
+    w.writerow([text_cell(c) for c in table["columns"]])
     for r in table["rows"]:
         if keep is None or keep(r["bean"]):
-            w.writerow(r["cells"])
+            w.writerow([text_cell(c) for c in r["cells"]])
     return buf.getvalue()
+
+
+def text_cell(c):
+    """A cell a spreadsheet would read as a formula (=, +, -, @, a tab or a return first) is written as text, with a
+    quote before it (security audit 2026-10-10, 3.10); a number stays a number."""
+    s = str(c) if c is not None else ""
+    if s[:1] in ("=", "+", "-", "@", "\t", "\r") and not re.fullmatch(r"[-+]?\d+(\.\d+)?", s):
+        return "'" + s
+    return c
 
 
 def tables():

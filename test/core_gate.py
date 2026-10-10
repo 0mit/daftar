@@ -442,8 +442,11 @@ flows:
         check("hub: a name that establishes an identity, settled by a writer, needs `ratify:F` — refused",
               r2.returncode != 0 and 'ratify:F' in r2.out, r.out[-300:] + r2.out)
         # THE HUB RUNS ONLY CODE THE GARDENER LET IN: a writer granted `write` on a bean changes no file that can make a
-        # machine run something — the gate, a file a release keeps, `.gitattributes`, a Python file wherever it is
-        for path, text in (('bin/check.py', None), ('.gitattributes', None), ('notes/helper.py', 'print("hi")\n')):
+        # machine run something — the gate, a file a release keeps, `.gitattributes`, a Python file wherever it is, a
+        # captured view whose templates another program's client compiles into script (security audit 2026-10-10, 2.1)
+        for path, text in (('bin/check.py', None), ('.gitattributes', None), ('notes/helper.py', 'print("hi")\n'),
+                           ('captures/views/odoo-17.0/res.partner/kanban.xml', '<kanban><templates><t t-name="card">'
+                            '<t t-esc="record.name.value"/></t></templates></kanban>\n')):
             run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
             p = os.path.join(W, *path.split('/'))
             os.makedirs(os.path.dirname(p), exist_ok=True)
