@@ -73,6 +73,7 @@ PROFILES = 'profiles.yaml'                                 # what a garden takes
 FORMS = 'forms.yaml'                                       # the forms part 12b adds, written by hand: a grant's cover,
                                                            # a settlement, a weighing, a channel
 VALUES = 'values.yaml'                                     # what a value is to a reader: the tree the widgets answer to
+CROSSWALKS = 'crosswalks.yaml'                             # a foreign system's records read from statements (P5.3)
 MEASURES = 'measures.yaml'                                 # the forms of a measure: a region, a repetition, a clause's
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
@@ -226,6 +227,11 @@ class Law:
         values = os.path.join(d, VALUES) if os.path.isfile(os.path.join(d, VALUES)) else os.path.join(LAW_DIR, VALUES)
         law.values = {str(v['value']): v for v in listed((read.data(values) or {}).get('values'))
                       if isinstance(v, dict) and 'value' in v} if os.path.isfile(values) else {}
+        cw = os.path.join(d, CROSSWALKS) if os.path.isfile(os.path.join(d, CROSSWALKS)) else os.path.join(LAW_DIR, CROSSWALKS)
+        cw_law = (read.data(cw) or {}) if os.path.isfile(cw) else {}
+        law.crosswalk_forms = cw_law.get('forms') or {}
+        law.crosswalks = {str(r['crosswalk']): r for r in listed(cw_law.get('crosswalks'))
+                          if isinstance(r, dict) and 'crosswalk' in r}
         for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies), (PROFILES, law._profiles)):
             put(read.data(os.path.join(d, name) if os.path.isfile(os.path.join(d, name)) else os.path.join(LAW_DIR, name)))
         return law
@@ -643,6 +649,71 @@ class Law:
                                                  f"already: one path, one statement"))
         return out
 
+    def crosswalk_problems(self):
+        """[(where, message)]: each crosswalk held to its form — a kind of the law, paths of the law's verbs and roles,
+        models that rows of its own system and series cross, `join` with `along`, `inverse` and `chain` with a model."""
+        out, rows = [], getattr(self, 'crosswalks', {}) or {}
+        forms = getattr(self, 'crosswalk_forms', {}) or {}
+        row_keys, field_keys = set(forms.get('crosswalk') or {}), set(forms.get('field') or {})
+        path = re.compile(r'^([a-z][a-z-]*)(\[([a-z-]+=[^,\]]+(,[a-z-]+=[^,\]]+)*)\])?\.([a-z]+)$')
+        roles = set(self.roles)
+
+        def path_ok(where, p):
+            if p in ('title', 'summary', 'bean'):
+                return
+            m = path.match(str(p))
+            if not m:
+                out.append((where, f"{p!r} is no path: title, summary, bean, or <verb>[<role>=<value>,…].<role>"))
+                return
+            verb, role = m.group(1), m.group(5)
+            if verb not in self.verbs:
+                out.append((where, f"{p!r}: {verb} is no verb of the law"))
+            elif role not in roles and role not in ((self.verbs.get(verb) or {}).get('roles') or {}):
+                out.append((where, f"{p!r}: {role} is no role of {verb}"))
+        for name, r in rows.items():
+            where = f"crosswalk {name}"
+            for k in r:
+                if row_keys and k not in row_keys:
+                    out.append((where, f"`{k}` is no key of a crosswalk ({', '.join(sorted(row_keys))})"))
+            for k, need in (forms.get('crosswalk') or {}).items():
+                if need == 'required' and k not in r:
+                    out.append((where, f"has no `{k}`"))
+            if r.get('kind') not in self.kinds:
+                out.append((where, f"its kind {r.get('kind')!r} is no kind of the law"))
+            same = {str(o.get('model')) for o in rows.values()
+                    if str(o.get('system')) == str(r.get('system')) and str(o.get('series')) == str(r.get('series'))}
+            sel = r.get('select') or {}
+            for k, v in sel.items():
+                if k in ('with', 'without'):
+                    path_ok(where, v)
+                elif k == 'within' and isinstance(v, dict):
+                    path_ok(where, v.get('along'))
+                    if str(v.get('model')) not in same:
+                        out.append((where, f"select.within names {v.get('model')!r}, which no crosswalk of its series crosses"))
+                else:
+                    out.append((where, f"select.{k} is none of with, without, within"))
+            for fname, spec in (r.get('fields') or {}).items():
+                fw = f"{where} field {fname}"
+                if not isinstance(spec, dict):
+                    out.append((fw, "is no field: { from | value, model?, inverse?, chain?, along?, join? }"))
+                    continue
+                for k in spec:
+                    if field_keys and k not in field_keys:
+                        out.append((fw, f"`{k}` is no key of a field ({', '.join(sorted(field_keys))})"))
+                if 'from' in spec:
+                    path_ok(fw, spec['from'])
+                if 'model' in spec and str(spec['model']) not in same:
+                    out.append((fw, f"names {spec['model']!r}, which no crosswalk of its series crosses"))
+                if ('inverse' in spec or 'chain' in spec) and 'model' not in spec:
+                    out.append((fw, "`inverse` and `chain` read records of a `model`, and name none"))
+                if ('join' in spec) != ('along' in spec):
+                    out.append((fw, "`join` and `along` go together: the titles along a path, joined"))
+                if 'along' in spec:
+                    path_ok(fw, spec['along'])
+                if 'value' in spec and 'from' in spec:
+                    out.append((fw, "a field is read `from` the bean, or given as a `value`, never both"))
+        return out
+
     # ------------------------------------------------------------------------------------------------ proof
     def problems(self):
         """[(rule, where, message)]: the law's own consistency. Each one is an error: a law that does not hold together
@@ -853,6 +924,8 @@ class Law:
             if name in seen:
                 bad(f"dimension {name}", "stands on itself through the dimensions beneath it: never a circle")
         for where, msg in self.given_twice(dim_rows):
+            bad(where, msg)
+        for where, msg in self.crosswalk_problems():
             bad(where, msg)
         names = {}
         for u, row in self.units.items():
