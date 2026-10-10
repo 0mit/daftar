@@ -172,7 +172,10 @@ once, as its `scene` in `site/boards.yaml` says, and shows the refusal the gate 
 and its line. The words each lens reads are
 written in `site/boards.yaml`, in each of the page's languages (English, and Persian, read right to left), with the
 page's own words under `ui`; the law's words, the forms and what the gate prints stay as the release states them. The
-page's template, style and script are `site/board.html` and `site/assets/`. A
+page itself is rendered by `site/blend.py` in four movements — a sentence you write, the ladder you climb, a garden
+played back, and yours — with the story's words in `site/blend.yaml`, in each language; its style and script are
+`site/assets/blend.css` and `blend.js`, and `site/assets/direction.js` is copied from the release's own view widget,
+so the page's keys and arrows follow the law's `orientations` as the view's do. A
 change to a tool reaches the page only through a release: bump `site/RELEASE` to its tag, run `python3
 site/board.py`, and commit the page. `python3 test/site.py` builds the page again in a temporary directory and fails
 until the committed page agrees with it. It also checks that the page parses under a policy that runs no script and

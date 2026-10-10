@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""site/board.py — the one page: daftar through four lenses and ten mechanisms, a board for every crossing.
+"""site/board.py — the one page: a sentence you write, the ladder you climb, a garden played back (site/blend.py).
 
     python3 site/board.py [--out site/index.html]
 
 Reads site/boards.yaml (what a person writes: each lens's words for each mechanism) and the release itself — the core's
 law (core/law/), its reasons (seed/RATIONALE.md, through bin/why.py), and the catalogue's parts, rules, checks and
 relations (bin/catalog.py) — and writes ONE page, site/index.html: its data inline, as a JSON block, beside the style and
-the script it links (site/assets/board.css, site/assets/board.js), so that its policy runs no code the site does not
+the script it links (site/assets/blend.css, site/assets/blend.js, and direction.js from the release), so that its policy runs no code the site does not
 hold. A keeper's board is never written by hand: it is read from the release it describes, so it cannot drift from it.
 
 An agent's board is proved. The builder grows a garden from the release, writes the beans of site/garden.yaml, and
@@ -292,17 +292,17 @@ DATA['ground'] = GROUND
 for m in DATA['mechanisms']:
     m['files'] = len(FILES[m['id']])
 
-page = open(os.path.join(ROOT, 'site', 'board.html'), encoding='utf-8').read()
-# The first language's words stand in the page as written, for a reader whose browser runs no script. They are filled
-# in before the data is, so that nothing in the data is ever read as a placeholder.
-UI0 = dict((B.get('ui') or {}).get(LANGS[0]) or {})
-UI0['boards'] = UI0.get('boards', '').replace('{l}', str(len(B['lenses']))).replace(
-    '{m}', str(len(B['mechanisms']))).replace('{b}', str(len(B['lenses']) * len(B['mechanisms'])))
-page = re.sub(r'\{\{(\w+)\}\}', lambda x: html.escape(UI0[x.group(1)]) if x.group(1) in UI0
-              else _fail(f"site/board.html names {x.group(0)}, which ui.{LANGS[0]} in site/boards.yaml lacks"), page)
-page = page.replace('__VERSION__', html.escape(VERSION)).replace('__RELEASE__', html.escape(RELEASE or 'the release'))
-page = page.replace('/*__DATA__*/', json.dumps(DATA, ensure_ascii=False).replace('</', '<\\/'))
+# THE PAGE: what was proved above, rendered by site/blend.py — a sentence you write, the ladder you climb, a garden
+# played back, and yours — and the one direction module beside it, copied from the release the page describes, so the
+# page's keys and arrows are the view's own and can never drift from the law's `orientations`.
+sys.path.insert(0, os.path.join(ROOT, 'site'))
+import blend  # noqa: E402
+page = blend.render(DATA, B, REL)
 open(OUT, 'w', encoding='utf-8').write(page)
-print(f"site/board.py: {len(DATA['mechanisms'])} mechanisms × {len(DATA['lenses'])} lenses = "
-      f"{len(DATA['mechanisms']) * len(DATA['lenses'])} boards, core {VERSION}; "
+_dir_js = os.path.join(REL, 'assets', 'view', 'lib', 'widgets', 'direction.js')
+if not os.path.isfile(_dir_js):
+    sys.exit(f"site/board.py: the release {RELEASE} has no assets/view/lib/widgets/direction.js, which the page loads")
+os.makedirs(os.path.join(os.path.dirname(OUT), 'assets'), exist_ok=True)
+shutil.copyfile(_dir_js, os.path.join(os.path.dirname(OUT), 'assets', 'direction.js'))
+print(f"site/board.py: {len(DATA['mechanisms'])} mechanisms, each proved; {len(DATA['lenses'])} lenses; core {VERSION}; "
       f"wrote {os.path.relpath(OUT, ROOT)} ({os.path.getsize(OUT):,} bytes)")
