@@ -161,7 +161,7 @@ profiles:
   - profile: view
     meaning: "for a garden that draws what it keeps: a page of drawings, each of a mapping or a bean the garden holds, read at four lenses, with live values beside the drawing and actions a host may run. Its asset is `assets/view/`, which a garden receives only while it extends this profile. A garden that draws nothing should inherit none of it."
     verbs: [draw]
-    tables: [lenses, archetypes]
+    tables: [lenses, archetypes, orientations]
     forms: [page, drawing]
     asset: "assets/view"
     went:
@@ -282,6 +282,22 @@ archetypes:
   - archetype: health-chain
     meaning: "tiles in flow order with value, limit and trend, and the blind spots"
     when: "no shape native to what is drawn is designed yet"
+# WHERE EACH ORDER RUNS ON A PAGE (the direction design, ratified 2026-10-10): a drawing keeps the frame of what it draws.
+# A sayable is laid out in the taxis, which on a page is the reader's script — its inline axis mirrored with the script.
+# A body keeps its own frame — the ladder's foundation below, north up, more up — never mirrored, because the world
+# does not turn around when its reader's language does. assets/view/lib/widgets/direction.js turns these rows into
+# axes, commands bound to keys, glyphs and gestures; a page names a command by its meaning, never by a side.
+orientations:
+  - { order: ordinal, of: "line:ordinal", axis: inline, sense: "1", follows: "true", commands: [next, previous], meaning: "which in order: the first at the start of the reader's line, the next toward its end" }
+  - { order: taxis, of: "level:taxis", axis: inline, sense: "1", follows: "true", commands: [next, previous], meaning: "the frame of sayables: a page, a statement, a list, read in the reader's own script" }
+  - { order: time, of: "line:time", axis: inline, sense: "1", follows: "true", commands: [later, earlier], meaning: "a timeline, a series, a journal: earlier at the start of the reader's line, later at its end" }
+  - { order: routine, of: "line:routine", axis: inline, sense: "1", follows: "true", commands: [next, previous], meaning: "a procedure's steps: the first at the start of the line; its branches down the block" }
+  - { order: flow, of: "verb:pass", axis: inline, sense: "1", follows: "true", commands: [next, previous], meaning: "from at the start, to at the end: a mail route, a backup's copy, a proposal between gardens — its arrowhead the glyph of next" }
+  - { order: walk, of: "line:walk", axis: block, sense: "1", follows: "true", commands: [next, previous], meaning: "part-of, ownership, habitat, dependency: the whole at the block start, its parts indented toward the reader's line end" }
+  - { order: ladder, of: "table:ways", axis: vertical, sense: "-1", follows: "false", commands: [up, down], meaning: "the ladder's stands, made-of and possible-on: the foundation below and what stands on it above — gravitation's up, never mirrored" }
+  - { order: magnitude, of: "line:temperature", axis: vertical, sense: "-1", follows: "false", commands: [up, down], meaning: "a metered line's value — a temperature, a potential, a measure: more is up" }
+  - { order: place, of: "line:place", axis: map, sense: "1", follows: "false", meaning: "a map: north up and east right, whatever the reader's script; a tree of places is the walk" }
+  - { order: depth, of: "way:made-of", axis: z, sense: "1", follows: "false", commands: [in, out], meaning: "made-of read inward: in shows a being's parts, out its whole" }
 planes:
   - { plane: data, meaning: "the traffic the being exists to carry or to serve" }
   - plane: control
@@ -649,6 +665,7 @@ forms:
       - { when: { archetype: table }, requires: [columns], why: "a table answers with a column per path" }
   lenses: { lens: required, depth: required, form: required, max: required, meaning: required }
   archetypes: { archetype: required, meaning: required, when: required, frame: optional, reads: optional }
+  orientations: { order: required, of: required, axis: required, sense: required, follows: required, commands: optional, meaning: required }
   planes: { plane: required, meaning: required }
   profiles:
     profile: required

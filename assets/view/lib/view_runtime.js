@@ -15,6 +15,9 @@
    outside click, opens on keyboard focus, and survives a re-render by remembering which element it was pinned to. */
 (function(){
 const W=(typeof window!=='undefined')?window:this;
+/* DIRECTION, from widgets/direction.js and the law's `orientations`: a flow's arrow is the glyph of `next` on this page —
+   it points to the reader's line end, mirrored with the script; a body's up is never turned. */
+const GLYPH=m=>(W.daftarDirection?W.daftarDirection.glyph(m):({next:'→',down:'↓'})[m]||'');
 function h(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 const PCT={unit:'percent',q:'ratio',f:[1,100]},SEC={unit:'second',q:'duration',f:[1,1]};
 function coherent(b,v){return b&&b.f?v*b.f[0]/b.f[1]:v;}
@@ -179,7 +182,7 @@ function wiringHtml(w){if(!w||!(w.pipes.length||w.processes.length))return '';
    (pr.length?'<div class="wr-procs">'+pr.map(([p,i])=>'<span class="wr-p '+h(p.state||'')+'" data-wq="'+i+'"><b>'+h(p.proc)+'</b> <i>'+h(p.user)+'</i></span>').join('')+'</div>':'')+'</section>';});
  return o+'</div>';}
 function wireWiring(root,w){if(!w)return;
- root.querySelectorAll('[data-wp]').forEach(n=>{const p=w.pipes[+n.dataset.wp];inspectable(n,'wp:'+n.dataset.wp,()=>'<b>'+h(p.from)+' → '+h(p.to)+'</b><div class="ins-sub">'+h(p.channel)+' · '+h(p.at)+'</div><div class="ins-row"><span>config</span>'+h(p.config)+'</div>'+(p.note?'<div class="ins-row">'+h(p.note)+'</div>':'')+(p.state?'<div class="ins-row"><span>state</span>'+h(p.state)+'</div>':''));});
+ root.querySelectorAll('[data-wp]').forEach(n=>{const p=w.pipes[+n.dataset.wp];inspectable(n,'wp:'+n.dataset.wp,()=>'<b>'+h(p.from)+' '+GLYPH('next')+' '+h(p.to)+'</b><div class="ins-sub">'+h(p.channel)+' · '+h(p.at)+'</div><div class="ins-row"><span>config</span>'+h(p.config)+'</div>'+(p.note?'<div class="ins-row">'+h(p.note)+'</div>':'')+(p.state?'<div class="ins-row"><span>state</span>'+h(p.state)+'</div>':''));});
  root.querySelectorAll('[data-wq]').forEach(n=>{const p=w.processes[+n.dataset.wq];inspectable(n,'wq:'+n.dataset.wq,()=>'<b>'+h(p.proc)+'</b><div class="ins-sub">runs as '+h(p.user)+'</div><div class="ins-row">'+h(p.role)+'</div><div class="ins-row"><span>config</span>'+h(p.config)+'</div>'+(p.note?'<div class="ins-row">'+h(p.note)+'</div>':'')+(p.state?'<div class="ins-row"><span>state</span>'+h(p.state)+'</div>':''));});}
 function anatomy(root,view,lv){let o=head(view,lv)+wiringHtml(view.wiring)+'<div class="vw-cards">';
  (view.parts||[]).forEach((p,i)=>{o+='<article class="vw-card2" data-part="'+i+'"><header><b>'+h(p.bean)+'</b><span class="genos">'+h(p.genos)+'</span><span class="org">'+h(p.org||'no organisation')+'</span></header>'+
@@ -312,7 +315,7 @@ function funnel(root,view,lv,state,op){const live=state.live,val=id=>live?V(stat
  (op.funnels||[]).forEach((f,fi)=>{const mx=Math.max(1,...f.stages.map(s=>L(cnt(s))));
   o+='<div class="fun"><div class="fun-h"><b>'+h(f.name)+'</b>'+(op.window?'<span>'+h(op.window)+'</span>':'')+'</div><div class="fun-row">';
   f.stages.forEach((s,si)=>{const v=cnt(s),b=s.static!=null?{}:B(view,s.count),w=v!=null?Math.max(4,100*L(v)/mx):0;
-   o+=(si?'<div class="fun-arrow">→</div>':'')+'<div class="fun-st" data-fs="'+fi+'-'+si+'"><div class="fun-bar"><i style="height:'+w.toFixed(1)+'%"></i></div>'+
+   o+=(si?'<div class="fun-arrow">'+GLYPH('next')+'</div>':'')+'<div class="fun-st" data-fs="'+fi+'-'+si+'"><div class="fun-bar"><i style="height:'+w.toFixed(1)+'%"></i></div>'+
     '<div class="fun-n">'+(v!=null?fmt(v,b):'—')+'</div><div class="fun-l">'+h(s.label)+'</div>'+(s.counts?'<div class="fun-u">'+h(s.counts)+'</div>':'')+
     (s.marks||[]).map((mk,mi)=>{const mv=val(mk.bind);return '<div class="fun-mark" data-fm="'+fi+'-'+si+'-'+mi+'">'+(live?fmt(mv,B(view,mk.bind)):'—')+' '+h(mk.label)+'</div>';}).join('')+
     (s.stops||[]).map((sp,pi)=>{const sv=val(sp.bind),hit=live&&sv>0;return '<div class="fun-stop'+(hit?' hit':'')+'" data-fp="'+fi+'-'+si+'-'+pi+'">↓ '+(live?fmt(sv,B(view,sp.bind)):'—')+' '+h(sp.label)+'</div>';}).join('')+'</div>';});

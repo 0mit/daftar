@@ -246,6 +246,7 @@ copy of the release the garden runs, so a value is shown by the law the garden k
 | `lib/widgets/safe.js` | — | `h```: the one way HTML is built; `mount`: the one door into a page |
 | `lib/widgets/locale.js` | — | the reader's digits, separators, calendar, direction and words, all CLDR's through `Intl` |
 | `lib/widgets/settings.js` | — | what the garden's host sends with a page: its language, calendar, zone, each currency's places |
+| `lib/widgets/direction.js` | — | where each order runs on the page, from the law's `orientations` (`core/law/profiles.yaml`): a sayable's next, later and flow follow the reader's script; a body's up, north and more never turn. Keys, glyphs and swipes are named by meaning (`command`, `glyph`, `bind`, `swipe`); a classic script, so the view's page, daftard's pages and the site load the one file |
 | `lib/widgets/widgets.css`, `lib/widgets/Vazirmatn.woff2` | — | the widgets' style; Vazirmatn (SIL OFL 1.1), for the Arabic script and the Latin |
 
 **No sibling is privileged.** No widget keeps a table of digits, separators, month names or a language's words:
