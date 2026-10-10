@@ -158,6 +158,12 @@ def lenses():
             for r in sorted(registry("view_lenses"), key=lambda r: (int(r.get("depth", 9)), str(r.get("lens"))))]
 
 
+def orientations():
+    """The law's `orientations` rows, as the page carries them for widgets/direction.js: where each order runs."""
+    keep = ("order", "axis", "sense", "follows", "commands")
+    return [{k: r[k] for k in keep if k in r} for r in registry("view_orientations")]
+
+
 def lens_of_form(form):
     return next((l for l in lenses() if l["form"] == form), {})
 

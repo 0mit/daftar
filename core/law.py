@@ -102,14 +102,14 @@ def shapes_of(spec):
 # line, a measure and the flow law under `columns` (their `forms` are the forms a qualifier holds).
 COLUMNED = (('systems.yaml', 'forms'), ('places.yaml', 'forms'), ('protocols.yaml', 'forms'), ('quantities.yaml', 'forms'),
             ('registries.yaml', 'forms'), (LINES, 'columns'), (MEASURES, 'columns'), ('flows.yaml', 'columns'),
-            (VALUES, 'columns'))
+            (VALUES, 'columns'), (PROFILES, 'forms'))     # the profiles' tables (lenses, archetypes, orientations…) too
 
 
 def columns_problems(law_dir, std_dir=None):
     """[(where, message)]: each table of rows in the files whose tables have forms, held to its form."""
     out = []
     for name, key in COLUMNED:
-        d = std_dir if std_dir and key == 'forms' else law_dir
+        d = std_dir if std_dir and key == 'forms' and name != PROFILES else law_dir     # a profile is the law's own
         path = os.path.join(d, name)
         if not os.path.isfile(path):
             continue
@@ -250,7 +250,7 @@ class Law:
         forms it brings; the attributes it adds to a form of the core, which the form holds for every garden and rule
         `profile` grants only where the garden takes the profile; its vacancies beside the law's own."""
         self.profiles = {str(p['profile']): p for p in listed(data.get('profiles')) if isinstance(p, dict)}
-        keys = {'lenses': 'lens', 'archetypes': 'archetype', 'planes': 'plane'}
+        keys = {'lenses': 'lens', 'archetypes': 'archetype', 'planes': 'plane', 'orientations': 'order'}
         for t, key in keys.items():
             rows = [r for r in listed(data.get(t)) if isinstance(r, dict)]
             self.profile_tables[t] = rows

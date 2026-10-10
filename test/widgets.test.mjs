@@ -152,4 +152,53 @@ ok('exact: sums of written amounts, never a float, n/d where they do not end', (
   assert.deepEqual(exact.of('−3'), [-3n, 1n]);
   assert.equal(exact.of('1/0'), null);
 });
-console.log(`PASS: widgets — ${n} groups of checks: safe, settings, locale, number, money, moment in ten calendars, text, name, choice, being, exact.`);
+// DIRECTION, solved once (core/law/profiles.yaml `orientations`): direction.js is a classic script — the view's page and the
+// site load it as one — so it is run here in a page of its own: a document whose <html dir> is ltr or rtl, with or without
+// the law's rows in <script id="orientations">.
+import vm from 'node:vm';
+const dirSrc = readFileSync(new URL('direction.js', lib), 'utf8');
+const page = (dir, rows) => {
+  const doc = { documentElement: { getAttribute: k => (k === 'dir' ? dir : null) },
+                getElementById: id => (id === 'orientations' && rows ? { textContent: JSON.stringify(rows) } : null) };
+  const win = { document: doc };
+  vm.runInNewContext(dirSrc, { window: win, document: doc });
+  const D = win.daftarDirection, plain = f => (...a) => JSON.parse(JSON.stringify(f(...a)) ?? 'null');   // out of its own realm
+  return Object.fromEntries(Object.entries(D).map(([k, v]) => [k, typeof v === 'function' ? plain(v) : v]));
+};
+const key = k => ({ key: k });
+ok('direction: a sayable follows the reader\'s script, a body keeps its own frame', () => {
+  const L = page('ltr'), R = page('rtl');
+  assert.deepEqual([L.frame().dir, R.frame().dir], ['ltr', 'rtl']);
+  assert.deepEqual(L.axis('time'), { axis: 'x', sign: 1, mirrored: false });
+  assert.deepEqual(R.axis('time'), { axis: 'x', sign: -1, mirrored: true });
+  assert.deepEqual([L.axis('ladder'), R.axis('ladder')], [{ axis: 'y', sign: -1, mirrored: false }, { axis: 'y', sign: -1, mirrored: false }]);
+  assert.equal(R.axis('place').mirrored, false);
+});
+ok('direction: a key means a command by the page\'s direction — in Persian ArrowLeft is later and next; ArrowUp is always up', () => {
+  const L = page('ltr'), R = page('rtl');
+  assert.deepEqual([L.command(key('ArrowRight'), ['time']), L.command(key('ArrowLeft'), ['time'])], ['later', 'earlier']);
+  assert.deepEqual([R.command(key('ArrowLeft'), ['time']), R.command(key('ArrowRight'), ['time'])], ['later', 'earlier']);
+  assert.deepEqual([R.command(key('ArrowLeft'), ['flow']), L.command(key('ArrowRight'), ['ordinal'])], ['next', 'next']);
+  for (const P of [L, R]) {
+    assert.deepEqual([P.command(key('ArrowUp'), ['ladder']), P.command(key('ArrowDown'), ['ladder'])], ['up', 'down']);
+    assert.deepEqual([P.command(key('Home'), ['time']), P.command(key('End'), ['time'])], ['first', 'last']);
+    assert.equal(P.command(key('ArrowUp'), ['time']), null);
+    assert.deepEqual([P.command(key('+'), ['depth']), P.command(key('-'), ['depth'])], ['in', 'out']);
+  }
+  assert.deepEqual([L.command(key('ArrowDown'), ['walk']), R.command(key('ArrowDown'), ['walk'])], ['next', 'next']);
+});
+ok('direction: a glyph is chosen by meaning and turned by the frame; up never turns', () => {
+  const L = page('ltr'), R = page('rtl');
+  assert.deepEqual(['next', 'previous', 'later', 'earlier', 'up', 'down'].map(m => L.glyph(m)), ['→', '←', '→', '←', '↑', '↓']);
+  assert.deepEqual(['next', 'previous', 'later', 'earlier', 'up', 'down'].map(m => R.glyph(m)), ['←', '→', '←', '→', '↑', '↓']);
+  assert.deepEqual([R.glyph('north'), R.glyph('east')], ['↑', '→']);
+});
+ok('direction: the law\'s rows, where the page carries them, decide — as the law writes them ("1", "true")', () => {
+  const rows = [{ order: 'time', axis: 'inline', sense: '1', follows: 'false', commands: ['later', 'earlier'] },
+                { order: 'ladder', axis: 'vertical', sense: '-1', follows: 'false', commands: ['up', 'down'] }];
+  const R = page('rtl', rows);
+  assert.deepEqual(R.axis('time'), { axis: 'x', sign: 1, mirrored: false });           // a row that keeps its frame
+  assert.equal(R.command(key('ArrowRight'), ['time']), 'later');
+  assert.equal(R.axis('flow'), null);                                                    // what the law does not name, nothing
+});
+console.log(`PASS: widgets — ${n} groups of checks: safe, settings, locale, number, money, moment in ten calendars, text, name, choice, being, exact, direction.`);

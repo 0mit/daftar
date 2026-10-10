@@ -5092,3 +5092,21 @@ organisation without a parent, which would take in every supplier; a department 
 company. A record's number is the first 31 bits of the SHA-256 of its model and bean — the same everywhere, and two
 beans that meet are refused by name.
 
+
+## core/law/profiles.yaml: orientations
+
+A DRAWING KEEPS THE FRAME OF WHAT IT DRAWS (2026-10-10, the direction design; the operator: "solve the right to left
+and left to right problem once forever — the arrows' direction and anything else like the keyboard shortcuts should
+reuse the same technique implemented in the view module itself", then "direction aware — left to right, right to left,
+up, down, depth, time and every other aspect daftar knows", and "Yes, ratify it"). The core has two frames: a body
+takes room in space∞time, a sayable takes a place in the taxis. A page is a sayable, read in the reader's script, so
+what is said on it — an order, a timeline, a procedure, a flow from one being to another, a walk down a tree — runs
+from the start of the reader's line to its end, and turns with the script. What it draws may be a body, and a body
+keeps its own frame: the ladder's foundation below and what stands on it above (gravitation's up, `levels.yaml`
+"where directions are ordered"), a map's north up and east right, more up on any metered line. The world does not turn
+around when its reader's language does, so those rows never follow the script. One row an order says on which screen
+axis it runs, which way, whether it follows the script, and the commands a key means for it; a page names a command
+(next, later, up, in) and never a side, and `widgets/direction.js` is the one module that turns the rows into axes,
+keys, glyphs and gestures — the view's own page, daftard's pages and the site load it from the release, so no
+stylesheet or script can disagree with the table. The profiles' tables are held to their forms by the gate from this
+change on, as the standards' tables are.

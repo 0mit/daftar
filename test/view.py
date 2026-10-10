@@ -689,6 +689,12 @@ _m = re.search(r'<script type="application/json" id="viewdata">(.*?)</script>', 
 P = json.loads(_m.group(1).replace("<\\/", "</")) if _m else {}
 V = P.get("views") or {}
 S_, D_ = V.get("silo") or {}, V.get("drying") or {}
+_om = re.search(r'<script type="application/json" id="orientations">(.*?)</script>', HTML, re.S)
+_O = {r["order"]: r for r in json.loads(_om.group(1).replace("<\\/", "</"))} if _om else {}
+check("DIRECTION: the page carries the law's `orientations` rows and the one module that reads them — time follows the "
+      "reader's script, the ladder keeps its frame — and its flows' arrows are the glyph of `next`",
+      _O.get("time", {}).get("follows") == "true" and _O.get("ladder", {}).get("follows") == "false" and len(_O) == 10
+      and "daftarDirection" in HTML and "GLYPH('next')" in HTML and 'class="fun-arrow">→' not in HTML, sorted(_O))
 check("the page opens on its organisation, and its lenses are the law's four, each with its form",
       P.get("opens_on") == "grain-coop" and [l["form"] for l in P.get("levels", [])] == ["story", "schematic", "health-chain", "anatomy"],
       (P.get("opens_on"), [l.get("form") for l in P.get("levels", [])]))

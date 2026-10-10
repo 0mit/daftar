@@ -343,6 +343,10 @@ render();
 """
 
 
+# where each order runs on the page: the law's rows and the one module that reads them (widgets/direction.js)
+DIRECTION_JS = open(os.path.join(HERE, "widgets", "direction.js"), encoding="utf-8").read()
+
+
 def build_html(p):
     stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     title = esc(p["page"]["title"])
@@ -354,9 +358,10 @@ def build_html(p):
             '<div class="bar"><div class="tabs" id="tabs"></div><span class="spacer"></span><span class="kd">lens</span>'
             '<div class="seg" id="lens"></div><button class="btn" id="authbtn">Author</button></div><div id="livebar" class="kd"></div></header>'
             '<main><div id="view"></div><section id="author"></section></main>'
-            '<script type="application/json" id="viewdata">%s</script><script>%s</script><script>%s</script></body></html>'
+            '<script type="application/json" id="viewdata">%s</script>'
+            '<script type="application/json" id="orientations">%s</script><script>%s</script><script>%s</script><script>%s</script></body></html>'
             % (title, PAGE_CSS, kit.SCHEMA_CSS + p.get("palette_css", ""), title, esc(p["page"]["id"]), esc(p.get("garden", "")), esc(p.get("release", "")),
-               stamp, data, kit.RUNTIME_JS, SCRIPT))
+               stamp, data, json.dumps(vm.orientations()).replace("</", "<\\/"), DIRECTION_JS, kit.RUNTIME_JS, SCRIPT))
 
 
 def main(args):

@@ -101,6 +101,8 @@ class Law:
         if name in ('view_archetypes', 'archetypes'):       # what the facts propose a shape by, as this view names
             return [dict(r, reads=[READS.get(x, x) for x in _listed(r.get('reads'))]) if r.get('reads') else r
                     for r in L.profile_tables.get('archetypes') or []]
+        if name in ('view_orientations', 'orientations'):    # where each order runs on a page (widgets/direction.js)
+            return list(L.profile_tables.get('orientations') or [])
         if name in ('net_protocols', 'protocols'):
             return list(std.protocols.values())
         if name in std.tables:
