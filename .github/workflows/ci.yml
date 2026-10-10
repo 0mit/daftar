@@ -103,6 +103,9 @@ jobs:
         run: python3 test/cases.py
       - name: "leads: what waits, for whom the garden says — a decision, a case at its step, an open session; never configured, never stored"
         run: python3 test/leads.py
+      - name: "act: an action run on the law's own walk — plan, show, check, a person's ratification, apply, verify; refused and rolled back with their reasons"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: its commits wait for the minute to turn
+        run: python3 test/act.py
       - name: "layers: each file sits in one layer, placed by the law or by its garden; no tool's path in the law; the changelog is journal"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/layers.py

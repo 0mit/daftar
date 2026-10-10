@@ -35,6 +35,7 @@ tools:
   - { tool: session, family: write }
   - { tool: cursor, family: write }
   - { tool: digest, family: write }
+  - { tool: act, family: write }
   - { tool: upgrade, family: write }
   - { tool: reform, family: write }
   - { tool: install, family: write }
