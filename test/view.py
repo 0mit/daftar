@@ -986,7 +986,8 @@ check("...and the garden saves it, a RULE-CHANGE: an adapter added beside the re
 # gardener's grants open the co-operative's beings to them — to read, and to run each tool. The host's configuration
 # only narrows what the grants open.
 VIEWERS = {"alice": "p-a11ce000", "carol": "p-ca401000", "dave": "p-da4e0000"}
-for _p in VIEWERS.values():
+STRANGER = "p-e7e00000"      # a person the garden holds, to whom no grant opens the page
+for _p in list(VIEWERS.values()) + [STRANGER]:
     put(f"beans/{_p}.md", f"""---
 bean: {_p}
 kind: person
@@ -1007,8 +1008,8 @@ put("beans/tessa.md", _t.replace("\n---\n", "\n  - say: { by: tessa, of: [viewer
                                  "  - grant: { id: viewers-act, by: tessa, to: [%s], of: [%s], as: enact, why: \"a viewer may start the fans, reset the radio and stop the pump\" }\n"
                                  "---\n" % (", ".join(VIEWERS.values()), ", ".join(_every), ", ".join(VIEWERS.values()), ", ".join(_every)), 1))
 _sv = run(sys.executable, os.path.join(G, "bin", "save.py"), "tessa", "the page's viewers, and what they are granted",
-          "--body", "- action: " + ", ".join(f"[[{_p}]]" for _p in VIEWERS.values()) + " recorded; [[tessa]] grants them "
-          "the co-operative's beings to read, and its three tools.", cwd=G)
+          "--body", "- action: " + ", ".join(f"[[{_p}]]" for _p in list(VIEWERS.values()) + [STRANGER]) + " recorded; [[tessa]] "
+          "grants the first three the co-operative's beings to read, and its three tools.", cwd=G)
 check("the viewers and the gardener's grants to them are saved through the gate", _sv.returncode == 0,
       (_sv.stdout + _sv.stderr)[-1500:])
 CFG = os.path.join(T, "host", "serve.json")
@@ -1016,7 +1017,8 @@ _pp = free_port()
 mon = ThreadingHTTPServer(("127.0.0.1", _pp), FakeMonitor)
 threading.Thread(target=mon.serve_forever, daemon=True).start()
 for _u, _o in (("alice", ["--orgs", "grain-coop", "--bean", VIEWERS["alice"]]), ("carol", ["--orgs", "grain-coop", "--shared", "--bean", VIEWERS["carol"]]),
-               ("dave", ["--orgs", "hill-farm", "--no-actions", "--bean", VIEWERS["dave"]]), ("root", ["--orgs", "*", "--bean", "tessa"])):
+               ("dave", ["--orgs", "hill-farm", "--no-actions", "--bean", VIEWERS["dave"]]), ("root", ["--orgs", "*", "--bean", "tessa"]),
+               ("eve", ["--orgs", "*", "--bean", STRANGER])):
     out, rc = dmview("serve-init", "--config", CFG, "--user", _u, *_o)
 check("serve-init: the password is written to a file of its own and never printed",
       rc == 0 and "password is in" in out and open(os.path.join(T, "host", "root.password")).read().strip() not in out, out)
@@ -1032,6 +1034,7 @@ check("...and a bean the garden does not hold is refused, and nothing is written
 _sp_ = free_port()
 C["listen"] = "127.0.0.1:%d" % _sp_
 C["recheck_seconds"] = 1
+C["request_seconds"] = 2
 C["monitors"] = {"yard-monitor": {"url": "http://127.0.0.1:%d" % _pp}, "radio-monitor": {"url": "http://127.0.0.1:1"}}
 C["users"]["dave"]["beans"] = ["field-radio"]
 C["tools"] = {"start-fans": {"argv": [sys.executable, "-c", "print('ran-for-real')"], "enabled": True, "timeout": 20},
@@ -1186,23 +1189,110 @@ try:
           ("alice", "run") in _modes and ("carol", "dry-run") in _modes and ("alice", "refused") in _modes
           and all(e.get("head") for e in _log), _modes)
     check("serve: the audit log is 0600", oct(os.stat(C["audit_log"]).st_mode & 0o777) == "0o600")
-    # A NEW RELEASE THAT CHECKS STARTS THE SERVER AGAIN ON IT: the release GARDEN.md records moves, and the server reloads.
-    _rel0 = urllib.request.urlopen(BASE + "/healthz", timeout=3).headers.get("X-View-Release")
+    # THE AUDIT LOG IS READ AS THE LAW ALLOWS (security audit 2026-10-10, 3.1): asked of the page's grants like the page
+    # itself; a viewer reads their own rows, and only the one who keeps the garden reads everyone's — the host's `orgs`
+    # ceiling narrows what is seen and never decides who may read what others did.
+    eve = session("eve")
+    st_e, _ = get_(eve, "/")
+    st_ea, au_e = get_(eve, "/api/audit")
+    check("serve: a viewer no grant opens the page to is refused the audit log too, even with every organisation in her ceiling",
+          st_e == 403 and st_ea == 403 and "alice" not in au_e, (st_e, st_ea, au_e[:200]))
+    st, au = get_(alice, "/api/audit")
+    _au = [e.get("user") for e in json.loads(au).get("entries", [])] if st == 200 else []
+    root = session("root")
+    st2, au2 = get_(root, "/api/audit")
+    _au2 = {e.get("user") for e in json.loads(au2).get("entries", [])} if st2 == 200 else set()
+    check("serve: a granted viewer reads only her own rows of the audit log, and the gardener everyone's",
+          st == 200 and _au and set(_au) == {"alice"} and st2 == 200 and {"alice", "carol", "eve"} <= _au2, (st, _au, st2, _au2))
+    # THE CSV IS TEXT (3.10): a cell a spreadsheet would run as a formula is written with a quote before it; a number stays
+    import view_export as _vx
+    _csv = _vx.csv_text({"columns": ["=label", "n"], "rows": [{"bean": "x", "cells": ["=HYPERLINK(\"http://x\")", -3]},
+                                                             {"bean": "y", "cells": ["+1+1", "-2.5"]},
+                                                             {"bean": "z", "cells": ["@SUM(A1)", "\tlead"]}]})
+    check("export: a cell a spreadsheet would read as a formula is written as text, and a number as a number",
+          _csv.splitlines() == ["'=label,n", "\"'=HYPERLINK(\"\"http://x\"\")\",-3", "'+1+1,-2.5", "'@SUM(A1),'\tlead"], _csv)
+    # A CONNECTION IS BOUNDED (3.3): one that sends no request is closed after `request_seconds`; past 64 held at once, a
+    # new one is closed at once; and the server still answers once they are gone.
+    import socket as _so
+    _c = _so.create_connection(("127.0.0.1", _sp_), timeout=10)
+    _c.sendall(b"GET / HTTP/1.1\r\n")                      # the request is begun, and never finished
+    _t0 = time.time()
+    try:
+        _got = _c.recv(64)
+    except OSError:
+        _got = None
+    _waited = time.time() - _t0
+    _c.close()
+    check("serve: a connection that never finishes its request is closed after request_seconds", _got == b"" and 1 < _waited < 6,
+          (_got, round(_waited, 2)))
+    _held = [_so.create_connection(("127.0.0.1", _sp_), timeout=10) for _ in range(64)]
+    time.sleep(0.5)
+    _extra = _so.create_connection(("127.0.0.1", _sp_), timeout=10)
+    _t0 = time.time()
+    try:
+        _got = _extra.recv(64)
+    except OSError:
+        _got = None
+    _waited = time.time() - _t0
+    for _x in _held + [_extra]:
+        _x.close()
+    time.sleep(0.5)
+    st, _ = get_(alice, "/api/values?m=silo")
+    check("serve: at most 64 connections are held at once — the next is closed at once, and the server answers again after",
+          _got == b"" and _waited < 1.0 and st == 200, (_got, round(_waited, 2), st))
+    # A HEALTH CHECK STARTS NO WORK (3.4), AND A NEW RELEASE THAT CHECKS STARTS THE SERVER AGAIN ON IT: the release
+    # GARDEN.md records moves, and nothing else; /healthz answers from what is held, and the next signed-in request reloads.
+    def _release():
+        try:
+            return urllib.request.urlopen(BASE + "/healthz", timeout=3).headers.get("X-View-Release")
+        except Exception:
+            return None
+    _rel0 = _release()
     _gm = get("GARDEN.md")
     put("GARDEN.md", _gm.replace('daftar_release: "%s"' % TAG, 'daftar_release: "v9.9.10"', 1))
     _rs = run(sys.executable, os.path.join(G, "bin", "save.py"), "tessa", "RULE-CHANGE: the release recorded moves",
               "--body", "- action: RULE-CHANGE: GARDEN.md records v9.9.10, a probe of the server's reload.", cwd=G)
+    _healthz = []
+    for _ in range(6):
+        time.sleep(0.5)
+        _healthz.append(_release())
+    check("serve: a health check answers from what is held, and starts no reading of the ledger, nor a reload",
+          _rs.returncode == 0 and _rel0 == TAG and set(_healthz) == {TAG}, (_rel0, _healthz, (_rs.stdout + _rs.stderr)[-400:]))
     _rel1 = None
     for _ in range(40):
-        time.sleep(0.5)
         try:
-            _rel1 = urllib.request.urlopen(BASE + "/healthz", timeout=3).headers.get("X-View-Release")
+            get_(alice, "/api/values?m=silo")
         except Exception:
-            _rel1 = None
+            pass
+        time.sleep(0.5)
+        _rel1 = _release()
         if _rel1 == "v9.9.10":
             break
-    check("serve: a new release the garden records, which checks, starts the server again on it", _rs.returncode == 0
-          and _rel0 == TAG and _rel1 == "v9.9.10", (_rel0, _rel1, (_rs.stdout + _rs.stderr)[-400:]))
+    check("serve: a new release the garden records, which moves no code and checks, starts the server again on it",
+          _rel1 == "v9.9.10", (_rel0, _rel1))
+    # CODE RUNS ONLY WHEN A PERSON STARTS IT (3.4): a commit that changes the drawing module — whoever made it, through
+    # the gate or not — is not run by the server, which keeps serving what it started with and says why.
+    _dm = get("bin/drawings.py")
+    put("bin/drawings.py", _dm + "\n# a change pulled in, which the server must not run by itself\n")
+    put("GARDEN.md", get("GARDEN.md").replace('daftar_release: "v9.9.10"', 'daftar_release: "v9.9.11"', 1))
+    _cm = run("git", "commit", "--no-verify", "-qam", "a pulled change to the drawing module", cwd=G)
+    _rel2 = []
+    for _ in range(8):
+        try:
+            get_(alice, "/api/values?m=silo")
+        except Exception:
+            pass
+        time.sleep(0.5)
+        _rel2.append(_release())
+    srv.terminate()
+    try:
+        _err = srv.communicate(timeout=10)[1] or ""
+    except Exception:
+        _err = ""
+    check("serve: a pulled change to the drawing module is not run: the server keeps its release and says to start it by hand",
+          _cm.returncode == 0 and set(_rel2) == {"v9.9.10"} and "bin/drawings.py changed since this server was started" in _err
+          and "run `view serve` again by hand" in _err and _err.count("changed since this server was started") == 1,
+          (_cm.stderr[-200:], _rel2, _err[-600:]))
 finally:
     srv.terminate()
     mon.shutdown()
