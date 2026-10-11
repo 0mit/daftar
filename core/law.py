@@ -728,6 +728,16 @@ class Law:
                     path_ok(fw, spec['along'])
                 if 'value' in spec and 'from' in spec:
                     out.append((fw, "a field is read `from` the bean, or given as a `value`, never both"))
+                if spec.get('many') is not None and ('model' not in spec or spec['many'] not in (True, 'true')):
+                    out.append((fw, "`many` is true, with the `model` whose records the path reaches"))
+                if 'position' in spec and spec['position'] not in ('from', 'to', 'days', 'moment-from', 'moment-to'):
+                    out.append((fw, "`position` is one of from, to, days, moment-from, moment-to"))
+                if 'stands' in spec:
+                    st = spec['stands']
+                    if not isinstance(st, dict) or not st or set(st) - {'none', 'step', 'final', 'exit'} or \
+                            {'from', 'model', 'value'} & set(spec):
+                        out.append((fw, "`stands` names, of none, step, final and exit, the value each gives, and reads "
+                                        "nothing else"))
                 if 'held' in spec:
                     from core.crosswalk import steps
                     last = steps(spec.get('from', 'title'))[-1]

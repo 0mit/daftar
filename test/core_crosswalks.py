@@ -6,8 +6,9 @@ one under another organisation, which is no company of the garden's. Odoo 17's `
 read through core/crosswalk.py, the one reader: what each record says, how one record points at another, and that
 nothing the garden does not say is in a record. Then `hr.employee`: a person employed by two of the garden's companies
 and once by the supplier, each employment a record, read through paths that run through beans; her identity number and
-private mail sealed in this host's store, read only where the host resolves them, never from git. Then the law refuses
-crosswalks that break their form.
+private mail sealed in this host's store, read only where the host resolves them, never from git. Then `hr.leave`: her
+absences over extents of days, one written in the Persian calendar, each using an employment's allowance and decided on
+a walk. Then the law refuses crosswalks that break their form.
 
 Run: python3 test/core_crosswalks.py   (0 = green)
 """
@@ -110,7 +111,8 @@ try:
                 f'  - agree: {{ by: {employer}, of: self, through: written, as: employer, at: 2026-03-01 }}\n'
                 f'  - agree: {{ id: employed, by: lale, of: self, through: written, as: employee, at: 2026-03-01 }}\n'
                 f'  - represent: {{ by: lale, of: {employer}, as: "{job}" }}\n'
-                + (f'  - part: {{ by: self, of: {dept} }}\n' if dept else '') + '---\nHer employment.\n')
+                + (f'  - part: {{ by: self, of: {dept} }}\n' if dept else '')
+                + '  - hold: { id: allowance, by: lale, of: { count: "20", unit: d } }\n---\nHer employment.\n')
     write(G, 'beans/lale-acme.md', employment('lale-acme', 'acme', 'Lale works for Acme', 'tester', 'qa'))
     write(G, 'beans/lale-beta.md', employment('lale-beta', 'beta', 'Lale works for Betamax on Fridays', 'bookkeeper'))
     write(G, 'beans/lale-supplier.md', employment('lale-supplier', 'supplier', "Lale once worked for the supplier", 'packer'))
@@ -152,6 +154,54 @@ try:
           U and U[0]['identification_id'] == '10000000146' and U[0]['private_email'] == 'lale@home.example'
           and U[0]['work_email'] == 'lale@acme.example', U)
 
+    # ---- hr.leave: an absence over an extent of days, using an employment's allowance, decided on a walk
+    write(G, 'VOCAB.md', '---\nkinds:\n  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: '
+          'a walk" }\nnamespaces:\n  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for '
+          'itself" }\n---\n# the garden\'s own rows\n')
+    write(G, 'mappings/walk-leave.md', '---\nbean: walk-leave\nkind: procedure\ntitle: "walk-leave — how a leave is decided"\n'
+          'statements:\n  - say: { by: sam, at: now }\n'
+          '  - step: { id: asked, as: "the employee asks for the days", by: employee, to: [approved, refused] }\n'
+          '  - step: { id: approved, as: "the employer approves them", by: employer, walk: { final: "true" } }\n'
+          '  - step: { id: refused, as: "the employer refuses them", by: employer, walk: { exit: "true" } }\n---\nLeave.\n')
+
+    def leave(bid, title, at, employment, *moves):
+        write(G, f'beans/{bid}.md', f'---\nbean: {bid}\nkind: event\ntitle: "{title}"\nstatements:\n  - say: {{ by: sam, at: now }}\n'
+              f'  - own: {{ by: theone, of: self }}\n  - concern: {{ of: lale }}\n'
+              f'  - be: {{ by: self, at: {at}, as: presence }}\n  - use: {{ by: self, of: "{employment}#allowance" }}\n'
+              + ('  - be: { id: decided, by: self, at: walk-leave, as: order }\n' if moves else '')
+              + ''.join(f'  - move: {{ by: lale, of: self, through: decided, at: [now, "walk-leave#{m}"] }}\n' for m in moves)
+              + '---\nLeave.\n')
+    leave('summer', 'Summer', '2026-07-06/2026-07-17', 'lale-acme', 'asked', 'approved')
+    leave('summer-persian', 'Summer, in the Persian calendar', 'persian:1405-04-15/1405-04-26', 'lale-acme', 'asked')
+    leave('autumn', 'Autumn', '2026-10-05/2026-10-07', 'lale-beta', 'asked', 'refused')
+    leave('winter', 'Winter', '2026-12-28/2027-01-02', 'lale-acme')
+    leave('packing', 'Packing season', '2026-05-01/2026-05-03', 'lale-supplier', 'asked')
+    r = grow.run(PY, 'bin/save.py', 'sam', "RULE-CHANGE: Lale's leaves, on the leave walk", '--body',
+                 '- action: RULE-CHANGE — VOCAB.md names the kind procedure; wrote [[walk-leave]], [[summer]], '
+                 '[[summer-persian]], [[autumn]], [[winter]] and [[packing]]', '- ratified_by: sam', cwd=G)
+    check("...and her leaves, under her employments, on a walk, pass the gate", r.returncode == 0, r.out[-1500:])
+    R = crosswalk.Reader(G, 'odoo', '17.0')
+    lv = {x['name']: x for x in R.records('hr.leave')}
+    acme_lale = [crosswalk.number('hr.employee', 'lale-acme'), 'Lale Demir']
+    s_ = lv.get('Summer', {})
+    check("hr.leave: each absence under an employment of the garden's companies — never the supplier's — its employee "
+          "the employment, its department the employment's",
+          sorted(lv) == ['Autumn', 'Summer', 'Summer, in the Persian calendar', 'Winter']
+          and s_.get('employee_id') == acme_lale and s_.get('all_employee_ids') == [acme_lale[0]]
+          and s_.get('department_id') == [deps['Quality']['id'], 'Engineering / Quality']
+          and lv.get('Autumn', {}).get('department_id') is False, lv)
+    check("...its days read from its extent: the first and last, how many, and its moments in the garden's zone, in UTC",
+          s_.get('request_date_from') == '2026-07-06' and s_.get('request_date_to') == '2026-07-17'
+          and s_.get('number_of_days') == 12 and s_.get('date_from') == '2026-07-05 21:00:00'
+          and s_.get('date_to') == '2026-07-17 20:59:59', s_)
+    p_ = lv.get('Summer, in the Persian calendar', {})
+    check("...in whatever calendar it was written: the same days written in the Persian calendar read the same",
+          (p_.get('request_date_from'), p_.get('request_date_to'), p_.get('number_of_days')) == ('2026-07-06', '2026-07-17', 12), p_)
+    check("...its state where its course stands on its walk: approved at a final step, refused at an exit, to approve at "
+          "a step, to submit before its first move",
+          [lv.get(n, {}).get('state') for n in ('Summer', 'Autumn', 'Summer, in the Persian calendar', 'Winter')]
+          == ['validate', 'refuse', 'confirm', 'draft'], {n: x.get('state') for n, x in lv.items()})
+
     L = Law.load(('VOCAB.md', {}))
     kept = dict(L.crosswalks)
     bad = dict(kept['odoo-17.0-hr.department'], kind='department', select={'within': {'along': 'part.over', 'model': 'res.partner'}},
@@ -161,6 +211,9 @@ try:
     L.crosswalks['odoo-17.0-hr.employee'] = dict(kept['odoo-17.0-hr.employee'], fields={
         'name': {'from': 'name[by=mail].as/title'}, 'x': {'from': 'title', 'held': True},
         'y': {'from': 'part.of', 'model': 'hr.department', 'held': True}})
+    L.crosswalks['odoo-17.0-hr.leave'] = dict(kept['odoo-17.0-hr.leave'], fields={
+        'a': {'from': 'use.of', 'many': True}, 'b': {'from': 'be.at', 'position': 'week'},
+        'c': {'stands': {'none': 'draft', 'later': 'x'}}})
     probs = [m for _w, m in L.crosswalk_problems()]
     L.crosswalks.clear(); L.crosswalks.update(kept)
     check("the law refuses a crosswalk out of form: a kind it lacks, a path of no role, a model nothing crosses, a "
@@ -170,7 +223,9 @@ try:
           and any('`inverse` and `chain`' in m for m in probs) and any('`join` and `along`' in m for m in probs)
           and any('never both' in m for m in probs)
           and any("reads no being, so no path goes on from it" in m for m in probs)
-          and sum('a held field reads the role of a sealed statement' in m for m in probs) == 2, probs)
+          and sum('a held field reads the role of a sealed statement' in m for m in probs) == 2
+          and any('`many` is true, with the `model`' in m for m in probs) and any('`position` is one of' in m for m in probs)
+          and any('`stands` names' in m for m in probs), probs)
     check("...and the law as it stands passes", not L.crosswalk_problems(), L.crosswalk_problems())
 finally:
     shutil.rmtree(T, ignore_errors=True)
