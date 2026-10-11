@@ -488,6 +488,10 @@ function clouds(svg,view){const ids=view.changed||[];if(!ids.length)return;const
 function mount(root,view,state){state=state||{};const lvs=view.levels||[];
  const lv=lvs.find(l=>l.id===state.level)||lvs.find(l=>+l.depth===+state.level)||lvs[0]||{form:'schematic',name:'',question:''};
  root.classList.add('vw');root.dataset.form=lv.form;
+ /* ENGRAVED FROM A READING (a queue, a timeline, flows, a sheet): no module draws it, so at every lens but its story it
+    is its archetype's own drawing, by view_engraved.js and its renderer, built through safe.js */
+ if(view.engraved&&lv.form!=='story'&&W.daftarEngraved){root.innerHTML=head(view,lv);W.daftarEngraved.mount(root,view,state);
+  root.insertAdjacentHTML('beforeend',titleBlock(view,lv));reattach(root);return;}
  (FORMS[lv.form]||schematic)(root,view,lv,state);root.insertAdjacentHTML('beforeend',titleBlock(view,lv));reattach(root);}
 W.viewMount=mount;W.viewInspector={show:insShow,hide:insHide};
 })();

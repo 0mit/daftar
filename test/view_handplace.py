@@ -14,8 +14,22 @@ a module. Then:
                     with no drawing module; and the gate refuses by name an order on an axis its row does not run on,
                     a timeline with no reading, flows that do not say what their nodes are, a sheet or a new kind whose
                     page names no facts for it, an entry form of no verb of the law or of a role its verb lacks
+  part 2, the readings  `view check` agrees with no module; the flows are `bin/ledger.py --json`'s net, the timeline's
+                    repetition `bin/stale.py`'s occurrences, the queue `bin/leads.py --json`'s leads for the reader; a
+                    sheet shows a payment's shares and the clause that asks it beneath it, and the law's default where no
+                    share is written; the report carries a held value's place and never the value
+  part 3, the one write path, through the served page   each viewer's readings their own; the held phone sent to the
+                    gardener on the machine that keeps it, and nothing of Ali to a reader who may not read her; a Save of
+                    a change, an add and a remove is one commit with one journal entry naming each, through bin/safe.py,
+                    and the gate passes it; a refused Save keeps nothing, its message at its fact; the title edited by
+                    the gardener, refused to a reader with no grant, written by one a `cover: {parts: [title]}` opens it
+                    to, and nothing else of the being; a new being minted from an empty sheet; a drawing's form of a verb
+                    with its presets; a held value changed in the Save, sealed, the commit keeping only the pointer
+  part 4, the browser   the report in `en` and in `fa`, and the served page in `fa`: every drawing at every lens, the
+                    timeline's three layouts and a sheet opened, in a left-to-right and a right-to-left page, with no
+                    exception; and on the served page the sheet's one Edit
 
-Run: python3 test/view_handplace.py   (0 = green)
+Run: python3 test/view_handplace.py   (0 = green; about three minutes: a save waits for its minute to turn)
 """
 import datetime, json, os, re, shutil, socket, subprocess, sys, tempfile
 
@@ -155,7 +169,7 @@ statements:
 ''',
 }
 
-STORY = ('purpose: "{p}", outcome: "{o}", stages: [{{label: Read the garden, doer: the view}}, {{label: Draw what it says, '
+STORY = ('label: "{l}", purpose: "{p}", outcome: "{o}", stages: [{{label: Read the garden, doer: the view}}, {{label: Draw what it says, '
          'doer: the reader}}, {{label: Open a being, doer: the reader}}], questions: [{{lens: orient, ask: "{q}"}}], '
          'blind: [{{what: "{b}"}}]')
 
@@ -176,14 +190,14 @@ statements:
   - reckon: { id: dated, reading: { what: "what has a day: the agreements and the happenings", steps: [ { id: c, op: select, kind: contract }, { id: e, op: select, kind: event }, { id: all, op: union, of: c, with: e } ] } }
   - reckon: { id: agreements, reading: { what: "the agreements", steps: [ { id: c, op: select, kind: contract } ] } }
 '''
-DRAWINGS = (drawing('waits', 'handplace', 'queue', p="What waits for the reader", o="Nothing waits unseen",
+DRAWINGS = (drawing('waits', 'handplace', 'queue', l="Now", p="What waits for the reader", o="Nothing waits unseen",
                     q="What needs me now?", b="what nobody has written down")
             + drawing('time', 'handplace', 'timeline', 'selection: dated, layouts: [week, month, list], axes: { inline: time }',
-                      p="When each thing falls", o="No day passes unseen", q="When?", b="what has no day")
+                      l="Time", p="When each thing falls", o="No day passes unseen", q="When?", b="what has no day")
             + drawing('money', 'handplace', 'flows', 'nodes: parties, selection: agreements',
-                      p="Who owes whom", o="Every debt is read, never kept", q="Who owes whom?", b="money not recorded")
+                      l="Money", p="Who owes whom", o="Every debt is read, never kept", q="Who owes whom?", b="money not recorded")
             + drawing('ali', 'ali', 'sheet', 'new: [person], writes: [{ verb: pay, preset: { to: sam } }]',
-                      p="Ali as she stands", o="One place to change her", q="Who is Ali?", b="what she has not said"))
+                      l="Ali", p="Ali as she stands", o="One place to change her", q="Who is Ali?", b="what she has not said"))
 FIELDS = ('[{kind: person, fact: title, shown_from: understand}, {kind: person, fact: summary, shown_from: understand}, '
           '{kind: person, fact: name, shown_from: inspect}, {kind: contract, fact: title, shown_from: understand}, '
           '{kind: contract, fact: agree, shown_from: understand}, {kind: contract, fact: pay, shown_from: understand}, '
@@ -282,6 +296,290 @@ try:
         check(f"REFUSED by name: {name}", rc == 1 and bool(hit), found[:6])
     run('git', 'checkout', '--', 'beans/handplace.md')
     check("...and the page as it was passes again", gate()[0] == 0, gate()[1][:4])
+
+    # ------------------------------------------------------------------ part 2: the readings, as the tools read them
+    rc, out = run(PY, 'assets/view/bin/view.py', 'check')
+    check("view check: the page of four engraved drawings agrees, with no drawing module", rc == 0 and 'agree' in out, out[-800:])
+    code = ("import json, os, sys; sys.path.insert(0, os.path.join(%r, 'assets', 'view', 'lib')); import view_model as vm, "
+            "view_report; p = vm.init(%r); assert not p, p; print(json.dumps(view_report.payload(), default=str))" % (G, G))
+    rc, out = run(PY, '-c', code)
+    try:
+        P = json.loads(out.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        P = {'error': out[-1500:]}
+    E = P.get('engraved') or {}
+    check("the report's page carries each engraved drawing — no svg, no module — with its archetype and the axes it runs on",
+          all(((P.get('views') or {}).get(k) or {}).get('engraved', {}).get('archetype') == a
+              for k, a in (('waits', 'queue'), ('time', 'timeline'), ('money', 'flows'), ('ali', 'sheet')))
+          and P['views']['time']['engraved']['axes'] == {'inline': 'time'}
+          and P['views']['money']['engraved']['axes'] == {'inline': 'flow'}, str(P)[-1200:])
+    rc, out = run(PY, 'bin/ledger.py', 'camera', 'loan', '--json')
+    net = [(x['from'], x['to'], x['count'], x['unit']) for x in json.loads(out)['net']] if rc == 0 else out
+    arrows = [(x['from'], x['to'], x['count'], x['unit']) for x in E['drawings']['money']['arrows']]
+    check("flows: the arrows are bin/ledger.py --json's net over the agreements the reading holds, exactly — Ali owes Sam "
+          "380/3 XTS, the camera's 60 against the lens's 200/3 and the loan's 120", arrows == net == [('ali', 'sam', '380/3', 'XTS')],
+          (arrows, net))
+    code = ("import datetime, json, sys; sys.path.insert(0, 'bin'); import stale; t = datetime.date.today().toordinal(); "
+            "f = stale.day_of(%r); r = {'of': 'time', 'in': 'gregorian-civil', 'each': 'month', 'at': '1', 'times': '6'}; "
+            "print(json.dumps([datetime.date.fromordinal(n).isoformat() for n in stale.occurrences(f, r) if t - 42 <= n <= t + 42]))"
+            % FIRST)
+    rc, out = run(PY, '-c', code)
+    occ = json.loads(out) if rc == 0 else out
+    tl = E['drawings']['time']
+    got = [x['day'] for x in tl['events'] if x.get('clause') == 'instalments']
+    check("timeline: the instalments are bin/stale.py's occurrences within the span, six weeks each side of today, and "
+          "nothing the browser walked", got == occ and len(got) >= 2, (got, occ))
+    check("...and the deposit falls on its day, and the dinner at its time",
+          [x['day'] for x in tl['events'] if x.get('clause') == 'deposit-due'] == [D(3)]
+          and [(x['day'], x['time']) for x in tl['events'] if x['bean'] == 'dinner'] == [(D(5), '19:00')], tl['events'])
+    rc, out = run(PY, 'bin/leads.py', '--for', 'sam', '--json')
+    leads = json.loads(out) if rc == 0 else []
+    q = E['drawings']['waits']
+    check("queue: the reader's leads are bin/leads.py --json's for them, grouped by what each waits on — Sam's parked "
+          "decision, and not Ali's deposit, which is hers",
+          sorted((x['kind'], x['about']) for x in q['leads']) == sorted((x['kind'], x['about']) for x in leads)
+          and ('decision', 'camera-insurance') in [(x['kind'], x['about']) for x in q['leads']]
+          and not [x for x in q['leads'] if x['kind'] == 'obligation'], (q, leads))
+    sh = (E.get('sheets') or {}).get('camera') or {}
+    pay = next((x for r in sh.get('rows', []) if r['verb'] == 'pay' for x in r['statements'] if x['key'] == 'pay#camera'), {})
+    check("sheet: a payment shows the shares that take it as their `of` beneath it — its `bear`s — and who said it",
+          sorted(d['key'] for d in pay.get('dependents', [])) == ['bear#camera-ali', 'bear#camera-sam']
+          and (pay.get('known') or {}).get('by') == 'sam' and sh['verbs']['pay']['required'] == ['by', 'of'], pay)
+    ins = next((x for r in ((E.get('sheets') or {}).get('loan') or {}).get('rows', []) for x in r['statements']
+                if x['key'] == 'pay#the-loan'), {})
+    dep = next((x for r in ((E.get('sheets') or {}).get('loan') or {}).get('rows', []) for x in r['statements']
+                if x['key'] == 'pay#deposit'), {})
+    check("...a clause that asks a payment stands under it, and a payment no `bear` names shows the law's default: its "
+          "payer bears it, alone",
+          [d['key'] for d in dep.get('dependents', [])] == ['obligatory#deposit-due']
+          and [(d['verb'], d['by']) for d in dep.get('defaults', [])] == [('bear', 'ali')]
+          and not ins.get('defaults'), (dep, ins))
+    ph = next((x for r in ((E.get('sheets') or {}).get('ali') or {}).get('rows', []) for x in r['statements']
+               if x['key'] == 'name#phone'), {})
+    check("held: the report — the gardener's page of one file — carries the held phone's place and never its value",
+          (ph.get('held') or {}).get('host') == 'laptop' and 'roles' not in ph and '5555550100' not in json.dumps(P), ph)
+    for lang in ('en', 'fa'):
+        rc, out = run(PY, 'assets/view/bin/view.py', 'report', '--out', os.path.join(T, f'page-{lang}.html'), '--lang', lang)
+        check(f"view report --lang {lang}: the offline page is written", rc == 0, out[-600:])
+
+    # ------------------------------------------------------------------ part 3: the one write path, through the served page
+    import http.cookiejar, time, urllib.error, urllib.parse, urllib.request
+    put('beans/sam.md', get('beans/sam.md').replace('\n---\n', '\n  - grant: { id: reader-reads, by: self, to: [%s], of: [handplace, camera, loan, dinner], as: read }\n'
+                                                   '  - say: { by: sam, of: [reader-reads], at: now }\n---\n' % READER, 1))
+    rc, out = run(PY, 'bin/save.py', 'sam', "the reader may read the page, the agreements and the dinner",
+                  '--body', f'- action: [[sam]] grants [[{READER}]] to read [[handplace]], [[camera]], [[loan]] and [[dinner]].')
+    check("the gardener's grant to the reader is saved", rc == 0, out[-800:])
+    CFG = os.path.join(T, 'host', 'serve.json')
+    for user, bean in (('sam', 'sam'), ('reader', READER)):
+        rc, out = run(PY, 'assets/view/bin/view.py', 'serve-init', '--config', CFG, '--user', user, '--bean', bean)
+    import socket as _so
+    _s = _so.socket(); _s.bind(('127.0.0.1', 0)); PORT = _s.getsockname()[1]; _s.close()
+    C = json.load(open(CFG))
+    C.update(listen='127.0.0.1:%d' % PORT, recheck_seconds=1, request_seconds=5)
+    C['users']['sam']['lang'] = 'fa'
+    json.dump(C, open(CFG, 'w'))
+    srv = subprocess.Popen([PY, 'assets/view/bin/view.py', 'serve', '--config', CFG], cwd=G, stderr=subprocess.PIPE,
+                           text=True, encoding='utf-8', env=grow.ENV)
+    BASE = 'http://127.0.0.1:%d' % PORT
+    for _ in range(100):
+        try:
+            urllib.request.urlopen(BASE + '/healthz', timeout=1); break
+        except Exception:
+            time.sleep(0.2)
+
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, *a, **k):
+            return None
+
+    def session(user):
+        op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()), NoRedirect)
+        pw = open(os.path.join(T, 'host', user + '.password')).read().strip()
+        try:
+            op.open(BASE + '/login', urllib.parse.urlencode({'user': user, 'password': pw}).encode())
+        except urllib.error.HTTPError:
+            pass
+        return op
+
+    def page_of(op):
+        try:
+            r = op.open(BASE + '/'); html_ = r.read().decode()
+        except urllib.error.HTTPError as e:
+            return e.code, {}, ''
+        m = re.search(r'<script type="application/json" id="viewdata">(.*?)</script>', html_, re.S)
+        return 200, (json.loads(m.group(1).replace('<\\/', '</')) if m else {}), html_
+
+    def settle(op):
+        """The host starts itself again on a ledger head another hand moved (view_serve `maybe_reexec`): asked again
+        until it answers on the new head."""
+        want = head()[:10]
+        for _ in range(200):
+            try:
+                st_, p_, _h = page_of(op)
+                if st_ == 200 and (p_.get('live') or {}).get('head') == want:
+                    return p_
+            except Exception:                   # a connection the host closed as it started again
+                pass
+            time.sleep(0.25)
+        return {}
+
+    def post(op, obj, csrf):
+        req = urllib.request.Request(BASE + '/api/write', json.dumps(obj).encode(),
+                                     {'Content-Type': 'application/json', 'X-View-CSRF': csrf})
+        try:
+            r = op.open(req, timeout=300); return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b'{}')
+    try:
+        SAM, RDR = session('sam'), session('reader')
+        st, PS, html_sam = page_of(SAM)
+        st2, PR, html_rdr = page_of(RDR)
+        check("serve: each viewer is sent the page, the engraved readings their own", st == 200 and st2 == 200
+              and PS['engraved']['reader'] == 'sam' and PR['engraved']['reader'] == READER, (st, st2))
+        phs = next((x for r in PS['engraved']['sheets']['ali']['rows'] for x in r['statements'] if x['key'] == 'name#phone'), {})
+        check("held: the host that holds the store sends the phone to the gardener, who may read it — on this machine only",
+              (phs.get('roles') or {}).get('as') == '+15555550100' and phs['held']['here'] is True, phs)
+        check("...and to the reader, who may not read Ali, nothing of her: no sheet, no phone, not her name in a reading",
+              'ali' not in PR['engraved']['sheets'] and '5555550100' not in html_rdr
+              and not any(n.get('title') == 'Ali' for n in PR['engraved']['drawings']['money']['nodes']),
+              (sorted(PR['engraved']['sheets']), PR['engraved']['drawings']['money']['nodes']))
+        check("...and the reader's flows name the party they may not read `someone`, never by id",
+              [n['id'] for n in PR['engraved']['drawings']['money']['nodes'] if n.get('someone')]
+              and all(a['from'].startswith('someone-') or a['from'] != 'ali' for a in PR['engraved']['drawings']['money']['arrows']),
+              PR['engraved']['drawings']['money'])
+        csrf_s, csrf_r = PS['live']['csrf'], PR['live']['csrf']
+        h0, j0 = head(), get('log/journal.md')
+        st, a = post(SAM, {'bean': 'camera', 'ops': [
+            {'op': 'change', 'key': 'pay#lens', 'roles': {'by': 'sam', 'of': {'count': '120.00', 'unit': 'XTS'}, 'through': 'agreed',
+                                                          'note': 'the lens, and its hood'}},
+            {'op': 'add', 'verb': 'bear', 'roles': {'by': 'sam', 'of': 'lens', 'share': '2'}},
+            {'op': 'remove', 'key': 'bear#lens-sam'}]}, csrf_s)
+        entry = get('log/journal.md')[len(j0):]
+        log = run('git', 'log', '--format=%H', f'{h0}..HEAD')[1].split()
+        check("sheet: a Save of a change, an add and a remove is ONE commit with ONE journal entry naming each, and the "
+              "gate passes it", st == 200 and a.get('ok') and len(log) == 1 and len(re.findall(r'(?m)^## ', entry)) == 1
+              and 'changed `pay#lens`' in entry and 'added `bear#bear-1`' in entry and 'removed `bear#lens-sam`' in entry
+              and clean() and gate()[0] == 0, (st, a, entry))
+        bean = get('beans/camera.md')
+        check("...each through bin/safe.py by its key — the lens rewritten in place, the share appended, the other taken "
+              "out — known by the writer's `say`", "count: '120.00'" in bean and 'id: bear-1' in bean and 'lens-sam' not in bean
+              and re.search(r'say: \{ by: sam, of: \[lens, bear-1\], at: "\d{4}', bean), bean[-900:])
+        h1 = head()
+        st, a = post(SAM, {'bean': 'camera', 'ops': [
+            {'op': 'add', 'verb': 'pay', 'id': 'strap', 'roles': {'by': 'ali', 'of': {'count': '7.00', 'unit': 'XTS'}}},
+            {'op': 'add', 'verb': 'bear', 'roles': {'by': 'ali', 'of': 'strap'}}]}, csrf_s)
+        check("a refused Save keeps nothing — no commit, the tree clean, no journal entry — and its message lands on its "
+              "fact: the share that only says what the law derives (its payer bears it alone)",
+              st == 422 and not a.get('ok') and head() == h1 and clean() and get('log/journal.md') == j0 + entry
+              and any(x.get('op') == 1 and 'placeholder' in x['message'] for x in a.get('refusals', [])), (st, a))
+        st, a = post(SAM, {'bean': 'camera', 'ops': [{'op': 'add', 'verb': 'pay', 'roles': {'by': 'ali', 'towards': 'sam',
+                                                                                             'of': {'count': '1', 'unit': 'XTS'}}}]}, csrf_s)
+        check("...and a role the verb does not take is refused before anything is written, at its op",
+              st == 422 and a['refusals'][0]['op'] == 0 and 'takes no towards' in a['refusals'][0]['message'] and clean(), a)
+        st, a = post(SAM, {'bean': 'camera', 'ops': [{'op': 'remove', 'key': 'bear#camera-ali'},
+                                                     {'op': 'remove', 'key': 'bear#camera-ali'}]}, csrf_s)
+        check("...two ops on one statement are refused, at the second", st == 422 and a['refusals'][0]['op'] == 1 and clean(), a)
+        st, a = post(SAM, {'bean': 'camera', 'ops': [{'op': 'change', 'header': 'title',
+                                                     'value': 'camera — Sam and Ali bought a camera and a lens together'}]}, csrf_s)
+        check("...and a Save that says what the being says already writes nothing", st == 422 and head() == h1
+              and 'nothing to write' in a['refusals'][0]['message'], a)
+        st, a = post(RDR, {'bean': 'dinner', 'ops': [{'op': 'change', 'header': 'title', 'value': 'dinner — شام سام'}]}, csrf_r)
+        check("title: a reader with no grant to write is refused, at the title, and nothing is written",
+              st == 422 and a['refusals'][0]['fact'] == 'header:title' and 'no grant opens the title' in a['refusals'][0]['message']
+              and clean(), a)
+        st, a = post(SAM, {'bean': 'loan', 'ops': [{'op': 'change', 'header': 'title', 'value': 'loan — وام سام به علی، Sam to Ali'}]}, csrf_s)
+        check("title: the gardener edits a title, in the garden's language and mixed scripts, as a header edit through "
+              "bin/safe.py, journalled", st == 200 and a.get('ok') and 'title: "loan — وام سام به علی، Sam to Ali"' in get('beans/loan.md')
+              and 'changed the title' in get('log/journal.md').rsplit('\n## ', 1)[-1] and clean(), a)
+        put('beans/sam.md', get('beans/sam.md').replace('\n---\n', '\n  - grant: { id: reader-titles, by: self, to: [%s], of: [dinner], as: write, cover: { parts: [title] } }\n'
+                                                       '  - say: { by: sam, of: [reader-titles], at: now }\n---\n' % READER, 1))
+        rc, out = run(PY, 'bin/save.py', 'sam', "the reader may write the dinner's title",
+                      '--body', f'- action: [[sam]] grants [[{READER}]] to write the title of [[dinner]], and nothing else of it.')
+        settle(RDR)
+        st, a = post(RDR, {'bean': 'dinner', 'ops': [{'op': 'change', 'header': 'title', 'value': 'dinner — شام سام'}]}, csrf_r)
+        check("title: a grant whose `cover` opens the title alone lets the reader write it — admin mode is the sheet with a "
+              "write grant", rc == 0 and st == 200 and a.get('ok') and 'title: "dinner — شام سام"' in get('beans/dinner.md'), (out[-400:], st, a))
+        st, a = post(RDR, {'bean': 'dinner', 'ops': [{'op': 'remove', 'key': 'attend#sam-comes'}]}, csrf_r)
+        check("...and nothing else of the being: a statement the cover does not open is refused, at its fact",
+              st == 422 and a['refusals'][0]['fact'] == 'attend#sam-comes' and 'id: sam-comes' in get('beans/dinner.md'), a)
+        st, a = post(SAM, {'kind': 'person', 'ops': [{'op': 'change', 'header': 'summary', 'value': 'a neighbour Sam lends tools to'},
+                                                     {'op': 'add', 'verb': 'own', 'roles': {'by': 'theone', 'of': 'self'}}]}, csrf_s)
+        nb = a.get('bean') or ''
+        check("new being: an empty sheet's first Save mints an opaque person, its title its id, its file written whole and "
+              "saved", st == 200 and a.get('ok') and re.fullmatch(r'p-[0-9a-f]{8}', nb)
+              and f'title: "{nb}"' in get(f'beans/{nb}.md') and clean(), (st, a))
+        st, a = post(RDR, {'kind': 'person', 'ops': [{'op': 'add', 'verb': 'own', 'roles': {'by': 'theone', 'of': 'self'}}]}, csrf_r)
+        check("...and a reader no grant opens it to may not make one", st == 422 and 'may not make' in a['refusals'][0]['message'], a)
+        st, a = post(SAM, {'m': 'ali', 'w': 0, 'ops': [{'op': 'add', 'verb': 'pay', 'roles': {'by': 'ali', 'to': 'ali',
+                                                                                              'of': {'count': '3.00', 'unit': 'XTS'}}}]}, csrf_s)
+        check("a drawing's form of a verb adds only its verb, with the roles it presets as it fixes them",
+              st == 400 and 'as it fixes them' in json.dumps(a), (st, a))
+        st, a = post(SAM, {'m': 'ali', 'w': 0, 'ops': [{'op': 'add', 'verb': 'pay', 'roles': {'by': 'ali', 'to': 'sam',
+                                                                                              'of': {'count': '3.00', 'unit': 'XTS'}}}]}, csrf_s)
+        check("...and adds it to the being the drawing draws, by the one write path, judged as a Save is",
+              st == 200 and a.get('ok') and a.get('bean') == 'ali' and "to: sam" in get('beans/ali.md'), (st, a))
+        st, a = post(SAM, {'bean': 'ali', 'ops': [{'op': 'change', 'key': 'name#phone', 'held': True,
+                                                   'roles': {'by': 'e164', 'of': 'self', 'as': '+15555550199'}}]}, csrf_s)
+        rec = run(PY, 'bin/held.py', 'resolve', re.search(r'root:vault/[0-9a-f]{32}', get('beans/ali.md')).group(0))[1]
+        check("held: a held value edited in the Save is sealed by bin/held.py — the store holds the new value, the commit "
+              "only the pointer", st == 200 and a.get('ok') and '+15555550199' in rec and '5555550199' not in
+              run('git', 'show', 'HEAD')[1] and '5555550199' not in get('beans/ali.md'), (st, a, rec))
+        audit = open(C['audit_log']).read()
+        check("every write is audited with its answer: saved, or refused and why", '"mode": "saved"' in audit
+              and '"mode": "refused"' in audit and 'no grant opens the title' in audit, audit[-600:])
+        st, PS2, html_sam = page_of(SAM)
+        open(os.path.join(T, 'served-fa.html'), 'w', encoding='utf-8').write(html_sam)
+    finally:
+        srv.terminate()
+        srv.wait(timeout=20)
+
+    # ------------------------------------------------------------------ part 4: the pages in a browser
+    browser = next((b for b in ('chromium', 'chromium-browser', 'google-chrome', 'google-chrome-stable') if shutil.which(b)), None)
+    DRIVE = """<script>
+window.__errs = []; window.addEventListener('error', e => window.__errs.push(String(e.message)));
+window.addEventListener('load', () => { const out = {}; let sheet = '';
+ try { const tabs = [...document.querySelectorAll('.tab')].map(b => b.dataset.t), lens = [...document.querySelectorAll('#lens button')].map(b => b.dataset.l);
+  for (const t of tabs) for (const l of lens) { document.querySelector('.tab[data-t="' + t + '"]').click(); document.querySelector('#lens button[data-l="' + l + '"]').click();
+   out[t + '/' + l] = (document.querySelector('#view').innerText || '').length; }
+  for (const lay of ['month', 'list', 'week']) { document.querySelector('.tab[data-t="time"]').click(); document.querySelector('#lens button[data-l="operate"]').click();
+   const b = document.querySelector('[data-layout="' + lay + '"]'); if (b) b.click(); out['time/' + lay] = (document.querySelector('#view').innerText || '').length; }
+  document.querySelector('.tab[data-t="money"]').click(); document.querySelector('#lens button[data-l="understand"]').click();
+  const o = document.querySelector('#view [data-action="open"]'); if (o) o.click();
+  const d = document.querySelector('dialog.eg-dialog'); sheet = d ? d.innerText : '';
+  const e = d && d.querySelector('[data-do="edit"]'); if (e) { e.click(); out.editing = d.querySelectorAll('.eg-editing').length;
+   out.inputs = [...d.querySelectorAll('input,select,textarea')].map(i => i.name + '=' + i.value); }
+  out.dir = document.documentElement.dir;
+ } catch (e) { window.__errs.push('driver: ' + e.message); }
+ const pre = document.createElement('pre'); pre.id = '__result'; pre.textContent = JSON.stringify({errs: window.__errs, out, sheet}); document.body.appendChild(pre); });
+</script>"""
+    if browser:
+        import html as _html
+        for name, want in (('page-en.html', 'ltr'), ('page-fa.html', 'rtl'), ('served-fa.html', 'rtl')):
+            src = os.path.join(T, name)
+            if not os.path.isfile(src):
+                check(f"browser: {name} drawn", False, "not written")
+                continue
+            dr = os.path.join(T, 'drive-' + name)
+            with open(dr, 'w', encoding='utf-8') as fh:
+                fh.write(open(src, encoding='utf-8').read().replace('<head>', '<head>' + DRIVE, 1))
+            r = subprocess.run([browser, '--headless=new', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=6000',
+                                '--dump-dom', 'file://' + dr], capture_output=True, text=True, encoding='utf-8',
+                               errors='replace', timeout=120)
+            m = re.search(r'<pre id="__result">(.*?)</pre>', r.stdout, re.S)
+            res = json.loads(_html.unescape(m.group(1))) if m else {'errs': ['no result: ' + r.stderr[-300:]], 'out': {}}
+            out = res.get('out') or {}
+            check(f"browser: {name} — every drawing at every lens, the timeline's three layouts and a sheet opened, in a "
+                  f"{want} page, with no exception", not res['errs'] and out.get('dir') == want
+                  and len([k for k in out if '/' in k]) == 4 * 5 + 3 and all(v > 20 for k, v in out.items() if '/' in k)
+                  and res.get('sheet'), res)
+            if name == 'served-fa.html':
+                ins = out.get('inputs') or []
+                check("...and on the served page the gardener's sheet of Ali offers its one Edit, which turns every fact "
+                      "into its widget in place — her title and summary, and her held phone, its value sent to the holder "
+                      "on this machine", out.get('editing') == 1 and any(i.startswith('header.title=Ali') for i in ins)
+                      and any(i.startswith('header.summary=') for i in ins) and any(i.endswith('.as=+15555550199') for i in ins),
+                      out)
+    else:
+        print("NOTE  the pages were not drawn in a browser: none on this machine")
 finally:
     if TRACES:
         print("TRACEBACKS:\n" + "\n---\n".join(TRACES[:3]))

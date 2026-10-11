@@ -38,6 +38,9 @@ What agents got wrong most often in measured runs — each a value nobody said, 
   `through`.
 - **An agent's own act is its session's.** What you were told is said by whoever told you: `say: { by: sam, at: now }`.
   What you found out yourself is `derive`d by your session's bean, never `say` by a person.
+- **A title is in the garden's language.** A bean's `title` and `summary` are written in the language the garden is
+  kept in, as its gardener says them, never put into the law's English; the law's own words (a verb, a role, a kind)
+  stay as the law writes them.
 - **Everything is between the two `---` lines.** Below them is prose the gate cannot see.
 
 ## The gardener, first

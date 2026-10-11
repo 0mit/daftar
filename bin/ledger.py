@@ -1107,6 +1107,20 @@ def reading_json(ags, units, unread, between=None):
     return out
 
 
+def reading(chosen=None, between=None):
+    """What --json prints, for a reader in this process (the view's flows and sheets): the agreements `chosen` — every
+    bean of this garden of the core that records a `pay`, where none are named — read as `core_main` reads them."""
+    sys.path.insert(0, ROOT)
+    from core import engine
+    G = engine.Garden.read(ROOT)
+    units = core_units()
+    unread = {k: b.unread for k, b in G.beans.items() if b.unread}
+    if chosen is None:
+        chosen = sorted(k for k, b in G.beans.items() if not b.unread and any(v == 'pay' for _i, v, _r in b.items))
+    ags = [core_agreement(G.beans[k], G, units) for k in chosen if k in G.beans and not G.beans[k].unread]
+    return reading_json(ags, units, unread, between)
+
+
 def main(argv):
     dmstale.new_run()
     # A PIPE ON WINDOWS IS WRITTEN IN THE ANSI CODE PAGE: a glyph it cannot carry (a party's name in Persian, a date in

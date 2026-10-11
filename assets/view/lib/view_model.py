@@ -550,6 +550,9 @@ def compose_all():
     kit.GLOSSARY.update({str(k): str(v) for k, v in g.items()} if isinstance(g, dict) else {})
     kit.NATURE_OF = lambda b: fm(b).get("nature")
     kit.ADDRESSES = private()
+    import view_engraved                     # a page of readings alone names no module, and runs no code of its own
+    if not page_view().get("drawings") and all(view_engraved.engraved(v) for _k, v in views_raw()):
+        return {}
     comps = getattr(garden(), "COMPOSERS", None)
     if not isinstance(comps, dict):
         raise NoPage("the drawing module defines no COMPOSERS = {key: function}")
@@ -1213,9 +1216,12 @@ def views(figs=None):
     every = page_bindings(figs)
     out = []
     _sheet, _changed = sheet(), changed_beans()
-    _keys = [k for k, _v in views_raw() if k in figs]
+    import view_engraved
+    _keys = [k for k, _v in views_raw() if k in figs or view_engraved.engraved(_v)]
     for k, v in views_raw():
         if k not in figs:
+            if view_engraved.engraved(v):        # engraved from a reading: its data is the viewer's, added when it is sent
+                out.append(view_engraved.entry(k, v, lv, dict(_sheet, n=_keys.index(k) + 1, of=len(_keys))))
             continue
         title, svg, cap, claim, els = figs[k]
         binds, _ = bindings(k, els)
@@ -1298,7 +1304,14 @@ def check(figs=None):
     every = page_bindings(figs)
     known_terms = set(law().TERMS) if CORE is None else \
         set(CORE.L.verbs) | {k for b in bean_ids() for k in fm(b)} | {k for m in bean_ids("mappings") for k in fm(m, "mappings")}
+    import view_engraved
+    e, w = view_engraved.page_problems()
+    errs, warns = errs + e, warns + w
     for k, v in views_raw():
+        if k not in figs and view_engraved.engraved(v):
+            e, w = view_engraved.problems(k, v)
+            errs, warns = errs + e, warns + w
+            continue
         if k not in figs:
             errs.append("%s: listed in `views`, and the drawing module has no drawing for it" % k); continue
         els = figs[k][4]

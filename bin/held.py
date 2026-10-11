@@ -259,6 +259,19 @@ def put_core(bean, sid, *, root=ROOT, host=None, store=None, basis=None, until=N
     verb, roles = hits[0]
     if 'held' in roles:
         raise ValueError(f"{bean}#{sid} is sealed already ({roles['held']})")
+    sealed, line = seal_core(bean, verb, sid, roles, fm, root=root, host=host, store=store, basis=basis, until=until)
+    dmsafe.replace_statements(path_, f"{verb}#{sid}", f"- {verb}: {_flow(sealed)}\n", expect=1,
+                              allow_remove=(f"statements.{verb}#{sid}",))
+    return sealed['held'], line
+
+
+def seal_core(bean, verb, sid, roles, fm, *, root=ROOT, host=None, store=None, basis=None, until=None):
+    """Seal a statement that is not written yet — what a sheet's Save adds or changes as held (assets/view) — so what it
+    says reaches the store and never the bean's file: its record is written here, and the caller writes the sealed
+    statement it returns in the bean. `fm` is the bean's front matter, which says how sensitive it is and whom the
+    record is about. Returns (the sealed statement's roles, the journal line); put_core seals one already written."""
+    if 'held' in roles:
+        raise ValueError(f"{bean}#{sid} is sealed already ({roles['held']})")
     if verb == 'name' and isinstance(roles.get('by'), str):    # the store judges a name as the gate would: once sealed,
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # no gate sees it again
         from core.check import garden_law
@@ -279,9 +292,17 @@ def put_core(bean, sid, *, root=ROOT, host=None, store=None, basis=None, until=N
     sealed = {'id': sid, 'held': f"root:{name}/{hexkey}"}
     if basis:
         sealed['while'] = basis
-    dmsafe.replace_statements(path_, f"{verb}#{sid}", f"- {verb}: {_flow(sealed)}\n", expect=1,
-                              allow_remove=(f"statements.{verb}#{sid}",))
-    return sealed['held'], f"- held: {bean} {sid} added"
+    return sealed, f"- held: {bean} {sid} added"
+
+
+def unwrite(pointer, *, root=ROOT, host=None):
+    """Take a record out of the store here, as if it had never been written: a seal whose save was refused, or the
+    record a changed held statement no longer points to. Not an erasure for a subject (`erase`): nothing is listed in
+    ERASED, because nothing in git ever pointed to it, or nothing points to it any more."""
+    path, key = _file(pointer, root, host)
+    f = os.path.join(path, key + '.yaml')
+    if os.path.isfile(f):
+        os.remove(f)
 
 
 def person_core(fields, *, root=ROOT, host=None, store=None, basis=None):

@@ -32,7 +32,10 @@ export function place(root) {
   }
 }
 // plain text has no markup: a value goes between FSI and PDI (LRI … PDI for a number), so it cannot reorder the line
-export const FSI = '\u2068', LRI = '\u2066', RLI = '\u2067', PDI = '\u2069';
+export const FSI = '\u2068';
+export const LRI = '\u2066';
+export const RLI = '\u2067';
+export const PDI = '\u2069';
 export const isolated = v => FSI + String(v ?? '') + PDI;
 // Unicode's Bidi_Control (PropList.txt): never part of a number, an id or a code (core/law/lines.yaml, `coding`)
 export const BIDI_CONTROLS = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/g;

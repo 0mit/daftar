@@ -11,8 +11,10 @@ WHY A SERVER OF ITS OWN. A page served by the asset can do what a static file ca
     and the server builds the queries itself.
   - ACT: a button on a drawing runs a tool the host names; an action with `every` runs on its schedule as the being who
     answers for it (`run_scheduled`), asked like a press.
-  - WRITE: a drawing's entry form (`views.writes`) adds an entry of a term the law gives, through bin/save.py as the
-    viewer's being; the gate judges it, and a refused save is undone and its message shown (`/api/write`).
+  - WRITE: a sheet's Save, or a drawing's form of a verb, writes statements through the view's one write path
+    (view_write.py, `ops`), and a drawing's entry form in today's words (`views.writes`) adds an entry of a term the law
+    gives, through bin/save.py as the viewer's being; the gate judges it, and a refused save is undone and its message
+    shown (`/api/write`).
   - EXPORT: a table's lines as CSV (`/api/csv`), each line scoped as on the page.
 
 CLOSED BY DEFAULT, TWICE. The law grants nothing that no grant opens (the gardener excepted). The host's configuration
@@ -322,6 +324,8 @@ class Host:
                     if st.get("members") is not None:
                         st["static"] = sum(1 for m in st["members"] if ok(m))
                     st.pop("members", None)
+        import view_engraved                         # the readings the engraved drawings draw: this viewer's own, never
+        p["engraved"] = view_engraved.scoped(self, user, keep=set(p["views"]))   # the gardener's the report reads
         return p
 
     def line_ok(self, user, bean, table):
@@ -816,6 +820,9 @@ def make_handler(F):
                 except ValueError:
                     return self._json(400, {"error": "bad json"})
                 F.refresh()
+                if isinstance(body, dict) and isinstance(body.get("ops"), list):   # statements: a sheet's Save, a form of a verb
+                    import view_engraved
+                    return self._json(*view_engraved.serve_write(F, user, body))
                 vals = body.get("values") if isinstance(body.get("values"), dict) else {}
                 code, obj = F.write(user, str(body.get("m", "")), str(body.get("w", "")), str(body.get("bean", "")),
                                     str(body.get("entry") or ""), vals)
