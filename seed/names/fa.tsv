@@ -1,222 +1,222 @@
 item	name	roots	status	by
-registry:natures	سرشت‌ها	سرشت (seresht, from سرشتن, to knead: the make a being is kneaded of); نهاد (nahād, what is laid at the foundation); طبیعت (tabī'at) is left to physis, the philosophers' nature, which is not this	proposed	agent (claude opus-5.5), by hand
-natures:soma	جسم	جسم (jesm, Arabic: bulk; Ibn Sina: a substance in which three dimensions may be posited); تن (tan, Middle Persian: the living body); کالبد (kālbad: the frame, the mould)	proposed	agent (claude opus-5.5), by hand
-natures:lekton	گفتنی	گفتن (goftan, to say); معنا (ma'nā: meaning, the Arabic philosophers' nearest word for λεκτόν); اعتباری (e'tebārī: Tabatabai's posited beings — ownership, contract, office — which are by being placed in an order people keep)	proposed	agent (claude opus-5.5), by hand
-term:nature	سرشت	سرشتن (to knead: the make a being is of)	proposed	agent (claude opus-5.5), by hand
-term:genos	گونه	گونه (gune, Middle Persian gōnag: colour, sort); جنس (jens, Arabic: genus); تیره (tire: a lineage)	proposed	agent (claude opus-5.5), by hand
-registry:gene	گونه‌ها	گونه (gune: a sort, a kind)	proposed	agent (claude opus-5.5), by hand
-registry:lines	رشته‌ها	رشته (reshte, from رشتن, to spin: a thread, a strand)	proposed	agent (claude opus-5.5), by hand
-lines:frame	چارچوب	چار (four) + چوب (wood): the four timbers that hold a thing	proposed	agent (claude opus-5.5), by hand
-lines:matter	ماده	م-د-د (to extend, to supply); the operator's word: an organisation of atoms makes ماده	proposed	agent (claude opus-5.5), by hand
-lines:gravitation	گرانش	گران (gerān: heavy — and dear, costly); گرانش (the Persian Academy's word for gravitation)	proposed	agent (claude opus-5.5), by hand
-lines:living	حیات	ح-ي-ي (to live) — the operator's word; زیستن (zistan: to live)	proposed	agent (claude opus-5.5), by hand
-lines:logos	نطق	ن-ط-ق (to speak: نطق is speech and reason at once — the philosophers' حیوان ناطق, the speaking animal, for ζῷον λόγον ἔχον); عقل (aql: reason, first a tether)	proposed	agent (claude opus-5.5), by hand
-lines:made	ساخته‌ها	ساختن (sākhtan: to make, to build)	proposed	agent (claude opus-5.5), by hand
-registry:conditions	شرایط	ش-ر-ط (a condition: شرط, first a mark, a sign)	proposed	agent (claude opus-5.5), by hand
-conditions:balance	اعتدال	ع-د-ل (to be even, just — عدل, justice); اعتدال المزاج (Ibn Sina: the balance of a mixture that readies it for a soul)	proposed	agent (claude opus-5.5), by hand
-conditions:proportion	تناسب	ن-س-ب (to relate: نسبت, a ratio, a relation)	proposed	agent (claude opus-5.5), by hand
-registry:foundation_rules	قواعد بنیاد	قاعده (qā'ede, ق-ع-د, to sit: a base, and a rule); بنیاد (foundation)	proposed	agent (claude opus-5.5), by hand
-foundation_rules:weight	وزن	و-ز-ن (to weigh: میزان, a balance, a measure) — the operator's word; سنگینی (heaviness)	proposed	agent (claude opus-5.5), by hand
-registry:complexity	مراتب اجسام	مرتبه (martabe, ر-ت-ب: a step one stands firm on); پیچیدگی (pichidegi, from پیچیدن, to twist together); مراتب وجود (the philosophers' grades of being), here of bodies alone	proposed	agent (claude opus-5.5), by hand
-complexity:space-time	فضا∞زمان	فضا (fazā: an open expanse); زمان (zamān) — the operator's form, one thing seen from two sides	proposed	agent (claude opus-5.5), by hand
-complexity:force-field	میدان نیرو	میدان (meydān: an open ground); نیرو (niru: strength) — a field that binds or gives mass, filling room without excluding	proposed	agent (claude opus-5.5), by hand
-complexity:matter-field	میدان ماده	میدان (meydān); ماده (mādde, Arabic: the stuff of a thing) — a field that takes room and excludes	proposed	agent (claude opus-5.5), by hand
-complexity:elementary-particle	ذره‌ی بنیادی	ذره (zarre, Arabic ḏarra: a mote in a sunbeam); بنیاد (bonyād: the foundation); نقطه (noqte: the dot, undivided)	proposed	agent (claude opus-5.5), by hand
-complexity:hadron	هادرون	ἁδρός (stout); کوارک (quark)	proposed	agent (claude opus-5.5), by hand
-complexity:nucleus	هسته	هسته (haste: the stone of a fruit, the kernel)	proposed	agent (claude opus-5.5), by hand
-complexity:atom	اتم	ἄτομος (uncut); جزء لایتجزا (the part that is not divided, of the kalām); جوهر فرد (jowhar-e fard: the single substance)	proposed	agent (claude opus-5.5), by hand
-complexity:molecule	مولکول	moles (a mass); مولکول (a little mass)	proposed	agent (claude opus-5.5), by hand
-complexity:cell	یاخته	یاخته (the Persian Academy's word); سلول (cellule, from cella: a little room)	proposed	agent (claude opus-5.5), by hand
-complexity:tissue	بافت	بافتن (bāftan, to weave)	proposed	agent (claude opus-5.5), by hand
-complexity:organ	اندام	اندام (andām, Middle Persian handām: a limb, a member; also stature, form); عضو (ʿozv, Arabic: a member)	proposed	agent (claude opus-5.5), by hand
-complexity:organism	جاندار	جان (jān: life, soul) + داشتن (to hold): a being that holds a life; موجود زنده (a living being)	proposed	agent (claude opus-5.5), by hand
-complexity:population	جمعیت	ج-م-ع (to gather): a gathering of one kind	proposed	agent (claude opus-5.5), by hand
-complexity:community	جامعه‌ی زیستی	جامعه (jāme'e, ج-م-ع: what gathers); زیستن (zistan, to live)	proposed	agent (claude opus-5.5), by hand
-complexity:ecosystem	زیست‌بوم	زیست (life) + بوم (bum: the ground one lives on, a homeland)	proposed	agent (claude opus-5.5), by hand
-complexity:logos	نطق	ن-ط-ق (to speak: نطق is speech and reason at once — the philosophers' حیوان ناطق, the speaking animal, for ζῷον λόγον ἔχον); عقل (aql: reason, first a tether)	proposed	agent (claude opus-5.5), by hand
-complexity:material	جنس	جنس (jens: the stuff a thing is of — what is it made of?); ماده (the line it is on)	proposed	agent (claude opus-5.5), by hand
-complexity:celestial-body	جرم آسمانی	جرم (jerm, Arabic: a body, a bulk — the astronomers' word); آسمان (āsmān, Avestan asman: stone, and the sky — once thought a vault of stone)	proposed	agent (claude opus-5.5), by hand
-complexity:planetary-system	سامانه‌ی سیاره‌ای	سیاره (sayyāre, س-ي-ر, to travel: the wanderer); سامانه (a system)	proposed	agent (claude opus-5.5), by hand
-complexity:galaxy	کهکشان	کاه (straw) + کشان (trailing): the trail of spilled straw across the sky	proposed	agent (claude opus-5.5), by hand
-complexity:component	قطعه	ق-ط-ع (to cut: a piece cut to fit); ساختن (to make)	proposed	agent (claude opus-5.5), by hand
-complexity:device	افزاره	افزار (afzār, Middle Persian abzār: an instrument, a means); the Persian Academy's word for a device	proposed	agent (claude opus-5.5), by hand
-registry:crown	تاج	تاج (tāj, Middle Persian tāg: a crown); افسر (afsar: a diadem)	proposed	agent (claude opus-5.5), by hand
-crown:theone	واجب الوجود	و-ج-ب (to fall due, to be necessary) + وجود (being, و-ج-د: to find — being is what is found); ابن سینا: واجب الوجود بالذات, necessary by itself, beside ممکن الوجود, possible in itself and necessary only through another	proposed	agent (claude opus-5.5), by hand
-crown:love	مهر	مهر (mehr, Avestan miθra: the covenant, the bond — and love, and the sun, which gives life); عشق (eshq: longing love)	proposed	agent (claude opus-5.5), by hand
-crown:wisdom	خرد	خرد (kherad, Middle Persian xrad: wisdom, reason); Ferdowsi opens the Shahnameh: به نام خداوند جان و خرد — in the name of the Lord of life and wisdom; حکمت (hekmat)	proposed	agent (claude opus-5.5), by hand
-term:via	به‌واسطه‌ی	واسطه (vāsete, Arabic wāsiṭa, و-س-ط: what stands in the middle, an intermediary); واسطه‌ی فیض (the philosophers' intermediary through whom being flows)	proposed	agent (claude opus-5.5), by hand
-term:status	وضعیت	و-ض-ع (to lay down, to place); حال (hāl: a state)	proposed	agent (claude opus-5.5), by hand
-registry:dimensions	ابعاد	بُعد (bo'd, ب-ع-د: to be far — a dimension is a way of being far); اندازه (andāze: a measure)	proposed	agent (claude opus-5.5), by hand
-dimensions:time	زمان	زمان (zamān, Middle Persian: a time, a span; Avestan zrvan, time itself) — which Arabic took from Persian	proposed	agent (claude opus-5.5), by hand
-dimensions:length	درازا	دراز (derāz: long); طول (tūl, Arabic)	proposed	agent (claude opus-5.5), by hand
-aspects:time	کِی	کی (kei: when); متی (matā: the category of when, in the philosophers' Arabic)	proposed	agent (claude opus-5.5), by hand
-aspects:place	کجا	کجا (kojā: where); أین (ayn: the category of where); جای (jāy: a place)	proposed	agent (claude opus-5.5), by hand
-registry:complements	مکمل‌ها	ک-م-ل (to be whole); نیمه‌ی دیگر (the other half)	proposed	agent (claude opus-5.5), by hand
-complements:stated	بیان‌شده	بیان (bayān, ب-ي-ن: to make distinct, clear)	proposed	agent (claude opus-5.5), by hand
-complements:bearer	حامل	ح-م-ل (to carry); دارنده (dārande: the holder)	proposed	agent (claude opus-5.5), by hand
-complements:system	سامانه	سامان (sāmān: order, good arrangement) — the Persian Academy's word for a system; نظام (nezām)	proposed	agent (claude opus-5.5), by hand
-section:division_form	بخش‌بندی	بخشیدن (bakhshidan: to share out — and, the same verb, to give and to forgive); نقطه (noqte: the dot)	proposed	agent (claude opus-5.5), by hand
-registry:divisions	بخش‌بندی‌ها	بخشیدن (to share out)	proposed	agent (claude opus-5.5), by hand
-term:part_of	جزءِ	جزء (joz', Arabic: a part); کل (kol: the whole); پاره (pāre: a piece)	proposed	agent (claude opus-5.5), by hand
-term:lives_in	ساکنِ	س-ک-ن (to be still, to dwell); زیستگاه (zistgāh: the place of living, a habitat)	proposed	agent (claude opus-5.5), by hand
-term:located_at	واقع در	و-ق-ع (to fall, to befall: where a thing has come to lie); جای (jāy: a place)	proposed	agent (claude opus-5.5), by hand
-term:owned_by	مالک	م-ل-ک (to possess, to rule: مُلک, a realm; مَلِک, a king); از آنِ (belonging to)	proposed	agent (claude opus-5.5), by hand
-term:responsibility	پاسخ‌گو	پاسخ (pāsokh: an answer) + گفتن (to say); مسئول (mas'ul, س-ا-ل: the one who will be asked)	proposed	agent (claude opus-5.5), by hand
-term:acquired	به دست آمده از	دست (dast: the hand): what came to hand, and from whom; خرید (kharid: a purchase)	proposed	agent (claude opus-5.5), by hand
-registry:facets	وجوه پاسخ‌گویی	وجه (vajh: a face, an aspect); پاسخ (an answer)	proposed	agent (claude opus-5.5), by hand
-facets:legal	حقوقی	حق (haqq: a right, and truth)	proposed	agent (claude opus-5.5), by hand
-facets:technical	فنی	فن (fann: a craft, an art)	proposed	agent (claude opus-5.5), by hand
-facets:experience	تجربه	ج-ر-ب (to try, to test)	proposed	agent (claude opus-5.5), by hand
-facets:financial	مالی	مال (māl: wealth, what one has)	proposed	agent (claude opus-5.5), by hand
-registry:acts	کنش‌ها	کنش (konesh, from کردن, to do)	proposed	agent (claude opus-5.5), by hand
-acts:made	ساخته	ساختن (sākhtan: to make, to build — and to suit, to agree)	proposed	agent (claude opus-5.5), by hand
-acts:derived	برگرفته	برگرفتن (to take from); مشتق (moshtaq, ش-ق-ق: split off)	proposed	agent (claude opus-5.5), by hand
-acts:read	خوانده	خواندن (khāndan: to read — and to call, and to sing)	proposed	agent (claude opus-5.5), by hand
-acts:said	گفته	گفتن (goftan: to say)	proposed	agent (claude opus-5.5), by hand
-section:provenance_record	خاستگاه	خاستن (khāstan: to rise) + گاه (a place): where a word rose; اسناد (esnād: the chain of those who handed a report on, each named)	proposed	agent (claude opus-5.5), by hand
-registry:layers	لایه‌ها	لایه (lāye: a layer, a fold)	proposed	agent (claude opus-5.5), by hand
-layers:manifesto	مرام‌نامه	مرام (marām, ر-و-م: what is sought) + نامه (a writing)	proposed	agent (claude opus-5.5), by hand
-layers:law	قانون	κανών (a straight rod, a rule — through Arabic qānūn); داد (dād, Middle Persian: law, justice)	proposed	agent (claude opus-5.5), by hand
-layers:reasoning	چرایی	چرا (cherā: why); استدلال (estedlāl, د-ل-ل: seeking what points the way)	proposed	agent (claude opus-5.5), by hand
-layers:journal	روزنامه	روز (a day) + نامه (a writing): the daybook; دفتر (daftar: a book of record — from διφθέρα, a prepared hide: the name this language carries)	proposed	agent (claude opus-5.5), by hand
-layers:history	تاریخ	أ-ر-خ (to date: a dating); پیشینه (pishine: what came before)	proposed	agent (claude opus-5.5), by hand
-layers:queue	صف	ص-ف-ف (to stand in a row); نوبت (nowbat: a turn); معلق (mo'allaq: hanging, undecided)	proposed	agent (claude opus-5.5), by hand
-layers:names	نام‌ها	نام (nām, Old Persian nāman); واژه‌نامه (vāzhe-nāme: a book of words)	proposed	agent (claude opus-5.5), by hand
-term:view	نما	نمودن (namudan: to show, to appear); نما (a view in a drawing: an elevation, a facade)	proposed	agent (claude opus-5.5), by hand
-registry:view_lenses	عدسی‌ها	عدس (adas: a lentil) — the same image	proposed	agent (claude opus-5.5), by hand
-view_lenses:orient	آشنایی	آشنا (āshnā: the known one, a friend); جهت‌یابی (finding one's direction)	proposed	agent (claude opus-5.5), by hand
-view_lenses:understand	دریافت	دریافتن (daryāftan: to find within, to grasp); فهم (fahm)	proposed	agent (claude opus-5.5), by hand
-view_lenses:operate	بهره‌برداری	بهره (a yield) + برداشتن (to take up): the running of a working plant	proposed	agent (claude opus-5.5), by hand
-view_lenses:inspect	وارسی	وارسیدن (vārasidan: to reach into, to examine)	proposed	agent (claude opus-5.5), by hand
-section:manifest	باغ	باغ (bāgh); پردیس (pardis, Avestan pairi-daēza: walled around — the garden that gave the world paradise)	proposed	agent (claude opus-5.5), by hand
-section:name_form	نام	نام (nām)	proposed	agent (claude opus-5.5), by hand
-roles:by	از سوی	از سوی (az su-ye: from the side of) — how Persian names the doer of what is said in the passive; سو (su: a side)	proposed	agent (claude opus-5.5), by hand
-roles:of	موضوع	و-ض-ع (to lay down): what is laid before the act — what it reaches, or what it is about	proposed	agent (claude opus-5.5), by hand
-roles:through	از راهِ	راه (rāh: a way): by way of — a tool, a document, words, a link, an agreement	proposed	agent (claude opus-5.5), by hand
-roles:to	به	به (be: to, towards) — the one it is for, or what it goes towards	proposed	agent (claude opus-5.5), by hand
-roles:from	از	از (az: from) — a source, a giver, a parent	proposed	agent (claude opus-5.5), by hand
-roles:at	در	در (dar: in, at) — a position in a frame, or the being a thing stands on, runs on or is kept at	proposed	agent (claude opus-5.5), by hand
-roles:as	به‌عنوانِ	عنوان (onvān: a title, a heading): under the title of — in what capacity, or as what	proposed	agent (claude opus-5.5), by hand
-verbs:say	گفتن	گفتن (goftan: to say) — the act whose deed is گفته (acts:said)	proposed	agent (claude opus-5.5), by hand
-verbs:read	خواندن	خواندن (khāndan: to read — a page, a gauge, a meter) — whose deed is خوانده (acts:read)	proposed	agent (claude opus-5.5), by hand
-verbs:derive	برگرفتن	برگرفتن (bar-gereftan: to take from) — whose deed is برگرفته (acts:derived)	proposed	agent (claude opus-5.5), by hand
-verbs:make	ساختن	ساختن (sākhtan: to make, to build) — whose deed is ساخته (acts:made)	proposed	agent (claude opus-5.5), by hand
-verbs:be	بودن	بودن (budan: to be) — where a being is, and the way it is placed	proposed	agent (claude opus-5.5), by hand
-verbs:stand	ایستادن	ایستادن (istādan: to stand) — on what a step stands: made of it, or possible on it	proposed	agent (claude opus-5.5), by hand
-verbs:part	جزء	ج-ز-ء (to divide into portions): a part of a whole — as in جزءِ (term:part_of)	proposed	agent (claude opus-5.5), by hand
-verbs:name	نامیدن	نام (nām: a name) — a namespace names a being, once or more	proposed	agent (claude opus-5.5), by hand
-verbs:come	پدید آمدن	پدید (padid: visible, come forth) + آمدن (āmadan: to come): to come into being	proposed	agent (claude opus-5.5), by hand
-verbs:own	مالکیت	م-ل-ک (to possess): owning — as مالک (term:owned_by)	proposed	agent (claude opus-5.5), by hand
-verbs:answer	پاسخ‌گویی	پاسخ (pāsokh: an answer) + گفتن: answering for — as پاسخ‌گو (term:responsibility)	proposed	agent (claude opus-5.5), by hand
-verbs:acquire	به دست آوردن	دست (dast: a hand): to bring to hand — as به دست آمده از (term:acquired)	proposed	agent (claude opus-5.5), by hand
-verbs:pass	گذر	گذشتن (gozashtan: to pass over): a passing from layer to layer	proposed	agent (claude opus-5.5), by hand
-verbs:necessary	واجب	و-ج-ب (to be due, to fall): Ibn Sina's wājib — the crown's own word (crown:theone, واجب الوجود)	proposed	agent (claude opus-5.5), by hand
-verbs:contingent	ممکنِ خاص	the logicians' special possibility (imkān-e khāss): neither necessary nor impossible	proposed	agent (claude opus-5.5), by hand
-verbs:possible	ممکن	م-ک-ن (to be able, to have room): Ibn Sina's mumkin in its general sense — what is not impossible	proposed	agent (claude opus-5.5), by hand
-verbs:impossible	ممتنع	م-ن-ع (to prevent): Ibn Sina's mumtaniʿ — what cannot be	proposed	agent (claude opus-5.5), by hand
-verbs:obligatory	الزامی	ل-ز-م (to cling, to be bound): binding — a clause's must	proposed	agent (claude opus-5.5), by hand
-verbs:omissible	ترک‌پذیر	ترک (tark: leaving) + پذیر (-pazir: that admits): what may be left undone	proposed	agent (claude opus-5.5), by hand
-verbs:permitted	مجاز	ج-و-ز (to pass, to be allowed): permitted	proposed	agent (claude opus-5.5), by hand
-verbs:forbidden	ممنوع	م-ن-ع (to prevent): forbidden	proposed	agent (claude opus-5.5), by hand
-verbs:agree	توافق	و-ف-ق (to fit, to suit): agreeing together — each party's yes	proposed	agent (claude opus-5.5), by hand
-verbs:decline	نپذیرفتن	نـ (na-: not) + پذیرفتن (paziroftan: to accept): a party's no	proposed	agent (claude opus-5.5), by hand
-verbs:pay	پرداخت	پرداختن (pardākhtan: to pay; first, to finish, to make clear)	proposed	agent (claude opus-5.5), by hand
-verbs:bear	برعهده‌گرفتن	عهده (ohde: a charge, an undertaking) + گرفتن: to take a cost upon oneself	proposed	agent (claude opus-5.5), by hand
-verbs:grant	اجازه	ج-و-ز (to pass, to be allowed): leave given — read, write, enact or ratify	proposed	agent (claude opus-5.5), by hand
-verbs:can	توانستن	توان (tavān: power, ability): may, or must, as the square says	proposed	agent (claude opus-5.5), by hand
-verbs:represent	نمایندگی	نمودن (nemudan: to show): standing for another	proposed	agent (claude opus-5.5), by hand
-verbs:need	نیاز	نیاز (niyāz: need — first, longing)	proposed	agent (claude opus-5.5), by hand
-verbs:meet	برآوردن	برآوردن (bar-āvardan: to bring up, to fulfil): a need met	proposed	agent (claude opus-5.5), by hand
-verbs:use	به‌کارگیری	کار (kār: work): putting to work	proposed	agent (claude opus-5.5), by hand
-verbs:do	کار	کار (kār: work, a job) — a router's, a file server's	proposed	agent (claude opus-5.5), by hand
-verbs:hold	دربرداشتن	در بر داشتن (dar bar dāshtan: to have within one's embrace): what it holds — a quantity, or a being	proposed	agent (claude opus-5.5), by hand
-verbs:run	اجرا	ج-ر-ی (to flow, to run): running a program	proposed	agent (claude opus-5.5), by hand
-verbs:open	گشودن	گشودن (goshudan: to open) — a session, an account	proposed	agent (claude opus-5.5), by hand
-verbs:move	پیش‌بردن	پیش (pish: forward) + بردن (bordan: to carry): a case carried forward on its walk	proposed	agent (claude opus-5.5), by hand
-verbs:step	گام	گام (gām: a pace, a step)	proposed	agent (claude opus-5.5), by hand
-verbs:attend	حضور	ح-ض-ر (to be present)	proposed	agent (claude opus-5.5), by hand
-verbs:measure	سنجش	سنجیدن (sanjidan: to weigh, to measure)	proposed	agent (claude opus-5.5), by hand
-verbs:record	ثبت	ث-ب-ت (to stand fast): writing down what a line held, position by position	proposed	agent (claude opus-5.5), by hand
-verbs:reckon	برآورد	برآوردن (bar-āvardan: to bring up, to work out): a reckoning read each time it is asked	proposed	agent (claude opus-5.5), by hand
-verbs:pin	تثبیت	ث-ب-ت (to stand fast): fixing the moment and the commit a reading was read at	proposed	agent (claude opus-5.5), by hand
-verbs:classify	رده‌بندی	رده (rade: a row, a rank) + بندی: setting in its class	proposed	agent (claude opus-5.5), by hand
-verbs:concern	مربوط‌بودن	ر-ب-ط (to tie): being tied to a person — whom a record is about	proposed	agent (claude opus-5.5), by hand
-verbs:rate	درجهٔ حساسیت	درجه (daraje: a step, a degree) + حساسیت (hassāsiyat: sensitivity)	proposed	agent (claude opus-5.5), by hand
-verbs:fail	خرابی	خراب (kharāb: ruined): a way a being breaks, or is breaking	proposed	agent (claude opus-5.5), by hand
-verbs:repair	تعمیر	ع-م-ر (to inhabit, to build up): mending	proposed	agent (claude opus-5.5), by hand
-verbs:rule	حکم	ح-ک-م (to judge): a ruling	proposed	agent (claude opus-5.5), by hand
-verbs:respond	پاسخ	پاسخ (pāsokh: an answer) — a verdict, or a speaker's own words	proposed	agent (claude opus-5.5), by hand
-verbs:weigh	وزن‌دهی	وزن (vazn: weight) + دهی: weighting criteria, pair by pair	proposed	agent (claude opus-5.5), by hand
-verbs:propose	پیشنهاد	پیش (pish: before) + نهادن (nahādan: to set): beans set before another garden	proposed	agent (claude opus-5.5), by hand
-verbs:take	ستاندن	ستاندن (setāndan: to take, to receive — the classical word): a proposal taken into the garden	proposed	agent (claude opus-5.5), by hand
-verbs:rehearse	تمرین	م-ر-ن (to be supple): practice, a rehearsal	proposed	agent (claude opus-5.5), by hand
-verbs:serve	سرویس‌دهی	the trade's word: serving at an address and a port	proposed	agent (claude opus-5.5), by hand
-verbs:carry	حمل	ح-م-ل (to carry)	proposed	agent (claude opus-5.5), by hand
-verbs:route	مسیریابی	مسیر (masir: a way) + یافتن: finding the way	proposed	agent (claude opus-5.5), by hand
-verbs:translate	ترجمهٔ نشانی	ترجمه (tarjome: rendering) + نشانی (neshāni: an address): an address rewritten as traffic crosses	proposed	agent (claude opus-5.5), by hand
-verbs:filter	پالایش	پالودن (pāludan: to strain, to purify)	proposed	agent (claude opus-5.5), by hand
-verbs:book	ثبت حسابداری	ثبت (sabt: writing down) + حسابداری (hesābdāri: book-keeping): an amount booked to an account	proposed	agent (claude opus-5.5), by hand
-verbs:renew	تمدید	م-د-د (to stretch): extending	proposed	agent (claude opus-5.5), by hand
-verbs:mark	نشانه‌گذاری	نشانه (neshāne: a sign) + گذاشتن (to set): a boundary set by a mark	proposed	agent (claude opus-5.5), by hand
-verbs:produce	پدیدآوردن	پدید (padid: come forth) + آوردن (to bring): to bring into being — beside پدید آمدن (come)	proposed	agent (claude opus-5.5), by hand
-verbs:draw	ترسیم	ر-س-م (to trace, to mark): drawing	proposed	agent (claude opus-5.5), by hand
-qualifiers:channel	کانال	the trade's word, from canalis	proposed	agent (claude opus-5.5), by hand
-qualifiers:charged	معادل	ع-د-ل (to make even): what it came to in another currency	proposed	agent (claude opus-5.5), by hand
-qualifiers:class	رده	رده (rade: a rank) — a class of the Contract of Parts	proposed	agent (claude opus-5.5), by hand
-qualifiers:clause	بند	بند (band: a tie, a clause)	proposed	agent (claude opus-5.5), by hand
-qualifiers:cover	پوشش	پوشیدن (pushidan: to cover): the parts a grant opens	proposed	agent (claude opus-5.5), by hand
-qualifiers:drawing	نقشه	ن-ق-ش (to engrave, to paint): a drawing	proposed	agent (claude opus-5.5), by hand
-qualifiers:method	روش	رفتن (raftan: to go): a way of going	proposed	agent (claude opus-5.5), by hand
-qualifiers:page	صفحه	ص-ف-ح (a broad flat face)	proposed	agent (claude opus-5.5), by hand
-qualifiers:placed	جای‌گیری	جا (jā: a place) + گرفتن: taking a place	proposed	agent (claude opus-5.5), by hand
-qualifiers:presence	یافت‌شدن	یافتن (yāftan: to find): found, or looked for and not found	proposed	agent (claude opus-5.5), by hand
-qualifiers:reading	خوانش	خواندن (khāndan: to read): a reading	proposed	agent (claude opus-5.5), by hand
-qualifiers:result	نتیجه	ن-ت-ج (to bring forth): what came of it	proposed	agent (claude opus-5.5), by hand
-qualifiers:series	سری	the trade's word for a series	proposed	agent (claude opus-5.5), by hand
-qualifiers:settles	تسویه	س-و-ی (to make level): settling	proposed	agent (claude opus-5.5), by hand
-qualifiers:share	سهم	س-ه-م (an arrow, a lot): one's portion	proposed	agent (claude opus-5.5), by hand
-qualifiers:value	مقدار	ق-د-ر (to measure out): how much	proposed	agent (claude opus-5.5), by hand
-qualifiers:walk	روند	رفتن (raftan: to go): a course of steps	proposed	agent (claude opus-5.5), by hand
-qualifiers:weighing	مقایسه‌ها	ق-ی-س (to measure against): the comparisons, pair by pair	proposed	agent (claude opus-5.5), by hand
-beside_roles:id	شناسه	شناختن (shenākhtan: to know, to recognise): what it is known by	proposed	agent (claude opus-5.5), by hand
-beside_roles:while	تا وقتی که	وقت (vaqt: a time): as long as	proposed	agent (claude opus-5.5), by hand
-beside_roles:why	دلیل	د-ل-ل (to point the way): the reason	proposed	agent (claude opus-5.5), by hand
-beside_roles:note	یادداشت	یاد (yād: memory) + داشتن: a remark kept	proposed	agent (claude opus-5.5), by hand
-beside_roles:held	سپرده	سپردن (sepordan: to entrust): kept in trust, off git	proposed	agent (claude opus-5.5), by hand
-kinds:codebase	مخزن کد	مخزن (makhzan: a store) + کد (code)	proposed	agent (claude opus-5.5), by hand
-kinds:product	فرآورده	فرآوردن (farā-āvardan: to bring forth)	proposed	agent (claude opus-5.5), by hand
-kinds:org	سازمان	ساختن (to build) + مان: a built order	proposed	agent (claude opus-5.5), by hand
-kinds:person	شخص	ش-خ-ص (to appear, to stand out)	proposed	agent (claude opus-5.5), by hand
-kinds:instance	نمونه	نمودن (nemudan: to show): one shown of a kind	proposed	agent (claude opus-5.5), by hand
-kinds:host	میزبان	میز (miz: a table, a feast) + بان: the one who receives	proposed	agent (claude opus-5.5), by hand
-kinds:virtual-host	میزبان مجازی	مجاز (majāz: a figure of speech, not the thing itself)	proposed	agent (claude opus-5.5), by hand
-kinds:domain	دامنه	دامن (dāman: a skirt, a foothill): an extent	proposed	agent (claude opus-5.5), by hand
-kinds:service	سرویس	the trade's word	proposed	agent (claude opus-5.5), by hand
-kinds:program	برنامه	بر + نامه (nāme: a letter): what is set down to be done	proposed	agent (claude opus-5.5), by hand
-kinds:design	طرح	ط-ر-ح (to cast, to lay out)	proposed	agent (claude opus-5.5), by hand
-kinds:session	نشست	نشستن (neshastan: to sit)	proposed	agent (claude opus-5.5), by hand
-kinds:contract	قرارداد	قرار (qarār: a settling) + داد (given)	proposed	agent (claude opus-5.5), by hand
-kinds:garden	باغ	باغ (bāgh: a garden) — as section:manifest	proposed	agent (claude opus-5.5), by hand
-kinds:document	سند	س-ن-د (to lean on): what one relies on	proposed	agent (claude opus-5.5), by hand
-kinds:event	رویداد	روی (ruy: a face) + داد (given): what came to face	proposed	agent (claude opus-5.5), by hand
-header:title	عنوان	عنوان (onvān: a heading)	proposed	agent (claude opus-5.5), by hand
-header:summary	چکیده	چکیدن (chekidan: to drip): what is distilled	proposed	agent (claude opus-5.5), by hand
-header:tags	برچسب‌ها	بر + چسب (chasb: glue): what is stuck on	proposed	agent (claude opus-5.5), by hand
-forms:clause.due	موعد	و-ع-د (to promise): the appointed day	proposed	agent (claude opus-5.5), by hand
-forms:clause.every	تکرار	ک-ر-ر (to return): its repeating	proposed	agent (claude opus-5.5), by hand
-forms:clause.notice	پیش‌آگاهی	پیش (before) + آگاهی (knowing): told this long before	proposed	agent (claude opus-5.5), by hand
-forms:clause.state	حالت	ح-و-ل (to turn): how it stands — met, waived, broken	proposed	agent (claude opus-5.5), by hand
-forms:clause.amount	اندازه	اندازه (andāze: a measure): how much	proposed	agent (claude opus-5.5), by hand
-forms:clause.during	بازهٔ اعتبار	بازه (a span) + اعتبار (holding good)	proposed	agent (claude opus-5.5), by hand
-forms:clause.within	بازهٔ شمارش	بازه (a span) + شمارش (counting)	proposed	agent (claude opus-5.5), by hand
-forms:clause.used_by	به‌کاررفته در	کار (work): what uses the allowance	proposed	agent (claude opus-5.5), by hand
-forms:clause.when	آغاز به شرطِ	شرط (a condition): what brings it into force	proposed	agent (claude opus-5.5), by hand
-forms:clause.each	یک بار برای هر	هر (every): once for each	proposed	agent (claude opus-5.5), by hand
-forms:clause.of	سهمی از	سهم (a portion): what its amount is a part of	proposed	agent (claude opus-5.5), by hand
-forms:clause.falls_due	موعد نسبی	موعد + نسبی (relative): counted from another day	proposed	agent (claude opus-5.5), by hand
-forms:clause.by_role	برای نقشِ	نقش (naqsh: a figure, a part played)	proposed	agent (claude opus-5.5), by hand
-forms:clause.over	برای بخشِ	بخش (bakhsh: a portion)	proposed	agent (claude opus-5.5), by hand
-forms:settlement.clause	کدام بند	بند (a clause): which clause it settles	proposed	agent (claude opus-5.5), by hand
-forms:settlement.occurrence	کدام بار	بار (bār: a time, a load): which occurrence	proposed	agent (claude opus-5.5), by hand
-forms:settlement.amount	مبلغ تسویه	مبلغ (an amount) + تسویه (settling)	proposed	agent (claude opus-5.5), by hand
-forms:settlement.note	توضیح	و-ض-ح (to be clear): an explanation	proposed	agent (claude opus-5.5), by hand
+registry:natures	سرشت‌ها	سرشت (seresht, from سرشتن, to knead: the make a being is kneaded of); نهاد (nahād, what is laid at the foundation); طبیعت (tabī'at) is left to physis, the philosophers' nature, which is not this	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+natures:soma	جسم	جسم (jesm, Arabic: bulk; Ibn Sina: a substance in which three dimensions may be posited); تن (tan, Middle Persian: the living body); کالبد (kālbad: the frame, the mould)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+natures:lekton	گفتنی	گفتن (goftan, to say); معنا (ma'nā: meaning, the Arabic philosophers' nearest word for λεκτόν); اعتباری (e'tebārī: Tabatabai's posited beings — ownership, contract, office — which are by being placed in an order people keep)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:nature	سرشت	سرشتن (to knead: the make a being is of)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:genos	گونه	گونه (gune, Middle Persian gōnag: colour, sort); جنس (jens, Arabic: genus); تیره (tire: a lineage)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:gene	گونه‌ها	گونه (gune: a sort, a kind)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:lines	رشته‌ها	رشته (reshte, from رشتن, to spin: a thread, a strand)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+lines:frame	چارچوب	چار (four) + چوب (wood): the four timbers that hold a thing	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+lines:matter	ماده	م-د-د (to extend, to supply); the operator's word: an organisation of atoms makes ماده	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+lines:gravitation	گرانش	گران (gerān: heavy — and dear, costly); گرانش (the Persian Academy's word for gravitation)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+lines:living	حیات	ح-ي-ي (to live) — the operator's word; زیستن (zistan: to live)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+lines:logos	نطق	ن-ط-ق (to speak: نطق is speech and reason at once — the philosophers' حیوان ناطق, the speaking animal, for ζῷον λόγον ἔχον); عقل (aql: reason, first a tether)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+lines:made	ساخته‌ها	ساختن (sākhtan: to make, to build)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:conditions	شرایط	ش-ر-ط (a condition: شرط, first a mark, a sign)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+conditions:balance	اعتدال	ع-د-ل (to be even, just — عدل, justice); اعتدال المزاج (Ibn Sina: the balance of a mixture that readies it for a soul)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+conditions:proportion	تناسب	ن-س-ب (to relate: نسبت, a ratio, a relation)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:foundation_rules	قواعد بنیاد	قاعده (qā'ede, ق-ع-د, to sit: a base, and a rule); بنیاد (foundation)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+foundation_rules:weight	وزن	و-ز-ن (to weigh: میزان, a balance, a measure) — the operator's word; سنگینی (heaviness)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:complexity	مراتب اجسام	مرتبه (martabe, ر-ت-ب: a step one stands firm on); پیچیدگی (pichidegi, from پیچیدن, to twist together); مراتب وجود (the philosophers' grades of being), here of bodies alone	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:space-time	فضا∞زمان	فضا (fazā: an open expanse); زمان (zamān) — the operator's form, one thing seen from two sides	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:force-field	میدان نیرو	میدان (meydān: an open ground); نیرو (niru: strength) — a field that binds or gives mass, filling room without excluding	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:matter-field	میدان ماده	میدان (meydān); ماده (mādde, Arabic: the stuff of a thing) — a field that takes room and excludes	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:elementary-particle	ذره‌ی بنیادی	ذره (zarre, Arabic ḏarra: a mote in a sunbeam); بنیاد (bonyād: the foundation); نقطه (noqte: the dot, undivided)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:hadron	هادرون	ἁδρός (stout); کوارک (quark)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:nucleus	هسته	هسته (haste: the stone of a fruit, the kernel)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:atom	اتم	ἄτομος (uncut); جزء لایتجزا (the part that is not divided, of the kalām); جوهر فرد (jowhar-e fard: the single substance)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:molecule	مولکول	moles (a mass); مولکول (a little mass)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:cell	یاخته	یاخته (the Persian Academy's word); سلول (cellule, from cella: a little room)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:tissue	بافت	بافتن (bāftan, to weave)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:organ	اندام	اندام (andām, Middle Persian handām: a limb, a member; also stature, form); عضو (ʿozv, Arabic: a member)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:organism	جاندار	جان (jān: life, soul) + داشتن (to hold): a being that holds a life; موجود زنده (a living being)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:population	جمعیت	ج-م-ع (to gather): a gathering of one kind	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:community	جامعه‌ی زیستی	جامعه (jāme'e, ج-م-ع: what gathers); زیستن (zistan, to live)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:ecosystem	زیست‌بوم	زیست (life) + بوم (bum: the ground one lives on, a homeland)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:logos	نطق	ن-ط-ق (to speak: نطق is speech and reason at once — the philosophers' حیوان ناطق, the speaking animal, for ζῷον λόγον ἔχον); عقل (aql: reason, first a tether)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:material	جنس	جنس (jens: the stuff a thing is of — what is it made of?); ماده (the line it is on)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:celestial-body	جرم آسمانی	جرم (jerm, Arabic: a body, a bulk — the astronomers' word); آسمان (āsmān, Avestan asman: stone, and the sky — once thought a vault of stone)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:planetary-system	سامانه‌ی سیاره‌ای	سیاره (sayyāre, س-ي-ر, to travel: the wanderer); سامانه (a system)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:galaxy	کهکشان	کاه (straw) + کشان (trailing): the trail of spilled straw across the sky	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:component	قطعه	ق-ط-ع (to cut: a piece cut to fit); ساختن (to make)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complexity:device	افزاره	افزار (afzār, Middle Persian abzār: an instrument, a means); the Persian Academy's word for a device	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:crown	تاج	تاج (tāj, Middle Persian tāg: a crown); افسر (afsar: a diadem)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+crown:theone	واجب الوجود	و-ج-ب (to fall due, to be necessary) + وجود (being, و-ج-د: to find — being is what is found); ابن سینا: واجب الوجود بالذات, necessary by itself, beside ممکن الوجود, possible in itself and necessary only through another	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+crown:love	مهر	مهر (mehr, Avestan miθra: the covenant, the bond — and love, and the sun, which gives life); عشق (eshq: longing love)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+crown:wisdom	خرد	خرد (kherad, Middle Persian xrad: wisdom, reason); Ferdowsi opens the Shahnameh: به نام خداوند جان و خرد — in the name of the Lord of life and wisdom; حکمت (hekmat)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:via	به‌واسطه‌ی	واسطه (vāsete, Arabic wāsiṭa, و-س-ط: what stands in the middle, an intermediary); واسطه‌ی فیض (the philosophers' intermediary through whom being flows)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:status	وضعیت	و-ض-ع (to lay down, to place); حال (hāl: a state)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:dimensions	ابعاد	بُعد (bo'd, ب-ع-د: to be far — a dimension is a way of being far); اندازه (andāze: a measure)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+dimensions:time	زمان	زمان (zamān, Middle Persian: a time, a span; Avestan zrvan, time itself) — which Arabic took from Persian	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+dimensions:length	درازا	دراز (derāz: long); طول (tūl, Arabic)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+aspects:time	کِی	کی (kei: when); متی (matā: the category of when, in the philosophers' Arabic)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+aspects:place	کجا	کجا (kojā: where); أین (ayn: the category of where); جای (jāy: a place)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:complements	مکمل‌ها	ک-م-ل (to be whole); نیمه‌ی دیگر (the other half)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complements:stated	بیان‌شده	بیان (bayān, ب-ي-ن: to make distinct, clear)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complements:bearer	حامل	ح-م-ل (to carry); دارنده (dārande: the holder)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+complements:system	سامانه	سامان (sāmān: order, good arrangement) — the Persian Academy's word for a system; نظام (nezām)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+section:division_form	بخش‌بندی	بخشیدن (bakhshidan: to share out — and, the same verb, to give and to forgive); نقطه (noqte: the dot)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:divisions	بخش‌بندی‌ها	بخشیدن (to share out)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:part_of	جزءِ	جزء (joz', Arabic: a part); کل (kol: the whole); پاره (pāre: a piece)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:lives_in	ساکنِ	س-ک-ن (to be still, to dwell); زیستگاه (zistgāh: the place of living, a habitat)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:located_at	واقع در	و-ق-ع (to fall, to befall: where a thing has come to lie); جای (jāy: a place)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:owned_by	مالک	م-ل-ک (to possess, to rule: مُلک, a realm; مَلِک, a king); از آنِ (belonging to)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:responsibility	پاسخ‌گو	پاسخ (pāsokh: an answer) + گفتن (to say); مسئول (mas'ul, س-ا-ل: the one who will be asked)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:acquired	به دست آمده از	دست (dast: the hand): what came to hand, and from whom; خرید (kharid: a purchase)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:facets	وجوه پاسخ‌گویی	وجه (vajh: a face, an aspect); پاسخ (an answer)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+facets:legal	حقوقی	حق (haqq: a right, and truth)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+facets:technical	فنی	فن (fann: a craft, an art)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+facets:experience	تجربه	ج-ر-ب (to try, to test)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+facets:financial	مالی	مال (māl: wealth, what one has)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:acts	کنش‌ها	کنش (konesh, from کردن, to do)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+acts:made	ساخته	ساختن (sākhtan: to make, to build — and to suit, to agree)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+acts:derived	برگرفته	برگرفتن (to take from); مشتق (moshtaq, ش-ق-ق: split off)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+acts:read	خوانده	خواندن (khāndan: to read — and to call, and to sing)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+acts:said	گفته	گفتن (goftan: to say)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+section:provenance_record	خاستگاه	خاستن (khāstan: to rise) + گاه (a place): where a word rose; اسناد (esnād: the chain of those who handed a report on, each named)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:layers	لایه‌ها	لایه (lāye: a layer, a fold)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+layers:manifesto	مرام‌نامه	مرام (marām, ر-و-م: what is sought) + نامه (a writing)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+layers:law	قانون	κανών (a straight rod, a rule — through Arabic qānūn); داد (dād, Middle Persian: law, justice)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+layers:reasoning	چرایی	چرا (cherā: why); استدلال (estedlāl, د-ل-ل: seeking what points the way)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+layers:journal	روزنامه	روز (a day) + نامه (a writing): the daybook; دفتر (daftar: a book of record — from διφθέρα, a prepared hide: the name this language carries)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+layers:history	تاریخ	أ-ر-خ (to date: a dating); پیشینه (pishine: what came before)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+layers:queue	صف	ص-ف-ف (to stand in a row); نوبت (nowbat: a turn); معلق (mo'allaq: hanging, undecided)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+layers:names	نام‌ها	نام (nām, Old Persian nāman); واژه‌نامه (vāzhe-nāme: a book of words)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+term:view	نما	نمودن (namudan: to show, to appear); نما (a view in a drawing: an elevation, a facade)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+registry:view_lenses	عدسی‌ها	عدس (adas: a lentil) — the same image	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+view_lenses:orient	آشنایی	آشنا (āshnā: the known one, a friend); جهت‌یابی (finding one's direction)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+view_lenses:understand	دریافت	دریافتن (daryāftan: to find within, to grasp); فهم (fahm)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+view_lenses:operate	بهره‌برداری	بهره (a yield) + برداشتن (to take up): the running of a working plant	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+view_lenses:inspect	وارسی	وارسیدن (vārasidan: to reach into, to examine)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+section:manifest	باغ	باغ (bāgh); پردیس (pardis, Avestan pairi-daēza: walled around — the garden that gave the world paradise)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+section:name_form	نام	نام (nām)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+roles:by	از سوی	از سوی (az su-ye: from the side of) — how Persian names the doer of what is said in the passive; سو (su: a side)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+roles:of	موضوع	و-ض-ع (to lay down): what is laid before the act — what it reaches, or what it is about	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+roles:through	از راهِ	راه (rāh: a way): by way of — a tool, a document, words, a link, an agreement	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+roles:to	به	به (be: to, towards) — the one it is for, or what it goes towards	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+roles:from	از	از (az: from) — a source, a giver, a parent	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+roles:at	در	در (dar: in, at) — a position in a frame, or the being a thing stands on, runs on or is kept at	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+roles:as	به‌عنوانِ	عنوان (onvān: a title, a heading): under the title of — in what capacity, or as what	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:say	گفتن	گفتن (goftan: to say) — the act whose deed is گفته (acts:said)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:read	خواندن	خواندن (khāndan: to read — a page, a gauge, a meter) — whose deed is خوانده (acts:read)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:derive	برگرفتن	برگرفتن (bar-gereftan: to take from) — whose deed is برگرفته (acts:derived)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:make	ساختن	ساختن (sākhtan: to make, to build) — whose deed is ساخته (acts:made)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:be	بودن	بودن (budan: to be) — where a being is, and the way it is placed	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:stand	ایستادن	ایستادن (istādan: to stand) — on what a step stands: made of it, or possible on it	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:part	جزء	ج-ز-ء (to divide into portions): a part of a whole — as in جزءِ (term:part_of)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:name	نامیدن	نام (nām: a name) — a namespace names a being, once or more	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:come	پدید آمدن	پدید (padid: visible, come forth) + آمدن (āmadan: to come): to come into being	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:own	مالکیت	م-ل-ک (to possess): owning — as مالک (term:owned_by)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:answer	پاسخ‌گویی	پاسخ (pāsokh: an answer) + گفتن: answering for — as پاسخ‌گو (term:responsibility)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:acquire	به دست آوردن	دست (dast: a hand): to bring to hand — as به دست آمده از (term:acquired)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:pass	گذر	گذشتن (gozashtan: to pass over): a passing from layer to layer	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:necessary	واجب	و-ج-ب (to be due, to fall): Ibn Sina's wājib — the crown's own word (crown:theone, واجب الوجود)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:contingent	ممکنِ خاص	the logicians' special possibility (imkān-e khāss): neither necessary nor impossible	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:possible	ممکن	م-ک-ن (to be able, to have room): Ibn Sina's mumkin in its general sense — what is not impossible	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:impossible	ممتنع	م-ن-ع (to prevent): Ibn Sina's mumtaniʿ — what cannot be	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:obligatory	الزامی	ل-ز-م (to cling, to be bound): binding — a clause's must	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:omissible	ترک‌پذیر	ترک (tark: leaving) + پذیر (-pazir: that admits): what may be left undone	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:permitted	مجاز	ج-و-ز (to pass, to be allowed): permitted	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:forbidden	ممنوع	م-ن-ع (to prevent): forbidden	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:agree	توافق	و-ف-ق (to fit, to suit): agreeing together — each party's yes	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:decline	نپذیرفتن	نـ (na-: not) + پذیرفتن (paziroftan: to accept): a party's no	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:pay	پرداخت	پرداختن (pardākhtan: to pay; first, to finish, to make clear)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:bear	برعهده‌گرفتن	عهده (ohde: a charge, an undertaking) + گرفتن: to take a cost upon oneself	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:grant	اجازه	ج-و-ز (to pass, to be allowed): leave given — read, write, enact or ratify	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:can	توانستن	توان (tavān: power, ability): may, or must, as the square says	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:represent	نمایندگی	نمودن (nemudan: to show): standing for another	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:need	نیاز	نیاز (niyāz: need — first, longing)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:meet	برآوردن	برآوردن (bar-āvardan: to bring up, to fulfil): a need met	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:use	به‌کارگیری	کار (kār: work): putting to work	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:do	کار	کار (kār: work, a job) — a router's, a file server's	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:hold	دربرداشتن	در بر داشتن (dar bar dāshtan: to have within one's embrace): what it holds — a quantity, or a being	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:run	اجرا	ج-ر-ی (to flow, to run): running a program	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:open	گشودن	گشودن (goshudan: to open) — a session, an account	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:move	پیش‌بردن	پیش (pish: forward) + بردن (bordan: to carry): a case carried forward on its walk	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:step	گام	گام (gām: a pace, a step)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:attend	حضور	ح-ض-ر (to be present)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:measure	سنجش	سنجیدن (sanjidan: to weigh, to measure)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:record	ثبت	ث-ب-ت (to stand fast): writing down what a line held, position by position	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:reckon	برآورد	برآوردن (bar-āvardan: to bring up, to work out): a reckoning read each time it is asked	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:pin	تثبیت	ث-ب-ت (to stand fast): fixing the moment and the commit a reading was read at	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:classify	رده‌بندی	رده (rade: a row, a rank) + بندی: setting in its class	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:concern	مربوط‌بودن	ر-ب-ط (to tie): being tied to a person — whom a record is about	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:rate	درجهٔ حساسیت	درجه (daraje: a step, a degree) + حساسیت (hassāsiyat: sensitivity)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:fail	خرابی	خراب (kharāb: ruined): a way a being breaks, or is breaking	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:repair	تعمیر	ع-م-ر (to inhabit, to build up): mending	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:rule	حکم	ح-ک-م (to judge): a ruling	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:respond	پاسخ	پاسخ (pāsokh: an answer) — a verdict, or a speaker's own words	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:weigh	وزن‌دهی	وزن (vazn: weight) + دهی: weighting criteria, pair by pair	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:propose	پیشنهاد	پیش (pish: before) + نهادن (nahādan: to set): beans set before another garden	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:take	ستاندن	ستاندن (setāndan: to take, to receive — the classical word): a proposal taken into the garden	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:rehearse	تمرین	م-ر-ن (to be supple): practice, a rehearsal	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:serve	خدمت‌دهی	خ-د-م (to serve) + دهی (from دادن, giving): giving a service at an address and a port. Neighbour: سرویس‌دهی, the trade's loanword	confirmed	0mit, a reader of Persian (2026-10-11)
+verbs:carry	حمل	ح-م-ل (to carry)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:route	مسیریابی	مسیر (masir: a way) + یافتن: finding the way	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:translate	ترجمهٔ نشانی	ترجمه (tarjome: rendering) + نشانی (neshāni: an address): an address rewritten as traffic crosses	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:filter	پالایش	پالودن (pāludan: to strain, to purify)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:book	ثبت حسابداری	ثبت (sabt: writing down) + حسابداری (hesābdāri: book-keeping): an amount booked to an account	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:renew	تمدید	م-د-د (to stretch): extending	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:mark	نشانه‌گذاری	نشانه (neshāne: a sign) + گذاشتن (to set): a boundary set by a mark	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:produce	پدیدآوردن	پدید (padid: come forth) + آوردن (to bring): to bring into being — beside پدید آمدن (come)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+verbs:draw	ترسیم	ر-س-م (to trace, to mark): drawing	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:channel	کانال	the trade's word, from canalis	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:charged	معادل	ع-د-ل (to make even): what it came to in another currency	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:class	رده	رده (rade: a rank) — a class of the Contract of Parts	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:clause	بند	بند (band: a tie, a clause)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:cover	پوشش	پوشیدن (pushidan: to cover): the parts a grant opens	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:drawing	نقشه	ن-ق-ش (to engrave, to paint): a drawing	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:method	روش	رفتن (raftan: to go): a way of going	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:page	صفحه	ص-ف-ح (a broad flat face)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:placed	جای‌گیری	جا (jā: a place) + گرفتن: taking a place	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:presence	یافت‌شدن	یافتن (yāftan: to find): found, or looked for and not found	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:reading	خوانش	خواندن (khāndan: to read): a reading	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:result	نتیجه	ن-ت-ج (to bring forth): what came of it	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:series	سری	the trade's word for a series	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:settles	تسویه	س-و-ی (to make level): settling	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:share	سهم	س-ه-م (an arrow, a lot): one's portion	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:value	مقدار	ق-د-ر (to measure out): how much	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:walk	روند	رفتن (raftan: to go): a course of steps	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+qualifiers:weighing	مقایسه‌ها	ق-ی-س (to measure against): the comparisons, pair by pair	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+beside_roles:id	شناسه	شناختن (shenākhtan: to know, to recognise): what it is known by	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+beside_roles:while	مادامی که	ما (mā, Arabic: so long as) + دام (dāma: it lasted; د-و-م, to last, to endure, as in دوام، مدام، دائم) + که: for as long as it lasts. مادام alone is also the French madame (خانم), so که is kept. Neighbour: تا وقتی که (vaqt: a time)	confirmed	0mit, a reader of Persian (2026-10-11)
+beside_roles:why	دلیل	د-ل-ل (to point the way): the reason	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+beside_roles:note	یادداشت	یاد (yād: memory) + داشتن: a remark kept	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+beside_roles:held	سپرده	سپردن (sepordan: to entrust): kept in trust, off git	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:codebase	مخزن کد	مخزن (makhzan: a store) + کد (code)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:product	فرآورده	فرآوردن (farā-āvardan: to bring forth)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:org	سازمان	ساختن (to build) + مان: a built order	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:person	فرد	ف-ر-د (to be single, alone): one human being, an individual; the law's person is a body that reasons. Neighbour: شخص (ش-خ-ص, to appear, to stand out), not taken because it also names a legal person (شخص حقوقی), which the law keeps as an org (سازمان)	confirmed	0mit, a reader of Persian (2026-10-11)
+kinds:instance	نمونه	نمودن (nemudan: to show): one shown of a kind	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:host	میزبان	میز (miz: a table, a feast) + بان: the one who receives	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:virtual-host	میزبان مجازی	مجاز (majāz: a figure of speech, not the thing itself)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:domain	دامنه	دامن (dāman: a skirt, a foothill): an extent	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:service	خدمت	خ-د-م (to serve): a service, as in خادم (one who serves) and استخدام (taking into service). Neighbour: سرویس, the trade's loanword	confirmed	0mit, a reader of Persian (2026-10-11)
+kinds:program	برنامه	بر + نامه (nāme: a letter): what is set down to be done	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:design	طرح	ط-ر-ح (to cast, to lay out)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:session	نشست	نشستن (neshastan: to sit)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:contract	قرارداد	قرار (qarār, ق-ر-ر: to settle, to stand fixed) + داد, the past stem of دادن, here as in قرار دادن (to set in place). The past stem is the Old Iranian past participle dāta-, set or laid down, and so is داد (dād), law and justice: Avestan and Old Persian dāta-, the law laid down (Encyclopaedia Iranica, DĀTA: from dā-, to put, place; Iranian dā- is also to give). A contract is what was set in place between its parties, as a law is what was laid down	confirmed	agent (claude opus-5.5), by hand; the root of داد checked on the operator's question; confirmed by 0mit (2026-10-11)
+kinds:garden	باغ	باغ (bāgh: a garden) — as section:manifest	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:document	سند	س-ن-د (to lean on): what one relies on	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+kinds:event	رویداد	روی (ruy: a face) + داد (given): what came to face	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+header:title	عنوان	عنوان (onvān: a heading)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+header:summary	چکیده	چکیدن (chekidan: to drip): what is distilled	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+header:tags	برچسب‌ها	بر + چسب (chasb: glue): what is stuck on	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.due	موعد	و-ع-د (to promise): the appointed day	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.every	تکرار	ک-ر-ر (to return): its repeating	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.notice	پیش‌آگاهی	پیش (before) + آگاهی (knowing): told this long before	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.state	حالت	ح-و-ل (to turn): how it stands — met, waived, broken	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.amount	اندازه	اندازه (andāze: a measure): how much	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.during	بازهٔ اعتبار	بازه (a span) + اعتبار (holding good)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.within	بازهٔ شمارش	بازه (a span) + شمارش (counting)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.used_by	به‌کاررفته در	کار (work): what uses the allowance	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.when	آغاز به شرطِ	شرط (a condition): what brings it into force	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.each	یک بار برای هر	هر (every): once for each	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.of	سهمی از	سهم (a portion): what its amount is a part of	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.falls_due	موعد نسبی	موعد + نسبی (relative): counted from another day	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.by_role	برای نقشِ	نقش (naqsh: a figure, a part played)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:clause.over	برای بخشِ	بخش (bakhsh: a portion)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:settlement.clause	کدام بند	بند (a clause): which clause it settles	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:settlement.occurrence	کدام بار	بار (bār: a time, a load): which occurrence	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:settlement.amount	مبلغ تسویه	مبلغ (an amount) + تسویه (settling)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
+forms:settlement.note	توضیح	و-ض-ح (to be clear): an explanation	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
