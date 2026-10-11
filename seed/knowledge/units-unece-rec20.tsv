@@ -1,0 +1,187 @@
+code	unit	in	level	back	vacant	why
+23	g/cm3					
+28	kg/m2					
+2A	rad/s					
+2N	dB					
+2P	kBy					
+2Q	kBq					
+2Z	mV					
+3B	MJ					
+4K	mA					
+4L	MBy					
+4N	MBq					
+4O	uF					
+4P					universal	a surface tension: the law writes N/m as a linear stiffness, and holds no kind of surface tension yet
+4T	pF					
+59	[ppm]					
+61	[ppb]					
+81	H					
+A24	cd/m2					
+A76	Gal					
+A86	GHz					
+A91	gon					
+A95	Gy					
+A99	bit					
+AD	By					
+AMH	A.h					
+AMP	A					
+ANN		gregorian-civil	year			a year of the calendar, counted in its cells, never Recommendation 20's Julian year of 365.25 days (the law's `a_j`), which no calendar year is
+ATM	atm					
+B10	bit/s					
+B11	J/(kg.K)					
+B31	kg.m/s					
+B32	kg.m2					
+B37	kgf					
+B47	kN					
+B49	kOhm					
+B61	lm/W					
+B75	MOhm					
+B80	Gbit/s					
+B84	uA					
+B90	uH					
+BAR	bar					
+BHP	[HP]					brake horsepower: the imperial horsepower (550 foot pound-force a second, UCUM `[HP]`) read at an engine's shaft
+BQL	Bq					
+C13	mGy					
+C14	mH					
+C18	mmol					
+C26	ms					
+C27	mS					
+C28	mSv					
+C29	mT					
+C31	mW					
+C34	mol					
+C38	mol/L					
+C41	nF					
+C61	Ohm.m					
+C62	{item}			true		on an invoice, one of what is sold: a count of things, which the law writes in `{item}`, keeping `1` for a ratio
+C69	phon					
+C74	kbit/s					
+C78	[lbf_av]					
+C81	rad					
+C94	/min					a frequency per minute (UCUM `/min`); a turn counted per minute is RPM's
+CDL	cd					
+CEL		celsius-scale				a temperature read in degrees Celsius, a position on its scale (`C:<count>`)
+CMT	cm					
+COU	C					
+D13	Sv					
+D19	m2.K/W					
+D27	sr					
+D33	T					
+D35	cal					the thermochemical calorie, 4.184 joules, which UCUM's `cal` is
+D44	V.A{reactive}					
+D46	V.A					
+D50	V/m					
+D53	W/(m.K)					
+D54	W/m2					
+D55	W/(m2.K)					
+D61	'					
+D62	''					
+DAY		gregorian-civil	day			a day on an invoice is a day of the calendar (a day's hire), counted in its cells, never Recommendation 20's 86 400 seconds
+DBM	dBm					
+DBW	dB[W]					
+DD	deg					
+DZN						a dozen: twelve of what is counted. The law writes a count in `{item}` and has no unit of twelve, so read as twelve items it would be written back as C62, never as DZN
+E09	mA.h					
+E14						the international-table kilocalorie, 4186.8 joules: the law's `kcal` is the thermochemical one, K53
+E20	Mbit/s					
+E34	GBy					
+E35	TBy					
+E36	PBy					
+E37	{px}					
+E61	TiBy					
+E62	GiBy					
+E63	MiBy					
+E64	KiBy					
+E93	kg/h					
+E96	deg/s					
+EA	{item}					each: a count of things, read as C62 is
+FAH		fahrenheit-scale				a temperature read in degrees Fahrenheit, a position on its scale (`F:<count>`)
+FAR	F					
+FH	umol					
+FOT	[ft_i]					
+G55	mL/h					
+GL						a gram per litre, which Recommendation 20 files under density: the law's g/L is a mass concentration (a substance in a solution), so read as one a density would change its kind; a density is crossed in KMQ and 23
+GRM	g					
+H51	decibel-per-kilometre					
+H52	decibel-per-metre					
+H78	cm[H2O]					
+H87	{item}					a piece: a count of things, read as C62 is
+HAR	har					
+HN	mm[Hg]					
+HTZ	Hz					
+HUR	h					
+INH	[in_i]					
+J2					universal	a specific energy (energy per mass): the law writes J/kg as a gravitational potential, and holds no kind of specific energy yet
+JE	J/K					
+JOU	J					
+K40	[g]					
+K53	kcal					the thermochemical kilocalorie, 4184 joules, which UCUM's `kcal` is
+KAT	kat					
+KEL		kelvin-scale				a temperature read, a position on the kelvin scale (`K:<count>`); a temperature difference is a quantity, which the law writes in `K`
+KGM	kg					
+KGS	kg/s					
+KHZ	kHz					
+KJO	kJ					
+KL	kg/m					
+KMH	km/h					
+KMK	km2					
+KMQ	kg/m3					
+KMT	km					
+KPA	kPa					
+KVA	kV.A					
+KVT	kV					
+KWH	kW.h					
+KWT	kW					
+L2	L/min					
+LBR	[lb_av]					
+LTR	L					
+LUM	lm					
+LUX	lx					
+M33	mmol/L					
+M46	{rev}/min					a turn counted per minute, which Recommendation 20 files under angular velocity: the law counts turns per minute as a rotational speed, and writes RPM back
+MAW	MW					
+MBR	mbar					
+MC	ug					
+MGM	mg					
+MHZ	MHz					
+MIN	min					
+MLT	mL					
+MMT	mm					
+MON		gregorian-civil	month			a month on an invoice is a month of the calendar (a month's rent), counted in its cells, never Recommendation 20's mean month of 2 629 800 seconds, which no month is
+MQH	m3/h					
+MQS	m3/s					
+MSK	m/s2					
+MTK	m2					
+MTQ	m3					
+MTR	m					
+MTS	m/s					
+N23	m[H2O]					
+NAR	{item}					a number of articles: a count of things, read as C62 is
+NEW	N					
+NIU	[iU]					a number of international units, each fixed by its reference preparation
+NU	N.m					
+NX	[ppth]					
+OHM	Ohm					
+P1	%					
+P93	By/s					
+P94	kBy/s					
+P95	MBy/s					
+PAL	Pa					
+PR	{pair}					
+PS	[psi]					
+Q30	[pH]					
+QAN						a quarter of a year: three of a calendar's months, and no calendar of the law has quarters as a level
+RPM	{rev}/min			true		
+RPS	{rev}/s					
+SEC	s					
+SET	{set}					
+SIE	S					
+SMI	[mi_i]					
+TNE	t					
+VLT	V					
+WEB	Wb					
+WEE		iso-week	week			a week of the calendar, counted in ISO 8601's weeks, never Recommendation 20's 604 800 seconds
+WHR	W.h					
+WTT	W					
+ZZ						a unit its parties agreed between themselves: read in their agreement, never in a table

@@ -25,6 +25,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import shutil
 import sys
 
@@ -85,7 +86,52 @@ def ilo_isco_08_xlsx(data):
     return out
 
 
-READERS = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx}
+def _head(cells):
+    """A header row's cells as words: a cell's line breaks and the spreadsheet's escaped carriage returns are spaces."""
+    return [' '.join(str(c).replace('_x000D_', ' ').split()) if c is not None else '' for c in cells]
+
+
+# UN/CEFACT's marks in a code's `Status`, as Recommendation 20 has used them: `X` a code marked deleted, `D` deprecated.
+# The others (an entry added, renamed, changed) say what moved in the revision, not whether the code stands.
+REC20_STATUS = {'X': 'deleted', 'D': 'deprecated'}
+
+
+def unece_rec20_xlsx(data):
+    """UN/CEFACT's Recommendation No. 20 (`rec20_Rev<N>e-<year>.xlsx`): its sheet of every code, one row a code
+    (Annexes II and III) — `Status`, `Common Code`, `Name`, `Symbol` — read into code, status, name_en and symbol, the
+    status `deleted` (`X`) or `deprecated` (`D`), another mark as written, and none where the code stands. Annex I, which
+    lists a code once for each quantity it measures (its `Quantity`), is not that sheet. The descriptions, levels and
+    conversion factors the file also holds are UNECE's text, and are not read."""
+    wb = _openpyxl().load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+    want = ('Status', 'Common Code', 'Name', 'Symbol')
+    sheets = []
+    for sheet in wb.worksheets:
+        rows = sheet.iter_rows(values_only=True)
+        head = _head(next(rows, ()))
+        if all(w in head for w in want) and 'Quantity' not in head:
+            sheets.append((sheet, rows, head))
+    if len(sheets) != 1:
+        raise Refused(f"{len(sheets)} sheets of UNECE's file list every code once with the columns read here "
+                      f"({', '.join(want)}), and one is read: its sheets are {', '.join(s.title for s in wb.worksheets)}")
+    sheet, rows, head = sheets[0]
+    at = {w: head.index(w) for w in want}
+    out, seen = [], set()
+    for r in rows:
+        if not r or all(c is None for c in r):
+            continue
+        status, code, name, symbol = (' '.join(str(r[at[w]]).split()) if at[w] < len(r) and r[at[w]] is not None
+                                      else '' for w in want)
+        if not re.fullmatch(r'[0-9A-Z]{2,3}', code) or not name or code in seen:
+            raise Refused(f"a row of UNECE's file is no code read here: code {code!r}, name {name[:60]!r}"
+                          + (" (a second row of it)" if code in seen else ''))
+        seen.add(code)
+        out.append({'code': code, 'status': REC20_STATUS.get(status, status), 'name_en': name, 'symbol': symbol})
+    if not out:
+        raise Refused("UNECE's file holds no code")
+    return out
+
+
+READERS = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx}
 
 
 # ------------------------------------------------------------------------------------------------ the law's rows
@@ -173,6 +219,28 @@ def fetched(scheme):
     return sorted(out, reverse=True)
 
 
+def crossed(scheme, rows):
+    """[line]: what the provider's rows, read, say of the scheme's crossing into the law's units and kinds (`units` on its
+    row): how many of its codes cross (through every axis, where it names axes), each value on an axis no row names,
+    and each crossed code it has not, or marks deprecated or deleted — a revision that moved what the law's crossing
+    names. Nothing for a scheme with no crossing."""
+    import units as dmunits
+    try:
+        n, missing, marked, unknown = dmunits.against(scheme, rows)
+    except ValueError:
+        return []
+    out = [f"fetch: {n} of its {len(rows)} codes cross into the law's units and kinds (python3 bin/units.py --codes "
+           f"{scheme})"]
+    for axis, values in unknown.items():
+        out.append(f"fetch: on its axis {axis}, values no row of the law's crossing names: {', '.join(values)}")
+    if missing:
+        out.append(f"fetch: crossed by the law, and not in this copy: {', '.join(missing)}")
+    if marked:
+        out.append(f"fetch: crossed by the law, and marked by the provider: "
+                   f"{', '.join(f'{c} ({s})' for c, s in marked)}")
+    return out
+
+
 def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         print(__doc__)
@@ -192,7 +260,11 @@ def main(argv):
                 data, source = fh.read(), os.path.abspath(rest[1])
         elif not rest:
             source = str(row['fetch'].get('from'))
-            data = download(source)
+            try:
+                data = download(source)
+            except Refused as e:
+                raise Refused(f"{e} — download it from there by hand, as its provider serves a person, and read that "
+                              f"copy: python3 bin/fetch.py {scheme} --from <file>") from None
         else:
             print(__doc__)
             return 2
@@ -201,6 +273,8 @@ def main(argv):
         print(f"fetch: NOT FETCHED: {e}", file=sys.stderr)
         return 1
     print(f"fetch: {scheme}, {len(rows)} rows, kept in {d}")
+    for line in crossed(scheme, rows):
+        print(line)
     print(f"for the save's entry:\n  - read: {scheme} from {source}, sha-256 {sha}, {len(rows)} rows")
     return 0
 

@@ -35,6 +35,12 @@ Third-party data, distributed alongside daftar as separate works, each under its
     CC BY 4.0 (dwc.tdwg.org/terms). The pairings and notes are daftar's own, and the file is CC BY 4.0
     (LICENSES/CC-BY-4.0.txt).
 
+  seed/knowledge/units-unece-rec20.tsv
+    Cites the codes of UN/CEFACT's Recommendation No. 20 (codes for units of measure used in international trade),
+    © United Nations Economic Commission for Europe; no name, description or definition of it is copied. The pairings
+    with the law's units and the reasons are daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt).
+    Recommendation No. 20's own table is not distributed: each machine fetches it from UNECE (bin/fetch.py).
+
   seed/knowledge/isced-f-2013.tsv
     Source: UNESCO Institute for Statistics, ISCED Fields of Education and Training 2013 (ISCED-F 2013).
     Licensed under CC BY-SA 3.0 IGO (LICENSES/CC-BY-SA-3.0-IGO.txt); its share-alike applies to that file only.
@@ -52,6 +58,7 @@ A font, distributed alongside daftar's widgets as a separate work:
     SIL Open Font License 1.1 (assets/view/lib/widgets/Vazirmatn-OFL.txt, LICENSES/OFL-1.1.txt), served with the widgets
     unchanged.
 
-daftar's own curated tables (seed/knowledge/technology.tsv, crosswalk-isco-08-isced-f-2013.tsv) are CC BY 4.0.
+daftar's own curated tables (seed/knowledge/technology.tsv, crosswalk-isco-08-isced-f-2013.tsv, and each
+seed/knowledge/units-<scheme>.tsv, a standard's codes crossed into the law's units) are CC BY 4.0.
 daftar's own tables of facts (seed/knowledge/substances.tsv, mechanisms.yaml, coefficients.yaml) and the FHIR R5
 crosswalk (seed/knowledge/crosswalk-fhir-r5-observation.tsv; FHIR is published under CC0) are CC0 1.0.
