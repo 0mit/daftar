@@ -5187,3 +5187,15 @@ feet and chains, each defined by its own bar or ratio, do not, and say so. A deg
 with its hemisphere's letter, is a notation of a degree, read by its parts, never one count. EPSG's year is the annus
 the law already holds (31 556 925.445 s), so a rate of plate motion per EPSG's year is per annus, and is not the law's
 millimetre per Julian year. The dataset is downloaded by a person who signs in; it is fetched, never shipped.
+
+## core/law/registries.yaml: knowledge_schemes[gs1-ai]
+
+A BARCODE'S MEASURE IS READ WITH ITS DECIMAL POINT (2026-10-11). A GS1 element string writes a measure as six digits
+and puts its decimal point in the application identifier itself: (3103)001250 is 1.250 kg, (3102)000125 is 1.25 kg.
+So a family of identifiers crosses as one row, `310n`, with `decimals: n`, and the reading puts the point where the
+AI's last digit says; written back, the law's 1.250 kg chooses its AI by the places it was written with, and is the
+same element string again. A count is what was written, never rounded: 1.250 kg stays three places. Several families
+measure in one unit and differ in what they measure — a net or a gross weight, a parcel's length, width or height —
+which the law says in the statement that holds the value, never in its unit; the law's value is written back as the
+first of them. GS1's ounce (357n) may be a weight or a volume, so it is not crossed; an amount whose currency each value
+names carries its unit with the value, and no crossing fixes it.

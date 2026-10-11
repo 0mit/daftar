@@ -61,6 +61,12 @@ Third-party data, distributed alongside daftar as separate works, each under its
     pairings with the law's units and the reasons are daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt).
     The dataset itself is not distributed: each machine's person fetches it (bin/fetch.py).
 
+  seed/knowledge/units-gs1-ai.tsv
+    Cites the application identifiers of GS1's Barcode Syntax Dictionary, © GS1 AISBL, published under the Apache
+    License 2.0; nothing of it is copied beyond the identifiers. The pairings with the law's units and the reasons are
+    daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt). The dictionary itself is not distributed: each
+    machine fetches it (bin/fetch.py).
+
   seed/knowledge/isced-f-2013.tsv
     Source: UNESCO Institute for Statistics, ISCED Fields of Education and Training 2013 (ISCED-F 2013).
     Licensed under CC BY-SA 3.0 IGO (LICENSES/CC-BY-SA-3.0-IGO.txt); its share-alike applies to that file only.

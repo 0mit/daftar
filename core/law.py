@@ -785,8 +785,9 @@ class Law:
                     elif 'level' not in r and dmunits.position_tag(srow) is None:
                         out.append((at, f"{r['in']} writes no position from a count, so no code is its unit of "
                                         f"position: name one of its levels"))
-                if 'decimals' in r and (r['decimals'] != 'n' or 'unit' not in r or not code.endswith('n')):
-                    out.append((at, "`decimals: n` is a unit's family, its code written with `n` for its last digit"))
+                if 'decimals' in r and (r['decimals'] != 'n' or (t and 'unit' not in t) or not code.endswith('n')):
+                    out.append((at, "`decimals: n` is a family's, its code written with `n` for its last digit, crossing "
+                                    "to a unit or to nothing"))
                 if r.get('back') not in (None, TRUE):
                     out.append((at, "`back` is written `true`, or not at all"))
                 if t:

@@ -80,7 +80,7 @@ units = LAW0.units
 check(f"units are UCUM's, the law's English name attached: each of the law's {len(units)} units is a row "
       f"(kg is kilogram, GiBy gibibyte, {{item}} item, Ohm ohm), and those UCUM cannot write say why — the two "
       f"attenuations (§22), the radio's dBm, the phon and the toman",
-      len(units) == 204 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
+      len(units) == 213 and units['kg']['name'] == 'kilogram' and units['GiBy']['name'] == 'gibibyte'
       and units['{item}']['name'] == 'item' and units['Ohm']['name'] == 'ohm'
       and [u for u, r in units.items() if r.get('ucum') == 'false']
       == ['decibel-per-metre', 'decibel-per-kilometre', 'dBm', 'phon', 'IRT']
