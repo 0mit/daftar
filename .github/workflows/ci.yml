@@ -134,6 +134,9 @@ jobs:
       - name: "bidi: the view's widgets and renderers in a browser, read as they land on the screen, in a right-to-left and a left-to-right page"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/bidi.py
+      - name: "view_pages: a garden's handplace is its pages — several page beans each checked as its own, listed in the order the garden places them, and a table of a reading drawn with no module"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_pages.py
       - name: "view_forms: a form's value on a sheet drawn by its entries — a clause's day, repetition, notice and state, a payment's settlement — edited by its widgets and written through the gate"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_forms.py

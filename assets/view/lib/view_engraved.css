@@ -46,3 +46,8 @@
 .eg-remove{font-size:.85em;color:var(--muted,#5a6a7b)}
 .eg-dialog{max-width:min(860px,96vw);max-height:90vh;overflow:auto;border:1px solid var(--line,#cfd8e2);border-radius:12px;background:var(--panel,#fff);color:var(--fg,#17202b)}
 .eg-dialog::backdrop{background:rgba(0,0,0,.35)}
+.eg-table-wrap{overflow-x:auto}
+.eg-table{border-collapse:collapse;width:100%;font-size:.95em}
+.eg-table th,.eg-table td{padding:6px 10px;border-block-end:1px solid var(--line,#cfd8e2);text-align:start;vertical-align:top}
+.eg-table thead th{color:var(--muted,#5a6a7b);font-weight:600;font-size:.88em}
+.eg-table tbody th{font-weight:600}

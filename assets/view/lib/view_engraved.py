@@ -8,6 +8,9 @@ never stored, and handed to its renderer (`view_queue.js`, `view_timeline.js`, `
                               occurrence of its repetition within the drawing's `span`, walked by bin/stale.py
     flows(v, may)             who owes whom (bin/ledger.py's reading, netted per currency), or what went between gardens
     sheet(bean, may, held)    one being: its header, its statements verb by verb with their dependents, its held values
+    table(v, may)             a table of a reading on a page that names no drawing module: one line per member the
+                              reader may read, each cell the values at its column's path as they are, each line opening
+                              its being's sheet
     data(key, v, may, reader) the reading a drawing of the page draws, by its archetype
 
 ONE QUESTION SCOPES EACH. `may(act, bean, positions=None)` answers whether the reader may read (or write) a being, or
@@ -36,7 +39,11 @@ SPAN_DAYS = 42                       # a timeline's span where the drawing state
 
 
 def engraved(v):
-    return isinstance(v, dict) and v.get('archetype') in ENGRAVED
+    """Whether a drawing is engraved from a reading: a queue, a timeline, flows or a sheet always; a table of a reading
+    where its page names no drawing module — its lines are the reading's, and nothing is drawn for it but them."""
+    if not isinstance(v, dict):
+        return False
+    return v.get('archetype') in ENGRAVED or (v.get('archetype') == 'table' and not vm.page_view().get('drawings'))
 
 
 def _listed(x):
@@ -227,6 +234,46 @@ def crossings(may):
     return {'nodes_are': 'gardens', 'nodes': list(nodes.values()),
             'arrows': [{'from': a, 'to': b, 'what': sorted(w)} for (a, b), w in sorted(arrows.items())],
             'partial': False}
+
+
+# --------------------------------------------------------------------------------------------------------------- table
+def table(v, may):
+    """A table of a reading with no module to draw it: one line per member of its `selection` the reader may read —
+    the whole being, or every part its columns read, as a grant's `cover` may open parts alone — each cell the values
+    at its column's path AS THEY ARE (a day, an amount, a being, text; a step a move reached by its walk's own words),
+    for the line's widgets to show in the reader's calendar and digits, and each line opening its being's sheet. A table of a series is drawn by its module."""
+    import reckon as dmreckon
+    cols = [{'label': str(c.get('label') or c.get('path')), 'path': str(c.get('path'))}
+            for c in v.get('columns') or [] if isinstance(c, dict) and c.get('path')]
+    reads = sorted({re.split(r"[.\[>]", c['path'])[0] for c in cols if c['path'] not in ('at', 'position')})
+    out = {'columns': cols, 'rows': [], 'notes': []}
+    try:
+        members = vm.members(v['selection']) if v.get('selection') else []
+    except Exception as e:                      # a reading the gate passed and this cannot read: said
+        members, out['notes'] = [], [f"the reading {v.get('selection')} is not read: {e}"]
+    for m in members:
+        if _bean(m) is None or not (may('read', m) or (reads and may('read', m, reads))):
+            continue
+        out['rows'].append({'bean': m, 'title': title_of(m),
+                            'cells': [_steps_said(dmreckon.path_values(vm.fm(m), c['path'], root=vm.ROOT)) for c in cols]})
+    return out
+
+
+_STEP = re.compile(r'([a-z0-9][a-z0-9-]*)#([A-Za-z0-9][A-Za-z0-9_.-]*)')
+
+
+def _steps_said(v):
+    """A cell's values, a step of a walk (`<walk>#<step>`, where a move reached) said by the walk's own words for it,
+    as the walk writes them; every other value as it is."""
+    if isinstance(v, list):
+        return [_steps_said(x) for x in v]
+    m = _STEP.fullmatch(v) if isinstance(v, str) else None
+    if m:
+        steps = (vm.fm(m.group(1), 'mappings') or vm.fm(m.group(1)) or {}).get('steps') or []
+        st = next((s for s in steps if isinstance(s, dict) and s.get('id') == m.group(2)), {})
+        if st.get('do'):
+            return str(st['do'])
+    return v
 
 
 # --------------------------------------------------------------------------------------------------------------- sheet
@@ -534,6 +581,8 @@ def data(key, v, may, reader):
         return timeline(v, may)
     if a == 'flows':
         return flows(v, may)
+    if a == 'table':
+        return table(v, may)
     kk, target, _f = vm.draws_of(v)
     return {'bean': target if kk == 'bean' and may('read', target) else None}
 
@@ -612,6 +661,8 @@ def page(may, reader, held=None, keep=None):
         elif v.get('archetype') == 'flows':
             show |= {n['id'] for n in d['nodes'] if _bean(n['id']) is not None} | \
                     {a['bean'] for a in d.get('agreements') or []}
+        elif v.get('archetype') == 'table':
+            show |= {r['bean'] for r in d['rows']}
         elif d.get('bean'):
             show.add(d['bean'])
         for kind in _listed(v.get('new')):
