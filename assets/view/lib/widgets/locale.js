@@ -150,6 +150,7 @@ export const SAID = {
   'sheet-refused': {en: 'Refused — nothing was kept.', fa: 'رد شد — چیزی نگه داشته نشد.'},
   'sheet-new': {en: 'New', fa: 'تازه'},
   'sheet-unknown': {en: 'not yet known', fa: 'هنوز معلوم نیست'},
+  'sheet-contact': {en: 'How to reach them', fa: 'نشانی و تماس'},
   'sheet-required': {en: 'required', fa: 'لازم'},
   'sheet-copy': {en: 'A copy of the page, read only: a being is changed where its garden is served.',
                  fa: 'نسخه‌ای فقط‌خواندنی از صفحه: هر چیز همان‌جا تغییر می‌کند که باغش سرو می‌شود.'},

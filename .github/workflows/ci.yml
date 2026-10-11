@@ -134,6 +134,9 @@ jobs:
       - name: "bidi: the view's widgets and renderers in a browser, read as they land on the screen, in a right-to-left and a left-to-right page"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/bidi.py
+      - name: "view_held_names: a person kept off git by name shown by it to a reader who may read them, on the host that keeps it — and by their opaque id to every other reader, host and page of one file"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_held_names.py
       - name: "catalogue: every part of the language, how the parts relate and what each is held to — read from the sources each time, the same bytes twice, and in a garden its copy of the language alone"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/catalogue.py

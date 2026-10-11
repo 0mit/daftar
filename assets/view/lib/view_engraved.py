@@ -497,7 +497,33 @@ def settings():
                            if str(r.get('digits') or '').isdigit()]}
 
 
-def page(may, reader, held=None, keep=None):
+_CONTACT = re.compile(r'root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32}')
+
+
+def contact_of(bid):
+    """(pointer, record) of the contact a person kept off git under an opaque id holds here — what `bin/held.py person`
+    writes: a record `{bean, term: person, key: contact, entry: {name, …}}` whose pointer the person's own bean names in
+    its words — or (None, None) where this host's stores hold none of theirs (another machine's, erased, or none)."""
+    b = _bean(bid)
+    if b is None or b.kind != 'person' or not b.path:
+        return None, None
+    import held as dmheld
+    try:
+        with open(b.path, encoding='utf-8') as fh:
+            text = fh.read()
+    except OSError:
+        return None, None
+    for pointer in dict.fromkeys(_CONTACT.findall(text)):
+        try:
+            rec = dmheld.resolve(pointer, root=vm.ROOT)
+        except (dmheld.NotHere, dmheld.Erased, ValueError, OSError):
+            continue
+        if isinstance(rec, dict) and rec.get('bean') == bid and rec.get('term') == 'person' and rec.get('key') == 'contact':
+            return pointer, rec
+    return None, None
+
+
+def page(may, reader, held=None, keep=None, contact=None):
     """For one reader: each engraved drawing's reading (of those `keep` names, where it names some: the drawings the
     reader is sent), the sheet of every being one of them shows, an empty sheet of each kind a drawing makes, the beings
     a role may name, and the widgets' settings."""
@@ -520,12 +546,27 @@ def page(may, reader, held=None, keep=None):
         for kind in _listed(v.get('new')):
             if isinstance(kind, str) and kind in vm.CORE.L.kinds:
                 out['blank'][kind] = blank(kind, may)
-    for bid in sorted(show):
+    # A PERSON KEPT OFF GIT BY NAME (`bin/held.py person`): to a reader who may read them, the host that keeps their
+    # contact sends it — their name as how the page calls them, their contact on their sheet, marked as kept here; every
+    # other host and reader has their opaque id, as the ledger does. A page of one file (`contact` None) sends none.
+    named = {}
+    if contact:
+        for bid, b in sorted(vm.CORE.G.beans.items()):
+            if b.kind == 'person' and not b.unread and may('read', bid):
+                c = contact(bid)
+                if isinstance(c, dict) and str(c.get('name') or '').strip():
+                    named[bid] = c
+    for bid in sorted(show | set(named)):
         s = sheet(bid, may, held)
         if s is not None:
+            if bid in named:
+                s['contact'] = {k: str(x) for k, x in named[bid].items() if isinstance(x, (str, int))}
+                s['title'] = str(named[bid]['name'])
             out['sheets'][bid] = s
     # THE BEINGS A ROLE MAY NAME: every bean the reader may read, by its title — what a sheet's picker offers
-    out['beings'] = [{'id': bid, 'title': title_of(bid), 'kind': b.kind} for bid, b in sorted(vm.CORE.G.beans.items())
+    out['beings'] = [{'id': bid, 'title': str(named[bid]['name']) if bid in named else title_of(bid), 'kind': b.kind,
+                      **({'held_name': True} if bid in named else {})}
+                     for bid, b in sorted(vm.CORE.G.beans.items())
                      if not b.unread and os.path.basename(os.path.dirname(b.path or '')) == 'beans' and may('read', bid)]
     return out
 
@@ -564,7 +605,10 @@ def scoped(host, user, keep=None):
             return None
         e = rec.get('entry') if isinstance(rec, dict) and rec.get('key') == sid else None
         return {k: x for k, x in e.items() if k != 'while'} if isinstance(e, dict) else None
-    p = page(may, u.get('bean'), held, keep)
+    def contact(bid):
+        _pointer, rec = contact_of(bid)
+        return rec.get('entry') if isinstance(rec, dict) and isinstance(rec.get('entry'), dict) else None
+    p = page(may, u.get('bean'), held, keep, contact)
     g = p['settings']['garden']
     for k in ('lang', 'calendar'):
         if isinstance(u.get(k), str) and u[k]:

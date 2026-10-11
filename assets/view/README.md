@@ -185,6 +185,12 @@ the word it is held on (`while`) stands; every other page says where it is kept.
 sealed in the same Save; the commit keeps only the pointer. `view check` refuses a public page that would show one, and
 the offline report carries none.
 
+**A person kept off git by name** (`bin/held.py person`: an opaque `p-<8 hex>` in git, their name and contacts held on
+a machine's store) is called by their name by the host whose store keeps it, to a reader who may read them: the title
+of their sheet and of every role that names them, and their contact on their sheet, marked as held on that machine
+(`view_engraved.contact_of`). Every other reader, every other host and the page of one file have their opaque id, as
+the ledger does; once they are erased from the store, so does the host that kept them.
+
 **Where they are drawn.** The renderers — `lib/view_engraved.js`, `view_queue.js`, `view_timeline.js`,
 `view_flows.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`
 (`h```, `mount`; a position a page computes is a data attribute `mount` sets, never a style attribute) with every value
