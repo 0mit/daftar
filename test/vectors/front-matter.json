@@ -1,0 +1,107 @@
+{
+ "about": "The bean splitter's vectors: bin/parse.py split_front_matter, which a port elsewhere is held to as well. Each case is a document's text and how it splits: its front matter (null where it is not fenced) and its body. Run by test/core_read.py.",
+ "cases": [
+  {
+   "name": "a bean: the front matter keeps the line break after the first fence, the body the one after the second",
+   "text": "---\nbean: a\n---\nBody.\n",
+   "front": "\nbean: a\n",
+   "body": "\nBody.\n"
+  },
+  {
+   "name": "a byte-order mark before the first fence is let go",
+   "text": "\ufeff---\nbean: a\n---\nBody.\n",
+   "front": "\nbean: a\n",
+   "body": "\nBody.\n"
+  },
+  {
+   "name": "line ends CR LF: a fence takes the CR before its LF, and the lines between keep theirs",
+   "text": "---\r\nbean: a\r\n---\r\nBody.\r\n",
+   "front": "\nbean: a\r\n",
+   "body": "\nBody.\r\n"
+  },
+  {
+   "name": "a rule in the body is the body's: only the first two fences split",
+   "text": "---\nbean: a\n---\nAbove.\n---\nBelow.\n",
+   "front": "\nbean: a\n",
+   "body": "\nAbove.\n---\nBelow.\n"
+  },
+  {
+   "name": "no fence: not fenced, the text whole as the body",
+   "text": "bean: a\nBody.\n",
+   "front": null,
+   "body": "bean: a\nBody.\n"
+  },
+  {
+   "name": "a fence may end in spaces or tabs",
+   "text": "--- \nbean: a\n---\t \nBody.\n",
+   "front": "\nbean: a\n",
+   "body": "\nBody.\n"
+  },
+  {
+   "name": "an opening fence and no closing one: not fenced",
+   "text": "---\nbean: a\nBody.\n",
+   "front": null,
+   "body": "---\nbean: a\nBody.\n"
+  },
+  {
+   "name": "the first fence is the first line, or the document is not fenced",
+   "text": "\n---\nbean: a\n---\nBody.\n",
+   "front": null,
+   "body": "\n---\nbean: a\n---\nBody.\n"
+  },
+  {
+   "name": "four dashes are no fence",
+   "text": "----\nbean: a\n----\nBody.\n",
+   "front": null,
+   "body": "----\nbean: a\n----\nBody.\n"
+  },
+  {
+   "name": "a fence does not begin with a space",
+   "text": " ---\nbean: a\n---\nBody.\n",
+   "front": null,
+   "body": " ---\nbean: a\n---\nBody.\n"
+  },
+  {
+   "name": "a fence is the whole line: three dashes and a word are text",
+   "text": "---\ntitle: a\n--- b\n---\nBody.\n",
+   "front": "\ntitle: a\n--- b\n",
+   "body": "\nBody.\n"
+  },
+  {
+   "name": "an empty front matter",
+   "text": "---\n---\nBody.\n",
+   "front": "\n",
+   "body": "\nBody.\n"
+  },
+  {
+   "name": "the closing fence at the very end: an empty body",
+   "text": "---\nbean: a\n---",
+   "front": "\nbean: a\n",
+   "body": ""
+  },
+  {
+   "name": "a byte-order mark after the start is text, kept where it is",
+   "text": "---\n\ufeffbean: a\n---\nBody.\n",
+   "front": "\n\ufeffbean: a\n",
+   "body": "\nBody.\n"
+  },
+  {
+   "name": "a line ended by CR alone ends no line: not fenced",
+   "text": "---\rbean: a\r---\rBody.\r",
+   "front": null,
+   "body": "---\rbean: a\r---\rBody.\r"
+  },
+  {
+   "name": "a line separator (U+2028) ends no line: not fenced",
+   "text": "---\u2028bean: a\u2028---\u2028Body.",
+   "front": null,
+   "body": "---\u2028bean: a\u2028---\u2028Body."
+  },
+  {
+   "name": "a fence after a line separator is no fence: only LF begins a line",
+   "text": "---\nbean: a\u2028---\n---\nBody.\n",
+   "front": "\nbean: a\u2028---\n",
+   "body": "\nBody.\n"
+  }
+ ]
+}
