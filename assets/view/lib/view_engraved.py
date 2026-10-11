@@ -162,16 +162,19 @@ def timeline(v, may, on=None):
             continue
         t = title_of(bid)
         times = {}                              # a statement's own time of day, by its id: what a repetition of it keeps
+        sessions = {}                           # the days a statement's own session is on, by its id
         for _i, verb, r in b.items:
             # A HAPPENING'S TIME: its `be` at a moment, or an attendance at its own moment (`attend … at`: a session of a
             # series, a sitting moved to another day) — each placed once, at the day of its own calendar
-            here = verb == 'be' and r.get('by') in ('self', bid) or verb == 'attend' and r.get('of') in ('self', bid)
-            if not (here and isinstance(r, dict) and 'held' not in r):
+            if not isinstance(r, dict) or 'held' in r:
+                continue
+            if not (verb == 'be' and r.get('by') in ('self', bid) or verb == 'attend' and r.get('of') in ('self', bid)):
                 continue
             for x in _listed(r.get('at')):
                 m = _moment(x)
                 if m and isinstance(r.get('id'), str):
                     times.setdefault(r['id'], m[1])
+                    sessions.setdefault(r['id'], set()).add(m[0])
                 if m and lo <= datetime.date.fromisoformat(m[0]).toordinal() <= hi and \
                         not any(e['bean'] == bid and e['day'] == m[0] and e['time'] == m[1] for e in events):
                     events.append({'day': m[0], 'time': m[1], 'at': x, 'bean': bid, 'title': t, 'kind': 'happening',
@@ -199,9 +202,11 @@ def timeline(v, may, on=None):
                 for i, n in enumerate(dmstale.occurrences(first, rec), 1):
                     if n > hi:
                         break
-                    if n >= lo and not any(x['bean'] == bid and x['day'] == datetime.date.fromordinal(n).isoformat()
-                                           and x['kind'] == 'happening' for x in events):   # the session itself is there
-                        events.append(dict(base, day=datetime.date.fromordinal(n).isoformat(), time=base['at_time'], index=i,
+                    day = datetime.date.fromordinal(n).isoformat()
+                    # a series' occurrence on the day of its own statement's session is that session, drawn already; any
+                    # other clause is drawn whatever else its being has that day (a rent due on the day of a meeting)
+                    if n >= lo and not (of_statement and day in sessions.get(e.get('what'), ())):
+                        events.append(dict(base, day=day, time=base['at_time'], index=i,
                                            times=None if rec.get('times') is None else str(rec.get('times'))))
             except dmstale.Unreckoned as why:
                 notes.append(f"{bid} {cid}: its repetition is not walked here: {why}")

@@ -13,7 +13,9 @@ repetition a clause over that attendance; a page of a queue and a timeline. Then
                 drawn in Persian, the case's line reads «در گام «…» منتظر است» and the clause's day is in the Persian
                 calendar, and drawn in English, "waits at “…”" — and no line shows bin/leads.py's English sentence
   the timeline  the class's first session is placed at its own moment; each later session at that moment's hour, and
-                named by its series, never by the id of the attendance its clause repeats
+                named by its series, never by the id of the attendance its clause repeats; and a lease whose meeting
+                falls on the day its monthly rent is due draws both: a session of a series is left out only on the day
+                of its own statement's session, never because its being has some other happening that day
 
 Run: python3 test/view_said.py   (0 = green)
 """
@@ -58,6 +60,8 @@ REL, G = os.path.join(T, 'release'), os.path.join(T, 'garden-sam')
 TODAY = datetime.date.today()
 # the class: its first session three days ago at 08:30, then each Tuesday and Sunday of an ISO week
 FIRST = TODAY - datetime.timedelta(days=3)
+# the lease: its rent due each month from a day soon (one every month has), and a meeting on that same day
+RENT = next(TODAY + datetime.timedelta(days=d) for d in range(2, 40) if (TODAY + datetime.timedelta(days=d)).day <= 28)
 WEEK = f"{FIRST.isocalendar()[0]}-W{FIRST.isocalendar()[1]:02d}-{FIRST.isocalendar()[2]}"
 STORY = ('purpose: "{p}", outcome: "{p}", stages: [{{label: Read, doer: the view}}, {{label: Draw, doer: the view}}, '
          '{{label: Open, doer: the reader}}], questions: [{{lens: orient, ask: "{p}"}}], blind: [{{what: "what nobody wrote down"}}]')
@@ -111,6 +115,19 @@ statements:
 ---
 A class.
 ''')
+    put('beans/lease-1.md', f'''---
+bean: lease-1
+kind: event
+title: "lease-1 — a room let by the month"
+summary: "a lease whose meeting falls on a rent day"
+statements:
+  - say:    {{ by: sam, at: now }}
+  - own:    {{ by: sam, of: self }}
+  - be:     {{ id: meeting, by: self, at: "{RENT.isoformat()}T10:00+03:00/{RENT.isoformat()}T11:00+03:00" }}
+  - can:    {{ id: rent, by: sam, of: "pay the month's rent", to: theone, clause: {{ due: "{RENT.isoformat()}", every: {{ of: time, in: gregorian-civil, each: month, at: "{RENT.day}" }}, amount: {{ count: "300", unit: XTS }} }} }}
+---
+A lease.
+''')
     put('beans/page.md', f'''---
 bean: page
 kind: service
@@ -128,7 +145,7 @@ statements:
 A page.
 ''')
     rc, out = run(PY, 'bin/save.py', 'sam', "RULE-CHANGE: a repair on its walk, a class, and a page", '--body', '- ratified_by: sam',
-                  '- action: wrote [[walk-repair]], [[repair-1]], [[class-yoga]] and [[page]]; VOCAB.md holds the kind of a walk')
+                  '- action: wrote [[walk-repair]], [[repair-1]], [[class-yoga]], [[lease-1]] and [[page]]; VOCAB.md holds the kind of a walk')
     check("the repair, the class and the page are saved through the core's gate", rc == 0 and '0 error(s)' in out, out[-1500:])
 
     code = ("import json, os, sys; sys.path[:0] = [os.path.join(%r, 'assets', 'view', 'lib'), os.path.join(%r, 'bin')]; "
@@ -154,6 +171,9 @@ A page.
     check("...each later session at that moment's hour, its words none (never the id `attends`), and none on the "
           "first session's own day twice", later and all(e.get('time') == '08:30' and not e.get('what') for e in later)
           and FIRST.isoformat() not in [e['day'] for e in later], later[:3])
+    lease = [(e['kind'], e.get('clause') or e.get('statement')) for e in ev if e.get('bean') == 'lease-1' and e.get('day') == RENT.isoformat()]
+    check("a lease's meeting and its monthly rent, due the same day, are both drawn on it", sorted(lease)
+          == [('due', 'rent'), ('happening', 'meeting')], [e for e in ev if e.get('bean') == 'lease-1'][:4])
 
     browser = next((b for b in ('chromium', 'chromium-browser', 'google-chrome', 'google-chrome-stable') if shutil.which(b)), None)
     DRIVE = """<script>
