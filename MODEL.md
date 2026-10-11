@@ -53,7 +53,7 @@ Every fact is one statement: a **verb** and its **roles**.
 | `to` | for whom, or towards what (*sampradāna*) |
 | `from` | the fixed point it departs from: a source, a giver, a parent (*apādāna*) |
 | `at` | the locus: a position in a frame, or the being a thing stands on, runs on or is kept at (*adhikaraṇa*) |
-| `as` | in what capacity, or as what: the name given, the job done, the way a thing stands (Aristotle's *qua*) |
+| `as` | in what capacity, or as what: the name given, the job done, the way a thing stands (Aristotle's ὡς; his ᾗ, *qua*, where it is the capacity a doer acts in) |
 
 - A filler is a **being** (a bean; `self`, the being this bean records; the crown; or `{ someone: <kind>, at: <a being
   or a place> }`, one nobody names), a **statement** (its `id`, or `<bean>#<id>` in another bean), a **position**, a

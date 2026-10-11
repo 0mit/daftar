@@ -183,12 +183,17 @@ def story_line(mid):
 
 
 # ============================================================================================ ① the sentence
+def source_lang(source):
+    """A role's source is Pāṇini's word, romanised, or Aristotle's, in Greek: the language it is written in."""
+    return 'grc' if re.search('[\u0370-\u03ff\u1f00-\u1fff]', source) else 'sa'
+
+
 def roles():
     out = []
     for r in CORE['roles']:
         out.append(f'<li class="role role-{r["role"]}"><code class="rw" dir="ltr">{esc(r["role"])}</code>'
                    + both('span', prose(r['meaning'], 'en'), esc(W['roles_fa'][r['role']]), cls='rm', raw=True)
-                   + f'<span class="rs" dir="ltr" lang="sa">{esc(r["source"].split(" — ")[0])}</span></li>')
+                   + f'<span class="rs" dir="ltr" lang="{source_lang(r["source"])}">{esc(r["source"].split(" — ")[0])}</span></li>')
     return '<ol class="roles">' + ''.join(out) + '</ol>'
 
 

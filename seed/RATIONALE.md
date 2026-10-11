@@ -811,6 +811,24 @@ counts `characters`, and nothing counts lines; a datum's `direction` is before o
 descending; a table of a view reads a `series`, which is what it points at; and a fixing position's `origin` is an
 origin, in the form every position's origin takes.
 
+## core/law/core.yaml: roles[as]
+
+THE SEVENTH ROLE IS ARISTOTLE'S ὡς (2026-10-11; the operator, shown both words in Aristotle's own use: "yes make it
+ὡς"). Aristotle has two words for "as", and keeps them apart. ὡς is the way in which a thing is what it is said to be:
+of the causes of a statue one is a cause ὡς ὕλη, as matter, the other ὡς ὅθεν ἡ κίνησις, as whence the motion, and one
+of the ways is ὡς τὸ ἐξ οὗ, as that out of which — the law's `made-of` (Physics II.3 195a); and, beside a verb's object,
+what a thing is taken or used as, a room ᾧ ὡς ταμιείῳ ἐχρῆτο, used as a storeroom (LSJ, ὡς Ab.II.3). ᾗ is in so far as,
+qua: the side of the doer an act belongs to — the doctor builds οὐχ ᾗ ἰατρὸς ἀλλʼ οἰκοδόμος, not as doctor but as
+builder (Physics I.8 191b4) — and being qua being, τὸ ὂν ᾗ ὂν (Metaphysics Γ.1 1003a21), after which the role was first
+named.
+
+Of the law's twenty-one verbs that take `as`, two or three give the capacity a doer acts in — `do` a job, `represent`
+another, a party's part in `agree` — which is ᾗ's ground. The rest give the way of the relation, or what a thing is
+taken as: placed as presence, standing as made-of, acquired as bought, named as a name, measured as a property, a
+response given as a dispute. ᾗ cannot say those, ὡς says them all, and the capacity besides. So the role is named for
+ὡς, and ᾗ is kept in its source as the case where the doer's capacity is meant. Nothing a garden writes changes: the
+role's meaning is as it was, and only the word it is named for is corrected.
+
 ## core/law/core.yaml: knowing
 
 (std-vocab 32: `provenance_record`)
