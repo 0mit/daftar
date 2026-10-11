@@ -80,6 +80,7 @@ parts, changes).
    python3 test/mailbox.py
    python3 test/layers.py
    python3 test/act.py
+   python3 test/routines.py
    python3 test/view.py
    python3 test/viewcap.py
    python3 test/catalogue.py
