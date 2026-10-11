@@ -190,10 +190,17 @@ try:
           and s_.get('employee_id') == acme_lale and s_.get('all_employee_ids') == [acme_lale[0]]
           and s_.get('department_id') == [deps['Quality']['id'], 'Engineering / Quality']
           and lv.get('Autumn', {}).get('department_id') is False, lv)
+    import datetime
+    from zoneinfo import ZoneInfo
+    from core import read as core_read
+    zone = ZoneInfo(str(core_read.document(os.path.join(G, 'GARDEN.md'))[0]['zone']))   # the garden's, whatever machine
+
+    def utc(*t):
+        return datetime.datetime(*t, tzinfo=zone).astimezone(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
     check("...its days read from its extent: the first and last, how many, and its moments in the garden's zone, in UTC",
           s_.get('request_date_from') == '2026-07-06' and s_.get('request_date_to') == '2026-07-17'
-          and s_.get('number_of_days') == 12 and s_.get('date_from') == '2026-07-05 21:00:00'
-          and s_.get('date_to') == '2026-07-17 20:59:59', s_)
+          and s_.get('number_of_days') == 12 and s_.get('date_from') == utc(2026, 7, 6)
+          and s_.get('date_to') == utc(2026, 7, 17, 23, 59, 59), (s_, utc(2026, 7, 6)))
     p_ = lv.get('Summer, in the Persian calendar', {})
     check("...in whatever calendar it was written: the same days written in the Persian calendar read the same",
           (p_.get('request_date_from'), p_.get('request_date_to'), p_.get('number_of_days')) == ('2026-07-06', '2026-07-17', 12), p_)
