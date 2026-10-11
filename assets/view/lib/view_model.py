@@ -108,6 +108,25 @@ def bean_ids(folder="beans"):
     return sorted(n[:-3] for n in os.listdir(d) if n.endswith(".md")) if os.path.isdir(d) else []
 
 
+def handplace():
+    """The garden's pages in the order of its handplace: [{bean, title, place}] — each page in the place its own
+    `be … at "ordinal:<n>" as: order` says (a sayable's place in the taxis: the first, the second), and after them each
+    page that says none, by its id. Read each time, never stored; a host lists its navigation from it."""
+    out = []
+    for p in (CORE.pages() if CORE is not None else [b for b in bean_ids() if PROFILE in fm(b)]):
+        place = None
+        b = CORE.G.beans.get(p) if CORE is not None else None
+        for _i, verb, r in (b.items if b is not None else []):
+            if verb == 'be' and isinstance(r, dict) and r.get('as') == 'order' and 'held' not in r:
+                for x in (r.get('at') if isinstance(r.get('at'), list) else [r.get('at')]):
+                    m = re.fullmatch(r'ordinal:(\d+)', str(x)) if isinstance(x, str) else None
+                    if m:
+                        place = int(m.group(1))
+        f = fm(p)
+        out.append({'bean': p, 'title': str(f.get('title') or p), 'place': place})
+    return sorted(out, key=lambda x: (x['place'] is None, x['place'] or 0, x['bean']))
+
+
 def page():
     if not PAGE:
         raise NoPage("no page is bound (init() first)")
@@ -1294,9 +1313,11 @@ def check(figs=None):
     except Exception as e:                       # the garden's own code: its failure is named, never a traceback
         return ["the drawing module %s failed: %s: %s" % (page_view().get("drawings"), type(e).__name__, e)], []
     # THE PAGE'S TERMS SIT ON THE PAGE. The schema language cannot say "only on the bean that carries another term", so
-    # the gate passes a `views` written on a being; this refuses it.
+    # the gate passes a `views` written on a being; this refuses it. Each page of a garden carries its own: a garden's
+    # handplace is its pages, one bean for each entry of its navigation, and each is checked as the page it is.
+    pages = set(CORE.pages()) if CORE is not None else {p for p in bean_ids() if PROFILE in fm(p)}
     for b in bean_ids():
-        if b != PAGE:
+        if b != PAGE and b not in pages:
             stray = [t for t in TERMS if t in fm(b)]
             if stray:
                 errs.append("%s carries %s, which sit on the page, the bean that carries `%s` (%s)"
