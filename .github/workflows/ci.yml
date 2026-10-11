@@ -114,6 +114,9 @@ jobs:
       - name: "act: an action run on the law's own walk — plan, show, check, a person's ratification, apply, verify; refused and rolled back with their reasons"
         if: github.event_name == 'workflow_dispatch'   # the whole list: its commits wait for the minute to turn
         run: python3 test/act.py
+      - name: "routines: a machine's routines read from the garden and run by the one engine — when each falls due at its clock time, which waits on what and why, a run that waits, skips, runs, fails its proof; crossings; cron adopted byte for byte"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: its commits wait for the minute to turn
+        run: python3 test/routines.py
       - name: "mailbox: a proposal laid in another garden's mailbox by a key that can do nothing else, and only a proposal taken"
         run: python3 test/mailbox.py
       - name: "layers: each file sits in one layer, placed by the law or by its garden; no tool's path in the law; the changelog is journal"

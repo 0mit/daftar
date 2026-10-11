@@ -5093,6 +5093,43 @@ company. A record's number is the first 31 bits of the SHA-256 of its model and 
 beans that meet are refused by name.
 
 
+## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.employee]
+
+AN EMPLOYEE IS AN EMPLOYMENT, NOT A PERSON (2026-10-11, the unified-tools design's P5.4; DECISIONS-NEXT §4, C4). Odoo's
+`hr.employee` is one person's work for one company: a person employed by two companies, or employed again after
+leaving, is two records there. So the record is the employment — the agreement the person `agree`s to as employee and
+one of the garden's companies as employer, as an employment is already written (seed/COOKBOOK.md, the tile workshop) —
+and what is the person's own is read from their bean, through it: a path runs through beans
+(`agree[as=employee].by/title`), so a fact stays where it is about and is read where it is needed. The job is what the
+employee acts for the employer as (`represent … as`, whose meaning names an employee): `agree … as` already says the
+part each party takes. The department is the one the employment is `part` of, as a department is `part` of its company.
+The work mail and phone are the person's names by `mail` and `e164`; the private ones are the same names sealed.
+
+WHAT IS PRIVATE IS HELD, AND ONLY WHAT A FORM NEEDS (C4; MODEL: what harm can come of, git does not keep). The form's
+private tab is carried by three fields, each `held`: the identity number (a name of a namespace that keeps its names
+held, `tr-tckn` or `ir-national-code`, either, so neither country's stands above the other's), the private mail and
+the private phone. A held field is read from sealed statements only, through what the host that keeps them resolves;
+the reader decides nothing about who may see them, and a reader handed nothing to resolve them with reads none. A
+birthday has no statement the law can say yet (a being's coming to be holds no day), and health no scheme the law
+holds for it: neither is carried, rather than bent into a verb that nearly fits.
+
+
+## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.leave]
+
+AN ABSENCE IS A HAPPENING OVER DAYS, UNDER AN ALLOWANCE, DECIDED ON A WALK (2026-10-11, the unified-tools design's P5.4;
+DECISIONS-NEXT §4). Odoo's `hr.leave` is one request for time off: whose, which days, and where its approval stands. In
+the law a leave is a happening (`event`) placed over its days, `be … at: <extent>, as: presence` — the placement that
+takes nothing of anyone, where `attend` takes the hours of those present. It is taken under the employment: it `use`s
+the employment's allowance (the `hold` the clause of its leave is `of`, as the cookbook's tile workshop writes it), so
+the employee is the employment and the department the employment's, read through it. Its days are read from its
+extent as Odoo writes them — the first and last day in the Gregorian calendar, whatever calendar wrote them (no
+calendar stands above another), how many, and the first and last moments of those days in the garden's own zone — and
+never stored beside it. Its approval is the law's own walk (`procedure`, a course `be … as: order`, its `move`s): where
+it stands is read from its last move by the walk's own form — a final step approved, an exit refused, any other to
+approve, none yet to submit — the reading core/lines.py already gives, so no second state can drift from the moves.
+A course on a walk the reader does not hold stands nowhere the reader can say, and says nothing.
+
+
 ## core/law/profiles.yaml: orientations
 
 A DRAWING KEEPS THE FRAME OF WHAT IT DRAWS (2026-10-10, the direction design; the operator: "solve the right to left
@@ -5110,6 +5147,43 @@ axis it runs, which way, whether it follows the script, and the commands a key m
 keys, glyphs and gestures — the view's own page, daftard's pages and the site load it from the release, so no
 stylesheet or script can disagree with the table. The profiles' tables are held to their forms by the gate from this
 change on, as the standards' tables are.
+
+## core/law/registries.yaml: units_crosswalk_form
+
+A STANDARD'S CODE OF A UNIT IS READ AS THE LAW'S, AND THE LAW'S IS WRITTEN BACK AS IT (2026-10-11; the units ladder's
+§4 and §6, item 5, ratified with the rest of it: "yes all recommended"). An e-invoice writes its quantities in
+UN/CEFACT's codes, a lab result names a LOINC property, a building model an IFC measure type, a survey EPSG's units, a
+barcode GS1's application identifiers: each a code list of its own, and none of them UCUM, the law's spelling. One form
+crosses any of them: a scheme names a registry of rows, one a code, each pairing it with the law's own row — a unit, a
+kind, a line, a system's positions or its cells, a shape — or saying why it crosses to nothing. One form and not one a
+standard, because what differs between them is which of the law's rows a code meets, never how a crossing is kept. The
+pairing is daftar's judgment, so it is law, ratified and shipped; the provider's own table stays where its scheme's
+holding keeps it. A row crosses to one target at most, so a code is never read two ways; of several codes crossing to
+one target one is marked to be written back, so writing back is never a guess. The crossing keeps the law's distinctions
+and does not take the provider's: a month an invoice bills is a cell of the calendar (`extent_form.level`), never the
+duration its provider defines; a temperature read is a position on its scale (`lines[temperature]`), never a quantity;
+and a code whose unit the law writes under another kind than the provider's is not crossed, since read through the
+shared unit it would change its kind. Where a list says what a code measures on one axis and how its result is written
+on another (LOINC's property and scale), a code is read through both, and a line named on one wins over a number or a
+kind named on the other, which then says what is placed on the line: a body temperature reported as a number is a
+reading on its scale, as the law has every temperature read, and a concentration reported as 1+, 2+ is a position on
+the ordinal line, as the law has every ordinal judgment. A factor stays the unit's (units.yaml): a crossing names a unit, never a size, so a conversion has one
+source.
+
+## core/law/registries.yaml: knowledge_schemes[unece-rec20]
+
+TRADE'S UNITS, AS AN INVOICE WRITES THEM (2026-10-11). Every UBL e-invoice, a Turkish e-fatura among them, writes a
+quantity's unit in Recommendation No. 20's codes (KGM, C62, MON). UN/CEFACT publishes them as a spreadsheet, and its
+terms are unsettled — the site's footer and its terms page disagree — so the table is held fetched, each copy its
+fetcher's own use, and the question goes to UNECE when a case needs the answer. The crossing names 179 codes: each whose
+unit the law writes; the counts of things, one count whichever code an invoice chose (C62 is written back: it is what
+e-invoices write); the calendar's cells an invoice bills (DAY, WEE, MON, ANN), which Recommendation 20 defines as
+durations — 86 400 seconds, a mean month of 2 629 800, a Julian year — and which no rent or salary means; and the three
+scales' temperature readings. A code is not crossed where its unit is the law's and its kind is not: N/m is the law's
+linear stiffness and 4P a surface tension, J/kg the law's gravitational potential and J2 a specific energy, g/L the law's
+mass concentration and GL a density. Each says why, and the two whose kind the law does not hold yet are vacant,
+`universal`. A pair and a set are counted in units of their own, as pixels and frames are: counts of different things
+never convert into one another.
 
 ## core/law/profiles.yaml: archetypes[sheet]
 

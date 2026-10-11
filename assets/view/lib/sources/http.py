@@ -12,9 +12,10 @@ a device's document — a device answers for itself — so the host sends a draw
 see that being, and asks nothing of a being they may not.
 
 A document holds now, and no past: `history` is empty, and a drawing that correlates over time reads another monitor.
-It writes no bundle: the device is its own server.
+It writes no bundle: the device is its own server. The document is read as every monitor's answer is (view_fetch): within
+one deadline, up to a size, and where it was asked — a redirect is never followed.
 """
-import json, urllib.request
+import view_fetch
 
 TECHNOLOGY = "http"
 
@@ -59,9 +60,8 @@ def check_binding(b):
     return ["its %s query is not a JSON Pointer: %s" % (TECHNOLOGY, prob)] if prob else []
 
 
-def _get(url, timeout=5):
-    with urllib.request.urlopen(url, timeout=timeout) as r:
-        return json.load(r)
+def _get(url, timeout=view_fetch.DEADLINE):
+    return view_fetch.get_json(url, timeout)
 
 
 def _number(x):

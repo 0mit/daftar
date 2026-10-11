@@ -10,8 +10,8 @@ through its gate, and each refusing what it must.
                 (LOINC) sealed; the patient's Turkish identity number held, refused written; the surgeon's ORCID iD, the
                 echo study's DICOM UID and the oxygenator's GTIN, each checked — and an altered copy refused
   blinker       a board that runs a sketch named by its SHA-256 and classed by its SPDX licence; its LED's rate a
-                frequency in hertz; the resistor's 220 ohms kept whole in `details`, since the law has no electrical
-                quantity yet
+                frequency in hertz; the resistor's 220 ohms a resistance — a part's, made of material, and refused of
+                the sketch, which is said and has none
   line          a production line as a walk whose steps take and give the workshop's own parts, a batch as its course,
                 and its money booked to accounts of the garden's own extract of the Turkish uniform chart — a move
                 after the final step, and a booking to no account, refused
@@ -217,18 +217,27 @@ try:
     write(C, 'beans/led.md', bean('led', 'component', 'led — the light-emitting diode that blinks', [
         'read: { by: sam, at: now }', 'part: { by: self, of: uno }',
         'measure: { id: blink-rate, by: sam, of: self, as: frequency, value: { count: "0.5", unit: Hz }, at: "2026-10-09 18:00+03:00" }']))
-    write(C, 'beans/resistor.md', bean('resistor', 'component', "resistor — the LED's current-limiting resistor",
-                                       ['read: { by: sam, at: now }', 'part: { by: self, of: uno }'],
-                                       details='  resistance: "220 Ohm (UCUM `Ohm`), its bands red, red, brown — kept whole '
-                                               'here: the law has no electrical quantity yet"\n'))
-    write(C, 'beans/blink.md', bean('blink', 'program', 'blink — the sketch that blinks the LED', [
+    write(C, 'beans/resistor.md', bean('resistor', 'component', "resistor — the LED's current-limiting resistor", [
+        'read: { by: sam, at: now }', 'part: { by: self, of: uno }',
+        'measure: { id: resistance, by: sam, of: self, as: resistance, value: { count: "220", unit: Ohm }, '
+        'at: "2026-10-09 18:00+03:00", note: "its bands red, red, brown" }']))
+    BLINK = bean('blink', 'program', 'blink — the sketch that blinks the LED', [
         'make: { by: sam, at: now }', f'name: {{ by: sha-256, of: self, as: "{hashlib.sha256(sketch.encode()).hexdigest()}" }}',
-        'classify: { of: self, as: "spdx:CC0-1.0" }'], body='```c\n' + sketch + '```'))
+        'classify: { of: self, as: "spdx:CC0-1.0" }'], body='```c\n' + sketch + '```')
+    write(C, 'beans/blink.md', BLINK.replace(
+        '---\n```c', '  - measure: { id: ohms, by: sam, of: self, as: resistance, value: { count: "220", unit: Ohm } }\n---\n```c', 1))
+    g = gate(C)
+    check("blinker: a resistance stated of the sketch is refused — a sayable has none; a resistance is a material's, and of "
+          "what is made of one", g.returncode != 0 and any(ln.startswith('bearer') and 'blink' in ln for ln in g.out.split('\n')),
+          g.out[-700:])
+    write(C, 'beans/blink.md', BLINK)
     r2 = save(C, 'sam', 'RULE-CHANGE: the blinker', '- action: RULE-CHANGE — VOCAB.md takes the knowledge profile, the '
               'kind component and SPDX held at its authority; wrote [[uno]], [[led]], [[resistor]] and [[blink]]',
               '- ratified_by: sam')
     check("blinker: a board runs a sketch named by its content's SHA-256 and classed by its SPDX licence, its LED's rate "
-          "in hertz — saved through the gate", r.returncode == 0 and r2.returncode == 0, r2.out[-800:])
+          "in hertz and its resistor's 220 ohms a resistance — saved through the gate",
+          r.returncode == 0 and r2.returncode == 0 and 'details' not in text(C, 'beans/resistor.md')
+          and 'unit: Ohm' in text(C, 'beans/resistor.md'), r2.out[-800:])
 
     # ---- A PRODUCTION LINE WITH ACCOUNTS
     D = os.path.join(T, 'bracket-line')

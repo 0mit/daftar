@@ -208,4 +208,6 @@ units:
   - { unit: "{px}", name: pixel, quantity: number, why: "a count of pixels: counts of different things never convert into one another" }
   - { unit: "{sector}", name: sector, quantity: number, why: "a count of a disk's blocks: counts of different things never convert into one another" }
   - { unit: "{frame}", name: frame, quantity: number, why: "a count of frames: counts of different things never convert into one another" }
+  - { unit: "{pair}", name: pair, quantity: number, why: "a count of pairs: counts of different things never convert into one another" }
+  - { unit: "{set}", name: set, quantity: number, why: "a count of sets: counts of different things never convert into one another" }
   - { unit: "IRT", name: toman, quantity: money, factor: ["10", "1"], per: IRR, ucum: "false", why: "the toman, the unit the Iranian rial is counted in every day and ISO 4217 does not name: exactly ten rials. A unit of IRR, never a currency of its own" }

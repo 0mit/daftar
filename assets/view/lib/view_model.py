@@ -622,11 +622,12 @@ def answering(uri):
     return None
 
 
-def where_shown():
+def where_shown(shows=None):
     """(svg, places) — the page's own chain to the eye, engraved from its facts: each place it states it is shown at
     (`located_at`), the being that holds it there — the `host` of a path, the being whose `endpoints` answer at a URI —
     and where that being runs (`lives_in`). On a public page a place whose position is an address is drawn by its
-    system alone."""
+    system alone. `shows(being)`, where given, says whether the reader may see a being: one they may not is not named,
+    and the place is drawn without it (security audit 2026-10-10, 3.8)."""
     import view_engrave
     title = str(page().get("title") or PAGE)
     parts, pipes, seen, places = [{"proc": title, "rail": "the page", "role": "this page"}], [], {title}, []
@@ -640,6 +641,8 @@ def where_shown():
             continue
         at = str(e.get("at") or "")
         hb = e["host"].get("bean") if isinstance(e.get("host"), dict) else answering(at) if e.get("system") == "uri" else None
+        if hb and shows and not shows(hb):
+            hb = None
         if not private() and _ADDRESS.search(at):
             at = ""
         where = ("%s %s" % (e.get("system"), at)).strip()
@@ -652,7 +655,7 @@ def where_shown():
             pipes.append({"from": where, "to": hb, "channel": "answered by" if e.get("system") == "uri" else "held by",
                           "rail": rail})
             lb = (fm(hb).get("lives_in") or {}).get("bean") if isinstance(fm(hb).get("lives_in"), dict) else None
-            if lb and fm(lb):
+            if lb and fm(lb) and (not shows or shows(lb)):
                 part(lb, rail, "%s · %s" % (fm(lb).get("genos", ""), fm(lb).get("nature", "")))
                 pipes.append({"from": hb, "to": lb, "channel": "runs on", "rail": rail})
     if len(parts) < 2:
@@ -788,6 +791,11 @@ def _binding(key, bk, b, by):
          if b.get("signal") else None}
     if r["live"] == "live-state" and not r["probe"]:
         return None, ["%s: %s is a live-state on %r, which depicts no being — give the binding `being`" % (key, bk, el)]
+    if b.get("unit") and not isinstance(law().UNITS.get(b.get("unit")), dict):
+        # the page shows a unit beside its value: one the law does not know is refused here as the gate refuses it, so a
+        # state that skipped the gate puts no word of its own on the page (security audit 2026-10-10, 3.9)
+        probs.append("%s: %s's unit %r is no unit of the law — a row of its `units`, or one the garden adds to `units` "
+                     "in VOCAB.md" % (key, bk, b.get("unit")))
     m = computing(r)
     r["monitor"] = m["bean"] if m else None
     r["technology"] = m["technology"] if m else None

@@ -118,15 +118,20 @@ class Knowledge:
             d = self.decl.get(registry)
             if not d:
                 raise KeyError("no registry %r is declared in registry_files, the law's or this garden's" % registry)
-            path = os.path.join(self.root, d["file"])
+            path = os.path.join(self.root, d["file"]) if d.get("file") else None   # none: no release carries a copy
+            if path and not os.path.isfile(path):          # a table of the law this tree carries none of (a garden in
+                mine = os.path.join(os.path.dirname(HERE), d["file"])   # today's words, read by this release's law):
+                path = mine if os.path.isfile(mine) else path           # the release's own, beside this tool
             if (self.schemes.get(registry) or {}).get("holding") == "fetched":     # this machine's newest copy of the
                 import fetch as dmfetch                                            # provider's own, else the release's
                 got = dmfetch.fetched(registry)
                 if got:
                     path = got[0][2]
-                elif not os.path.isfile(path):
+                elif not path or not os.path.isfile(path):
                     raise KeyError("%s is fetched from its provider, and this machine has fetched none: python3 "
                                    "bin/fetch.py %s" % (registry, registry))
+            elif not path:
+                raise KeyError("the registry %s names no file, and is no scheme fetched from its provider" % registry)
             with open(path, encoding="utf-8") as fh:
                 if d.get("format") == "yaml":
                     self._rows[registry] = [r for r in (dmparse.loads(fh.read()) or []) if isinstance(r, dict)]
@@ -177,7 +182,11 @@ class Knowledge:
             if not self.held(s):
                 continue
             key = self.decl[s].get("key", "code")
-            for r in self.rows(s):
+            try:
+                rows = self.rows(s)
+            except KeyError:                       # a scheme fetched from its provider, which this machine has not
+                continue
+            for r in rows:
                 hay = _words(self.name(r)) + _words(r.get(key, ""))
                 hit = sum(1 for w in q if any(h.startswith(w) or (len(w) > 3 and h.startswith(w.rstrip("s"))) for h in hay))
                 if not hit:
@@ -313,4 +322,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyError as e:                  # a registry this machine cannot read: a fetched scheme none fetched, say
+        print("knowledge: %s" % (e.args[0] if e.args else e))
+        sys.exit(1)

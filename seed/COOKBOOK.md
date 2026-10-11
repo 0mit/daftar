@@ -537,6 +537,86 @@ Ali mends Sam's bicycle; the parts are Sam's to pay for.
 `python3 bin/daftar.py seq course bike-repair` reads where it stands. Where a case stands is read from its moves, and
 never written down: a stored stage is a second copy, and it drifts.
 
+## A machine's routine: what it runs, when, what it waits on, what proves it
+
+Sam's NAS copies the photo archive to a USB disk each night. A **routine** is a walk a machine runs on a schedule, and
+each part of it is a statement the law already has. The walk says what is done and by which tool (`use`); what it
+**needs** before it may act — the disk attached — is a `need` of the walk, met by a **reading** whose input is what the
+tool's probe reads (`usb-present`, its key `usb.present` written with hyphens). In the archive's own bean, the machine
+`run`s the walk, and a clause on it says when: the first time (`due`, a moment), how it repeats (`every`), and the
+window each run may start in (`lasts`). What **proves** a run is what the archive itself needs: copied within a day.
+
+<!-- example: mappings/walk-photo-copy.md -->
+```markdown
+---
+bean: walk-photo-copy
+kind: procedure
+title: "walk-photo-copy — the photo archive copied to the USB disk"
+summary: "Planned, checked with the disk attached, copied, and read back."
+statements:
+  - say:    { by: sam, at: now }
+  - use:    { by: self, of: photo-copy }
+  - step:   { id: plan, as: "what would be copied", by: engine, to: [show] }
+  - step:   { id: show, as: "the plan, line by line", by: engine, to: [check] }
+  - step:   { id: check, as: "the tool's checks, and the disk attached", by: engine, to: [apply] }
+  - step:   { id: apply, as: "the copy", by: engine, to: [verify] }
+  - step:   { id: verify, as: "read back from the disk", by: engine, to: [done] }
+  - step:   { id: done, as: "copied and read back", walk: { final: "true" } }
+  - step:   { id: waits, as: "the disk is not attached: read again each minute of the window", by: keeper, walk: { resumes: "true", reasons: [interlock-held] } }
+  - step:   { id: skipped, as: "the window closed without the disk", walk: { exit: "true", final: "true", reasons: [window-passed] } }
+  - step:   { id: refused, as: "nothing was copied", walk: { exit: "true", reasons: [cannot-plan, check-failed] } }
+  - step:   { id: rolled-back, as: "the copy put back as it was", walk: { exit: "true", reasons: [apply-failed, verify-mismatch] } }
+  - need:   { id: disk-in, by: self, of: "the USB disk is attached" }
+  - meet:   { by: disk-attached, of: disk-in }
+  - reckon: { id: disk-attached, reading: { what: "the USB disk is attached", inputs: [ { name: usb-present, origin: { act: read, nature: soma, by: photo-copy }, quantity: number } ], steps: [ { id: one, op: constant, value: { count: "1", unit: "{item}" } }, { id: ok, op: compare, of: usb-present, with: one, is: at-least } ] } }
+---
+How the photo archive is copied.
+```
+
+<!-- example: beans/photo-copy.md -->
+```markdown
+---
+bean: photo-copy
+kind: program
+title: "photo-copy — what copies the archive and reads the disk"
+summary: "A script on the NAS: plan, check, apply, verify, restore, and a probe of the disk."
+statements:
+  - make: { by: sam, at: now }
+  - be:   { by: self, at: "nas:/usr/local/bin/photo-copy", as: location }
+---
+The tool.
+```
+
+<!-- example: beans/photos.md -->
+```markdown
+---
+bean: photos
+kind: document
+title: "photos — Sam's photo archive"
+summary: "Kept on the NAS, copied each night to a USB disk."
+statements:
+  - say:    { by: sam, at: now }
+  - own:    { by: sam, of: self }
+  - be:     { by: self, at: nas, as: presence }
+  - run:    { id: nightly-copy, by: nas, of: walk-photo-copy }
+  - obligatory: { id: nightly-copy-due, of: nightly-copy, through: sam, clause: { due: "2026-10-12 02:30", every: { of: time, in: gregorian-civil, each: day, lasts: { of: time, measure: { count: "1", unit: h } } } } }
+  - need:   { id: copied-lately, by: self, of: "a copy on the disk less than a day old" }
+  - meet:   { by: copy-young, of: copied-lately }
+  - reckon: { id: copy-young, reading: { what: "the newest copy is less than a day old", inputs: [ { name: copy-age, origin: { act: read, nature: soma, by: photo-copy }, quantity: duration } ], steps: [ { id: day, op: constant, value: { count: "1", unit: d } }, { id: ok, op: compare, of: copy-age, with: day, is: less } ] } }
+---
+The photo archive.
+```
+
+`python3 bin/routines.py list` reads it: the NAS runs it each night at 02:30 in the garden's zone, in a one-hour
+window, waiting on the disk, proved by the archive's own need. On the NAS, `bin/routines.py tick` (each minute,
+called by the program that serves the garden on that machine) places each night's run on the walk as a course — `nightly-copy-<YYYYMMDD>-0230` — and `bin/act.py` moves it:
+a run with the disk detached **waits** (a lead for whoever keeps the archive), the window closing on it **skips** it,
+and a proof that does not hold rolls it back and writes the reading that showed it, and a `fail` through it. A walk no
+person ratifies runs alone only where the gardener grants the machine `enact` of it —
+`grant: { by: self, to: [nas], of: [walk-photo-copy], as: enact }` in the gardener's own bean — and a walk present in
+a crontab (`be: { by: self, at: "<host>:<crontab>", as: presence }`) is cron's, which `bin/routines.py render cron`
+writes from the garden. A routine's clause is the machine's to keep: no reader warns a person of it as an obligation.
+
 ## Proposing to another garden
 
 Ali's garden is recorded here, and hers records Sam's (*Another person, and the garden she keeps*, above). Now the camera

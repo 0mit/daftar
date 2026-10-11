@@ -353,7 +353,10 @@ function wire(){
 }
 function renderLive(){
   $('#livebar').innerHTML = 'live · signed in as <b>' + esc(LIVE.user) + '</b> · ledger ' + esc(LIVE.head) +
-    (LIVE.history && P.views[tab] ? ' · <a href="' + esc(LIVE.history) + '/d/' + esc(P.views[tab].uid) + '" target="_blank" rel="noopener">history ↗</a>' : '') + ' · <a href="/logout">sign out</a>'; }
+    (/^https?:\/\//i.test(LIVE.history || '') && P.views[tab] ? ' · <a href="' + esc(LIVE.history) + '/d/' + esc(P.views[tab].uid) + '" target="_blank" rel="noopener">history ↗</a>' : '') +
+    ' · <button class="btn mini" id="signout">sign out</button>';
+  // signing out is the page's own act, a POST with its CSRF token: a link elsewhere signs nobody out
+  $('#signout').onclick = () => fetch('/logout', {method: 'POST', headers: {'X-View-CSRF': LIVE.csrf}}).finally(() => { location.href = '/login'; }); }
 if (LIVE || !P.author) { $('#authbtn').style.display = 'none'; }
 if (LIVE) { setInterval(poll, (LIVE.poll || 30) * 1000); }
 $('#authbtn').onclick = () => { document.body.classList.toggle('authoring'); $('#authbtn').classList.toggle('on'); render(); };
@@ -380,12 +383,17 @@ def engraved_assets():
 
 ENGRAVED_SCRIPT, ENGRAVED_CSS = engraved_assets()
 
+# THE PAGE'S SCRIPTS, ONCE: what runs on the page, in its order, and nothing else. build_html writes exactly these, and a
+# host's Content-Security-Policy allows exactly these by their hashes (view_serve, and daftard's /view), never a script a
+# page happens to hold (security audit 2026-10-10, 2.4 and 3.9). A script the page needs is added here; the page's data
+# travels as JSON (`<script type="application/json">`), which nothing runs.
+SCRIPTS = (DIRECTION_JS, ENGRAVED_SCRIPT, kit.RUNTIME_JS, SCRIPT)
+
 
 def build_html(p):
     stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     title = esc(p["page"]["title"])
     data = json.dumps(p, ensure_ascii=False).replace("</", "<\\/")
-    ejs, ecss = ENGRAVED_SCRIPT, ENGRAVED_CSS
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
             '<title>%s</title><style>%s%s</style></head><body>'
             '<header><h1>%s <span class="pill">%s</span></h1><div class="sub">how the parts work together · %s · daftar %s · drawn %s · '
@@ -394,9 +402,9 @@ def build_html(p):
             '<div class="seg" id="lens"></div><button class="btn" id="authbtn">Author</button></div><div id="livebar" class="kd"></div></header>'
             '<main><div id="view"></div><section id="author"></section></main>'
             '<script type="application/json" id="viewdata">%s</script>'
-            '<script type="application/json" id="orientations">%s</script><script>%s</script><script>%s</script><script>%s</script><script>%s</script></body></html>'
-            % (title, PAGE_CSS, kit.SCHEMA_CSS + p.get("palette_css", "") + ecss, title, esc(p["page"]["id"]), esc(p.get("garden", "")), esc(p.get("release", "")),
-               stamp, data, json.dumps(vm.orientations()).replace("</", "<\\/"), DIRECTION_JS, ejs, kit.RUNTIME_JS, SCRIPT))
+            '<script type="application/json" id="orientations">%s</script>%s</body></html>'
+            % (title, PAGE_CSS, kit.SCHEMA_CSS + p.get("palette_css", "") + ENGRAVED_CSS, title, esc(p["page"]["id"]), esc(p.get("garden", "")), esc(p.get("release", "")),
+               stamp, data, json.dumps(vm.orientations()).replace("</", "<\\/"), "".join("<script>%s</script>" % x for x in SCRIPTS)))
 
 
 def main(args):
