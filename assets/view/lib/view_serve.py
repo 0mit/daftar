@@ -32,6 +32,9 @@ SESSIONS. A sign-in form; a signed, expiring, HttpOnly, SameSite=Strict cookie; 
 are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git. `view serve-init` writes the
 configuration with a random password in a 0600 file beside it — never printed.
 
+ITS OWN SCRIPTS. Every answer carries a Content-Security-Policy: no source by default, and the page's own scripts
+(view_report.SCRIPTS) by their hashes, nothing else that runs.
+
 THE LEDGER IS READ AGAIN when the garden's git HEAD moves (asked at most every `recheck_seconds`, 30 by default, and
 only for a signed-in viewer: a health check answers from what is held). When it moves, or the release GARDEN.md records
 moves, and no code moved with it, the server runs `view check` on the new state, and only if it passes starts itself
@@ -143,6 +146,18 @@ def strip_beans(svg, gone):
     """A drawing as a viewer may see it: the mark of the being a part depicts (`data-bean`) is taken off a part whose
     being the viewer may not see (3.8). The part stays as drawn: its words are the drawing's."""
     return _BEAN.sub(lambda m: "" if gone(html.unescape(m.group(1))) else m.group(0), svg)
+
+
+def _hashes(scripts):
+    return " ".join("'sha256-%s'" % base64.b64encode(hashlib.sha256(x.encode("utf-8")).digest()).decode() for x in scripts)
+
+
+# THE PAGE'S POLICY (security audit 2026-10-10, 3.9): nothing loads or runs but what the page is — its own scripts by
+# their hashes (view_report.SCRIPTS: the scripts the asset writes, never the ones a page happens to hold), its own
+# style and pictures, its calls to itself. Every other answer runs nothing at all.
+CSP = ("default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; form-action 'self'; base-uri 'none'; "
+       "frame-ancestors 'none'")
+PAGE_CSP = CSP + "; script-src %s; connect-src 'self'" % _hashes(view_report.SCRIPTS)
 
 class Verdict(tuple):
     """(yes, why), and the grants the answer read — compares as the pair it is."""
@@ -779,7 +794,7 @@ def make_handler(F):
         def log_message(self, fmt, *a):
             sys.stderr.write("%s %s\n" % (time.strftime("%H:%M:%S"), fmt % a))
 
-        def _send(self, code, body, ctype="text/html; charset=utf-8", headers=None):
+        def _send(self, code, body, ctype="text/html; charset=utf-8", headers=None, csp=CSP):
             b = body.encode() if isinstance(body, str) else body
             self.send_response(code)
             self.send_header("Content-Type", ctype)
@@ -788,6 +803,7 @@ def make_handler(F):
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("X-Frame-Options", "DENY")
             self.send_header("Referrer-Policy", "same-origin")
+            self.send_header("Content-Security-Policy", csp)
             for k, v in (headers or {}).items():
                 self.send_header(k, v)
             self.end_headers()
@@ -838,7 +854,7 @@ def make_handler(F):
                 p = F.scoped_payload(user)
                 live = {"user": user, "csrf": F.csrf(tok), "history": F.cfg.get("history", ""), "poll": 30,
                         "actions": F.may(user, act=True)[0], "head": (F.head or "")[:10]}
-                return self._send(200, vm.surface("python").render(p, live=live))   # this host's surface
+                return self._send(200, vm.surface("python").render(p, live=live), csp=PAGE_CSP)   # this host's surface
             if u.path == "/api/values":
                 key = urllib.parse.parse_qs(u.query).get("m", [""])[0]
                 vals = F.values(user, key)

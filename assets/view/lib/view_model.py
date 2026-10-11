@@ -788,6 +788,11 @@ def _binding(key, bk, b, by):
          if b.get("signal") else None}
     if r["live"] == "live-state" and not r["probe"]:
         return None, ["%s: %s is a live-state on %r, which depicts no being — give the binding `being`" % (key, bk, el)]
+    if b.get("unit") and not isinstance(law().UNITS.get(b.get("unit")), dict):
+        # the page shows a unit beside its value: one the law does not know is refused here as the gate refuses it, so a
+        # state that skipped the gate puts no word of its own on the page (security audit 2026-10-10, 3.9)
+        probs.append("%s: %s's unit %r is no unit of the law — a row of its `units`, or one the garden adds to `units` "
+                     "in VOCAB.md" % (key, bk, b.get("unit")))
     m = computing(r)
     r["monitor"] = m["bean"] if m else None
     r["technology"] = m["technology"] if m else None

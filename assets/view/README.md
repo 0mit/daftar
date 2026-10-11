@@ -235,6 +235,12 @@ pass through it; where only a part of a bean is granted (`positions`), only that
 The server reads the ledger again when its head moves, and starts itself again on a new head or a new release only
 once `check` passes on it.
 
+**What runs on the page.** Every answer carries a Content-Security-Policy: nothing loads by default, the page's own
+scripts run by their hashes — the ones the asset declares in `view_report.SCRIPTS`, never a script a page happens to
+hold — and its calls go to itself alone. A script the page needs is added to `SCRIPTS`; what a page knows travels as
+JSON in a `<script type="application/json">`, which nothing runs. Every word the page shows is escaped, a unit too, and
+a link goes only to an `http:` or `https:` address.
+
 ## The widgets: what shows a value, and takes one in
 
 `lib/widgets/` is the toolbox of the values tree (`core/law/values.yaml`): one widget per value, each answering to

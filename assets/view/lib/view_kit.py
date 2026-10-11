@@ -244,11 +244,21 @@ def gauge(x, y, w, frac, label, note_text, bean=None, eid=None):
             f'<text x="{x+w}" y="{y+26}" text-anchor="end" class="nsub">{esc(note_text)}</text></g>')
 
 
+_NOT_AN_ENTITY = re.compile(r"&(?!(?:[A-Za-z][A-Za-z0-9]{1,31}|#[0-9]{1,7}|#[xX][0-9A-Fa-f]{1,6});)")
+
+
+def esc_keeping_entities(s):
+    """`s` escaped as every word of the kit is, but for the character references it already carries (`&rarr;`, `&#8594;`):
+    markup is shown as text, an entity as the character it names."""
+    return _NOT_AN_ENTITY.sub("&amp;", str(s)).replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
 def ribbon(x, y, w, text, eid=None):
-    """A join key that runs through every stage — the thread to follow. `text` may carry entities."""
+    """A join key that runs through every stage — the thread to follow. `text` may carry entities, and nothing else of
+    markup: it is escaped as every label is (security audit 2026-10-10, 3.9)."""
     eid = _rec(["ribbon"], "ribbon", (x, y, w, 28), None, eid)
     return (_g(eid, "ribbon") + f'<rect x="{x}" y="{y}" width="{w}" height="28" rx="14" class="ribbonbox"/>'
-            f'<text x="{x+w/2}" y="{y+19}" text-anchor="middle" class="ribbon-t">{text}</text></g>')
+            f'<text x="{x+w/2}" y="{y+19}" text-anchor="middle" class="ribbon-t">{esc_keeping_entities(text)}</text></g>')
 
 
 def boundary(x, y, w, h, caption, eid=None):

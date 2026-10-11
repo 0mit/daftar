@@ -445,6 +445,10 @@ ASSET_REFUSED = [
     ("a value no monitor of the page can compute", "beans/grain-page.md",
      "query: [{technology: prometheus, says: 'silo_days_to_full{$F}'}]", "query: [{technology: zabbix, says: silo.days}]",
      ("silo-full-in", "zabbix")),
+    # a unit is a row of the law, and the page shows it beside a value: one the law does not know is refused here too, as
+    # the gate refuses it, so a state that skipped the gate puts no markup on the page (security audit 2026-10-10, 3.9)
+    ("a value's unit the law does not know", "beans/grain-page.md", "label: until full, unit: d,",
+     "label: until full, unit: '<img src=x onerror=alert(1)>',", ("silo-full-in", "<img src=x onerror=alert(1)>", "no unit")),
     ("a page that states nowhere it is shown", "beans/grain-page.md",
      "  - be: {id: at-1, by: self, at: 'uri:https://grain.example.org/page/', as: location, placed: {openness: here}}\n", "",
      ("states nowhere it is shown", "uri")),
@@ -772,24 +776,26 @@ else:
 _browser = next((b for b in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable") if _sh.which(b)), None)
 DRIVE = """<script>
 window.__errs = []; window.addEventListener('error', e => window.__errs.push(String(e.message)));
-window.addEventListener('load', () => { const out = [], twice = []; let shown = [];
+window.addEventListener('load', () => { const out = [], twice = []; let shown = [], js = 0;
  try { const tabs = [...document.querySelectorAll('.tab')].map(b => b.dataset.t), lens = [...document.querySelectorAll('#lens button')].map(b => b.dataset.l);
   for (const t of tabs) for (const l of lens) { document.querySelector('.tab[data-t="' + t + '"]').click(); document.querySelector('#lens button[data-l="' + l + '"]').click();
-   out.push(t + '/' + l + ':' + (document.querySelector('#view').innerText || '').length);
+   out.push(t + '/' + l + ':' + (document.querySelector('#view').innerText || '').length); js += document.querySelectorAll('a[href^="javascript" i]').length;
    if (/&amp;(amp|lt|gt|quot|#[0-9]+);/.test(document.querySelector('#tabs').innerHTML + document.querySelector('#view').innerHTML)) twice.push(t + '/' + l); }
   document.querySelector('.tab[data-t="drying"]').click(); document.querySelector('#lens button[data-l="understand"]').click();
   shown = [document.querySelector('.tab[data-t="drying"]').textContent, (document.querySelector('#view h3') || {}).textContent,
            [...document.querySelectorAll('#view .tb-c')].filter(c => c.querySelector('.tb-k').textContent === 'drawing').map(c => c.querySelector('.tb-v').textContent)[0]];
   document.querySelector('#authbtn').click(); out.push('author:' + (document.querySelector('#author').innerText || '').length);
  } catch (e) { window.__errs.push('driver: ' + e.message); }
- const pre = document.createElement('pre'); pre.id = '__result'; pre.textContent = JSON.stringify({errs: window.__errs, out, twice, shown}); document.body.appendChild(pre); });
+ const pre = document.createElement('pre'); pre.id = '__result'; pre.textContent = JSON.stringify({errs: window.__errs, out, twice, shown, js}); document.body.appendChild(pre); });
 </script>"""
 if _browser and HTML:
     _dr = os.path.join(T, "drive.html")
     with open(_dr, "w", encoding="utf-8") as fh:
         # a drawing's title is HTML, as the drawing module writes it: one with an ampersand shows whether anything escapes it twice
         fh.write(HTML.replace("<head>", "<head>" + DRIVE, 1).replace('"key": "drying", "title": "The drying run"',
-                                                                    '"key": "drying", "title": "Drying &amp; unloading"', 1))
+                                                                    '"key": "drying", "title": "Drying &amp; unloading"', 1)
+                 # and a technology's documentation at an address that runs script: a link is made only to http(s) (3.9)
+                 .replace('"docs": "https://', '"docs": "javascript:alert(1)//'))
     try:
         r = subprocess.run([_browser, "--headless=new", "--disable-gpu", "--no-sandbox", "--virtual-time-budget=5000",
                             "--dump-dom", "file://" + _dr], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
@@ -803,6 +809,8 @@ if _browser and HTML:
     check("...and a drawing's title, which is HTML, is shown as its text on its tab, its heading and its title block: nothing "
           "escapes it twice", not _res.get("twice") and _res.get("shown") == ["Drying & unloading"] * 3,
           (_res.get("twice"), _res.get("shown")))
+    check("...and a technology whose documentation is given at an address that runs script is shown without a link to it",
+          _res.get("js") == 0 and '"docs": "javascript:' in open(_dr, encoding="utf-8").read(), _res.get("js"))
 else:
     print("NOTE  the runtime was not driven in a browser: none on this machine")
 
@@ -964,7 +972,7 @@ check("...and a binding in both languages is computed by the first monitor of th
 SIBLING_PAGE = get("beans/grain-page.md")
 
 # --- the served page: signed in, closed by default, and the one function that says who may see and do what
-import socket, threading, time, urllib.parse, urllib.request, http.cookiejar
+import socket, threading, time, urllib.parse, urllib.request, urllib.error, http.client, http.cookiejar
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 
@@ -1171,6 +1179,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 def session(user):
     jar = http.cookiejar.CookieJar()
     op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar), NoRedirect)
+    op.jar = jar
     pw = open(os.path.join(T, "host", user + ".password")).read().strip()
     try:
         op.open(BASE + "/login", urllib.parse.urlencode({"user": user, "password": pw}).encode())
@@ -1407,6 +1416,140 @@ try:
           and (j2.get("history") or {}).get("grain-temperature") == [[1000, "NaN"], [1300, "-Infinity"]]
           and (j3.get("values") or {}).get("drying-batches") == [{"name": "a", "value": 3.0}, {"name": "b", "value": "NaN"}],
           (j1.get("values"), j2.get("history"), j3.get("values")))
+    # THE PAGE'S POLICY (security audit 2026-10-10, 3.9): a Content-Security-Policy on every answer — no source by
+    # default, the page's own scripts by their hashes and nothing else that runs, its calls to itself, no frame, no base.
+    import base64 as _b64, hashlib as _hl
+    try:
+        import view_report as _vr
+        _own = list(_vr.SCRIPTS)
+    except Exception as e:  # noqa: BLE001
+        _own = []
+        print("NOTE  view_report.SCRIPTS: %r" % e)
+    _alice_ck = "; ".join("%s=%s" % (c.name, c.value) for c in alice.jar if c.name == "view_session")
+
+    def _raw(path, cookie=None, host=None, method="GET", headers=None):
+        c = http.client.HTTPConnection("127.0.0.1", _sp_, timeout=60)
+        c.putrequest(method, path, skip_host=True)
+        if host is not None:
+            c.putheader("Host", host)
+        if cookie:
+            c.putheader("Cookie", cookie)
+        for k, v in (headers or {}).items():
+            c.putheader(k, v)
+        c.endheaders()
+        r = c.getresponse()
+        return r.status, dict(r.getheaders()), r.read().decode("utf-8", "replace")
+    _ps, _ph, _pg = _raw("/", _alice_ck, "127.0.0.1:%d" % _sp_)
+    _csp = _ph.get("Content-Security-Policy") or ""
+    _hashes = set((re.search(r"script-src ([^;]*)", _csp) or re.match("()", "")).group(1).split())
+    _want = {"'sha256-%s'" % _b64.b64encode(_hl.sha256(x.encode("utf-8")).digest()).decode() for x in _own}
+    check("serve: the page is sent with a Content-Security-Policy: no source by default, its scripts by their hashes, its "
+          "calls to itself, no frame, no base, forms to itself", _ps == 200 and bool(_own) and _hashes == _want
+          and all(d in _csp for d in ("default-src 'none'", "connect-src 'self'", "frame-ancestors 'none'", "base-uri 'none'",
+                                      "form-action 'self'")), _csp)
+    check("...and the scripts that run on the page are exactly the asset's own (view_report.SCRIPTS), in their order: "
+          "none is hashed because the page holds it", re.findall(r"<script>(.*?)</script>", _pg, re.S) == _own and bool(_own),
+          [x[:40] for x in re.findall(r"<script>(.*?)</script>", _pg, re.S)])
+    _ls_, _lh, _lp_ = _raw("/login", None, "127.0.0.1:%d" % _sp_)
+    check("...and the sign-in page has its policy too: nothing of it runs", "default-src 'none'" in (_lh.get("Content-Security-Policy") or "")
+          and "sha256" not in (_lh.get("Content-Security-Policy") or "x sha256"), _lh.get("Content-Security-Policy"))
+    if _browser:
+        # THE PAGE, LIVE, IN A BROWSER, UNDER ITS POLICY: a proxy in front of the host signs alice in, adds a driver (allowed
+        # by its own hash, and nothing else changed of the policy), an injected script (which the policy must refuse) and a
+        # value's unit written as markup (which the runtime must show as text) — then every drawing at every lens, the
+        # live values, and an action.
+        DRIVE_LIVE = r"""<script>
+window.__errs = []; window.__csp = [];
+window.addEventListener('error', e => window.__errs.push(String(e.message)));
+window.addEventListener('unhandledrejection', e => window.__errs.push('unhandled: ' + e.reason));
+document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.effectiveDirective + ' ' + (e.sample || e.blockedURI)));
+window.confirm = () => true; window.prompt = () => '';
+const __wait = ms => new Promise(r => setTimeout(r, ms));
+window.addEventListener('load', async () => { const out = []; let pwn = null, toast = null, live = '';
+ try {
+  const tabs = [...document.querySelectorAll('.tab')].map(b => b.dataset.t), lens = [...document.querySelectorAll('#lens button')].map(b => b.dataset.l);
+  for (const t of tabs) for (const l of lens) { document.querySelector('.tab[data-t="' + t + '"]').click(); document.querySelector('#lens button[data-l="' + l + '"]').click();
+   out.push(t + '/' + l + ':' + (document.querySelector('#view').innerText || '').length); }
+  document.querySelector('.tab[data-t="silo"]').click(); document.querySelector('#lens button[data-l="operate"]').click();
+  await __wait(3000);
+  pwn = !!document.getElementById('pwn'); live = (document.querySelector('.op-ev') || {}).textContent || '';
+  const act = document.querySelector('.vw-act[data-act="start-fans"]'); if (act) act.click();
+  await __wait(3000);
+  toast = (document.getElementById('toast') || {}).textContent || null;
+ } catch (e) { window.__errs.push('driver: ' + e.message); }
+ const pre = document.createElement('pre'); pre.id = '__result';
+ pre.textContent = JSON.stringify({errs: window.__errs, csp: window.__csp, out, pwn, live, toast, injected: window.__injected === 1});
+ document.body.appendChild(pre); });
+</script>"""
+        _dh = "'sha256-%s'" % _b64.b64encode(_hl.sha256(DRIVE_LIVE[len("<script>"):-len("</script>")].encode()).digest()).decode()
+        _plog = []
+
+        class Proxy(BaseHTTPRequestHandler):
+            def log_message(self, *a):
+                pass
+
+            def _fwd(self, method):
+                n = int(self.headers.get("Content-Length") or 0)
+                body = self.rfile.read(n) if n else None
+                _plog.append((method, self.path))
+                c = http.client.HTTPConnection("127.0.0.1", _sp_, timeout=60)
+                h = {"Cookie": _alice_ck}
+                for k in ("Content-Type", "X-View-CSRF"):
+                    if self.headers.get(k):
+                        h[k] = self.headers[k]
+                c.request(method, self.path, body, h)
+                r = c.getresponse()
+                data, ctype, csp = r.read(), r.getheader("Content-Type") or "", r.getheader("Content-Security-Policy") or ""
+                if self.path == "/" and ctype.startswith("text/html"):
+                    pg = data.decode("utf-8")
+                    pg = pg.replace("<head>", "<head>" + DRIVE_LIVE, 1)
+                    pg = pg.replace("<main>", "<main><script>window.__injected = 1</script>", 1)
+                    pg = pg.replace('"name": "grain temperature (°C)", "short": "", "unit": ""',
+                                    '"name": "grain temperature (°C)", "short": "", "unit": "<img id=pwn src=x>"', 1)
+                    data = pg.encode("utf-8")
+                    csp = csp.replace("script-src ", "script-src %s " % _dh, 1)
+                self.send_response(r.status)
+                for k in ("Content-Type", "Location"):
+                    if r.getheader(k):
+                        self.send_header(k, r.getheader(k))
+                if csp:
+                    self.send_header("Content-Security-Policy", csp)
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+
+            def do_GET(self):
+                self._fwd("GET")
+
+            def do_POST(self):
+                self._fwd("POST")
+        _pxp = free_port()
+        _px = ThreadingHTTPServer(("127.0.0.1", _pxp), Proxy)
+        _px.daemon_threads = True
+        threading.Thread(target=_px.serve_forever, daemon=True).start()
+        try:
+            r = subprocess.run([_browser, "--headless=new", "--disable-gpu", "--no-sandbox", "--virtual-time-budget=20000",
+                                "--dump-dom", "http://127.0.0.1:%d/" % _pxp], capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", timeout=120)
+            _mm = re.search(r'<pre id="__result">(.*?)</pre>', r.stdout, re.S)
+            import html as _html
+            _lv = json.loads(_html.unescape(_mm.group(1))) if _mm else {"errs": ["no result: " + (r.stderr or "")[-300:]], "out": []}
+        except (OSError, subprocess.SubprocessError) as e:
+            _lv = {"errs": ["the browser did not run: %s" % e], "out": []}
+        finally:
+            _px.shutdown()
+        check("in a headless browser the served page, under its policy, draws every drawing at every lens with no error "
+              "and no script refused but the one injected",
+              not _lv["errs"] and len(_lv["out"]) == 12 and all(int(x.rsplit(":", 1)[1]) > 40 for x in _lv["out"])
+              and _lv.get("csp") == ["script-src-elem inline"], _lv)      # one inline script refused: the injected one
+        check("...the injected script does not run, and a unit written as markup is shown as text, never made an element",
+              _lv.get("injected") is False and _lv.get("pwn") is False and "<img id=pwn" in (_lv.get("live") or ""),
+              (_lv.get("injected"), _lv.get("pwn"), _lv.get("live")))
+        check("...its live values are polled, and an action runs from its button",
+              ("GET", "/api/values?m=silo") in _plog and ("POST", "/api/action") in _plog
+              and (_lv.get("toast") or "").startswith("Ran start-fans"), (_plog[-8:], _lv.get("toast")))
+    else:
+        print("NOTE  the served page was not driven in a browser: none on this machine")
     # THE CSV IS TEXT (3.10): a cell a spreadsheet would run as a formula is written with a quote before it; a number stays
     import view_export as _vx
     _csv = _vx.csv_text({"columns": ["=label", "n"], "rows": [{"bean": "x", "cells": ["=HYPERLINK(\"http://x\")", -3]},
@@ -1629,6 +1772,11 @@ check("engrave: a division draws the wholes — the silo's three parts one eleme
       _e3.get("silo", {}).get("of", {}).get("holds") == ["intake", "dryer", "bin", "old fan", "intake :2"]
       and "intake-2" not in _e3, (_e3.get("silo"), sorted(_e3)))
 
+# THE KIT ESCAPES EVERY WORD IT DRAWS (security audit 2026-10-10, 3.9): a ribbon's text as every label's — markup is shown
+# as text — and the entities a drawing module writes in it (an arrow, an ampersand already written as one) are kept.
+_rb = _vk.ribbon(0, 0, 200, '<script>x()</script> a &rarr; b & c &#8594; &#x2192; &amp;')
+check("ribbon: its text is escaped as every label of the kit is, and an entity it carries is kept",
+      "<script>" not in _rb and "&lt;script&gt;x()&lt;/script&gt;" in _rb and "a &rarr; b &amp; c &#8594; &#x2192; &amp;<" in _rb, _rb)
 check("NOTHING above ended in a traceback: every case is a refusal or a pass", not TRACES, TRACES[:2])
 shutil.rmtree(T, ignore_errors=True)
 print("\nview: %d failed" % len(FAILS))
