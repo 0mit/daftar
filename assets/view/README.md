@@ -146,9 +146,14 @@ is read each time it is asked, as the release's tools read it, never computed ag
 (`lib/view_engraved.py`):
 
 - a **queue** — what waits for the reader: `bin/leads.py`'s leads for them, grouped by what each waits on (a decision,
-  a case at a step, an obligation falling due, a failure, an open session), the most urgent first;
-- a **timeline** — the members of a reading at their moments: a happening's time, and a clause's due day and each
-  occurrence of its repetition within the `span`, walked by `bin/stale.py`'s `occurrences`, the function that warns.
+  a case at a step, an obligation falling due, a failure, an open session), the most urgent first. Each is said in the
+  reader's language from what it is and what it is about — a case by its walk's own words for its step, a clause by
+  its words and the day it falls due in the reader's calendar, whatever calendar it counts in — and bin/leads.py's
+  English `why`, a log's sentence, is the line's title;
+- a **timeline** — the members of a reading at their moments: a happening's time (its `be` at a moment, or an
+  attendance at its own, `attend … at`), and a clause's due day and each occurrence of its repetition within the
+  `span`, walked by `bin/stale.py`'s `occurrences`, the function that warns; a repetition of an attendance (a series'
+  sessions) keeps that attendance's hour, and is named by its being, never by the statement's id.
   Week, month and list are three readings of one line; the week begins on the day the reader's region begins one
   (CLDR's `firstDay`), in the reader's calendar and digits;
 - **flows** — who owes whom: `bin/ledger.py`'s reading (`ledger.reading`, what `--json` prints) of the agreements the
@@ -178,7 +183,8 @@ move is a step chosen by the walk's words, from now, on the being's course.
 its title and summary, and each verb the page's `fields` names for its kind, its statements in the order the bean holds
 them, each with the statements that take it as their `of` beneath it (a payment with its `bear` shares and the clauses
 that ask it), who knows it (its knowing act), and the default the law derives where nothing is written (a payment no
-`bear` names: its payer bears it, alone, as the ledger reads it). What the page's `fields` names of the being's
+`bear` names: its payer bears it, alone, as the ledger reads it), and its tags where the page names them, each a word
+of its own. What the page's `fields` names of the being's
 `details` — what fits no verb yet, kept whole until one is proposed — is drawn beneath its head as it is held, key by
 key, each value by the widget of what it looks like, and never edited on the sheet. Where the reader may write the
 being — the gardener, or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns
@@ -194,7 +200,8 @@ yet made.
 
 **The one write path** (`lib/view_write.py`, `write(root, who, bean, ops, kind=None, may=None)`): a sheet's Save and a
 drawing's form of a verb (`writes: [{ verb, preset }]`) both send statements — `[{op: add|change|remove, key?, verb,
-roles, held?}]`, and `{op: change, header: title|summary, value}` — and both are written by it: each op read against its
+roles, held?}]`, `{op: change, header: title|summary, value}`, and `{op: change, header: tags, value: [words]}`, the
+tags as a set of words (none: the key taken out) — and both are written by it: each op read against its
 verb's row; `may` asked for the bean, or for the part each op touches; each edit through `bin/safe.py` by its key, one
 line, an expected count of 1; a held value sealed by `bin/held.py` before its statement is written; the statements added
 or changed known by the writer's `say`; each written statement read back and judged by the gate's own judge; then
