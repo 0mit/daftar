@@ -172,8 +172,35 @@ def loinc_table_csv(data):
     return out
 
 
+def ifc_express(data):
+    """IFC's schema in EXPRESS (`IFC4X3_ADD2.exp`): its measure types (`TYPE Ifc…Measure = …;`) and its SI units — each
+    name of `IfcSIUnitName`, alone and after each prefix of `IfcSIPrefix`, written as a model writes the two
+    (`MILLI.METRE`) — read into code, kind (`measure` or `unit`) and base (the type a measure is defined by; a unit's
+    name). The schema's entities, rules and functions are buildingSMART's text, and are not read."""
+    try:
+        text = data.decode('utf-8')
+    except UnicodeDecodeError:
+        raise Refused("IFC's schema is not UTF-8 text: no EXPRESS schema") from None
+    if not re.search(r'^SCHEMA IFC\w*;', text, re.M):
+        raise Refused("the file is no IFC schema in EXPRESS: it declares no `SCHEMA IFC…;`")
+
+    def enum(name):
+        m = re.search(r'^TYPE ' + name + r' = ENUMERATION OF\s*\(([^)]*)\);', text, re.M)
+        return [v.strip() for v in m.group(1).split(',') if v.strip()] if m else []
+    measures = re.findall(r'^TYPE (Ifc\w+Measure) = ([^;]+);', text, re.M)
+    names, prefixes = enum('IfcSIUnitName'), enum('IfcSIPrefix')
+    if not measures or not names or not prefixes:
+        raise Refused(f"IFC's schema holds {len(measures)} measure types, {len(names)} SI unit names and {len(prefixes)} "
+                      f"prefixes, and each is read")
+    out = [{'code': m, 'kind': 'measure', 'base': ' '.join(b.split())} for m, b in measures]
+    for n in names:
+        out.append({'code': n, 'kind': 'unit', 'base': n})
+        out += [{'code': f"{p}.{n}", 'kind': 'unit', 'base': n} for p in prefixes]
+    return out
+
+
 READERS = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx,
-           'loinc-table-csv': loinc_table_csv}
+           'loinc-table-csv': loinc_table_csv, 'ifc-express': ifc_express}
 
 
 # ------------------------------------------------------------------------------------------------ the law's rows

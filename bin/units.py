@@ -11,6 +11,7 @@
     python3 bin/units.py --codes unece-rec20                         # every code of it, and what each crosses to
     python3 bin/units.py --code unece-rec20:MON                      # what one code crosses to, or through its axes
     python3 bin/units.py --judge loinc:2345-7 95 mg/dL               # is this value what the code says one is
+    python3 bin/units.py --unit-of 0.3048 m                          # -> [ft_i]: the law's unit of that size, exactly
 
 A unit names the QUANTITY it measures and its FACTOR to that quantity's coherent unit, as a pair of whole numbers, so a
 conversion is exact arithmetic and never a rounded float — and the result is PRINTED exactly too: a terminating decimal in
@@ -519,6 +520,26 @@ def judge(scheme, code, value):
     return ''
 
 
+def unit_of(count, unit):
+    """[the law's units equal in size to `count` `unit`, exactly]: a standard that states a unit by its factor to another
+    — IFC's conversion-based unit, EPSG's factor to its base unit — names the law's unit of that size, if the law has
+    one. A factor that is no exact decimal (a degree stated as π/180 rounded) meets none: a rounding is never matched.
+    ValueError where `unit` is none of the law's or has no factor, or `count` is no count."""
+    units = _law()[0]
+    u = named(unit, units)
+    row = units.get(u)
+    if row is None or row.get('from_registry'):
+        raise ValueError(f"{unit!r} is no unit of the law with a factor")
+    if not row.get('factor'):
+        raise ValueError(f"{u} has no factor in the law: it converts only through what defines it")
+    x = exact(str(count))
+    if x is None or x <= 0:
+        raise ValueError(f"{count!r}: a factor is a positive count, written as it was stated")
+    size = x * Fraction(*row['factor'])
+    return sorted(n for n, r in units.items() if r.get('quantity') == row['quantity'] and r.get('factor')
+                  and not r.get('per') and Fraction(*r['factor']) == size)
+
+
 def against(scheme, rows):
     """What a provider's table, read (`rows`, each with its `code` and the provider's `status` where it states one), says
     of `scheme`'s crossing: (how many of its codes cross, [crossed codes the table has not], [(crossed code, status)],
@@ -662,6 +683,14 @@ def main(argv):
         return _code(argv[1])
     if argv[:1] == ['--judge'] and len(argv) in (3, 4):
         return _judge(argv[1], argv[2:])
+    if argv[:1] == ['--unit-of'] and len(argv) == 3:
+        try:
+            got = unit_of(argv[1], argv[2])
+        except ValueError as e:
+            print(speakable(f"units: {e}")); return 1
+        print(speakable(', '.join(f"{u} ({_law()[0][u]['name']})" for u in got) if got else
+                        f"units: no unit of the law is exactly {argv[1]} {argv[2]}"))
+        return 0 if got else 1
     coded = len(argv) in (2, 3) and _coded(argv[1])
     if coded or (len(argv) == 3 and argv[2] in _crossings()[0]):
         return _crossed(argv, coded, rate, digits)

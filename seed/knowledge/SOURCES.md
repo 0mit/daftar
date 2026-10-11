@@ -193,3 +193,19 @@ Commission." Modified or adapted versions must be marked as such.
 - **Its licence** lets LOINC's parts be used "to organize, categorize, and be constituents of LOINC terms, and provide
   links to external terminologies", with its notice (NOTICE); the crossing is that use: it links LOINC's property and
   scale abbreviations, as its table writes them, to the law's kinds, in daftar's own words.
+
+## ifc-4x3 — IFC 4.3, what a building model measures and in what units (fetched)
+
+- **Not shipped.** Each machine fetches buildingSMART's schema in EXPRESS (`IFC4X3_ADD2.exp`, IFC 4.3.2.0) with
+  `python3 bin/fetch.py ifc-4x3`, and reads its measure types and its SI units — each name of `IfcSIUnitName`, alone
+  and after each prefix of `IfcSIPrefix` (`MILLI.METRE`). standards.buildingsmart.org answered this build machine with a
+  browser challenge on 2026-10-11, so the reader was built against buildingSMART's own IFC 4.3 RC4 schema from its
+  development repository (`reference_schemas/IFC4x3_RC4.exp`): the same EXPRESS, 92 measure types.
+- **units-ifc-4x3.tsv** crosses the 92 measure types and 72 SI units the law writes: 63 measure types to a kind (a
+  temperature to its line, a descriptive measure to text), 26 to nothing, vacant `universal` — the structural and
+  hygrothermal kinds the law has not yet (a modulus of elasticity, a section modulus, a warping constant, a section's
+  second moment of area, a viscosity…) — and three to nothing with their reasons. A model's conversion-based unit
+  (a foot, a pound) is read by the exact factor it states (`bin/units.py --unit-of`), not by name: its name is the
+  model's, and IFC fixes none.
+- **Its licence** is CC BY-ND 4.0 (© buildingSMART International): the schema is fetched, never redistributed, and the
+  crossing cites its type and unit names and links each to the law's rows, changing nothing of the schema.

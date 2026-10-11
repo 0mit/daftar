@@ -20,6 +20,7 @@ units:
   - { unit: m,             name: metre,                      quantity: length, factor: ["1", "1"] }
   - { unit: km,            name: kilometre,                  quantity: length, factor: ["1000", "1"] }
   - { unit: m2,            name: square-metre,               quantity: area, factor: ["1", "1"] }
+  - { unit: mm2,           name: square-millimetre,          quantity: area, factor: ["1", "1000000"] }
   - { unit: har,           name: hectare,                    quantity: area, factor: ["10000", "1"] }
   - { unit: km2,           name: square-kilometre,           quantity: area, factor: ["1000000", "1"] }
   - { unit: m3,            name: cubic-metre,                quantity: volume, factor: ["1", "1"] }
@@ -51,6 +52,7 @@ units:
   - { unit: g/cm3,         name: gram-per-cubic-centimetre,  quantity: density, factor: ["1000", "1"] }
   - { unit: Pa,            name: pascal,                     quantity: pressure, factor: ["1", "1"] }
   - { unit: kPa,           name: kilopascal,                 quantity: pressure, factor: ["1000", "1"] }
+  - { unit: MPa,           name: megapascal,                 quantity: pressure, factor: ["1000000", "1"] }
   - { unit: "mm[Hg]",      name: millimetre-of-mercury,      quantity: pressure, factor: ["26664477483", "200000000"] }
   - { unit: m3/s,          name: cubic-metre-per-second,     quantity: volume-flow, factor: ["1", "1"] }
   - { unit: L/min,         name: litre-per-minute,           quantity: volume-flow, factor: ["1", "60000"] }

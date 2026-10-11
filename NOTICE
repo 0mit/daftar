@@ -49,6 +49,12 @@ Third-party data, distributed alongside daftar as separate works, each under its
     the law's kinds; the pairings and the reasons are daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt)
     for what is daftar's. LOINC's table itself is not distributed: each machine's person fetches it (bin/fetch.py).
 
+  seed/knowledge/units-ifc-4x3.tsv
+    Cites the names of IFC 4.3's measure types and SI units (IFC4X3_ADD2), © buildingSMART International Limited, the
+    schema licensed under CC BY-ND 4.0; nothing of the schema is changed or copied beyond the names. The pairings with
+    the law's units and kinds and the reasons are daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt).
+    The schema itself is not distributed: each machine fetches it from buildingSMART (bin/fetch.py).
+
   seed/knowledge/isced-f-2013.tsv
     Source: UNESCO Institute for Statistics, ISCED Fields of Education and Training 2013 (ISCED-F 2013).
     Licensed under CC BY-SA 3.0 IGO (LICENSES/CC-BY-SA-3.0-IGO.txt); its share-alike applies to that file only.
