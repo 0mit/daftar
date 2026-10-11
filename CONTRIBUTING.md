@@ -85,6 +85,9 @@ parts, changes).
    python3 test/viewcap.py
    python3 test/view_handplace.py
    python3 test/bidi.py
+   python3 test/view_pages.py
+   python3 test/view_forms.py
+   python3 test/view_details.py
    python3 test/view_tags.py
    python3 test/names.py
    python3 test/catalogue.py
