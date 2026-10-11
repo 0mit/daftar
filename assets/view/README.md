@@ -240,10 +240,22 @@ once `check` passes on it.
 is bound, unless the configuration says `"listen_beyond_loopback": true` — the page carries passwords and sessions,
 and over plain HTTP they cross the network in clear. To serve it beyond its machine, keep it on the loopback and put a
 proxy that speaks TLS in front of it, which passes `X-Forwarded-Proto: https` (the session's cookie is then `Secure`;
-`"secure_cookie": true` says so where no proxy does). The page answers only to its own names — its
+`"secure_cookie": true` says so where no proxy does) and `X-Forwarded-For`, and name that proxy's own addresses in
+`"trusted_proxies": ["127.0.0.1", "::1"]`: from those peers alone, the client counted at sign-in is the rightmost address
+of `X-Forwarded-For` that is no trusted proxy; with none named (the default), the header is ignored from everyone and
+each connection counts as the address it comes from. The page answers only to its own names — its
 address, the loopback's, and the names `"hosts": [...]` lists, such as the name the proxy passes on as the `Host` — and
 refuses any other (421), so a stranger's name made to resolve to the host (DNS rebinding) opens nothing. `serve` refuses
 a configuration others may read (it holds the session key and the password hashes): `serve-init` writes it 0600.
+
+**Signing in.** A session is signed over the viewer's stored password as well, so a password changed ends every session
+begun before it; signing out is the page's own button, a POST with its CSRF token. Failures are counted per address and
+name, and per address: five for one name from one address, or twenty from one address for any names, and that address
+waits a quarter of an hour. Past thirty failures for one name from anywhere, a stranger is refused even with the right
+password — but a browser the viewer has signed in with before (the `view_known` cookie, signed over their password) is
+asked the password still, and waits only after five failures of its own: no stranger locks out a viewer — even where
+every connection comes through one address (a proxy not named in `trusted_proxies`, a tunnel), when strangers can hold
+that address.
 
 **What runs on the page.** Every answer carries a Content-Security-Policy: nothing loads by default, the page's own
 scripts run by their hashes — the ones the asset declares in `view_report.SCRIPTS`, never a script a page happens to

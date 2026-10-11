@@ -1044,7 +1044,7 @@ mon = ThreadingHTTPServer(("127.0.0.1", _pp), FakeMonitor)
 threading.Thread(target=mon.serve_forever, daemon=True).start()
 for _u, _o in (("alice", ["--orgs", "grain-coop", "--bean", VIEWERS["alice"]]), ("carol", ["--orgs", "grain-coop", "--shared", "--bean", VIEWERS["carol"]]),
                ("dave", ["--orgs", "hill-farm", "--no-actions", "--bean", VIEWERS["dave"]]), ("root", ["--orgs", "*", "--bean", "tessa"]),
-               ("eve", ["--orgs", "*", "--bean", STRANGER])):
+               ("eve", ["--orgs", "*", "--bean", STRANGER]), ("ivy", ["--orgs", "grain-coop", "--bean", VIEWERS["carol"]])):
     out, rc = dmview("serve-init", "--config", CFG, "--user", _u, *_o)
 check("serve-init: the password is written to a file of its own and never printed",
       rc == 0 and "password is in" in out and open(os.path.join(T, "host", "root.password")).read().strip() not in out, out)
@@ -1064,6 +1064,7 @@ C["request_seconds"] = 2
 C["monitors"] = {"yard-monitor": {"url": "http://127.0.0.1:%d" % _pp}, "radio-monitor": {"url": "http://127.0.0.1:1"}}
 C["users"]["dave"]["beans"] = ["field-radio"]
 C["hosts"] = ["view.example.org"]     # the name a proxy in front of the host passes on as the Host (3.11)
+C["trusted_proxies"] = ["127.0.0.1", "::1"]   # the proxy on this machine names the client it serves (3.5)
 C["tools"] = {"start-fans": {"argv": [sys.executable, "-c", "print('ran-for-real')"], "enabled": True, "timeout": 20},
               "radio-reset": {"argv": ["/bin/false"], "enabled": False}, "pump-stop": {"argv": ["/bin/false"], "enabled": False}}
 json.dump(C, open(CFG, "w"))
@@ -1135,6 +1136,43 @@ if os.name == "posix":
         _lo = (None, "it served")
     check("serve: a configuration others may read (it holds the session key and the password hashes) is refused, and "
           "nothing is served", _lo[0] not in (0, None) and "0600" in _lo[1] and "Traceback" not in _lo[1], _lo)
+# WHO SIGNS IN, BEHIND A PROXY (3.5): the client a proxy the configuration trusts names, the rightmost address of its
+# X-Forwarded-For that is no trusted proxy; from any other peer, or with no proxy trusted, the header is ignored.
+_tp = ["127.0.0.1", "::1"]
+try:
+    _src = [_vs.source_of("127.0.0.1", "203.0.113.5", _tp), _vs.source_of("127.0.0.1", "203.0.113.5", []),
+            _vs.source_of("127.0.0.1", "203.0.113.5", None), _vs.source_of("192.0.2.9", "203.0.113.5", _tp),
+            _vs.source_of("127.0.0.1", "198.51.100.1, 203.0.113.5", _tp), _vs.source_of("127.0.0.1", "203.0.113.5, 127.0.0.1", _tp),
+            _vs.source_of("127.0.0.1", "not an address", _tp)]
+except Exception as e:  # noqa: BLE001
+    _src = repr(e)
+check("serve: who signs in is the address the connection comes from — or, from a proxy the configuration trusts, the "
+      "client it names (the rightmost address that is no trusted proxy); a forged header from anyone else is ignored",
+      _src == ["203.0.113.5", "127.0.0.1", "127.0.0.1", "192.0.2.9", "203.0.113.5", "203.0.113.5", "127.0.0.1"], _src)
+# A SESSION IS THE PASSWORD'S (3.11): a token is signed over the viewer's stored password as well, so a password changed
+# voids every token signed before it — a stolen cookie dies with the password it was won under.
+_tk = _H.token("alice")
+_was = _H.cfg["users"]["alice"]["password"]
+_u1 = _H.user_of(_tk)
+_H.cfg["users"]["alice"]["password"] = _vs.hash_password("a password changed")
+_u2 = _H.user_of(_tk)
+_H.cfg["users"]["alice"]["password"] = _was
+check("a session is the password's: once a viewer's password changes, a token signed before it opens nothing",
+      _u1 == "alice" and _u2 is None and _H.user_of(_tk) == "alice", (_u1, _u2))
+# A NAME NOBODY HOLDS IS ASKED AS ONE SOMEBODY DOES (3.5): its password is checked against a hash of the same rounds,
+# so how long the answer takes says nothing of who is kept here.
+_calls = []
+_real_cp = _vs.check_password
+_vs.check_password = lambda pw, stored: (_calls.append(str(stored).split("$")[1] if str(stored).count("$") == 3 else "?"),
+                                         _real_cp(pw, stored))[1]
+try:
+    _pk = (_H.password_ok("alice", "a wrong one"), _H.password_ok("nobody-kept-here", "a wrong one"))
+except Exception as e:  # noqa: BLE001
+    _pk = repr(e)
+finally:
+    _vs.check_password = _real_cp
+check("a name nobody holds has its password checked as a known name's is, against a hash of the same rounds",
+      _pk == (False, False) and _calls == [str(_vs.PBKDF2_ROUNDS)] * 2, (_pk, _calls))
 # THE AUDIT LOG IS READ FROM ITS END (3.11): a log that grows for years costs the viewer who asks for the last rows
 # the last rows, not the whole file.
 _alog = os.path.join(T, "host", "long-actions.log")
@@ -1661,6 +1699,52 @@ window.addEventListener('load', async () => { const out = []; let pwn = null, to
           "names — and refuses another, or none (421)",
           _hs["attacker.example"] == _hs["attacker.example:%d" % _sp_] == _hs[None] == 421
           and all(_hs[h] == 200 for h in ("127.0.0.1:%d" % _sp_, "localhost:%d" % _sp_, "view.example.org", "VIEW.example.org:443")), _hs)
+    # A STRANGER LOCKS NOBODY OUT (security audit 2026-10-10, 3.5): failures are held per address and name, and per
+    # address; a ceiling per name refuses strangers past it — and a viewer this browser has signed in before is asked
+    # her password still, held only by her own failures. Behind a proxy on this machine, the address is the one it passes.
+
+    def _login(user, pw, src=None, known=None):
+        h = {"Content-Type": "application/x-www-form-urlencoded"}
+        if src:
+            h["X-Forwarded-For"] = src
+        c = http.client.HTTPConnection("127.0.0.1", _sp_, timeout=60)
+        if known:
+            h["Cookie"] = known
+        c.request("POST", "/login", urllib.parse.urlencode({"user": user, "password": pw}), h)
+        r = c.getresponse()
+        r.read()
+        return r.status, [v for k, v in r.getheaders() if k.lower() == "set-cookie"]
+    _ivy = open(os.path.join(T, "host", "ivy.password")).read().strip()
+    _a = [_login("ivy", "a guess %d" % i, "198.51.100.7")[0] for i in range(5)]
+    _b = _login("ivy", _ivy, "198.51.100.8")
+    check("serve: a stranger's five wrong passwords for a name, from one address, do not lock the name out: ivy, from "
+          "another, signs in", _a == [401] * 5 and _b[0] == 303, (_a, _b[0]))
+    _c = _login("ivy", _ivy, "198.51.100.7")[0]
+    check("...and that address is held for that name: even the right password from it waits out the quarter (429)",
+          _c == 429, _c)
+    _d = [_login("nobody-%d" % i, "x", "198.51.100.9")[0] for i in range(20)] + [_login("ivy", _ivy, "198.51.100.9")[0]]
+    check("...and an address that tries many names is held for every name after twenty failures", _d == [401] * 20 + [429], _d)
+    _known = "; ".join(v.split(";", 1)[0] for v in _b[1] if v.startswith("view_known="))
+    _e = [_login("ivy", "a guess", "203.0.113.%d" % (10 + i // 4))[0] for i in range(32)]
+    _f = _login("ivy", _ivy, "203.0.113.99")[0]
+    _g = _login("ivy", _ivy, "203.0.113.98", known=_known)[0]
+    check("serve: past the ceiling of failures for one name, a stranger is refused even with the right password — and "
+          "ivy, known on the browser she signed in with, signs in: no stranger locks out a viewer who has signed in before",
+          bool(_known) and 429 in _e and _f == 429 and _g == 303, (_known[:14], _e, _f, _g))
+    _k = [_login("ivy", "a guess", "203.0.113.97", known=_known)[0] for _ in range(5)] + [_login("ivy", _ivy, "203.0.113.97", known=_known)[0]]
+    check("...and a known viewer is held by her own failures alone: five on her browser, and it waits", _k == [401] * 5 + [429], _k)
+
+    def _slow(user, base):
+        ts, codes = [], []
+        for i in range(3):
+            t0 = time.perf_counter()
+            codes.append(_login(user, "wrong %d" % i, "192.0.2.%d" % (base + i))[0])
+            ts.append(time.perf_counter() - t0)
+        return sorted(ts)[1], codes
+    (_tk, _ck), (_tu, _cu) = _slow("carol", 60), _slow("no-such-viewer", 70)
+    check("serve: a wrong password for a name nobody holds is asked, and takes as long, as for one somebody does: the "
+          "answer's time says nothing of who is kept here", _ck == _cu == [401] * 3 and _tu >= 0.5 * _tk,
+          (_ck, _cu, round(_tk, 3), round(_tu, 3)))
     # THE CSV IS TEXT (3.10): a cell a spreadsheet would run as a formula is written with a quote before it; a number stays
     import view_export as _vx
     _csv = _vx.csv_text({"columns": ["=label", "n"], "rows": [{"bean": "x", "cells": ["=HYPERLINK(\"http://x\")", -3]},

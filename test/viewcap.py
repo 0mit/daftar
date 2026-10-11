@@ -432,6 +432,7 @@ try:
                 {"Content-Type": "application/x-www-form-urlencoded", "X-Forwarded-Proto": "https"})
     _r = _hc.getresponse()
     _ck = _r.getheader("Set-Cookie") or ""
+    _known = "; ".join(v.split(";", 1)[0] for k, v in _r.getheaders() if k.lower() == "set-cookie" and v.startswith("view_known="))
     _r.read()
     check("reached over HTTPS (the proxy says so), the session's cookie is Secure", "; Secure" in _ck, _ck)
     _tok = _ck.split(";", 1)[0]
@@ -443,10 +444,28 @@ try:
         r.read()
         return r.status
     _before = _with(_tok, "/")
-    _with(_tok, "/logout")
+    _get_out = _with(_tok, "/logout")              # a GET: a link on another page could send it
+    _still = _with(_tok, "/")
+    # SIGNING OUT IS THE PAGE'S OWN ACT (security audit 2026-10-10, 3.11): a POST with the session's CSRF token
+    c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
+    c.request("GET", "/", headers={"Cookie": _tok})
+    _pg = c.getresponse().read().decode()
+    _vd = re.search(r'<script type="application/json" id="viewdata">(.*?)</script>', _pg, re.S)
+    _csrf = (json.loads(_vd.group(1).replace("<\\/", "</")).get("live") or {}).get("csrf", "") if _vd else ""
+    c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
+    c.request("POST", "/logout", "", {"Cookie": _tok, "X-View-CSRF": _csrf})
+    _r = c.getresponse()
+    _r.read()
+    _post_out = _r.status
     _after = _with(_tok, "/")
+    check("signing out is a POST with the session's CSRF token: a GET, which a link elsewhere could send, leaves the "
+          "session as it was, and the POST ends it", _get_out == 405 and _still == 200 and bool(_csrf) and _post_out == 200,
+          (_get_out, _still, bool(_csrf), _post_out))
     check("a token signed out opens nothing again, though the browser that held it kept a copy",
           _before == 200 and _after == 303, (_before, _after))
+    _rv = os.path.join(T, "host", "revoked.json")
+    check("...and what is signed out is kept in a file only the host's own account reads (0600)",
+          os.path.isfile(_rv) and os.stat(_rv).st_mode & 0o077 == 0, oct(os.stat(_rv).st_mode) if os.path.isfile(_rv) else None)
     _codes = []
     for _i in range(6):
         c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
@@ -455,8 +474,24 @@ try:
         r = c.getresponse()
         r.read()
         _codes.append(r.status)
-    check("five wrong passwords lock the address and the user out: the sixth try, right or wrong, is refused (429)",
-          _codes == [401] * 5 + [429], _codes)
+    check("five wrong passwords for one name from one address hold that address for that name: the sixth try, right or "
+          "wrong, is refused (429)", _codes == [401] * 5 + [429], _codes)
+
+    def _try(pw, headers):
+        c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
+        c.request("POST", "/login", urllib.parse.urlencode({"user": "bosun", "password": pw}),
+                  dict({"Content-Type": "application/x-www-form-urlencoded"}, **headers))
+        r = c.getresponse()
+        r.read()
+        return r.status
+    # THIS HOST TRUSTS NO PROXY (no `trusted_proxies`): every connection is its own address, here all the same one — a
+    # forged X-Forwarded-For moves nothing, and a stranger who held that address still locks out no viewer known on her
+    # browser (security audit 2026-10-10, 3.5)
+    _forged = _try(_pw, {"X-Forwarded-For": "203.0.113.200"})
+    _kn = _try(_pw, {"Cookie": _known}) if _known else None
+    check("with no proxy trusted, a forged X-Forwarded-For changes nothing: the address held is still held", _forged == 429, _forged)
+    check("...and the bosun, known on the browser he signed in with, signs in from that very address: no stranger locks "
+          "out a viewer who has signed in before", bool(_known) and _kn == 303, (bool(_known), _kn))
 finally:
     srv.terminate()
     try:

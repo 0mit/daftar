@@ -28,10 +28,18 @@ place a button; only the host can make a command runnable. A tool that is not en
 says what it would run, and audits that. Every attempt, dry or real or refused, is appended to the host's audit log
 (JSON lines, 0600) with who, what and the result. The viewer must be allowed to act, and to see the being acted on.
 
-SESSIONS. A sign-in form; a signed, expiring, HttpOnly, SameSite=Strict cookie; a CSRF token on every POST. Passwords
-are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git. `view serve-init` writes the
-configuration with a random password in a 0600 file beside it — never printed — and `serve` refuses a configuration
-others may read: it holds the session key and the password hashes.
+SESSIONS. A sign-in form; a signed, expiring, HttpOnly, SameSite=Strict cookie, signed over the viewer's stored
+password too, so a password changed voids every session signed before it; a CSRF token on every POST, signing out
+among them. Passwords are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git, and a name nobody
+holds is checked against a hash of the same rounds, so the answer's time tells nobody who is kept here. `view
+serve-init` writes the configuration with a random password in a 0600 file beside it — never printed — and `serve`
+refuses a configuration others may read: it holds the session key and the password hashes.
+
+A STRANGER LOCKS NOBODY OUT. Failures are counted per address and name, and per address; past a ceiling of failures
+for one name, a stranger is refused even with the right password — and a viewer this browser has signed in as before
+(the `view_known` cookie, signed over their password) is asked their password still, held only by their own failures.
+Behind a proxy the configuration trusts (`"trusted_proxies": ["127.0.0.1", "::1"]`), the address counted is the client
+the proxy names in `X-Forwarded-For` (the rightmost that is no trusted proxy); from any other peer the header is ignored.
 
 ONE ADDRESS, ITS OWN NAMES, ITS OWN SCRIPTS. The page listens on the loopback (`listen`, 127.0.0.1:8780 by default);
 an address beyond it is refused unless the configuration says `"listen_beyond_loopback": true` — passwords and
@@ -72,6 +80,7 @@ GUARDS = {
 SESSION_HOURS = 12
 PBKDF2_ROUNDS = 200000
 COOKIE = "view_session"
+KNOWN, KNOWN_DAYS = "view_known", 90       # the browser a viewer signed in with (see A STRANGER LOCKS NOBODY OUT)
 CSRF = "X-View-CSRF"
 
 
@@ -91,6 +100,16 @@ def check_password(pw, stored):
         return hmac.compare_digest(got, d)
     except Exception:
         return False
+
+
+_DUMMY = []
+
+
+def dummy_hash():
+    """A hash of the stored kind and rounds, of no one's password: what a name nobody holds is checked against."""
+    if not _DUMMY:
+        _DUMMY.append(hash_password(secrets.token_hex(16)))
+    return _DUMMY[0]
 
 
 def _write_private(path, text):
@@ -135,6 +154,32 @@ def private_config(path):
     if mode & 0o077:
         raise SystemExit("view serve: %s may be read by others (mode %o), and it holds the session key and the password "
                          "hashes — `chmod 0600` it, as `serve-init` writes it; nothing is served" % (path, mode))
+
+
+def _address(a):
+    """An address as one writes it once: `::ffff:127.0.0.1` and `[::1]` as `127.0.0.1` and `::1`; None if it is none."""
+    try:
+        ip = ipaddress.ip_address(str(a).strip().strip("[]"))
+    except ValueError:
+        return None
+    return str(ip.ipv4_mapped or ip) if ip.version == 6 else str(ip)
+
+
+def source_of(peer, forwarded, trusted=()):
+    """Who is signing in, as far as the host can tell: the address the connection comes from — or, where that is a proxy
+    the host's configuration trusts (`trusted_proxies`), the client it names: the rightmost address of
+    `X-Forwarded-For` that is not itself a trusted proxy. A header from any other peer is ignored, and so is one that
+    names no address."""
+    trusted = {t for t in (_address(x) for x in trusted or ()) if t}
+    if not forwarded or _address(peer) not in trusted:
+        return peer
+    for a in reversed(forwarded.split(",")):
+        a = _address(a)
+        if a and a not in trusted:
+            return a
+        if not a:
+            break
+    return peer
 
 
 def finite(x):
@@ -232,7 +277,8 @@ class Host:
         self.lock = threading.Lock()
         self.wlock = threading.Lock()                # one form's save at a time in this host; save's own lock queues others
         self.head, self.checked, self.payload, self.views = None, 0, None, {}
-        self.fails = {}                              # ip or user -> [the moments of its failed sign-ins in the window]
+        self.fails = {}                              # what failed to sign in -> [its moments in the window]
+        self.flock = threading.Lock()                # threads sign in at once: the failures are counted under it
         self.closed_memo = {}                        # viewer -> (head, day, the beings they may not see, a pattern of them)
         self.revoked = self._load_revoked()          # the signatures of tokens signed out, until each would expire
         self.beans, self.gardener, self.answers = {}, None, {}
@@ -465,7 +511,6 @@ class Host:
                 v["sheet"]["by"] = ""
             v["facts"] = {b: f for b, f in (v.get("facts") or {}).items() if ok(b)}
             v["svg"] = strip_beans(strip_addresses(v.get("svg") or "", ok), gone)
-
             v["parts"] = [x for x in (v.get("parts") or []) if ok(x["bean"])]
             if v.get("wiring") and not ok(v["wiring"]["bean"]):
                 v["wiring"] = None
@@ -743,28 +788,81 @@ class Host:
         return rows[-n:]
 
     # --- sessions ---
-    # SIGNING IN IS LIMITED, AND SIGNING OUT IS FOR GOOD. Five failures in a quarter of an hour, from one address or for
-    # one user, lock that address or user out until the quarter has passed: the password is not even asked. Nothing
-    # sleeps, so a flood of failures ties up no thread, and a failure older than the window is forgotten. A token signed
-    # out is kept, by its signature, in `revoked.json` beside the host's configuration until it would have expired —
-    # the key outlives a restart, so the revocation does too.
-    FAIL_WINDOW, FAIL_LIMIT = 900, 5
+    # SIGNING IN IS LIMITED, AND NO STRANGER LOCKS ANYONE OUT (security audit 2026-10-10, 3.5). A stranger — a browser that
+    # has not signed in as the name it tries — is refused for a quarter of an hour, the password not even asked, once
+    # five tries for one name from one address fail, twenty from one address for any names, or thirty for one name from
+    # anywhere (a ceiling no spread of addresses passes). A viewer's own browser, known by the `view_known` cookie a
+    # sign-in leaves (signed over their password, so a new password forgets every browser), is held by its own failures
+    # alone: five, as for one address. So where every viewer comes through one address — a proxy the configuration does
+    # not trust, a tunnel — strangers can hold that address, and never a viewer who has signed in before. Nothing
+    # sleeps, so a flood ties up no thread; a failure older than the window is forgotten, and the count of what failed
+    # is bounded. A token signed out is kept, by its signature, in `revoked.json` beside the host's configuration until
+    # it would have expired — the key outlives a restart, so the revocation does too.
+    FAIL_WINDOW, FAIL_LIMIT, SOURCE_LIMIT, NAME_CEILING = 900, 5, 20, 30
 
-    def locked(self, *who):
+    def _recent(self, k, now):
+        ts = [t for t in self.fails.get(k, ()) if now - t < self.FAIL_WINDOW]
+        if ts:
+            self.fails[k] = ts
+        else:
+            self.fails.pop(k, None)
+        return len(ts)
+
+    def held(self, source, user, known=False):
+        """Whether a sign-in as `user` from `source` is refused now, the password not asked: by its own failures for a
+        browser known as `user`'s, else by the address and the name's, and the name's ceiling."""
         now = time.time()
-        for k in list(self.fails):
-            self.fails[k] = [t for t in self.fails[k] if now - t < self.FAIL_WINDOW]
-            if not self.fails[k]:
-                del self.fails[k]
-        return any(len(self.fails.get(w, ())) >= self.FAIL_LIMIT for w in who if w)
+        with self.flock:
+            if known:
+                return self._recent("known|" + user, now) >= self.FAIL_LIMIT
+            return (self._recent("pair|%s|%s" % (source, user), now) >= self.FAIL_LIMIT
+                    or self._recent("source|" + source, now) >= self.SOURCE_LIMIT
+                    or self._recent("name|" + user, now) >= self.NAME_CEILING)
 
-    def failed(self, *who):
-        if len(self.fails) > 10000:                  # a flood of addresses: forget the oldest, never grow without end
-            for k in sorted(self.fails, key=lambda k: max(self.fails[k]))[:len(self.fails) - 10000]:
-                del self.fails[k]
-        for w in who:
-            if w:
-                self.fails.setdefault(w, []).append(time.time())
+    def failed(self, source, user, known=False):
+        now = time.time()
+        with self.flock:
+            if len(self.fails) > 10000:              # a flood of addresses: forget the oldest, never grow without end
+                for k in sorted(self.fails, key=lambda k: max(self.fails[k]))[:len(self.fails) - 10000]:
+                    del self.fails[k]
+            for k in (["known|" + user] if known else ["pair|%s|%s" % (source, user), "source|" + source, "name|" + user]):
+                self.fails.setdefault(k, []).append(now)
+
+    def signed_in(self, source, user):
+        with self.flock:
+            self.fails.pop("pair|%s|%s" % (source, user), None)
+            self.fails.pop("known|" + user, None)
+
+    def password_ok(self, user, pw):
+        """Whether `pw` is `user`'s password. A name nobody holds is checked against a hash of the same rounds, so the
+        answer takes as long as for a name somebody holds (3.5)."""
+        rec = (self.cfg.get("users") or {}).get(user)
+        stored = rec.get("password") if isinstance(rec, dict) and rec.get("password") else dummy_hash()
+        return check_password(pw, stored) and isinstance(rec, dict) and stored is rec.get("password")
+
+    def _pw(self, user):
+        """What a viewer's tokens are signed over beside the key: their stored password hash (3.11), so a new password
+        voids every token signed before it."""
+        rec = (self.cfg.get("users") or {}).get(user)
+        return str(rec.get("password") or "") if isinstance(rec, dict) else ""
+
+    def _signed(self, kind, user, exp):
+        return hmac.new(self.key, ("%s%s|%s|%s" % (kind, user, exp, self._pw(user))).encode(), hashlib.sha256).hexdigest()
+
+    def known_token(self, user):
+        exp = int(time.time()) + KNOWN_DAYS * 86400
+        return base64.urlsafe_b64encode(("%s|%d|%s" % (user, exp, self._signed("known|", user, exp))).encode()).decode()
+
+    def known_of(self, tok):
+        """The viewer a browser has signed in as, by its `view_known` cookie, while it lasts and their password holds."""
+        try:
+            user, exp, sig = base64.urlsafe_b64decode((tok or "").encode()).decode().split("|")
+            if user in (self.cfg.get("users") or {}) and int(exp) > time.time() and \
+                    hmac.compare_digest(sig, self._signed("known|", user, exp)):
+                return user
+        except Exception:
+            pass
+        return None
 
     def _revoked_path(self):
         return os.path.join(os.path.dirname(os.path.abspath(self.config_path)), "revoked.json")
@@ -779,7 +877,8 @@ class Host:
         return {str(k): int(v) for k, v in (got.items() if isinstance(got, dict) else []) if int(v) > now}
 
     def revoke(self, tok):
-        """Sign a token out: kept by its signature until it would have expired, and written whole beside the config."""
+        """Sign a token out: kept by its signature until it would have expired, and written whole beside the config, 0600
+        as the configuration is (3.11)."""
         try:
             _user, exp, sig = base64.urlsafe_b64decode(tok.encode()).decode().split("|")
         except Exception:
@@ -788,21 +887,17 @@ class Host:
         self.revoked = {k: v for k, v in self.revoked.items() if v > now}
         self.revoked[sig] = int(exp)
         tmp = self._revoked_path() + ".tmp"
-        with open(tmp, "w") as fh:
-            json.dump(self.revoked, fh)
+        _write_private(tmp, json.dumps(self.revoked))
         os.replace(tmp, self._revoked_path())
 
     def token(self, user):
         exp = int(time.time()) + SESSION_HOURS * 3600
-        body = "%s|%d" % (user, exp)
-        sig = hmac.new(self.key, body.encode(), hashlib.sha256).hexdigest()
-        return base64.urlsafe_b64encode(("%s|%s" % (body, sig)).encode()).decode()
+        return base64.urlsafe_b64encode(("%s|%d|%s" % (user, exp, self._signed("", user, exp))).encode()).decode()
 
     def user_of(self, tok):
         try:
             user, exp, sig = base64.urlsafe_b64decode(tok.encode()).decode().split("|")
-            good = hmac.new(self.key, ("%s|%s" % (user, exp)).encode(), hashlib.sha256).hexdigest()
-            if hmac.compare_digest(sig, good) and int(exp) > time.time() and user in self.cfg["users"] \
+            if user in self.cfg["users"] and int(exp) > time.time() and hmac.compare_digest(sig, self._signed("", user, exp)) \
                     and sig not in self.revoked:
                 return user
         except Exception:
@@ -866,7 +961,7 @@ def make_handler(F):
             self.send_header("X-Frame-Options", "DENY")
             self.send_header("Referrer-Policy", "same-origin")
             self.send_header("Content-Security-Policy", csp)
-            for k, v in (headers or {}).items():
+            for k, v in (headers.items() if isinstance(headers, dict) else headers or ()):
                 self.send_header(k, v)
             self.end_headers()
             self.wfile.write(b)
@@ -880,6 +975,13 @@ def make_handler(F):
             name = h[1:h.index("]")] if h.startswith("[") and "]" in h else h.rsplit(":", 1)[0] if h.count(":") == 1 else h
             return bool(name) and name in names
 
+        def _cookie(self, name):
+            for part in (self.headers.get("Cookie") or "").split(";"):
+                k, _, v = part.strip().partition("=")
+                if k == name:
+                    return v
+            return None
+
         def _secure(self):
             """`; Secure` where the viewer reached the host over HTTPS — said by the host's configuration, or by the proxy
             in front of it — so the cookie never travels in the clear; over plain HTTP a browser would refuse it."""
@@ -887,11 +989,8 @@ def make_handler(F):
             return "; Secure" if https else ""
 
         def _session(self):
-            for part in (self.headers.get("Cookie") or "").split(";"):
-                k, _, v = part.strip().partition("=")
-                if k == COOKIE:
-                    return v, F.user_of(v)
-            return None, None
+            v = self._cookie(COOKIE)
+            return (v, F.user_of(v)) if v is not None else (None, None)
 
         def do_GET(self):
             u = urllib.parse.urlparse(self.path)
@@ -902,12 +1001,9 @@ def make_handler(F):
                 return self._send(200, "ok", "text/plain", headers={"X-View-Release": F.release_at_start} if self._session()[1] else None)
             if u.path == "/login":
                 return self._send(200, LOGIN % {"title": title, "err": ""})
-            if u.path == "/logout":
-                tok, user = self._session()
-                if user:
-                    F.revoke(tok)                  # the token itself, not only the browser's copy of it
-                return self._send(303, "", headers={"Location": "/login", "Set-Cookie": "%s=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict%s"
-                                                     % (COOKIE, self._secure())})
+            if u.path == "/logout":                # signing out is the page's own POST, with its CSRF token (3.11)
+                return self._send(405, "signing out is the page's own button", "text/plain; charset=utf-8",
+                                  headers={"Allow": "POST"})
             tok, user = self._session()
             if not user:
                 if u.path.startswith("/api/"):
@@ -966,23 +1062,31 @@ def make_handler(F):
             if u.path == "/login":
                 f = urllib.parse.parse_qs(raw)
                 user, pw = f.get("user", [""])[0], f.get("password", [""])[0]
-                ip = self.client_address[0]
-                who = ("ip:" + ip, "user:" + user if user else None)
-                if F.locked(*who):
+                src = source_of(self.client_address[0], self.headers.get("X-Forwarded-For"), F.cfg.get("trusted_proxies"))
+                known = bool(user) and F.known_of(self._cookie(KNOWN)) == user
+                if F.held(src, user, known):
                     return self._send(429, LOGIN % {"title": title, "err": '<div class="e">too many tries — wait a quarter '
                                                                            'of an hour</div>'})
-                rec = F.cfg["users"].get(user)
-                if rec and check_password(pw, rec["password"]):
-                    F.fails.pop(who[0], None)
-                    return self._send(303, "", headers={"Location": "/", "Set-Cookie": "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d%s"
-                                                         % (COOKIE, F.token(user), SESSION_HOURS * 3600, self._secure())})
-                F.failed(*who)
+                if F.password_ok(user, pw):
+                    F.signed_in(src, user)
+                    return self._send(303, "", headers=[
+                        ("Location", "/"),
+                        ("Set-Cookie", "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d%s"
+                         % (COOKIE, F.token(user), SESSION_HOURS * 3600, self._secure())),
+                        # this browser, known as the viewer's: asked their password still when strangers have tried it
+                        ("Set-Cookie", "%s=%s; Path=/login; HttpOnly; SameSite=Strict; Max-Age=%d%s"
+                         % (KNOWN, F.known_token(user), KNOWN_DAYS * 86400, self._secure()))])
+                F.failed(src, user, known)
                 return self._send(401, LOGIN % {"title": title, "err": '<div class="e">wrong user or password</div>'})
             tok, user = self._session()
             if not user:
                 return self._json(401, {"error": "sign in"})
             if not hmac.compare_digest(self.headers.get(CSRF) or "", F.csrf(tok)):
                 return self._json(403, {"error": "missing or wrong CSRF token"})
+            if u.path == "/logout":                  # the token itself, not only the browser's copy of it
+                F.revoke(tok)
+                return self._send(200, json.dumps({"out": True}), "application/json", headers={
+                    "Set-Cookie": "%s=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict%s" % (COOKIE, self._secure())})
             if u.path == "/api/action":
                 try:
                     body = json.loads(raw or "{}")
@@ -1042,6 +1146,7 @@ def serve(config, argv=None):
     with open(config, encoding="utf-8") as fh:
         host, port = listen_of(json.load(fh))
     F = Host(config, argv)
+    dummy_hash()                                     # made once, before the first stranger's name is asked
     srv = (Bounded6 if ":" in host else Bounded)((host, port), make_handler(F))
     if not loopback(host) and F.cfg.get("secure_cookie") is not True:
         sys.stderr.write("view serve: listening beyond the loopback, as the configuration chooses: unless a proxy that "

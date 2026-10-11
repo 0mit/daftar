@@ -338,7 +338,10 @@ function wire(){
 }
 function renderLive(){
   $('#livebar').innerHTML = 'live · signed in as <b>' + esc(LIVE.user) + '</b> · ledger ' + esc(LIVE.head) +
-    (/^https?:\/\//i.test(LIVE.history || '') && P.views[tab] ? ' · <a href="' + esc(LIVE.history) + '/d/' + esc(P.views[tab].uid) + '" target="_blank" rel="noopener">history ↗</a>' : '') + ' · <a href="/logout">sign out</a>'; }
+    (/^https?:\/\//i.test(LIVE.history || '') && P.views[tab] ? ' · <a href="' + esc(LIVE.history) + '/d/' + esc(P.views[tab].uid) + '" target="_blank" rel="noopener">history ↗</a>' : '') +
+    ' · <button class="btn mini" id="signout">sign out</button>';
+  // signing out is the page's own act, a POST with its CSRF token: a link elsewhere signs nobody out
+  $('#signout').onclick = () => fetch('/logout', {method: 'POST', headers: {'X-View-CSRF': LIVE.csrf}}).finally(() => { location.href = '/login'; }); }
 if (LIVE || !P.author) { $('#authbtn').style.display = 'none'; }
 if (LIVE) { setInterval(poll, (LIVE.poll || 30) * 1000); }
 $('#authbtn').onclick = () => { document.body.classList.toggle('authoring'); $('#authbtn').classList.toggle('on'); render(); };
