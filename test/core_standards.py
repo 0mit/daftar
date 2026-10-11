@@ -930,5 +930,174 @@ check("CLDR: `length-meter` is read as the law's m and written back as it; `dura
       and dmunits.code_of('cldr-units', {'unit': 'kcal'})[0] == 'energy-kilocalorie')
 shutil.rmtree(CACHE, ignore_errors=True)
 
+# PLACES (design §12): GeoNames and OpenStreetMap's places, each fetched from its provider a country at a time
+sysrows = {r['system']: r for r in read.data(os.path.join(LAW_DIR, 'systems.yaml'))['systems']}
+gn_sys = sysrows.get('geonames') or {}
+from core import frame  # noqa: E402
+try:
+    gn_pos = frame.read('geonames:112931', sysrows).system
+except frame.Refused as e:
+    gn_pos = str(e)
+check("a GeoNames feature is a position of its own system, beside an OpenStreetMap element: it resolves through "
+      "coordinates and establishes nothing, and it is always written with its system — a bare geonameid is a geohash's "
+      "spelling, and a port's",
+      gn_sys.get('resolves_through') == 'geographic' and str(gn_sys.get('establishes')) == 'false' and gn_pos == 'geonames'
+      and frame.read('112931', sysrows).system != 'geonames' and str(sysrows['osm'].get('establishes')) == 'false',
+      (gn_sys, gn_pos))
+gn = next((r for r in reg['knowledge_schemes'] if r['scheme'] == 'geonames'), {})
+op = next((r for r in reg['knowledge_schemes'] if r['scheme'] == 'osm-places'), {})
+check("GeoNames is held fetched from its own daily export, a country at a time (`{part}`, a part named as ISO 3166 "
+      "writes a country), CC BY 4.0; OpenStreetMap's places likewise, from the dumps Photon reads, a region at a time, "
+      "ODbL 1.0; each read by a reader the law lists and this release has",
+      gn.get('holding') == 'fetched' and gn['fetch']['from'] == 'https://download.geonames.org/export/dump/{part}.zip'
+      and gn['fetch']['part'] == '^[A-Z]{2}$' and gn['licence'] == 'CC-BY-4.0' and gn['fetch']['reader'] == 'geonames-dump'
+      and op.get('holding') == 'fetched' and '{part}' in op['fetch']['from'] and op['licence'] == 'ODbL-1.0'
+      and op['fetch']['reader'] == 'photon-dump'
+      and {'geonames-dump', 'photon-dump'} <= set(reg['fetch_shape']['readers']) & set(dmfetch.READERS), (gn, op))
+CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
+os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
+import zipfile  # noqa: E402
+
+
+def gn_zip(cc, lines, day=(2026, 10, 11, 4, 55, 0)):
+    """A country's export, as GeoNames writes one: its table, tab-separated, and its readme beside it."""
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, 'w') as zf:
+        zf.writestr(zipfile.ZipInfo('readme.txt', day), 'Readme for GeoNames Gazetteer extract files\n')
+        zf.writestr(zipfile.ZipInfo(f'{cc}.txt', day), ''.join('\t'.join(c) + '\n' for c in lines))
+    return out.getvalue()
+
+
+def gn_row(gid, name, alt, lat, lon, fc, code, cc, a1, pop, tz):
+    return [gid, name, name, alt, lat, lon, fc, code, cc, '', a1, '', '', '', pop, '', '1190', tz, '2026-10-09']
+
+
+IR = gn_zip('IR', [gn_row('112931', 'Tehran', 'Tehran,Teheran,تهران', '35.69439', '51.42151', 'P', 'PPLC', 'IR', '26',
+                          '7153309', 'Asia/Tehran'),
+                   gn_row('124665', 'Mashhad', 'Mashhad,مشهد', '36.29807', '59.60567', 'P', 'PPLA', 'IR', '42', '2307177',
+                          'Asia/Tehran')])
+TR = gn_zip('TR', [gn_row('745044', 'Istanbul', 'Istanbul,İstanbul,استانبول', '41.01384', '28.94966', 'P', 'PPLA', 'TR',
+                          '34', '15701602', 'Europe/Istanbul')])
+for cc, data in (('IR', IR), ('TR', TR)):
+    with open(os.path.join(CACHE, f'{cc}.zip'), 'wb') as fh:
+        fh.write(data)
+r_ir = subprocess.run([PY, os.path.join(ROOT, 'bin', 'fetch.py'), 'geonames', 'IR', '--from', os.path.join(CACHE, 'IR.zip')],
+                      capture_output=True, text=True, encoding='utf-8', env=dict(os.environ))
+r_tr = subprocess.run([PY, os.path.join(ROOT, 'bin', 'fetch.py'), 'geonames', 'TR', '--from', os.path.join(CACHE, 'TR.zip')],
+                      capture_output=True, text=True, encoding='utf-8', env=dict(os.environ))
+K = dmknowledge.Knowledge(ROOT)
+check("fetch: GeoNames' export of a country is kept unchanged, each feature read with its names, its point in WGS 84, "
+      "its class and code and its population, the day of the export said in the save's line; two countries fetched "
+      "are read as one table",
+      r_ir.returncode == 0 and r_tr.returncode == 0 and '- read: geonames IR' in r_ir.stdout
+      and 'export of 2026-10-11' in r_ir.stdout and '2 rows' in r_ir.stdout
+      and (K.row('geonames', '112931') or {}).get('feature') == 'PPLC'
+      and (K.row('geonames', '112931') or {}).get('names') == 'Tehran,Teheran,تهران'
+      and (K.row('geonames', '745044') or {}).get('latitude') == '41.01384' and len(K.rows('geonames')) == 3,
+      r_ir.stdout + r_ir.stderr + r_tr.stdout + r_tr.stderr)
+IR2 = gn_zip('IR', [gn_row('112931', 'Tehran', 'Tehran,تهران', '35.69439', '51.42151', 'P', 'PPLC', 'IR', '26',
+                           '7153400', 'Asia/Tehran')], day=(2026, 10, 12, 4, 55, 0))
+dmfetch.keep('geonames', IR2, 'test', part='IR', now=__import__('datetime').datetime(2099, 1, 1).astimezone())
+K = dmknowledge.Knowledge(ROOT)
+check("...and a later copy of a country replaces that country's alone: Iran read from its newest copy, Turkey still",
+      (K.row('geonames', '112931') or {}).get('population') == '7153400' and K.row('geonames', '124665') is None
+      and K.row('geonames', '745044') is not None and len(dmfetch.current('geonames')) == 2, dmfetch.current('geonames'))
+refusals = {}
+for name, call in (("no part named", lambda: dmfetch.keep('geonames', IR, 'test')),
+                   ("a part that is no country's code", lambda: dmfetch.keep('geonames', IR, 'test', part='Iran')),
+                   ("a part of a scheme served whole", lambda: dmfetch.keep('isco-08', ilo, 'test', part='IR')),
+                   ("a table of eighteen columns", lambda: dmfetch.keep('geonames', gn_zip('IR', [gn_row(
+                       '1', 'x', '', '1', '2', 'P', 'PPL', 'IR', '', '0', '')[:-1]]), 'test', part='IR')),
+                   ("a feature at no coordinate", lambda: dmfetch.keep('geonames', gn_zip('IR', [gn_row(
+                       '1', 'x', '', 'north', '2', 'P', 'PPL', 'IR', '', '0', '')]), 'test', part='IR')),
+                   ("a zip with no country's table", lambda: dmfetch.keep('geonames', (
+                       lambda b: (zipfile.ZipFile(b, 'w').close(), b.getvalue())[1])(io.BytesIO()), 'test', part='IR'))):
+    try:
+        call()
+        refusals[name] = ''
+    except dmfetch.Refused as e:
+        refusals[name] = str(e)
+check("fetch: GeoNames — no part named, a part that is no country's code, a part of a scheme served whole, a table of "
+      "eighteen columns, a feature at no coordinate, a zip with no country's table — each refused, and nothing kept",
+      'name the part' in refusals["no part named"] and 'is no part of geonames' in refusals["a part that is no country's code"]
+      and 'served whole' in refusals["a part of a scheme served whole"] and '18 columns' in refusals["a table of eighteen columns"]
+      and 'no feature read here' in refusals["a feature at no coordinate"]
+      and '0 tables of a country' in refusals["a zip with no country's table"] and len(dmfetch.fetched('geonames')) == 3,
+      refusals)
+seen_url = []
+_download = dmfetch.download
+dmfetch.download = lambda url: (seen_url.append(url), TR)[1]
+try:
+    import contextlib  # noqa: E402
+    with contextlib.redirect_stdout(io.StringIO()):
+        code = dmfetch.main(['geonames', 'TR'])
+finally:
+    dmfetch.download = _download
+check("fetch: a part is downloaded from where the scheme's row says, the part in its place",
+      code == 0 and seen_url == ['https://download.geonames.org/export/dump/TR.zip'], seen_url)
+
+# OpenStreetMap's places, as the dump Photon reads gives them: the header, a country's names, and its places
+PHOTON = [{"type": "NominatimDumpFile", "content": {"version": "0.1.0", "generator": "photon", "database_version": "1.0.0-4",
+                                                    "data_timestamp": "2026-10-03T23:01:00.000+00:00",
+                                                    "features": {"sorted_by_country": True, "has_addresslines": False}}},
+          {"type": "CountryInfo", "content": [{"country_code": "zz", "name": {"name": "Zedland"}}]},
+          {"type": "Place", "content": [{"place_id": "1", "object_type": "R", "object_id": 6663864, "osm_key": "place",
+                                         "osm_value": "city", "address_type": "city",
+                                         "name": {"name": "تهران", "name:en": "Tehran", "name:fa": "تهران",
+                                                  "name:tr": "Tahran", "name:de": "Teheran"},
+                                         "country_code": "ir", "centroid": [51.3896004, 35.6892523]}]},
+          {"type": "Place", "content": [{"place_id": "2", "object_type": "W", "object_id": 42, "osm_key": "highway",
+                                         "osm_value": "primary", "address_type": "street", "name": {"name": "خیابان کاخ"},
+                                         "country_code": "ir", "centroid": [51.40, 35.69]}]},
+          {"type": "Place", "content": [{"place_id": "3", "object_type": "N", "object_id": 7, "osm_key": "place",
+                                         "osm_value": "neighbourhood", "address_type": "district",
+                                         "name": {"name": "  ولی‌عصر \t"}, "country_code": "ir", "centroid": [51.41, 35.70]},
+                                        {"place_id": "3", "object_type": "N", "object_id": 7, "osm_key": "place",
+                                         "osm_value": "suburb", "address_type": "district", "name": {"name": "ولیعصر"},
+                                         "country_code": "ir", "centroid": [51.41, 35.70]}]},
+          {"type": "Place", "content": [{"place_id": "4", "object_type": "N", "object_id": 8, "osm_key": "place",
+                                         "osm_value": "village", "address_type": "locality", "name": {},
+                                         "country_code": "ir", "centroid": [51.0, 35.0]}]},
+          {"type": "photon:Unknown", "content": {}}]
+DUMP = ''.join(json.dumps(o, ensure_ascii=False) + '\n' for o in PHOTON).encode()
+plain = os.path.join(CACHE, 'photon-dump-iran-1.0-latest.jsonl')
+with open(plain, 'wb') as fh:
+    fh.write(DUMP)
+r = subprocess.run([PY, os.path.join(ROOT, 'bin', 'fetch.py'), 'osm-places', 'asia/iran', '--from', plain],
+                   capture_output=True, text=True, encoding='utf-8', env=dict(os.environ))
+K = dmknowledge.Knowledge(ROOT)
+city, quarter = K.row('osm-places', 'relation/6663864') or {}, K.row('osm-places', 'node/7') or {}
+check("fetch: a dump Photon reads is kept unchanged and its places at a country's scale read — the element, its tag, its "
+      "own name and its English, Persian and Turkish ones, its centroid latitude first — a street, a place with no name "
+      "and an object of a type the format does not know passed over, an element given twice read once, the dump's data "
+      "timestamp said in the save's line",
+      r.returncode == 0 and '2 rows' in r.stdout and 'data of 2026-10-03T23:01:00.000+00:00' in r.stdout
+      and city.get('kind') == 'place=city' and city.get('name_tr') == 'Tahran' and city.get('latitude') == '35.6892523'
+      and city.get('longitude') == '51.3896004' and city.get('country') == 'IR' and 'name_de' not in city
+      and quarter.get('name') == 'ولی‌عصر' and quarter.get('kind') == 'place=neighbourhood'
+      and K.row('osm-places', 'way/42') is None, r.stdout + r.stderr)
+zst = shutil.which('zstd')
+if zst:
+    subprocess.run([zst, '-q', '-f', plain, '-o', plain + '.zst'], check=True)
+    with open(plain + '.zst', 'rb') as fh:
+        packed = fh.read()
+    _sha, rows, _d = dmfetch.keep('osm-places', packed, plain + '.zst', part='asia/iran')
+    check("...and the same dump as GraphHopper serves it, compressed with zstd, is read alike, streamed",
+          len(rows) == 2 and rows[0]['code'] == 'relation/6663864' and packed[:4] == b'\x28\xb5\x2f\xfd', rows)
+else:
+    print("NOTE  zstd: this machine has no `zstd` program, so the compressed dump's check is not run here")
+for name, data, says in (("a file whose first object is no dump's header", DUMP.split(b'\n', 1)[1], 'no dump Photon reads'),
+                         ("a dump with no place at a country's scale",
+                          b'\n'.join(DUMP.split(b'\n')[:2] + DUMP.split(b'\n')[3:4]), 'holds no place'),
+                         ("a line that is no JSON", DUMP + b'{"type": "Place", "content": [\n', 'is no JSON object')):
+    try:
+        dmfetch.keep('osm-places', data, 'test', part='asia/iran')
+        refused = ''
+    except dmfetch.Refused as e:
+        refused = str(e)
+    check(f"fetch: OpenStreetMap's places — {name} — is refused, and nothing more is kept",
+          says in refused and len(dmfetch.fetched('osm-places')) == (2 if zst else 1), refused)
+shutil.rmtree(CACHE, ignore_errors=True)
+
 print(f"\ncore_standards: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)
