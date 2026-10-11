@@ -195,7 +195,11 @@ through its widget; a host that serves files loads them, and the widgets as the 
 (`window.daftarWidgets`). The page of one file — the report and `view serve`'s page — carries the widgets written into
 one classic script (`lib/view_widgets.py`) with the renderers, `view_report.ENGRAVED_SCRIPT`, one of the page's own
 scripts (`SCRIPTS`, below: allowed by its hash, as every other), and `lib/view_engraved.css` in the page's style.
-`view report --lang <tag>` draws the page in a reader's language, its direction CLDR's for the language's script.
+`view report --lang <tag>` draws the page in a reader's language, its direction CLDR's for the language's script, and
+the law's words on it — a verb, a role, a qualifier, a kind, a header key, a form's attribute — as the names layer names
+them in that language (`seed/names/<lang>.tsv`, `view_engraved.names`); a word no table of the language names is shown as
+the law writes it, and no language stands in for another. A host serving a page does the same for its reader
+(`view_engraved.scoped`, the reader's `lang`).
 `test/view_handplace.py` holds the readings to the tools' own, the write path to one commit, and the pages in Chromium —
 the served one under its policy, a sheet's Save from it; `test/bidi.py` reads them as they land on the screen, right to
 left and left to right.
@@ -371,6 +375,8 @@ each is the runtime's CLDR data, read through `Intl` for the reader's language, 
 in the Persian calendar because CLDR says so for `fa`, and Turkish with `.` grouping for `tr`. Nothing is assumed
 where nothing is given: no language, calendar or zone stands in for a missing one. The widgets' own sentences are
 the one table (`locale.js`, `SAID`): English, the law's language, and every language a sentence has been written in.
+The law's own words are not the widgets': a page carries them for its reader (`names`), read from the names layer,
+and a renderer shows one through `t.name(group, word)`.
 
 **Exact on the wire.** A number travels as its written form, or as the exact fraction `n/d` when it was read rather
 than written, never as a JSON float; a widget never rounds a value it takes in.

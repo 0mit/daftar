@@ -137,6 +137,9 @@ jobs:
       - name: "view_details: what a page names of a being's details drawn on its sheet, kept whole — in the reader's calendar and digits, never edited there"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_details.py
+      - name: "names: the law's words a page shows — verbs, roles, qualifiers, kinds, header keys, a form's attributes — named in every language the tables carry, and a sheet drawn in its reader's"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/names.py
       - name: "catalogue: every part of the language, how the parts relate and what each is held to — read from the sources each time, the same bytes twice, and in a garden its copy of the language alone"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/catalogue.py

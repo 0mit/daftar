@@ -90,3 +90,133 @@ view_lenses:operate	opera	opus (work); operari (to work)	proposed	agent (claude 
 view_lenses:inspect	inspectio	inspicere (to look into); examen (the tongue of a balance)	proposed	agent (claude opus-5.5), by hand
 section:manifest	hortus	hortus (an enclosed garden — kin to cohors, an enclosure); paradisus	proposed	agent (claude opus-5.5), by hand
 section:name_form	nomen	nomen (a name)	proposed	agent (claude opus-5.5), by hand
+roles:by	ab	ab (from, by): with the ablative, the doer of a Latin passive — dictum ab aliquo; the grammarians' agens	proposed	agent (claude opus-5.5), by hand
+roles:of	obiectum	obicere (to throw before): the schoolmen's obiectum, what an act is of (actus specificatur per obiectum: an act is known by its object); de (about) says the second sense alone	proposed	agent (claude opus-5.5), by hand
+roles:through	per	per (through): the means — per instrumentum, per pactum; per quem (through whom) was term:via's	proposed	agent (claude opus-5.5), by hand
+roles:to	ad	ad (to, towards): what it goes towards, or the one it is for; the dative (cui) names the receiver	proposed	agent (claude opus-5.5), by hand
+roles:from	ex	ex (out of): the source it comes out of — a giver, a parent; ex quo (from whom) beside per quem; ab is the doer's (`by`)	proposed	agent (claude opus-5.5), by hand
+roles:at	in	in with the ablative (in, at): a position in a frame — in loco, in tempore — or the being it stands on; apud (at, in the keeping of)	proposed	agent (claude opus-5.5), by hand
+roles:as	ut	ut (as): in what capacity — ut consul, as consul (Cicero); inquantum (the schoolmen's qua: ens inquantum ens)	proposed	agent (claude opus-5.5), by hand
+verbs:say	dicere	dicere (to say, first to show): to give one's word — whose deed is dictum (acts:said)	proposed	agent (claude opus-5.5), by hand
+verbs:read	legere	legere (to gather, to pick out, to read): what a body read off a thing — whose deed is lectum (acts:read)	proposed	agent (claude opus-5.5), by hand
+verbs:derive	derivare	derivare (de + rivus: to draw off a stream) — whose deed is derivatum (acts:derived)	proposed	agent (claude opus-5.5), by hand
+verbs:make	facere	facere (to make): made here from nothing given — whose deed is factum (acts:made)	proposed	agent (claude opus-5.5), by hand
+verbs:be	esse	esse (to be): where a being is — esse in loco; situs (the category of position: term:located_at, which `be` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:stand	stare	stare (to stand): stare super, to stand on — what a step stands on, made of it (ex quo) or possible on it; status (a standing)	proposed	agent (claude opus-5.5), by hand
+verbs:part	partem esse	pars (a part, a share) + esse: to be a part of a whole; totum (the whole)	proposed	agent (claude opus-5.5), by hand
+verbs:name	nominare	nomen (a name): a namespace names a being — once, or more	proposed	agent (claude opus-5.5), by hand
+verbs:come	fieri	fieri (to come to be — the passive of facere): fieri per, to come to be through; per quem (term:via, which `come` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:own	dominium habere	dominium (ownership, from domus, a house: the master's right) + habere: whose a being is — Roman law keeps it apart from possessio, holding in fact; dominus (term:owned_by, which `own` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:answer	praestare	praestare (to stand before, to vouch for): the Roman jurists' word for answering for — praestare culpam, to answer for fault; sponsor (term:responsibility)	proposed	agent (claude opus-5.5), by hand
+verbs:acquire	acquirere	ad + quaerere (to seek besides): from whom a being came to us — emptio, conductio, donatio, commodatum, hereditas (bought, rented, given, lent, inherited)	proposed	agent (claude opus-5.5), by hand
+verbs:pass	transferre	trans + ferre (to carry across): statements carried from one layer to another	proposed	agent (claude opus-5.5), by hand
+verbs:necessary	necessarium	necesse (ne + cedere: not yielding): what cannot not be; necesse esse (crown:theone)	proposed	agent (claude opus-5.5), by hand
+verbs:contingent	contingens	contingere (to touch, to befall): the schoolmen's contingens, quod potest esse et non esse — what can be and not be	proposed	agent (claude opus-5.5), by hand
+verbs:possible	possibile	posse (to be able): what is not impossible — the schoolmen's possibile commune	proposed	agent (claude opus-5.5), by hand
+verbs:impossible	impossibile	in + possibilis: what cannot be	proposed	agent (claude opus-5.5), by hand
+verbs:obligatory	obligatorium	obligare (ob + ligare: to bind to): what must be done — the canonists' word; obligatio, the Roman law's bond (iuris vinculum)	proposed	agent (claude opus-5.5), by hand
+verbs:omissible	omissibile	omittere (ob + mittere: to let go): what may be left undone — a late form	proposed	agent (claude opus-5.5), by hand
+verbs:permitted	licitum	licet (it is allowed): what may be done	proposed	agent (claude opus-5.5), by hand
+verbs:forbidden	vetitum	vetare (to forbid): what must not be done — nitimur in vetitum (Ovid: we strive for the forbidden)	proposed	agent (claude opus-5.5), by hand
+verbs:agree	consentire	consentire (to feel together): each party's yes — the Roman law's consensus, which alone makes a sale or a hire	proposed	agent (claude opus-5.5), by hand
+verbs:decline	recusare	re + causa (to plead against): a party's no	proposed	agent (claude opus-5.5), by hand
+verbs:pay	solvere	solvere (to loosen — to release from a debt): to give an amount; pendere (to weigh out: money was weighed)	proposed	agent (claude opus-5.5), by hand
+verbs:bear	sustinere	sub + tenere (to hold up): sustinere impensam, to bear a cost, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:grant	concedere	concedere (to yield, to grant): to open an act to someone — read, write, enact or ratify	proposed	agent (claude opus-5.5), by hand
+verbs:can	posse	posse (potis + esse: to be able): may, or must, as the square says	proposed	agent (claude opus-5.5), by hand
+verbs:represent	vicem gerere	vicis (a turn, a stead) + gerere (to bear): to act in another's stead — vicarius; procurator (one who manages for another)	proposed	agent (claude opus-5.5), by hand
+verbs:need	egere	egere (to be in want): egere aliqua re, to need a thing — how badly is a position on the necessity square; egestas (want)	proposed	agent (claude opus-5.5), by hand
+verbs:meet	satisfacere	satis + facere (to do enough): to meet a need	proposed	agent (claude opus-5.5), by hand
+verbs:use	uti	uti (to use — and to enjoy: Augustine's uti and frui)	proposed	agent (claude opus-5.5), by hand
+verbs:do	fungi	fungi (to perform): fungi munere, to discharge a duty — the job a being does	proposed	agent (claude opus-5.5), by hand
+verbs:hold	continere	con + tenere (to hold together): what a being can hold, and what it holds — capacitas (room)	proposed	agent (claude opus-5.5), by hand
+verbs:run	exsequi	ex + sequi (to follow out, to carry out) — coined: a machine running an operating system, a program, an instance	proposed	agent (claude opus-5.5), by hand
+verbs:open	aperire	aperire (to uncover, to open): a session, an account	proposed	agent (claude opus-5.5), by hand
+verbs:move	promovere	pro + movere (to move forward): a case moved forward on its walk	proposed	agent (claude opus-5.5), by hand
+verbs:step	gradus	gradi (to step, to walk): a step of a walk, the line a case moves along	proposed	agent (claude opus-5.5), by hand
+verbs:attend	interesse	inter + esse (to be among): interesse convivio, to be present at an event (Cicero)	proposed	agent (claude opus-5.5), by hand
+verbs:measure	metiri	metiri (to measure): a property read, at a moment, through an instrument	proposed	agent (claude opus-5.5), by hand
+verbs:record	consignare	con + signare (to seal, to put on record): consignare litteris, to set down in writing what a line held at each position	proposed	agent (claude opus-5.5), by hand
+verbs:reckon	computare	com + putare (to reckon together): a reckoning declared, read each time it is asked	proposed	agent (claude opus-5.5), by hand
+verbs:pin	figere	figere (to fasten, to fix): the moment and the commit a reading was read at, fixed	proposed	agent (claude opus-5.5), by hand
+verbs:classify	digerere	dis + gerere (to carry apart, to sort): Cicero's ius civile in genera digerere, sorting the civil law into kinds	proposed	agent (claude opus-5.5), by hand
+verbs:concern	pertinere	per + tenere (to reach through to): pertinere ad aliquem, to concern someone — the person a record is about	proposed	agent (claude opus-5.5), by hand
+verbs:rate	aestimare	aes (bronze: to put a price on): how much harm a being can do a person if it leaves the garden	proposed	agent (claude opus-5.5), by hand
+verbs:fail	deficere	de + facere (to fall away, to give out): a way a being can fail, or is failing — defectus	proposed	agent (claude opus-5.5), by hand
+verbs:repair	mederi	mederi (to heal, to remedy — remedium): a failure remedied, where the fix lives	proposed	agent (claude opus-5.5), by hand
+verbs:rule	decernere	de + cernere (to sift): the disputed statements sifted, and one chosen	proposed	agent (claude opus-5.5), by hand
+verbs:respond	respondere	respondere (to pledge in return): an observer's verdict on another's reading, or a speaker's words at a hearing — as a jurist's responsum	proposed	agent (claude opus-5.5), by hand
+verbs:weigh	ponderare	pondus (a weight): criteria weighed against each other, pair by pair	proposed	agent (claude opus-5.5), by hand
+verbs:propose	proponere	pro + ponere (to put forth): beans offered to another garden	proposed	agent (claude opus-5.5), by hand
+verbs:take	recipere	re + capere (to take back in, to admit): a proposal taken in, whole; acceptare (to accept) is not this	proposed	agent (claude opus-5.5), by hand
+verbs:rehearse	meditari	meditari (to practise, to rehearse — as an orator rehearsed his speech): a garden holding no facts about the world	proposed	agent (claude opus-5.5), by hand
+verbs:serve	ministrare	minister (an attendant): to serve at table — coined: listening at an address and a port, through a protocol	proposed	agent (claude opus-5.5), by hand
+verbs:carry	vehere	vehere (to carry, to convey — vehiculum): coined, a link carrying a tunnel, a disk a volume	proposed	agent (claude opus-5.5), by hand
+verbs:route	dirigere	dis + regere (to set straight): coined, traffic sent on to its next hop	proposed	agent (claude opus-5.5), by hand
+verbs:translate	commutare	com + mutare (to change, to exchange): coined, an address exchanged for another as traffic crosses; transferre is `pass`'s	proposed	agent (claude opus-5.5), by hand
+verbs:filter	percolare	per + colare (to strain through — colum, a strainer): coined for a packet filter, letting traffic cross or stopping it	proposed	agent (claude opus-5.5), by hand
+verbs:book	imputare	in + putare (to reckon into): in rationem imputare, to put to an account — an amount booked, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:renew	renovare	re + novare (to make new again): a registration renewed	proposed	agent (claude opus-5.5), by hand
+verbs:mark	terminare	terminus (a boundary stone, and its god): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
+verbs:produce	producere	pro + ducere (to lead forth): an artifact brought into being	proposed	agent (claude opus-5.5), by hand
+verbs:draw	delineare	de + linea (to sketch in outline): a page draws	proposed	agent (claude opus-5.5), by hand
+qualifiers:channel	canalis	canalis (a pipe, a groove): coined for a network channel — where it is bound, what it protects, who may reach it	proposed	agent (claude opus-5.5), by hand
+qualifiers:charged	aequivalens	aequus + valere (of equal worth — a late form): what a payment came to in another currency; permutatio (Cicero's exchange of money abroad)	proposed	agent (claude opus-5.5), by hand
+qualifiers:class	classis	classis (a division of the Roman people, called to arms): a class of the Contract of Parts	proposed	agent (claude opus-5.5), by hand
+qualifiers:clause	clausula	claudere (to close): the jurists' clausula, a provision — what it holds beside its words	proposed	agent (claude opus-5.5), by hand
+qualifiers:cover	ambitus	ambire (to go round): the compass of a grant — which parts it opens	proposed	agent (claude opus-5.5), by hand
+qualifiers:drawing	descriptio	describere (to write out, to draw — Cicero's descriptio aedificandi, a builder's drawing): what it draws, its story and its lenses	proposed	agent (claude opus-5.5), by hand
+qualifiers:method	modus	modus (a measure, a manner): how a reading was made; ratio is reason's (lines:logos)	proposed	agent (claude opus-5.5), by hand
+qualifiers:page	pagina	pangere (to fasten: vines fastened in a row): a column of writing — a page of drawings	proposed	agent (claude opus-5.5), by hand
+qualifiers:placed	collocatio	collocare (to set in place): what a placement holds there	proposed	agent (claude opus-5.5), by hand
+qualifiers:presence	praesentia	prae + esse (to be before): found, or looked for and not found	proposed	agent (claude opus-5.5), by hand
+qualifiers:reading	lectio	legere (to gather, to read): a reading — what a reckoning selects and computes	proposed	agent (claude opus-5.5), by hand
+qualifiers:result	exitus	exire (to go out): an outcome — what came of a measuring	proposed	agent (claude opus-5.5), by hand
+qualifiers:series	series	serere (to join, to string together): a row — here coined for a series of a store's rows, what a line held at each position	proposed	agent (claude opus-5.5), by hand
+qualifiers:settles	liberatio	liberare (to set free): the debtor freed by payment — which occurrences of which clauses it settles; solutio is `pay`'s	proposed	agent (claude opus-5.5), by hand
+qualifiers:share	portio	pro portione (by each one's share): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
+qualifiers:value	valor	valere (to be strong, to be worth — valor, a late form): the value a measuring read	proposed	agent (claude opus-5.5), by hand
+qualifiers:walk	cursus	currere (to run): a course — how a walk goes at a step	proposed	agent (claude opus-5.5), by hand
+qualifiers:weighing	comparationes	comparare (to pair together): the judgments, pair by pair	proposed	agent (claude opus-5.5), by hand
+beside_roles:id	signum	signum (a mark, a token): what a statement is known by in its bean	proposed	agent (claude opus-5.5), by hand
+beside_roles:while	dum	dum (while, as long as): the statement holds while what it names matches	proposed	agent (claude opus-5.5), by hand
+beside_roles:why	causa	causa (a cause, a reason, a case at law): the reason, in prose; ratio (layers:reasoning) is the law's own	proposed	agent (claude opus-5.5), by hand
+beside_roles:note	adnotatio	ad + notare (to mark beside): a remark, in prose	proposed	agent (claude opus-5.5), by hand
+beside_roles:held	depositum	deponere (to lay down in trust — the Roman law's deposit): kept off git, in a store a host resolves	proposed	agent (claude opus-5.5), by hand
+kinds:codebase	repositorium codicis	reponere (to lay back, to store) + codex (a tree trunk, then a book): coined, a codebase	proposed	agent (claude opus-5.5), by hand
+kinds:product	productum	producere (to lead forth): coined in this sense — a product, as a program offered for use	proposed	agent (claude opus-5.5), by hand
+kinds:org	collegium	collega (one chosen with another): a body of members, the Roman association; universitas (a corporation)	proposed	agent (claude opus-5.5), by hand
+kinds:person	persona	persona (a mask, a role — then the bearer of rights): a person	proposed	agent (claude opus-5.5), by hand
+kinds:instance	instantia	instare (to stand near): coined in this sense — a running instance of a product	proposed	agent (claude opus-5.5), by hand
+kinds:host	hospes	hospes (a host, and a guest): coined, a machine that hosts	proposed	agent (claude opus-5.5), by hand
+kinds:virtual-host	hospes virtualis	virtus (power): virtualis, the schoolmen's 'in power, not in act' — coined, a host in effect, not in body	proposed	agent (claude opus-5.5), by hand
+kinds:domain	ditio	dicio (sway, dominion — in dicione esse, to be under one's sway): coined, a domain of the DNS; dominium is kept for ownership (`own`)	proposed	agent (claude opus-5.5), by hand
+kinds:service	ministerium	minister (an attendant): a service — coined in this sense	proposed	agent (claude opus-5.5), by hand
+kinds:program	programma	πρόγραμμα (a public notice): coined in this sense — a program a machine runs	proposed	agent (claude opus-5.5), by hand
+kinds:design	designatio	designare (to mark out): a design	proposed	agent (claude opus-5.5), by hand
+kinds:session	sessio	sedere (to sit): a sitting — coined in this sense, an agent's session	proposed	agent (claude opus-5.5), by hand
+kinds:contract	contractus	contrahere (to draw together): a contract	proposed	agent (claude opus-5.5), by hand
+kinds:garden	hortus	hortus (an enclosed garden): a garden this one records — as section:manifest	proposed	agent (claude opus-5.5), by hand
+kinds:document	documentum	docere (to teach): a lesson, a proof — a document; instrumentum (the jurists' deed)	proposed	agent (claude opus-5.5), by hand
+kinds:event	eventus	evenire (to come out, to happen): an event	proposed	agent (claude opus-5.5), by hand
+header:title	titulus	titulus (an inscription, a label): what a bean is called	proposed	agent (claude opus-5.5), by hand
+header:summary	summarium	summa (the whole — Seneca's summarium, a digest): one sentence of what a bean is	proposed	agent (claude opus-5.5), by hand
+header:tags	notae	nota (a mark): marks — a bean's tags	proposed	agent (claude opus-5.5), by hand
+forms:clause.due	dies	dies (a day): dies venit, the day has come — the Roman jurists' falling due; the first, when it repeats	proposed	agent (claude opus-5.5), by hand
+forms:clause.every	iteratio	iterum (again): how a clause repeats	proposed	agent (claude opus-5.5), by hand
+forms:clause.notice	denuntiatio	denuntiare (to give formal notice — the Roman law's notice served): how long before it falls due a reader is told	proposed	agent (claude opus-5.5), by hand
+forms:clause.state	habitus	habere (to have, to hold oneself): how a clause holds — in force, met, waived, broken, disputed; status (term:status) is the retired table's	proposed	agent (claude opus-5.5), by hand
+forms:clause.amount	quantum	quantus (how great): how much — money, time, anything	proposed	agent (claude opus-5.5), by hand
+forms:clause.during	intervallum	inter + vallus (the space between the stakes of a palisade): the window in which a clause holds	proposed	agent (claude opus-5.5), by hand
+forms:clause.within	spatium computandi	spatium (a stretch) + computare (to reckon): the window an amount is counted within	proposed	agent (claude opus-5.5), by hand
+forms:clause.used_by	utentes	uti (to use): those using — the entries whose spans use the allowance	proposed	agent (claude opus-5.5), by hand
+forms:clause.when	initium	inire (to go into): a beginning — what brings a clause into force; condicio (the Roman law's condition, which suspends a deed until it holds)	proposed	agent (claude opus-5.5), by hand
+forms:clause.each	pro singulis	singuli (one by one): the clause occurs once for each bean or entry a reading holds	proposed	agent (claude opus-5.5), by hand
+forms:clause.of	portio ex	pro portione (by each one's share): what the clause's amount is a share of	proposed	agent (claude opus-5.5), by hand
+forms:clause.falls_due	dies relativus	dies (a day) + relatus (carried back — relativus, a late form): when a clause falls due relative to another position	proposed	agent (claude opus-5.5), by hand
+forms:clause.by_role	pro munere	munus (an office, a duty): every party whose office this is, each bound alike	proposed	agent (claude opus-5.5), by hand
+forms:clause.over	pro parte	pars (a part): the part of what the agreement concerns that this clause is for	proposed	agent (claude opus-5.5), by hand
+forms:settlement.clause	clausula soluta	clausula + solvere (to loosen, to pay): the clause a payment settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.occurrence	casus	cadere (to fall): a falling, a case — which occurrence of the clause it settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.amount	quantum solutum	quantus (how great) + solvere (to pay): how much of the occurrence it settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.note	observatio	observare (to watch over): a remark on a settlement; adnotatio is the note beside the roles	proposed	agent (claude opus-5.5), by hand
