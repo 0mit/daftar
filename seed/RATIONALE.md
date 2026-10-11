@@ -5184,3 +5184,17 @@ linear stiffness and 4P a surface tension, J/kg the law's gravitational potentia
 mass concentration and GL a density. Each says why, and the two whose kind the law does not hold yet are vacant,
 `universal`. A pair and a set are counted in units of their own, as pixels and frames are: counts of different things
 never convert into one another.
+
+## core/law/registries.yaml: knowledge_schemes[loinc]
+
+A LAB RESULT IS READ THROUGH WHAT ITS TERM SAYS (2026-10-11). A LOINC term names an observation by six axes, and two of
+them are the law's business: its property — what kind of quantity it is, a mass concentration, a substance rate, a
+presence — and its scale — how its result is written, a number, an ordered answer, a name, prose. So LOINC is crossed on
+those axes, not term by term: some hundred thousand terms read through two short tables, and a term LOINC adds tomorrow
+reads the same. A glucose in mg/dL is a mass concentration and refused in mmol/L, which is a substance concentration: the
+two are the commonest confusion of a lab's units, and the property tells them apart. A temperature read is a position on
+its scale, as the law has every temperature, though LOINC's scale calls it a number. A property whose kind the law has
+not yet — a catalytic concentration (U/L), a number concentration (cells per litre), a molality — is vacant, `universal`:
+a value of it is judged by its scale alone, and the reader says so. LOINC is downloaded by a person who signs in and
+accepts its licence, so it is fetched; its terms are health data wherever they are written, so it is special-category.
+Its licence names this use of its parts: to link them to an external terminology, with its notice.

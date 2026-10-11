@@ -174,3 +174,22 @@ Commission." Modified or adapted versions must be marked as such.
   things (C62, H87, EA, NAR, SET, PR), the calendar's cells an invoice counts (DAY, WEE, MON, ANN — never Rec 20's own
   durations of them) and the three temperature scales' readings; and says why seven codes cross to nothing (J2, 4P,
   GL, DZN, QAN, E14, ZZ). A code it does not name is one whose unit the law does not write.
+
+## loinc — LOINC, observations of a lab and a clinic (fetched)
+
+- **Not shipped.** A person signed in at loinc.org with a free account, who accepts its licence, downloads LOINC's
+  release; `python3 bin/fetch.py loinc --from <the zip or its LoincTable/Loinc.csv>` keeps it unchanged outside git and
+  reads each term's code, status, property, scale and long common name. loinc.org answered this build machine with a
+  browser challenge on 2026-10-11, so the reader was built on LOINC's published table format (the samples HL7's and
+  HAPI FHIR's terminology tests carry, LOINC 2.6x to 2.7x columns) and the crossing on the property and scale tables
+  of LOINC 2.81's Users' Guide (§2.3, Table 8; §2.6, Table 12), read through the Internet Archive.
+- **units-loinc.tsv** crosses LOINC's two axes, not its terms: each property the guide lists (212, with `-` for a
+  panel and `Pr`, which older tables carry) to a kind, a line or nothing with its reason, and each scale (10) to a
+  shape, a line or nothing. 121 properties cross; 31 name a kind the law holds not yet and are vacant, `universal` (a
+  catalytic or a number concentration, a molality, a viscosity…); 60 are no measure, or no one kind (a finding, an
+  identity, an address, a logarithm, a score). A
+  term's kind is read through its property, and how its value is written through its scale; a temperature read as a
+  number is a position on its scale.
+- **Its licence** lets LOINC's parts be used "to organize, categorize, and be constituents of LOINC terms, and provide
+  links to external terminologies", with its notice (NOTICE); the crossing is that use: it links LOINC's property and
+  scale abbreviations, as its table writes them, to the law's kinds, in daftar's own words.

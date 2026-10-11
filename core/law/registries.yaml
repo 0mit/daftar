@@ -22,6 +22,8 @@ registry_files:
   - { registry: coefficients, file: "seed/knowledge/coefficients.yaml", key: coefficient, format: yaml }
   - { registry: unece-rec20, key: code }
   - { registry: units-unece-rec20, file: "seed/knowledge/units-unece-rec20.tsv", key: code }
+  - { registry: loinc, key: code }
+  - { registry: units-loinc, file: "seed/knowledge/units-loinc.tsv", key: code }
 knowledge_schemes:
   - scheme: isced-f-2013
     classifies: "fields of knowledge (education and training)"
@@ -111,6 +113,22 @@ knowledge_schemes:
     neighbours: none
     sources: "seed/knowledge/SOURCES.md"
     units: units-unece-rec20
+  - scheme: loinc
+    classifies: "laboratory and clinical observations — what is measured or observed, of what, and how its result is written (LOINC terms), each read through its property and its scale"
+    holding: fetched
+    fetch:
+      from: "https://loinc.org/downloads/"
+      reader: loinc-table-csv
+      latest: "LOINC publishes a release twice a year (2.xx); a person signed in at loinc.org with a free account, who accepts its licence, downloads it, and its LoincTable/Loinc.csv is read alone or inside the release's zip"
+    licence: LicenseRef-LOINC
+    release: "LOINC 2.81"
+    publisher: "Regenstrief Institute, and the LOINC Committee"
+    url: "https://loinc.org"
+    sensitive: special-category
+    levels: [{ level: term }]
+    neighbours: none
+    sources: "seed/knowledge/SOURCES.md"
+    units: units-loinc
 knowledge_scheme_form:
   holding: "shipped | extract | at-authority | fetched — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); held at the publisher and looked up there, checked here only by `code_pattern`; or fetched — each machine downloads the provider's own table (`fetch`) into a cache outside git (bin/fetch.py), under the provider's terms, and reads its codes there; while the release still carries a copy, a machine that has fetched none reads that"
   fetch: "with `fetched`: { from: the provider's own download, reader: how its rows are read, one of `fetch_shape.readers` (bin/fetch.py), latest: how to learn of its latest release }"
@@ -165,4 +183,4 @@ forms:
 # How a fetched table's rows are read: each reader turns the provider's own file into the rows its `registry_files` file
 # holds, and refuses a file whose columns are not the ones it reads (bin/fetch.py READERS).
 fetch_shape:
-  readers: [ilo-isco-08-xlsx, unece-rec20-xlsx]
+  readers: [ilo-isco-08-xlsx, unece-rec20-xlsx, loinc-table-csv]
