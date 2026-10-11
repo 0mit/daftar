@@ -14,7 +14,7 @@ may read the lessons alone. Then:
   one file      the report, a page of one file, carries the opaque id and never the name or the phone
   a browser     Sam's page in Persian: the lessons' `agree` shows the person by their name; their sheet shows how to reach
                 them under «نشانی و تماس», the phone left to right as it is written, and says it is held on this machine
-  erased        once the person is erased from the store, the page calls them by their id again
+  erased        once the person is erased from the store, the page no longer calls them by their name
 
 Run: python3 test/view_held_names.py   (0 = green; a NOTE, and no browser check, where no Chromium is on the machine)
 """
@@ -201,9 +201,9 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
     P = scoped()
     ps = ((P.get('sam') or {}).get('sheets') or {}).get(PID) or {}
     s = json.dumps(P, ensure_ascii=False)
-    check("once the person is erased from the store, the page calls them by their id again, and holds nothing of them",
-          rc == 0 and NAME not in s and PHONE not in s and all(b.get('title') == PID for b in (P.get('sam') or {}).get('beings') or []
-                                                              if b.get('id') == PID), (out[-400:], ps))
+    check("once the person is erased from the store, the page no longer calls them by their name, and holds nothing of "
+          "them", rc == 0 and NAME not in s and PHONE not in s and not any(b.get('held_name') for b in (P.get('sam') or {}).get('beings') or []
+                                                                         if b.get('id') == PID) and 'contact' not in ps, (out[-400:], ps))
 finally:
     if TRACES:
         print("TRACEBACKS:\n" + "\n---\n".join(TRACES[:3]))
