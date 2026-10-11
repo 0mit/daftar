@@ -90,3 +90,133 @@ view_lenses:operate	التشغيل	ش-غ-ل (to occupy, to keep at work)	propose
 view_lenses:inspect	الفَحْص	ف-ح-ص (to search, to dig into)	proposed	agent (claude opus-5.5), by hand
 section:manifest	الحَديقة	ح-د-ق (to surround: a garden walled round); الجنّة (al-janna, ج-ن-ن: a garden, what is covered by its trees)	proposed	agent (claude opus-5.5), by hand
 section:name_form	الاسم	س-م-و (to rise); و-س-م (a mark)	proposed	agent (claude opus-5.5), by hand
+roles:by	مِن قِبَل	قِبَل (qibal: the side facing one): from the side of — how Modern Arabic names the doer of a passive, as از سوی and tarafından; الفاعل (al-fāʿil: the grammarians' doer, the subject of a verb with an object or without one — Pāṇini's kartṛ)	proposed	agent (claude opus-5.5), by hand
+roles:of	مُتَعَلَّق	ع-ل-ق (to hang upon): what an act hangs upon — the word of the kalām and the uṣūl for what an act or a knowing is of (مُتَعَلَّق العِلم, مُتَعَلَّق الحُكم): what the act reaches, or what it is about; المفعول به (the grammarians' object, what the act falls upon); الموضوع is kept by the philosophers for the subject, ὑποκείμενον	proposed	agent (claude opus-5.5), by hand
+roles:through	عن طريق	طريق (ṭarīq: a road, a way): by way of — a tool, a document, words, a link, an agreement, as از راهِ and yoluyla; باء الاستعانة (the bi- of the instrument); بواسطة was term:via's, which `come` now takes	proposed	agent (claude opus-5.5), by hand
+roles:to	إلى	إلى (ilā: to, towards — the grammarians' انتهاء الغاية, the end an extent reaches): what it goes towards, or the one it is for; لِـ (li-: for, the lām of the one it is for)	proposed	agent (claude opus-5.5), by hand
+roles:from	مِن	مِن (min: from — the grammarians' ابتداء الغاية, the beginning of an extent): the fixed point it departs from — a source, a giver, a parent	proposed	agent (claude opus-5.5), by hand
+roles:at	في	في (fī: in, at): the grammarians' ظرف (ẓarf: a vessel), المفعول فيه — that in which it is done: where and when, which in an order, or the being it stands on, runs on or is kept at; عند (ʿinda: at, beside)	proposed	agent (claude opus-5.5), by hand
+roles:as	بِصِفَة	و-ص-ف (to describe): صِفة (ṣifa: a description, a quality) — in the capacity of, as what; الحال (al-ḥāl: the grammarians' circumstantial, the state in which); كـ (ka-: like)	proposed	agent (claude opus-5.5), by hand
+verbs:say	قَوْل	ق-و-ل (to say): to give one's word — the act whose deed is مَقول (acts:said)	proposed	agent (claude opus-5.5), by hand
+verbs:read	قِراءة	ق-ر-أ (to read, to recite — held by some to be first to gather): what a body read off a thing, a gauge, a page — whose deed is مقروء (acts:read)	proposed	agent (claude opus-5.5), by hand
+verbs:derive	اشتِقاق	ش-ق-ق (to split): split off from what was given — whose deed is مُشتَقّ (acts:derived); استنباط (istinbāṭ: drawing water up from a well — the jurists' derivation)	proposed	agent (claude opus-5.5), by hand
+verbs:make	صُنْع	ص-ن-ع (to make, to craft): made here from nothing given — whose deed is مصنوع (acts:made)	proposed	agent (claude opus-5.5), by hand
+verbs:be	كَوْن	ك-و-ن (to be): in the kalām, a body's كون is its being in a place (الحصول في الحيّز) — where a being is, at a position or at a being; the philosophers' الكون والفساد (coming to be and passing away) is another sense; يقع في (term:located_at, which `be` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:stand	قِيام	ق-و-م (to stand, to rise): قيام الشيء بغيره, a thing's subsisting on another — the philosophers' قيام العرض بالجوهر (an accident standing on its substance): what a step stands on, made of it or possible on it	proposed	agent (claude opus-5.5), by hand
+verbs:part	جُزْء	ج-ز-أ (to divide into portions): a part of a whole — the noun stands, as جزء does in Persian, where Arabic has no masdar for being a part; جزءٌ من (term:part_of, which `part` replaces); جزئي (a particular) is the logicians', not this	proposed	agent (claude opus-5.5), by hand
+verbs:name	تَسْمِية	س-م-و (to rise: a name raised over a thing) — a namespace names a being, once or more; و-س-م (a mark, as the Kufans held)	proposed	agent (claude opus-5.5), by hand
+verbs:come	صُدُور	ص-د-ر (to issue, to go forth): through whom a being came to be — the falāsifa's صدور, beings issuing one through another, every chain ending at واجب الوجود (crown:theone); بواسطة (term:via, which `come` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:own	مِلْكِيّة	م-ل-ك (to possess, to rule): owning — whose a being is, one owner; المالِك (term:owned_by, which `own` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:answer	مَسْؤوليّة	س-أ-ل (to ask): being the one who will be asked — who answers for a being, and in which mode; المسؤول (term:responsibility, which `answer` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:acquire	اقتِناء	ق-ن-ي (to acquire, to keep): from whom a being came to us — bought, rented, given, lent, inherited; الاقتناء (term:acquired, which `acquire` replaces); الشراء (a purchase: one way of the five)	proposed	agent (claude opus-5.5), by hand
+verbs:pass	عُبُور	ع-ب-ر (to cross over): statements carried from one layer to another; انتقال (intiqāl: a transfer — of property too)	proposed	agent (claude opus-5.5), by hand
+verbs:necessary	واجب	و-ج-ب (to fall due, to be necessary): Ibn Sina's wājib — what cannot not be; the crown's own word (واجب الوجود, crown:theone); the fiqh's wājib (obligatory) is kept apart, and the permission square says إلزامي	proposed	agent (claude opus-5.5), by hand
+verbs:contingent	ممكن خاص	م-ك-ن (to have room, to be able): the logicians' special possibility (الإمكان الخاص) — neither necessary nor impossible: what may be and may not be	proposed	agent (claude opus-5.5), by hand
+verbs:possible	ممكن	م-ك-ن (to have room, to be able): Ibn Sina's mumkin in its general sense (الإمكان العام) — what is not impossible	proposed	agent (claude opus-5.5), by hand
+verbs:impossible	ممتنع	م-ن-ع (to withhold): Ibn Sina's mumtaniʿ — what cannot be	proposed	agent (claude opus-5.5), by hand
+verbs:obligatory	إلزامي	ل-ز-م (to cling, to be bound): binding — a clause's must; واجب, the fiqh's word, is kept by the necessity square for Ibn Sina's wājib	proposed	agent (claude opus-5.5), by hand
+verbs:omissible	جائز الترك	ج-و-ز (to pass, to be allowed) + ترك (tark: a leaving): the uṣūlīs' own phrase — the obligatory is what may not be left (ما لا يجوز تركه), and what may be left is جائز الترك	proposed	agent (claude opus-5.5), by hand
+verbs:permitted	جائز	ج-و-ز (to pass, to be allowed): what is not forbidden — the uṣūlīs' general jāʾiz; مباح (mubāḥ) is narrower, the indifferent, both permitted and omissible	proposed	agent (claude opus-5.5), by hand
+verbs:forbidden	محظور	ح-ظ-ر (to fence in): barred — the jurists' synonym of حرام; ممنوع is passed over so the two squares do not share م-ن-ع with ممتنع	proposed	agent (claude opus-5.5), by hand
+verbs:agree	مُوافَقة	و-ف-ق (to fit, to suit): each party's yes; قبول (qabūl: the fiqh's acceptance, answering an offer, إيجاب)	proposed	agent (claude opus-5.5), by hand
+verbs:decline	رَفْض	ر-ف-ض (to cast off): a party's no	proposed	agent (claude opus-5.5), by hand
+verbs:pay	دَفْع	د-ف-ع (to push, to hand over): to give an amount; أداء (adāʾ: discharging what is owed)	proposed	agent (claude opus-5.5), by hand
+verbs:bear	تَحَمُّل	ح-م-ل (to carry): bearing a cost, in a share — تحمّل النفقات (to bear the costs)	proposed	agent (claude opus-5.5), by hand
+verbs:grant	إذْن	أ-ذ-ن (the ear: to give ear, to permit): leave given — read, write, enact or ratify; جائز (permitted) is the square's	proposed	agent (claude opus-5.5), by hand
+verbs:can	استِطاعة	ط-و-ع (to obey, to be able): being able — the theologians' استطاعة, the capacity to act; may, or must, as the square says; بند (a clause, what a `can` in words is)	proposed	agent (claude opus-5.5), by hand
+verbs:represent	نِيابة	ن-و-ب (to take one's turn): acting in another's stead, who is bound by what is done — نائب (a deputy); الوكالة (wakāla: the fiqh's agency)	proposed	agent (claude opus-5.5), by hand
+verbs:need	احتِياج	ح-و-ج (to be in want): needing something to function — how badly is a position on the necessity square	proposed	agent (claude opus-5.5), by hand
+verbs:meet	تَلْبِية	ل-ب-ي (to answer a call — the pilgrims' labbayk, here I am): تلبية الحاجة, meeting a need	proposed	agent (claude opus-5.5), by hand
+verbs:use	استِعمال	ع-م-ل (to work): putting to work — a being, an allowance, a technology; استخدام (istikhdām: putting into service — the root of خدمة, kept for `serve`)	proposed	agent (claude opus-5.5), by hand
+verbs:do	وَظِيفة	و-ظ-ف (to assign a daily portion): a function, a job — a router's, a file server's; the noun stands, as کار and görev do	proposed	agent (claude opus-5.5), by hand
+verbs:hold	احتِواء	ح-و-ي (to gather in, to contain): what a being can hold, and what it holds; سعة (saʿa: room — what it can hold only)	proposed	agent (claude opus-5.5), by hand
+verbs:run	تَنْفِيذ	ن-ف-ذ (to pierce through, to carry out): a machine runs an operating system, a program, an instance; التشغيل is view_lenses:operate's	proposed	agent (claude opus-5.5), by hand
+verbs:open	فَتْح	ف-ت-ح (to open): a session, an account opened	proposed	agent (claude opus-5.5), by hand
+verbs:move	تَسْيِير	س-ي-ر (to go, to travel): making a case go along its course — سيرة (a course); نقل (naql: moving a body from place to place) is not this	proposed	agent (claude opus-5.5), by hand
+verbs:step	خُطْوة	خ-ط-و (to stride): a step of a walk, the line a case moves along — the noun stands, as گام and adım do	proposed	agent (claude opus-5.5), by hand
+verbs:attend	حُضُور	ح-ض-ر (to be present): being present at an event, which takes the hours of those present	proposed	agent (claude opus-5.5), by hand
+verbs:measure	قِياس	ق-ي-س (to measure — and the logicians' syllogism, the jurists' analogy): reading a property of a being, at a moment, through an instrument	proposed	agent (claude opus-5.5), by hand
+verbs:record	تَسْجِيل	س-ج-ل (a scroll, a register — سِجِلّ): what a line held, written down position by position	proposed	agent (claude opus-5.5), by hand
+verbs:reckon	إحْصاء	ح-ص-ي (pebbles: to count by pebbles): a reckoning declared, read each time it is asked and never stored; حساب (an account) is kept for the books	proposed	agent (claude opus-5.5), by hand
+verbs:pin	تَثْبِيت	ث-ب-ت (to stand fast): fixing the moment and the commit a reading was read at	proposed	agent (claude opus-5.5), by hand
+verbs:classify	تَصْنِيف	ص-ن-ف (a kind, a sort): setting a being in its class by a code of a scheme	proposed	agent (claude opus-5.5), by hand
+verbs:concern	شَأْن	ش-أ-ن (an affair, a concern): صاحب الشأن, the person concerned — the person a record is about; بشأن (concerning); the owner is another question (`own`)	proposed	agent (claude opus-5.5), by hand
+verbs:rate	تقدير الحساسية	ق-د-ر (to measure out) + ح-س-س (to feel): how much harm a being can do a person if it leaves the garden	proposed	agent (claude opus-5.5), by hand
+verbs:fail	تَعَطُّل	ع-ط-ل (to stand idle): a way a being can break down, or is breaking down	proposed	agent (claude opus-5.5), by hand
+verbs:repair	إصلاح	ص-ل-ح (to be sound): setting a failure right, where the fix lives	proposed	agent (claude opus-5.5), by hand
+verbs:rule	حُكْم	ح-ك-م (to judge, to hold back): a person's ruling on a disagreement — the statements disputed, and the one chosen	proposed	agent (claude opus-5.5), by hand
+verbs:respond	إجابة	ج-و-ب (to answer — first to cut through): an observer's verdict on another's reading — it confirms, disputes or abstains — or a speaker's own words at a hearing	proposed	agent (claude opus-5.5), by hand
+verbs:weigh	مُوازَنة	و-ز-ن (to weigh): weighing criteria against each other, pair by pair; الوزن (foundation_rules:weight) is a body's own	proposed	agent (claude opus-5.5), by hand
+verbs:propose	اقتِراح	ق-ر-ح (to bring forth anew): beans offered to another garden, under an agreement	proposed	agent (claude opus-5.5), by hand
+verbs:take	اسْتِلام	س-ل-م (to hand over safe): receiving a proposal in, whole; قبول (qabūl: acceptance) is not this — taking in is not accepting	proposed	agent (claude opus-5.5), by hand
+verbs:rehearse	تَمْرِين	م-ر-ن (to be supple, to be practised): a rehearsal, a drill — a garden holding no facts about the world; اختبار (a test)	proposed	agent (claude opus-5.5), by hand
+verbs:serve	استِماع	س-م-ع (to hear): listening at an address and a port, through a protocol, as a خادم (khādim: a servant — Arabic's word for a server) does; خدمة is kept for the kind `service`	proposed	agent (claude opus-5.5), by hand
+verbs:carry	حَمْل	ح-م-ل (to carry): a link carries a tunnel, a disk a volume — الموجة الحاملة (the carrier wave); الحامِل (complements:bearer) is another sense	proposed	agent (claude opus-5.5), by hand
+verbs:route	تَوْجِيه	و-ج-ه (a face: to turn towards): traffic sent on to its next hop — Arabic networking's word for routing	proposed	agent (claude opus-5.5), by hand
+verbs:translate	ترجمة عناوين الشبكة	ت-ر-ج-م (to render) + عنوان (ʿunwān: an address — and a title, which the plural and the network keep apart): network address translation, an address rewritten as traffic crosses	proposed	agent (claude opus-5.5), by hand
+verbs:filter	تَصْفِية	ص-ف-و (to be clear, pure): letting traffic cross or stopping it — تصفية الحزم (packet filtering); جدار ناري (a firewall)	proposed	agent (claude opus-5.5), by hand
+verbs:book	قَيْد	ق-ي-د (to fetter: what is bound down in the books): القيد المحاسبي, an amount booked to an account of the analytic scheme, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:renew	تَجْدِيد	ج-د-د (to be new): a registration renewed	proposed	agent (claude opus-5.5), by hand
+verbs:mark	تَحْدِيد	ح-د-د (to set a limit: حدّ, a boundary): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
+verbs:produce	إنشاء	ن-ش-أ (to arise, to grow): bringing into being an artifact — a file, a build, a report; and the art of composing words (الإنشاء)	proposed	agent (claude opus-5.5), by hand
+verbs:draw	رَسْم	ر-س-م (to trace, to mark): a page draws — each drawing a رسم of what it draws	proposed	agent (claude opus-5.5), by hand
+qualifiers:channel	قَناة	قناة (a channel, a conduit — and a spear-shaft): what a listening surface, a link or a treatment is as a channel	proposed	agent (claude opus-5.5), by hand
+qualifiers:charged	مُعادِل	ع-د-ل (to make even): what a payment came to in another currency	proposed	agent (claude opus-5.5), by hand
+qualifiers:class	فِئة	ف-ي-ء (a band, a group): a class of the Contract of Parts; تصنيف is `classify`'s	proposed	agent (claude opus-5.5), by hand
+qualifiers:clause	بَنْد	بند (band, from Persian: a tie, a clause): what a clause holds beside its words — when it falls due, how it repeats, its window	proposed	agent (claude opus-5.5), by hand
+qualifiers:cover	شُمُول	ش-م-ل (to enfold): which parts of what a grant covers it opens, and whether each use states a reason	proposed	agent (claude opus-5.5), by hand
+qualifiers:drawing	مُخَطَّط	خ-ط-ط (to draw lines): a drawing — the mapping or being it draws, its story and its lenses	proposed	agent (claude opus-5.5), by hand
+qualifiers:method	مَنْهَج	ن-ه-ج (a plain road): how a reading was made; طريقة (a way) shares ط-ر-ق with the role `through`	proposed	agent (claude opus-5.5), by hand
+qualifiers:page	صَفْحة	ص-ف-ح (a broad flat face): a page of drawings	proposed	agent (claude opus-5.5), by hand
+qualifiers:placed	مَوْضِع	و-ض-ع (to lay, to put): where a thing is put — what a placement holds there, how well its position is known, its window	proposed	agent (claude opus-5.5), by hand
+qualifiers:presence	وُجود	و-ج-د (to find): found, or looked for and not found — being is what is found; حضور is kept for `attend`	proposed	agent (claude opus-5.5), by hand
+qualifiers:reading	اسْتِعْلام	ع-ل-م (to know): seeking to know — a query, what a reckoning selects and computes, read each time; قراءة is `read`'s	proposed	agent (claude opus-5.5), by hand
+qualifiers:result	نَتِيجة	ن-ت-ج (to bring forth young): what came of a measuring — a code	proposed	agent (claude opus-5.5), by hand
+qualifiers:series	سِلْسِلة	س-ل-س-ل (a chain): a series — what a line held at each position, its rows	proposed	agent (claude opus-5.5), by hand
+qualifiers:settles	تَسْوِية	س-و-ي (to make level): which occurrences of which clauses a payment settles, and how much of each	proposed	agent (claude opus-5.5), by hand
+qualifiers:share	حِصّة	ح-ص-ص (to fall to one's lot): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
+qualifiers:value	قِيمة	ق-و-م (to stand up, to be worth): the value a measuring read, with how well it is known	proposed	agent (claude opus-5.5), by hand
+qualifiers:walk	مَسْلَك	س-ل-ك (to go along a path): how a walk goes at a step — who acts, how long, the ways out	proposed	agent (claude opus-5.5), by hand
+qualifiers:weighing	مُقارَنات	ق-ر-ن (to join, to pair): the comparisons, pair by pair — the judgments a weighing writes	proposed	agent (claude opus-5.5), by hand
+beside_roles:id	مُعَرِّف	ع-ر-ف (to know, to recognise): what a statement is known by in its bean, so another can take it as a filler	proposed	agent (claude opus-5.5), by hand
+beside_roles:while	ما دام	د-و-م (to last): as long as — the statement holds while what it names matches	proposed	agent (claude opus-5.5), by hand
+beside_roles:why	سَبَب	س-ب-ب (a rope let down, then a cause — what one reaches by): the reason, in prose; التعليل (layers:reasoning) is the law's own	proposed	agent (claude opus-5.5), by hand
+beside_roles:note	مُلاحَظة	ل-ح-ظ (to glance at): a remark, in prose	proposed	agent (claude opus-5.5), by hand
+beside_roles:held	مَحْفوظ	ح-ف-ظ (to guard, to keep): kept off git, in a store a host resolves — this is its pointer; اللوح المحفوظ (the Preserved Tablet)	proposed	agent (claude opus-5.5), by hand
+kinds:codebase	مستودع الشيفرة	و-د-ع (to lay down in trust: a depository) + شيفرة (code, through French chiffre from Arabic ṣifr, a cipher, zero): a codebase	proposed	agent (claude opus-5.5), by hand
+kinds:product	مُنْتَج	ن-ت-ج (to bring forth): a product — a program made to be used, sold or given	proposed	agent (claude opus-5.5), by hand
+kinds:org	مُنَظَّمة	ن-ظ-م (to string pearls on a thread): an organisation	proposed	agent (claude opus-5.5), by hand
+kinds:person	شَخْص	ش-خ-ص (to stand out, to appear): a person; فرد (an individual — one of a number)	proposed	agent (claude opus-5.5), by hand
+kinds:instance	مَثِيل	م-ث-ل (to be like): one of a kind — a running instance of a product	proposed	agent (claude opus-5.5), by hand
+kinds:host	مُضِيف	ض-ي-ف (a guest): the one who receives guests — a machine that hosts	proposed	agent (claude opus-5.5), by hand
+kinds:virtual-host	مضيف افتراضي	ف-ر-ض (to posit, to suppose): a host that is posited, not a body — a rented virtual server	proposed	agent (claude opus-5.5), by hand
+kinds:domain	نِطاق	ن-ط-ق (to gird: a girdle, a range): a domain of the DNS — اسم النطاق, a domain name	proposed	agent (claude opus-5.5), by hand
+kinds:service	خِدْمة	خ-د-م (to serve): a service offered	proposed	agent (claude opus-5.5), by hand
+kinds:program	بَرْنامَج	Persian barnāme (bar + nāme: what is set down in writing): a program	proposed	agent (claude opus-5.5), by hand
+kinds:design	تَصْمِيم	ص-م-م (to resolve firmly): a design	proposed	agent (claude opus-5.5), by hand
+kinds:session	جَلْسة	ج-ل-س (to sit): a sitting — an agent's session, in which its acts are made	proposed	agent (claude opus-5.5), by hand
+kinds:contract	عَقْد	ع-ق-د (to tie a knot): a contract	proposed	agent (claude opus-5.5), by hand
+kinds:garden	حَديقة	ح-د-ق (to surround: a garden walled round): a garden this one records — as الحَديقة (section:manifest)	proposed	agent (claude opus-5.5), by hand
+kinds:document	وَثِيقة	و-ث-ق (to be firm, to trust): what is made fast and relied on — a document	proposed	agent (claude opus-5.5), by hand
+kinds:event	حَدَث	ح-د-ث (to happen, to be new): an event	proposed	agent (claude opus-5.5), by hand
+header:title	عُنْوان	عنوان (ʿunwān: the heading of a letter): what a bean is called	proposed	agent (claude opus-5.5), by hand
+header:summary	خُلاصة	خ-ل-ص (to be pure, to come clear): the gist — one sentence of what a bean is	proposed	agent (claude opus-5.5), by hand
+header:tags	وُسوم	و-س-م (to brand, to mark): marks — a bean's tags	proposed	agent (claude opus-5.5), by hand
+forms:clause.due	استِحقاق	ح-ق-ق (to be true, to become a right): the day a clause falls due — the first, when it repeats; تاريخ الاستحقاق (the due date)	proposed	agent (claude opus-5.5), by hand
+forms:clause.every	تَكْرار	ك-ر-ر (to return): how a clause repeats — each month of a calendar, six times	proposed	agent (claude opus-5.5), by hand
+forms:clause.notice	إشعار مسبق	ش-ع-ر (to perceive: making aware) + س-ب-ق (to go before): how long before it falls due a reader is told	proposed	agent (claude opus-5.5), by hand
+forms:clause.state	حالة	ح-و-ل (to turn): how a clause stands — in force, met, waived, broken, disputed; الحال (term:status) is the retired table's	proposed	agent (claude opus-5.5), by hand
+forms:clause.amount	مِقْدار	ق-د-ر (to measure out): how much — money, time, anything	proposed	agent (claude opus-5.5), by hand
+forms:clause.during	مدّة السريان	م-د-د (to stretch: a span) + س-ر-ي (to travel by night, to flow: a contract's being in force): the window in which a clause holds	proposed	agent (claude opus-5.5), by hand
+forms:clause.within	مدّة الاحتساب	م-د-د (a span) + ح-س-ب (to count): the window an amount is counted within — ninety days within any hundred and eighty	proposed	agent (claude opus-5.5), by hand
+forms:clause.used_by	مُسْتَعْمِلوه	ع-م-ل (to work, as استعمال, `use`): its users — the entries whose spans use the allowance: a person's stays, their leave	proposed	agent (claude opus-5.5), by hand
+forms:clause.when	شرط السريان	ش-ر-ط (a condition) + س-ر-ي (to flow: being in force): what brings a clause into force, where that is not a day	proposed	agent (claude opus-5.5), by hand
+forms:clause.each	لكلّ	ك-ل-ل (all, each): the clause occurs once for each bean or entry a reading holds	proposed	agent (claude opus-5.5), by hand
+forms:clause.of	نِسبةً من	ن-س-ب (to relate: a proportion): what the clause's amount is a share of, read from each occurrence	proposed	agent (claude opus-5.5), by hand
+forms:clause.falls_due	استحقاق نسبي	ح-ق-ق (to fall due) + ن-س-ب (to relate): when a clause falls due relative to another position, read each time	proposed	agent (claude opus-5.5), by hand
+forms:clause.by_role	بحسب الصفة	ح-س-ب (to reckon: according to) + صفة (a capacity): every party whose capacity this is, each bound alike	proposed	agent (claude opus-5.5), by hand
+forms:clause.over	للقِسْم	ق-س-م (to apportion): for the part of what the agreement concerns that this clause is for — of two purchases, the one paid in six instalments	proposed	agent (claude opus-5.5), by hand
+forms:settlement.clause	البند المسوّى	بند (a clause) + س-و-ي (to make level): the clause a payment settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.occurrence	مَرّة	م-ر-ر (to pass: a time, once): which occurrence of the clause it settles — each sale, each booking	proposed	agent (claude opus-5.5), by hand
+forms:settlement.amount	مبلغ مسدَّد	ب-ل-غ (to reach: an amount) + س-د-د (to stop a gap: paid off): how much of the occurrence it settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.note	إيضاح	و-ض-ح (to be clear): a remark on a settlement; ملاحظة is the note beside the roles	proposed	agent (claude opus-5.5), by hand

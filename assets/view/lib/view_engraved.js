@@ -33,6 +33,10 @@
         return s && s.title || b && b.title || null;
       }
     };
+    // THE LAW'S WORDS IN THE READER'S LANGUAGE: a verb, a role, a qualifier, a key beside the roles, a kind, a header
+    // key or a form's attribute, as the names layer names it (`names`, sent with the page for its reader); the law's
+    // own word where none does
+    t.name = function (group, word) { return (((E.names || {})[group] || {})[word]) || word; };
     t.open = function (what) { open(what, state); };
     t.wire = function (el) { wireOpen(t, el); };
     t.forward = function (order) { return forward(t, order); };
@@ -47,6 +51,7 @@
     var w = t.w, h = t.h, shapes = (spec && spec.shape) || [];
     o = o || {};
     if (v === 'unknown') return h`<span class="w-none">${t.say('sheet-unknown')}</span>`;
+    if (v === 'self') return h`<span class="eg-self">${t.say('sheet-self')}</span>`;   // the being this bean records
     if (Array.isArray(v)) return t.join(v.map(function (x) { return show(t, x, spec, o); }), ', ');
     if (v && typeof v === 'object' && 'count' in v) {
       var places = w.settings.settings.places[v.unit];
@@ -91,7 +96,7 @@
   function head(t, view) {
     var h = t.h, e = view.engraved || {};
     return h`<div class="eg-head">${(e.new || []).length ? h`<span class="eg-new">${e.new.map(function (k) {
-      return h`<button type="button" class="eg-btn" data-new="${k}">+ ${t.say('sheet-new')} ${k}</button>`; })}</span>` : ''}</div>`;
+      return h`<button type="button" class="eg-btn" data-new="${k}">+ ${t.say('sheet-new')} ${t.name('kinds', k)}</button>`; })}</span>` : ''}</div>`;
   }
 
   function mount(el, view, state) {
