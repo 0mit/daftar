@@ -226,3 +226,21 @@ Commission." Modified or adapted versions must be marked as such.
   as π): test/core_standards.py holds the crossing to it.
 - **Its terms** are the EPSG Dataset's terms of use (epsg.org/terms-of-use.html): the dataset is fetched by each
   machine, never redistributed; the crossing cites EPSG's codes.
+
+## gs1-ai — GS1's application identifiers (fetched)
+
+- **Not shipped.** Each machine fetches GS1's Barcode Syntax Dictionary (`gs1-syntax-dictionary.txt`, maintained by GS1
+  AISBL at github.com/gs1/gs1-syntax-dictionary, under the licence its scheme's row names) with
+  `python3 bin/fetch.py gs1-ai`, and reads each
+  application identifier — each of a range — with its specification and its title. The reader was built on
+  2026-10-11 against its release 2026-01-27 (541 identifiers).
+- **units-gs1-ai.tsv** crosses its measures by family, as GS1 writes them: `310n` a net weight in kg, the AI's last
+  digit `n` the decimal point's place (`decimals: n`), so (3103)001250 is 1.250 kg and the law's 1.250 kg is written
+  back as it. 55 of 61 families cross: the metric and the imperial weights, lengths, areas and volumes, net and of a
+  logistic unit, a grammage, a count, a percentage off; the law gains the square and cubic inch, foot and yard, the US
+  gallon and quart, and the troy ounce for them. Six cross to nothing with their reasons: an ounce that GS1 lets be a
+  weight or a volume (357n), and the amounts and prices, whose currency the AI leaves local or each value names.
+  Where several families cross to one unit (a net and a gross weight, a length, a width and a height), the law's value
+  is written back as the first of them, a net weight or a length: the law's quantity says how much, never which
+  dimension of a parcel it was.
+- **Its licence** would let it ship; daftar ships no one's table, so it is fetched like the others.

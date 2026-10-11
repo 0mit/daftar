@@ -787,5 +787,83 @@ for name, data, says in (("a script with no unit of measure", b"INSERT INTO epsg
           refused)
 shutil.rmtree(CACHE, ignore_errors=True)
 
+# GS1: a barcode's application identifiers, each measure with its unit and its decimal point's place
+gs = next(r for r in reg['knowledge_schemes'] if r['scheme'] == 'gs1-ai')
+check("GS1's application identifiers are held fetched from GS1's Barcode Syntax Dictionary, read by a "
+      "reader the law lists, and crossed by family: 310n a net weight in kg, its last digit the decimal point's place",
+      gs['holding'] == 'fetched' and 'gs1' in gs['fetch']['from'] and gs['fetch']['reader'] == 'gs1-syntax-dictionary'
+      and 'gs1-syntax-dictionary' in dmfetch.READERS and 'gs1-syntax-dictionary' in reg['fetch_shape']['readers']
+      and dmunits.crossing('gs1-ai')[('', '310n')].get('decimals') == 'n'
+      and all(c.endswith('n') == bool(r.get('decimals')) for (a, c), r in dmunits.crossing('gs1-ai').items()), gs)
+CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
+os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
+DICT = ("# a dictionary in GS1's shape\n#\n# AI    Flags  Specification   Attributes   Title\n\n"
+        "00         *?  N18,csum,gcppos2                  dlpkey                                           # SSCC\n"
+        "30          ?  N..8                              req=01,02                                        # VAR. COUNT\n"
+        "3100-3105  *?  N6                                req=01,02 ex=310n                                # NET WEIGHT (kg)\n"
+        "3150-3155  *?  N6                                req=01,02 ex=315n                                # NET VOLUME (l)\n"
+        "3200-3205  *?  N6                                req=01,02 ex=320n                                # NET WEIGHT (lb)\n"
+        "3570-3575  *?  N6                                req=01,02 ex=357n                                # NET VOLUME (oz)\n"
+        "37          ?  N..8                              req=00 req=02,8026                               # COUNT\n"
+        "3910-3919   ?  N3,iso4217 N..15                  req=8020 ex=391n                                 # AMOUNT\n"
+        "3940-3943   ?  N4                                req=255 ex=394n,8111                             # PRCNT OFF\n")
+src = os.path.join(CACHE, 'gs1-syntax-dictionary.txt')
+with open(src, 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write(DICT)
+r = subprocess.run([PY, os.path.join(ROOT, 'bin', 'fetch.py'), 'gs1-ai', '--from', src], capture_output=True, text=True,
+                   encoding='utf-8', env=dict(os.environ))
+K = dmknowledge.Knowledge(ROOT)
+check("fetch: GS1's dictionary is kept unchanged, each AI of a range read with its specification and title, its flags "
+      "and attributes passed over",
+      r.returncode == 0 and '41 rows' in r.stdout and (K.row('gs1-ai', '3103') or {}).get('format') == 'N6'
+      and (K.row('gs1-ai', '3103') or {}).get('name_en') == 'NET WEIGHT (kg)'
+      and (K.row('gs1-ai', '3912') or {}).get('format') == 'N3,iso4217 N..15', r.stdout + r.stderr)
+
+
+def element(ai, data):
+    """An element string's AI and data, as the law reads it."""
+    return dmunits.read('gs1-ai', data, ai)
+
+
+def written(value):
+    """The law's value written back as an element string: its AI, and its digits padded to the AI's fixed length."""
+    digits, ai = dmunits.write('gs1-ai', value)
+    fixed = re.fullmatch(r'N([0-9]+)', (K.row('gs1-ai', ai) or {}).get('format', ''))
+    return f"({ai}){digits.zfill(int(fixed.group(1))) if fixed else digits}"
+
+
+got = {s: element(*re.fullmatch(r'\((\d+)\)(\d+)', s).groups()) for s in
+       ('(3103)001250', '(3202)000750', '(3150)002000', '(37)24', '(3942)0750')}
+back = {s: written(v) for s, v in got.items()}
+refused = {}
+for s in ('(3572)001000', '(3912)978001500', '(3105)12.500'):
+    try:
+        element(*re.fullmatch(r'\((\d+)\)([\d.]+)', s).groups())
+    except ValueError as e:
+        refused[s] = str(e)
+check("GS1: an element string is read as the law's quantity and written back as itself — (3103)001250 is 1.250 kg, "
+      "(3202)000750 7.50 lb, (3150)002000 2000 L, (37)24 24 items, (3942)0750 7.50 % off — the decimal point where the "
+      "AI's last digit says",
+      got == {'(3103)001250': {'count': '1.250', 'unit': 'kg'}, '(3202)000750': {'count': '7.50', 'unit': '[lb_av]'},
+              '(3150)002000': {'count': '2000', 'unit': 'L'}, '(37)24': {'count': '24', 'unit': '{item}'},
+              '(3942)0750': {'count': '7.50', 'unit': '%'}} and back == {s: s for s in got}, (got, back))
+check("GS1: an ounce that may be a weight or a volume (357n) and an amount whose currency each value names (391n) cross "
+      "to nothing and say why; a value written with a point is refused",
+      'weight or a net volume' in refused.get('(3572)001000', '') and 'currency' in refused.get('(3912)978001500', '')
+      and 'digits without a point' in refused.get('(3105)12.500', ''), refused)
+check("GS1: the law's 1.25 kg is written as a net weight, 310n with two places, of the families crossing to kg the one "
+      "marked `back`", written({'count': '1.25', 'unit': 'kg'}) == '(3102)000125')
+for name, data, says in (("a line with no identifier", DICT + "XX   N6   # A TITLE\n", 'no application identifier'),
+                         ("a range that runs backwards", DICT + "3205-3200  N6  # A TITLE\n", 'no application identifier'),
+                         ("an identifier named twice", DICT + "3103  N6  # A TITLE\n", 'twice')):
+    try:
+        dmfetch.keep('gs1-ai', data.encode(), 'test')
+        refused_ = ''
+    except dmfetch.Refused as e:
+        refused_ = str(e)
+    check(f"fetch: GS1 — {name} — is refused, and nothing is kept", says in refused_ and len(dmfetch.fetched('gs1-ai')) == 1,
+          refused_)
+shutil.rmtree(CACHE, ignore_errors=True)
+
 print(f"\ncore_standards: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)

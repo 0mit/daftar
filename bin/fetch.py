@@ -265,8 +265,42 @@ def epsg_sql(data):
     return out
 
 
+def gs1_syntax_dictionary(data):
+    """GS1's Barcode Syntax Dictionary (`gs1-syntax-dictionary.txt`): one line an application identifier or a range of
+    them — `AIs [flags] specification [attributes] # title` — read into code (each AI of a range: `3100-3105` is six),
+    format (its specification: `N6`, `N3,iso4217 N..15`) and name_en (its title, `NET WEIGHT (kg)`). Its flags, its
+    attributes and its comments are GS1's, and are not read."""
+    try:
+        text = data.decode('utf-8')
+    except UnicodeDecodeError:
+        raise Refused("GS1's dictionary is not UTF-8 text") from None
+    out, seen = [], set()
+    for n, line in enumerate(text.splitlines(), 1):
+        if not line.strip() or line.lstrip().startswith('#'):
+            continue
+        body, _, title = line.partition('#')
+        words = body.split()
+        m = re.fullmatch(r'([0-9]{2,4})(?:-([0-9]{2,4}))?', words[0])
+        if not m or (m.group(2) and (len(m.group(2)) != len(m.group(1)) or m.group(2) < m.group(1))):
+            raise Refused(f"line {n} of GS1's dictionary names no application identifier read here: {words[0]!r}")
+        spec = [w for w in words[1:] if re.match(r'^\[?[NXYZ][0-9.]', w)]
+        if not spec:
+            raise Refused(f"line {n} of GS1's dictionary gives {words[0]} no specification")
+        first, last = m.group(1), m.group(2) or m.group(1)
+        for ai in range(int(first), int(last) + 1):
+            code = str(ai).zfill(len(first))
+            if code in seen:
+                raise Refused(f"GS1's dictionary names the application identifier {code} twice")
+            seen.add(code)
+            out.append({'code': code, 'format': ' '.join(spec), 'name_en': ' '.join(title.split())})
+    if not out:
+        raise Refused("GS1's dictionary names no application identifier")
+    return out
+
+
 READERS = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx,
-           'loinc-table-csv': loinc_table_csv, 'ifc-express': ifc_express, 'epsg-sql': epsg_sql}
+           'loinc-table-csv': loinc_table_csv, 'ifc-express': ifc_express, 'epsg-sql': epsg_sql,
+           'gs1-syntax-dictionary': gs1_syntax_dictionary}
 
 
 # ------------------------------------------------------------------------------------------------ the law's rows

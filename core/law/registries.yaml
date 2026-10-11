@@ -28,6 +28,8 @@ registry_files:
   - { registry: units-ifc-4x3, file: "seed/knowledge/units-ifc-4x3.tsv", key: code }
   - { registry: epsg-uom, key: code }
   - { registry: units-epsg-uom, file: "seed/knowledge/units-epsg-uom.tsv", key: code }
+  - { registry: gs1-ai, key: code }
+  - { registry: units-gs1-ai, file: "seed/knowledge/units-gs1-ai.tsv", key: code }
 knowledge_schemes:
   - scheme: isced-f-2013
     classifies: "fields of knowledge (education and training)"
@@ -163,6 +165,21 @@ knowledge_schemes:
     neighbours: none
     sources: "seed/knowledge/SOURCES.md"
     units: units-epsg-uom
+  - scheme: gs1-ai
+    classifies: "GS1's application identifiers: what a barcode's element string says after its AI — a trade item's net weight, a logistic unit's length, a count — each measure with its unit, and the AI's last digit the decimal point's place (`310n`)"
+    holding: fetched
+    fetch:
+      from: "https://raw.githubusercontent.com/gs1/gs1-syntax-dictionary/main/gs1-syntax-dictionary.txt"
+      reader: gs1-syntax-dictionary
+      latest: "GS1 publishes the Barcode Syntax Dictionary as a dated release (github.com/gs1/gs1-syntax-dictionary, its tags and its CHANGES); the dictionary follows the GS1 General Specifications, which add an AI when a release does"
+    licence: Apache-2.0
+    release: "GS1 Barcode Syntax Dictionary, the release `2026-01-27`"
+    publisher: "GS1 AISBL"
+    url: "https://ref.gs1.org/ai/"
+    levels: [{ level: ai }]
+    neighbours: none
+    sources: "seed/knowledge/SOURCES.md"
+    units: units-gs1-ai
 knowledge_scheme_form:
   holding: "shipped | extract | at-authority | fetched — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); held at the publisher and looked up there, checked here only by `code_pattern`; or fetched — each machine downloads the provider's own table (`fetch`) into a cache outside git (bin/fetch.py), under the provider's terms, and reads its codes there; while the release still carries a copy, a machine that has fetched none reads that"
   fetch: "with `fetched`: { from: the provider's own download, reader: how its rows are read, one of `fetch_shape.readers` (bin/fetch.py), latest: how to learn of its latest release }"
@@ -186,7 +203,7 @@ units_crosswalk_form:
   in: "a system of positions of the law (core/law/systems.yaml): alone, the code is that system's unit of position, and a count written with it is the position the system writes for that count (a Celsius reading); with `level`, the system whose cells the code counts"
   level: "with `in`: a level of that system — a month, a week — whose cells the code counts, read as an extent's `level` and `count` (`extent_form`), never as a duration"
   shape: "a shape of the core (core.yaml `shapes`): the code says only what a value is written as — `quantity`, `row` (a code: a name), `text`, `position`"
-  decimals: "with `unit`, `n`: the code is a family written with `n` for its last digit, and that digit says how many of a value's digits follow its decimal point, the value written without one (GS1's 310n)"
+  decimals: "`n`: the code is a family written with `n` for its last digit, and that digit says how many of a value's digits follow its decimal point, the value written without one (GS1's 310n); on a row with no target, a family that crosses to nothing, and says why"
   back: "`true` on the one row, of several crossing to one target, whose code that target is written back as; a target one row alone crosses to is written back as that row's code"
   vacant: "with no target, a reason of vacancies.yaml `reasons`: `universal`, the code waits for a kind the law will hold and holds not yet"
   why: "prose: why a row crosses as it does, where that is a judgment a reader should see (a month on an invoice is a calendar's cell, never its provider's mean month); and, on a row with no target, why the code crosses to nothing"
@@ -217,4 +234,4 @@ forms:
 # How a fetched table's rows are read: each reader turns the provider's own file into the rows its `registry_files` file
 # holds, and refuses a file whose columns are not the ones it reads (bin/fetch.py READERS).
 fetch_shape:
-  readers: [ilo-isco-08-xlsx, unece-rec20-xlsx, loinc-table-csv, ifc-express, epsg-sql]
+  readers: [ilo-isco-08-xlsx, unece-rec20-xlsx, loinc-table-csv, ifc-express, epsg-sql, gs1-syntax-dictionary]

@@ -1,0 +1,62 @@
+code	unit	decimals	back	why
+30	{item}			a variable count of items
+310n	kg	n	true	a net weight, read as the mass it states
+311n	m	n	true	a length
+312n	m	n		a width
+313n	m	n		a height
+314n	m2	n	true	an area
+315n	L	n	true	a net volume
+316n	m3	n	true	a net volume
+320n	[lb_av]	n	true	a net weight, read as the mass it states
+321n	[in_i]	n	true	a length
+322n	[ft_i]	n	true	a length
+323n	[yd_i]	n	true	a length
+324n	[in_i]	n		a width
+325n	[ft_i]	n		a width
+326n	[yd_i]	n		a width
+327n	[in_i]	n		a height
+328n	[ft_i]	n		a height
+329n	[yd_i]	n		a height
+330n	kg	n		a logistic unit's gross weight, read as the mass it states
+331n	m	n		a logistic unit's length
+332n	m	n		a logistic unit's width
+333n	m	n		a logistic unit's height
+334n	m2	n		a logistic unit's area
+335n	L	n		a logistic unit's volume
+336n	m3	n		a logistic unit's volume
+337n	kg/m2	n		a mass per area: a sheet's or a paper's grammage
+340n	[lb_av]	n		a logistic unit's gross weight, read as the mass it states
+341n	[in_i]	n		a logistic unit's length
+342n	[ft_i]	n		a logistic unit's length
+343n	[yd_i]	n		a logistic unit's length
+344n	[in_i]	n		a logistic unit's width
+345n	[ft_i]	n		a logistic unit's width
+346n	[yd_i]	n		a logistic unit's width
+347n	[in_i]	n		a logistic unit's height
+348n	[ft_i]	n		a logistic unit's height
+349n	[yd_i]	n		a logistic unit's height
+350n	[sin_i]	n	true	an area
+351n	[sft_i]	n	true	an area
+352n	[syd_i]	n	true	an area
+353n	[sin_i]	n		a logistic unit's area
+354n	[sft_i]	n		a logistic unit's area
+355n	[syd_i]	n		a logistic unit's area
+356n	[oz_tr]	n		a net weight in troy ounces, read as the mass it states
+357n		n		a net weight or a net volume in ounces, as GS1 allows either: no one unit of the law
+360n	[qt_us]	n	true	a net volume
+361n	[gal_us]	n	true	a net volume
+362n	[qt_us]	n		a logistic unit's volume
+363n	[gal_us]	n		a logistic unit's volume
+364n	[cin_i]	n	true	a net volume
+365n	[cft_i]	n	true	a net volume
+366n	[cyd_i]	n	true	a net volume
+367n	[cin_i]	n		a logistic unit's volume
+368n	[cft_i]	n		a logistic unit's volume
+369n	[cyd_i]	n		a logistic unit's volume
+37	{item}		true	a count of the trade items a logistic unit holds
+390n		n		an amount in the local currency, which the identifier does not name: money in no currency the law can read
+391n		n		an amount whose currency its first three digits name (ISO 4217's number): money, its unit read with each value, never fixed by the code
+392n		n		a price in the local currency, which the identifier does not name
+393n		n		a price whose currency its first three digits name: its unit read with each value
+394n	%	n		a percentage off a price
+395n		n		a price per a unit of measure the identifier does not name
