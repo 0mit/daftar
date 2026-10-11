@@ -427,8 +427,9 @@ def main(args):
     out = args[args.index("--out") + 1]
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     p = payload()
-    if "--lang" in args and args.index("--lang") + 1 < len(args):   # the reader's language: the widgets read it, and the
-        p["engraved"]["settings"]["garden"]["lang"] = args[args.index("--lang") + 1]   # page takes its direction from it
+    if "--lang" in args and args.index("--lang") + 1 < len(args):   # the reader's language: the widgets read it, the page
+        import view_engraved                                         # takes its direction from it, and the law's words
+        view_engraved.localize(p["engraved"], args[args.index("--lang") + 1])   # are named in it
     import view_export
     stem = os.path.splitext(out)[0]
     csvs, p["csv"] = [], {}

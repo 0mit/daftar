@@ -811,6 +811,24 @@ counts `characters`, and nothing counts lines; a datum's `direction` is before o
 descending; a table of a view reads a `series`, which is what it points at; and a fixing position's `origin` is an
 origin, in the form every position's origin takes.
 
+## core/law/core.yaml: roles[as]
+
+THE SEVENTH ROLE IS ARISTOTLE'S ὡς (2026-10-11; the operator, shown both words in Aristotle's own use: "yes make it
+ὡς"). Aristotle has two words for "as", and keeps them apart. ὡς is the way in which a thing is what it is said to be:
+of the causes of a statue one is a cause ὡς ὕλη, as matter, the other ὡς ὅθεν ἡ κίνησις, as whence the motion, and one
+of the ways is ὡς τὸ ἐξ οὗ, as that out of which — the law's `made-of` (Physics II.3 195a); and, beside a verb's object,
+what a thing is taken or used as, a room ᾧ ὡς ταμιείῳ ἐχρῆτο, used as a storeroom (LSJ, ὡς Ab.II.3). ᾗ is in so far as,
+qua: the side of the doer an act belongs to — the doctor builds οὐχ ᾗ ἰατρὸς ἀλλʼ οἰκοδόμος, not as doctor but as
+builder (Physics I.8 191b4) — and being qua being, τὸ ὂν ᾗ ὂν (Metaphysics Γ.1 1003a21), after which the role was first
+named.
+
+Of the law's twenty-one verbs that take `as`, two or three give the capacity a doer acts in — `do` a job, `represent`
+another, a party's part in `agree` — which is ᾗ's ground. The rest give the way of the relation, or what a thing is
+taken as: placed as presence, standing as made-of, acquired as bought, named as a name, measured as a property, a
+response given as a dispute. ᾗ cannot say those, ὡς says them all, and the capacity besides. So the role is named for
+ὡς, and ᾗ is kept in its source as the case where the doer's capacity is meant. Nothing a garden writes changes: the
+role's meaning is as it was, and only the word it is named for is corrected.
+
 ## core/law/core.yaml: knowing
 
 (std-vocab 32: `provenance_record`)
@@ -4480,6 +4498,22 @@ sees why: طبیعت names physis, not the natures; آفریدگار, Yaradan, S
 The roots are chosen for what they show about the item's use here, and they show what the languages share: λεκτόν is
 from λέγω, first to gather and lay in order, as a lekton is placed in an order; tissue is woven in all nine; a lens is
 a lentil in all nine; the order of bodies is Pascal's first order, Hartmann's strata and Ibn Miskawayh's ranks.
+
+THE WORDS A PAGE SHOWS ARE NAMED TOO (2026-10-11). A sheet shows a being's statements by their verbs and roles, and
+until now it showed them in the law's English: a Persian reader of their own garden met `pay`, `by`, `through` and
+`obligatory` on a page whose every other word was theirs. So the tables name, beside the registries and the terms, every
+verb, every role, every qualifier a verb declares, the keys beside the roles, every kind, the header's keys and the
+attributes of the forms a sheet draws (`verbs:pay`, `roles:by`, `qualifiers:clause`, `beside_roles:why`,
+`kinds:contract`, `header:title`, `forms:clause.due`), and the view reads them for its reader. The page's words stand in the
+same tables as the glossary's, because a reader who looks one up must find the word they saw. Each is the language's
+own word for the item as the law uses it: `by` is از سوی, the side the act comes from, not به دستِ, by the hand of,
+which is a person's only where the law's `by` is a document or a tool too; `hold` is دربرداشتن, what a being holds
+within it, not گنجایش, which is only what it can hold; `obligatory` is الزامی, binding, and not واجب, which the
+necessity square already keeps. A name is never the law's: the view shows it, and every check, every save and every
+reading uses the code. A word no table of the reader's language names is shown as the law writes it, never in a
+sibling's word, so a missing name is seen and not hidden. The tables' form — siblings, each row whole, each item a part
+of the law that exists, no two of a page's words alike in one language — is held by `test/names.py`, since the gate
+reads nothing of this layer.
 
 ## core/law/layers.yaml: standing
 

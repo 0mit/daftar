@@ -251,6 +251,28 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.4** (2026-10-11, daftar v2.4.0, human-ratified rule-changes: the units ladder, "yes all recommended", and
+  each PR read by the operator, "yes merge all four as CI passes", #138, #140, #142 and #143; the seventh role's word,
+  "yes make it ὡς", #146) — **four more standards' codes read as the law's units, and the role `as` named for
+  Aristotle's ὡς.** MINOR: rows and schemes added, nothing a garden could write refused.
+  - Units (#138, #140, #142, #143), each through the form of core 2.3 (`units_crosswalk_form`), each held fetched and
+    crossed by daftar's own pairings in `seed/knowledge/`:
+    - IFC 4.3's measure types (63 of 92 to a kind, 26 vacant `universal`) and its SI units by prefix and name. A
+      conversion-based unit is read by its exact factor (`bin/units.py --unit-of`), and a rounding meets no unit.
+    - EPSG's units of measure: 22 of 95 cross, each held to the size EPSG states, and the rest say why not.
+    - GS1's application identifiers, read with the decimal point their last digit places (`decimals: n`): 55 of 61
+      cross, and an element string is written back as itself.
+    - CLDR's unit names in English, Persian and Turkish. The release carries them (`seed/knowledge/cldr-units.tsv`,
+      Unicode License v3), and `bin/units.py --name` gives a unit its name in a language.
+
+    `core/law/units.yaml` gains thirteen units: `mm2`, `MPa`, the yard and the US survey foot, the square and cubic
+    inch, foot and yard, the US gallon and quart, and the troy ounce, each in UCUM with an exact factor.
+  - The seventh role (#146). `as`'s source is now ὡς, the way in which a thing is what it is said to be (Physics II.3
+    195a: ὡς ὕλη, ὡς τὸ ἐξ οὗ, the law's `made-of`). Aristotle's ᾗ (qua) is kept in the source as the case where the
+    capacity a doer acts in is meant (Physics I.8 191b4; Metaphysics Γ 1003a21). Of the 21 verbs that take `as`, two
+    or three give a doer's capacity, and the rest give the way of the relation, which ᾗ cannot say. The role's meaning
+    and every check are unchanged.
+
 - **core 2.3** (2026-10-11, daftar v2.3.0, human-ratified rule-changes: the view-handplace design's §12, ratified
   2026-10-11 as recommended, #132; the units ladder, "yes all recommended", #130 and #137; the unified-tools design's
   P5.4, #133 and #135; each PR read by the operator, "I've read the PRs all are okay") — **one sheet per being, a

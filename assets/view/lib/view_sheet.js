@@ -28,6 +28,10 @@
     var mayAny = data.may_write || data.rows.some(function (r) { return r.may_add || r.statements.some(function (s) { return s.may; }); })
       || Object.keys(data.header || {}).some(function (k) { return data.header[k].may; });
 
+    function label(verb, k) {
+      var row = data.verbs[verb] || {roles: {}, qualifiers: {}};
+      return t.name(k in (row.roles || {}) ? 'roles' : k in (row.qualifiers || {}) ? 'qualifiers' : 'beside_roles', k);
+    }
     // a value as it is shown: a form's value by its entries (widgets/form.js), one or many, every other by its shape
     function shown(v, spec) {
       var def = spec.form && (data.forms || {})[spec.form];
@@ -43,7 +47,7 @@
       var row = data.verbs[verb] || {roles: {}, qualifiers: {}}, specs = Object.assign({}, row.roles, row.qualifiers);
       var keys = Object.keys(specs).filter(function (k) { return roles && k in roles; }).concat(BESIDE.filter(function (k) { return roles && k in roles; }));
       return t.join(keys.map(function (k) {
-        return h`<span class="eg-role" data-role="${k}"><span class="eg-role-name">${k}</span> ${shown(roles[k], specs[k] || {shape: ['text']})}</span>`;
+        return h`<span class="eg-role" data-role="${k}"><span class="eg-role-name">${label(verb, k)}</span> ${shown(roles[k], specs[k] || {shape: ['text']})}</span>`;
       }), ' ');
     }
     function readOne(s) {
@@ -51,9 +55,9 @@
       return h`<li class="eg-statement${s.held ? ' eg-sealed' : ''}" data-fact="${s.key}">
         <div class="eg-roles">${s.roles ? rolesOf(s.verb, s.roles) : ''} ${held}</div>${known(s)}
         ${(s.defaults || []).map(function (d) {
-          return h`<div class="eg-default">${d.verb}: ${w.being.show(d.by, d.title || d.by, {action: 'open'})} — ${t.say('sheet-default', {says: d.says})}</div>`; })}
+          return h`<div class="eg-default">${t.name('verbs', d.verb)}: ${w.being.show(d.by, d.title || d.by, {action: 'open'})} — ${t.say('sheet-default', {says: d.says})}</div>`; })}
         ${(s.dependents || []).length ? h`<ol class="eg-dependents">${s.dependents.map(function (d) {
-          return h`<li class="eg-dependent" data-fact="${d.key}"><span class="eg-verb">${d.verb}</span> ${d.roles ? rolesOf(d.verb, d.roles) : ''}${known(d)}</li>`;
+          return h`<li class="eg-dependent" data-fact="${d.key}"><span class="eg-verb">${t.name('verbs', d.verb)}</span> ${d.roles ? rolesOf(d.verb, d.roles) : ''}${known(d)}</li>`;
         })}</ol>` : ''}</li>`;
     }
 
@@ -65,7 +69,7 @@
       return t.join(keys.map(function (k) {
         var spec = specs[k] || {shape: ['text']}, v = roles ? roles[k] : undefined, shapes = spec.shape || ['text'];
         var req = (row.required || []).indexOf(k) >= 0, nm = nameOf(prefix, k), input;
-        if (!may) return v === undefined ? '' : h`<span class="eg-role"><span class="eg-role-name">${k}</span> ${shown(v, spec)}</span>`;
+        if (!may) return v === undefined ? '' : h`<span class="eg-role"><span class="eg-role-name">${label(verb, k)}</span> ${shown(v, spec)}</span>`;
         var def = shapes.indexOf('form') >= 0 && spec.form && (data.forms || {})[spec.form];
         if (def) {                                  // a form's value, drawn by its entries (widgets/form.js)
           input = spec.many === 'true'
@@ -93,7 +97,7 @@
         } else {
           input = w.name.edit(nm, typeof v === 'string' ? v : v === undefined ? '' : JSON.stringify(v));
         }
-        return h`<label class="eg-field${req ? ' eg-req' : ''}" data-role="${k}"><span class="eg-role-name">${k}${req ? h` <span class="eg-req-word">(${t.say('sheet-required')})</span>` : ''}</span> ${input}<span class="eg-err" data-err="${nm}"></span></label>`;
+        return h`<label class="eg-field${req ? ' eg-req' : ''}" data-role="${k}"><span class="eg-role-name">${label(verb, k)}${req ? h` <span class="eg-req-word">(${t.say('sheet-required')})</span>` : ''}</span> ${input}<span class="eg-err" data-err="${nm}"></span></label>`;
       }), '');
     }
     function editOne(s, parentId) {
@@ -104,7 +108,7 @@
         ${s.may && (!s.held || s.held.here) ? h`<label class="eg-remove"><input type="checkbox" data-remove="${s.key}"> ${t.say('sheet-remove')}</label>` : ''}
         ${(s.dependents || []).length ? h`<ol class="eg-dependents">${s.dependents.map(function (d) { return editOne(d, s.id); })}</ol>` : ''}
         ${s.may && s.id ? t.join(Object.keys(depVerbs(s)).map(function (v) {
-          return h`<button type="button" class="eg-btn eg-add" data-add="${v}" data-of="${s.id}">+ ${t.say('sheet-add')} ${v}</button>`; }), ' ') : ''}
+          return h`<button type="button" class="eg-btn eg-add" data-add="${v}" data-of="${s.id}">+ ${t.say('sheet-add')} ${t.name('verbs', v)}</button>`; }), ' ') : ''}
         <span class="eg-err" data-err-fact="${s.key}"></span></li>`;
     }
     function depVerbs(s) {
@@ -121,17 +125,17 @@
     function draw() {
       n = 0;
       var hd = data.header || {}, title = hd.title || {}, summary = hd.summary;
-      var named = data.new ? (t.say('sheet-new') + ' ' + data.kind) : data.title;
+      var named = data.new ? (t.say('sheet-new') + ' ' + t.name('kinds', data.kind)) : data.title;
       var head = editing
-        ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">title</span> ${w.text.edit('header.title', title.value || '')}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
-            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">summary</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>`
+        ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">${t.name('header', 'title')}</span> ${w.text.edit('header.title', title.value || '')}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
+            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${t.name('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>`
         : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}</div>`;
       var rows = data.rows.length ? data.rows.map(function (r) {
         var meaning = (data.verbs[r.verb] || {}).meaning || '';
-        return h`<section class="eg-row" data-verb="${r.verb}"><h4 title="${meaning}">${r.verb}</h4><ol class="eg-statements">${
+        return h`<section class="eg-row" data-verb="${r.verb}"><h4 title="${meaning}">${t.name('verbs', r.verb)}</h4><ol class="eg-statements">${
           editing ? r.statements.map(function (s) { return editOne(s); }) : r.statements.map(function (s) { return readOne(s); })}</ol>${
-          editing && r.may_add ? h`<button type="button" class="eg-btn eg-add" data-add="${r.verb}">+ ${t.say('sheet-add')} ${r.verb}</button>` : ''}</section>`;
-      }) : h`<p class="eg-empty">${t.say('sheet-none', {kind: data.kind})}</p>`;
+          editing && r.may_add ? h`<button type="button" class="eg-btn eg-add" data-add="${r.verb}">+ ${t.say('sheet-add')} ${t.name('verbs', r.verb)}</button>` : ''}</section>`;
+      }) : h`<p class="eg-empty">${t.say('sheet-none', {kind: t.name('kinds', data.kind)})}</p>`;
       var bar = !t.write ? h`<p class="eg-copy">${t.say('sheet-copy')}</p>`
         : !mayAny ? ''
           : editing ? h`<div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-do="save">${t.say('sheet-save')}</button> <button type="button" class="eg-btn" data-do="cancel">${t.say('sheet-cancel')}</button> <span class="eg-said" data-said=""></span></div>`
