@@ -131,14 +131,30 @@
         return h`<div class="eg-detail"><span class="eg-role-name">${w.text.show(k)}</span> ${/^[+\d][\d\s()-]{5,}$/.test(String(c[k])) ? w.name.show(c[k], {kind: 'phone'}) : w.text.show(c[k])}</div>`;
       })}<p class="eg-held">${t.say('sheet-held')}</p></section>`;
     }
+    // WHAT A PAGE NAMES OF `details` (its `fields`): what fits no verb yet, kept whole until one is proposed — drawn as it
+    // is held, key by key, each value by the widget of what it looks like (a day, an amount, words), and never edited
+    // here: a sheet changes statements and the header, and what `details` keeps waits for its verb
+    function details() {
+      var keys = Object.keys(data.details || {});
+      if (!keys.length) return '';
+      function one(v) {
+        if (v && typeof v === 'object' && !Array.isArray(v) && !('count' in v)) {
+          return h`<dl class="eg-details-map">${Object.keys(v).map(function (k) { return h`<dt>${w.text.show(k)}</dt><dd>${one(v[k])}</dd>`; })}</dl>`;
+        }
+        return root.daftarEngraved.show(t, v, {shape: ['position', 'text']});
+      }
+      return h`<section class="eg-row eg-details" data-fact="details"><h4>${t.say('sheet-details')}</h4>${keys.map(function (k) {
+        return h`<div class="eg-detail" data-detail="${k}"><span class="eg-role-name">${w.text.show(k)}</span> ${one(data.details[k])}</div>`;
+      })}<p class="eg-known">${t.say('sheet-details-kept')}</p></section>`;
+    }
     function draw() {
       n = 0;
       var hd = data.header || {}, title = hd.title || {}, summary = hd.summary;
       var named = data.new ? (t.say('sheet-new') + ' ' + t.name('kinds', data.kind)) : data.title;
       var head = editing
         ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">${t.name('header', 'title')}</span> ${w.text.edit('header.title', title.value || '')}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
-            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${t.name('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>`
-        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}</div>${contact()}`;
+            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${t.name('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>${details()}`
+        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}</div>${contact()}${details()}`;
       var rows = data.rows.length ? data.rows.map(function (r) {
         var meaning = (data.verbs[r.verb] || {}).meaning || '';
         return h`<section class="eg-row" data-verb="${r.verb}"><h4 title="${meaning}">${t.name('verbs', r.verb)}</h4><ol class="eg-statements">${
