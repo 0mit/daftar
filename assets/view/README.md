@@ -169,7 +169,8 @@ runs and name every key, glyph and swipe by meaning (`earlier`, `later`, `next`)
 its title and summary, and each verb the page's `fields` names for its kind, its statements in the order the bean holds
 them, each with the statements that take it as their `of` beneath it (a payment with its `bear` shares and the clauses
 that ask it), who knows it (its knowing act), and the default the law derives where nothing is written (a payment no
-`bear` names: its payer bears it, alone, as the ledger reads it). What the page's `fields` names of the being's
+`bear` names: its payer bears it, alone, as the ledger reads it), and its tags where the page names them, each a word
+of its own. What the page's `fields` names of the being's
 `details` — what fits no verb yet, kept whole until one is proposed — is drawn beneath its head as it is held, key by
 key, each value by the widget of what it looks like, and never edited on the sheet. Where the reader may write the
 being — the gardener, or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns
@@ -185,7 +186,8 @@ yet made.
 
 **The one write path** (`lib/view_write.py`, `write(root, who, bean, ops, kind=None, may=None)`): a sheet's Save and a
 drawing's form of a verb (`writes: [{ verb, preset }]`) both send statements — `[{op: add|change|remove, key?, verb,
-roles, held?}]`, and `{op: change, header: title|summary, value}` — and both are written by it: each op read against its
+roles, held?}]`, `{op: change, header: title|summary, value}`, and `{op: change, header: tags, value: [words]}`, the
+tags as a set of words (none: the key taken out) — and both are written by it: each op read against its
 verb's row; `may` asked for the bean, or for the part each op touches; each edit through `bin/safe.py` by its key, one
 line, an expected count of 1; a held value sealed by `bin/held.py` before its statement is written; the statements added
 or changed known by the writer's `say`; each written statement read back and judged by the gate's own judge; then

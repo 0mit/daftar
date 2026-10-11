@@ -187,6 +187,7 @@ export const SAID = {
   'sheet-details': {en: 'Kept whole', fa: 'نگه‌داشته‌شده به همان شکل'},
   'sheet-details-kept': {en: 'What fits no verb yet, kept as it was written until a verb says it: read here, changed where it was written.',
                          fa: 'آنچه هنوز در هیچ فعلی نمی‌گنجد، همان‌طور که نوشته شده نگه داشته می‌شود تا فعلی آن را بگوید: اینجا خوانده می‌شود و همان‌جا که نوشته شده تغییر می‌کند.'},
+  'sheet-tags-sep': {en: ', ', fa: '، '},
   'sheet-self': {en: 'this one', fa: 'همین'},
   'sheet-required': {en: 'required', fa: 'لازم'},
   'sheet-copy': {en: 'A copy of the page, read only: a being is changed where its garden is served.',
