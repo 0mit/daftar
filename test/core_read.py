@@ -15,6 +15,8 @@ words refused, a reading at a pinned commit. ledger: positions and debts from `p
 data (--json), and the net between two. garden, where, stale, pos: the garden's law, a `root:` location resolved here, a
 cache's verdict, the position index's named scans. cursor: a file under a root resolves to its bean (part 5 left it).
 The aliases run the same tools. translate: today's series, walk, course, moves and reading written in statements, every value placed.
+split, first: bin/parse.py's splitter on the documents of test/vectors/front-matter.json, which a port of it (daftard's,
+in Go) runs as well, so two readers of one document cannot split it two ways.
 
 Run: python3 test/core_read.py   (0 = green; about a minute)
 """
@@ -230,6 +232,14 @@ The shop's code.
 """
 
 try:
+    # ---- THE SPLITTER: a document's front matter and body, by the vectors a port of it is held to as well
+    VECTORS = json.load(open(os.path.join(ROOT, 'test', 'vectors', 'front-matter.json'), encoding='utf-8'))['cases']
+    _split = [(c['name'], dmparse.split_front_matter(c['text']), (c['front'], c['body'])) for c in VECTORS]
+    check(f"split: bin/parse.py splits each of the {len(VECTORS)} documents of test/vectors/front-matter.json as it says "
+          f"— a byte-order mark, CR LF, a rule in the body, no fence, a fence ending in spaces, a line separator",
+          len(VECTORS) >= 17 and all(got == want for _n, got, want in _split),
+          [(n, got, want) for n, got, want in _split if got != want])
+
     # ---- THE RELEASE: v1.0.0, a release of the core made from this tree, and a garden grown from it
     grow.release(REL)
     r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), G, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=T)
