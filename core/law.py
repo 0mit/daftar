@@ -63,7 +63,7 @@ ROW_FIELDS = {
                 'overlay', 'meaning', 'why', 'vacant'},
     'schemes': {'scheme', 'classifies', 'publisher', 'url', 'levels', 'neighbours', 'sources', 'holding', 'licence',
                 'release', 'sensitive', 'code_pattern', 'relations', 'labels', 'crosswalk', 'same_ground_as', 'within',
-                'file', 'key', 'format', 'meaning', 'vacant'},
+                'file', 'key', 'format', 'meaning', 'units', 'vacant'},
     'files': {'registry', 'file', 'key', 'format'},
     'exclusive': {'verb', 'why'},
 }
@@ -714,6 +714,94 @@ class Law:
                     out.append((fw, "a field is read `from` the bean, or given as a `value`, never both"))
         return out
 
+    def units_crosswalk_problems(self):
+        """[(where, message)]: each scheme's crossing into the law's units and kinds (`units`), held to
+        registries.yaml's `units_crosswalk_form`: its registry declared and read, its columns the form's, and each row at
+        most one target that is the law's — a unit, a kind, a line, a system of positions alone or with one of its
+        levels, a shape — with `why` where it has none; `vacant` a vacancy's reason, on a row with no target; `decimals`
+        `n` on a unit's row whose code ends in it; and of several rows crossing to one target, one marked `back`."""
+        out = []
+        if not self.std:
+            return out
+        import units as dmunits
+        form = self.std.tables.get('units_crosswalk_form') or {}
+        cols = set(form) - {'requires'}
+        K = self.std.knowledge
+        lines = {str(r.get('line')) for r in listed((self.measure_law or {}).get('lines')) if isinstance(r, dict)}
+        systems = self.systems
+        for scheme, srow in sorted(K.schemes.items()):
+            reg = srow.get('units') if isinstance(srow, dict) else None
+            if not reg:
+                continue
+            where = f"scheme {scheme} units {reg}"
+            if reg not in K.decl:
+                out.append((where, f"names {reg!r}, which no registry file declares (`registry_files`, `files`)"))
+                continue
+            try:
+                rows = K.rows(str(reg))
+            except (KeyError, OSError) as e:
+                out.append((where, f"cannot be read: {e}"))
+                continue
+            if rows and set(rows[0]) - cols:
+                out.append((where, f"{', '.join(sorted(set(rows[0]) - cols))}: no column of `units_crosswalk_form` "
+                                   f"({', '.join(sorted(cols))})"))
+            seen, targets = set(), {}
+            for i, r in enumerate(rows):
+                r = {k: v for k, v in r.items() if v not in (None, '')}
+                code, axis = str(r.get('code') or ''), str(r.get('axis') or '')
+                at = f"{where} {(axis + ':') if axis else ''}{code or f'[{i + 1}]'}"
+                if not code:
+                    out.append((at, "a row names its `code`"))
+                    continue
+                if (axis, code) in seen:
+                    out.append((at, "is written twice: one row a code"))
+                seen.add((axis, code))
+                t = dmunits.target(r)
+                named = [k for k in dmunits.TARGETS if k in t]
+                if len(named) > 1:
+                    out.append((at, f"crosses to {' and '.join(named)}: one target a row"))
+                if 'level' in r and 'in' not in r:
+                    out.append((at, "`level` is a level of the system `in` names, and it names none"))
+                if not t and not r.get('why'):
+                    out.append((at, "crosses to nothing, and says no `why`"))
+                if r.get('vacant') is not None and (t or r['vacant'] not in self.vacancy_reasons):
+                    out.append((at, f"`vacant: {r['vacant']}` is a vacancy's reason ({', '.join(self.vacancy_reasons)}) "
+                                    f"on a row that crosses to nothing"))
+                if 'unit' in r and r['unit'] not in self.units:
+                    out.append((at, f"{r['unit']!r} is no unit of the law in UCUM (core/law/units.yaml)"))
+                if 'quantity' in r and r['quantity'] not in self.std.quantities:
+                    out.append((at, f"{r['quantity']!r} is no kind of the law (core/law/quantities.yaml)"))
+                if 'line' in r and r['line'] not in lines:
+                    out.append((at, f"{r['line']!r} is no line of the law: one of {', '.join(sorted(lines))}"))
+                if 'shape' in r and r['shape'] not in self.shapes:
+                    out.append((at, f"{r['shape']!r} is no shape of the core: one of {', '.join(sorted(self.shapes))}"))
+                if 'in' in r:
+                    srow = systems.get(r['in'])
+                    lvls = [str(lv.get('level')) for lv in listed((srow or {}).get('levels')) if isinstance(lv, dict)]
+                    if srow is None:
+                        out.append((at, f"{r['in']!r} is no system of positions of the law"))
+                    elif 'level' in r and r['level'] not in lvls:
+                        out.append((at, f"{r['level']!r} is no level of {r['in']}: one of {', '.join(lvls)}"))
+                    elif 'level' not in r and dmunits.position_tag(srow) is None:
+                        out.append((at, f"{r['in']} writes no position from a count, so no code is its unit of "
+                                        f"position: name one of its levels"))
+                if 'decimals' in r and (r['decimals'] != 'n' or 'unit' not in r or not code.endswith('n')):
+                    out.append((at, "`decimals: n` is a unit's family, its code written with `n` for its last digit"))
+                if r.get('back') not in (None, TRUE):
+                    out.append((at, "`back` is written `true`, or not at all"))
+                if t:
+                    targets.setdefault((axis, tuple(sorted(t.items()))), []).append((code, r.get('back') == TRUE))
+            for (axis, t), codes in sorted(targets.items()):
+                backs = [c for c, b in codes if b]
+                shown = ', '.join(f"{k}: {v}" for k, v in t)
+                if len(codes) > 1 and len(backs) != 1:
+                    out.append((where, f"{', '.join(c for c, _b in codes)} cross to {shown}, and "
+                                       f"{'none is' if not backs else f'{len(backs)} are'} marked `back`: one is the "
+                                       f"code it is written back as"))
+                elif len(codes) == 1 and backs:
+                    out.append((f"{where} {backs[0]}", f"is marked `back`, and is the one code crossing to {shown}"))
+        return out
+
     # ------------------------------------------------------------------------------------------------ proof
     def problems(self):
         """[(rule, where, message)]: the law's own consistency. Each one is an error: a law that does not hold together
@@ -926,6 +1014,8 @@ class Law:
         for where, msg in self.given_twice(dim_rows):
             bad(where, msg)
         for where, msg in self.crosswalk_problems():
+            bad(where, msg)
+        for where, msg in self.units_crosswalk_problems():
             bad(where, msg)
         names = {}
         for u, row in self.units.items():

@@ -150,3 +150,27 @@ Commission." Modified or adapted versions must be marked as such.
   TDWG's attribution in NOTICE. The names they cite remain their publishers'.
 - **What the files are for:** `bin/crosswalk.py` reads them, and nothing else, to carry records in and back. A field
   with no row is listed, never dropped; test/crosswalk.py proves a round trip equal field for field.
+
+## units-<scheme>.tsv — a standard's codes of units, crossed into the law's units and kinds
+
+- **daftar's own.** Each row names one code of a standard's own list and the law's row it crosses to — a unit in UCUM,
+  a kind, a line, a system's positions or its cells, a shape — or, crossing to nothing, why (`units_crosswalk_form`,
+  core/law/registries.yaml). The pairings and the reasons are daftar's; the codes cited remain their publishers', and no
+  name, description or definition of theirs is copied. CC BY 4.0, with daftar's law. `bin/units.py` reads them; the
+  standard's own table is held where its scheme's `holding` says.
+
+## unece-rec20 — UN/CEFACT Recommendation No. 20, codes for units of measure used in international trade (fetched)
+
+- **Not shipped.** Each machine fetches UN/CEFACT's own spreadsheet (Revision 17, `rec20_Rev17e-2021.xlsx`) with
+  `python3 bin/fetch.py unece-rec20`, keeps it unchanged outside git and reads its codes there: code, status, English
+  name, symbol. unece.org may answer a script with a challenge meant for a browser; a person then downloads the file
+  there and reads it with `--from`. The reader was built on 2026-10-11 against a copy of that file taken from a public
+  mirror, unece.org refusing the machine it ran on (305,526 bytes, sha-256
+  994a85c3682e67604d42dbda3b35d672338a45b400f5397a96a4c5467ee8056d): 2,136 codes, 309 marked deleted and 71 deprecated.
+- **Its terms are an open question:** as read on 2026-10-08, UNECE's site footer says CC BY 4.0 and its terms-of-use
+  page says otherwise, and UNECE has not been asked which governs its code lists (`LicenseRef-UNECE-terms` until it
+  answers). Holding it fetched makes each copy its fetcher's own use under UNECE's terms, whichever they are.
+- **units-unece-rec20.tsv** crosses 179 of its codes into the law: each code whose unit the law writes, the counts of
+  things (C62, H87, EA, NAR, SET, PR), the calendar's cells an invoice counts (DAY, WEE, MON, ANN — never Rec 20's own
+  durations of them) and the three temperature scales' readings; and says why seven codes cross to nothing (J2, 4P,
+  GL, DZN, QAN, E14, ZZ). A code it does not name is one whose unit the law does not write.

@@ -247,7 +247,11 @@ A name is a statement: the namespace gives it.
 ## What a being is, measured, coded and used
 - **`measure`** reads a property of a being (ISO 19156): `of` the being, `as` the property, its `value`, `at` the
   moment, `through` the instrument, `by` the observer. A reading made again is a new statement; change is read, never
-  stored. A unit is UCUM's code (`kg`, `GiBy`, `Cel`), its English name the law's (`core/law/units.yaml`).
+  stored. A unit is UCUM's code (`kg`, `GiBy`, `Ohm`), its English name the law's (`core/law/units.yaml`); a
+  temperature read is a position on its scale (`C:21.5`), never a quantity. A standard's own code of a unit — an
+  invoice's `KGM`, a month it bills — crosses into the law's units and kinds by a table of the law
+  (`core/law/registries.yaml`, `units_crosswalk_form`): a value written with it is read as the law's, and the law's
+  written back with it (`python3 bin/units.py`), and a month an invoice bills is a cell of the calendar, never a duration.
 - **`classify`** says what a being is in the world's shared terms: a code of a scheme of our knowledge tree,
   `<scheme>:<code>` — `isco-08:2522`, `isced-f-2013:0612`, `technology:samba`. **`use`** says what it rests on: a
   technology, a field. Every code is checked against its scheme; an invented code is refused. The schemes are kept

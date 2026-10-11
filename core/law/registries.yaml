@@ -1,5 +1,6 @@
 # Where a standard's own table is kept (seed/knowledge/), and the schemes of our knowledge tree: ISCED-F 2013, ISCO-08,
-# the technologies, the geologic chart and the rest, with what each column of a scheme says.
+# the technologies, the geologic chart and the rest, with what each column of a scheme says. A table each machine
+# fetches from its provider, and no release carries a copy of, names no file: its rows are this machine's fetched copy.
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 registry_files:
   - { registry: isced-f-2013, file: "seed/knowledge/isced-f-2013.tsv", key: code }
@@ -19,6 +20,8 @@ registry_files:
   - { registry: crosswalk-fhir-r5-observation, file: "seed/knowledge/crosswalk-fhir-r5-observation.tsv", key: fhir }
   - { registry: crosswalk-dwc, file: "seed/knowledge/crosswalk-dwc.tsv", key: dwc }
   - { registry: coefficients, file: "seed/knowledge/coefficients.yaml", key: coefficient, format: yaml }
+  - { registry: unece-rec20, key: code }
+  - { registry: units-unece-rec20, file: "seed/knowledge/units-unece-rec20.tsv", key: code }
 knowledge_schemes:
   - scheme: isced-f-2013
     classifies: "fields of knowledge (education and training)"
@@ -93,6 +96,21 @@ knowledge_schemes:
     levels: [{ level: place }, { level: mode }]
     neighbours: none
     sources: "seed/RATIONALE.md"
+  - scheme: unece-rec20
+    classifies: "units of measure in trade — the unit an invoice, an order, a customs declaration or a shipping notice writes a quantity in, as UN/CEFACT codes it (Recommendation No. 20; an e-invoice's `unitCode`)"
+    holding: fetched
+    fetch:
+      from: "https://unece.org/sites/default/files/2021-06/rec20_Rev17e-2021.xlsx"
+      reader: unece-rec20-xlsx
+      latest: "UN/CEFACT's code list recommendations (https://unece.org/trade/uncefact/cl-recommendations) name each revision of Recommendation No. 20 and its spreadsheet; a new revision is a file of its own, read by the same reader while its columns are these"
+    licence: LicenseRef-UNECE-terms
+    release: "Recommendation No. 20, Revision 17"
+    publisher: "UN/CEFACT, the United Nations Economic Commission for Europe"
+    url: "https://unece.org/trade/uncefact/cl-recommendations"
+    levels: [{ level: unit }]
+    neighbours: none
+    sources: "seed/knowledge/SOURCES.md"
+    units: units-unece-rec20
 knowledge_scheme_form:
   holding: "shipped | extract | at-authority | fetched — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); held at the publisher and looked up there, checked here only by `code_pattern`; or fetched — each machine downloads the provider's own table (`fetch`) into a cache outside git (bin/fetch.py), under the provider's terms, and reads its codes there; while the release still carries a copy, a machine that has fetched none reads that"
   fetch: "with `fetched`: { from: the provider's own download, reader: how its rows are read, one of `fetch_shape.readers` (bin/fetch.py), latest: how to learn of its latest release }"
@@ -102,8 +120,27 @@ knowledge_scheme_form:
   code_pattern: "with `at-authority`: the form a code must take, a regular expression"
   relations: "a registry of relations between its own codes, rows {from, to, rel}, `rel` one of part-of, requires, adjacent (N23); resolved by the `registry_links` rows the garden declares for it"
   labels: "[{language, registry, attribution?}] — its labels in another language: a registry of {code, name} rows, and the words its publisher asks to be printed with them, verbatim (N25)"
+  units: "a registry of rows in the form `units_crosswalk_form` — its codes crossed into the law's units and kinds, one row a code, so a value written with one of its codes is read as the law's, and the law's written back with its code (bin/units.py)"
+# HOW A SCHEME'S CODES CROSS INTO THE LAW'S UNITS AND KINDS (`knowledge_schemes.units`): one row a code, in a registry of
+# its own whose file holds the columns it uses of these. A crossing is daftar's: it names the provider's codes and pairs
+# each with the law's own rows, and the provider's table stays where its holding keeps it. The law's proof holds every
+# row to this form.
+units_crosswalk_form:
+  code: "a code of the scheme, as its provider writes it; with `axis`, a value its provider writes in that column of its rows"
+  axis: "optional: the column of the scheme's rows the row crosses a value of (LOINC's `property`, `scale`), where the scheme's codes are read through what each says on an axis rather than one by one"
+  unit: "a unit of the law (core/law/units.yaml, in UCUM): the code is that unit, and measures that unit's quantity"
+  quantity: "a kind of the law (core/law/quantities.yaml): the code says what is measured, and not in which unit"
+  line: "a line of the law (core/law/measures.yaml `lines`): the code says that what it measures is a position on that line, never a quantity — a temperature reading, a moment, an ordinal judgment"
+  in: "a system of positions of the law (core/law/systems.yaml): alone, the code is that system's unit of position, and a count written with it is the position the system writes for that count (a Celsius reading); with `level`, the system whose cells the code counts"
+  level: "with `in`: a level of that system — a month, a week — whose cells the code counts, read as an extent's `level` and `count` (`extent_form`), never as a duration"
+  shape: "a shape of the core (core.yaml `shapes`): the code says only what a value is written as — `quantity`, `row` (a code: a name), `text`, `position`. Beside a line another axis names, `quantity` reads as a number on that line: a temperature read as a number is a position on its scale"
+  decimals: "with `unit`, `n`: the code is a family written with `n` for its last digit, and that digit says how many of a value's digits follow its decimal point, the value written without one (GS1's 310n)"
+  back: "`true` on the one row, of several crossing to one target, whose code that target is written back as; a target one row alone crosses to is written back as that row's code"
+  vacant: "with no target, a reason of vacancies.yaml `reasons`: `universal`, the code waits for a kind the law will hold and holds not yet"
+  why: "prose: why a row crosses as it does, where that is a judgment a reader should see (a month on an invoice is a calendar's cell, never its provider's mean month); and, on a row with no target, why the code crosses to nothing"
+  requires: "at most one target — `unit`, `quantity`, `line`, `in` (alone or with `level`), `shape` — and a row with none says why; `axis` and `code` together name one row"
 forms:
-  registry_files: { registry: required, file: required, key: required, format: optional }
+  registry_files: { registry: required, file: optional, key: required, format: optional }
   knowledge_schemes:
     scheme: required
     classifies: required
@@ -123,8 +160,9 @@ forms:
     code_pattern: optional
     relations: optional
     labels: optional
+    units: optional
 
 # How a fetched table's rows are read: each reader turns the provider's own file into the rows its `registry_files` file
 # holds, and refuses a file whose columns are not the ones it reads (bin/fetch.py READERS).
 fetch_shape:
-  readers: [ilo-isco-08-xlsx]
+  readers: [ilo-isco-08-xlsx, unece-rec20-xlsx]
