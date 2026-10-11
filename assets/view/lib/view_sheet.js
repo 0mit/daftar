@@ -24,10 +24,16 @@
     if (data && !data.rows) data = data.bean ? (t.E.sheets || {})[data.bean] : null;   // a sheet drawing: its being's
     var h = t.h, w = t.w;
     if (!data) { t.mount(el, h`<p class="eg-empty">—</p>`); return; }
-    var editing = false, n = 0;
+    var editing = false, n = 0, fo = {names: (t.E.names || {}).forms || {}};   // a form's attributes in the reader's language
     var mayAny = data.may_write || data.rows.some(function (r) { return r.may_add || r.statements.some(function (s) { return s.may; }); })
       || Object.keys(data.header || {}).some(function (k) { return data.header[k].may; });
 
+    // a value as it is shown: a form's value by its entries (widgets/form.js), one or many, every other by its shape
+    function shown(v, spec) {
+      var def = spec.form && (data.forms || {})[spec.form];
+      if (!def) return root.daftarEngraved.show(t, v, spec);
+      return Array.isArray(v) ? t.join(v.map(function (e) { return w.form.show(e, def, fo); }), '; ') : w.form.show(v, def, fo);
+    }
     function known(s) {
       if (!s.known || !s.known.by) return '';
       var who = t.titleOf(s.known.by) || s.known.by;
@@ -37,7 +43,7 @@
       var row = data.verbs[verb] || {roles: {}, qualifiers: {}}, specs = Object.assign({}, row.roles, row.qualifiers);
       var keys = Object.keys(specs).filter(function (k) { return roles && k in roles; }).concat(BESIDE.filter(function (k) { return roles && k in roles; }));
       return t.join(keys.map(function (k) {
-        return h`<span class="eg-role" data-role="${k}"><span class="eg-role-name">${k}</span> ${root.daftarEngraved.show(t, roles[k], specs[k] || {shape: ['text']})}</span>`;
+        return h`<span class="eg-role" data-role="${k}"><span class="eg-role-name">${k}</span> ${shown(roles[k], specs[k] || {shape: ['text']})}</span>`;
       }), ' ');
     }
     function readOne(s) {
@@ -59,8 +65,13 @@
       return t.join(keys.map(function (k) {
         var spec = specs[k] || {shape: ['text']}, v = roles ? roles[k] : undefined, shapes = spec.shape || ['text'];
         var req = (row.required || []).indexOf(k) >= 0, nm = nameOf(prefix, k), input;
-        if (!may) return v === undefined ? '' : h`<span class="eg-role"><span class="eg-role-name">${k}</span> ${root.daftarEngraved.show(t, v, spec)}</span>`;
-        if (spec.many === 'true' || Array.isArray(v)) {
+        if (!may) return v === undefined ? '' : h`<span class="eg-role"><span class="eg-role-name">${k}</span> ${shown(v, spec)}</span>`;
+        var def = shapes.indexOf('form') >= 0 && spec.form && (data.forms || {})[spec.form];
+        if (def) {                                  // a form's value, drawn by its entries (widgets/form.js)
+          input = spec.many === 'true'
+            ? t.join((Array.isArray(v) ? v : []).concat([{}]).map(function (e, i) { return h`<span class="eg-form-entry">${w.form.edit(nm + '.' + i, e, def, fo)}</span>`; }), '')
+            : w.form.edit(nm, v, def, fo);
+        } else if (spec.many === 'true' || Array.isArray(v)) {
           input = w.name.edit(nm, Array.isArray(v) ? v.join(', ') : (v || ''));
         } else if (shapes.indexOf('quantity') >= 0 && (v === undefined || (v && typeof v === 'object'))) {
           input = h`${w.number.edit(nm + '.count', v ? v.count : '')} ${w.name.edit(nm + '.unit', v ? v.unit : '')}`;
@@ -160,6 +171,23 @@
           var c = w.number.take(q(nm + '.count').value), u = w.name.take(q(nm + '.unit').value);
           if (c.error) { errs.push([nm, c.error]); return; }
           if (c.value !== '' || u.value) roles[k] = {count: c.value, unit: u.value};
+          return;
+        }
+        var def = spec.form && (data.forms || {})[spec.form];
+        if (def) {                                  // a form's value, as the law writes it, or an error at its field
+          var takeOne = function (n2) {
+            var r = w.form.take(w.form.collect(li, n2), def);
+            if (r.error) { errs.push([n2 + '.' + r.at, r.error]); return undefined; }
+            return Object.keys(r.value).length ? r.value : undefined;
+          };
+          if (spec.many === 'true') {
+            var list = [];
+            for (var i = 0; li.querySelector('[data-name="' + nm + '.' + i + '"]'); i++) { var e = takeOne(nm + '.' + i); if (e) list.push(e); }
+            if (list.length) roles[k] = list;
+          } else {
+            var one = takeOne(nm);
+            if (one) roles[k] = one;
+          }
           return;
         }
         if (q(nm + '.json')) {

@@ -163,6 +163,9 @@ that ask it), who knows it (its knowing act), and the default the law derives wh
 or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns every fact they may
 write into the widget of its shape (read from the verb's row: never typed in a page), with a remove mark on each
 statement and an add for each verb; **one Save** is one write; Cancel drops the draft. There is no button per field.
+A value in one of the law's forms — what a clause holds beside its words, what a payment settles — is drawn and edited
+by its entries (`widgets/form.js`): its day in the reader's calendar, its repetition in their words, a choice of the
+bean's own clauses, never a text of JSON to type; what the form holds that no widget draws is written back as it was.
 A page a `new` names opens an empty sheet of a kind, whose first Save mints the bean (`p-<8 hex>` for a person, titled
 by the id; `<kind>-<8 hex>` for another) and writes it whole — the gardener's alone, since no grant names a being not
 yet made.
@@ -357,6 +360,8 @@ copy of the release the garden runs, so a value is shown by the law the garden k
 | `lib/widgets/choice.js` | choice, choices, code | a row by its label, taken by its key |
 | `lib/widgets/being.js` | being | a bean by its title, reached by its id |
 | `lib/widgets/exact.js` | number | sums of written amounts as fractions of two integers |
+| `lib/widgets/recurrence.js` | recurrence | a repetition said in the reader's words, calendar and digits — each week on Tuesday and Thursday, ninety minutes each time — and edited by its parts: the cell it repeats in, the places in it (a week's days as the reader's region begins a week), where it starts, how many times, how long each lasts; the time systems and the units of a length of time are the law's, sent by the host |
+| `lib/widgets/form.js` | a form's value | what a clause holds beside its words (`clause`), what a payment settles (`settlement`): drawn by its entries, each attribute by the widget that implements its value, as the host resolves it from the law (`view_engraved.form_def`); what it cannot draw is kept as written |
 | `lib/widgets/safe.js` | — | `h```: the one way HTML is built; `mount`: the one door into a page |
 | `lib/widgets/locale.js` | — | the reader's digits, separators, calendar, direction and words, all CLDR's through `Intl` |
 | `lib/widgets/settings.js` | — | what the garden's host sends with a page: its language, calendar, zone, each currency's places |
