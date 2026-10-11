@@ -217,11 +217,13 @@ Four things are asked of every being, each its own statement, never one:
   and names no day.
 - **What a being can hold** is `hold`: `hold: { by: nas, of: { count: "2", unit: TBy } }`, read beside what is placed
   in it.
-- **Two bodies are not in one room at once.** Two `be … as: location` at one position — a rack's slot, an address —
-  are refused unless one is part of, or at, the other (a sayable takes no room); so are two listeners at one port on one address; and a being
-  attending two happenings whose times, to the moment, overlap. A garden may declare a verb **exclusive** in its
-  `VOCAB.md` (`exclusive: [ { verb: attend, why: … } ]`): then one being holds it once over any extent of its `at`,
-  across every bean, and what was declined holds nothing.
+- **Two bodies are not in one room at once.** Two `be … as: location` at one position that names a point — a rack's
+  slot, a coordinate, one network address — are refused unless one is part of, or at, the other (a sayable takes no
+  room); an area — a country, a postal code, a network — holds many, and each system says which its positions name
+  (`covers`); so are two listeners at one port on one address; and a being attending two happenings whose times, to
+  the moment, overlap. A garden may declare a verb **exclusive** in its `VOCAB.md`
+  (`exclusive: [ { verb: attend, why: … } ]`): then one being holds it once over any extent of its `at`, across every
+  bean, and what was declined holds nothing.
 
 ## Names: what establishes an identity
 A name is a statement: the namespace gives it.

@@ -710,6 +710,19 @@ same days, one room lent twice — and the check is across every bean of the gar
 the language so that a garden which needs it writes it in its own VOCAB.md, as a RULE-CHANGE; the law puts it on no term,
 because nothing the standard holds is exclusive for every garden.
 
+A POINT IS ONE ROOM; AN AREA HOLDS MANY (2026-10-12, the operator's choice of a law change now, over the place widget's
+work alone). The rule was written for a rack's slot and a coordinate, and it judged every position alike: two persons
+who live in one city, each `be { at: "osm:relation/6663864", as: location }` — what a person who picks the city from the
+place widget's list is placed at — were refused as two bodies in one room, and so were two in one country
+(`iso-3166`), one postal code and one network (`10.0.0.0/8`). Measured on the gate before the change, each is refused;
+two at one coordinate are refused too, and should be. A country is not a room. So the rule asks only of a position that
+names a point, and each place system says which its positions name (`core/law/systems.yaml: system_shape.covers`); a
+garden's own system that says nothing is read as a point, as every position was, so nothing that passed stops passing.
+The alternatives: the gate's own list of the systems that name points — the rule would keep a copy of what the systems'
+law is for saying, and a garden's own system could not be on it; and the law left as it was, the widget writing
+`as: place` for an area it picks — right for the widget, which does so too, but a person who writes `as: location` at
+a country by hand, as the language invites, would still be refused for something true.
+
 ## core/law/core.yaml: rules[vacancy]
 
 WHOEVER DECLARES A POSITION ACCOUNTS FOR IT (taken over from today's gate in v1 part 2, §16 item 8, 2026-10-01: "do the
@@ -1268,6 +1281,33 @@ years, which the `ip` anchor beside it had always used, and which the software t
 hand-written copy of a validator is wrong in ways nobody has found yet. So a row names the check or states a pattern,
 never both, and the names are a closed list the tools must actually carry. The library's OWN spelling is the one form:
 that is what makes two gardens' addresses comparable as text, which is how a ledger compares them.
+
+## core/law/systems.yaml: system_shape.covers
+
+WHAT A POSITION NAMES: A POINT, OR AN AREA (2026-10-12). Two bodies are not in one room at once
+(`core/law/core.yaml: rules[room]`) is true of a point and false of an area: two persons are at one coordinate only if
+one has taken the other's place, and any number live in one country. Which a position names is its system's to say, as
+its `neighbours` and its `levels` are, so the gate keeps no list of its own:
+point             one spot, one item, one resource: a coordinate (`geographic`), a slot in a frame (`local-frame`), a
+distance along a being (`along`), a bearing and a distance from a point (`relative`), a path in a
+filesystem, an object in a repository or a store, one position on a line (`ordinal-number`), a port, a
+URI.
+area              a region, which holds many: a country or a subdivision (`iso-3166`), a postal code ("one code covers
+many places"), a street address (a household is many persons, and "one building has many"
+addresses), a network segment, a geohash's or a plus code's cell, a shelf, a drawer or a room
+(`physical`), and a stretch fixed by events (`event-anchored`: "an interval, never a point").
+{ point, area }   where one system names both, a pattern of each, read of the position without its system's tag: in
+`ipv4` and `ipv6` an address, or a prefix of all its bits, is a point and a shorter prefix a network;
+in `osm` a node is a point, and a way or a relation — a street, a city's boundary — an area. A
+position neither pattern reads is a point: the rule judges what it cannot read, as it did.
+WHERE A SYSTEM NAMES BOTH AND NO PATTERN TELLS THEM APART, it is an area: a `geonames` feature is a town, a province or a
+peak by its class, which its id does not carry, and a garden that means one spot writes the coordinate beside it, which
+the rule judges as a point.
+Every system of the standard a being is placed at (its dimension `place` or `any`) says it, and the law's own proof
+holds each to this shape; a system of time is never where a being is placed, so it says nothing. A garden's own system
+may say nothing and is read as a point, as every position was before a system could say: nothing that passed is
+refused. Kept as a word of the system's shape, not a new dimension or a level: whether a position holds many is not
+how fine it is — a geohash cell of twelve characters is a few centimetres wide and still a cell.
 
 ## core/law/systems.yaml: systems[unix-filesystem]
 

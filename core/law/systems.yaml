@@ -5,6 +5,7 @@
 systems:
   - system: unix-filesystem
     dimension: place
+    covers: point
     complement: [stated, bearer]
     levels: open
     neighbours: none
@@ -16,6 +17,7 @@ systems:
     why: "a path is reassignable and a tree can be checked out anywhere, so it CORROBORATES a location and never fixes it — the same rule that keeps `hostname` and `ip` corroborating-only"
   - system: git-remote
     dimension: place
+    covers: point
     complement: [stated, bearer]
     neighbours: none
     datum: host
@@ -26,6 +28,7 @@ systems:
     why: "a repository is mirrored and moved between hosts: where it is fetched from corroborates which code it holds, and the code's own identity is its `git_remote`"
   - system: git-object-graph
     dimension: place
+    covers: point
     complement: [stated, bearer]
     neighbours: counted
     datum: host
@@ -36,6 +39,7 @@ systems:
     why: "an object id is content-addressed — it names the same object in every clone that has it, and no two clones can disagree about what it contains"
   - system: guix-store
     dimension: place
+    covers: point
     complement: [stated, bearer]
     neighbours: none
     meaning: "an item in a GNU Guix store: a build output named by a hash of EVERYTHING that went into building it. With git-object-graph, the second place system here in which a position says what it holds — for a BUILT thing, where git's is for a written one."
@@ -46,6 +50,7 @@ systems:
     why: "the hash is computed from the inputs, so the same position names the same build on every machine that has it"
   - system: physical
     dimension: place
+    covers: area
     complement: [stated, bearer]
     meaning: "where a PHYSICAL COPY is: a printed listing on a shelf, a disk in a drawer, a machine in a room. Declared because a codebase is not always a tree on a host — this ledger's own first rule is that it must survive being printed on paper and rescanned, and a printed copy has an address like anything else."
     pattern: none
@@ -648,6 +653,7 @@ systems:
     why: "as for kelvin-scale"
   - system: geographic
     dimension: place
+    covers: point
     complement: [stated, bearer]
     neighbours: metered
     restrictions: { lines: 3, metered: length }
@@ -659,6 +665,7 @@ systems:
     why: "a coordinate says where something IS and never which thing it is: two beings can stand in one spot, and one being can move"
   - system: event-anchored
     dimension: any
+    covers: area
     datum: named
     neighbours: counted
     meaning: "a position fixed by NEIGHBOURING EVENTS rather than by any coordinate — 'after the branch was pushed, before the cutover'. Fully positioned while carrying no calendar value at all. Declared because it is what makes this a registry rather than a two-item enum: SEQUENCE is the general structure and a coordinate system is one restriction of it."
@@ -668,6 +675,7 @@ systems:
     why: "an event anchor positions relative to other positions — it fixes an interval, never a point"
   - system: ordinal-number
     dimension: any
+    covers: point
     datum: line
     neighbours: counted
     restrictions: { lines: 1, order: total }
@@ -679,6 +687,7 @@ systems:
     why: "an ordinal number says which of a line's positions, never which being"
   - system: network-segment
     dimension: place
+    covers: area
     complement: [stated, bearer]
     resolves_through: geographic
     levels: [{ level: network }, { level: segment }]
@@ -690,6 +699,7 @@ systems:
     why: "a being moves between segments — a laptop joins the guest network and then the staff one — so a segment corroborates where it is and never fixes which being it is"
   - system: windows-filesystem
     dimension: place
+    covers: point
     complement: [stated, bearer]
     levels: open
     neighbours: none
@@ -701,6 +711,7 @@ systems:
     why: "a path is reassignable and a tree can be checked out anywhere — it corroborates a location, never fixes it. Identical to the unix case, because the reason has nothing to do with the operating system."
   - system: ipv4
     dimension: place
+    covers: { point: "^[0-9.]+(/32)?$", area: "/([0-9]|[12][0-9]|3[01])$" }
     complement: [stated, bearer]
     levels: { by: prefix-length, from: 0, to: 32 }
     neighbours: counted
@@ -712,6 +723,7 @@ systems:
     why: "reassignable by DHCP, NAT, failover and plain reuse — it corroborates which being answers and never fixes which being it IS. The same rule the `ip` anchor has always carried, now stated where the position is."
   - system: ipv6
     dimension: place
+    covers: { point: "^[0-9a-f:.]+(/128)?$", area: "/([0-9]|[1-9][0-9]|1[01][0-9]|12[0-7])$" }
     complement: [stated, bearer]
     levels: { by: prefix-length, from: 0, to: 128 }
     neighbours: counted
@@ -723,6 +735,7 @@ systems:
     why: "everything ipv4's reason says, and one more: v6 addresses are also AUTOCONFIGURED, so a being may answer at an address nobody assigned and nobody recorded."
   - system: tcp-port
     dimension: place
+    covers: point
     complement: [stated, bearer]
     transport: tcp
     within: [ipv4, ipv6]
@@ -735,6 +748,7 @@ systems:
     why: "a port is reassigned by editing one line of configuration — it corroborates which listener answers and never fixes which being it is"
   - system: udp-port
     dimension: place
+    covers: point
     complement: [stated, bearer]
     transport: udp
     within: [ipv4, ipv6]
@@ -747,6 +761,7 @@ systems:
     why: "as for tcp-port"
   - system: uri
     dimension: place
+    covers: point
     complement: [stated, bearer]
     neighbours: counted
     meaning: "a position in the web: a resource as RFC 3986 names it — its scheme, the authority that serves it (a name or an address, with a port) and its path. Where a page is published, where a service answers: its authority resolves through the name system to an address and a port"
@@ -757,6 +772,7 @@ systems:
     why: "a page moves between addresses, and a name is given to another: where a thing is shown is not what it is"
   - system: iso-3166
     dimension: place
+    covers: area
     complement: [stated, bearer]
     resolves_through: geographic
     levels: [{ level: country }, { level: subdivision }]
@@ -768,6 +784,7 @@ systems:
     why: "a published code names the same territory in every garden; it survives a renaming, which a name does not"
   - system: osm
     dimension: place
+    covers: { point: "^node/", area: "^(way|relation)/" }
     complement: [stated, bearer]
     resolves_through: geographic
     neighbours: none
@@ -779,6 +796,7 @@ systems:
     why: "An element id names a row in a third party's database: elements are split, merged, deleted and re-created, a tag may simply be wrong (a school tagged `place=village`), and the whole map is a CAPTURE of somebody else's truth under ground rule 3. It corroborates which mapped object was meant. What a place is rooted in is a coordinate on a body."
   - system: geonames
     dimension: place
+    covers: area
     complement: [stated, bearer]
     resolves_through: geographic
     neighbours: none
@@ -790,6 +808,7 @@ systems:
     why: "a gazetteer's row is merged and deleted as its editors find two rows of one place, with no forwarding from the row that went (its daily deletes file), and one place may still have two; it corroborates which feature was meant. What a place is rooted in is a coordinate on a body."
   - system: street-address
     dimension: place
+    covers: area
     complement: [stated, bearer]
     within: [iso-3166]
     resolves_through: geographic
@@ -800,6 +819,7 @@ systems:
     why: "an address names a DELIVERY POINT that is renumbered, renamed and shared — and one building has many"
   - system: local-frame
     dimension: place
+    covers: point
     complement: [stated, bearer]
     datum: host
     resolves_through: geographic
@@ -812,6 +832,7 @@ systems:
     why: "rooms are renumbered and racks re-filled; and the frame itself may be moved"
   - system: along
     dimension: place
+    covers: point
     complement: [stated, bearer]
     resolves_through: local-frame
     neighbours: metered
@@ -824,6 +845,7 @@ systems:
     why: "a distance along a being says where on it, never which being"
   - system: geohash
     dimension: place
+    covers: area
     complement: [stated, bearer]
     resolves_through: geographic
     levels: { by: prefix-length, from: 1, to: 12 }
@@ -836,6 +858,7 @@ systems:
     why: "a cell says roughly where and never what"
   - system: plus-code
     dimension: place
+    covers: area
     complement: [stated, bearer]
     resolves_through: geographic
     levels: { by: prefix-length, from: 2, to: 15 }
@@ -848,6 +871,7 @@ systems:
     why: "as for geohash"
   - system: postal-code
     dimension: place
+    covers: area
     complement: [stated, bearer]
     resolves_through: geographic
     within: [iso-3166]
@@ -860,6 +884,7 @@ systems:
     why: "codes are re-drawn by the postal operator that issues them, and one code covers many places"
   - system: relative
     dimension: place
+    covers: point
     complement: [stated, bearer]
     resolves_through: geographic
     neighbours: metered
@@ -924,6 +949,7 @@ systems:
     why: "a cell says roughly when, never what"
 system_shape:
   neighbours: [none, counted, metered]
+  covers: [point, area]
   reckoning: [arithmetic, astronomical, observational, tabulated]
   crosswalk: [computed, table, observed, none]
   day_begins: [midnight, sunset, noon]
@@ -994,6 +1020,7 @@ forms:
   systems:
     system: required
     dimension: required
+    covers: optional
     levels: optional
     neighbours: optional
     datum: optional

@@ -272,6 +272,52 @@ _probs = Law.load(("VOCAB.md", {"systems": [{"system": "week-of-the-shed", "dime
 check("a system's own example is held to its own pattern: the core's law refuses one that is not",
       any("its own `example` '2026-38'" in m for _r, _w, m in _probs), _probs)
 check("...and every system of the core's law holds its own example", not Law.load().problems(), Law.load().problems())
+
+# ---------------------------------------------------------------- what a position covers: a point is one room, an area many
+os.remove(os.path.join(G, "beans", "box.md"))
+
+
+def two_at(at, as_="location"):
+    """Two persons, kept under opaque ids, placed at one position: what the gate says of the room between them."""
+    for pid in ("p-0a0a0a01", "p-0a0a0a02"):
+        with open(os.path.join(G, "beans", pid + ".md"), "w", encoding="utf-8") as fh:
+            fh.write(f"""---
+bean: {pid}
+kind: person
+title: "{pid}"
+statements:
+  - say: {{ by: keeper, at: "2026-09-20 10:00+03:30" }}
+  - own: {{ by: theone, of: self }}
+  - be:  {{ id: lives, by: self, at: "{at}", as: {as_} }}
+---
+A person.
+""")
+    return gate()
+
+
+ROOM = "two beings are not in one room"
+for at, why in (("osm:relation/6663864", "a city's element"), ("IR", "a country"), ("IR:14155", "a postal code"),
+                ("10.0.0.0/8", "a network, by its prefix"), ("geonames:112931", "a gazetteer's feature")):
+    out = two_at(at)
+    check(f"AN AREA HOLDS MANY: two persons placed at {at} ({why}) as their location are not refused",
+          ROOM not in out and "0 error" in out, out[-500:])
+for at, why in (("EPSG:4326;35.6892,51.3890", "one coordinate"), ("osm:node/7", "a map's node"),
+                ("10.0.0.5", "one address"), ("10.0.0.5/32", "one address, as a prefix of all its bits")):
+    out = two_at(at)
+    check(f"A POINT IS ONE ROOM: two persons at {at} ({why}) as their location are refused, as before", ROOM in out, out[-500:])
+out = two_at("EPSG:4326;35.6892,51.3890", "place")
+check("...and placed there only as a place, not a location, they take no room", ROOM not in out and "0 error" in out, out[-500:])
+rows = {r["system"]: r for r in sv["anchor_systems"]}
+check("every system a being is placed at says what its positions cover — a point or an area, or patterns for both — and "
+      "the law's own proof holds it", all(rows[s].get("covers") for s in rows if str(rows[s].get("dimension")) in ("place", "any"))
+      and rows["osm"]["covers"] == {"point": "^node/", "area": "^(way|relation)/"} and rows["geographic"]["covers"] == "point"
+      and rows["iso-3166"]["covers"] == "area", {s: rows[s].get("covers") for s in rows if str(rows[s].get("dimension")) == "place"})
+_probs = Law.load(("VOCAB.md", {"systems": [{"system": "shed-shelf", "dimension": "place", "covers": "wide", "pattern": "^shelf:[0-9]+$",
+                                             "example": "shelf:3"}]})).problems()
+check("...a system that covers what the shape does not offer is refused by it; one of a garden's own that says nothing is "
+      "read as a point, as before", any("covers `wide`" in m for _r, _w, m in _probs)
+      and not Law.load(("VOCAB.md", {"systems": [{"system": "shed-shelf", "dimension": "place", "pattern": "^shelf:[0-9]+$",
+                                                  "example": "shelf:3"}]})).problems(), _probs)
 shutil.rmtree(T, ignore_errors=True)
 
 print("\ncalendars: %d failed" % len(FAILS))

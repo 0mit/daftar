@@ -80,10 +80,11 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       is not the gardener it is held `while` a statement — their word — holds. A commit that seals or unseals one says
       so in its entry, one line, `- held: <bean> <id> added` or `erased`. A sensitivity rated below the one its bean
       derives is a person's own word: the `rate` is said by a person, never derived.
-- [ ] **room** — Two bodies are not in one room at once: two `be … as: location` at one position, neither part of nor
-      at the other — a sayable takes no room; two `serve` at one port on one address; one being attending two happenings whose times, to the
-      moment, overlap. A verb the garden declares exclusive (`VOCAB.md`, `exclusive`) holds one being once over any
-      extent of its `at`; what was declined holds nothing.
+- [ ] **room** — Two bodies are not in one room at once: two `be … as: location` at one position that names a point
+      (its system's `covers`; an area holds many), neither part of nor at the other — a sayable takes no room; two
+      `serve` at one port on one address; one being attending two happenings whose times, to the moment, overlap. A
+      verb the garden declares exclusive (`VOCAB.md`, `exclusive`) holds one being once over any extent of its `at`;
+      what was declined holds nothing.
 - [ ] **vacancy** — Every row the garden adds to the law — a kind, a level, a verb, a namespace, a unit, a row of a
       table — is used by a statement or a bean (`details` too), or says why it is vacant (`vacant: <why>`). Add a row
       with the first bean that uses it.

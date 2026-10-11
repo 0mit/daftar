@@ -57,7 +57,7 @@ ROW_FIELDS = {
     'verbs': {'verb', 'meaning', 'roles', 'qualifiers', 'required', 'choice', 'default', 'replaces', 'home', 'figure',
               'vacant'},
     'units': {'unit', 'name', 'quantity', 'factor', 'per', 'ucum', 'why', 'vacant'},
-    'systems': {'system', 'dimension', 'pattern', 'form_note', 'example', 'levels', 'restrictions', 'neighbours',
+    'systems': {'system', 'dimension', 'covers', 'pattern', 'form_note', 'example', 'levels', 'restrictions', 'neighbours',
                 'complement', 'calendar', 'reckoning', 'day_begins', 'datum', 'boundaries_in', 'cells_in', 'checked_by',
                 'crosswalk', 'establishes', 'resolves_through', 'same_ground_as', 'transport', 'unit_symbols', 'within',
                 'overlay', 'meaning', 'why', 'vacant'},
@@ -882,6 +882,25 @@ class Law:
             if kept is not None and str(kept) not in listed(shape.get('kept')):
                 bad(f"namespaces {name}", f"is kept `{kept}`, which is nowhere `namespace_shape.kept` names "
                                           f"({', '.join(listed(shape.get('kept')))})")
+        covers = listed(((self.std.tables or {}).get('system_shape') or {}).get('covers')) if self.std else []
+        for name, row in (self.systems or {}).items():         # WHAT A POSITION COVERS: a point or an area, the room rule's
+            c = row.get('covers') if isinstance(row, dict) else None   # question; a pair of patterns where it holds both
+            if c is None:
+                if name in (self.std_systems() or {}) and str(row.get('dimension')) in ('place', 'any'):
+                    bad(f"systems {name}", "a system a being is placed at says what its positions cover — `covers: point`, "
+                                           "`area`, or `{ point: <pattern>, area: <pattern> }`")
+                continue
+            if isinstance(c, dict):
+                if not c or set(c) - set(covers) or not all(isinstance(v, str) for v in c.values()):
+                    bad(f"systems {name}", f"`covers` as patterns names each of {', '.join(covers)} it holds, a pattern "
+                                           f"of its positions each")
+                for v in c.values():
+                    try:
+                        re.compile(str(v))
+                    except re.error as e:
+                        bad(f"systems {name}", f"`covers` holds a pattern that does not compile: {e}")
+            elif str(c) not in covers:
+                bad(f"systems {name}", f"covers `{c}`, which `system_shape.covers` does not offer ({', '.join(covers)})")
         for name, row in (self.systems or {}).items():         # a system's own example is in its own form (16.0)
             pat, ex = row.get('pattern'), row.get('example') if isinstance(row, dict) else None
             if isinstance(pat, str) and isinstance(ex, str):
