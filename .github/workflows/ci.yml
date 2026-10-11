@@ -137,6 +137,12 @@ jobs:
       - name: "view_held_names: a person kept off git by name shown by it to a reader who may read them, on the host that keeps it — and by their opaque id to every other reader, host and page of one file"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_held_names.py
+      - name: "view_pages: a garden's handplace is its pages — several page beans each checked as its own, listed in the order the garden places them, and a table of a reading drawn with no module"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_pages.py
+      - name: "view_forms: a form's value on a sheet drawn by its entries — a clause's day, repetition, notice and state, a payment's settlement — edited by its widgets and written through the gate"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_forms.py
       - name: "names: the law's words a page shows — verbs, roles, qualifiers, kinds, header keys, a form's attributes — named in every language the tables carry, and a sheet drawn in its reader's"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/names.py
