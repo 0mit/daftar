@@ -423,6 +423,23 @@ class Host:
         os.execv(sys.executable, [sys.executable] + self.argv)
 
     # --- what a viewer is sent ---
+    def set_prefs(self, user, prefs):
+        """A viewer's own way of reading (view_prefs.check's), kept in the host's configuration beside their account —
+        on this machine, for every browser they sign in from, never in git — and the pages it drew for them read again."""
+        with self.lock:
+            cfg = json.load(open(self.config_path))
+            rec = cfg["users"][user]
+            for k in ("locale", "date", "currency"):
+                if prefs.get(k):
+                    rec[k] = prefs[k]
+                else:
+                    rec.pop(k, None)
+            tmp = self.config_path + ".tmp"
+            _write_private(tmp, json.dumps(cfg, indent=1))
+            os.replace(tmp, self.config_path)
+            self.cfg["users"][user] = rec
+            self._engraved = None
+
     def closed(self, user):
         """(the beings of the garden `user` may not see, a pattern that finds one named in a value's query): asked of the
         grants once a head and a day, as every answer is."""
@@ -896,7 +913,11 @@ class Host:
 
     def token(self, user):
         exp = int(time.time()) + SESSION_HOURS * 3600
-        return base64.urlsafe_b64encode(("%s|%d|%s" % (user, exp, self._signed("", user, exp))).encode()).decode()
+        sig = self._signed("", user, exp)
+        while sig in self.revoked:      # a token signed out this very second is never minted again: its signing in would be
+            exp += 1                    # refused as the token signed out, and the person kept out until the next second
+            sig = self._signed("", user, exp)
+        return base64.urlsafe_b64encode(("%s|%d|%s" % (user, exp, sig)).encode()).decode()
 
     def user_of(self, tok):
         try:
@@ -1052,6 +1073,11 @@ def make_handler(F):
                          "mode": "csv", "head": (F.head or "")[:12]})
                 return self._send(200, view_export.csv_text(t, keep=lambda b: F.line_ok(user, b, t)), "text/csv; charset=utf-8",
                                   headers={"Content-Disposition": 'attachment; filename="%s.csv"' % re.sub(r"[^A-Za-z0-9_.-]", "", key)})
+            if u.path == "/api/prefs":     # the viewer's own way of reading, and what the panel offers (view_prefs)
+                import view_prefs
+                rec = F.cfg["users"].get(user) or {}
+                return self._json(200, {"prefs": {k: rec[k] for k in ("locale", "date", "currency") if rec.get(k)},
+                                        "zones": view_prefs.zones()})
             if u.path == "/api/audit":     # asked of the law like the page itself (security audit 2026-10-10, 3.1)
                 if not F.may(user)[0]:
                     return self._json(403, {"error": "no grant opens this page to you"})
@@ -1114,6 +1140,17 @@ def make_handler(F):
                 code, obj = F.act(user, str(body.get("m", "")), str(body.get("el", "")), inputs=ins,
                                   reason=str(body["reason"]) if body.get("reason") else None)
                 return self._json(code, obj)
+            if u.path == "/api/prefs":                # the viewer's own way of reading: kept with their account, never in git
+                try:
+                    body = json.loads(raw or "{}")
+                except ValueError:
+                    return self._json(400, {"error": "bad json"})
+                import view_prefs
+                kept, bad = view_prefs.check(body)
+                if bad:
+                    return self._json(400, {"error": "; ".join(bad)})
+                F.set_prefs(user, kept)
+                return self._json(200, {"ok": True, "reader": view_prefs.settings_of(kept)})
             if u.path == "/api/write":
                 try:
                     body = json.loads(raw or "{}")

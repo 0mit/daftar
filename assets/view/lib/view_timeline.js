@@ -63,7 +63,7 @@
       var days = [], d = start;
       while (w.moment.toCalendar(d, cal).m === p.m && days.length < 40) { days.push(d); d = add(d, 1); }
       var lead = (weekday(start) - first + 7) % 7;
-      var label = new Intl.DateTimeFormat(t.lang + '-u-ca-' + cal, {month: 'long', year: 'numeric', timeZone: 'UTC'}).format(new Date(ms(start)));
+      var label = new Intl.DateTimeFormat(w.locale.tagWith(t.lang, {ca: cal, nu: w.locale.digitsOf({})}), {month: 'long', year: 'numeric', timeZone: 'UTC'}).format(new Date(ms(start)));
       return {label: label,
               body: h`<div class="eg-grid eg-month" data-rows="${'repeat(' + Math.ceil((lead + days.length) / 7) + ', auto)'}">${days.map(function (dd, i) {
                 var k = lead + i, c = k % 7;

@@ -89,6 +89,7 @@ parts, changes).
    python3 test/view_forms.py
    python3 test/view_details.py
    python3 test/names.py
+   python3 test/view_reader_prefs.py
    python3 test/catalogue.py
    python3 test/garden.py
    reuse lint

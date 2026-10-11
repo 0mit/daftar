@@ -716,7 +716,11 @@ def scoped(host, user, keep=None):
     g = p['settings']['garden']
     if isinstance(u.get('calendar'), str) and u['calendar']:
         g['calendar'] = u['calendar']
-    localize(p, u.get('lang'))                                    # the reader's language, and the law's words in it
+    # THE READER'S OWN WAY OF READING, kept with their account on the host (view_prefs): their tag, its zone, how a day
+    # is written and a currency named — what they did not set is their language's own; the law's words in their language
+    import view_prefs
+    p['settings']['reader'] = view_prefs.settings_of(u)
+    localize(p, p['settings']['reader'].get('locale') or u.get('lang'))
     g['me'] = u.get('bean') or ''
     if g.get('gardener') and not may('read', g['gardener']):   # the gardener too is named only to whom may read them
         g['gardener'] = ''

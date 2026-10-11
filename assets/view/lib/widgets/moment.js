@@ -6,7 +6,7 @@
 // neighbour. The law's written form is always taken as written.
 import { h, BIDI_CONTROLS } from './safe.js';
 import { settings } from './settings.js';
-import { langOf, digitsOf, inDigits, toAscii, calendarOf, relativeDay, dirOf, say } from './locale.js';
+import { langOf, digitsOf, inDigits, toAscii, calendarOf, relativeDay, dirOf, say, tagWith } from './locale.js';
 const IMPL = 'day';
 export { IMPL as implements };
 const pad = n => String(n).padStart(2, '0');
@@ -54,7 +54,7 @@ export function fromCalendar(cal, y, m, d) {
 }
 // the order a language writes a numeric day's parts in, in a calendar (CLDR): e.g. ['year', 'month', 'day']
 function order(lang, cal) {
-  return new Intl.DateTimeFormat(`${lang}-u-ca-${cal}-nu-latn`, {year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC'})
+  return new Intl.DateTimeFormat(tagWith(lang, {ca: cal, nu: 'latn'}), {year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC'})
     .formatToParts(new Date(Date.UTC(2001, 1, 3, 12))).map(p => p.type).filter(t => ['year', 'month', 'day'].includes(t));
 }
 
@@ -62,7 +62,7 @@ const longFormats = {};
 function long(day, o) {
   const cal = calendarOf(o), lang = langOf(o), ns = digitsOf(o);
   const key = [cal, lang, ns, o.style, o.year].join('|');
-  longFormats[key] ||= new Intl.DateTimeFormat(`${lang}-u-ca-${cal}-nu-${ns}`, {day: 'numeric', month: 'long',
+  longFormats[key] ||= new Intl.DateTimeFormat(tagWith(lang, {ca: cal, nu: ns}), {day: 'numeric', month: o.style === 'medium' ? 'short' : 'long',
     year: o.year === false ? undefined : 'numeric', weekday: o.style === 'weekday' ? 'long' : undefined, timeZone: 'UTC'});
   return longFormats[key].format(new Date(noon(day)));
 }
@@ -71,7 +71,7 @@ function numeric(day, o) {
   const cal = calendarOf(o), lang = langOf(o), ns = digitsOf(o);
   if (WRITTEN.has(cal)) return inDigits(day, ns);
   const key = [cal, lang, ns].join('|');
-  numFormats[key] ||= new Intl.DateTimeFormat(`${lang}-u-ca-${cal}-nu-${ns}`, {year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC'});
+  numFormats[key] ||= new Intl.DateTimeFormat(tagWith(lang, {ca: cal, nu: ns}), {year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC'});
   return numFormats[key].format(new Date(noon(day))).replace(BIDI_CONTROLS, '');
 }
 // the day relative to today (the server's, settings.asOf), in the reader's words; otherwise null
@@ -79,25 +79,51 @@ function relative(day, o) {
   if (!settings.asOf) return null;
   return relativeDay(Math.round((noon(day) - noon(settings.asOf)) / DAY), o);
 }
-// options: style 'numeric'|'long'|'weekday'; calendar; lang; digits; year: false; relative: true
+// A MOMENT IN THE READER'S ZONE: a moment written with its offset, where the reader chose a zone to read moments in,
+// is that instant's day and time there; every other moment is as written (the garden's own zone)
+function inZone(p) {
+  if (!p.time || !p.offset || !settings.readerZone) return p;
+  const off = p.offset === 'Z' ? '+00:00' : p.offset.replace(/^([+-]\d{2})(\d{2})$/, '$1:$2');
+  const t = Date.parse(`${p.day}T${p.time}:00${off}`);
+  if (!Number.isFinite(t)) return p;
+  try {
+    const ps = new Intl.DateTimeFormat('en-CA', {timeZone: settings.readerZone, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).formatToParts(new Date(t)), g = k => (ps.find(x => x.type === k) || {}).value;
+    return {...p, day: `${g('year')}-${g('month')}-${g('day')}`, time: `${g('hour')}:${g('minute')}`, zoned: true};
+  } catch { return p; }
+}
+// a time of day in the reader's hour cycle, where their tag sets one; else as the garden writes it, HH:MM
+function timeText(time, o) {
+  const lang = langOf(o);
+  let hc = '';
+  try { hc = new Intl.Locale(lang).hourCycle || ''; } catch { /* as written */ }
+  if (!hc) return inDigits(time, digitsOf(o));
+  const [hh, mm] = time.split(':').map(Number);
+  return new Intl.DateTimeFormat(tagWith(lang, {nu: digitsOf(o)}), {hour: 'numeric', minute: '2-digit', timeZone: 'UTC'})
+    .format(new Date(Date.UTC(2000, 0, 1, hh, mm)));
+}
+// how a day is written, where the reader chose (`settings.date`): short is the numeric form, full has the weekday
+const STYLE = {short: 'numeric', medium: 'medium', long: 'long', full: 'weekday'};
+// options: style 'numeric'|'medium'|'long'|'weekday'; calendar; lang; digits; year: false; relative: true
 export function show(v, o = {}) {
-  const p = parse(v);
-  if (!p) return v ? h`<span class="w-moment w-bad">${v}</span>` : h`<span class="w-moment w-none">—</span>`;
-  const style = o.style || 'numeric', rel = o.relative ? relative(p.day, o) : null;
+  const p = inZone(parse(v) || {});
+  if (!p.day) return v ? h`<span class="w-moment w-bad">${v}</span>` : h`<span class="w-moment w-none">—</span>`;
+  const style = STYLE[settings.date] || o.style || 'numeric', rel = o.relative ? relative(p.day, o) : null;
   let text = rel || (style === 'numeric' ? numeric(p.day, o) : long(p.day, {...o, style}));
-  if (p.time) text += ' ' + inDigits(p.time, digitsOf(o));
+  if (p.time) text += ' ' + timeText(p.time, o);
   const dir = style === 'numeric' && !rel ? 'ltr' : dirOf(langOf(o));
   const written = p.day + (p.time ? ' ' + p.time : '');
   return h`<time class="w-moment" datetime="${p.day}${p.time ? 'T' + p.time : ''}" dir="${dir}"${text === written ? '' : h` title="${written}"`}>${text}</time>`;
 }
 export function text(v, o = {}) {
-  const p = parse(v);
-  return p ? '\u2068' + numeric(p.day, o) + (p.time ? ' ' + inDigits(p.time, digitsOf(o)) : '') + '\u2069' : '';
+  const p = inZone(parse(v) || {});
+  return p.day ? '\u2068' + numeric(p.day, o) + (p.time ? ' ' + timeText(p.time, o) : '') + '\u2069' : '';
 }
 // what a person typed, as the written day: the law's form (`2026-10-08`) as written, or a day of the reader's calendar
 // with `/` or `.` between its parts, in the order its language writes them, in any digits
 export function take(input, o = {}) {
-  const s = toAscii(String(input ?? '').trim()).replace(BIDI_CONTROLS, '');
+  // the era a calendar's numeric day carries where the reader's language writes one (`07/02/1405 AP`), as shown back
+  const s = toAscii(String(input ?? '').trim()).replace(BIDI_CONTROLS, '').replace(/\s+\p{L}[\p{L}.]*$/u, '');
   const today = settings.asOf || iso(Date.now());
   if (!s) return o.required ? {error: say('day-required', o)} : {value: ''};
   let m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -119,7 +145,7 @@ export function edit(name, value, o = {}) {
   return h`<input class="w-input w-moment-input" name="${name}" dir="ltr" inputmode="numeric" autocomplete="off" placeholder="${ph}" value="${shown}">`;
 }
 // a time of day, HH:MM, shown in the reader's digits
-export const showTime = (t, o = {}) => /^\d{2}:\d{2}$/.test(String(t ?? '')) ? h`<bdi dir="ltr" class="w-time">${inDigits(t, digitsOf(o))}</bdi>` : h`<span class="w-none">—</span>`;
+export const showTime = (t, o = {}) => /^\d{2}:\d{2}$/.test(String(t ?? '')) ? h`<bdi dir="ltr" class="w-time">${timeText(t, o)}</bdi>` : h`<span class="w-none">—</span>`;
 export function takeTime(input, o = {}) {
   const s = toAscii(String(input ?? '').trim()).replace(BIDI_CONTROLS, '');
   if (!s) return o.required ? {error: say('time-required', o)} : {value: ''};

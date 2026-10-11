@@ -9,12 +9,24 @@ import { settings } from './settings.js';
 const cache = new Map();
 const once = (key, make) => { if (!cache.has(key)) cache.set(key, make()); return cache.get(key); };
 
-// the reader's language: the option, the garden's setting, the page's own, else the runtime's
+// the reader's language: the option, the reader's own tag (with the keys they set), the garden's setting, the page's
+// own, else the runtime's
 export function langOf(o = {}) {
   if (o.lang) return o.lang;
+  if (settings.locale) return settings.locale;
   if (settings.lang) return settings.lang;
   const page = typeof document !== 'undefined' && document.documentElement && document.documentElement.lang;
   return page || new Intl.DateTimeFormat().resolvedOptions().locale;
+}
+
+// A TAG WITH THE KEYS A FORMAT NEEDS (`ca`, `nu`, `hc`), the reader's other keys kept: composed by Intl.Locale, never
+// by joining strings, so a tag that already carries a `-u-` extension is not given a second
+export function tagWith(lang, k = {}) {
+  const opt = {};
+  if (k.ca) opt.calendar = k.ca;
+  if (k.nu) opt.numberingSystem = k.nu;
+  if (k.hc) opt.hourCycle = k.hc;
+  try { return new Intl.Locale(lang, opt).toString(); } catch { return lang; }
 }
 
 // the numbering system a number is shown in: the option (`latn`, `arabext`, `arab`, `deva` …), else the language's own
@@ -39,7 +51,7 @@ export const inDigits = (s, ns) => ns === 'latn' ? String(s) : String(s).replace
 export function separators(o = {}) {
   const lang = langOf(o), ns = digitsOf(o);
   return once(`sep|${lang}|${ns}`, () => {
-    const parts = new Intl.NumberFormat(`${lang}-u-nu-${ns}`).formatToParts(1234567.5);
+    const parts = new Intl.NumberFormat(tagWith(lang, {nu: ns})).formatToParts(1234567.5);
     return {group: (parts.find(p => p.type === 'group') || {}).value || ',',
             decimal: (parts.find(p => p.type === 'decimal') || {}).value || '.'};
   });
@@ -59,9 +71,13 @@ const DIGIT = once('digits', () => {
 });
 export const toAscii = s => [...String(s ?? '')].map(c => DIGIT.get(c) ?? c).join('');
 
-// the calendar a day is shown in: the option, the garden's setting, else the language's own (CLDR)
+// the calendar a day is shown in: the option, the reader's own (their tag's `ca`), the garden's setting, else the
+// language's own (CLDR)
 export function calendarOf(o = {}) {
   if (o.calendar) return o.calendar;
+  if (!o.lang && settings.locale) {
+    try { const c = new Intl.Locale(settings.locale).calendar; if (c) return c; } catch { /* a tag the runtime does not read */ }
+  }
   if (settings.calendar) return settings.calendar;
   const lang = langOf(o);
   return once(`cal|${lang}`, () => new Intl.DateTimeFormat(lang).resolvedOptions().calendar);
@@ -188,6 +204,22 @@ export const SAID = {
   'sheet-details-kept': {en: 'What fits no verb yet, kept as it was written until a verb says it: read here, changed where it was written.',
                          fa: 'آنچه هنوز در هیچ فعلی نمی‌گنجد، همان‌طور که نوشته شده نگه داشته می‌شود تا فعلی آن را بگوید: اینجا خوانده می‌شود و همان‌جا که نوشته شده تغییر می‌کند.'},
   'sheet-self': {en: 'this one', fa: 'همین'},
+  'prefs-title': {en: 'How you read', fa: 'شیوهٔ خواندن شما'},
+  'prefs-open': {en: 'How you read', fa: 'شیوهٔ خواندن'},
+  'prefs-lang': {en: 'Language', fa: 'زبان'},
+  'prefs-ca': {en: 'Calendar', fa: 'تقویم'},
+  'prefs-nu': {en: 'Digits', fa: 'رقم‌ها'},
+  'prefs-hc': {en: 'Hours', fa: 'ساعت'},
+  'prefs-fw': {en: 'First day of the week', fa: 'نخستین روز هفته'},
+  'prefs-tz': {en: 'Time zone of moments', fa: 'منطقهٔ زمانیِ نمایش'},
+  'prefs-date': {en: 'How a day is written', fa: 'شیوهٔ نوشتن روز'},
+  'prefs-currency': {en: 'How a currency is named', fa: 'نام‌بردن از ارز'},
+  'prefs-default': {en: 'your language\u2019s own ({x})', fa: 'پیش‌فرض زبان ({x})'},
+  'prefs-garden-zone': {en: 'the garden\u2019s ({x})', fa: 'منطقهٔ دفتر ({x})'},
+  'prefs-save': {en: 'Save', fa: 'ذخیره'},
+  'prefs-cancel': {en: 'Cancel', fa: 'انصراف'},
+  'prefs-saved': {en: 'Saved — only for you.', fa: 'ذخیره شد — فقط برای شما.'},
+  'prefs-bad': {en: 'That is no language tag: {why}', fa: 'این برچسب زبان درست نیست: {why}'},
   'sheet-required': {en: 'required', fa: 'لازم'},
   'sheet-copy': {en: 'A copy of the page, read only: a being is changed where its garden is served.',
                  fa: 'نسخه‌ای فقط‌خواندنی از صفحه: هر چیز همان‌جا تغییر می‌کند که باغش خدمت‌دهی می‌شود.'},

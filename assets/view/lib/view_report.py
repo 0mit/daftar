@@ -254,8 +254,9 @@ function engravedWrite(body){ return fetch('/api/write', {method: 'POST', header
   .then(r => r.json().then(j => ({status: r.status, answer: j}))).catch(e => ({status: 0, answer: {ok: false, refusals: [{op: null, fact: null, message: String(e)}]}})); }
 // THE READER'S LANGUAGE, where the host or the report names it: the page's own `lang`, and its direction from CLDR's
 // layout of the language's script (widgets/locale.js), which every order on the page follows (widgets/direction.js)
-(function(){ const g = ((P.engraved || {}).settings || {}).garden || {}; if (g.lang && window.daftarWidgets) {
-  document.documentElement.lang = g.lang; const d = window.daftarWidgets.locale.dirOf(g.lang); if (d === 'rtl' || d === 'ltr') document.documentElement.dir = d; } })();
+(function(){ const st = (P.engraved || {}).settings || {}, g = st.garden || {}, lang = (st.reader || {}).locale || g.lang;
+  if (lang && window.daftarWidgets) { window.daftarWidgets.settings.configure(st);
+  document.documentElement.lang = lang; const d = window.daftarWidgets.locale.dirOf(lang); if (d === 'rtl' || d === 'ltr') document.documentElement.dir = d; } })();
 function mountView(){ const root = document.querySelector('#view > div'); if (!root || tab === 'ref') return; window.viewMount(root, viewFor(tab), state()); }
 function render(){
   renderTabs(); renderLenses(); if (LIVE) renderLive();
@@ -354,9 +355,28 @@ function wire(){
 function renderLive(){
   $('#livebar').innerHTML = 'live · signed in as <b>' + esc(LIVE.user) + '</b> · ledger ' + esc(LIVE.head) +
     (/^https?:\/\//i.test(LIVE.history || '') && P.views[tab] ? ' · <a href="' + esc(LIVE.history) + '/d/' + esc(P.views[tab].uid) + '" target="_blank" rel="noopener">history ↗</a>' : '') +
+    ' · <button class="btn mini" id="prefsbtn">' + esc(window.daftarWidgets ? window.daftarWidgets.locale.say('prefs-open') : 'how you read') + '</button>' +
     ' · <button class="btn mini" id="signout">sign out</button>';
   // signing out is the page's own act, a POST with its CSRF token: a link elsewhere signs nobody out
-  $('#signout').onclick = () => fetch('/logout', {method: 'POST', headers: {'X-View-CSRF': LIVE.csrf}}).finally(() => { location.href = '/login'; }); }
+  $('#signout').onclick = () => fetch('/logout', {method: 'POST', headers: {'X-View-CSRF': LIVE.csrf}}).finally(() => { location.href = '/login'; });
+  $('#prefsbtn').onclick = openPrefs; }
+// HOW THE VIEWER READS (view_prefs): their language and its calendar, digits, hours, first day and zone, how a day is
+// written and a currency named — chosen in the widgets' own panel, kept by the host with their account, never in the
+// garden; a Save draws the page again in place, in their choice
+const LANGS = ['fa', 'en', 'tr', 'ar', 'de', 'fr', 'it'];
+function openPrefs(){ const W = window.daftarWidgets; if (!W || !W.prefs) return;
+  fetch('/api/prefs').then(r => r.json()).then(j => {
+    let d = document.getElementById('prefsdlg');
+    if (!d) { d = document.createElement('dialog'); d.id = 'prefsdlg'; d.className = 'vw light eg-dialog'; document.body.appendChild(d); }
+    const s = (P.engraved || {}).settings || {};
+    W.prefs.open(d, j.prefs || {}, {languages: LANGS, zones: j.zones || [], currency: ((s.currencies || []).find(c => c.code !== 'XTS') || {}).code, gardenZone: (s.garden || {}).zone},
+      v => fetch('/api/prefs', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-View-CSRF': LIVE.csrf}, body: JSON.stringify(v)})
+        .then(r => r.json()).then(a => a.ok ? (readAs(a.reader), a) : {error: a.error || 'refused'}),
+      () => d.close());
+    d.showModal(); }); }
+function readAs(reader){ const W = window.daftarWidgets; if (P.engraved) P.engraved.settings = Object.assign({}, P.engraved.settings, {reader});
+  W.settings.configure({reader}); const lang = W.locale.langOf({}); document.documentElement.lang = lang;
+  const dir = W.locale.dirOf(lang); if (dir === 'rtl' || dir === 'ltr') document.documentElement.dir = dir; render(); }
 if (LIVE || !P.author) { $('#authbtn').style.display = 'none'; }
 if (LIVE) { setInterval(poll, (LIVE.poll || 30) * 1000); }
 $('#authbtn').onclick = () => { document.body.classList.toggle('authoring'); $('#authbtn').classList.toggle('on'); render(); };
