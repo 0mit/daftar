@@ -198,7 +198,8 @@ def lv(name, default='0'):
 try:
     REL = grow.release(os.path.join(T, 'release'))
     G = os.path.join(T, 'garden')
-    r = grow.garden(REL, G, 'sam', '--gardener-name', 'Sam')
+    # the garden's zone named, so the clocks below read the same wherever this runs (a CI runner keeps UTC)
+    r = grow.garden(REL, G, 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
     check("a garden grows, kept by sam", r.returncode == 0, r.out[-600:])
     write(G, 'tools/restart.py', TOOL)
     write(G, 'tools/depot.py', DEPOT_TOOL)
