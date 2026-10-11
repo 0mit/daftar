@@ -211,17 +211,9 @@ def read_text(path):
 
 
 def write_text(path, text, form=LF):
-    """Written whole beside the file, then swapped in: a failure leaves the file as it was, and no half-written copy."""
-    try:
-        with open(path + '.tmp', 'w', encoding='utf-8', newline=form.nl) as fh:
-            fh.write(form.bom + text)
-        os.replace(path + '.tmp', path)
-    except BaseException:
-        try:
-            os.remove(path + '.tmp')
-        except OSError:
-            pass
-        raise
+    """Written whole beside the file, flushed, then swapped in (bin/safe.py write_atomic): a failure leaves the file as it
+    was and no half-written copy, and the file keeps its mode. Its line ends and its mark are the form's."""
+    dmsafe.write_atomic(path, (form.bom + text).replace('\n', form.nl).encode('utf-8'))
 
 
 def patterns(root):
