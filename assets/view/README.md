@@ -413,7 +413,8 @@ copy of the release the garden runs, so a value is shown by the law the garden k
 | `lib/widgets/form.js` | a form's value | what a clause holds beside its words (`clause`), what a payment settles (`settlement`): drawn by its entries, each attribute by the widget that implements its value, as the host resolves it from the law (`view_engraved.form_def`); what it cannot draw is kept as written |
 | `lib/widgets/safe.js` | — | `h```: the one way HTML is built; `mount`: the one door into a page |
 | `lib/widgets/locale.js` | — | the reader's digits, separators, calendar, direction and words, all CLDR's through `Intl` |
-| `lib/widgets/settings.js` | — | what the garden's host sends with a page: its language, calendar, zone, each currency's places |
+| `lib/widgets/settings.js` | — | what the garden's host sends with a page: its language, calendar, zone, each currency's places; the reader's own tag, zone, date style and currency naming |
+| `lib/widgets/prefs.js` | — | a reader's own way of reading, chosen in a panel with a sample of each choice; the tag composed and read by `Intl.Locale` |
 | `lib/widgets/direction.js` | — | where each order runs on the page, from the law's `orientations` (`core/law/profiles.yaml`): a sayable's next, later and flow follow the reader's script; a body's up, north and more never turn. Keys, glyphs and swipes are named by meaning (`command`, `glyph`, `bind`, `swipe`); a classic script, so the view's page, daftard's pages and the site load the one file |
 | `lib/widgets/widgets.css`, `lib/widgets/Vazirmatn.woff2` | — | the widgets' style; Vazirmatn (SIL OFL 1.1), for the Arabic script and the Latin |
 
@@ -424,6 +425,18 @@ where nothing is given: no language, calendar or zone stands in for a missing on
 the one table (`locale.js`, `SAID`): English, the law's language, and every language a sentence has been written in.
 The law's own words are not the widgets': a page carries them for its reader (`names`), read from the names layer,
 and a renderer shows one through `t.name(group, word)`.
+
+**Each reader's own way of reading.** A reader sets their language as one BCP 47 tag whose Unicode keys (UTS #35) say
+their calendar (`ca`), digits (`nu`), hour cycle (`hc`), first day of the week (`fw`) and the zone moments are shown in
+(`tz`) — `fa-u-ca-persian-nu-arabext-hc-h23-fw-sat` — and beside it how a day is written (`date`: short, medium, long,
+full) and how a currency is named (`currency`: symbol, narrowSymbol, code, name). Unset is the language's own, as CLDR
+says it. The host keeps them with the reader's account (`view serve`'s users; daftard's record of the person) — on that
+machine, for every browser they sign in from, never in the garden and never in a commit: a way of reading is no fact of
+the garden. The page reads the tag with `Intl.Locale`; the host reads it by RFC 5646's grammar and CLDR's own types
+(`lib/view_prefs.py`, `seed/knowledge/cldr-bcp47.tsv`) and refuses a bad one with a sentence. The panel
+(`widgets/prefs.js`) is reached from the page's own bar, in the reader's language, a sample day, time, amount and number
+showing each choice; a Save draws the page again in place, and a day the reader types is read in the calendar and
+digits they chose.
 
 **Exact on the wire.** A number travels as its written form, or as the exact fraction `n/d` when it was read rather
 than written, never as a JSON float; a widget never rounds a value it takes in.

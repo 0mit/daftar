@@ -1,0 +1,579 @@
+key	type	aliases	description
+ca	buddhist	-	Thai Buddhist calendar
+ca	chinese	-	Traditional Chinese calendar
+ca	coptic	-	Coptic calendar
+ca	dangi	-	Traditional Korean calendar
+ca	ethioaa	ethiopic-amete-alem	Ethiopic calendar, Amete Alem (epoch approx. 5493 B.C.E)
+ca	ethiopic	-	Ethiopic calendar, Amete Mihret (epoch approx, 8 C.E.)
+ca	gregory	gregorian	Gregorian calendar
+ca	hebrew	-	Traditional Hebrew calendar
+ca	indian	-	Indian calendar
+ca	islamic	-	Islamic calendar
+ca	islamic-civil	-	Islamic calendar, tabular (intercalary years [2,5,7,10,13,16,18,21,24,26,29] - civil epoch)
+ca	islamic-rgsa	-	Islamic calendar, Saudi Arabia sighting
+ca	islamic-tbla	-	Islamic calendar, tabular (intercalary years [2,5,7,10,13,16,18,21,24,26,29] - astronomical epoch)
+ca	islamic-umalqura	-	Islamic calendar, Umm al-Qura
+ca	iso8601	-	ISO calendar (Gregorian calendar using the ISO 8601 calendar week rules)
+ca	japanese	-	Japanese Imperial calendar
+ca	persian	-	Persian calendar
+ca	roc	-	Republic of China calendar
+fw	fri	-	Friday
+fw	mon	-	Monday
+fw	sat	-	Saturday
+fw	sun	-	Sunday
+fw	thu	-	Thursday
+fw	tue	-	Tuesday
+fw	wed	-	Wednesday
+hc	h11	-	Hour system using 0–11; 'K' in patterns
+hc	h12	-	Hour system using 1–12; 'h' in patterns
+hc	h23	-	Hour system using 0–23; 'H' in patterns
+hc	h24	-	Hour system using 1–24; 'k' in patterns
+nu	adlm	-	Adlam digits
+nu	ahom	-	Ahom digits
+nu	arab	-	Arabic-Indic digits
+nu	arabext	-	Extended Arabic-Indic digits
+nu	armn	-	Armenian upper case numerals — algorithmic
+nu	armnlow	-	Armenian lower case numerals — algorithmic
+nu	bali	-	Balinese digits
+nu	beng	-	Bengali digits
+nu	bhks	-	Bhaiksuki digits
+nu	brah	-	Brahmi digits
+nu	cakm	-	Chakma digits
+nu	cham	-	Cham digits
+nu	cyrl	-	Cyrillic numerals — algorithmic
+nu	deva	-	Devanagari digits
+nu	diak	-	Dives Akuru digits
+nu	ethi	-	Ethiopic numerals — algorithmic
+nu	finance	-	Financial numerals — may be algorithmic
+nu	fullwide	-	Full width digits
+nu	geor	-	Georgian numerals — algorithmic
+nu	gong	-	Gunjala Gondi digits
+nu	gonm	-	Masaram Gondi digits
+nu	grek	-	Greek upper case numerals — algorithmic
+nu	greklow	-	Greek lower case numerals — algorithmic
+nu	gujr	-	Gujarati digits
+nu	guru	-	Gurmukhi digits
+nu	hanidays	-	Han-character day-of-month numbering for lunar/other traditional calendars
+nu	hanidec	-	Positional decimal system using Chinese number ideographs as digits
+nu	hans	-	Simplified Chinese numerals — algorithmic
+nu	hansfin	-	Simplified Chinese financial numerals — algorithmic
+nu	hant	-	Traditional Chinese numerals — algorithmic
+nu	hantfin	-	Traditional Chinese financial numerals — algorithmic
+nu	hebr	-	Hebrew numerals — algorithmic
+nu	hmng	-	Pahawh Hmong digits
+nu	hmnp	-	Nyiakeng Puachue Hmong digits
+nu	java	-	Javanese digits
+nu	jpan	-	Japanese numerals — algorithmic
+nu	jpanfin	-	Japanese financial numerals — algorithmic
+nu	jpanyear	-	Japanese first-year Gannen numbering for Japanese calendar
+nu	kali	-	Kayah Li digits
+nu	khmr	-	Khmer digits
+nu	knda	-	Kannada digits
+nu	lana	-	Tai Tham Hora (secular) digits
+nu	lanatham	-	Tai Tham Tham (ecclesiastical) digits
+nu	laoo	-	Lao digits
+nu	latn	-	Latin digits
+nu	lepc	-	Lepcha digits
+nu	limb	-	Limbu digits
+nu	mathbold	-	Mathematical bold digits
+nu	mathdbl	-	Mathematical double-struck digits
+nu	mathmono	-	Mathematical monospace digits
+nu	mathsanb	-	Mathematical sans-serif bold digits
+nu	mathsans	-	Mathematical sans-serif digits
+nu	mlym	-	Malayalam digits
+nu	modi	-	Modi digits
+nu	mong	-	Mongolian digits
+nu	mroo	-	Mro digits
+nu	mtei	-	Meetei Mayek digits
+nu	mymr	-	Myanmar digits
+nu	mymrshan	-	Myanmar Shan digits
+nu	mymrtlng	-	Myanmar Tai Laing digits
+nu	native	-	Native digits
+nu	newa	-	Newa digits
+nu	nkoo	-	N'Ko digits
+nu	olck	-	Ol Chiki digits
+nu	orya	-	Oriya digits
+nu	osma	-	Osmanya digits
+nu	rohg	-	Hanifi Rohingya digits
+nu	roman	-	Roman upper case numerals — algorithmic
+nu	romanlow	-	Roman lowercase numerals — algorithmic
+nu	saur	-	Saurashtra digits
+nu	segment	-	Legacy computing segmented digits
+nu	shrd	-	Sharada digits
+nu	sind	-	Khudawadi digits
+nu	sinh	-	Sinhala Lith digits
+nu	sora	-	Sora_Sompeng digits
+nu	sund	-	Sundanese digits
+nu	takr	-	Takri digits
+nu	talu	-	New Tai Lue digits
+nu	taml	-	Tamil numerals — algorithmic
+nu	tamldec	-	Modern Tamil decimal digits
+nu	telu	-	Telugu digits
+nu	thai	-	Thai digits
+nu	tibt	-	Tibetan digits
+nu	tirh	-	Tirhuta digits
+nu	tnsa	-	Tangsa digits
+nu	traditio	traditional	Traditional numerals — may be algorithmic
+nu	vaii	-	Vai digits
+nu	wara	-	Warang Citi digits
+nu	wcho	-	Wancho digits
+tz	adalv	Europe/Andorra	Andorra
+tz	aedxb	Asia/Dubai	Dubai, United Arab Emirates
+tz	afkbl	Asia/Kabul	Kabul, Afghanistan
+tz	aganu	America/Antigua	Antigua
+tz	aiaxa	America/Anguilla	Anguilla
+tz	altia	Europe/Tirane	Tirane, Albania
+tz	amevn	Asia/Yerevan	Yerevan, Armenia
+tz	ancur	America/Curacao	Curaçao
+tz	aolad	Africa/Luanda	Luanda, Angola
+tz	aqcas	Antarctica/Casey	Casey Station, Bailey Peninsula
+tz	aqdav	Antarctica/Davis	Davis Station, Vestfold Hills
+tz	aqddu	Antarctica/DumontDUrville	Dumont d'Urville Station, Terre Adélie
+tz	aqmaw	Antarctica/Mawson	Mawson Station, Holme Bay
+tz	aqmcm	Antarctica/McMurdo	McMurdo Station, Ross Island
+tz	aqplm	Antarctica/Palmer	Palmer Station, Anvers Island
+tz	aqrot	Antarctica/Rothera	Rothera Station, Adelaide Island
+tz	aqsyw	Antarctica/Syowa	Syowa Station, East Ongul Island
+tz	aqtrl	Antarctica/Troll	Troll Station, Queen Maud Land
+tz	aqvos	Antarctica/Vostok	Vostok Station, Lake Vostok
+tz	arbue	America/Buenos_Aires America/Argentina/Buenos_Aires	Buenos Aires, Argentina
+tz	arcor	America/Cordoba America/Argentina/Cordoba America/Rosario	Córdoba, Argentina
+tz	arctc	America/Catamarca America/Argentina/Catamarca America/Argentina/ComodRivadavia	Catamarca, Argentina
+tz	arirj	America/Argentina/La_Rioja	La Rioja, Argentina
+tz	arjuj	America/Jujuy America/Argentina/Jujuy	Jujuy, Argentina
+tz	arluq	America/Argentina/San_Luis	San Luis, Argentina
+tz	armdz	America/Mendoza America/Argentina/Mendoza	Mendoza, Argentina
+tz	arrgl	America/Argentina/Rio_Gallegos	Río Gallegos, Argentina
+tz	arsla	America/Argentina/Salta	Salta, Argentina
+tz	artuc	America/Argentina/Tucuman	Tucumán, Argentina
+tz	aruaq	America/Argentina/San_Juan	San Juan, Argentina
+tz	arush	America/Argentina/Ushuaia	Ushuaia, Argentina
+tz	asppg	Pacific/Pago_Pago Pacific/Samoa US/Samoa	Pago Pago, American Samoa
+tz	atvie	Europe/Vienna	Vienna, Austria
+tz	auadl	Australia/Adelaide Australia/South	Adelaide, Australia
+tz	aubhq	Australia/Broken_Hill Australia/Yancowinna	Broken Hill, Australia
+tz	aubne	Australia/Brisbane Australia/Queensland	Brisbane, Australia
+tz	audrw	Australia/Darwin Australia/North	Darwin, Australia
+tz	aueuc	Australia/Eucla	Eucla, Australia
+tz	auhba	Australia/Hobart Australia/Tasmania	Hobart, Australia
+tz	aukns	Australia/Currie	Currie, Australia
+tz	auldc	Australia/Lindeman	Lindeman Island, Australia
+tz	auldh	Australia/Lord_Howe Australia/LHI	Lord Howe Island, Australia
+tz	aumel	Australia/Melbourne Australia/Victoria	Melbourne, Australia
+tz	aumqi	Antarctica/Macquarie	Macquarie Island Station, Macquarie Island
+tz	auper	Australia/Perth Australia/West	Perth, Australia
+tz	ausyd	Australia/Sydney Australia/ACT Australia/Canberra Australia/NSW	Sydney, Australia
+tz	awaua	America/Aruba	Aruba
+tz	azbak	Asia/Baku	Baku, Azerbaijan
+tz	basjj	Europe/Sarajevo	Sarajevo, Bosnia and Herzegovina
+tz	bbbgi	America/Barbados	Barbados
+tz	bddac	Asia/Dhaka Asia/Dacca	Dhaka, Bangladesh
+tz	bebru	Europe/Brussels	Brussels, Belgium
+tz	bfoua	Africa/Ouagadougou	Ouagadougou, Burkina Faso
+tz	bgsof	Europe/Sofia	Sofia, Bulgaria
+tz	bhbah	Asia/Bahrain	Bahrain
+tz	bibjm	Africa/Bujumbura	Bujumbura, Burundi
+tz	bjptn	Africa/Porto-Novo	Porto-Novo, Benin
+tz	bmbda	Atlantic/Bermuda	Bermuda
+tz	bnbwn	Asia/Brunei	Brunei
+tz	bolpb	America/La_Paz	La Paz, Bolivia
+tz	bqkra	America/Kralendijk	Bonaire, Sint Estatius and Saba
+tz	braux	America/Araguaina	Araguaína, Brazil
+tz	brbel	America/Belem	Belém, Brazil
+tz	brbvb	America/Boa_Vista	Boa Vista, Brazil
+tz	brcgb	America/Cuiaba	Cuiabá, Brazil
+tz	brcgr	America/Campo_Grande	Campo Grande, Brazil
+tz	brern	America/Eirunepe	Eirunepé, Brazil
+tz	brfen	America/Noronha Brazil/DeNoronha	Fernando de Noronha, Brazil
+tz	brfor	America/Fortaleza	Fortaleza, Brazil
+tz	brmao	America/Manaus Brazil/West	Manaus, Brazil
+tz	brmcz	America/Maceio	Maceió, Brazil
+tz	brpvh	America/Porto_Velho	Porto Velho, Brazil
+tz	brrbr	America/Rio_Branco America/Porto_Acre Brazil/Acre	Rio Branco, Brazil
+tz	brrec	America/Recife	Recife, Brazil
+tz	brsao	America/Sao_Paulo Brazil/East	São Paulo, Brazil
+tz	brssa	America/Bahia	Bahia, Brazil
+tz	brstm	America/Santarem	Santarém, Brazil
+tz	bsnas	America/Nassau	Nassau, Bahamas
+tz	btthi	Asia/Thimphu Asia/Thimbu	Thimphu, Bhutan
+tz	bwgbe	Africa/Gaborone	Gaborone, Botswana
+tz	bymsq	Europe/Minsk	Minsk, Belarus
+tz	bzbze	America/Belize	Belize
+tz	cacfq	America/Creston	Creston, Canada
+tz	caedm	America/Edmonton Canada/Mountain	Edmonton, Canada
+tz	caffs	America/Rainy_River	Rainy River, Canada
+tz	cafne	America/Fort_Nelson	Fort Nelson, Canada
+tz	caglb	America/Glace_Bay	Glace Bay, Canada
+tz	cagoo	America/Goose_Bay	Goose Bay, Canada
+tz	cahal	America/Halifax Canada/Atlantic	Halifax, Canada
+tz	caiql	America/Iqaluit	Iqaluit, Canada
+tz	camon	America/Moncton	Moncton, Canada
+tz	canpg	America/Nipigon	Nipigon, Canada
+tz	capnt	America/Pangnirtung	Pangnirtung, Canada
+tz	careb	America/Resolute	Resolute, Canada
+tz	careg	America/Regina Canada/East-Saskatchewan Canada/Saskatchewan	Regina, Canada
+tz	casjf	America/St_Johns Canada/Newfoundland	St. John's, Canada
+tz	cathu	America/Thunder_Bay	Thunder Bay, Canada
+tz	cator	America/Toronto Canada/Eastern	Toronto, Canada
+tz	cavan	America/Vancouver Canada/Pacific	Vancouver, Canada
+tz	cawnp	America/Winnipeg Canada/Central	Winnipeg, Canada
+tz	caybx	America/Blanc-Sablon	Blanc-Sablon, Canada
+tz	caycb	America/Cambridge_Bay	Cambridge Bay, Canada
+tz	cayda	America/Dawson	Dawson, Canada
+tz	caydq	America/Dawson_Creek	Dawson Creek, Canada
+tz	cayek	America/Rankin_Inlet	Rankin Inlet, Canada
+tz	cayev	America/Inuvik	Inuvik, Canada
+tz	cayxy	America/Whitehorse Canada/Yukon	Whitehorse, Canada
+tz	cayyn	America/Swift_Current	Swift Current, Canada
+tz	cayzf	America/Yellowknife	Yellowknife, Canada
+tz	cayzs	America/Coral_Harbour America/Atikokan	Atikokan, Canada
+tz	cccck	Indian/Cocos	Cocos (Keeling) Islands
+tz	cdfbm	Africa/Lubumbashi	Lubumbashi, Democratic Republic of the Congo
+tz	cdfih	Africa/Kinshasa	Kinshasa, Democratic Republic of the Congo
+tz	cfbgf	Africa/Bangui	Bangui, Central African Republic
+tz	cgbzv	Africa/Brazzaville	Brazzaville, Republic of the Congo
+tz	chzrh	Europe/Zurich	Zurich, Switzerland
+tz	ciabj	Africa/Abidjan	Abidjan, Côte d'Ivoire
+tz	ckrar	Pacific/Rarotonga	Rarotonga, Cook Islands
+tz	clipc	Pacific/Easter Chile/EasterIsland	Easter Island, Chile
+tz	clpuq	America/Punta_Arenas	Punta Arenas, Chile
+tz	clscl	America/Santiago Chile/Continental	Santiago, Chile
+tz	cmdla	Africa/Douala	Douala, Cameroon
+tz	cnsha	Asia/Shanghai Asia/Chongqing Asia/Chungking Asia/Harbin PRC	Shanghai, China
+tz	cnurc	Asia/Urumqi Asia/Kashgar	Ürümqi, China
+tz	cobog	America/Bogota	Bogotá, Colombia
+tz	crsjo	America/Costa_Rica	Costa Rica
+tz	cst6cdt	CST6CDT	POSIX style time zone for US Central Time
+tz	cuhav	America/Havana Cuba	Havana, Cuba
+tz	cvrai	Atlantic/Cape_Verde	Cape Verde
+tz	cxxch	Indian/Christmas	Christmas Island
+tz	cyfmg	Asia/Famagusta	Famagusta, Cyprus
+tz	cynic	Asia/Nicosia Europe/Nicosia	Nicosia, Cyprus
+tz	czprg	Europe/Prague	Prague, Czech Republic
+tz	deber	Europe/Berlin	Berlin, Germany
+tz	debsngn	Europe/Busingen	Busingen, Germany
+tz	djjib	Africa/Djibouti	Djibouti
+tz	dkcph	Europe/Copenhagen	Copenhagen, Denmark
+tz	dmdom	America/Dominica	Dominica
+tz	dosdq	America/Santo_Domingo	Santo Domingo, Dominican Republic
+tz	dzalg	Africa/Algiers	Algiers, Algeria
+tz	ecgps	Pacific/Galapagos	Galápagos Islands, Ecuador
+tz	ecgye	America/Guayaquil	Guayaquil, Ecuador
+tz	eetll	Europe/Tallinn	Tallinn, Estonia
+tz	egcai	Africa/Cairo Egypt	Cairo, Egypt
+tz	eheai	Africa/El_Aaiun	El Aaiún, Western Sahara
+tz	erasm	Africa/Asmera Africa/Asmara	Asmara, Eritrea
+tz	esceu	Africa/Ceuta	Ceuta, Spain
+tz	eslpa	Atlantic/Canary	Canary Islands, Spain
+tz	esmad	Europe/Madrid	Madrid, Spain
+tz	est5edt	EST5EDT	POSIX style time zone for US Eastern Time
+tz	etadd	Africa/Addis_Ababa	Addis Ababa, Ethiopia
+tz	fihel	Europe/Helsinki	Helsinki, Finland
+tz	fimhq	Europe/Mariehamn	Mariehamn, Åland, Finland
+tz	fjsuv	Pacific/Fiji	Fiji
+tz	fkpsy	Atlantic/Stanley	Stanley, Falkland Islands
+tz	fmksa	Pacific/Kosrae	Kosrae, Micronesia
+tz	fmpni	Pacific/Ponape Pacific/Pohnpei	Pohnpei, Micronesia
+tz	fmtkk	Pacific/Truk Pacific/Chuuk Pacific/Yap	Chuuk, Micronesia
+tz	fotho	Atlantic/Faeroe Atlantic/Faroe	Faroe Islands
+tz	frpar	Europe/Paris	Paris, France
+tz	galbv	Africa/Libreville	Libreville, Gabon
+tz	gazastrp	Asia/Gaza	Gaza Strip, Palestinian Territories
+tz	gblon	Europe/London Europe/Belfast GB GB-Eire	London, United Kingdom
+tz	gdgnd	America/Grenada	Grenada
+tz	getbs	Asia/Tbilisi	Tbilisi, Georgia
+tz	gfcay	America/Cayenne	Cayenne, French Guiana
+tz	gggci	Europe/Guernsey	Guernsey
+tz	ghacc	Africa/Accra	Accra, Ghana
+tz	gigib	Europe/Gibraltar	Gibraltar
+tz	gldkshvn	America/Danmarkshavn	Danmarkshavn, Greenland
+tz	glgoh	America/Godthab America/Nuuk	Nuuk (Godthåb), Greenland
+tz	globy	America/Scoresbysund	Ittoqqortoormiit (Scoresbysund), Greenland
+tz	glthu	America/Thule	Qaanaaq (Thule), Greenland
+tz	gmbjl	Africa/Banjul	Banjul, Gambia
+tz	gmt	Etc/GMT Etc/GMT+0 Etc/GMT-0 Etc/GMT0 Etc/Greenwich GMT GMT+0 GMT-0 GMT0 Greenwich	Greenwich Mean Time
+tz	gncky	Africa/Conakry	Conakry, Guinea
+tz	gpbbr	America/Guadeloupe	Guadeloupe
+tz	gpmsb	America/Marigot	Marigot, Saint Martin
+tz	gpsbh	America/St_Barthelemy	Saint Barthélemy
+tz	gqssg	Africa/Malabo	Malabo, Equatorial Guinea
+tz	grath	Europe/Athens	Athens, Greece
+tz	gsgrv	Atlantic/South_Georgia	South Georgia and the South Sandwich Islands
+tz	gtgua	America/Guatemala	Guatemala
+tz	gugum	Pacific/Guam	Guam
+tz	gwoxb	Africa/Bissau	Bissau, Guinea-Bissau
+tz	gygeo	America/Guyana	Guyana
+tz	hebron	Asia/Hebron	West Bank, Palestinian Territories
+tz	hkhkg	Asia/Hong_Kong Hongkong	Hong Kong SAR China
+tz	hntgu	America/Tegucigalpa	Tegucigalpa, Honduras
+tz	hrzag	Europe/Zagreb	Zagreb, Croatia
+tz	htpap	America/Port-au-Prince	Port-au-Prince, Haiti
+tz	hubud	Europe/Budapest	Budapest, Hungary
+tz	iddjj	Asia/Jayapura	Jayapura, Indonesia
+tz	idjkt	Asia/Jakarta	Jakarta, Indonesia
+tz	idmak	Asia/Makassar Asia/Ujung_Pandang	Makassar, Indonesia
+tz	idpnk	Asia/Pontianak	Pontianak, Indonesia
+tz	iedub	Europe/Dublin Eire	Dublin, Ireland
+tz	imdgs	Europe/Isle_of_Man	Isle of Man
+tz	inccu	Asia/Calcutta Asia/Kolkata	Kolkata, India
+tz	iodga	Indian/Chagos	Chagos Archipelago
+tz	iqbgw	Asia/Baghdad	Baghdad, Iraq
+tz	irthr	Asia/Tehran Iran	Tehran, Iran
+tz	isrey	Atlantic/Reykjavik Iceland	Reykjavik, Iceland
+tz	itrom	Europe/Rome	Rome, Italy
+tz	jeruslm	Asia/Jerusalem Asia/Tel_Aviv Israel	Jerusalem
+tz	jesth	Europe/Jersey	Jersey
+tz	jmkin	America/Jamaica Jamaica	Jamaica
+tz	joamm	Asia/Amman	Amman, Jordan
+tz	jptyo	Asia/Tokyo Japan	Tokyo, Japan
+tz	kenbo	Africa/Nairobi	Nairobi, Kenya
+tz	kgfru	Asia/Bishkek	Bishkek, Kyrgyzstan
+tz	khpnh	Asia/Phnom_Penh	Phnom Penh, Cambodia
+tz	kicxi	Pacific/Kiritimati	Kiritimati, Kiribati
+tz	kipho	Pacific/Enderbury Pacific/Kanton	Enderbury Island, Kiribati
+tz	kitrw	Pacific/Tarawa	Tarawa, Kiribati
+tz	kmyva	Indian/Comoro	Comoros
+tz	knbas	America/St_Kitts	Saint Kitts
+tz	kpfnj	Asia/Pyongyang	Pyongyang, North Korea
+tz	krsel	Asia/Seoul ROK	Seoul, South Korea
+tz	kwkwi	Asia/Kuwait	Kuwait
+tz	kygec	America/Cayman	Cayman Islands
+tz	kzaau	Asia/Aqtau	Aqtau, Kazakhstan
+tz	kzakx	Asia/Aqtobe	Aqtobe, Kazakhstan
+tz	kzala	Asia/Almaty	Almaty, Kazakhstan
+tz	kzguw	Asia/Atyrau	Atyrau (Guryev), Kazakhstan
+tz	kzksn	Asia/Qostanay	Qostanay (Kostanay), Kazakhstan
+tz	kzkzo	Asia/Qyzylorda	Kyzylorda, Kazakhstan
+tz	kzura	Asia/Oral	Oral, Kazakhstan
+tz	lavte	Asia/Vientiane	Vientiane, Laos
+tz	lbbey	Asia/Beirut	Beirut, Lebanon
+tz	lccas	America/St_Lucia	Saint Lucia
+tz	livdz	Europe/Vaduz	Vaduz, Liechtenstein
+tz	lkcmb	Asia/Colombo	Colombo, Sri Lanka
+tz	lrmlw	Africa/Monrovia	Monrovia, Liberia
+tz	lsmsu	Africa/Maseru	Maseru, Lesotho
+tz	ltvno	Europe/Vilnius	Vilnius, Lithuania
+tz	lulux	Europe/Luxembourg	Luxembourg
+tz	lvrix	Europe/Riga	Riga, Latvia
+tz	lytip	Africa/Tripoli Libya	Tripoli, Libya
+tz	macas	Africa/Casablanca	Casablanca, Morocco
+tz	mcmon	Europe/Monaco	Monaco
+tz	mdkiv	Europe/Chisinau Europe/Tiraspol	Chişinău, Moldova
+tz	metgd	Europe/Podgorica	Podgorica, Montenegro
+tz	mgtnr	Indian/Antananarivo	Antananarivo, Madagascar
+tz	mhkwa	Pacific/Kwajalein Kwajalein	Kwajalein, Marshall Islands
+tz	mhmaj	Pacific/Majuro	Majuro, Marshall Islands
+tz	mkskp	Europe/Skopje	Skopje, Macedonia
+tz	mlbko	Africa/Bamako Africa/Timbuktu	Bamako, Mali
+tz	mmrgn	Asia/Rangoon Asia/Yangon	Yangon (Rangoon), Burma
+tz	mncoq	Asia/Choibalsan	Choibalsan, Mongolia
+tz	mnhvd	Asia/Hovd	Khovd (Hovd), Mongolia
+tz	mnuln	Asia/Ulaanbaatar Asia/Ulan_Bator	Ulaanbaatar (Ulan Bator), Mongolia
+tz	momfm	Asia/Macau Asia/Macao	Macau SAR China
+tz	mpspn	Pacific/Saipan	Saipan, Northern Mariana Islands
+tz	mqfdf	America/Martinique	Martinique
+tz	mrnkc	Africa/Nouakchott	Nouakchott, Mauritania
+tz	msmni	America/Montserrat	Montserrat
+tz	mst7mdt	MST7MDT	POSIX style time zone for US Mountain Time
+tz	mtmla	Europe/Malta	Malta
+tz	muplu	Indian/Mauritius	Mauritius
+tz	mvmle	Indian/Maldives	Maldives
+tz	mwblz	Africa/Blantyre	Blantyre, Malawi
+tz	mxchi	America/Chihuahua	Chihuahua, Mexico
+tz	mxcun	America/Cancun	Cancún, Mexico
+tz	mxhmo	America/Hermosillo	Hermosillo, Mexico
+tz	mxmam	America/Matamoros	Matamoros, Mexico
+tz	mxmex	America/Mexico_City Mexico/General	Mexico City, Mexico
+tz	mxmid	America/Merida	Mérida, Mexico
+tz	mxmty	America/Monterrey	Monterrey, Mexico
+tz	mxmzt	America/Mazatlan Mexico/BajaSur	Mazatlán, Mexico
+tz	mxoji	America/Ojinaga	Ojinaga, Mexico
+tz	mxpvr	America/Bahia_Banderas	Bahía de Banderas, Mexico
+tz	mxstis	America/Santa_Isabel	Santa Isabel (Baja California), Mexico
+tz	mxtij	America/Tijuana America/Ensenada Mexico/BajaNorte	Tijuana, Mexico
+tz	mykch	Asia/Kuching	Kuching, Malaysia
+tz	mykul	Asia/Kuala_Lumpur	Kuala Lumpur, Malaysia
+tz	mzmpm	Africa/Maputo	Maputo, Mozambique
+tz	nawdh	Africa/Windhoek	Windhoek, Namibia
+tz	ncnou	Pacific/Noumea	Noumea, New Caledonia
+tz	nenim	Africa/Niamey	Niamey, Niger
+tz	nfnlk	Pacific/Norfolk	Norfolk Island
+tz	nglos	Africa/Lagos	Lagos, Nigeria
+tz	nimga	America/Managua	Managua, Nicaragua
+tz	nlams	Europe/Amsterdam	Amsterdam, Netherlands
+tz	noosl	Europe/Oslo	Oslo, Norway
+tz	npktm	Asia/Katmandu Asia/Kathmandu	Kathmandu, Nepal
+tz	nrinu	Pacific/Nauru	Nauru
+tz	nuiue	Pacific/Niue	Niue
+tz	nzakl	Pacific/Auckland Antarctica/South_Pole NZ	Auckland, New Zealand
+tz	nzcht	Pacific/Chatham NZ-CHAT	Chatham Islands, New Zealand
+tz	ommct	Asia/Muscat	Muscat, Oman
+tz	papty	America/Panama	Panama
+tz	pelim	America/Lima	Lima, Peru
+tz	pfgmr	Pacific/Gambier	Gambiera Islands, French Polynesia
+tz	pfnhv	Pacific/Marquesas	Marquesas Islands, French Polynesia
+tz	pfppt	Pacific/Tahiti	Tahiti, French Polynesia
+tz	pgpom	Pacific/Port_Moresby	Port Moresby, Papua New Guinea
+tz	pgraw	Pacific/Bougainville	Bougainville, Papua New Guinea
+tz	phmnl	Asia/Manila	Manila, Philippines
+tz	pkkhi	Asia/Karachi	Karachi, Pakistan
+tz	plwaw	Europe/Warsaw Poland	Warsaw, Poland
+tz	pmmqc	America/Miquelon	Saint Pierre and Miquelon
+tz	pnpcn	Pacific/Pitcairn	Pitcairn Islands
+tz	prsju	America/Puerto_Rico	Puerto Rico
+tz	pst8pdt	PST8PDT	POSIX style time zone for US Pacific Time
+tz	ptfnc	Atlantic/Madeira	Madeira, Portugal
+tz	ptlis	Europe/Lisbon Portugal	Lisbon, Portugal
+tz	ptpdl	Atlantic/Azores	Azores, Portugal
+tz	pwror	Pacific/Palau	Palau
+tz	pyasu	America/Asuncion	Asunción, Paraguay
+tz	qadoh	Asia/Qatar	Qatar
+tz	rereu	Indian/Reunion	Réunion
+tz	robuh	Europe/Bucharest	Bucharest, Romania
+tz	rsbeg	Europe/Belgrade	Belgrade, Serbia
+tz	ruasf	Europe/Astrakhan	Astrakhan, Russia
+tz	rubax	Asia/Barnaul	Barnaul, Russia
+tz	ruchita	Asia/Chita	Chita Zabaykalsky, Russia
+tz	rudyr	Asia/Anadyr	Anadyr, Russia
+tz	rugdx	Asia/Magadan	Magadan, Russia
+tz	ruikt	Asia/Irkutsk	Irkutsk, Russia
+tz	rukgd	Europe/Kaliningrad	Kaliningrad, Russia
+tz	rukhndg	Asia/Khandyga	Khandyga Tomponsky, Russia
+tz	rukra	Asia/Krasnoyarsk	Krasnoyarsk, Russia
+tz	rukuf	Europe/Samara	Samara, Russia
+tz	rukvx	Europe/Kirov	Kirov, Russia
+tz	rumow	Europe/Moscow W-SU	Moscow, Russia
+tz	runoz	Asia/Novokuznetsk	Novokuznetsk, Russia
+tz	ruoms	Asia/Omsk	Omsk, Russia
+tz	ruovb	Asia/Novosibirsk	Novosibirsk, Russia
+tz	rupkc	Asia/Kamchatka	Kamchatka Peninsula, Russia
+tz	rurtw	Europe/Saratov	Saratov, Russia
+tz	rusred	Asia/Srednekolymsk	Srednekolymsk, Russia
+tz	rutof	Asia/Tomsk	Tomsk, Russia
+tz	ruuly	Europe/Ulyanovsk	Ulyanovsk, Russia
+tz	ruunera	Asia/Ust-Nera	Ust-Nera Oymyakonsky, Russia
+tz	ruuus	Asia/Sakhalin	Sakhalin, Russia
+tz	ruvog	Europe/Volgograd	Volgograd, Russia
+tz	ruvvo	Asia/Vladivostok	Vladivostok, Russia
+tz	ruyek	Asia/Yekaterinburg	Yekaterinburg, Russia
+tz	ruyks	Asia/Yakutsk	Yakutsk, Russia
+tz	rwkgl	Africa/Kigali	Kigali, Rwanda
+tz	saruh	Asia/Riyadh	Riyadh, Saudi Arabia
+tz	sbhir	Pacific/Guadalcanal	Guadalcanal, Solomon Islands
+tz	scmaw	Indian/Mahe	Mahé, Seychelles
+tz	sdkrt	Africa/Khartoum	Khartoum, Sudan
+tz	sesto	Europe/Stockholm	Stockholm, Sweden
+tz	sgsin	Asia/Singapore Singapore	Singapore
+tz	shshn	Atlantic/St_Helena	Saint Helena
+tz	silju	Europe/Ljubljana	Ljubljana, Slovenia
+tz	sjlyr	Arctic/Longyearbyen Atlantic/Jan_Mayen	Longyearbyen, Svalbard
+tz	skbts	Europe/Bratislava	Bratislava, Slovakia
+tz	slfna	Africa/Freetown	Freetown, Sierra Leone
+tz	smsai	Europe/San_Marino	San Marino
+tz	sndkr	Africa/Dakar	Dakar, Senegal
+tz	somgq	Africa/Mogadishu	Mogadishu, Somalia
+tz	srpbm	America/Paramaribo	Paramaribo, Suriname
+tz	ssjub	Africa/Juba	Juba, South Sudan
+tz	sttms	Africa/Sao_Tome	São Tomé, São Tomé and Príncipe
+tz	svsal	America/El_Salvador	El Salvador
+tz	sxphi	America/Lower_Princes	Sint Maarten
+tz	sydam	Asia/Damascus	Damascus, Syria
+tz	szqmn	Africa/Mbabane	Mbabane, Swaziland
+tz	tcgdt	America/Grand_Turk	Grand Turk, Turks and Caicos Islands
+tz	tdndj	Africa/Ndjamena	N'Djamena, Chad
+tz	tfpfr	Indian/Kerguelen	Kerguelen Islands, French Southern Territories
+tz	tglfw	Africa/Lome	Lomé, Togo
+tz	thbkk	Asia/Bangkok	Bangkok, Thailand
+tz	tjdyu	Asia/Dushanbe	Dushanbe, Tajikistan
+tz	tkfko	Pacific/Fakaofo	Fakaofo, Tokelau
+tz	tldil	Asia/Dili	Dili, East Timor
+tz	tmasb	Asia/Ashgabat Asia/Ashkhabad	Ashgabat, Turkmenistan
+tz	tntun	Africa/Tunis	Tunis, Tunisia
+tz	totbu	Pacific/Tongatapu	Tongatapu, Tonga
+tz	trist	Europe/Istanbul Asia/Istanbul Turkey	Istanbul, Turkey
+tz	ttpos	America/Port_of_Spain	Port of Spain, Trinidad and Tobago
+tz	tvfun	Pacific/Funafuti	Funafuti, Tuvalu
+tz	twtpe	Asia/Taipei ROC	Taipei, Taiwan
+tz	tzdar	Africa/Dar_es_Salaam	Dar es Salaam, Tanzania
+tz	uaiev	Europe/Kiev	Kyiv, Ukraine
+tz	uaozh	Europe/Zaporozhye	Zaporizhia (Zaporozhye), Ukraine
+tz	uasip	Europe/Simferopol	Simferopol, Ukraine
+tz	uauzh	Europe/Uzhgorod	Uzhhorod (Uzhgorod), Ukraine
+tz	ugkla	Africa/Kampala	Kampala, Uganda
+tz	umawk	Pacific/Wake	Wake Island, U.S. Minor Outlying Islands
+tz	umjon	Pacific/Johnston	Johnston Atoll, U.S. Minor Outlying Islands
+tz	ummdy	Pacific/Midway	Midway Islands, U.S. Minor Outlying Islands
+tz	unk	Etc/Unknown	Unknown time zone
+tz	usadk	America/Adak America/Atka US/Aleutian	Adak (Alaska), United States
+tz	usaeg	America/Indiana/Marengo	Marengo (Indiana), United States
+tz	usanc	America/Anchorage US/Alaska	Anchorage, United States
+tz	usboi	America/Boise	Boise (Idaho), United States
+tz	uschi	America/Chicago US/Central	Chicago, United States
+tz	usden	America/Denver America/Shiprock Navajo US/Mountain	Denver, United States
+tz	usdet	America/Detroit US/Michigan	Detroit, United States
+tz	ushnl	Pacific/Honolulu US/Hawaii	Honolulu, United States
+tz	usind	America/Indianapolis America/Fort_Wayne America/Indiana/Indianapolis US/East-Indiana	Indianapolis, United States
+tz	usinvev	America/Indiana/Vevay	Vevay (Indiana), United States
+tz	usjnu	America/Juneau	Juneau (Alaska), United States
+tz	usknx	America/Indiana/Knox America/Knox_IN US/Indiana-Starke	Knox (Indiana), United States
+tz	uslax	America/Los_Angeles US/Pacific US/Pacific-New	Los Angeles, United States
+tz	uslui	America/Louisville America/Kentucky/Louisville	Louisville (Kentucky), United States
+tz	usmnm	America/Menominee	Menominee (Michigan), United States
+tz	usmoc	America/Kentucky/Monticello	Monticello (Kentucky), United States
+tz	usmtm	America/Metlakatla	Metlakatla (Alaska), United States
+tz	usndcnt	America/North_Dakota/Center	Center (North Dakota), United States
+tz	usndnsl	America/North_Dakota/New_Salem	New Salem (North Dakota), United States
+tz	usnyc	America/New_York US/Eastern	New York, United States
+tz	usoea	America/Indiana/Vincennes	Vincennes (Indiana), United States
+tz	usome	America/Nome	Nome (Alaska), United States
+tz	usphx	America/Phoenix US/Arizona	Phoenix, United States
+tz	ussit	America/Sitka	Sitka (Alaska), United States
+tz	ustel	America/Indiana/Tell_City	Tell City (Indiana), United States
+tz	uswlz	America/Indiana/Winamac	Winamac (Indiana), United States
+tz	uswsq	America/Indiana/Petersburg	Petersburg (Indiana), United States
+tz	usxul	America/North_Dakota/Beulah	Beulah (North Dakota), United States
+tz	usyak	America/Yakutat	Yakutat (Alaska), United States
+tz	utc	Etc/UTC Etc/UCT Etc/Universal Etc/Zulu UCT UTC Universal Zulu	UTC (Coordinated Universal Time)
+tz	utce01	Etc/GMT-1	1 hour ahead of UTC
+tz	utce02	Etc/GMT-2	2 hours ahead of UTC
+tz	utce03	Etc/GMT-3	3 hours ahead of UTC
+tz	utce04	Etc/GMT-4	4 hours ahead of UTC
+tz	utce05	Etc/GMT-5	5 hours ahead of UTC
+tz	utce06	Etc/GMT-6	6 hours ahead of UTC
+tz	utce07	Etc/GMT-7	7 hours ahead of UTC
+tz	utce08	Etc/GMT-8	8 hours ahead of UTC
+tz	utce09	Etc/GMT-9	9 hours ahead of UTC
+tz	utce10	Etc/GMT-10	10 hours ahead of UTC
+tz	utce11	Etc/GMT-11	11 hours ahead of UTC
+tz	utce12	Etc/GMT-12	12 hours ahead of UTC
+tz	utce13	Etc/GMT-13	13 hours ahead of UTC
+tz	utce14	Etc/GMT-14	14 hours ahead of UTC
+tz	utcw01	Etc/GMT+1	1 hour behind UTC
+tz	utcw02	Etc/GMT+2	2 hours behind UTC
+tz	utcw03	Etc/GMT+3	3 hours behind UTC
+tz	utcw04	Etc/GMT+4	4 hours behind UTC
+tz	utcw05	Etc/GMT+5 EST	5 hours behind UTC
+tz	utcw06	Etc/GMT+6	6 hours behind UTC
+tz	utcw07	Etc/GMT+7 MST	7 hours behind UTC
+tz	utcw08	Etc/GMT+8	8 hours behind UTC
+tz	utcw09	Etc/GMT+9	9 hours behind UTC
+tz	utcw10	Etc/GMT+10 HST	10 hours behind UTC
+tz	utcw11	Etc/GMT+11	11 hours behind UTC
+tz	utcw12	Etc/GMT+12	12 hours behind UTC
+tz	uymvd	America/Montevideo	Montevideo, Uruguay
+tz	uzskd	Asia/Samarkand	Samarkand, Uzbekistan
+tz	uztas	Asia/Tashkent	Tashkent, Uzbekistan
+tz	vavat	Europe/Vatican	Vatican City
+tz	vcsvd	America/St_Vincent	Saint Vincent, Saint Vincent and the Grenadines
+tz	veccs	America/Caracas	Caracas, Venezuela
+tz	vgtov	America/Tortola	Tortola, British Virgin Islands
+tz	vistt	America/St_Thomas America/Virgin	Saint Thomas, U.S. Virgin Islands
+tz	vnsgn	Asia/Saigon Asia/Ho_Chi_Minh	Ho Chi Minh City, Vietnam
+tz	vuvli	Pacific/Efate	Efate, Vanuatu
+tz	wfmau	Pacific/Wallis	Wallis Islands, Wallis and Futuna
+tz	wsapw	Pacific/Apia	Apia, Samoa
+tz	yeade	Asia/Aden	Aden, Yemen
+tz	ytmam	Indian/Mayotte	Mayotte
+tz	zajnb	Africa/Johannesburg	Johannesburg, South Africa
+tz	zmlun	Africa/Lusaka	Lusaka, Zambia
+tz	zwhre	Africa/Harare	Harare, Zimbabwe

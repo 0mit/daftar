@@ -94,6 +94,7 @@ parts, changes).
    python3 test/view_said.py
    python3 test/names.py
    python3 test/view_sheet_words.py
+   python3 test/view_reader_prefs.py
    python3 test/catalogue.py
    python3 test/garden.py
    reuse lint

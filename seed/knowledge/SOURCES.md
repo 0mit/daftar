@@ -281,3 +281,15 @@ Commission." Modified or adapted versions must be marked as such.
   sha-256 b15bdec0e72ac9fdf85dc27bff5e5ee1a01429e86c2c88c66da9d8ccecc72768): 72,840 places of its 1,196,260 objects.
 - **Its licence** is the Open Database Licence 1.0, © OpenStreetMap contributors: what a garden shows of it says so,
   and a database made from it stays under it.
+
+## cldr-bcp47.tsv — the types of the Unicode keys a reader sets (CLDR)
+
+- **Source:** CLDR's own `common/bcp47` — `calendar.xml` (the keys `ca`, `fw`, `hc`), `number.xml` (`nu`) and
+  `timezone.xml` (`tz`, each type with the IANA zones it stands for) — as the copy of CLDR on the machine that wrote it
+  carries them (LibreOffice's liblangtag, CLDR 41's types: `fw` and `hc` since 28, the newest since 41), written by
+  `python3 assets/view/lib/view_prefs.py --from-ldml <cldr>/common/bcp47`. One row per type of each key, with its
+  aliases (`-` for none) and CLDR's description; a deprecated type is left out. Unicode License v3.
+- **Read by:** `assets/view/lib/view_prefs.py`, which keeps a reader's own way of reading as one BCP 47 tag (UTS #35):
+  a type not here is refused with a sentence, and a `tz` is shown in the IANA zone its first alias names.
+- **Behind CLDR 48:** two zones (America/Ciudad_Juarez, America/Coyhaique) and eleven numbering systems the runtime of
+  2026 knows are not here; written again from a later CLDR's `common/bcp47`, they are.

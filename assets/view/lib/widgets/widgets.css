@@ -23,3 +23,10 @@ table .w-num,.num .w-num,.amount .w-num{font-variant-numeric:tabular-nums}
 .w-place-credit,.w-place-empty{padding:.2em .5em}
 .w-place-near[aria-pressed="true"]{font-weight:600}
 .w-place-coord{unicode-bidi:isolate;white-space:nowrap}
+.w-prefs{display:grid;gap:6px;min-width:min(420px,90vw)}
+.w-prefs-title{margin:0 0 4px;font-size:1.05em}
+.w-prefs-field{display:grid;grid-template-columns:minmax(9em,auto) 1fr;gap:8px;align-items:center}
+.w-prefs-label{font-size:.88em}
+.w-prefs-sample{margin-top:6px;padding:6px 8px;border:1px dashed currentColor;border-radius:6px}
+.w-prefs-error{color:#c62828;min-height:1em;margin:0}
+.w-prefs-bar{display:flex;gap:8px}

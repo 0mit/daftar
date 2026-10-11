@@ -12,7 +12,21 @@ const names = {};
 function nameOf(code, lang) {
   try { return (names[lang] ||= new Intl.DisplayNames([lang], {type: 'currency'})).of(code); } catch { return code; }
 }
-const labelOf = (unit, o) => !unit || o.label === 'none' ? '' : o.label === 'name' ? nameOf(unit, langOf(o)) : unit;
+// a currency's symbol as the reader's language writes it (CLDR, through Intl), or its code where none
+function symbolOf(code, lang, display) {
+  try {
+    const p = new Intl.NumberFormat(lang, {style: 'currency', currency: code, currencyDisplay: display}).formatToParts(1).find(x => x.type === 'currency');
+    return p ? p.value : code;
+  } catch { return code; }
+}
+// how a currency is named: the option, else the reader's choice (`settings.currency`), else its code
+function labelOf(unit, o) {
+  const how = o.label || settings.currency || 'code';
+  if (!unit || how === 'none') return '';
+  if (how === 'name') return nameOf(unit, langOf(o));
+  if (how === 'symbol' || how === 'narrowSymbol') return symbolOf(unit, langOf(o), how);
+  return unit;
+}
 export const places = unit => settings.places[unit];
 // options: label 'code'|'name'|'none'; abs (no sign); everything number.show takes
 export function show(v, unit, o = {}) {
