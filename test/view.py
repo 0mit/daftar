@@ -1224,6 +1224,89 @@ try:
     check("serve: ...nor their part cards, their facts or their tiles, on any drawing",
           {p["bean"] for p in _sv["parts"]} == {"silo-controller"} and set(_sv["facts"]) == {"silo-controller"}
           and not any(t.get("bean") in ("field-radio", "hill-pump") for t in _sv["tiles"]), [p["bean"] for p in _sv["parts"]])
+    # NOTHING NAMES WHAT THE VIEWER MAY NOT SEE (security audit 2026-10-10, 3.8): the grants are asked for every being
+    # the page names — the part an element depicts, a value's probe and its query, the being an action acts on, a step's
+    # parts, a story's, where the page is shown, who stated it — and a being alice may not see is named nowhere. The
+    # drawing's own words stay, as its picture does: an element's id is the slug of its label, which the drawing shows.
+    import view_model as _vmm
+    _hidden = sorted(b for b in _vmm.bean_ids() if b != _vmm.PAGE and not _H.may("alice", b)[0])
+
+    _POS = ("bean", "probe", "being", "host", "draws_bean", "answered_by", "acts_on", "by", "opens_on")
+
+    def _naming(p, hidden):
+        """Where the scoped page names a being in `hidden`: a key that names a being, a step's or a story's parts, the
+        drawing's own marks of a being in its picture (`data-bean`, `data-addr-of`), a value's query naming one — quoted,
+        or as a step of a JSON Pointer. A technology is named by the published catalogue's code, which may be a being's id
+        too: the catalogue's word names no being of the garden."""
+        found = []
+
+        def walk(x, path):
+            last = path[-1] if path else None
+            if isinstance(x, dict):
+                if "live" in x and "probe" in x:              # a value: its query and its path are its own text
+                    for t in [x.get("source")] + list((x.get("query") or {}).values()):
+                        for b in hidden:
+                            if isinstance(t, str) and re.search(r"(?:^|(?<=[\"'/|]))%s(?=[\"'/|]|$)" % re.escape(b), t):
+                                found.append((".".join(map(str, path)) + ".query", b))
+                for k, v in x.items():
+                    walk(v, path + [k])
+            elif isinstance(x, list):
+                for i, v in enumerate(x):
+                    walk(v, path + [i])
+            elif isinstance(x, str):
+                if (last in _POS or (len(path) > 1 and path[-2] in ("parts", "idle"))
+                        or (last == "title" and "stages" in path and "parts" in path)) and x in hidden:
+                    found.append((".".join(map(str, path)), x))
+                for b in re.findall(r' data-(?:bean|addr-of)="([^"]*)"', x):
+                    if b in hidden:
+                        found.append((".".join(map(str, path)) + "@data", b))
+        walk(p, [])
+        return found
+
+    def _literal(p, word):
+        """Every place `word` is written in the scoped page but the drawing's own words for its elements — an element's id
+        (the slug of its label, which the drawing shows) and the references to it — and a granted being's own facts: a
+        grant opens a bean whole, and what it states of another is its own (the law's grants decide that, not the page)."""
+        found = []
+
+        def walk(x, path, own):
+            if len(path) == 2 and path[0] == "beans" and not (x or {}).get("part"):
+                return
+            if isinstance(x, dict):
+                if isinstance(x.get("elements"), list):
+                    own = own | {e.get("id") for e in x["elements"] if isinstance(e, dict)}
+                for k, v in x.items():
+                    walk(v, path + [k], own)
+            elif isinstance(x, list):
+                for i, v in enumerate(x):
+                    walk(v, path + [i], own)
+            elif isinstance(x, str) and word in x:
+                if x in own and ((path and path[-1] in ("id", "el", "from", "to")) or (len(path) > 1 and path[-2] in ("inside", "flows"))):
+                    return
+                if word in re.sub(r' data-el="[^"]*"', "", x):
+                    found.append(".".join(map(str, path)))
+        walk(p, [], set())
+        return found
+    _nm, _lt = _naming(PA, _hidden), _literal(PA, "hill-pump")
+    check("serve: the scoped page names no being alice may not see — not the part a drawing's element depicts, a value's "
+          "probe or query, the being an action acts on, a step's or a story's parts, nor where the page is shown or who "
+          "stated it (%d beings closed to her, among them %s)" % (len(_hidden), ", ".join(b for b in ("hill-pump", "field-radio") if b in _hidden)),
+          {"hill-pump", "field-radio"} <= set(_hidden) and not _nm, _nm[:12])
+    check("...and the hill farm's pump is written nowhere in what she is sent but as the drawing's own word for its element",
+          not _lt, _lt[:12])
+    _bq = lambda q: _H.bind_shown("alice", {"id": "q", "live": "live-value", "probe": None, "query": {"prometheus": q}, "source": q})
+    try:
+        _bqs = [_bq('pump_rpm{name="hill-pump"}'), _bq('{"/devices/hill-pump/rpm"}'), _bq('up{job="prometheus"}'), _bq("silo_fill_ratio{$F}")]
+    except Exception as e:  # noqa: BLE001
+        _bqs = repr(e)
+    check("...a value whose query names a being she may not see is not sent her, and the name of a technology of the "
+          "published catalogue in a query (a job named for it) names no being", _bqs == [False, False, True, True], _bqs)
+    _sv8 = PA["views"]["silo"]
+    check("...while what she may see is still drawn whole: the silo controller's element, its live-state and the action on "
+          "the silo, the silo's step parts",
+          any(e.get("bean") == "silo-controller" for e in _sv8["elements"]) and any(b.get("probe") == "silo-controller" for b in _sv8["binds"])
+          and any(a.get("tool") == "start-fans" for a in _sv8["actions"]) and 'data-bean="silo-controller"' in _sv8["svg"],
+          ([e.get("bean") for e in _sv8["elements"]], [b.get("id") for b in _sv8["binds"]], [a.get("tool") for a in _sv8["actions"]]))
     carol = session("carol")
     st, PC = page_of(carol)
     check("serve: carol, granted what no organisation owns, sees the radio — and still not the hill farm's pump",

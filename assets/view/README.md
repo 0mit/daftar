@@ -228,6 +228,9 @@ pass through it; where only a part of a bean is granted (`positions`), only that
   log, with the answer that decided it.
 - `monitors` gives each monitor's address (`{"<being>": {"url": …}}`); `history`, where a history page exists, the
   base its links open.
+- A page names only the beings its viewer may see, whole or in part: a part of a drawing that depicts another is drawn
+  as the drawing draws it, without saying which being it is, and the values, actions, steps and story parts that name
+  one are not sent.
 
 The server reads the ledger again when its head moves, and starts itself again on a new head or a new release only
 once `check` passes on it.

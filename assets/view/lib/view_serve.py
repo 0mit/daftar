@@ -135,6 +135,15 @@ def strip_addresses(svg, ok):
     see is taken out. What the drawing's own text says belongs to no being, and stays, as the page's `visibility` says."""
     return _NIP.sub(lambda m: m.group(0) if not m.group(1) or ok(html.unescape(m.group(1))) else "", svg)
 
+
+_BEAN = re.compile(r' data-bean="([^"]*)"')
+
+
+def strip_beans(svg, gone):
+    """A drawing as a viewer may see it: the mark of the being a part depicts (`data-bean`) is taken off a part whose
+    being the viewer may not see (3.8). The part stays as drawn: its words are the drawing's."""
+    return _BEAN.sub(lambda m: "" if gone(html.unescape(m.group(1))) else m.group(0), svg)
+
 class Verdict(tuple):
     """(yes, why), and the grants the answer read — compares as the pair it is."""
     def __new__(cls, yes, why, grants=(), reason_asked=False):
@@ -152,6 +161,7 @@ class Host:
         self.wlock = threading.Lock()                # one form's save at a time in this host; save's own lock queues others
         self.head, self.checked, self.payload, self.views = None, 0, None, {}
         self.fails = {}                              # ip or user -> [the moments of its failed sign-ins in the window]
+        self.closed_memo = {}                        # viewer -> (head, day, the beings they may not see, a pattern of them)
         self.revoked = self._load_revoked()          # the signatures of tokens signed out, until each would expire
         self.beans, self.gardener, self.answers = {}, None, {}
         self.argv = argv or sys.argv
@@ -293,9 +303,34 @@ class Host:
         os.execv(sys.executable, [sys.executable] + self.argv)
 
     # --- what a viewer is sent ---
+    def closed(self, user):
+        """(the beings of the garden `user` may not see, a pattern that finds one named in a value's query): asked of the
+        grants once a head and a day, as every answer is."""
+        key = (self.head, int(time.time() // 86400))
+        m = self.closed_memo.get(user)
+        if not m or m[0] != key:
+            gone = frozenset(b for b in (self.payload or {}).get("beans") or {} if not self.may(user, b)[0])
+            # named in a query as a label's value or a step of a JSON Pointer: delimited by a quote, a bar or a slash. A
+            # technology's code in the published catalogue (`job="prometheus"`) names the technology as much as the being
+            # a garden keeps for it, and is no name of a being in a query.
+            words = sorted(gone - set((self.payload or {}).get("techcat") or {}), key=len, reverse=True)
+            rx = re.compile(r"(?:^|(?<=[\"'/|]))(?:%s)(?=[\"'/|]|$)" % "|".join(map(re.escape, words))) if words else None
+            m = self.closed_memo[user] = (key, gone, rx)
+        return m[1], m[2]
+
+    def bind_shown(self, user, b):
+        """Whether a value is shown to `user`: its probe is a being they may see, and its query names none they may not."""
+        if b.get("probe") and not self.may(user, b["probe"])[0]:
+            return False
+        rx = self.closed(user)[1]
+        return not (rx and any(isinstance(t, str) and rx.search(t) for t in [b.get("source")] + list((b.get("query") or {}).values())))
+
     def scoped_payload(self, user):
         """The page as `user` may see it: every being they may not see taken out of what is sent, and every drawing of a
-        being they may not see."""
+        being they may not see — and named nowhere (security audit 2026-10-10, 3.8): not as the part an element depicts
+        (its picture's mark of it too), a value's probe or query, the being an action acts on or answers for it, a step's
+        or a story's parts, a board's member, where the page is shown, who stated it, the organisation it opens on. The
+        drawing's own words stay, as its picture does: an element's id is the slug of the label the drawing shows."""
         p = json.loads(json.dumps(self.payload))
         ok = lambda b: self.may(user, b)[0]
         p["reference"] = [r for r in p["reference"] if ok(r["being"])]
@@ -315,18 +350,57 @@ class Host:
         p["beans"] = beans
         p["addresses"] = {b: a for b, a in (p.get("addresses") or {}).items() if ok(b)}
         p.pop("author", None)                        # the served page edits nothing; the author mode is the report's
+        # WHO IS NAMED: a being of the garden the viewer is sent, whole or in part, and the page itself; any other is named
+        # nowhere a being is named. A word that is no being's id (a series' item) is no name. A bean sent in part says
+        # which organisation owns it only where the viewer may see that one too.
+        named = set(beans) | {vm.PAGE}
+        gone = lambda b: isinstance(b, str) and b in self.closed(user)[0] and b not in named
+        for b, v in beans.items():
+            if v.get("part") and gone(v.get("org")):
+                v["org"] = None
+        if gone(p.get("opens_on")):
+            p["opens_on"] = ""
+        hosts = [pl.get("host") for pl in (p.get("where") or {}).get("places") or [] if pl.get("host")]
+        if any(gone(b) for b in hosts + [(vm.fm(h).get("lives_in") or {}).get("bean") for h in hosts
+                                         if isinstance(vm.fm(h).get("lives_in"), dict)]):
+            svg, places = vm.where_shown(shows=lambda b: not gone(b))
+            p["where"] = {"svg": svg, "places": places}
         for k in list(p["views"]):
             v = p["views"][k]
             if v.get("draws_bean") and not ok(v["draws_bean"]):
                 del p["views"][k]
                 p["order"] = [x for x in p["order"] if x != k]
                 continue
+            hid = {e["id"] for e in v.get("elements") or [] if gone(e.get("bean"))
+                   or (isinstance(e.get("of"), dict) and gone(e["of"].get("bean")))}
+            for e in v.get("elements") or []:
+                if gone(e.get("bean")):
+                    e["bean"] = None
+                if isinstance(e.get("of"), dict) and gone(e["of"].get("bean")):
+                    e["of"] = None
+            v["changed"] = [i for i in v.get("changed") or [] if i not in hid]
+            v["binds"] = [b for b in v.get("binds") or [] if self.bind_shown(user, b)]
+            shown = {b["id"] for b in v["binds"]}
+            v["actions"] = [a for a in v.get("actions") or [] if not gone(a.get("bean"))]
+            for a in v["actions"]:
+                if gone(a.get("answered_by")):
+                    a["answered_by"] = None
+            for st in v.get("steps") or []:
+                st["parts"] = [b for b in st.get("parts") or [] if not gone(b)]
+            for st in (v.get("story") or {}).get("stages") or []:
+                st["parts"] = [x for x in st.get("parts") or [] if not gone(x.get("title"))]
+            if gone((v.get("sheet") or {}).get("by")):
+                v["sheet"]["by"] = ""
             v["facts"] = {b: f for b, f in (v.get("facts") or {}).items() if ok(b)}
-            v["svg"] = strip_addresses(v.get("svg") or "", ok)
+            v["svg"] = strip_beans(strip_addresses(v.get("svg") or "", ok), gone)
+
             v["parts"] = [x for x in (v.get("parts") or []) if ok(x["bean"])]
             if v.get("wiring") and not ok(v["wiring"]["bean"]):
                 v["wiring"] = None
             v["tiles"] = [t for t in v.get("tiles") or [] if not t.get("bean") or ok(t["bean"])]
+            for t in v["tiles"]:
+                if "binds" in t:
+                    t["binds"] = [i for i in t["binds"] if i in shown]
             op = v.get("operate") or {}
             if op.get("table"):                      # a line of a table shows the parts of one being its columns read:
                 op["table"]["rows"] = [r for r in op["table"]["rows"] if self.line_ok(user, r["bean"], op["table"])]
@@ -335,6 +409,14 @@ class Host:
                     if st.get("members") is not None:
                         st["static"] = sum(1 for m in st["members"] if ok(m))
                     st.pop("members", None)
+            for it in op.get("items") or []:
+                if gone(it.get("bean")):
+                    it["bean"] = None
+            for rc in op.get("rollcall") or []:
+                rc["idle"] = [x for x in rc.get("idle") or [] if not gone(x)]
+                rc["notes"] = {x: n for x, n in (rc.get("notes") or {}).items() if not gone(x)}
+            # the alert rules that watch this drawing, as the parts and the values it is sent read them
+            v["alerts"] = vm.alert_names([x["bean"] for x in v["parts"]], v["binds"]) if v.get("alerts") else []
         return p
 
     def line_ok(self, user, bean, table):
@@ -357,8 +439,7 @@ class Host:
         out = {}
         by_monitor = {}
         for b in v["binds"]:
-            if b.get("probe") and not self.may(user, b["probe"])[0]:
-                out[b["id"]] = None                  # a being the viewer may not see is not asked about
+            if not self.bind_shown(user, b):          # a being the viewer may not see is not asked about, nor named
                 continue
             by_monitor.setdefault(b.get("monitor"), []).append(b)
         for mon, binds in by_monitor.items():
@@ -380,7 +461,7 @@ class Host:
         out, now = {}, int(time.time())
         by_monitor = {}
         for b in v["binds"]:
-            if b.get("live") == "live-value" and not (b.get("probe") and not self.may(user, b["probe"])[0]):
+            if b.get("live") == "live-value" and self.bind_shown(user, b):
                 by_monitor.setdefault(b.get("monitor"), []).append(b)
         for mon, binds in by_monitor.items():
             m = next((x for x in vm.monitors() if x["bean"] == mon), None)
