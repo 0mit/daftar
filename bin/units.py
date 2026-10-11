@@ -12,6 +12,7 @@
     python3 bin/units.py --code unece-rec20:MON                      # what one code crosses to, or through its axes
     python3 bin/units.py --judge loinc:2345-7 95 mg/dL               # is this value what the code says one is
     python3 bin/units.py --unit-of 0.3048 m                          # -> [ft_i]: the law's unit of that size, exactly
+    python3 bin/units.py --name m fa cldr-units                      # -> متر: the unit's name in a language, by CLDR
 
 A unit names the QUANTITY it measures and its FACTOR to that quantity's coherent unit, as a pair of whole numbers, so a
 conversion is exact arithmetic and never a rounded float — and the result is PRINTED exactly too: a terminating decimal in
@@ -540,6 +541,21 @@ def unit_of(count, unit):
                   and not r.get('per') and Fraction(*r['factor']) == size)
 
 
+def name_of(scheme, want, lang):
+    """(code, name): what the law writes as `want` — a target, {unit: …}, {in: …, level?: …} — named in `lang`: the code
+    of `scheme` written back for it, and that code's `name_<lang>` in the scheme's own rows (CLDR's names, for a
+    widget). ValueError where no code of it crosses from `want`, or its rows give no name in `lang`."""
+    code, _row = code_of(scheme, want)
+    try:
+        r = _garden_law().std.knowledge.row(scheme, code)
+    except (KeyError, OSError) as e:
+        raise ValueError(f"{scheme}'s own table cannot be read here: {e.args[0] if e.args else e}") from None
+    name = (r or {}).get(f'name_{lang}')
+    if not name:
+        raise ValueError(f"{scheme}:{code} has no name in {lang!r} in {scheme}'s own table")
+    return code, name
+
+
 def against(scheme, rows):
     """What a provider's table, read (`rows`, each with its `code` and the provider's `status` where it states one), says
     of `scheme`'s crossing: (how many of its codes cross, [crossed codes the table has not], [(crossed code, status)],
@@ -683,6 +699,13 @@ def main(argv):
         return _code(argv[1])
     if argv[:1] == ['--judge'] and len(argv) in (3, 4):
         return _judge(argv[1], argv[2:])
+    if argv[:1] == ['--name'] and len(argv) == 4:
+        try:
+            code, name = name_of(argv[3], {'unit': named(argv[1], _law()[0])}, argv[2])
+        except ValueError as e:
+            print(speakable(f"units: {e}")); return 1
+        print(speakable(f"{name}\t({argv[3]}:{code})"))
+        return 0
     if argv[:1] == ['--unit-of'] and len(argv) == 3:
         try:
             got = unit_of(argv[1], argv[2])

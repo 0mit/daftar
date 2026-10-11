@@ -5319,3 +5319,13 @@ measure in one unit and differ in what they measure — a net or a gross weight,
 which the law says in the statement that holds the value, never in its unit; the law's value is written back as the
 first of them. GS1's ounce (357n) may be a weight or a volume, so it is not crossed; an amount whose currency each value
 names carries its unit with the value, and no crossing fixes it.
+
+## core/law/registries.yaml: knowledge_schemes[cldr-units]
+
+A UNIT IS SHOWN IN ITS READER'S LANGUAGE, BY THE NAMES THE WORLD SHARES (2026-10-11). The law names its units in
+English, its working language, and a widget shows a value to a reader of Persian or Turkish too. CLDR is where the
+world's software keeps those names, under a licence that lets them travel, so the release carries them — the names
+only, in the three languages, and nothing of CLDR's patterns — and each machine may fetch a later CLDR as any provider
+is fetched. CLDR names units by its own ids, so the ids cross into the law as every standard's codes do: `length-meter`
+is the law's m, its month a calendar's cells and never a duration, its Celsius a reading. A unit of the law that CLDR
+does not name keeps its English name; none is made up.
