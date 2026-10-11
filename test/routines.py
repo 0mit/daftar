@@ -70,6 +70,8 @@ if step == 'probe':
         for key, name in (('server.sessions', 'sessions'), ('server.open_files', 'open-files'), ('server.services_down', 'services-down')):
             out.append({'key': key, 'being': being, 'property': 'number', 'value': {'count': num(name), 'unit': '{item}'},
                         'at': at, 'instrument': 'restart-tool:fake', 'quality': 'ok'})
+            if name == 'services-down' and num(name) != '0' and num('down-detail', ''):
+                out[-1]['detail'] = num('down-detail', '').replace('|', '\n')     # what the reading saw, in words
     print(json.dumps({'tool': 'restart-tool', 'version': '1', 'at': at, 'readings': out}))
     sys.exit(0)
 bean, course = sys.argv[2:4]
@@ -435,13 +437,19 @@ print(json.dumps({'five': [loc(b, 3) for b, e in five], 'hourly': [loc(b, 3) for
     sc = text(G, 'beans/server-c.md')
     check("cross: the need holding again writes its repair", r.returncode == 0 and '- repair: { id: services-up-' in sc,
           r.out[-800:] + sc[-800:])
-    live(services_down=3)
+    live(services_down=3, down_detail='spooler stopped since 05:40|w32time stopped ' + 'x' * 900)
     r1 = rt('cross', '--json')
     r2 = rt('cross', '--json')
     sa = text(G, 'beans/server-a.md')
     check("cross: a need that stops holding writes its measure and its fail once, never each sample",
           sa.count('- fail: { id: services-up-') == 1 and '"need": "services-up"' in r1.out and '"need"' not in r2.out,
           r1.out[-600:] + r2.out[-600:])
+    note = next((ln for ln in sa.splitlines() if '- measure: { id: services-up-' in ln and 'services-down' in ln), '')
+    check("cross: what the reading saw in words (its `detail`) is kept in the measure's note — one line, bounded — so the "
+          "lead says what crossed, not only how many",
+          'spooler stopped since 05:40 w32time stopped xxx' in note and 'x' * 600 not in note and '\\n' not in note,
+          note[:400] or sa[-800:])
+    live(down_detail='')
 
     # ---- a crossing proposes its remedy, which waits for its key, then for a person
     live(depot_fill=90, key=0)

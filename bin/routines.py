@@ -28,8 +28,11 @@
   something proposes it.
 - ITS INTERLOCKS are the walk's needs: each `need` the walk states that a `reckon` reading `meet`s — the reading's
   `inputs` are probe readings (the tool's `probe --json`: `{"tool", "at", "readings": [{"key", "being", "property",
-  "value": {"count", "unit"}, "at", "instrument", "quality"}]}`; an input named as the probe's key, `.` and `_` read as
-  `-`, its origin `by` the tool), so "no file open for writing" is a reading of a number, never a word.
+  "value": {"count", "unit"}, "at", "instrument", "quality", "detail"?}]}`; an input named as the probe's key, `.` and
+  `_` read as `-`, its origin `by` the tool), so "no file open for writing" is a reading of a number, never a word. A
+  reading's `detail`, where its tool gives one, is what it saw in words (which services are down, which differences it
+  counted): never part of what is judged, kept in the note of the `measure` a crossing writes, so a lead says what
+  crossed and not only how much.
   Needs sharing an `as` are alternatives. A need no reading meets is not read here, and is said so.
 - ITS PROOF is the acted being's own needs, read the same way after the walk's verify: the being's health, which `cross`
   reads at any time as well.
@@ -379,7 +382,7 @@ def read_needs(G, holder, being, readings, root=ROOT):
                 given[d['name']] = v
                 used[d['name']] = {'value': v, 'at': src.get('at'), 'instrument': src.get('instrument'),
                                    'tool': src.get('tool'), 'property': src.get('property') or d.get('quantity'),
-                                   'key': src.get('key')}
+                                   'key': src.get('key'), 'detail': src.get('detail')}
             if missing:
                 verdicts.append(None)
                 whys.append('; '.join(missing))
@@ -518,9 +521,19 @@ def crossing_block(G, bean, row, machine, at_text, holds):
     return block + know, ids
 
 
+DETAIL_MAX = 600                     # what a measure's note keeps of a reading's words
+
+
+def _words(text, limit=DETAIL_MAX):
+    """A reading's words as one line of a note: every control character a space, at most `limit` characters."""
+    s = re.sub(r'\s+', ' ', re.sub(r'[\x00-\x1f\x7f]', ' ', str(text))).strip()
+    return s if len(s) <= limit else s[:limit - 1].rstrip() + '…'
+
+
 def _note(name, x, row):
     return (f"{name} = {_val(x['value'])}, read by {x.get('instrument') or x.get('tool') or 'its probe'}"
-            f" (probe key {x.get('key')}) for {row['holder']}#{row['need']}")
+            f" (probe key {x.get('key')}) for {row['holder']}#{row['need']}"
+            + (f": {_words(x['detail'])}" if x.get('detail') else ''))
 
 
 def at_now():
