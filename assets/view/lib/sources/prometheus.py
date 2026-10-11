@@ -27,9 +27,12 @@ bundle, the page or the ledger.
 THE BUNDLE (`view bundle --out DIR`): a Prometheus + Grafana deployment written from the ledger — the probe targets,
 each labelled with its being, its genos and the organisation it belongs to where one can be derived; one Grafana page
 per drawing, the drawing itself mounted by the same runtime; the alert rules. It opens no network path; `values` and
-`history` do, to the monitor's own address, which the host's configuration gives.
+`history` do, to the monitor's own address, which the host's configuration gives — each answer read within one
+deadline, up to a size, and where it was asked (view_fetch), and one poll's reads within one budget.
 """
-import json, os, re, urllib.parse, urllib.request
+import json, os, re, urllib.parse
+
+import view_fetch
 
 import view_model as vm
 import view_kit as kit
@@ -107,17 +110,21 @@ def check_binding(b):
 
 
 def _get(url, timeout):
-    with urllib.request.urlopen(url, timeout=timeout) as r:
-        return json.load(r)
+    if timeout <= 0:
+        raise view_fetch.Refused("this poll's time is spent")
+    return view_fetch.get_json(url, timeout)
+
+
+POLL_SECONDS = 10       # one poll's reads of one monitor, together: a slow monitor costs a poll this, at most
 
 
 def values(url, binds, sel=None):
     """{binding id: number | [{name, value}] | None} — each binding asked of the monitor at `url`, now."""
-    out = {}
+    out, budget = {}, view_fetch.Budget(POLL_SECONDS)
     for b in binds:
         q = query(b, sel)
         try:
-            r = _get(url.rstrip("/") + "/api/v1/query?" + urllib.parse.urlencode({"query": q}), 5)
+            r = _get(url.rstrip("/") + "/api/v1/query?" + urllib.parse.urlencode({"query": q}), budget.left(5))
             res = (r.get("data") or {}).get("result") or []
             if b.get("live") == "live-series":
                 lab = (b.get("items_by") or {}).get(TECHNOLOGY)
@@ -131,13 +138,13 @@ def values(url, binds, sel=None):
 
 def history(url, binds, sel, hours, step, now):
     """{binding id: [[t, v], …]} — each live-value binding over the window, asked of the monitor at `url`."""
-    out = {}
+    out, budget = {}, view_fetch.Budget(2 * POLL_SECONDS)
     for b in binds:
         if b.get("live") != "live-value":
             continue
         try:
             r = _get(url.rstrip("/") + "/api/v1/query_range?" + urllib.parse.urlencode(
-                {"query": query(b, sel), "start": now - hours * 3600, "end": now, "step": step}), 8)
+                {"query": query(b, sel), "start": now - hours * 3600, "end": now, "step": step}), budget.left(8))
             res = (r.get("data") or {}).get("result") or []
             out[b["id"]] = [[int(float(t)), float(x)] for t, x in res[0]["values"]] if res else []
         except Exception:

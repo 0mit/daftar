@@ -122,11 +122,80 @@ A value a shape reads is the key of a `view_bindings` entry on the page.
 | race | `step_at` (0 before the first step, n at the n-th of the procedure it draws), `elapsed`, `eta`, `progress`, `deadline` (an extent) or `deadline_from`, `checkpoints`, `numbers`, `parts` |
 | health-chain | nothing of its own: a tile per bound element, and a blind spot for every part nothing measures |
 | table | the members of one reading (`selection`) or the rows of one series (`series`, a `{bean, field}` pointer), one line each, and its `columns` (a field path of each member, or a channel and `at`) |
+| queue | nothing of its own: the reader's leads (`bin/leads.py`) — engraved, no module draws it |
+| timeline | a reading (`selection`), its `span` (a length each side of today; six weeks absent) and its `layouts` (week, month, list) — engraved |
+| flows | `nodes` — `parties` (the agreements a `selection` holds, every one absent, read by `bin/ledger.py`) or `gardens` — engraved |
+| sheet | the being it draws, the facts `fields` names for its kind, and the kinds it may make (`new`) — engraved |
 
 Any shape may add `correlate`: values on one time axis (`traces`), how far back (`span`, an extent) and how often
 (`every`, a recurrence), a step value that shades every trace (`band`), and one value binned against another
 (`relate`). The gate refuses a shape without what it answers with, a length written as a bare number, and a stride
 on a walk with no meter.
+
+## Pages of readings: the queue, the timeline, flows and the sheet
+
+Four shapes are **engraved from readings**, and no drawing module draws them: a page whose drawings are all of them
+names no module (`drawings`), and a garden's pages of them are pages of its own, never code of its own. What each draws
+is read each time it is asked, as the release's tools read it, never computed again in a page
+(`lib/view_engraved.py`):
+
+- a **queue** — what waits for the reader: `bin/leads.py`'s leads for them, grouped by what each waits on (a decision,
+  a case at a step, an obligation falling due, a failure, an open session), the most urgent first;
+- a **timeline** — the members of a reading at their moments: a happening's time, and a clause's due day and each
+  occurrence of its repetition within the `span`, walked by `bin/stale.py`'s `occurrences`, the function that warns.
+  Week, month and list are three readings of one line; the week begins on the day the reader's region begins one
+  (CLDR's `firstDay`), in the reader's calendar and digits;
+- **flows** — who owes whom: `bin/ledger.py`'s reading (`ledger.reading`, what `--json` prints) of the agreements the
+  reader may read, netted per currency across them, an arrow from the one who owes to the one owed, its head the glyph
+  of `next`; or, with `nodes: gardens`, what went between this garden and the others (`take`, `propose`, `pass`);
+- a **sheet** — one being as it stands, and the one place it is changed (below).
+
+**Every direction from `axes`.** A drawing names, per axis (`inline`, `block`, `vertical`, `map`), the order of
+`orientations` that runs along it — `{ inline: time }` — and the gate refuses an order on an axis its row does not run
+on. Absent, the archetype's row says it (`archetypes` `axes`). The renderers ask `widgets/direction.js` where an order
+runs and name every key, glyph and swipe by meaning (`earlier`, `later`, `next`).
+
+**The sheet.** Every being drawn — a lead, an event, a node of a flow, a sheet drawing's own being — opens as a sheet:
+its title and summary, and each verb the page's `fields` names for its kind, its statements in the order the bean holds
+them, each with the statements that take it as their `of` beneath it (a payment with its `bear` shares and the clauses
+that ask it), who knows it (its knowing act), and the default the law derives where nothing is written (a payment no
+`bear` names: its payer bears it, alone, as the ledger reads it). Where the reader may write the being — the gardener,
+or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns every fact they may
+write into the widget of its shape (read from the verb's row: never typed in a page), with a remove mark on each
+statement and an add for each verb; **one Save** is one write; Cancel drops the draft. There is no button per field.
+A page a `new` names opens an empty sheet of a kind, whose first Save mints the bean (`p-<8 hex>` for a person, titled
+by the id; `<kind>-<8 hex>` for another) and writes it whole — the gardener's alone, since no grant names a being not
+yet made.
+
+**The one write path** (`lib/view_write.py`, `write(root, who, bean, ops, kind=None, may=None)`): a sheet's Save and a
+drawing's form of a verb (`writes: [{ verb, preset }]`) both send statements — `[{op: add|change|remove, key?, verb,
+roles, held?}]`, and `{op: change, header: title|summary, value}` — and both are written by it: each op read against its
+verb's row; `may` asked for the bean, or for the part each op touches; each edit through `bin/safe.py` by its key, one
+line, an expected count of 1; a held value sealed by `bin/held.py` before its statement is written; the statements added
+or changed known by the writer's `say`; each written statement read back and judged by the gate's own judge; then
+`bin/save.py`, with ONE journal entry naming each statement added, changed or removed, and the gate judges the commit.
+A refusal undoes everything — the tree, the index, every store record the write made — and each message is returned
+tied to the op whose statement it names. `view serve` calls it for `/api/write` with `ops`; a host that serves a
+garden's pages imports it from the release the garden runs. The entry forms of today's words (`{term, attrs}`) stay
+beside it.
+
+**Held values on a page.** A card's fact may name a verb whose statements are sealed (`held`). The host whose store
+holds one — the host bean whose `roots` declare it — sends its value only to a viewer who may read that statement, while
+the word it is held on (`while`) stands; every other page says where it is kept. It is edited in the same Edit and
+sealed in the same Save; the commit keeps only the pointer. `view check` refuses a public page that would show one, and
+the offline report carries none.
+
+**Where they are drawn.** The renderers — `lib/view_engraved.js`, `view_queue.js`, `view_timeline.js`,
+`view_flows.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`
+(`h```, `mount`; a position a page computes is a data attribute `mount` sets, never a style attribute) with every value
+through its widget; a host that serves files loads them, and the widgets as the modules they are
+(`window.daftarWidgets`). The page of one file — the report and `view serve`'s page — carries the widgets written into
+one classic script (`lib/view_widgets.py`) with the renderers, `view_report.ENGRAVED_SCRIPT`, one of the page's own
+scripts (`SCRIPTS`, below: allowed by its hash, as every other), and `lib/view_engraved.css` in the page's style.
+`view report --lang <tag>` draws the page in a reader's language, its direction CLDR's for the language's script.
+`test/view_handplace.py` holds the readings to the tools' own, the write path to one commit, and the pages in Chromium —
+the served one under its policy, a sheet's Save from it; `test/bidi.py` reads them as they land on the screen, right to
+left and left to right.
 
 ## Live values, and the monitors they come from
 
@@ -148,6 +217,13 @@ computes a shown number: its path), `check_binding(binding)` and `check_monitor(
 `selector(scope)` (a viewer's scope in its own language), `values(url, binds, selector)` and
 `history(url, binds, selector, hours, step, now)` (what the served page shows), `alerts(settings, beings, binds)`,
 and, where it deploys anything, `bundle(monitor, views, out)`.
+
+A monitor is read within one deadline for its whole answer (5 s; one poll of a Prometheus, 10 s in all), up to 4 MiB,
+and where it was asked: an answer that sends the host elsewhere is not followed (`lib/view_fetch.py`). A value a monitor
+gives that is no finite number — Prometheus's `NaN` for a ratio of 0/0, `+Inf`, `-Inf` — is sent to the page as the word
+JavaScript reads it back by (`"NaN"`, `"Infinity"`, `"-Infinity"`), apart from `null`, a value nobody gave: the page shows
+`NaN`, `∞` or `−∞` where the value stands, and `—` for none; a NaN counts as no data, `+Inf` is past every threshold
+and `-Inf` below them, and neither is drawn in a line of history.
 
 ## The sheet
 
@@ -173,7 +249,7 @@ the eye, engraved from its record: where it is shown, what holds it there, and w
 
     python3 assets/view/bin/view.py check                       # the page against the law and its drawings
     python3 assets/view/bin/view.py elements <view>             # a drawing's elements
-    python3 assets/view/bin/view.py report --out map/page.html  # the offline page, with the author mode
+    python3 assets/view/bin/view.py report --out map/page.html [--lang fa]  # the offline page, with the author mode
     python3 assets/view/bin/view.py import view-selection.json  # the author mode's selection, written and journalled
     python3 assets/view/bin/view.py bundle --out <dir>          # a monitor's deployment, written by its adapter
     python3 assets/view/bin/view.py serve-init --config <file> --user <name> [--bean <person>] [--orgs "*"|org-a] [--shared] [--no-actions]
@@ -192,9 +268,11 @@ monitor reaches a being it cannot probe.
 
 A drawing may give more than a picture, each declared on its `views` entry and judged by the gate:
 
-- `writes`: an entry form per term, its `attrs` among the law's attributes of that term. The served page adds the entry
-  to a bean through bin/save.py, as the viewer's being; the gate judges it, and a refused save is undone and its
-  message shown. The offline report shows no form.
+- `writes`: an entry form of a verb of the law (`{ verb, preset }`), derived from the verb's row and written by the one
+  write path a sheet's Save takes (*Pages of readings*, above); or, in today's words, an entry form per term, its
+  `attrs` among the law's attributes of that term. The served page writes it as the viewer's being, through
+  bin/save.py; the gate judges it, and a refused save is undone and its message shown. The offline report shows no
+  form.
 - a `table`'s lines as CSV: beside the report (`report` writes `<stem>.<view>.csv`), and from the host (`/api/csv`).
 - `renders`: a template of the garden (`file:<path>`, each `{{ path }}` a field path of the member) rendered per member
   of a reading (`selection`; absent, the being drawn) by `render`; `--keep` keeps each as a `document` bean named by its content_hash, saved through save.
@@ -221,9 +299,45 @@ pass through it; where only a part of a bean is granted (`positions`), only that
   log, with the answer that decided it.
 - `monitors` gives each monitor's address (`{"<being>": {"url": …}}`); `history`, where a history page exists, the
   base its links open.
+- A page names only the beings its viewer may see, whole or in part: a part of a drawing that depicts another is drawn
+  as the drawing draws it, without saying which being it is, and the values, actions, steps and story parts that name
+  one are not sent.
 
 The server reads the ledger again when its head moves, and starts itself again on a new head or a new release only
-once `check` passes on it.
+once `check` passes on it — and never when the drawing module the page names, or the release's assets, changed since it
+was started: code runs only when a person starts `view serve` again (security audit 2026-10-10, 3.4).
+
+**Where it listens, and to whom it answers.** The page listens on the loopback: `listen`, `127.0.0.1:8780` by default
+(`localhost`, `::1` and the rest of `127.0.0.0/8` are the loopback too). An address beyond it is refused, and nothing
+is bound, unless the configuration says `"listen_beyond_loopback": true` — the page carries passwords and sessions,
+and over plain HTTP they cross the network in clear. To serve it beyond its machine, keep it on the loopback and put a
+proxy that speaks TLS in front of it, which passes `X-Forwarded-Proto: https` (the session's cookie is then `Secure`;
+`"secure_cookie": true` says so where no proxy does) and `X-Forwarded-For`, and name that proxy's own addresses in
+`"trusted_proxies": ["127.0.0.1", "::1"]`: from those peers alone, the client counted at sign-in is the rightmost address
+of `X-Forwarded-For` that is no trusted proxy; with none named (the default), the header is ignored from everyone and
+each connection counts as the address it comes from. The page answers only to its own names — its
+address, the loopback's, and the names `"hosts": [...]` lists, such as the name the proxy passes on as the `Host` — and
+refuses any other (421), so a stranger's name made to resolve to the host (DNS rebinding) opens nothing. Listening on
+every interface (`0.0.0.0` or `::`, chosen as above), it has no one address of its own: `hosts` then lists each address
+and name it is reached by. `serve` refuses
+a configuration others may read (it holds the session key and the password hashes): `serve-init` writes it 0600.
+
+**Signing in.** A session is signed over the viewer's stored password as well, so a password changed ends every session
+begun before it; signing out is the page's own button, a POST with its CSRF token; and a sign-in is taken only from
+the page's own origin (a form another site posts to `/login`, which would sign the browser in as a name of that site's
+choosing, is refused). Failures are counted per address and
+name, and per address: five for one name from one address, or twenty from one address for any names, and that address
+waits a quarter of an hour. Past thirty failures for one name from anywhere, a stranger is refused even with the right
+password — but a browser the viewer has signed in with before (the `view_known` cookie, signed over their password) is
+asked the password still, and waits only after five failures of its own: no stranger locks out a viewer — even where
+every connection comes through one address (a proxy not named in `trusted_proxies`, a tunnel), when strangers can hold
+that address.
+
+**What runs on the page.** Every answer carries a Content-Security-Policy: nothing loads by default, the page's own
+scripts run by their hashes — the ones the asset declares in `view_report.SCRIPTS`, never a script a page happens to
+hold — and its calls go to itself alone. A script the page needs is added to `SCRIPTS`; what a page knows travels as
+JSON in a `<script type="application/json">`, which nothing runs. Every word the page shows is escaped, a unit too, and
+a link goes only to an `http:` or `https:` address.
 
 ## The widgets: what shows a value, and takes one in
 

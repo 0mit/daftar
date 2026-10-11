@@ -11,10 +11,13 @@ disagrees with the garden. A lead says what waits, whose it is, and what it is a
              `grant … as: ratify, class: <its class>` of the gardener's opens it to
   case       a case on a walk (a course: a being `be`ing at a walk `as: order`) at a step that is not final: the
              party's whose part the step's `by` names (the `agree … as: <part>` of the case's agreement), said
-             overdue where the step's `usually` has passed (bin/seq.py `where`); where nobody took that part, the
-             gardener's, saying so
+             overdue where the step's `usually` has passed (bin/seq.py `where`); where nobody took that part, whoever
+             keeps the being (`answer … as: keeping`) — a routine's run waiting on its interlocks, a run rolled back —
+             else the gardener's, saying so
   obligation a clause of an agreement (or any term the law gives an expiry) falling due within its notice, or past
-             it, as bin/stale.py reads it: the party it binds — who makes the payment it asks — else the gardener
+             it, as bin/stale.py reads it: the party it binds — who makes the payment it asks — else the gardener. A
+             routine's clause (a clause of a `run`, bin/routines.py) is none: the machine keeps it, and a person is
+             told of it only when a run waits, fails or is rolled back
   health     a failure a reading shows is happening — a `fail` whose `through` names a `measure` (a probe's
              reading: a disk's pending sectors, a clock's offset, a certificate's days left), with no `repair` of
              it: whoever answers for the being in keeping it (`answer … as: keeping`), else its owner, else the
@@ -47,14 +50,20 @@ HEAD = re.compile(r'^## (.+?)(?: · |$)')
 
 def pending(root):
     """[(id, class, status)] of log/pending.md's entries, as each writes them: `## <id> · …`, `- class: X …`,
-    `- status: …`."""
+    `- status: …`. What a fenced block holds is the file's own example of an entry (the seed's "Entry shape"), never an
+    entry: read, it was a decision `<slug>` waiting on every gardener of every garden grown from the seed."""
     path = os.path.join(root, 'log', 'pending.md')
-    out, cur = [], None
+    out, cur, fenced = [], None, False
     try:
         lines = open(path, encoding='utf-8').read().splitlines()
     except OSError:
         return out
     for ln in lines:
+        if ln.lstrip().startswith('```'):
+            fenced = not fenced
+            continue
+        if fenced:
+            continue
         m = HEAD.match(ln)
         if m:
             cur = [m.group(1).strip(), '', '']
@@ -73,6 +82,12 @@ def pending(root):
 
 def listed(x):
     return x if isinstance(x, list) else [] if x is None else [x]
+
+
+def keepers_of(b, bid):
+    """Who keeps a being: the `by` of each `answer … as: keeping` of it, in its own bean."""
+    return sorted({str(x) for _j, v, a in (b.items if b else []) if v == 'answer' and a.get('as') == 'keeping'
+                   and a.get('of') in (None, 'self', bid) for x in listed(a.get('by')) if isinstance(x, str)})
 
 
 def read(root=ROOT):
@@ -114,6 +129,9 @@ def read(root=ROOT):
                 for who in parties:
                     leads.append(dict(base, **{'for': who, 'why': f"{bid} waits at {w['step']} for you, as its "
                                                                  f"{w.get('by')}{late}"}))
+            elif keepers_of(b, bid):
+                for who in keepers_of(b, bid):
+                    leads.append(dict(base, **{'for': who, 'why': f"{bid} waits at {w['step']}, and you keep it{late}"}))
             elif gardener:
                 leads.append(dict(base, **{'for': gardener, 'why': f"{bid} waits at {w['step']}, whose part "
                                                                    f"({w.get('by') or 'unsaid'}) nobody took{late}"}))
@@ -123,6 +141,7 @@ def read(root=ROOT):
     import datetime
     import stale as dmstale
     today = datetime.date.today().toordinal()
+    routine = dmstale.routine_clauses()
     for fm in dmstale._fronts():
         bid = str(fm.get('bean') or '')
         b = G.beans.get(bid)
@@ -134,6 +153,8 @@ def read(root=ROOT):
             for label, held, day, shown, _detail, _why in due:
                 if day is None:
                     continue
+                if (bid, label.strip('[]')) in routine:
+                    continue                  # a routine's clause: the machine keeps it (bin/routines.py)
                 own = held.get('notice') if isinstance(held, dict) and isinstance(held.get('notice'), dict) else None
                 notice = dmstale.notice_days({'of': 'time', 'measure': own} if own else decl.get('notice'))
                 days = day - today

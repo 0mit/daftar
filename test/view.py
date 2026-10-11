@@ -445,6 +445,10 @@ ASSET_REFUSED = [
     ("a value no monitor of the page can compute", "beans/grain-page.md",
      "query: [{technology: prometheus, says: 'silo_days_to_full{$F}'}]", "query: [{technology: zabbix, says: silo.days}]",
      ("silo-full-in", "zabbix")),
+    # a unit is a row of the law, and the page shows it beside a value: one the law does not know is refused here too, as
+    # the gate refuses it, so a state that skipped the gate puts no markup on the page (security audit 2026-10-10, 3.9)
+    ("a value's unit the law does not know", "beans/grain-page.md", "label: until full, unit: d,",
+     "label: until full, unit: '<img src=x onerror=alert(1)>',", ("silo-full-in", "<img src=x onerror=alert(1)>", "no unit")),
     ("a page that states nowhere it is shown", "beans/grain-page.md",
      "  - be: {id: at-1, by: self, at: 'uri:https://grain.example.org/page/', as: location, placed: {openness: here}}\n", "",
      ("states nowhere it is shown", "uri")),
@@ -772,24 +776,26 @@ else:
 _browser = next((b for b in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable") if _sh.which(b)), None)
 DRIVE = """<script>
 window.__errs = []; window.addEventListener('error', e => window.__errs.push(String(e.message)));
-window.addEventListener('load', () => { const out = [], twice = []; let shown = [];
+window.addEventListener('load', () => { const out = [], twice = []; let shown = [], js = 0;
  try { const tabs = [...document.querySelectorAll('.tab')].map(b => b.dataset.t), lens = [...document.querySelectorAll('#lens button')].map(b => b.dataset.l);
   for (const t of tabs) for (const l of lens) { document.querySelector('.tab[data-t="' + t + '"]').click(); document.querySelector('#lens button[data-l="' + l + '"]').click();
-   out.push(t + '/' + l + ':' + (document.querySelector('#view').innerText || '').length);
+   out.push(t + '/' + l + ':' + (document.querySelector('#view').innerText || '').length); js += document.querySelectorAll('a[href^="javascript" i]').length;
    if (/&amp;(amp|lt|gt|quot|#[0-9]+);/.test(document.querySelector('#tabs').innerHTML + document.querySelector('#view').innerHTML)) twice.push(t + '/' + l); }
   document.querySelector('.tab[data-t="drying"]').click(); document.querySelector('#lens button[data-l="understand"]').click();
   shown = [document.querySelector('.tab[data-t="drying"]').textContent, (document.querySelector('#view h3') || {}).textContent,
            [...document.querySelectorAll('#view .tb-c')].filter(c => c.querySelector('.tb-k').textContent === 'drawing').map(c => c.querySelector('.tb-v').textContent)[0]];
   document.querySelector('#authbtn').click(); out.push('author:' + (document.querySelector('#author').innerText || '').length);
  } catch (e) { window.__errs.push('driver: ' + e.message); }
- const pre = document.createElement('pre'); pre.id = '__result'; pre.textContent = JSON.stringify({errs: window.__errs, out, twice, shown}); document.body.appendChild(pre); });
+ const pre = document.createElement('pre'); pre.id = '__result'; pre.textContent = JSON.stringify({errs: window.__errs, out, twice, shown, js}); document.body.appendChild(pre); });
 </script>"""
 if _browser and HTML:
     _dr = os.path.join(T, "drive.html")
     with open(_dr, "w", encoding="utf-8") as fh:
         # a drawing's title is HTML, as the drawing module writes it: one with an ampersand shows whether anything escapes it twice
         fh.write(HTML.replace("<head>", "<head>" + DRIVE, 1).replace('"key": "drying", "title": "The drying run"',
-                                                                    '"key": "drying", "title": "Drying &amp; unloading"', 1))
+                                                                    '"key": "drying", "title": "Drying &amp; unloading"', 1)
+                 # and a technology's documentation at an address that runs script: a link is made only to http(s) (3.9)
+                 .replace('"docs": "https://', '"docs": "javascript:alert(1)//'))
     try:
         r = subprocess.run([_browser, "--headless=new", "--disable-gpu", "--no-sandbox", "--virtual-time-budget=5000",
                             "--dump-dom", "file://" + _dr], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
@@ -803,6 +809,8 @@ if _browser and HTML:
     check("...and a drawing's title, which is HTML, is shown as its text on its tab, its heading and its title block: nothing "
           "escapes it twice", not _res.get("twice") and _res.get("shown") == ["Drying & unloading"] * 3,
           (_res.get("twice"), _res.get("shown")))
+    check("...and a technology whose documentation is given at an address that runs script is shown without a link to it",
+          _res.get("js") == 0 and '"docs": "javascript:' in open(_dr, encoding="utf-8").read(), _res.get("js"))
 else:
     print("NOTE  the runtime was not driven in a browser: none on this machine")
 
@@ -964,12 +972,13 @@ check("...and a binding in both languages is computed by the first monitor of th
 SIBLING_PAGE = get("beans/grain-page.md")
 
 # --- the served page: signed in, closed by default, and the one function that says who may see and do what
-import socket, threading, time, urllib.parse, urllib.request, http.cookiejar
+import socket, threading, time, urllib.parse, urllib.request, urllib.error, http.client, http.cookiejar
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 
 class FakeMonitor(BaseHTTPRequestHandler):
     queries = []
+    odd = None          # what Prometheus may answer that is no finite number: "NaN" (a ratio of 0/0), "+Inf", "-Inf"
 
     def log_message(self, *a):
         pass
@@ -978,11 +987,13 @@ class FakeMonitor(BaseHTTPRequestHandler):
         q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query).get("query", [""])[0]
         FakeMonitor.queries.append(q)
         if "query_range" in self.path:
-            res = [{"metric": {}, "values": [[1000, "1"], [1300, "2"]]}]
+            res = [{"metric": {}, "values": [[1000, FakeMonitor.odd or "1"], [1300, "-Inf" if FakeMonitor.odd else "2"]]}]
         elif "dryer_batches" in q:
-            res = [{"metric": {"bay": "a"}, "value": [0, "3"]}, {"metric": {"bay": "b"}, "value": [0, "1"]}]
+            res = [{"metric": {"bay": "a"}, "value": [0, "3"]}, {"metric": {"bay": "b"}, "value": [0, FakeMonitor.odd or "1"]}]
+        elif FakeMonitor.odd and "silo_days_to_full" in q:
+            res = [{"metric": {}, "value": [0, "+Inf"]}]
         else:
-            res = [{"metric": {}, "value": [0, "1"]}]
+            res = [{"metric": {}, "value": [0, FakeMonitor.odd or "1"]}]
         body = json.dumps({"status": "success", "data": {"resultType": "vector", "result": res}}).encode()
         self.send_response(200); self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
@@ -1033,7 +1044,7 @@ mon = ThreadingHTTPServer(("127.0.0.1", _pp), FakeMonitor)
 threading.Thread(target=mon.serve_forever, daemon=True).start()
 for _u, _o in (("alice", ["--orgs", "grain-coop", "--bean", VIEWERS["alice"]]), ("carol", ["--orgs", "grain-coop", "--shared", "--bean", VIEWERS["carol"]]),
                ("dave", ["--orgs", "hill-farm", "--no-actions", "--bean", VIEWERS["dave"]]), ("root", ["--orgs", "*", "--bean", "tessa"]),
-               ("eve", ["--orgs", "*", "--bean", STRANGER])):
+               ("eve", ["--orgs", "*", "--bean", STRANGER]), ("ivy", ["--orgs", "grain-coop", "--bean", VIEWERS["carol"]])):
     out, rc = dmview("serve-init", "--config", CFG, "--user", _u, *_o)
 check("serve-init: the password is written to a file of its own and never printed",
       rc == 0 and "password is in" in out and open(os.path.join(T, "host", "root.password")).read().strip() not in out, out)
@@ -1052,6 +1063,8 @@ C["recheck_seconds"] = 1
 C["request_seconds"] = 2
 C["monitors"] = {"yard-monitor": {"url": "http://127.0.0.1:%d" % _pp}, "radio-monitor": {"url": "http://127.0.0.1:1"}}
 C["users"]["dave"]["beans"] = ["field-radio"]
+C["hosts"] = ["view.example.org"]     # the name a proxy in front of the host passes on as the Host (3.11)
+C["trusted_proxies"] = ["127.0.0.1", "::1"]   # the proxy on this machine names the client it serves (3.5)
 C["tools"] = {"start-fans": {"argv": [sys.executable, "-c", "print('ran-for-real')"], "enabled": True, "timeout": 20},
               "radio-reset": {"argv": ["/bin/false"], "enabled": False}, "pump-stop": {"argv": ["/bin/false"], "enabled": False}}
 json.dump(C, open(CFG, "w"))
@@ -1074,6 +1087,216 @@ check("...and it says why, and refuses to act for a viewer who may view but not 
       "no grant" in _H.may("alice", "field-radio")[1] and _H.may("dave", "hill-pump", act=True) == (False, "this viewer may view but not act"),
       (_H.may("alice", "field-radio"), _H.may("dave", "hill-pump", act=True)))
 
+# THE LOOPBACK BY DEFAULT (security audit 2026-10-10, 3.2): the page listens where its host's configuration says, and
+# beyond the loopback only where the configuration chooses it in as many words — an address alone never opens it.
+def _listen(cfg):
+    try:
+        return _vs.listen_of(cfg)
+    except SystemExit as e:
+        return "refused: %s" % e
+    except Exception as e:  # noqa: BLE001 — what happened is the answer
+        return "%s: %s" % (type(e).__name__, e)
+
+
+_ls = {a: _listen({"listen": a}) for a in ("127.0.0.1:8780", "127.0.0.2:8780", "localhost:8780", "[::1]:8780",
+                                           "0.0.0.0:8780", ":8780", "192.0.2.1:8780")}
+check("serve: the page listens on the loopback — 127.0.0.0/8, ::1, localhost, and no address at all, as it always read "
+      "it — and an address beyond it, or every interface, is refused unless the host's configuration says "
+      "`listen_beyond_loopback`",
+      _ls["127.0.0.1:8780"] == ("127.0.0.1", 8780) and _ls["127.0.0.2:8780"] == ("127.0.0.2", 8780)
+      and _ls["localhost:8780"] == ("localhost", 8780) and _ls["[::1]:8780"] == ("::1", 8780) and _ls[":8780"] == ("127.0.0.1", 8780)
+      and all(str(_ls[a]).startswith("refused") and "listen_beyond_loopback" in str(_ls[a]) for a in ("0.0.0.0:8780", "192.0.2.1:8780")), _ls)
+check("...and chosen in as many words (`true`, nothing else), it listens where it is told",
+      _listen({"listen": "0.0.0.0:8780", "listen_beyond_loopback": True}) == ("0.0.0.0", 8780)
+      and str(_listen({"listen": "0.0.0.0:8780", "listen_beyond_loopback": "yes"})).startswith("refused"),
+      (_listen({"listen": "0.0.0.0:8780", "listen_beyond_loopback": True}),
+       _listen({"listen": "0.0.0.0:8780", "listen_beyond_loopback": "yes"})))
+_far = os.path.join(T, "host", "far.json")
+_vs._write_private(_far, json.dumps(dict(C, listen="192.0.2.1:%d" % free_port())))
+try:
+    _fp = subprocess.run([sys.executable, DMVIEW, "serve", "--config", _far], cwd=G, capture_output=True, text=True,
+                         encoding="utf-8", errors="replace", timeout=60)
+    _fo = (_fp.returncode, _fp.stderr[-700:])
+except subprocess.TimeoutExpired:
+    _fo = (None, "still serving after a minute")
+check("serve: started on an address beyond the loopback with no such choice, it says why and binds nothing",
+      _fo[0] not in (0, None) and "listen_beyond_loopback" in _fo[1] and "Traceback" not in _fo[1], _fo)
+# A CONFIGURATION OTHERS MAY READ IS REFUSED (3.11): it holds the session key, which signs every viewer's session, and
+# the password hashes — a host's file made by hand at 0644 would hand both to every account of the machine.
+if os.name == "posix":
+    _loose = os.path.join(T, "host", "loose.json")
+    with open(_loose, "w", encoding="utf-8") as _fh:
+        json.dump(dict(C, listen="127.0.0.1:%d" % free_port()), _fh)
+    os.chmod(_loose, 0o644)
+    try:
+        _lp = subprocess.run([sys.executable, DMVIEW, "serve", "--config", _loose], cwd=G, capture_output=True, text=True,
+                             encoding="utf-8", errors="replace", timeout=20)
+        _lo = (_lp.returncode, _lp.stderr[-700:])
+    except subprocess.TimeoutExpired:
+        _lo = (None, "it served")
+    check("serve: a configuration others may read (it holds the session key and the password hashes) is refused, and "
+          "nothing is served", _lo[0] not in (0, None) and "0600" in _lo[1] and "Traceback" not in _lo[1], _lo)
+# WHO SIGNS IN, BEHIND A PROXY (3.5): the client a proxy the configuration trusts names, the rightmost address of its
+# X-Forwarded-For that is no trusted proxy; from any other peer, or with no proxy trusted, the header is ignored.
+_tp = ["127.0.0.1", "::1"]
+try:
+    _src = [_vs.source_of("127.0.0.1", "203.0.113.5", _tp), _vs.source_of("127.0.0.1", "203.0.113.5", []),
+            _vs.source_of("127.0.0.1", "203.0.113.5", None), _vs.source_of("192.0.2.9", "203.0.113.5", _tp),
+            _vs.source_of("127.0.0.1", "198.51.100.1, 203.0.113.5", _tp), _vs.source_of("127.0.0.1", "203.0.113.5, 127.0.0.1", _tp),
+            _vs.source_of("127.0.0.1", "not an address", _tp)]
+except Exception as e:  # noqa: BLE001
+    _src = repr(e)
+check("serve: who signs in is the address the connection comes from — or, from a proxy the configuration trusts, the "
+      "client it names (the rightmost address that is no trusted proxy); a forged header from anyone else is ignored",
+      _src == ["203.0.113.5", "127.0.0.1", "127.0.0.1", "192.0.2.9", "203.0.113.5", "203.0.113.5", "127.0.0.1"], _src)
+# A SESSION IS THE PASSWORD'S (3.11): a token is signed over the viewer's stored password as well, so a password changed
+# voids every token signed before it — a stolen cookie dies with the password it was won under.
+_tk = _H.token("alice")
+_was = _H.cfg["users"]["alice"]["password"]
+_u1 = _H.user_of(_tk)
+_H.cfg["users"]["alice"]["password"] = _vs.hash_password("a password changed")
+_u2 = _H.user_of(_tk)
+_H.cfg["users"]["alice"]["password"] = _was
+check("a session is the password's: once a viewer's password changes, a token signed before it opens nothing",
+      _u1 == "alice" and _u2 is None and _H.user_of(_tk) == "alice", (_u1, _u2))
+# A NAME NOBODY HOLDS IS ASKED AS ONE SOMEBODY DOES (3.5): its password is checked against a hash of the same rounds,
+# so how long the answer takes says nothing of who is kept here.
+_calls = []
+_real_cp = _vs.check_password
+_vs.check_password = lambda pw, stored: (_calls.append(str(stored).split("$")[1] if str(stored).count("$") == 3 else "?"),
+                                         _real_cp(pw, stored))[1]
+try:
+    _pk = (_H.password_ok("alice", "a wrong one"), _H.password_ok("nobody-kept-here", "a wrong one"))
+except Exception as e:  # noqa: BLE001
+    _pk = repr(e)
+finally:
+    _vs.check_password = _real_cp
+check("a name nobody holds has its password checked as a known name's is, against a hash of the same rounds",
+      _pk == (False, False) and _calls == [str(_vs.PBKDF2_ROUNDS)] * 2, (_pk, _calls))
+# THE AUDIT LOG IS READ FROM ITS END (3.11): a log that grows for years costs the viewer who asks for the last rows
+# the last rows, not the whole file.
+_alog = os.path.join(T, "host", "long-actions.log")
+with open(_alog, "w", encoding="utf-8") as _fh:
+    for _i in range(60000):
+        _fh.write(json.dumps({"user": "alice" if _i % 2 else "carol", "n": _i, "pad": "x" * 100}) + "\n")
+_read = [0]
+_real_open = open
+
+
+class _Counted:
+    def __init__(self, f):
+        self.f = f
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        self.f.close()
+
+    def __iter__(self):
+        for ln in self.f:
+            _read[0] += len(ln)
+            yield ln
+
+    def read(self, *a):
+        got = self.f.read(*a)
+        _read[0] += len(got)
+        return got
+
+    def __getattr__(self, k):
+        return getattr(self.f, k)
+
+
+_vs.open = lambda *a, **k: _Counted(_real_open(*a, **k))      # found by the module before the builtin
+_alog_was = _H.cfg["audit_log"]
+_H.cfg["audit_log"] = _alog
+try:
+    _tail = [r.get("n") for r in _H.audit_tail("root")]
+except Exception as e:  # noqa: BLE001
+    _tail = repr(e)
+finally:
+    del _vs.open
+    _H.cfg["audit_log"] = _alog_was
+check("the audit log's last rows are read from its end, not the whole file: %d bytes of %d read" % (_read[0], os.path.getsize(_alog)),
+      _tail == list(range(59970, 60000)) and 0 < _read[0] < 1 << 20, (str(_tail)[:200], _read[0]))
+os.remove(_alog)
+# A MONITOR'S ANSWER IS BOUNDED (3.6): one deadline for the whole answer, a cap on its size, and no redirect followed — a
+# monitor that drips its answer, floods it or sends the host elsewhere costs a poll seconds, and reaches nothing else.
+
+
+class BadMonitor(BaseHTTPRequestHandler):
+    hits = []
+
+    def log_message(self, *a):
+        pass
+
+    def _out(self, body, code=200, headers=()):
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        for k, v in headers:
+            self.send_header(k, v)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        return body
+
+    def do_GET(self):
+        BadMonitor.hits.append((self.server.server_address[1], self.path))
+        answer = json.dumps({"n": 7, "status": "success", "data": {"resultType": "vector",
+                                                                  "result": [{"metric": {}, "value": [0, "7"]}]}}).encode()
+        try:
+            if self.path.startswith("/drip"):                # the right answer, a byte at a time
+                for i in range(len(self._out(answer))):
+                    self.wfile.write(answer[i:i + 1])
+                    self.wfile.flush()
+                    time.sleep(0.15)
+            elif self.path.startswith("/big"):                # the right answer, padded past any page's need
+                big = answer[:-1] + b', "pad": "' + b"x" * (5 << 20) + b'"}'
+                self.wfile.write(self._out(big))
+            elif self.path.startswith("/away"):               # sent elsewhere
+                self.wfile.write(self._out(b"{}", 302, [("Location", "http://127.0.0.1:%d/elsewhere" % _bp2)]))
+            else:
+                self.wfile.write(self._out(answer))
+        except OSError:
+            pass                                              # the reader went away: that is the point
+
+
+_bp, _bp2 = free_port(), free_port()
+_bad = [ThreadingHTTPServer(("127.0.0.1", p), BadMonitor) for p in (_bp, _bp2)]
+for _b in _bad:
+    _b.daemon_threads = True
+    threading.Thread(target=_b.serve_forever, daemon=True).start()
+_http_a, _prom_a = _vm.adapter("http"), _vm.adapter("prometheus")
+_bv = {"id": "probe-v", "live": "live-value", "query": {"http": "/n", "prometheus": "vector(7)"}}
+
+
+def _timed(f):
+    t0 = time.time()
+    try:
+        r = f()
+    except Exception as e:  # noqa: BLE001
+        r = "raised %s: %s" % (type(e).__name__, e)
+    return r, round(time.time() - t0, 1)
+
+
+_ok7 = (_timed(lambda: _http_a.values("http://127.0.0.1:%d/fine" % _bp, [_bv])),
+        _timed(lambda: _prom_a.values("http://127.0.0.1:%d/fine" % _bp, [_bv])))
+check("(a monitor that answers well is read by both adapters)", [x[0] for x in _ok7] == [{"probe-v": 7.0}] * 2, _ok7)
+_drip = (_timed(lambda: _http_a.values("http://127.0.0.1:%d/drip" % _bp, [_bv])),
+         _timed(lambda: _prom_a.values("http://127.0.0.1:%d/drip" % _bp, [_bv])))
+check("a monitor that drips its answer costs a poll one deadline, not the whole drip, and gives nothing — each adapter",
+      all(x[0] == {"probe-v": None} and x[1] < 8 for x in _drip), _drip)
+_big = _timed(lambda: _http_a.values("http://127.0.0.1:%d/big" % _bp, [_bv]))
+check("a monitor whose answer is larger than any page needs (5 MiB) is not read whole: nothing is taken from it",
+      _big[0] == {"probe-v": None}, _big)
+BadMonitor.hits.clear()
+_away = (_timed(lambda: _http_a.values("http://127.0.0.1:%d/away" % _bp, [_bv])),
+         _timed(lambda: _prom_a.values("http://127.0.0.1:%d/away" % _bp, [_bv])))
+check("a monitor that sends the host elsewhere is not followed: nothing is read, and the other address is never asked",
+      all(x[0] == {"probe-v": None} for x in _away) and not any(p == _bp2 for p, _ in BadMonitor.hits),
+      (_away, BadMonitor.hits))
+for _b in _bad:
+    _b.shutdown()
+
 srv = subprocess.Popen([sys.executable, DMVIEW, "serve", "--config", CFG], cwd=G, stderr=subprocess.PIPE, text=True, encoding="utf-8")
 BASE = "http://127.0.0.1:%d" % _sp_
 for _ in range(80):
@@ -1091,6 +1314,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 def session(user):
     jar = http.cookiejar.CookieJar()
     op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar), NoRedirect)
+    op.jar = jar
     pw = open(os.path.join(T, "host", user + ".password")).read().strip()
     try:
         op.open(BASE + "/login", urllib.parse.urlencode({"user": user, "password": pw}).encode())
@@ -1144,6 +1368,89 @@ try:
     check("serve: ...nor their part cards, their facts or their tiles, on any drawing",
           {p["bean"] for p in _sv["parts"]} == {"silo-controller"} and set(_sv["facts"]) == {"silo-controller"}
           and not any(t.get("bean") in ("field-radio", "hill-pump") for t in _sv["tiles"]), [p["bean"] for p in _sv["parts"]])
+    # NOTHING NAMES WHAT THE VIEWER MAY NOT SEE (security audit 2026-10-10, 3.8): the grants are asked for every being
+    # the page names — the part an element depicts, a value's probe and its query, the being an action acts on, a step's
+    # parts, a story's, where the page is shown, who stated it — and a being alice may not see is named nowhere. The
+    # drawing's own words stay, as its picture does: an element's id is the slug of its label, which the drawing shows.
+    import view_model as _vmm
+    _hidden = sorted(b for b in _vmm.bean_ids() if b != _vmm.PAGE and not _H.may("alice", b)[0])
+
+    _POS = ("bean", "probe", "being", "host", "draws_bean", "answered_by", "acts_on", "by", "opens_on")
+
+    def _naming(p, hidden):
+        """Where the scoped page names a being in `hidden`: a key that names a being, a step's or a story's parts, the
+        drawing's own marks of a being in its picture (`data-bean`, `data-addr-of`), a value's query naming one — quoted,
+        or as a step of a JSON Pointer. A technology is named by the published catalogue's code, which may be a being's id
+        too: the catalogue's word names no being of the garden."""
+        found = []
+
+        def walk(x, path):
+            last = path[-1] if path else None
+            if isinstance(x, dict):
+                if "live" in x and "probe" in x:              # a value: its query and its path are its own text
+                    for t in [x.get("source")] + list((x.get("query") or {}).values()):
+                        for b in hidden:
+                            if isinstance(t, str) and re.search(r"(?:^|(?<=[\"'/|]))%s(?=[\"'/|]|$)" % re.escape(b), t):
+                                found.append((".".join(map(str, path)) + ".query", b))
+                for k, v in x.items():
+                    walk(v, path + [k])
+            elif isinstance(x, list):
+                for i, v in enumerate(x):
+                    walk(v, path + [i])
+            elif isinstance(x, str):
+                if (last in _POS or (len(path) > 1 and path[-2] in ("parts", "idle"))
+                        or (last == "title" and "stages" in path and "parts" in path)) and x in hidden:
+                    found.append((".".join(map(str, path)), x))
+                for b in re.findall(r' data-(?:bean|addr-of)="([^"]*)"', x):
+                    if b in hidden:
+                        found.append((".".join(map(str, path)) + "@data", b))
+        walk(p, [])
+        return found
+
+    def _literal(p, word):
+        """Every place `word` is written in the scoped page but the drawing's own words for its elements — an element's id
+        (the slug of its label, which the drawing shows) and the references to it — and a granted being's own facts: a
+        grant opens a bean whole, and what it states of another is its own (the law's grants decide that, not the page)."""
+        found = []
+
+        def walk(x, path, own):
+            if len(path) == 2 and path[0] == "beans" and not (x or {}).get("part"):
+                return
+            if isinstance(x, dict):
+                if isinstance(x.get("elements"), list):
+                    own = own | {e.get("id") for e in x["elements"] if isinstance(e, dict)}
+                for k, v in x.items():
+                    walk(v, path + [k], own)
+            elif isinstance(x, list):
+                for i, v in enumerate(x):
+                    walk(v, path + [i], own)
+            elif isinstance(x, str) and word in x:
+                if x in own and ((path and path[-1] in ("id", "el", "from", "to")) or (len(path) > 1 and path[-2] in ("inside", "flows"))):
+                    return
+                if word in re.sub(r' data-el="[^"]*"', "", x):
+                    found.append(".".join(map(str, path)))
+        walk(p, [], set())
+        return found
+    _nm, _lt = _naming(PA, _hidden), _literal(PA, "hill-pump")
+    check("serve: the scoped page names no being alice may not see — not the part a drawing's element depicts, a value's "
+          "probe or query, the being an action acts on, a step's or a story's parts, nor where the page is shown or who "
+          "stated it (%d beings closed to her, among them %s)" % (len(_hidden), ", ".join(b for b in ("hill-pump", "field-radio") if b in _hidden)),
+          {"hill-pump", "field-radio"} <= set(_hidden) and not _nm, _nm[:12])
+    check("...and the hill farm's pump is written nowhere in what she is sent but as the drawing's own word for its element",
+          not _lt, _lt[:12])
+    _bq = lambda q: _H.bind_shown("alice", {"id": "q", "live": "live-value", "probe": None, "query": {"prometheus": q}, "source": q})
+    try:
+        _bqs = [_bq('pump_rpm{name="hill-pump"}'), _bq('{"/devices/hill-pump/rpm"}'), _bq('up{job="prometheus"}'), _bq("silo_fill_ratio{$F}")]
+    except Exception as e:  # noqa: BLE001
+        _bqs = repr(e)
+    check("...a value whose query names a being she may not see is not sent her, and the name of a technology of the "
+          "published catalogue in a query (a job named for it) names no being", _bqs == [False, False, True, True], _bqs)
+    _sv8 = PA["views"]["silo"]
+    check("...while what she may see is still drawn whole: the silo controller's element, its live-state and the action on "
+          "the silo, the silo's step parts",
+          any(e.get("bean") == "silo-controller" for e in _sv8["elements"]) and any(b.get("probe") == "silo-controller" for b in _sv8["binds"])
+          and any(a.get("tool") == "start-fans" for a in _sv8["actions"]) and 'data-bean="silo-controller"' in _sv8["svg"],
+          ([e.get("bean") for e in _sv8["elements"]], [b.get("id") for b in _sv8["binds"]], [a.get("tool") for a in _sv8["actions"]]))
     carol = session("carol")
     st, PC = page_of(carol)
     check("serve: carol, granted what no organisation owns, sees the radio — and still not the hill farm's pump",
@@ -1219,6 +1526,225 @@ try:
     _au2 = {e.get("user") for e in json.loads(au2).get("entries", [])} if st2 == 200 else set()
     check("serve: a granted viewer reads only her own rows of the audit log, and the gardener everyone's",
           st == 200 and _au and set(_au) == {"alice"} and st2 == 200 and {"alice", "carol", "eve"} <= _au2, (st, _au, st2, _au2))
+    # A VALUE THAT IS NO FINITE NUMBER (security audit 2026-10-10, 3.7): Prometheus answers NaN for a ratio of 0/0, and
+    # ±Inf; the answer is still JSON a browser parses, and each is kept for what it is, apart from a value nobody gave.
+    FakeMonitor.odd = "NaN"
+    try:
+        st1, b1 = get_(alice, "/api/values?m=silo")
+        st2, b2 = get_(alice, "/api/history?m=drying")
+        st3, b3 = get_(alice, "/api/values?m=drying")
+    finally:
+        FakeMonitor.odd = None
+
+    def _strict(t):
+        def no(c):
+            raise ValueError("%s is no JSON" % c)
+        return json.loads(t, parse_constant=no)
+    try:
+        j1, j2, j3, _je = _strict(b1), _strict(b2), _strict(b3), None
+    except ValueError as e:
+        j1, j2, j3, _je = {}, {}, {}, str(e)
+    check("serve: a monitor's NaN or ±Inf is sent as JSON can carry it: the values and the history parse as strict JSON",
+          st1 == st2 == st3 == 200 and _je is None, (st1, st2, st3, _je, b1[:200]))
+    check("...each kept for what it is — NaN, Infinity, -Infinity — apart from a value nobody gave (null)",
+          (j1.get("values") or {}).get("silo-fill") == "NaN" and (j1.get("values") or {}).get("silo-full-in") == "Infinity"
+          and (j2.get("history") or {}).get("grain-temperature") == [[1000, "NaN"], [1300, "-Infinity"]]
+          and (j3.get("values") or {}).get("drying-batches") == [{"name": "a", "value": 3.0}, {"name": "b", "value": "NaN"}],
+          (j1.get("values"), j2.get("history"), j3.get("values")))
+    # THE PAGE'S POLICY (security audit 2026-10-10, 3.9): a Content-Security-Policy on every answer — no source by
+    # default, the page's own scripts by their hashes and nothing else that runs, its calls to itself, no frame, no base.
+    import base64 as _b64, hashlib as _hl
+    try:
+        import view_report as _vr
+        _own = list(_vr.SCRIPTS)
+    except Exception as e:  # noqa: BLE001
+        _own = []
+        print("NOTE  view_report.SCRIPTS: %r" % e)
+    _alice_ck = "; ".join("%s=%s" % (c.name, c.value) for c in alice.jar if c.name == "view_session")
+
+    def _raw(path, cookie=None, host=None, method="GET", headers=None):
+        c = http.client.HTTPConnection("127.0.0.1", _sp_, timeout=60)
+        c.putrequest(method, path, skip_host=True)
+        if host is not None:
+            c.putheader("Host", host)
+        if cookie:
+            c.putheader("Cookie", cookie)
+        for k, v in (headers or {}).items():
+            c.putheader(k, v)
+        c.endheaders()
+        r = c.getresponse()
+        return r.status, dict(r.getheaders()), r.read().decode("utf-8", "replace")
+    _ps, _ph, _pg = _raw("/", _alice_ck, "127.0.0.1:%d" % _sp_)
+    _csp = _ph.get("Content-Security-Policy") or ""
+    _hashes = set((re.search(r"script-src ([^;]*)", _csp) or re.match("()", "")).group(1).split())
+    _want = {"'sha256-%s'" % _b64.b64encode(_hl.sha256(x.encode("utf-8")).digest()).decode() for x in _own}
+    check("serve: the page is sent with a Content-Security-Policy: no source by default, its scripts by their hashes, its "
+          "calls to itself, no frame, no base, forms to itself", _ps == 200 and bool(_own) and _hashes == _want
+          and all(d in _csp for d in ("default-src 'none'", "connect-src 'self'", "frame-ancestors 'none'", "base-uri 'none'",
+                                      "form-action 'self'")), _csp)
+    check("...and the scripts that run on the page are exactly the asset's own (view_report.SCRIPTS), in their order: "
+          "none is hashed because the page holds it", re.findall(r"<script>(.*?)</script>", _pg, re.S) == _own and bool(_own),
+          [x[:40] for x in re.findall(r"<script>(.*?)</script>", _pg, re.S)])
+    _ls_, _lh, _lp_ = _raw("/login", None, "127.0.0.1:%d" % _sp_)
+    check("...and the sign-in page has its policy too: nothing of it runs", "default-src 'none'" in (_lh.get("Content-Security-Policy") or "")
+          and "sha256" not in (_lh.get("Content-Security-Policy") or "x sha256"), _lh.get("Content-Security-Policy"))
+    if _browser:
+        # THE PAGE, LIVE, IN A BROWSER, UNDER ITS POLICY: a proxy in front of the host signs alice in, adds a driver (allowed
+        # by its own hash, and nothing else changed of the policy), an injected script (which the policy must refuse) and a
+        # value's unit written as markup (which the runtime must show as text) — then every drawing at every lens, the
+        # live values, and an action.
+        DRIVE_LIVE = r"""<script>
+window.__errs = []; window.__csp = [];
+window.addEventListener('error', e => window.__errs.push(String(e.message)));
+window.addEventListener('unhandledrejection', e => window.__errs.push('unhandled: ' + e.reason));
+document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.effectiveDirective + ' ' + (e.sample || e.blockedURI)));
+window.confirm = () => true; window.prompt = () => '';
+const __wait = ms => new Promise(r => setTimeout(r, ms));
+window.addEventListener('load', async () => { const out = []; let pwn = null, toast = null, live = '';
+ try {
+  const tabs = [...document.querySelectorAll('.tab')].map(b => b.dataset.t), lens = [...document.querySelectorAll('#lens button')].map(b => b.dataset.l);
+  for (const t of tabs) for (const l of lens) { document.querySelector('.tab[data-t="' + t + '"]').click(); document.querySelector('#lens button[data-l="' + l + '"]').click();
+   out.push(t + '/' + l + ':' + (document.querySelector('#view').innerText || '').length); }
+  document.querySelector('.tab[data-t="silo"]').click(); document.querySelector('#lens button[data-l="operate"]').click();
+  await __wait(3000);
+  pwn = !!document.getElementById('pwn'); live = (document.querySelector('.op-ev') || {}).textContent || '';
+  const act = document.querySelector('.vw-act[data-act="start-fans"]'); if (act) act.click();
+  await __wait(3000);
+  toast = (document.getElementById('toast') || {}).textContent || null;
+ } catch (e) { window.__errs.push('driver: ' + e.message); }
+ const pre = document.createElement('pre'); pre.id = '__result';
+ pre.textContent = JSON.stringify({errs: window.__errs, csp: window.__csp, out, pwn, live, toast, injected: window.__injected === 1});
+ document.body.appendChild(pre); });
+</script>"""
+        _dh = "'sha256-%s'" % _b64.b64encode(_hl.sha256(DRIVE_LIVE[len("<script>"):-len("</script>")].encode()).digest()).decode()
+        _plog = []
+
+        class Proxy(BaseHTTPRequestHandler):
+            def log_message(self, *a):
+                pass
+
+            def _fwd(self, method):
+                n = int(self.headers.get("Content-Length") or 0)
+                body = self.rfile.read(n) if n else None
+                _plog.append((method, self.path))
+                c = http.client.HTTPConnection("127.0.0.1", _sp_, timeout=60)
+                h = {"Cookie": _alice_ck}
+                for k in ("Content-Type", "X-View-CSRF"):
+                    if self.headers.get(k):
+                        h[k] = self.headers[k]
+                c.request(method, self.path, body, h)
+                r = c.getresponse()
+                data, ctype, csp = r.read(), r.getheader("Content-Type") or "", r.getheader("Content-Security-Policy") or ""
+                if self.path == "/" and ctype.startswith("text/html"):
+                    pg = data.decode("utf-8")
+                    pg = pg.replace("<head>", "<head>" + DRIVE_LIVE, 1)
+                    pg = pg.replace("<main>", "<main><script>window.__injected = 1</script>", 1)
+                    pg = pg.replace('"name": "grain temperature (°C)", "short": "", "unit": ""',
+                                    '"name": "grain temperature (°C)", "short": "", "unit": "<img id=pwn src=x>"', 1)
+                    data = pg.encode("utf-8")
+                    csp = csp.replace("script-src ", "script-src %s " % _dh, 1)
+                self.send_response(r.status)
+                for k in ("Content-Type", "Location"):
+                    if r.getheader(k):
+                        self.send_header(k, r.getheader(k))
+                if csp:
+                    self.send_header("Content-Security-Policy", csp)
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+
+            def do_GET(self):
+                self._fwd("GET")
+
+            def do_POST(self):
+                self._fwd("POST")
+        _pxp = free_port()
+        _px = ThreadingHTTPServer(("127.0.0.1", _pxp), Proxy)
+        _px.daemon_threads = True
+        threading.Thread(target=_px.serve_forever, daemon=True).start()
+        try:
+            r = subprocess.run([_browser, "--headless=new", "--disable-gpu", "--no-sandbox", "--virtual-time-budget=20000",
+                                "--dump-dom", "http://127.0.0.1:%d/" % _pxp], capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", timeout=120)
+            _mm = re.search(r'<pre id="__result">(.*?)</pre>', r.stdout, re.S)
+            import html as _html
+            _lv = json.loads(_html.unescape(_mm.group(1))) if _mm else {"errs": ["no result: " + (r.stderr or "")[-300:]], "out": []}
+        except (OSError, subprocess.SubprocessError) as e:
+            _lv = {"errs": ["the browser did not run: %s" % e], "out": []}
+        finally:
+            _px.shutdown()
+        check("in a headless browser the served page, under its policy, draws every drawing at every lens with no error "
+              "and no script refused but the one injected",
+              not _lv["errs"] and len(_lv["out"]) == 12 and all(int(x.rsplit(":", 1)[1]) > 40 for x in _lv["out"])
+              and _lv.get("csp") == ["script-src-elem inline"], _lv)      # one inline script refused: the injected one
+        check("...the injected script does not run, and a unit written as markup is shown as text, never made an element",
+              _lv.get("injected") is False and _lv.get("pwn") is False and "<img id=pwn" in (_lv.get("live") or ""),
+              (_lv.get("injected"), _lv.get("pwn"), _lv.get("live")))
+        check("...its live values are polled, and an action runs from its button",
+              ("GET", "/api/values?m=silo") in _plog and ("POST", "/api/action") in _plog
+              and (_lv.get("toast") or "").startswith("Ran start-fans"), (_plog[-8:], _lv.get("toast")))
+    else:
+        print("NOTE  the served page was not driven in a browser: none on this machine")
+    # A HEALTH CHECK SAYS IT IS UP, AND NOTHING MORE TO A STRANGER (3.11): which release it runs is a signed-in viewer's
+    _hz = _raw("/healthz", None, "127.0.0.1:%d" % _sp_)
+    _hza = _raw("/healthz", _alice_ck, "127.0.0.1:%d" % _sp_)
+    check("serve: the health check tells a stranger it is up, and not which release it runs; a signed-in viewer is told",
+          _hz[0] == 200 and "X-View-Release" not in _hz[1] and _hza[1].get("X-View-Release") == TAG, (_hz[:2], _hza[1].get("X-View-Release")))
+    # THE PAGE ANSWERS TO ITS OWN NAMES (3.11): its address, the loopback's, and the `hosts` a proxy in front passes on — a
+    # page served under another name (DNS rebinding: a stranger's name, resolved to this host) is refused
+    _hs = {h: _raw("/", _alice_ck, h)[0] for h in ("attacker.example", "attacker.example:%d" % _sp_, "127.0.0.1:%d" % _sp_,
+                                                     "localhost:%d" % _sp_, "view.example.org", "VIEW.example.org:443")}
+    _hs[None] = _raw("/", _alice_ck, None)[0]
+    check("serve: the page answers only to its own names — its address, the loopback's, the `hosts` its configuration "
+          "names — and refuses another, or none (421)",
+          _hs["attacker.example"] == _hs["attacker.example:%d" % _sp_] == _hs[None] == 421
+          and all(_hs[h] == 200 for h in ("127.0.0.1:%d" % _sp_, "localhost:%d" % _sp_, "view.example.org", "VIEW.example.org:443")), _hs)
+    # A STRANGER LOCKS NOBODY OUT (security audit 2026-10-10, 3.5): failures are held per address and name, and per
+    # address; a ceiling per name refuses strangers past it — and a viewer this browser has signed in before is asked
+    # her password still, held only by her own failures. Behind a proxy on this machine, the address is the one it passes.
+
+    def _login(user, pw, src=None, known=None):
+        h = {"Content-Type": "application/x-www-form-urlencoded"}
+        if src:
+            h["X-Forwarded-For"] = src
+        c = http.client.HTTPConnection("127.0.0.1", _sp_, timeout=60)
+        if known:
+            h["Cookie"] = known
+        c.request("POST", "/login", urllib.parse.urlencode({"user": user, "password": pw}), h)
+        r = c.getresponse()
+        r.read()
+        return r.status, [v for k, v in r.getheaders() if k.lower() == "set-cookie"]
+    _ivy = open(os.path.join(T, "host", "ivy.password")).read().strip()
+    _a = [_login("ivy", "a guess %d" % i, "198.51.100.7")[0] for i in range(5)]
+    _b = _login("ivy", _ivy, "198.51.100.8")
+    check("serve: a stranger's five wrong passwords for a name, from one address, do not lock the name out: ivy, from "
+          "another, signs in", _a == [401] * 5 and _b[0] == 303, (_a, _b[0]))
+    _c = _login("ivy", _ivy, "198.51.100.7")[0]
+    check("...and that address is held for that name: even the right password from it waits out the quarter (429)",
+          _c == 429, _c)
+    _d = [_login("nobody-%d" % i, "x", "198.51.100.9")[0] for i in range(20)] + [_login("ivy", _ivy, "198.51.100.9")[0]]
+    check("...and an address that tries many names is held for every name after twenty failures", _d == [401] * 20 + [429], _d)
+    _known = "; ".join(v.split(";", 1)[0] for v in _b[1] if v.startswith("view_known="))
+    _e = [_login("ivy", "a guess", "203.0.113.%d" % (10 + i // 4))[0] for i in range(32)]
+    _f = _login("ivy", _ivy, "203.0.113.99")[0]
+    _g = _login("ivy", _ivy, "203.0.113.98", known=_known)[0]
+    check("serve: past the ceiling of failures for one name, a stranger is refused even with the right password — and "
+          "ivy, known on the browser she signed in with, signs in: no stranger locks out a viewer who has signed in before",
+          bool(_known) and 429 in _e and _f == 429 and _g == 303, (_known[:14], _e, _f, _g))
+    _k = [_login("ivy", "a guess", "203.0.113.97", known=_known)[0] for _ in range(5)] + [_login("ivy", _ivy, "203.0.113.97", known=_known)[0]]
+    check("...and a known viewer is held by her own failures alone: five on her browser, and it waits", _k == [401] * 5 + [429], _k)
+
+    def _slow(user, base):
+        ts, codes = [], []
+        for i in range(3):
+            t0 = time.perf_counter()
+            codes.append(_login(user, "wrong %d" % i, "192.0.2.%d" % (base + i))[0])
+            ts.append(time.perf_counter() - t0)
+        return sorted(ts)[1], codes
+    (_tk, _ck), (_tu, _cu) = _slow("carol", 60), _slow("no-such-viewer", 70)
+    check("serve: a wrong password for a name nobody holds is asked, and takes as long, as for one somebody does: the "
+          "answer's time says nothing of who is kept here", _ck == _cu == [401] * 3 and _tu >= 0.5 * _tk,
+          (_ck, _cu, round(_tk, 3), round(_tu, 3)))
     # THE CSV IS TEXT (3.10): a cell a spreadsheet would run as a formula is written with a quote before it; a number stays
     import view_export as _vx
     _csv = _vx.csv_text({"columns": ["=label", "n"], "rows": [{"bean": "x", "cells": ["=HYPERLINK(\"http://x\")", -3]},
@@ -1259,7 +1785,7 @@ try:
     # GARDEN.md records moves, and nothing else; /healthz answers from what is held, and the next signed-in request reloads.
     def _release():
         try:
-            return urllib.request.urlopen(BASE + "/healthz", timeout=3).headers.get("X-View-Release")
+            return alice.open(BASE + "/healthz", timeout=3).headers.get("X-View-Release")
         except Exception:
             return None
     _rel0 = _release()
@@ -1441,6 +1967,11 @@ check("engrave: a division draws the wholes — the silo's three parts one eleme
       _e3.get("silo", {}).get("of", {}).get("holds") == ["intake", "dryer", "bin", "old fan", "intake :2"]
       and "intake-2" not in _e3, (_e3.get("silo"), sorted(_e3)))
 
+# THE KIT ESCAPES EVERY WORD IT DRAWS (security audit 2026-10-10, 3.9): a ribbon's text as every label's — markup is shown
+# as text — and the entities a drawing module writes in it (an arrow, an ampersand already written as one) are kept.
+_rb = _vk.ribbon(0, 0, 200, '<script>x()</script> a &rarr; b & c &#8594; &#x2192; &amp;')
+check("ribbon: its text is escaped as every label of the kit is, and an entity it carries is kept",
+      "<script>" not in _rb and "&lt;script&gt;x()&lt;/script&gt;" in _rb and "a &rarr; b &amp; c &#8594; &#x2192; &amp;<" in _rb, _rb)
 check("NOTHING above ended in a traceback: every case is a refusal or a pass", not TRACES, TRACES[:2])
 shutil.rmtree(T, ignore_errors=True)
 print("\nview: %d failed" % len(FAILS))

@@ -251,6 +251,40 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.3** (2026-10-11, daftar v2.3.0, human-ratified rule-changes: the view-handplace design's §12, ratified
+  2026-10-11 as recommended, #132; the units ladder, "yes all recommended", #130 and #137; the unified-tools design's
+  P5.4, #133 and #135; each PR read by the operator, "I've read the PRs all are okay") — **one sheet per being, a
+  standard's codes read as the law's units, and a foreign system's people and leave read from statements.** MINOR:
+  forms and rows added, nothing a garden could write refused.
+  - The view (#132). `core/law/profiles.yaml` `archetypes` gains `queue` (what waits for the reader), `timeline` (the
+    members of a reading at their moments), `flows` (who owes whom, or what went between gardens) and `sheet` (one
+    being, the one place it is changed), each declared whole and vacant (`universal`) until a garden draws it. A
+    drawing may name the orders it runs on (`axes`, each a row of `orientations` that runs on that axis), its reach
+    (`span`), its `layouts` and `nodes`, the kinds a reader may make (`new`), and `writes` a verb of the law with
+    `preset` roles. A page whose drawings are all engraved names no module, and a card may show a sealed statement
+    through the host that keeps it. The rule `profile` says so: an order on an axis its row does not run on, a verb the
+    law lacks, a role its verb does not take, and a sheet whose page names no `fields` for its kind are refused by
+    name. The renderers are among the served page's own scripts, allowed by their hashes, and its readings are scoped
+    by the viewer's grants, as the rest of the page is.
+  - Units (#130, #137). `units_crosswalk_form` (`core/law/registries.yaml`) crosses any standard's code list into the
+    law's rows — a unit, a kind, a line, a system's positions or cells, a shape — or says why it does not, `vacant:
+    universal` where the law will hold the kind. A code may be read through its provider's axes, and a line named on
+    one axis wins over a quantity or a kind named on another: an ordinal judgment is a position, never a quantity. Its
+    first occupants are UNECE Recommendation 20 (179 codes cross, seven to nothing with their reasons) and LOINC, read
+    through its terms' property and scale (121 of 212 properties cross, 31 vacant), each held fetched; `{pair}` and
+    `{set}` join the counts. `bin/units.py` reads a value by its code, writes the law's back with its code, and judges
+    one against what a code says.
+  - Crosswalks (#133, #135). `core/law/crosswalks.yaml` gains Odoo 17's `hr.employee` — the employment, with what is
+    the person's own read through it and the private tab's three fields `held`, read only from sealed statements — and
+    `hr.leave` — an absence placed over its days that uses an allowance of an employment, its state read from its
+    course on the walk. A path runs through beans, a filter may name alternatives, and the reader gains `position`,
+    `many` and `stands`.
+  - With it, and no change to the law: the view after the security audit's remaining findings (#131); routines — what a
+    machine runs, when, what it waits on and what proves it (#134); a drawing's title escaped once (#108); one agreement
+    exchanged again and again by `bin/propose.py` (#109); the site's blend (#127); the gate's stamp from named time
+    servers in CI (#128); the merge driver installed from the main tree (#129); a case's resistor stated as a quantity
+    (#136).
+
 - **core 2.2** (2026-10-11, daftar v2.2.0, human-ratified rule-change: the direction design, ratified 2026-10-10 —
   "Yes, ratify it", #125) — **a drawing keeps the frame of what it draws.** MINOR: a table added to the view profile,
   nothing a garden could write refused. `core/law/profiles.yaml` `orientations`: a row an order the law knows — the

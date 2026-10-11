@@ -19,6 +19,8 @@ const W=(typeof window!=='undefined')?window:this;
    it points to the reader's line end, mirrored with the script; a body's up is never turned. */
 const GLYPH=m=>(W.daftarDirection?W.daftarDirection.glyph(m):({next:'→',down:'↓'})[m]||'');
 function h(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+/* where a link may go: an address on the web (http, https), never one that runs script — a catalogue's or a host's word */
+function web(u){u=String(u==null?'':u).trim();return /^https?:\/\//i.test(u)?u:'';}
 function plain(s){return new DOMParser().parseFromString(String(s==null?'':s),'text/html').body.textContent;}   // a title is HTML; a text place shows this
 const PCT={unit:'percent',q:'ratio',f:[1,100]},SEC={unit:'second',q:'duration',f:[1,1]};
 function coherent(b,v){return b&&b.f?v*b.f[0]/b.f[1]:v;}
@@ -29,14 +31,18 @@ function dur(s){if(s==null||isNaN(s))return '—';s=Math.max(0,Math.round(+s));
 function bytes(n){const u=['B','kB','MB','GB','TB','PB'];let i=0;while(Math.abs(n)>=1000&&i<u.length-1){n/=1000;i++;}return (i?n.toFixed(1):Math.round(n))+' '+u[i];}
 function bits(n){const u=['bit/s','kbit/s','Mbit/s','Gbit/s','Tbit/s'];let i=0;while(Math.abs(n)>=1000&&i<u.length-1){n/=1000;i++;}return (i?n.toFixed(1):Math.round(n))+' '+u[i];}
 function num(v){return (Math.abs(v)>=100?Math.round(v):v.toFixed(v%1?1:0))+'';}
-function fmt(v,b){if(v==null||isNaN(v))return '—';v=+v;const u=(b&&b.unit)||'',q=(b&&b.q)||'';
+/* A VALUE, AS ITS UNIT SAYS: '—' where nobody gave one; NaN where the monitor gave a number that is none (Prometheus's
+   NaN, a ratio of 0/0) and ∞ for an infinite one, as the host sends them ("NaN", "Infinity", "-Infinity"); the unit is
+   text, escaped as every word on the page is. */
+function fmt(v,b){if(v==='NaN')return 'NaN';if(v==null||isNaN(v))return '—';v=+v;const u=(b&&b.unit)||'',q=(b&&b.q)||'';
+ if(!isFinite(v))return (v<0?'−∞':'∞')+(u&&u!=='percent'?' '+h(u):u?'%':'');
  if(u==='percent')return v.toFixed(1)+'%';
  if(q==='duration')return v*b.f[0]/b.f[1]<1&&v>0?Math.round(v*b.f[0]/b.f[1]*1000)+' ms':dur(coherent(b,v));
  if(q==='information')return bytes(coherent(b,v));
  if(q==='data-rate')return bits(coherent(b,v)*8);
- return u?num(v)+' '+u:num(v);}
+ return u?num(v)+' '+h(u):num(v);}
 function pctOf(b,v){return b&&b.q==='ratio'?coherent(b,v)*100:v;}
-function stateOf(b,v,live){if(!live)return 'nd';if(v==null)return 'nd';
+function stateOf(b,v,live){if(!live)return 'nd';if(v==null||v==='NaN')return 'nd';
  if(b.live==='live-state')return v>=1?'up':'down';
  return b.crit!=null&&v>=b.crit?'down':b.warn!=null&&v>=b.warn?'warn':'up';}
 
@@ -82,15 +88,16 @@ function reattach(root){if(!INS.key)return;const n=root.querySelector('[data-ins
 /* ---------------- pieces ---------------- */
 const ELSEWHERE='live on the served page';
 function short(n){return String(n||'').split(' (')[0];}   // a chip carries the name, the inspector the full title
-function techChip(t){return '<a class="vw-tech" href="'+h(t.docs||t.homepage||'#')+'" target="_blank" rel="noopener" data-tech="'+h(t.code)+'">'+
- '<i>'+h((t.name||t.code).slice(0,1))+'</i>'+h(short(t.name||t.code))+' <span class="ext">↗</span></a>';}
+function techChip(t){const d=web(t.docs)||web(t.homepage);
+ return (d?'<a class="vw-tech" href="'+h(d)+'" target="_blank" rel="noopener" data-tech="'+h(t.code)+'">':'<span class="vw-tech" data-tech="'+h(t.code)+'">')+
+ '<i>'+h((t.name||t.code).slice(0,1))+'</i>'+h(short(t.name||t.code))+(d?' <span class="ext">↗</span></a>':'</span>');}
 function techCard(t){return '<b>'+h(t.name||t.code)+'</b><div class="ins-sub">'+h(t.category||'technology')+(t.vendor?' · '+h(t.vendor):'')+'</div>'+
- (t.docs?'<div><a href="'+h(t.docs)+'" target="_blank" rel="noopener">official documentation ↗</a></div>':'')+
+ (web(t.docs)?'<div><a href="'+h(web(t.docs))+'" target="_blank" rel="noopener">official documentation ↗</a></div>':'')+
  (t.fields&&t.fields.length?'<div class="ins-row"><span>field of knowledge</span>'+t.fields.map(f=>h(f.code)+' '+h(f.label)).join('<br>')+'</div>':'')+
  (t.occupations&&t.occupations.length?'<div class="ins-row"><span>who runs it</span>'+t.occupations.map(o=>h(o.code)+' '+h(o.label)).join('<br>')+'</div>':'');}
 function partCard(f){if(!f)return '';const a=(f.addresses||[]);return '<b>'+h(f.title)+'</b>'+(f.role?'<div class="ins-sub">'+h(f.role)+'</div>':'')+
  (a.length?'<div class="ins-row"><span>addresses</span>'+a.map(x=>'<code>'+h(x.address)+'</code> '+h((x.what||[]).join(' · '))).join('<br>')+'</div>':'')+
- (f.tech&&f.tech.length?'<div class="ins-row"><span>runs</span>'+f.tech.map(t=>'<a href="'+h(t.docs)+'" target="_blank" rel="noopener">'+h(t.name)+' ↗</a>').join(' · ')+'</div>':'');}
+ (f.tech&&f.tech.length?'<div class="ins-row"><span>runs</span>'+f.tech.map(t=>web(t.docs)?'<a href="'+h(web(t.docs))+'" target="_blank" rel="noopener">'+h(t.name)+' ↗</a>':h(t.name)).join(' · ')+'</div>':'');}
 function head(view,lv){const q=(view.questions||{})[lv.id];   // the DRAWING's own question at this lens, else the lens's own
  return '<div class="vw-head"><div class="vw-lv"><span class="lvname">'+h(lv.name)+'</span><span class="lvq">'+h(q||lv.question)+'</span></div>'+
  '<h3>'+view.title+'</h3>'+(lv.form==='story'?'':'<p class="vw-claim">'+view.claim+'</p>')+'</div>';}
@@ -143,10 +150,10 @@ function schematic(root,view,lv,state){
   if(state.onOpen){g.style.cursor='zoom-in';g.addEventListener('click',()=>state.onOpen(o.view));}});}
 
 /* ---------------- operate · the health chain, the fallback ---------------- */
-function spark(pts,w,hh){if(!pts||pts.length<2)return '';const ys=pts.map(p=>+p[1]),mn=Math.min(...ys),mx=Math.max(...ys),r=(mx-mn)||1;
+function spark(pts,w,hh){pts=(pts||[]).filter(p=>isFinite(+p[1]));if(pts.length<2)return '';const ys=pts.map(p=>+p[1]),mn=Math.min(...ys),mx=Math.max(...ys),r=(mx-mn)||1;
  return '<svg class="spark" viewBox="0 0 '+w+' '+hh+'" preserveAspectRatio="none"><polyline points="'+
   pts.map((p,i)=>(i/(pts.length-1)*w).toFixed(1)+','+(hh-2-((+p[1]-mn)/r)*(hh-4)).toFixed(1)).join(' ')+'"/></svg>';}
-function histLink(view,state){return state.historyUrl?'<div><a href="'+h(state.historyUrl)+'/d/'+h(view.uid)+'" target="_blank" rel="noopener">history ↗</a></div>':'';}
+function histLink(view,state){return web(state.historyUrl)?'<div><a href="'+h(web(state.historyUrl))+'/d/'+h(view.uid)+'" target="_blank" rel="noopener">history ↗</a></div>':'';}
 function chain(root,view,lv,state){const vals=state.values||{},hist=state.history||{};
  const bind={};(view.binds||[]).forEach(b=>bind[b.id]=b);
  let o=head(view,lv)+'<div class="vw-chain">';
@@ -384,11 +391,11 @@ function corrOne(view,c,ci,state){if(!c||!(c.rows||[]).length)return '';
  const w=view.window||{};
  let o='<div class="op-corr" data-corr="'+ci+'"><div class="corr-h"><b>'+h(c.title||'Together, over time')+'</b>'+(w.hours?'<span>'+h(winText(view))+', every '+h(dur(w.step))+'</span>':'')+'</div>';
  if(!state.live)return o+'<p class="bl">drawn '+ELSEWHERE+', from its history</p></div>';
- const H=state.history||{},rows=c.rows.map(id=>({b:B(view,id),pts:(H[id]||[]).filter(p=>!isNaN(+p[1]))})).filter(r=>r.b.id),band=c.band?(H[c.band]||[]):[];
+ const H=state.history||{},rows=c.rows.map(id=>({b:B(view,id),pts:(H[id]||[]).filter(p=>isFinite(+p[1]))})).filter(r=>r.b.id),band=c.band?(H[c.band]||[]):[];
  const all=[].concat(...rows.map(r=>r.pts),band);if(all.length<2)return o+'<p class="bl">no history yet — it gathers as the page is open</p></div>';
  const t0=Math.min(...all.map(p=>+p[0])),t1=Math.max(...all.map(p=>+p[0])),Wd=960,L=150,R=84,RH=54,G=12,top=6,Hb=rows.length*(RH+G)-G,Ht=top+Hb+24;
  const x=t=>L+(t-t0)/((t1-t0)||1)*(Wd-L-R);let g='';
- for(let i=0;i<band.length;i++){const v=+band[i][1];if(isNaN(v))continue;const ta=+band[i][0],tb=i+1<band.length?+band[i+1][0]:t1;
+ for(let i=0;i<band.length;i++){const v=+band[i][1];if(!isFinite(v))continue;const ta=+band[i][0],tb=i+1<band.length?+band[i+1][0]:t1;
   g+='<rect x="'+x(ta).toFixed(1)+'" y="'+top+'" width="'+Math.max(x(tb)-x(ta),0.6).toFixed(1)+'" height="'+Hb+'" class="corr-band" style="fill:'+PHC[Math.abs(v)%PHC.length]+'"/>';}
  rows.forEach((r,i)=>{const y0=top+i*(RH+G),vs=r.pts.map(p=>+p[1]),mn=Math.min(0,...vs),mx=Math.max(...vs,0),y=v=>y0+RH-(v-mn)/((mx-mn)||1)*RH;
   g+='<text x="'+(L-10)+'" y="'+(y0+RH/2+4)+'" class="corr-l" text-anchor="end">'+h(r.b.short||r.b.name)+'</text><line x1="'+L+'" x2="'+(Wd-R)+'" y1="'+(y0+RH)+'" y2="'+(y0+RH)+'" class="corr-ax"/>';
@@ -413,7 +420,7 @@ function corrOne(view,c,ci,state){if(!c||!(c.rows||[]).length)return '';
    pr.forEach(p=>bins[Math.min(n-1,Math.floor((p[0]-a)/wd))].ys.push(p[1]));
    const ms=bins.map(b=>b.ys.length?b.ys.reduce((s,v)=>s+v,0)/b.ys.length:null),top2=Math.max(...ms.filter(v=>v!=null),1e-9),BW=560,BH=120,bw=BW/n;
    let q='';bins.forEach((b,k)=>{const m=ms[k];if(m==null)return;const hh=BH*m/top2;
-    q+='<rect x="'+(k*bw+3).toFixed(1)+'" y="'+(BH-hh+14).toFixed(1)+'" width="'+(bw-6).toFixed(1)+'" height="'+hh.toFixed(1)+'" class="rel-bar"><title>'+h(fmt(b.lo,bx)+' – '+fmt(b.lo+wd,bx)+': '+fmt(m,by)+' ('+b.ys.length+' samples)')+'</title></rect>'+
+    q+='<rect x="'+(k*bw+3).toFixed(1)+'" y="'+(BH-hh+14).toFixed(1)+'" width="'+(bw-6).toFixed(1)+'" height="'+hh.toFixed(1)+'" class="rel-bar"><title>'+fmt(b.lo,bx)+' – '+fmt(b.lo+wd,bx)+': '+fmt(m,by)+' ('+b.ys.length+' samples)</title></rect>'+
      '<text x="'+(k*bw+bw/2).toFixed(1)+'" y="'+(BH-hh+10).toFixed(1)+'" class="rel-v" text-anchor="middle">'+fmt(m,by)+'</text>';});
    q+='<text x="0" y="'+(BH+30)+'" class="corr-t">'+fmt(a,bx)+'</text><text x="'+BW+'" y="'+(BH+30)+'" class="corr-t" text-anchor="end">'+fmt(z,bx)+'</text>';
    o+='<svg class="rel" viewBox="-4 0 '+(BW+8)+' '+(BH+36)+'">'+q+'</svg>';}}
@@ -488,6 +495,10 @@ function clouds(svg,view){const ids=view.changed||[];if(!ids.length)return;const
 function mount(root,view,state){state=state||{};const lvs=view.levels||[];
  const lv=lvs.find(l=>l.id===state.level)||lvs.find(l=>+l.depth===+state.level)||lvs[0]||{form:'schematic',name:'',question:''};
  root.classList.add('vw');root.dataset.form=lv.form;
+ /* ENGRAVED FROM A READING (a queue, a timeline, flows, a sheet): no module draws it, so at every lens but its story it
+    is its archetype's own drawing, by view_engraved.js and its renderer, built through safe.js */
+ if(view.engraved&&lv.form!=='story'&&W.daftarEngraved){root.innerHTML=head(view,lv);W.daftarEngraved.mount(root,view,state);
+  root.insertAdjacentHTML('beforeend',titleBlock(view,lv));reattach(root);return;}
  (FORMS[lv.form]||schematic)(root,view,lv,state);root.insertAdjacentHTML('beforeend',titleBlock(view,lv));reattach(root);}
 W.viewMount=mount;W.viewInspector={show:insShow,hide:insHide};
 })();

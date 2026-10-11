@@ -4,7 +4,7 @@
 
     python3 assets/view/bin/view.py check                        the page against the law and its drawings
     python3 assets/view/bin/view.py elements <view>              a drawing's elements: id, pattern, being
-    python3 assets/view/bin/view.py report --out FILE            the offline page, with the author mode
+    python3 assets/view/bin/view.py report --out FILE [--lang fa]  the offline page, with the author mode
     python3 assets/view/bin/view.py import <view-selection.json> an author-mode selection written into the page
     python3 assets/view/bin/view.py bundle --out DIR [--monitor <being>]   a monitor's deployment, by its adapter
     python3 assets/view/bin/view.py serve --config FILE          the served page and the action executor

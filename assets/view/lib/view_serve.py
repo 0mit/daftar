@@ -11,8 +11,10 @@ WHY A SERVER OF ITS OWN. A page served by the asset can do what a static file ca
     and the server builds the queries itself.
   - ACT: a button on a drawing runs a tool the host names; an action with `every` runs on its schedule as the being who
     answers for it (`run_scheduled`), asked like a press.
-  - WRITE: a drawing's entry form (`views.writes`) adds an entry of a term the law gives, through bin/save.py as the
-    viewer's being; the gate judges it, and a refused save is undone and its message shown (`/api/write`).
+  - WRITE: a sheet's Save, or a drawing's form of a verb, writes statements through the view's one write path
+    (view_write.py, `ops`), and a drawing's entry form in today's words (`views.writes`) adds an entry of a term the law
+    gives, through bin/save.py as the viewer's being; the gate judges it, and a refused save is undone and its message
+    shown (`/api/write`).
   - EXPORT: a table's lines as CSV (`/api/csv`), each line scoped as on the page.
 
 CLOSED BY DEFAULT, TWICE. The law grants nothing that no grant opens (the gardener excepted). The host's configuration
@@ -28,9 +30,26 @@ place a button; only the host can make a command runnable. A tool that is not en
 says what it would run, and audits that. Every attempt, dry or real or refused, is appended to the host's audit log
 (JSON lines, 0600) with who, what and the result. The viewer must be allowed to act, and to see the being acted on.
 
-SESSIONS. A sign-in form; a signed, expiring, HttpOnly, SameSite=Strict cookie; a CSRF token on every POST. Passwords
-are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git. `view serve-init` writes the
-configuration with a random password in a 0600 file beside it — never printed.
+SESSIONS. A sign-in form; a signed, expiring, HttpOnly, SameSite=Strict cookie, signed over the viewer's stored
+password too, so a password changed voids every session signed before it; a CSRF token on every POST, signing out
+among them, and a sign-in is taken only from the page's own origin. Passwords are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git, and a name nobody
+holds is checked against a hash of the same rounds, so the answer's time tells nobody who is kept here. `view
+serve-init` writes the configuration with a random password in a 0600 file beside it — never printed — and `serve`
+refuses a configuration others may read: it holds the session key and the password hashes.
+
+A STRANGER LOCKS NOBODY OUT. Failures are counted per address and name, and per address; past a ceiling of failures
+for one name, a stranger is refused even with the right password — and a viewer this browser has signed in as before
+(the `view_known` cookie, signed over their password) is asked their password still, held only by their own failures.
+Behind a proxy the configuration trusts (`"trusted_proxies": ["127.0.0.1", "::1"]`), the address counted is the client
+the proxy names in `X-Forwarded-For` (the rightmost that is no trusted proxy); from any other peer the header is ignored.
+
+ONE ADDRESS, ITS OWN NAMES, ITS OWN SCRIPTS. The page listens on the loopback (`listen`, 127.0.0.1:8780 by default);
+an address beyond it is refused unless the configuration says `"listen_beyond_loopback": true` — passwords and
+sessions would otherwise cross a network in clear: serve it beyond this machine through a proxy that speaks TLS, which
+passes `X-Forwarded-Proto: https` (or set `"secure_cookie": true`). It answers only to its own names — its address,
+the loopback's and the `hosts` its configuration lists, such as the name a proxy passes on — so a page served under a
+stranger's name (DNS rebinding) is refused. Every answer carries a Content-Security-Policy: no source by default, and
+the page's own scripts (view_report.SCRIPTS) by their hashes, nothing else that runs.
 
 THE LEDGER IS READ AGAIN when the garden's git HEAD moves (asked at most every `recheck_seconds`, 30 by default, and
 only for a signed-in viewer: a health check answers from what is held). When it moves, or the release GARDEN.md records
@@ -46,7 +65,7 @@ Usage (through assets/view/bin/view.py):
   view serve-init --config <path> --user <name> [--orgs "*"|org-a,org-b] [--shared] [--no-actions]
   view serve --config <path>
 """
-import base64, hashlib, hmac, html, json, os, re, secrets, subprocess, sys, threading, time, urllib.parse
+import base64, hashlib, hmac, html, ipaddress, json, math, os, re, secrets, socket, subprocess, sys, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -63,6 +82,7 @@ GUARDS = {
 SESSION_HOURS = 12
 PBKDF2_ROUNDS = 200000
 COOKIE = "view_session"
+KNOWN, KNOWN_DAYS = "view_known", 90       # the browser a viewer signed in with (see A STRANGER LOCKS NOBODY OUT)
 CSRF = "X-View-CSRF"
 
 
@@ -84,10 +104,110 @@ def check_password(pw, stored):
         return False
 
 
+_DUMMY = []
+
+
+def dummy_hash():
+    """A hash of the stored kind and rounds, of no one's password: what a name nobody holds is checked against."""
+    if not _DUMMY:
+        _DUMMY.append(hash_password(secrets.token_hex(16)))
+    return _DUMMY[0]
+
+
 def _write_private(path, text):
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as fh:
         fh.write(text)
+
+
+def loopback(host):
+    """Whether `host` is this machine's loopback: 127.0.0.0/8, ::1, or `localhost`."""
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def listen_of(cfg):
+    """(host, port) the page listens on: the configuration's `listen` — no address at all is the loopback, as `serve` has
+    always read it — refused (SystemExit, before anything is bound) where it is beyond the loopback and the configuration
+    does not choose that in as many words, `"listen_beyond_loopback": true` (security audit 2026-10-10, 3.2)."""
+    listen = str(cfg.get("listen") or "127.0.0.1:8780")
+    host, _, port = listen.rpartition(":")
+    host = host.strip("[]") or "127.0.0.1"
+    if not port.isdigit():
+        raise SystemExit("view serve: `listen` is <address>:<port>, and %r is not — nothing is bound" % listen)
+    if not loopback(host) and cfg.get("listen_beyond_loopback") is not True:
+        raise SystemExit("view serve: `listen` is %s, beyond this machine's loopback, where passwords and sessions would "
+                         "cross the network in clear — listen on 127.0.0.1 and serve the page beyond this machine through "
+                         "a proxy that speaks TLS, or say `\"listen_beyond_loopback\": true` in the host's configuration "
+                         "to choose it; nothing is bound" % listen)
+    return host, int(port)
+
+
+def private_config(path):
+    """Refuse (SystemExit) a configuration others may read: it holds the session key, which signs every viewer's session,
+    and the password hashes (security audit 2026-10-10, 3.11). Where the system has no such modes, nothing is asked."""
+    if os.name != "posix":
+        return
+    mode = os.stat(path).st_mode & 0o777
+    if mode & 0o077:
+        raise SystemExit("view serve: %s may be read by others (mode %o), and it holds the session key and the password "
+                         "hashes — `chmod 0600` it, as `serve-init` writes it; nothing is served" % (path, mode))
+
+
+def _address(a):
+    """An address as one writes it once: `::ffff:127.0.0.1` and `[::1]` as `127.0.0.1` and `::1`; None if it is none."""
+    try:
+        ip = ipaddress.ip_address(str(a).strip().strip("[]"))
+    except ValueError:
+        return None
+    return str(ip.ipv4_mapped or ip) if ip.version == 6 else str(ip)
+
+
+def source_of(peer, forwarded, trusted=()):
+    """Who is signing in, as far as the host can tell: the address the connection comes from — or, where that is a proxy
+    the host's configuration trusts (`trusted_proxies`), the client it names: the rightmost address of
+    `X-Forwarded-For` that is not itself a trusted proxy. A header from any other peer is ignored, and so is one that
+    names no address."""
+    trusted = {t for t in (_address(x) for x in trusted or ()) if t}
+    if not forwarded or _address(peer) not in trusted:
+        return peer
+    for a in reversed(forwarded.split(",")):
+        a = _address(a)
+        if a and a not in trusted:
+            return a
+        if not a:
+            break
+    return peer
+
+
+def finite(x):
+    """A monitor's value as JSON can carry it: a number that is no finite number — Prometheus's NaN for a ratio of 0/0,
+    and ±Inf — is written as the word JavaScript reads it back by, "NaN", "Infinity" or "-Infinity", apart from null,
+    a value nobody gave (security audit 2026-10-10, 3.7)."""
+    if isinstance(x, float) and not math.isfinite(x):
+        return "NaN" if x != x else "Infinity" if x > 0 else "-Infinity"
+    if isinstance(x, dict):
+        return {k: finite(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [finite(v) for v in x]
+    return x
+
+
+def _tail_lines(path, n, block=65536):
+    """The last `n` lines of a file, read from its end: a log that grows for years costs what is asked of it."""
+    with open(path, "rb") as fh:
+        fh.seek(0, os.SEEK_END)
+        pos, buf = fh.tell(), b""
+        while pos > 0 and buf.count(b"\n") <= n:
+            step = min(block, pos)
+            pos -= step
+            fh.seek(pos)
+            buf = fh.read(step) + buf
+    return buf.decode("utf-8", "replace").splitlines()[-n:]
 
 
 def serve_init(config, user, orgs="*", actions=True, shared=False, bean=None):
@@ -122,6 +242,27 @@ def strip_addresses(svg, ok):
     see is taken out. What the drawing's own text says belongs to no being, and stays, as the page's `visibility` says."""
     return _NIP.sub(lambda m: m.group(0) if not m.group(1) or ok(html.unescape(m.group(1))) else "", svg)
 
+
+_BEAN = re.compile(r' data-bean="([^"]*)"')
+
+
+def strip_beans(svg, gone):
+    """A drawing as a viewer may see it: the mark of the being a part depicts (`data-bean`) is taken off a part whose
+    being the viewer may not see (3.8). The part stays as drawn: its words are the drawing's."""
+    return _BEAN.sub(lambda m: "" if gone(html.unescape(m.group(1))) else m.group(0), svg)
+
+
+def _hashes(scripts):
+    return " ".join("'sha256-%s'" % base64.b64encode(hashlib.sha256(x.encode("utf-8")).digest()).decode() for x in scripts)
+
+
+# THE PAGE'S POLICY (security audit 2026-10-10, 3.9): nothing loads or runs but what the page is — its own scripts by
+# their hashes (view_report.SCRIPTS: the scripts the asset writes, never the ones a page happens to hold), its own
+# style and pictures, its calls to itself. Every other answer runs nothing at all.
+CSP = ("default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; form-action 'self'; base-uri 'none'; "
+       "frame-ancestors 'none'")
+PAGE_CSP = CSP + "; script-src %s; connect-src 'self'" % _hashes(view_report.SCRIPTS)
+
 class Verdict(tuple):
     """(yes, why), and the grants the answer read — compares as the pair it is."""
     def __new__(cls, yes, why, grants=(), reason_asked=False):
@@ -138,7 +279,9 @@ class Host:
         self.lock = threading.Lock()
         self.wlock = threading.Lock()                # one form's save at a time in this host; save's own lock queues others
         self.head, self.checked, self.payload, self.views = None, 0, None, {}
-        self.fails = {}                              # ip or user -> [the moments of its failed sign-ins in the window]
+        self.fails = {}                              # what failed to sign in -> [its moments in the window]
+        self.flock = threading.Lock()                # threads sign in at once: the failures are counted under it
+        self.closed_memo = {}                        # viewer -> (head, day, the beings they may not see, a pattern of them)
         self.revoked = self._load_revoked()          # the signatures of tokens signed out, until each would expire
         self.beans, self.gardener, self.answers = {}, None, {}
         self.argv = argv or sys.argv
@@ -280,9 +423,34 @@ class Host:
         os.execv(sys.executable, [sys.executable] + self.argv)
 
     # --- what a viewer is sent ---
+    def closed(self, user):
+        """(the beings of the garden `user` may not see, a pattern that finds one named in a value's query): asked of the
+        grants once a head and a day, as every answer is."""
+        key = (self.head, int(time.time() // 86400))
+        m = self.closed_memo.get(user)
+        if not m or m[0] != key:
+            gone = frozenset(b for b in (self.payload or {}).get("beans") or {} if not self.may(user, b)[0])
+            # named in a query as a label's value or a step of a JSON Pointer: delimited by a quote, a bar or a slash. A
+            # technology's code in the published catalogue (`job="prometheus"`) names the technology as much as the being
+            # a garden keeps for it, and is no name of a being in a query.
+            words = sorted(gone - set((self.payload or {}).get("techcat") or {}), key=len, reverse=True)
+            rx = re.compile(r"(?:^|(?<=[\"'/|]))(?:%s)(?=[\"'/|]|$)" % "|".join(map(re.escape, words))) if words else None
+            m = self.closed_memo[user] = (key, gone, rx)
+        return m[1], m[2]
+
+    def bind_shown(self, user, b):
+        """Whether a value is shown to `user`: its probe is a being they may see, and its query names none they may not."""
+        if b.get("probe") and not self.may(user, b["probe"])[0]:
+            return False
+        rx = self.closed(user)[1]
+        return not (rx and any(isinstance(t, str) and rx.search(t) for t in [b.get("source")] + list((b.get("query") or {}).values())))
+
     def scoped_payload(self, user):
         """The page as `user` may see it: every being they may not see taken out of what is sent, and every drawing of a
-        being they may not see."""
+        being they may not see — and named nowhere (security audit 2026-10-10, 3.8): not as the part an element depicts
+        (its picture's mark of it too), a value's probe or query, the being an action acts on or answers for it, a step's
+        or a story's parts, a board's member, where the page is shown, who stated it, the organisation it opens on. The
+        drawing's own words stay, as its picture does: an element's id is the slug of the label the drawing shows."""
         p = json.loads(json.dumps(self.payload))
         ok = lambda b: self.may(user, b)[0]
         p["reference"] = [r for r in p["reference"] if ok(r["being"])]
@@ -302,18 +470,56 @@ class Host:
         p["beans"] = beans
         p["addresses"] = {b: a for b, a in (p.get("addresses") or {}).items() if ok(b)}
         p.pop("author", None)                        # the served page edits nothing; the author mode is the report's
+        # WHO IS NAMED: a being of the garden the viewer is sent, whole or in part, and the page itself; any other is named
+        # nowhere a being is named. A word that is no being's id (a series' item) is no name. A bean sent in part says
+        # which organisation owns it only where the viewer may see that one too.
+        named = set(beans) | {vm.PAGE}
+        gone = lambda b: isinstance(b, str) and b in self.closed(user)[0] and b not in named
+        for b, v in beans.items():
+            if v.get("part") and gone(v.get("org")):
+                v["org"] = None
+        if gone(p.get("opens_on")):
+            p["opens_on"] = ""
+        hosts = [pl.get("host") for pl in (p.get("where") or {}).get("places") or [] if pl.get("host")]
+        if any(gone(b) for b in hosts + [(vm.fm(h).get("lives_in") or {}).get("bean") for h in hosts
+                                         if isinstance(vm.fm(h).get("lives_in"), dict)]):
+            svg, places = vm.where_shown(shows=lambda b: not gone(b))
+            p["where"] = {"svg": svg, "places": places}
         for k in list(p["views"]):
             v = p["views"][k]
             if v.get("draws_bean") and not ok(v["draws_bean"]):
                 del p["views"][k]
                 p["order"] = [x for x in p["order"] if x != k]
                 continue
+            hid = {e["id"] for e in v.get("elements") or [] if gone(e.get("bean"))
+                   or (isinstance(e.get("of"), dict) and gone(e["of"].get("bean")))}
+            for e in v.get("elements") or []:
+                if gone(e.get("bean")):
+                    e["bean"] = None
+                if isinstance(e.get("of"), dict) and gone(e["of"].get("bean")):
+                    e["of"] = None
+            v["changed"] = [i for i in v.get("changed") or [] if i not in hid]
+            v["binds"] = [b for b in v.get("binds") or [] if self.bind_shown(user, b)]
+            shown = {b["id"] for b in v["binds"]}
+            v["actions"] = [a for a in v.get("actions") or [] if not gone(a.get("bean"))]
+            for a in v["actions"]:
+                if gone(a.get("answered_by")):
+                    a["answered_by"] = None
+            for st in v.get("steps") or []:
+                st["parts"] = [b for b in st.get("parts") or [] if not gone(b)]
+            for st in (v.get("story") or {}).get("stages") or []:
+                st["parts"] = [x for x in st.get("parts") or [] if not gone(x.get("title"))]
+            if gone((v.get("sheet") or {}).get("by")):
+                v["sheet"]["by"] = ""
             v["facts"] = {b: f for b, f in (v.get("facts") or {}).items() if ok(b)}
-            v["svg"] = strip_addresses(v.get("svg") or "", ok)
+            v["svg"] = strip_beans(strip_addresses(v.get("svg") or "", ok), gone)
             v["parts"] = [x for x in (v.get("parts") or []) if ok(x["bean"])]
             if v.get("wiring") and not ok(v["wiring"]["bean"]):
                 v["wiring"] = None
             v["tiles"] = [t for t in v.get("tiles") or [] if not t.get("bean") or ok(t["bean"])]
+            for t in v["tiles"]:
+                if "binds" in t:
+                    t["binds"] = [i for i in t["binds"] if i in shown]
             op = v.get("operate") or {}
             if op.get("table"):                      # a line of a table shows the parts of one being its columns read:
                 op["table"]["rows"] = [r for r in op["table"]["rows"] if self.line_ok(user, r["bean"], op["table"])]
@@ -322,6 +528,16 @@ class Host:
                     if st.get("members") is not None:
                         st["static"] = sum(1 for m in st["members"] if ok(m))
                     st.pop("members", None)
+            for it in op.get("items") or []:
+                if gone(it.get("bean")):
+                    it["bean"] = None
+            for rc in op.get("rollcall") or []:
+                rc["idle"] = [x for x in rc.get("idle") or [] if not gone(x)]
+                rc["notes"] = {x: n for x, n in (rc.get("notes") or {}).items() if not gone(x)}
+            # the alert rules that watch this drawing, as the parts and the values it is sent read them
+            v["alerts"] = vm.alert_names([x["bean"] for x in v["parts"]], v["binds"]) if v.get("alerts") else []
+        import view_engraved                         # the readings the engraved drawings draw: this viewer's own, never
+        p["engraved"] = view_engraved.scoped(self, user, keep=set(p["views"]))   # the gardener's the report reads
         return p
 
     def line_ok(self, user, bean, table):
@@ -344,8 +560,7 @@ class Host:
         out = {}
         by_monitor = {}
         for b in v["binds"]:
-            if b.get("probe") and not self.may(user, b["probe"])[0]:
-                out[b["id"]] = None                  # a being the viewer may not see is not asked about
+            if not self.bind_shown(user, b):          # a being the viewer may not see is not asked about, nor named
                 continue
             by_monitor.setdefault(b.get("monitor"), []).append(b)
         for mon, binds in by_monitor.items():
@@ -354,7 +569,7 @@ class Host:
             if not m or not m["adapter"] or not url:
                 out.update({b["id"]: None for b in binds}); continue
             sel = m["adapter"].selector(self.scope(user))
-            out.update(m["adapter"].values(url, binds, sel))
+            out.update(finite(m["adapter"].values(url, binds, sel)))
         return out
 
     def history(self, user, key):
@@ -367,14 +582,14 @@ class Host:
         out, now = {}, int(time.time())
         by_monitor = {}
         for b in v["binds"]:
-            if b.get("live") == "live-value" and not (b.get("probe") and not self.may(user, b["probe"])[0]):
+            if b.get("live") == "live-value" and self.bind_shown(user, b):
                 by_monitor.setdefault(b.get("monitor"), []).append(b)
         for mon, binds in by_monitor.items():
             m = next((x for x in vm.monitors() if x["bean"] == mon), None)
             url = ((self.cfg.get("monitors") or {}).get(mon) or {}).get("url") if mon else None
             if not m or not m["adapter"] or not url:
                 out.update({b["id"]: [] for b in binds}); continue
-            out.update(m["adapter"].history(url, binds, m["adapter"].selector(self.scope(user)), hours, step, now))
+            out.update(finite(m["adapter"].history(url, binds, m["adapter"].selector(self.scope(user)), hours, step, now)))
         return out
 
     # --- actions ---
@@ -566,7 +781,7 @@ class Host:
 
     def audit_tail(self, user, n=30):
         try:
-            lines = open(self.cfg["audit_log"]).read().splitlines()[-400:]
+            lines = _tail_lines(self.cfg["audit_log"], 400)   # from its end: the log is never rotated (3.11)
         except OSError:
             return []
         rows = [json.loads(l) for l in lines if l.strip()]
@@ -577,28 +792,81 @@ class Host:
         return rows[-n:]
 
     # --- sessions ---
-    # SIGNING IN IS LIMITED, AND SIGNING OUT IS FOR GOOD. Five failures in a quarter of an hour, from one address or for
-    # one user, lock that address or user out until the quarter has passed: the password is not even asked. Nothing
-    # sleeps, so a flood of failures ties up no thread, and a failure older than the window is forgotten. A token signed
-    # out is kept, by its signature, in `revoked.json` beside the host's configuration until it would have expired —
-    # the key outlives a restart, so the revocation does too.
-    FAIL_WINDOW, FAIL_LIMIT = 900, 5
+    # SIGNING IN IS LIMITED, AND NO STRANGER LOCKS ANYONE OUT (security audit 2026-10-10, 3.5). A stranger — a browser that
+    # has not signed in as the name it tries — is refused for a quarter of an hour, the password not even asked, once
+    # five tries for one name from one address fail, twenty from one address for any names, or thirty for one name from
+    # anywhere (a ceiling no spread of addresses passes). A viewer's own browser, known by the `view_known` cookie a
+    # sign-in leaves (signed over their password, so a new password forgets every browser), is held by its own failures
+    # alone: five, as for one address. So where every viewer comes through one address — a proxy the configuration does
+    # not trust, a tunnel — strangers can hold that address, and never a viewer who has signed in before. Nothing
+    # sleeps, so a flood ties up no thread; a failure older than the window is forgotten, and the count of what failed
+    # is bounded. A token signed out is kept, by its signature, in `revoked.json` beside the host's configuration until
+    # it would have expired — the key outlives a restart, so the revocation does too.
+    FAIL_WINDOW, FAIL_LIMIT, SOURCE_LIMIT, NAME_CEILING = 900, 5, 20, 30
 
-    def locked(self, *who):
+    def _recent(self, k, now):
+        ts = [t for t in self.fails.get(k, ()) if now - t < self.FAIL_WINDOW]
+        if ts:
+            self.fails[k] = ts
+        else:
+            self.fails.pop(k, None)
+        return len(ts)
+
+    def held(self, source, user, known=False):
+        """Whether a sign-in as `user` from `source` is refused now, the password not asked: by its own failures for a
+        browser known as `user`'s, else by the address and the name's, and the name's ceiling."""
         now = time.time()
-        for k in list(self.fails):
-            self.fails[k] = [t for t in self.fails[k] if now - t < self.FAIL_WINDOW]
-            if not self.fails[k]:
-                del self.fails[k]
-        return any(len(self.fails.get(w, ())) >= self.FAIL_LIMIT for w in who if w)
+        with self.flock:
+            if known:
+                return self._recent("known|" + user, now) >= self.FAIL_LIMIT
+            return (self._recent("pair|%s|%s" % (source, user), now) >= self.FAIL_LIMIT
+                    or self._recent("source|" + source, now) >= self.SOURCE_LIMIT
+                    or self._recent("name|" + user, now) >= self.NAME_CEILING)
 
-    def failed(self, *who):
-        if len(self.fails) > 10000:                  # a flood of addresses: forget the oldest, never grow without end
-            for k in sorted(self.fails, key=lambda k: max(self.fails[k]))[:len(self.fails) - 10000]:
-                del self.fails[k]
-        for w in who:
-            if w:
-                self.fails.setdefault(w, []).append(time.time())
+    def failed(self, source, user, known=False):
+        now = time.time()
+        with self.flock:
+            if len(self.fails) > 10000:              # a flood of addresses: forget the oldest, never grow without end
+                for k in sorted(self.fails, key=lambda k: max(self.fails[k]))[:len(self.fails) - 10000]:
+                    del self.fails[k]
+            for k in (["known|" + user] if known else ["pair|%s|%s" % (source, user), "source|" + source, "name|" + user]):
+                self.fails.setdefault(k, []).append(now)
+
+    def signed_in(self, source, user):
+        with self.flock:
+            self.fails.pop("pair|%s|%s" % (source, user), None)
+            self.fails.pop("known|" + user, None)
+
+    def password_ok(self, user, pw):
+        """Whether `pw` is `user`'s password. A name nobody holds is checked against a hash of the same rounds, so the
+        answer takes as long as for a name somebody holds (3.5)."""
+        rec = (self.cfg.get("users") or {}).get(user)
+        stored = rec.get("password") if isinstance(rec, dict) and rec.get("password") else dummy_hash()
+        return check_password(pw, stored) and isinstance(rec, dict) and stored is rec.get("password")
+
+    def _pw(self, user):
+        """What a viewer's tokens are signed over beside the key: their stored password hash (3.11), so a new password
+        voids every token signed before it."""
+        rec = (self.cfg.get("users") or {}).get(user)
+        return str(rec.get("password") or "") if isinstance(rec, dict) else ""
+
+    def _signed(self, kind, user, exp):
+        return hmac.new(self.key, ("%s%s|%s|%s" % (kind, user, exp, self._pw(user))).encode(), hashlib.sha256).hexdigest()
+
+    def known_token(self, user):
+        exp = int(time.time()) + KNOWN_DAYS * 86400
+        return base64.urlsafe_b64encode(("%s|%d|%s" % (user, exp, self._signed("known|", user, exp))).encode()).decode()
+
+    def known_of(self, tok):
+        """The viewer a browser has signed in as, by its `view_known` cookie, while it lasts and their password holds."""
+        try:
+            user, exp, sig = base64.urlsafe_b64decode((tok or "").encode()).decode().split("|")
+            if user in (self.cfg.get("users") or {}) and int(exp) > time.time() and \
+                    hmac.compare_digest(sig, self._signed("known|", user, exp)):
+                return user
+        except Exception:
+            pass
+        return None
 
     def _revoked_path(self):
         return os.path.join(os.path.dirname(os.path.abspath(self.config_path)), "revoked.json")
@@ -613,7 +881,8 @@ class Host:
         return {str(k): int(v) for k, v in (got.items() if isinstance(got, dict) else []) if int(v) > now}
 
     def revoke(self, tok):
-        """Sign a token out: kept by its signature until it would have expired, and written whole beside the config."""
+        """Sign a token out: kept by its signature until it would have expired, and written whole beside the config, 0600
+        as the configuration is (3.11)."""
         try:
             _user, exp, sig = base64.urlsafe_b64decode(tok.encode()).decode().split("|")
         except Exception:
@@ -622,21 +891,17 @@ class Host:
         self.revoked = {k: v for k, v in self.revoked.items() if v > now}
         self.revoked[sig] = int(exp)
         tmp = self._revoked_path() + ".tmp"
-        with open(tmp, "w") as fh:
-            json.dump(self.revoked, fh)
+        _write_private(tmp, json.dumps(self.revoked))
         os.replace(tmp, self._revoked_path())
 
     def token(self, user):
         exp = int(time.time()) + SESSION_HOURS * 3600
-        body = "%s|%d" % (user, exp)
-        sig = hmac.new(self.key, body.encode(), hashlib.sha256).hexdigest()
-        return base64.urlsafe_b64encode(("%s|%s" % (body, sig)).encode()).decode()
+        return base64.urlsafe_b64encode(("%s|%d|%s" % (user, exp, self._signed("", user, exp))).encode()).decode()
 
     def user_of(self, tok):
         try:
             user, exp, sig = base64.urlsafe_b64decode(tok.encode()).decode().split("|")
-            good = hmac.new(self.key, ("%s|%s" % (user, exp)).encode(), hashlib.sha256).hexdigest()
-            if hmac.compare_digest(sig, good) and int(exp) > time.time() and user in self.cfg["users"] \
+            if user in self.cfg["users"] and int(exp) > time.time() and hmac.compare_digest(sig, self._signed("", user, exp)) \
                     and sig not in self.revoked:
                 return user
         except Exception:
@@ -676,6 +941,11 @@ def _add_entry(text, term, line):
 
 def make_handler(F):
     title = view_report.esc(str(vm.page().get("title") or vm.PAGE))
+    # THE NAMES IT ANSWERS TO (3.11): its own address, the loopback's, and the `hosts` its configuration lists — the name
+    # a proxy in front of it passes on as the Host. A page served under another name (DNS rebinding) is refused.
+    own = listen_of(F.cfg)[0].lower()
+    names = {"127.0.0.1", "localhost", "::1"} | ({own} if own not in ("0.0.0.0", "::") else set()) | \
+        {str(h).strip().lower() for h in F.cfg.get("hosts") or [] if str(h).strip()}
 
     class H(BaseHTTPRequestHandler):
         timeout = float(F.cfg.get("request_seconds", 15))   # a connection that sends nothing is closed (audit 3.3)
@@ -685,7 +955,7 @@ def make_handler(F):
         def log_message(self, fmt, *a):
             sys.stderr.write("%s %s\n" % (time.strftime("%H:%M:%S"), fmt % a))
 
-        def _send(self, code, body, ctype="text/html; charset=utf-8", headers=None):
+        def _send(self, code, body, ctype="text/html; charset=utf-8", headers=None, csp=CSP):
             b = body.encode() if isinstance(body, str) else body
             self.send_response(code)
             self.send_header("Content-Type", ctype)
@@ -694,13 +964,35 @@ def make_handler(F):
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("X-Frame-Options", "DENY")
             self.send_header("Referrer-Policy", "same-origin")
-            for k, v in (headers or {}).items():
+            self.send_header("Content-Security-Policy", csp)
+            for k, v in (headers.items() if isinstance(headers, dict) else headers or ()):
                 self.send_header(k, v)
             self.end_headers()
             self.wfile.write(b)
 
         def _json(self, code, obj):
-            self._send(code, json.dumps(obj, ensure_ascii=False), "application/json")
+            # a value JSON cannot carry fails here, loudly, rather than reach a page as JSON no browser parses (3.7)
+            self._send(code, json.dumps(obj, ensure_ascii=False, allow_nan=False), "application/json")
+
+        def _host_ok(self):
+            h = (self.headers.get("Host") or "").strip().lower()
+            name = h[1:h.index("]")] if h.startswith("[") and "]" in h else h.rsplit(":", 1)[0] if h.count(":") == 1 else h
+            return bool(name) and name in names
+
+        def _from_here(self):
+            """Whether a form comes from the page itself: the browser does not call it cross-site, and its `Origin`, where it
+            names one, is one of the page's own names. A client that names none (a command line) is taken (3.11)."""
+            if (self.headers.get("Sec-Fetch-Site") or "").strip().lower() == "cross-site":
+                return False
+            o = self.headers.get("Origin")
+            return o is None or (urllib.parse.urlsplit(o.strip()).hostname or "").lower() in names
+
+        def _cookie(self, name):
+            for part in (self.headers.get("Cookie") or "").split(";"):
+                k, _, v = part.strip().partition("=")
+                if k == name:
+                    return v
+            return None
 
         def _secure(self):
             """`; Secure` where the viewer reached the host over HTTPS — said by the host's configuration, or by the proxy
@@ -709,24 +1001,21 @@ def make_handler(F):
             return "; Secure" if https else ""
 
         def _session(self):
-            for part in (self.headers.get("Cookie") or "").split(";"):
-                k, _, v = part.strip().partition("=")
-                if k == COOKIE:
-                    return v, F.user_of(v)
-            return None, None
+            v = self._cookie(COOKIE)
+            return (v, F.user_of(v)) if v is not None else (None, None)
 
         def do_GET(self):
             u = urllib.parse.urlparse(self.path)
+            if not self._host_ok():
+                return self._send(421, "this page answers to its own names only", "text/plain; charset=utf-8")
             if u.path == "/healthz":   # answered from what is held; a stranger's request starts no work (audit 3.4)
-                return self._send(200, "ok", "text/plain", headers={"X-View-Release": F.release_at_start})
+                # which release it runs is a signed-in viewer's to be told, not a stranger's (3.11)
+                return self._send(200, "ok", "text/plain", headers={"X-View-Release": F.release_at_start} if self._session()[1] else None)
             if u.path == "/login":
                 return self._send(200, LOGIN % {"title": title, "err": ""})
-            if u.path == "/logout":
-                tok, user = self._session()
-                if user:
-                    F.revoke(tok)                  # the token itself, not only the browser's copy of it
-                return self._send(303, "", headers={"Location": "/login", "Set-Cookie": "%s=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict%s"
-                                                     % (COOKIE, self._secure())})
+            if u.path == "/logout":                # signing out is the page's own POST, with its CSRF token (3.11)
+                return self._send(405, "signing out is the page's own button", "text/plain; charset=utf-8",
+                                  headers={"Allow": "POST"})
             tok, user = self._session()
             if not user:
                 if u.path.startswith("/api/"):
@@ -743,7 +1032,7 @@ def make_handler(F):
                 p = F.scoped_payload(user)
                 live = {"user": user, "csrf": F.csrf(tok), "history": F.cfg.get("history", ""), "poll": 30,
                         "actions": F.may(user, act=True)[0], "head": (F.head or "")[:10]}
-                return self._send(200, vm.surface("python").render(p, live=live))   # this host's surface
+                return self._send(200, vm.surface("python").render(p, live=live), csp=PAGE_CSP)   # this host's surface
             if u.path == "/api/values":
                 key = urllib.parse.parse_qs(u.query).get("m", [""])[0]
                 vals = F.values(user, key)
@@ -771,6 +1060,8 @@ def make_handler(F):
 
         def do_POST(self):
             u = urllib.parse.urlparse(self.path)
+            if not self._host_ok():
+                return self._send(421, "this page answers to its own names only", "text/plain; charset=utf-8")
             try:
                 n = int(self.headers.get("Content-Length") or 0)
             except ValueError:
@@ -783,23 +1074,36 @@ def make_handler(F):
             if u.path == "/login":
                 f = urllib.parse.parse_qs(raw)
                 user, pw = f.get("user", [""])[0], f.get("password", [""])[0]
-                ip = self.client_address[0]
-                who = ("ip:" + ip, "user:" + user if user else None)
-                if F.locked(*who):
+                # a sign-in from another site signs nobody in: its form would sign this browser in as a name of that
+                # site's choosing (login CSRF, security audit 2026-10-10, 3.11); it is refused before any name is tried
+                if not self._from_here():
+                    return self._send(403, LOGIN % {"title": title, "err": '<div class="e">a sign-in from another site is '
+                                                                           'not taken here</div>'})
+                src = source_of(self.client_address[0], self.headers.get("X-Forwarded-For"), F.cfg.get("trusted_proxies"))
+                known = bool(user) and F.known_of(self._cookie(KNOWN)) == user
+                if F.held(src, user, known):
                     return self._send(429, LOGIN % {"title": title, "err": '<div class="e">too many tries — wait a quarter '
                                                                            'of an hour</div>'})
-                rec = F.cfg["users"].get(user)
-                if rec and check_password(pw, rec["password"]):
-                    F.fails.pop(who[0], None)
-                    return self._send(303, "", headers={"Location": "/", "Set-Cookie": "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d%s"
-                                                         % (COOKIE, F.token(user), SESSION_HOURS * 3600, self._secure())})
-                F.failed(*who)
+                if F.password_ok(user, pw):
+                    F.signed_in(src, user)
+                    return self._send(303, "", headers=[
+                        ("Location", "/"),
+                        ("Set-Cookie", "%s=%s; Path=/; HttpOnly; SameSite=Strict; Max-Age=%d%s"
+                         % (COOKIE, F.token(user), SESSION_HOURS * 3600, self._secure())),
+                        # this browser, known as the viewer's: asked their password still when strangers have tried it
+                        ("Set-Cookie", "%s=%s; Path=/login; HttpOnly; SameSite=Strict; Max-Age=%d%s"
+                         % (KNOWN, F.known_token(user), KNOWN_DAYS * 86400, self._secure()))])
+                F.failed(src, user, known)
                 return self._send(401, LOGIN % {"title": title, "err": '<div class="e">wrong user or password</div>'})
             tok, user = self._session()
             if not user:
                 return self._json(401, {"error": "sign in"})
             if not hmac.compare_digest(self.headers.get(CSRF) or "", F.csrf(tok)):
                 return self._json(403, {"error": "missing or wrong CSRF token"})
+            if u.path == "/logout":                  # the token itself, not only the browser's copy of it
+                F.revoke(tok)
+                return self._send(200, json.dumps({"out": True}), "application/json", headers={
+                    "Set-Cookie": "%s=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict%s" % (COOKIE, self._secure())})
             if u.path == "/api/action":
                 try:
                     body = json.loads(raw or "{}")
@@ -816,6 +1120,9 @@ def make_handler(F):
                 except ValueError:
                     return self._json(400, {"error": "bad json"})
                 F.refresh()
+                if isinstance(body, dict) and isinstance(body.get("ops"), list):   # statements: a sheet's Save, a form of a verb
+                    import view_engraved
+                    return self._json(*view_engraved.serve_write(F, user, body))
                 vals = body.get("values") if isinstance(body.get("values"), dict) else {}
                 code, obj = F.write(user, str(body.get("m", "")), str(body.get("w", "")), str(body.get("bean", "")),
                                     str(body.get("entry") or ""), vals)
@@ -848,10 +1155,23 @@ class Bounded(ThreadingHTTPServer):
             self.slots.release()
 
 
+class Bounded6(Bounded):
+    address_family = socket.AF_INET6
+
+
 def serve(config, argv=None):
+    # refused before anything is read of the garden or bound: a configuration others may read, an address beyond the
+    # loopback nobody chose (3.11, 3.2)
+    private_config(config)
+    with open(config, encoding="utf-8") as fh:
+        host, port = listen_of(json.load(fh))
     F = Host(config, argv)
-    host, _, port = F.cfg.get("listen", "127.0.0.1:8780").rpartition(":")
-    srv = Bounded((host or "127.0.0.1", int(port)), make_handler(F))
+    dummy_hash()                                     # made once, before the first stranger's name is asked
+    srv = (Bounded6 if ":" in host else Bounded)((host, port), make_handler(F))
+    if not loopback(host) and F.cfg.get("secure_cookie") is not True:
+        sys.stderr.write("view serve: listening beyond the loopback, as the configuration chooses: unless a proxy that "
+                         "speaks TLS stands in front (and passes X-Forwarded-Proto: https), passwords and sessions cross "
+                         "the network in clear\n")
     sys.stderr.write("view serve: %s:%s · page %s of %s @ %s · %d viewers · %d tools (%d enabled)\n" % (
         host, port, vm.PAGE, vm.garden_name(), (F.head or "")[:10], len(F.cfg["users"]), len(F.cfg.get("tools") or {}),
         sum(1 for t in (F.cfg.get("tools") or {}).values() if t.get("enabled"))))

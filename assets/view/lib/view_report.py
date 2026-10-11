@@ -22,7 +22,9 @@ which validates it, writes the page through safe, reads it back, and journals it
 browser's own storage); "Reset" returns to what the page says.
 
 Usage:
-  view report --out FILE      (required: a report is written where it is asked for, never inside the garden unasked)
+  view report --out FILE [--lang <BCP 47 tag>]   (--out required: a report is written where it is asked for, never inside
+                                                  the garden unasked; --lang, the reader's language, which the widgets
+                                                  read and the page's direction follows)
 """
 import datetime, html, json, os, subprocess, sys
 
@@ -60,6 +62,7 @@ def units():
 
 
 def payload():
+    import view_engraved
     figs = vm.compose_all()
     views = {v["key"]: v for v in vm.views(figs)}
     pv = vm.page_view()
@@ -86,6 +89,10 @@ def payload():
         "palette_css": vm.palette_css(),
         "addresses": {r["being"]: vm.addresses(r["being"]) for r in ref if vm.fm(r["being"])},
         "beans": catalog(),
+        # THE READINGS THE ENGRAVED DRAWINGS DRAW, as the gardener reads them: the offline page is the gardener's tool's,
+        # read only, and carries no held value (a host sends its own viewer's: view_serve, `view_engraved.scoped`)
+        "engraved": view_engraved.page(lambda *a, **k: True,
+                                       str(vm.fm_path(os.path.join(vm.ROOT, "GARDEN.md")).get("gardener") or ""), None),
         "author": {"views": {key: {a: v.get(a) for a in vm.EDITABLE if v.get(a) is not None} for key, v in vm.views_raw()},
                    "bindings": {bk: b for bk, b in vm.entries("view_bindings")},
                    "reference": [dict(r) for _i, r in vm.entries_of_view("reference")],
@@ -240,7 +247,15 @@ function renderRef(){
   ['#f-org','#f-genos'].forEach(s => $(s).onchange = apply); $('#f-q').oninput = apply; apply();
 }
 function state(){ return {level, live: !!LIVE, values: VALS[tab] || {}, history: HIST[tab] || {}, onAction: LIVE ? doAction : null, historyUrl: LIVE && LIVE.history,
-  onOpen: k => { if ((P.order || []).includes(k)) { tab = k; render(); } }}; }
+  onOpen: k => { if ((P.order || []).includes(k)) { tab = k; render(); } }, engraved: P.engraved || null, write: LIVE ? engravedWrite : null}; }
+// A SHEET'S SAVE, OR A DRAWING'S FORM OF A VERB: the statements it adds, changes and takes out, written by the host as one
+// commit the gate judges (view_engraved.serve_write); the answer is the page's to show at each fact it names
+function engravedWrite(body){ return fetch('/api/write', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-View-CSRF': LIVE.csrf}, body: JSON.stringify(body)})
+  .then(r => r.json().then(j => ({status: r.status, answer: j}))).catch(e => ({status: 0, answer: {ok: false, refusals: [{op: null, fact: null, message: String(e)}]}})); }
+// THE READER'S LANGUAGE, where the host or the report names it: the page's own `lang`, and its direction from CLDR's
+// layout of the language's script (widgets/locale.js), which every order on the page follows (widgets/direction.js)
+(function(){ const g = ((P.engraved || {}).settings || {}).garden || {}; if (g.lang && window.daftarWidgets) {
+  document.documentElement.lang = g.lang; const d = window.daftarWidgets.locale.dirOf(g.lang); if (d === 'rtl' || d === 'ltr') document.documentElement.dir = d; } })();
 function mountView(){ const root = document.querySelector('#view > div'); if (!root || tab === 'ref') return; window.viewMount(root, viewFor(tab), state()); }
 function render(){
   renderTabs(); renderLenses(); if (LIVE) renderLive();
@@ -338,7 +353,10 @@ function wire(){
 }
 function renderLive(){
   $('#livebar').innerHTML = 'live · signed in as <b>' + esc(LIVE.user) + '</b> · ledger ' + esc(LIVE.head) +
-    (LIVE.history && P.views[tab] ? ' · <a href="' + esc(LIVE.history) + '/d/' + esc(P.views[tab].uid) + '" target="_blank" rel="noopener">history ↗</a>' : '') + ' · <a href="/logout">sign out</a>'; }
+    (/^https?:\/\//i.test(LIVE.history || '') && P.views[tab] ? ' · <a href="' + esc(LIVE.history) + '/d/' + esc(P.views[tab].uid) + '" target="_blank" rel="noopener">history ↗</a>' : '') +
+    ' · <button class="btn mini" id="signout">sign out</button>';
+  // signing out is the page's own act, a POST with its CSRF token: a link elsewhere signs nobody out
+  $('#signout').onclick = () => fetch('/logout', {method: 'POST', headers: {'X-View-CSRF': LIVE.csrf}}).finally(() => { location.href = '/login'; }); }
 if (LIVE || !P.author) { $('#authbtn').style.display = 'none'; }
 if (LIVE) { setInterval(poll, (LIVE.poll || 30) * 1000); }
 $('#authbtn').onclick = () => { document.body.classList.toggle('authoring'); $('#authbtn').classList.toggle('on'); render(); };
@@ -348,6 +366,28 @@ render();
 
 # where each order runs on the page: the law's rows and the one module that reads them (widgets/direction.js)
 DIRECTION_JS = open(os.path.join(HERE, "widgets", "direction.js"), encoding="utf-8").read()
+# the archetypes engraved from readings: their renderers, classic scripts beside the widgets, in the order they lean on
+ENGRAVED_JS = [os.path.join(HERE, f) for f in ("view_engraved.js", "view_queue.js", "view_timeline.js", "view_flows.js",
+                                                "view_sheet.js")]
+
+
+def engraved_assets():
+    """(script, style) the page carries for the engraved drawings: the widgets as one classic script, the renderers, and
+    the style of both — read once, from the release's files, so a host that allows the page's scripts by their hashes
+    allows exactly these."""
+    import view_widgets
+    js = view_widgets.bundle() + "".join(open(f, encoding="utf-8").read() for f in ENGRAVED_JS)
+    css = view_widgets.css() + open(os.path.join(HERE, "view_engraved.css"), encoding="utf-8").read()
+    return js, css
+
+
+ENGRAVED_SCRIPT, ENGRAVED_CSS = engraved_assets()
+
+# THE PAGE'S SCRIPTS, ONCE: what runs on the page, in its order, and nothing else. build_html writes exactly these, and a
+# host's Content-Security-Policy allows exactly these by their hashes (view_serve, and daftard's /view), never a script a
+# page happens to hold (security audit 2026-10-10, 2.4 and 3.9). A script the page needs is added here; the page's data
+# travels as JSON (`<script type="application/json">`), which nothing runs.
+SCRIPTS = (DIRECTION_JS, ENGRAVED_SCRIPT, kit.RUNTIME_JS, SCRIPT)
 
 
 def build_html(p):
@@ -362,13 +402,13 @@ def build_html(p):
             '<div class="seg" id="lens"></div><button class="btn" id="authbtn">Author</button></div><div id="livebar" class="kd"></div></header>'
             '<main><div id="view"></div><section id="author"></section></main>'
             '<script type="application/json" id="viewdata">%s</script>'
-            '<script type="application/json" id="orientations">%s</script><script>%s</script><script>%s</script><script>%s</script></body></html>'
-            % (title, PAGE_CSS, kit.SCHEMA_CSS + p.get("palette_css", ""), title, esc(p["page"]["id"]), esc(p.get("garden", "")), esc(p.get("release", "")),
-               stamp, data, json.dumps(vm.orientations()).replace("</", "<\\/"), DIRECTION_JS, kit.RUNTIME_JS, SCRIPT))
+            '<script type="application/json" id="orientations">%s</script>%s</body></html>'
+            % (title, PAGE_CSS, kit.SCHEMA_CSS + p.get("palette_css", "") + ENGRAVED_CSS, title, esc(p["page"]["id"]), esc(p.get("garden", "")), esc(p.get("release", "")),
+               stamp, data, json.dumps(vm.orientations()).replace("</", "<\\/"), "".join("<script>%s</script>" % x for x in SCRIPTS)))
 
 
 def main(args):
-    bad = [a for a in args if a.startswith("-") and a not in ("--out",)]
+    bad = [a for a in args if a.startswith("-") and a not in ("--out", "--lang")]
     if bad:
         print("view report: unknown arguments %s — nothing written" % bad, file=sys.stderr)
         sys.exit(2)
@@ -387,6 +427,8 @@ def main(args):
     out = args[args.index("--out") + 1]
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     p = payload()
+    if "--lang" in args and args.index("--lang") + 1 < len(args):   # the reader's language: the widgets read it, and the
+        p["engraved"]["settings"]["garden"]["lang"] = args[args.index("--lang") + 1]   # page takes its direction from it
     import view_export
     stem = os.path.splitext(out)[0]
     csvs, p["csv"] = [], {}

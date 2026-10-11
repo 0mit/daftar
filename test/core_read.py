@@ -11,14 +11,14 @@ codebase under it.
 law: core/law/lines.yaml is what std-vocab generates, and the law holds together with its rules. gate: the
 garden saved through the core's gate; each form's breach refused by rule `line`, by name. seq: the series read between
 its rows, the course where it stands. reckon: a reading by its name, an ad-hoc one over `pay.of`, a comparator in today's
-words refused, a reading at a pinned commit. ledger: positions and debts from `pay` and `bear`, exactly, and the net
-between two. garden, where, stale, pos: the garden's law, a `root:` location resolved here, a cache's verdict, the
-position index's named scans. cursor: a file under a root resolves to its bean (part 5 left it). The aliases run the
-same tools. translate: today's series, walk, course, moves and reading written in statements, every value placed.
+words refused, a reading at a pinned commit. ledger: positions and debts from `pay` and `bear`, exactly, as prose and as
+data (--json), and the net between two. garden, where, stale, pos: the garden's law, a `root:` location resolved here, a
+cache's verdict, the position index's named scans. cursor: a file under a root resolves to its bean (part 5 left it).
+The aliases run the same tools. translate: today's series, walk, course, moves and reading written in statements, every value placed.
 
 Run: python3 test/core_read.py   (0 = green; about a minute)
 """
-import os, re, shutil, socket, subprocess, sys, tempfile
+import json, os, re, shutil, socket, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -335,6 +335,25 @@ try:
     r = run(PY, 'bin/ledger.py', '--between', 'sam', 'ali')
     check("ledger: --between nets the two across the agreements they share (today's name, the same tool)",
           r.returncode == 0 and 'net, across 1 agreement' in r.out and 'sam owes ali 30 EUR' in r.out, r.out)
+    r = run(PY, 'bin/ledger.py', 'bike-repair', '--json')
+    try:
+        J = json.loads(r.out)
+        A = J['agreements'][0]
+    except (ValueError, KeyError, IndexError):
+        J, A = {}, {}
+    tool = next((t for t in A.get('transactions') or [] if t.get('id') == 'tool'), {})
+    check("ledger --json: the same reading as data — positions, the debt netted, a transaction's shares, every amount a "
+          "count as text and never a JSON number, and the clause with its figure",
+          r.returncode == 0 and A.get('bean') == 'bike-repair'
+          and {(p['party'], p['count'], p['unit']) for p in A.get('positions', [])} == {('ali', '30', 'EUR'), ('sam', '-30', 'EUR')}
+          and [(d['from'], d['to'], d['count']) for d in A.get('debts', [])] == [('sam', 'ali', '30')]
+          and [(b['by'], b['count']) for b in tool.get('borne', [])] == [('ali', '60'), ('sam', '30')]
+          and [(c['id'], c['figures']) for c in A.get('clauses', [])] == [('mend', ['obligatory'])]
+          and not re.search(r'"count": -?[0-9]', r.out)
+          and [(n['from'], n['to'], n['count']) for n in J.get('net', [])] == [('sam', 'ali', '30')], r.out[-1500:])
+    r = run(PY, 'bin/ledger.py', '--between', 'sam', 'ali', '--json')
+    check("ledger --between --json: the pair's net, as the prose nets it",
+          r.returncode == 0 and '"between": [' in r.out and '"from": "sam"' in r.out and '"count": "30"' in r.out, r.out[-800:])
 
     # ---- GARDEN, WHERE, STALE, POS, CURSOR
     r = run(PY, 'bin/garden.py')

@@ -5093,6 +5093,43 @@ company. A record's number is the first 31 bits of the SHA-256 of its model and 
 beans that meet are refused by name.
 
 
+## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.employee]
+
+AN EMPLOYEE IS AN EMPLOYMENT, NOT A PERSON (2026-10-11, the unified-tools design's P5.4; DECISIONS-NEXT §4, C4). Odoo's
+`hr.employee` is one person's work for one company: a person employed by two companies, or employed again after
+leaving, is two records there. So the record is the employment — the agreement the person `agree`s to as employee and
+one of the garden's companies as employer, as an employment is already written (seed/COOKBOOK.md, the tile workshop) —
+and what is the person's own is read from their bean, through it: a path runs through beans
+(`agree[as=employee].by/title`), so a fact stays where it is about and is read where it is needed. The job is what the
+employee acts for the employer as (`represent … as`, whose meaning names an employee): `agree … as` already says the
+part each party takes. The department is the one the employment is `part` of, as a department is `part` of its company.
+The work mail and phone are the person's names by `mail` and `e164`; the private ones are the same names sealed.
+
+WHAT IS PRIVATE IS HELD, AND ONLY WHAT A FORM NEEDS (C4; MODEL: what harm can come of, git does not keep). The form's
+private tab is carried by three fields, each `held`: the identity number (a name of a namespace that keeps its names
+held, `tr-tckn` or `ir-national-code`, either, so neither country's stands above the other's), the private mail and
+the private phone. A held field is read from sealed statements only, through what the host that keeps them resolves;
+the reader decides nothing about who may see them, and a reader handed nothing to resolve them with reads none. A
+birthday has no statement the law can say yet (a being's coming to be holds no day), and health no scheme the law
+holds for it: neither is carried, rather than bent into a verb that nearly fits.
+
+
+## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.leave]
+
+AN ABSENCE IS A HAPPENING OVER DAYS, UNDER AN ALLOWANCE, DECIDED ON A WALK (2026-10-11, the unified-tools design's P5.4;
+DECISIONS-NEXT §4). Odoo's `hr.leave` is one request for time off: whose, which days, and where its approval stands. In
+the law a leave is a happening (`event`) placed over its days, `be … at: <extent>, as: presence` — the placement that
+takes nothing of anyone, where `attend` takes the hours of those present. It is taken under the employment: it `use`s
+the employment's allowance (the `hold` the clause of its leave is `of`, as the cookbook's tile workshop writes it), so
+the employee is the employment and the department the employment's, read through it. Its days are read from its
+extent as Odoo writes them — the first and last day in the Gregorian calendar, whatever calendar wrote them (no
+calendar stands above another), how many, and the first and last moments of those days in the garden's own zone — and
+never stored beside it. Its approval is the law's own walk (`procedure`, a course `be … as: order`, its `move`s): where
+it stands is read from its last move by the walk's own form — a final step approved, an exit refused, any other to
+approve, none yet to submit — the reading core/lines.py already gives, so no second state can drift from the moves.
+A course on a walk the reader does not hold stands nowhere the reader can say, and says nothing.
+
+
 ## core/law/profiles.yaml: orientations
 
 A DRAWING KEEPS THE FRAME OF WHAT IT DRAWS (2026-10-10, the direction design; the operator: "solve the right to left
@@ -5161,6 +5198,89 @@ not yet — a catalytic concentration (U/L), a number concentration (cells per l
 a value of it is judged by its scale alone, and the reader says so. LOINC is downloaded by a person who signs in and
 accepts its licence, so it is fetched; its terms are health data wherever they are written, so it is special-category.
 Its licence names this use of its parts: to link them to an external terminology, with its notice.
+
+## core/law/profiles.yaml: archetypes[sheet]
+
+ONE PLACE WHERE A BEING IS CHANGED (2026-10-11, the view finished for a handplace; the operator, of a handplace built
+page by page: "the edit mechanism for [the] case files [is a] disaster, a lot of edit buttons for some fields", and its
+titles "should be ui editable at least via admin mode"; the design's decisions ratified as recommended the same day).
+A page that types its own forms for each fact keeps a second copy of the law — which roles a fact has, which are
+required, what fills each — and every copy drifts; a page that gives each field its own button makes as many writes as
+buttons, each judged alone. The law already says what a being's facts are: its statements, each a verb whose row gives
+its roles, their shapes, what is required and the default it derives. So a being opens as one sheet, the facts its
+page's `fields` names for its kind; one Edit turns every fact the reader may write into the widget of its shape, and
+one Save is one commit with one journal entry naming each statement added, changed or removed, which the gate judges
+whole. "Admin mode" is no second interface: it is the same sheet for a reader a `grant … as: write` opens, and a
+grant's `cover` may open the title alone.
+
+A PAYMENT'S SHARES NEED NO FORM OF THEIR OWN. The law writes a payment and who bears it as statements of their own —
+`pay`, and `bear … of` the payment, in shares (seed/FORMS.md, "Money between two people") — and a clause that asks a
+payment is a position on the permission square `of` it. A sheet shows under each statement the statements that take
+it as their `of`, so a payment is shown with its shares and the clauses that ask it, and each is changed where it
+stands. A table of patterns ("a payment with shares") would restate what the statements already say, and drift from
+them; the dependents are read, never declared.
+
+## core/law/profiles.yaml: archetypes[queue]
+
+ENGRAVED FROM A READING. What waits, when each thing falls due and who owes whom are readings: bin/leads.py,
+bin/stale.py and bin/ledger.py read them from the statements each time they are asked, and never store them (manifesto:
+once). A page that computed them again — a debt summed in the browser, a due day walked in a script — would be a second
+reader that disagrees with the first the day one of them changes. So the queue, the timeline and the flows draw what
+those tools read (`leads --json`, `stale`'s occurrences, `ledger --json`), and need no drawing module: a garden's
+pages are pages of its own, never code of its own (`forms.page.attrs.drawings`).
+
+## core/law/profiles.yaml: archetypes[timeline]
+
+A REPETITION IS WALKED WHERE IT IS WARNED OF. A clause that repeats is placed on the timeline at each occurrence within
+the drawing's `span`, walked by bin/stale.py's `occurrences` — the one function that warns of it and that the ledger
+asks for when it next falls due — through the day, in the calendar it is counted in. A browser that walked it again
+would hold a second calendar arithmetic. The week, the month and the list are three readings of one line, and the week
+begins on the day the reader's region begins one (CLDR's `firstDay`), never a day typed for a language.
+
+## core/law/profiles.yaml: archetypes[flows]
+
+WHO OWES WHOM IS AN ARROW, ITS HEAD THE GLYPH OF NEXT. A debt runs from the one who owes to the one owed: a flow, whose
+order runs along the reader's line (`orientations`), so its arrowhead points to the line's end in either script. The
+amounts are the ledger's, netted per currency as `--between` nets a pair, exact — an uneven one shown as the fraction
+it is. Between gardens the nodes are gardens and the arrows what went from one to another: what a garden took from
+another (`take`), what it proposed to one (`propose`), what passed between them (`pass`).
+
+## core/law/profiles.yaml: forms.drawing.attrs.axes
+
+AN AXIS NAMES AN ORDER, NEVER A SIDE. A drawing says which order runs along each of its axes — `{ inline: time }` —
+and never "left" or "right": the side an order runs toward is the reader's script's, for a sayable, and the body's own,
+for a body (`orientations`). The form names, for each axis, the orders whose row runs on it, so the gate refuses a
+magnitude laid along the reader's line or time run down the page: a value that grows would grow to the left in a
+right-to-left page, and the world does not turn around when its reader's language does. Absent, a drawing runs as its
+archetype's row says (`archetypes` `axes`), the default being the law's and not the asset's.
+
+## core/law/profiles.yaml: forms.drawing.attrs.span
+
+WHY NOT `window`. The design named a timeline's extent `window`; the drawing's form already has a `window`, the funnel's
+span in words, and one attribute cannot be prose for one shape and an extent for another. `span` is the word the
+correlate block already uses for how far a time axis reaches, and the timeline's is the same thing: how far it reaches
+on each side of the day it is read on, a length on time the gate reads as an extent.
+
+## core/law/profiles.yaml: forms.drawing.attrs.writes
+
+THE LAW GIVES THE FORM. An entry form that names a term and its attributes adds an entry of today's words, which a
+garden of the core does not read. A form that names a verb is derived each time from the verb's row — each role and
+qualifier drawn by the widget of its shape, what is required and the default from the row — and `preset` fills the
+roles a drawing fixes (a card's payments, `{ through: card }`). What it adds is written by the one path a sheet's Save
+takes, so a form and a sheet are judged alike. The term form stays beside it until today's words are retired.
+
+## core/law/profiles.yaml: forms.drawing.attrs.new
+
+A NEW BEING IS AN EMPTY SHEET OF ITS KIND. Making a being is a write like any other: its kind's sheet, empty, whose
+first Save mints the bean's id and writes the file whole, then saves it. A person's id is minted opaque, `p-<8 hex>`,
+its title the id, because a person is kept by name only on their own word (rule `consent`), and a sheet opened from a
+page has no such word yet.
+
+## core/law/profiles.yaml: forms.page.attrs.drawings
+
+A PAGE OF READINGS NAMES NO CODE. A drawing module is the garden's code, which the host runs. The four archetypes
+engraved from readings need none, so a page whose drawings are all of them names none, and a garden whose pages are
+only readings carries no code of its own; the module is required where a drawing is drawn by it (`view check`).
 
 ## core/law/registries.yaml: knowledge_schemes[ifc-4x3]
 
