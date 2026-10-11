@@ -195,10 +195,9 @@ def take_comments(root):
         while end > at + 1 and not out[end - 1].strip():
             end -= 1
         out[end:end] = ['', said]
+    import safe as dmsafe                       # each written whole beside itself, keeping its mode
     for p, s in ((why_p, '\n'.join(out).rstrip('\n') + '\n'), (law_p, new_text)):
-        with open(p + '.tmp', 'w', encoding='utf-8', newline='') as fh:
-            fh.write(s)
-        os.replace(p + '.tmp', p)
+        dmsafe.write_atomic(p, s)
     return name, moved
 
 

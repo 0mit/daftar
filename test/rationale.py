@@ -361,6 +361,18 @@ check("a garden keeps the reasoning for ITS OWN terms beside its VOCAB.md, under
       _rc == 0 and "RATIONALE.md: 1 reasons, 0 orphaned" in _o and "seed/RATIONALE.md" in _o, _o[-400:])
 _rc, _o = _why("## namespaces[shelf]\n\nthings were being lost.\n\n## namespaces[drawer].meaning\n\na row that is gone.\n")
 check("...and a reason whose law is gone is refused there as well", _rc == 1 and "ORPHAN  namespaces[drawer].meaning" in _o, _o[-400:])
+# a comment taken out of VOCAB.md into the reasoning: both written whole (bin/safe.py write_atomic), each keeping its mode
+_why("## namespaces[shelf]\n\nthings were being lost.\n")
+_s = open(_v).read()
+open(_v, "w").write(_s.replace('meaning: "which shelf a thing is kept on" }', 'meaning: "which shelf a thing is kept on" }   # the store has three'))
+os.chmod(_v, 0o640); os.chmod(os.path.join(_G, "RATIONALE.md"), 0o600)
+_r = subprocess.run([sys.executable, os.path.join(_G, "bin", "why.py"), "--take-comments"], cwd=_G, capture_output=True,
+                    text=True, encoding="utf-8", errors="replace")
+_modes = [oct(os.stat(p).st_mode & 0o777) for p in (_v, os.path.join(_G, "RATIONALE.md"))]
+check("why --take-comments moves a comment of VOCAB.md into the reasoning beside it, and each file keeps its mode",
+      _r.returncode == 0 and "# the store has three" not in open(_v).read()
+      and "the store has three" in open(os.path.join(_G, "RATIONALE.md")).read() and _modes == ["0o640", "0o600"]
+      and not [n for n in os.listdir(_G) if n.endswith(".tmp")], (_r.stdout + _r.stderr, _modes))
 # reader never returned (2026-10-01). Each path now climbs by the parent it was walked from, run in a child with a limit.
 _fm = ('steps:\n  # the first step\n  - "mount the copy."\n  - "a [bracket"   # beside a lone bracket\n'
        'risks:\n  - { what: "it fails.]", note: x }   # on a risk\nkey:\n  sub: x   # on sub\n')

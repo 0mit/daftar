@@ -371,11 +371,15 @@ try:
     run('git', 'add', '-A')
     r = run('git', 'commit', '-qm', 'RULE-CHANGE: v1.0.1')
     check("...committed through the core's gate once a person has filled it", r.returncode == 0 and clean(), r.out[-800:])
+    os.chmod(os.path.join(G, 'GARDEN.md'), 0o600)       # a mode git does not keep, which the gardener may
     r = upgrade('v1.1.0')
     later = f"core@{VERSION.split('.')[0]}.{int(VERSION.split('.')[1]) + 1}"
     check(f"upgrade: a release whose core is later moves the pin to it ({later})",
           r.returncode == 0 and re.search(rf'(?m)^extends: {re.escape(later)}\s', text('GARDEN.md'))
           and 'daftar_release: "v1.1.0"' in text('GARDEN.md'), r.out[-1200:])
+    _mode = os.stat(os.path.join(G, 'GARDEN.md')).st_mode & 0o777
+    check("...GARDEN.md written whole beside itself and swapped in (bin/safe.py write_atomic), keeping its mode",
+          _mode == 0o600 and not [n for n in os.listdir(G) if n.endswith('.tmp')], oct(_mode))
     write('log/journal.md', text('log/journal.md').replace(
         "- ratified_by: (fill in who ratified — the gardener's word, given here)", '- ratified_by: sam, here').replace(
         '- why: (fill in — what this release brings the garden)', '- why: the later core'))

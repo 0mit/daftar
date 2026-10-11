@@ -890,9 +890,8 @@ class Host:
         now = time.time()
         self.revoked = {k: v for k, v in self.revoked.items() if v > now}
         self.revoked[sig] = int(exp)
-        tmp = self._revoked_path() + ".tmp"
-        _write_private(tmp, json.dumps(self.revoked))
-        os.replace(tmp, self._revoked_path())
+        import safe as dmsafe
+        dmsafe.write_atomic(self._revoked_path(), json.dumps(self.revoked), mode=0o600)
 
     def token(self, user):
         exp = int(time.time()) + SESSION_HOURS * 3600
