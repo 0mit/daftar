@@ -107,14 +107,19 @@
         <div class="eg-fields">${editor(verb, of ? {of: of} : {}, p, true)}</div><span class="eg-err" data-err-op=""></span></li>`;
     }
 
+    // THE TAGS, a set of words the page names among a being's facts: each a word of its own, in its own isolate
+    function tagsOf(tags) {
+      return tags && (tags.value || []).length ? h`<p class="eg-tags" data-fact="header:tags">${t.join(tags.value.map(function (x) { return h`<span class="eg-tag">${w.text.show(x)}</span>`; }), ' ')}</p>` : '';
+    }
     function draw() {
       n = 0;
-      var hd = data.header || {}, title = hd.title || {}, summary = hd.summary;
+      var hd = data.header || {}, title = hd.title || {}, summary = hd.summary, tags = hd.tags;
       var named = data.new ? (t.say('sheet-new') + ' ' + data.kind) : data.title;
       var head = editing
         ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">title</span> ${w.text.edit('header.title', title.value || '')}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
+            ${tags ? (tags.may ? h`<label class="eg-field" data-fact="header:tags"><span class="eg-role-name">tags</span> ${w.text.edit('header.tags', (tags.value || []).join(t.say('sheet-tags-sep')))}<span class="eg-err" data-err-fact="header:tags"></span></label>` : tagsOf(tags)) : ''}
             ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">summary</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>`
-        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}</div>`;
+        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}${tagsOf(tags)}</div>`;
       var rows = data.rows.length ? data.rows.map(function (r) {
         var meaning = (data.verbs[r.verb] || {}).meaning || '';
         return h`<section class="eg-row" data-verb="${r.verb}"><h4 title="${meaning}">${r.verb}</h4><ol class="eg-statements">${
@@ -196,6 +201,11 @@
           ops.push({op: 'change', header: k, value: f.value.trim()}); where.push(f.closest('[data-fact]'));
         }
       });
+      var tf = el.querySelector('[name="header.tags"]');
+      if (tf) {                                     // the tags: words, as the reader's language separates a list of them
+        var words = tf.value.split(new RegExp('[' + t.say('sheet-tags-sep').trim() + ',]')).map(function (x) { return x.trim(); }).filter(Boolean);
+        if (JSON.stringify(words) !== JSON.stringify((hd.tags || {}).value || [])) { ops.push({op: 'change', header: 'tags', value: words}); where.push(tf.closest('[data-fact]')); }
+      }
       var originals = {};
       data.rows.forEach(function (r) { r.statements.forEach(function (s) { originals[s.key] = s; (s.dependents || []).forEach(function (d) { originals[d.key] = d; }); }); });
       el.querySelectorAll('[data-remove]').forEach(function (c) {

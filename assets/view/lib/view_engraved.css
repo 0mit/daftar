@@ -46,3 +46,5 @@
 .eg-remove{font-size:.85em;color:var(--muted,#5a6a7b)}
 .eg-dialog{max-width:min(860px,96vw);max-height:90vh;overflow:auto;border:1px solid var(--line,#cfd8e2);border-radius:12px;background:var(--panel,#fff);color:var(--fg,#17202b)}
 .eg-dialog::backdrop{background:rgba(0,0,0,.35)}
+.eg-tags{margin:.2em 0 .5em}
+.eg-tag{display:inline-block;padding:1px 8px;border:1px solid var(--line,#cfd8e2);border-radius:10px;font-size:.85em;margin-inline-end:4px}
