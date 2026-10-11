@@ -233,7 +233,8 @@ pass through it; where only a part of a bean is granted (`positions`), only that
   one are not sent.
 
 The server reads the ledger again when its head moves, and starts itself again on a new head or a new release only
-once `check` passes on it.
+once `check` passes on it — and never when the drawing module the page names, or the release's assets, changed since it
+was started: code runs only when a person starts `view serve` again (security audit 2026-10-10, 3.4).
 
 **Where it listens, and to whom it answers.** The page listens on the loopback: `listen`, `127.0.0.1:8780` by default
 (`localhost`, `::1` and the rest of `127.0.0.0/8` are the loopback too). An address beyond it is refused, and nothing
@@ -245,7 +246,9 @@ proxy that speaks TLS in front of it, which passes `X-Forwarded-Proto: https` (t
 of `X-Forwarded-For` that is no trusted proxy; with none named (the default), the header is ignored from everyone and
 each connection counts as the address it comes from. The page answers only to its own names — its
 address, the loopback's, and the names `"hosts": [...]` lists, such as the name the proxy passes on as the `Host` — and
-refuses any other (421), so a stranger's name made to resolve to the host (DNS rebinding) opens nothing. `serve` refuses
+refuses any other (421), so a stranger's name made to resolve to the host (DNS rebinding) opens nothing. Listening on
+every interface (`0.0.0.0` or `::`, chosen as above), it has no one address of its own: `hosts` then lists each address
+and name it is reached by. `serve` refuses
 a configuration others may read (it holds the session key and the password hashes): `serve-init` writes it 0600.
 
 **Signing in.** A session is signed over the viewer's stored password as well, so a password changed ends every session
