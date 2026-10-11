@@ -252,7 +252,9 @@ and name it is reached by. `serve` refuses
 a configuration others may read (it holds the session key and the password hashes): `serve-init` writes it 0600.
 
 **Signing in.** A session is signed over the viewer's stored password as well, so a password changed ends every session
-begun before it; signing out is the page's own button, a POST with its CSRF token. Failures are counted per address and
+begun before it; signing out is the page's own button, a POST with its CSRF token; and a sign-in is taken only from
+the page's own origin (a form another site posts to `/login`, which would sign the browser in as a name of that site's
+choosing, is refused). Failures are counted per address and
 name, and per address: five for one name from one address, or twenty from one address for any names, and that address
 waits a quarter of an hour. Past thirty failures for one name from anywhere, a stranger is refused even with the right
 password — but a browser the viewer has signed in with before (the `view_known` cookie, signed over their password) is

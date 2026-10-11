@@ -30,7 +30,7 @@ says what it would run, and audits that. Every attempt, dry or real or refused, 
 
 SESSIONS. A sign-in form; a signed, expiring, HttpOnly, SameSite=Strict cookie, signed over the viewer's stored
 password too, so a password changed voids every session signed before it; a CSRF token on every POST, signing out
-among them. Passwords are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git, and a name nobody
+among them, and a sign-in is taken only from the page's own origin. Passwords are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git, and a name nobody
 holds is checked against a hash of the same rounds, so the answer's time tells nobody who is kept here. `view
 serve-init` writes the configuration with a random password in a 0600 file beside it — never printed — and `serve`
 refuses a configuration others may read: it holds the session key and the password hashes.
@@ -975,6 +975,14 @@ def make_handler(F):
             name = h[1:h.index("]")] if h.startswith("[") and "]" in h else h.rsplit(":", 1)[0] if h.count(":") == 1 else h
             return bool(name) and name in names
 
+        def _from_here(self):
+            """Whether a form comes from the page itself: the browser does not call it cross-site, and its `Origin`, where it
+            names one, is one of the page's own names. A client that names none (a command line) is taken (3.11)."""
+            if (self.headers.get("Sec-Fetch-Site") or "").strip().lower() == "cross-site":
+                return False
+            o = self.headers.get("Origin")
+            return o is None or (urllib.parse.urlsplit(o.strip()).hostname or "").lower() in names
+
         def _cookie(self, name):
             for part in (self.headers.get("Cookie") or "").split(";"):
                 k, _, v = part.strip().partition("=")
@@ -1062,6 +1070,11 @@ def make_handler(F):
             if u.path == "/login":
                 f = urllib.parse.parse_qs(raw)
                 user, pw = f.get("user", [""])[0], f.get("password", [""])[0]
+                # a sign-in from another site signs nobody in: its form would sign this browser in as a name of that
+                # site's choosing (login CSRF, security audit 2026-10-10, 3.11); it is refused before any name is tried
+                if not self._from_here():
+                    return self._send(403, LOGIN % {"title": title, "err": '<div class="e">a sign-in from another site is '
+                                                                           'not taken here</div>'})
                 src = source_of(self.client_address[0], self.headers.get("X-Forwarded-For"), F.cfg.get("trusted_proxies"))
                 known = bool(user) and F.known_of(self._cookie(KNOWN)) == user
                 if F.held(src, user, known):

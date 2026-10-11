@@ -437,6 +437,22 @@ try:
     check("reached over HTTPS (the proxy says so), the session's cookie is Secure", "; Secure" in _ck, _ck)
     _tok = _ck.split(";", 1)[0]
 
+    # A SIGN-IN FROM ANOTHER SITE SIGNS NOBODY IN (security audit 2026-10-10, 3.11: login CSRF): a page elsewhere that
+    # posted a name and password of its own to /login would sign the viewer's browser in as that name, and what they
+    # then did would be done as it. A sign-in is taken from the page's own origin, or from a client that names none.
+    def _signin(headers):
+        c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
+        c.request("POST", "/login", urllib.parse.urlencode({"user": "bosun", "password": _pw}),
+                  dict({"Content-Type": "application/x-www-form-urlencoded"}, **headers))
+        r = c.getresponse()
+        r.read()
+        return r.status, bool(r.getheader("Set-Cookie"))
+    _cross = [_signin({"Origin": "https://elsewhere.example"}), _signin({"Origin": "null"}),
+              _signin({"Sec-Fetch-Site": "cross-site"})]
+    _own = _signin({"Origin": "http://127.0.0.1:%d" % _sp, "Sec-Fetch-Site": "same-origin"})
+    check("a sign-in posted from another site signs nobody in (403, no cookie), and one from the page's own origin does",
+          all(c == (403, False) for c in _cross) and _own == (303, True), (_cross, _own))
+
     def _with(cookie, path):
         c = http.client.HTTPConnection("127.0.0.1", _sp, timeout=180)
         c.request("GET", path, headers={"Cookie": cookie})
