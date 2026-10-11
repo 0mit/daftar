@@ -376,11 +376,14 @@ forms:
             fact:
               required: "true"
               in: { pattern: "^[a-z][a-z0-9_.-]*$" }
-              meaning: "the fact a card shows: a verb of the law (the being's statements of it), a key of the header (`title`, `summary`, `tags`), or a key `details` keeps. A statement of the verb that is sealed (`held`) is shown by the host that holds its store, and only to a reader who may read it; every other reader is told where it is kept"
+              meaning: "the fact a card shows: a verb of the law (the being's statements of it), a key of the header (`title`, `summary`, `tags`), or a key `details` keeps, or a path into one (`case.opened_on`). A statement of the verb that is sealed (`held`) is shown by the host that holds its store, and only to a reader who may read it; every other reader is told where it is kept"
             shown_from:
               required: "true"
               in: { registry: lenses, take: lens }
               meaning: "the first lens that shows it; every deeper lens shows it too"
+            label:
+              in: prose
+              meaning: "what the page calls the fact, in the page's language — a heading for the statements of a verb, a name for a key `details` keeps; absent, the law's word for it, as the reader's language names it"
       monitors:
         meaning: "the monitors a page's live values come from, one entry each. What a monitor watches is its own `reaches` and each target's own `endpoints`; which technology it runs is its own `knowledge` (`uses`), and the asset reads it through its adapter for that technology"
         in:

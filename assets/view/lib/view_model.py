@@ -1452,8 +1452,16 @@ def check(figs=None):
         b = r.get("being")
         if fm(b) and r.get("system") and not address(b, r["system"]):
             warns.append("reference: %s states no position in %s, so the page shows no address for it" % (b, r["system"]))
+    def held_at(path):          # a path into what `details` keeps (`case.opened_on`), held by some being here
+        for b in (CORE.G.beans.values() if CORE is not None else []):
+            node = b.header.get("details")
+            for part in path.split("."):
+                node = node.get(part) if isinstance(node, dict) else None
+            if node is not None:
+                return True
+        return False
     for _i, f in entries_of_view("fields"):
-        if f.get("term") and f["term"] not in known_terms:
+        if f.get("term") and f["term"] not in known_terms and not ("." in f["term"] and held_at(f["term"])):
             errs.append(("view.fields: %r is no term the law declares" if CORE is None else
                          "page.fields: %r is no fact a being here holds — a verb of the law, a key of the header, or a key "
                          "`details` keeps") % f["term"])

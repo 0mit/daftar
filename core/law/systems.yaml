@@ -777,6 +777,17 @@ systems:
     example: "relation/1234567"
     establishes: "false"
     why: "An element id names a row in a third party's database: elements are split, merged, deleted and re-created, a tag may simply be wrong (a school tagged `place=village`), and the whole map is a CAPTURE of somebody else's truth under ground rule 3. It corroborates which mapped object was meant. What a place is rooted in is a coordinate on a body."
+  - system: geonames
+    dimension: place
+    complement: [stated, bearer]
+    resolves_through: geographic
+    neighbours: none
+    meaning: "a feature of the GeoNames gazetteer — a populated place, a division of a country, a mountain, a river — by its geonameid. An IDENTIFIER in somebody else's database, as an OpenStreetMap element is: convenient, stable across a renaming, and NOT what a place is anchored to."
+    pattern: "^geonames:[1-9][0-9]{0,9}$"
+    form_note: "`geonames:<geonameid>` — `geonames:112931`, always with its system: digits alone are a port's, a count's and a year's"
+    example: "geonames:112931"
+    establishes: "false"
+    why: "a gazetteer's row is merged and deleted as its editors find two rows of one place, with no forwarding from the row that went (its daily deletes file), and one place may still have two; it corroborates which feature was meant. What a place is rooted in is a coordinate on a body."
   - system: street-address
     dimension: place
     complement: [stated, bearer]

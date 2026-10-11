@@ -7,14 +7,18 @@ git, and read into the rows its `registry_files` file holds.
     python3 bin/fetch.py <scheme> --from <file>   # a copy at hand: one this machine's person downloaded from the
                                                   # provider, or a peer's unchanged copy where the scheme's licence
                                                   # allows unchanged copies to be handed on
+    python3 bin/fetch.py <scheme> <part> [--from <file>]   # a scheme its provider serves in parts (`fetch.part`: a
+                                                  # country, a region): each part fetched alone, read as one table
     python3 bin/fetch.py --list                   # what this machine has fetched, each copy by its SHA-256
 
 DAFTAR SHIPS NO ONE ELSE'S TABLE where the provider's terms do not let it: each machine reaches the provider itself,
 under the provider's terms, and keeps the provider's file unchanged beside the rows read from it. The cache is this
 machine's, never the garden's: `DAFTAR_STANDARDS_CACHE`, else `%LOCALAPPDATA%\\daftar\\standards` on Windows, else
 `$XDG_CACHE_HOME/daftar/standards` (`~/.cache/daftar/standards`). Each copy is kept under the SHA-256 of the provider's
-file: `<scheme>/<sha-256>/source.<ext>`, `rows.tsv` and `fetched.json` (from where, when, how many rows). A garden reads
-a fetched scheme's codes from the newest copy here (bin/knowledge.py), and from the release's copy while it carries one.
+file: `<scheme>/<sha-256>/source.<ext>`, `rows.tsv` and `fetched.json` (from where, when, how many rows, and the part
+and the provider's release where it has them). A garden reads a fetched scheme's codes from the newest copy here — of a
+scheme in parts, the newest of each part, as one table (bin/knowledge.py) — and from the release's copy while it carries
+one.
 
 Nothing is sent but the request for the provider's file. Print the line it prints into the save's entry: what was
 read, from where, and its SHA-256, so the garden says which copy its codes were read against.
@@ -341,9 +345,160 @@ def cldr_units_json(data):
     return out
 
 
+# GeoNames' table of a country (its readme.txt, "the main 'geoname' table"): nineteen columns, tab-separated, UTF-8.
+GEONAMES_COLUMNS = ('geonameid', 'name', 'asciiname', 'alternatenames', 'latitude', 'longitude', 'feature class',
+                    'feature code', 'country code', 'cc2', 'admin1 code', 'admin2 code', 'admin3 code', 'admin4 code',
+                    'population', 'elevation', 'dem', 'timezone', 'modification date')
+_DEGREES = re.compile(r'-?[0-9]{1,3}(\.[0-9]+)?')
+
+
+def geonames_dump(data):
+    """GeoNames' export of a country (`export/dump/<CC>.zip`, or the `<CC>.txt` inside it): one line a feature, in the
+    nineteen columns its readme.txt names — read into code (the geonameid), name, ascii, names (its alternate names, as
+    GeoNames writes them, comma-separated), latitude, longitude (WGS 84, degrees as written), class, feature (its
+    feature class and code), country, admin1, admin2 (the divisions' codes), population, timezone and modified (the
+    row's last change). Its cc2, admin3, admin4, elevation and dem are GeoNames' too, and are not read. The release is
+    the day the zip was written."""
+    release = None
+    if data[:2] == b'PK':
+        import zipfile
+        try:
+            z = zipfile.ZipFile(io.BytesIO(data))
+        except zipfile.BadZipFile as e:
+            raise Refused(f"GeoNames' file is no zip it can be read in: {e}") from None
+        inside = [i for i in z.infolist() if re.fullmatch(r'[A-Z]{2}\.txt|no-country\.txt', os.path.basename(i.filename))]
+        if len(inside) != 1:
+            raise Refused(f"GeoNames' zip holds {len(inside)} tables of a country (<CC>.txt), and one is read")
+        release = 'export of %04d-%02d-%02d' % inside[0].date_time[:3]
+        data = z.read(inside[0])
+    try:
+        text = data.decode('utf-8')
+    except UnicodeDecodeError:
+        raise Refused("GeoNames' table is not UTF-8 text") from None
+    out, seen = [], set()
+    for n, line in enumerate(text.split('\n'), 1):
+        if not line.strip():
+            continue
+        cells = line.rstrip('\r').split('\t')
+        if len(cells) != len(GEONAMES_COLUMNS):
+            raise Refused(f"line {n} of GeoNames' table has {len(cells)} columns, and its readme names "
+                          f"{len(GEONAMES_COLUMNS)}: it is no table of a country read here")
+        r = dict(zip(GEONAMES_COLUMNS, cells))
+        code = r['geonameid']
+        if not re.fullmatch(r'[1-9][0-9]{0,9}', code) or code in seen or not r['name'] \
+                or not _DEGREES.fullmatch(r['latitude']) or not _DEGREES.fullmatch(r['longitude']):
+            raise Refused(f"line {n} of GeoNames' table is no feature read here: geonameid {code!r}, name "
+                          f"{r['name'][:60]!r}, at {r['latitude']!r},{r['longitude']!r}"
+                          + (" (a second row of it)" if code in seen else ''))
+        seen.add(code)
+        out.append({'code': code, 'name': r['name'], 'ascii': r['asciiname'], 'names': r['alternatenames'],
+                    'latitude': r['latitude'], 'longitude': r['longitude'], 'class': r['feature class'],
+                    'feature': r['feature code'], 'country': r['country code'], 'admin1': r['admin1 code'],
+                    'admin2': r['admin2 code'], 'population': r['population'], 'timezone': r['timezone'],
+                    'modified': r['modification date']})
+    if not out:
+        raise Refused("GeoNames' table holds no feature")
+    return {'rows': out, 'release': release}
+
+
+# Photon's layers of an address (a Place's `address_type`) that name where a thing is at the scale a person says it:
+# the rest — a street, a house, an `other` — are what a place search finds, not a gazetteer's rows.
+PHOTON_LAYERS = ('country', 'state', 'county', 'city', 'district', 'locality')
+PHOTON_ELEMENTS = {'N': 'node', 'W': 'way', 'R': 'relation'}
+PLACE_LANGUAGES = ('en', 'fa', 'tr')     # the names read beside a place's own: the law's English, its widgets' languages
+
+
+def _zstd_lines(data):
+    """The lines of a zstd-compressed file, as text: by Python's own zstd (3.14), else by the `zstd` program, streamed —
+    a country's dump is gigabytes once decompressed, and is never held whole."""
+    try:
+        from compression import zstd
+        yield from io.TextIOWrapper(zstd.ZstdFile(io.BytesIO(data)), encoding='utf-8')
+        return
+    except ImportError:
+        pass
+    exe = shutil.which('zstd')
+    if not exe:
+        raise Refused("the dump is compressed with zstd, which this Python cannot read and no `zstd` program here "
+                      "can: decompress it (zstd -d <file>) and read the .jsonl, with --from")
+    import subprocess
+    import tempfile
+    import threading
+    with tempfile.TemporaryDirectory(prefix='daftar-fetch-') as tmp:
+        src = os.path.join(tmp, 'dump.zst')
+        with open(src, 'wb') as fh:
+            fh.write(data)
+        p = subprocess.Popen([exe, '-dcq', src], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        err = []
+        t = threading.Thread(target=lambda: err.append(p.stderr.read()), daemon=True)
+        t.start()
+        try:
+            yield from io.TextIOWrapper(p.stdout, encoding='utf-8')
+        finally:
+            p.stdout.close()
+            code = p.wait()
+            t.join()
+        if code != 0:
+            raise Refused(f"zstd could not decompress the dump: {(err[0] if err else b'').decode(errors='replace')[:200]}")
+
+
+def photon_dump(data):
+    """A country's dump in the format Photon reads (GraphHopper's `photon-dump-<country>-<version>-latest.jsonl.zst`,
+    or the `.jsonl` decompressed): its first object the file's header (`NominatimDumpFile`), then the places — read,
+    of each place at one of PHOTON_LAYERS with a name and a centroid, into code (its element, `relation/6663864`),
+    layer, kind (its tag, `place=city`), name (its own), name_en, name_fa, name_tr, latitude, longitude (its centroid,
+    WGS 84) and country. Its addresses, extra tags, importance, bounding box and geometry are the dump's, and are not
+    read; an element the dump gives twice is read once. The release is the header's data timestamp."""
+    out, seen, release = [], set(), None
+    try:
+        lines = _zstd_lines(data) if data[:4] == b'\x28\xb5\x2f\xfd' else iter(io.StringIO(data.decode('utf-8')))
+        for n, line in enumerate(lines, 1):
+            if not line.strip():
+                continue
+            try:
+                o = json.loads(line)
+            except ValueError:
+                raise Refused(f"line {n} of the dump is no JSON object") from None
+            if n == 1:
+                head = o.get('content') if isinstance(o, dict) and o.get('type') == 'NominatimDumpFile' else None
+                if not isinstance(head, dict) or not str(head.get('version', '')).startswith('0.1.'):
+                    raise Refused("the file is no dump Photon reads: its first object is not a NominatimDumpFile of "
+                                  "the format 0.1")
+                release = f"data of {head.get('data_timestamp') or 'an unstated day'}, by {head.get('generator')} " \
+                          f"{head.get('database_version') or ''}".strip()
+                continue
+            if not isinstance(o, dict) or o.get('type') != 'Place' or not isinstance(o.get('content'), list):
+                continue
+            for p in o['content']:
+                if not isinstance(p, dict) or p.get('address_type') not in PHOTON_LAYERS:
+                    continue
+                names, c = p.get('name') or {}, p.get('centroid')
+                kind, oid = PHOTON_ELEMENTS.get(p.get('object_type')), p.get('object_id')
+                if not (kind and isinstance(oid, int) and oid > 0 and isinstance(names, dict) and names.get('name')
+                        and isinstance(c, list) and len(c) == 2 and all(isinstance(x, (int, float)) for x in c)):
+                    continue
+                code = f"{kind}/{oid}"
+                if code in seen:
+                    continue
+                seen.add(code)
+                out.append({'code': code, 'layer': p['address_type'], 'kind': f"{p.get('osm_key')}={p.get('osm_value')}",
+                            'name': ' '.join(str(names['name']).split()),
+                            **{f'name_{l}': ' '.join(str(names.get(f'name:{l}') or '').split()) for l in PLACE_LANGUAGES},
+                            'latitude': repr(float(c[1])), 'longitude': repr(float(c[0])),
+                            'country': str(p.get('country_code') or '').upper()})
+    except UnicodeDecodeError:
+        raise Refused("the dump is not UTF-8 text") from None
+    if release is None:
+        raise Refused("the file is empty: no dump Photon reads")
+    if not out:
+        raise Refused("the dump holds no place at the scale of a country's divisions, cities and localities")
+    return {'rows': out, 'release': release}
+
+
 READERS = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx,
            'loinc-table-csv': loinc_table_csv, 'ifc-express': ifc_express, 'epsg-sql': epsg_sql,
-           'gs1-syntax-dictionary': gs1_syntax_dictionary, 'cldr-units-json': cldr_units_json}
+           'gs1-syntax-dictionary': gs1_syntax_dictionary, 'cldr-units-json': cldr_units_json,
+           'geonames-dump': geonames_dump, 'photon-dump': photon_dump}
 
 
 # ------------------------------------------------------------------------------------------------ the law's rows
@@ -373,14 +528,33 @@ def scheme_row(scheme, root=ROOT):
 
 
 # ------------------------------------------------------------------------------------------------ the act
-def keep(scheme, data, source, *, root=ROOT, now=None):
+def part_of(row, part):
+    """The part of a scheme its provider serves in parts, checked against the form its row gives one; None for a scheme
+    in one piece. Refused where a part is wanted and none is named, or one is named that the scheme has not."""
+    form = row['fetch'].get('part')
+    if not form:
+        if part:
+            raise Refused(f"{row['scheme']} is served whole: it has no part {part!r}")
+        return None
+    if not part:
+        raise Refused(f"{row['scheme']} is served in parts (a part is named as {form}): name the part — python3 "
+                      f"bin/fetch.py {row['scheme']} <part>")
+    if not re.fullmatch(str(form), part):
+        raise Refused(f"{part!r} is no part of {row['scheme']}: a part is named as {form}")
+    return part
+
+
+def keep(scheme, data, source, *, part=None, root=ROOT, now=None):
     """Read the provider's file `data` (from `source`) by the scheme's reader, and keep it in this machine's cache.
     Returns (sha-256, rows, the directory kept in)."""
     row, columns = scheme_row(scheme, root)
+    part = part_of(row, part)
     reader = READERS.get(str(row['fetch'].get('reader')))
     if reader is None:
         raise Refused(f"{scheme}'s reader `{row['fetch'].get('reader')}` is no reader of this release")
-    rows = reader(data)
+    rows, release = reader(data), None
+    if isinstance(rows, dict):                     # a reader that says the provider's release beside its rows
+        rows, release = rows['rows'], rows.get('release')
     if columns and set(columns) != set(rows[0]):
         raise Refused(f"the rows read have the columns {', '.join(rows[0])}, and {scheme}'s file has {', '.join(columns)}")
     sha = hashlib.sha256(data).hexdigest()
@@ -397,8 +571,10 @@ def keep(scheme, data, source, *, root=ROOT, now=None):
         w.writeheader()
         w.writerows(rows)
     when = (now or datetime.datetime.now().astimezone()).isoformat(timespec='seconds')
+    meta = {'scheme': scheme, 'from': source, 'at': when, 'sha256': sha, 'rows': len(rows)}
+    meta.update({k: v for k, v in (('part', part), ('release', release)) if v})
     with open(os.path.join(tmp, 'fetched.json'), 'w', encoding='utf-8') as fh:
-        json.dump({'scheme': scheme, 'from': source, 'at': when, 'sha256': sha, 'rows': len(rows)}, fh, indent=1)
+        json.dump(meta, fh, indent=1, ensure_ascii=False)
     shutil.rmtree(d, ignore_errors=True)
     os.replace(tmp, d)
     return sha, rows, d
@@ -414,8 +590,8 @@ def download(url):
         raise Refused(f"the provider did not answer ({url}): {e}") from None
 
 
-def fetched(scheme):
-    """The copies of `scheme` this machine keeps, newest first: [(when, sha-256, rows.tsv)]."""
+def _copies(scheme):
+    """[(when, sha-256, rows.tsv, part)] of every whole copy of `scheme` this machine keeps."""
     d = os.path.join(cache_dir(), scheme)
     out = []
     for sha in os.listdir(d) if os.path.isdir(d) else []:
@@ -427,8 +603,22 @@ def fetched(scheme):
                     m = json.load(fh)
             except (OSError, ValueError):
                 continue
-            out.append((str(m.get('at') or ''), sha, rows))
-    return sorted(out, reverse=True)
+            out.append((str(m.get('at') or ''), sha, rows, str(m.get('part') or '')))
+    return out
+
+
+def fetched(scheme):
+    """The copies of `scheme` this machine keeps, newest first: [(when, sha-256, rows.tsv)]."""
+    return sorted(((w, s, r) for w, s, r, _p in _copies(scheme)), reverse=True)
+
+
+def current(scheme):
+    """The rows.tsv files a garden reads `scheme` from: its newest copy — or, of a scheme in parts, the newest copy of
+    each part this machine fetched, the parts in their names' order, read as one table."""
+    newest = {}
+    for when, sha, rows, part in sorted(_copies(scheme)):
+        newest[part] = rows                        # oldest first: the newest of each part stays
+    return [newest[p] for p in sorted(newest)]
 
 
 def crossed(scheme, rows):
@@ -460,41 +650,47 @@ def main(argv):
     if argv == ['--list']:
         base = cache_dir()
         for scheme in sorted(os.listdir(base)) if os.path.isdir(base) else []:
-            for when, sha, _rows in fetched(scheme):
-                print(f"{scheme}\t{when}\tsha-256:{sha}")
+            for when, sha, _rows, part in sorted(_copies(scheme), reverse=True):
+                print(f"{scheme}{' ' + part if part else ''}\t{when}\tsha-256:{sha}")
         print(f"fetch: this machine's cache is {base}")
         return 0
     scheme, rest = argv[0], argv[1:]
+    part = rest.pop(0) if rest[:1] and not rest[0].startswith('--') else None
     try:
         row, _cols = scheme_row(scheme)
+        part = part_of(row, part)
         if rest[:1] == ['--from'] and len(rest) == 2:
             with open(rest[1], 'rb') as fh:
                 data, source = fh.read(), os.path.abspath(rest[1])
         elif not rest:
-            source = str(row['fetch'].get('from'))
+            source = str(row['fetch'].get('from')).replace('{part}', part or '')
             try:
                 data = download(source)
             except Refused as e:
                 raise Refused(f"{e} — download it from there by hand, as its provider serves a person, and read that "
-                              f"copy: python3 bin/fetch.py {scheme} --from <file>") from None
+                              f"copy: python3 bin/fetch.py {scheme}{' ' + part if part else ''} --from <file>") from None
         else:
             print(__doc__)
             return 2
         try:
-            sha, rows, d = keep(scheme, data, source)
+            sha, rows, d = keep(scheme, data, source, part=part)
         except Refused as e:
             if rest:
                 raise
             raise Refused(f"{e} — what {source} answered is not the table its reader reads: a provider that serves its "
                           f"table to a person signed in is downloaded there by hand, and read with: python3 bin/fetch.py "
-                          f"{scheme} --from <file>") from None
+                          f"{scheme}{' ' + part if part else ''} --from <file>") from None
     except (Refused, OSError) as e:
         print(f"fetch: NOT FETCHED: {e}", file=sys.stderr)
         return 1
-    print(f"fetch: {scheme}, {len(rows)} rows, kept in {d}")
+    with open(os.path.join(d, 'fetched.json'), encoding='utf-8') as fh:
+        release = json.load(fh).get('release')
+    named = f"{scheme}{' ' + part if part else ''}"
+    print(f"fetch: {named}, {len(rows)} rows, kept in {d}")
     for line in crossed(scheme, rows):
         print(line)
-    print(f"for the save's entry:\n  - read: {scheme} from {source}, sha-256 {sha}, {len(rows)} rows")
+    print(f"for the save's entry:\n  - read: {named} from {source}{', ' + release if release else ''}, sha-256 {sha}, "
+          f"{len(rows)} rows")
     return 0
 
 

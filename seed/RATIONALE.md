@@ -5310,6 +5310,21 @@ first Save mints the bean's id and writes the file whole, then saves it. A perso
 its title the id, because a person is kept by name only on their own word (rule `consent`), and a sheet opened from a
 page has no such word yet.
 
+## core/law/profiles.yaml: forms.page.attrs.fields
+
+A SHEET IN ITS READER'S WORDS (2026-10-11). A sheet headed each fact by the law's word for it and drew every role of
+every statement as a field: a gardener editing a case met `concern`, `move` and `can`, a picker offering `self`, a
+course by its id, a person kept off git by the id git keeps, and a moment typed as the law writes it — the law's
+internals, where they keep their clients, the step each case is at and what they are to do next. The law's words are the
+page's to name: a `fields` entry may say what the page calls its fact (`label`, in the page's language), and name a path
+into what `details` keeps, so a page names the parts of a record no verb holds yet as its gardener does. What a sheet
+shows of a statement is what a reader keeps of it: a role that is the being itself, or a link to another of its
+statements (the course a move is on, the request a clause asks), is structure, kept as written and never shown; a
+statement another names is said by its own words (a step by its walk's); a being by how the page calls it, and a person
+whose name this host does not hold as a person, never an id; a move made is history, and a new one is a step chosen by
+its walk's words. The alternative — a names layer of a garden's own for its keys — would put a page's words outside the
+page that shows them; a label sits on the page and changes with it.
+
 ## core/law/profiles.yaml: forms.page.attrs.drawings
 
 A PAGE OF READINGS NAMES NO CODE. A drawing module is the garden's code, which the host runs. The four archetypes
@@ -5374,3 +5389,42 @@ only, in the three languages, and nothing of CLDR's patterns — and each machin
 is fetched. CLDR names units by its own ids, so the ids cross into the law as every standard's codes do: `length-meter`
 is the law's m, its month a calendar's cells and never a duration, its Celsius a reading. A unit of the law that CLDR
 does not name keeps its English name; none is made up.
+
+## core/law/systems.yaml: systems[geonames]
+
+A GAZETTEER'S ROW SAYS WHICH FEATURE, NEVER WHICH BEING (2026-10-11, the place lookup of the design's §12). A place a
+person picks is written as a coordinate in a named system, and beside it the identifier it was read from, so a reader
+can see which mapped object was meant and read it again. An OpenStreetMap element was a position already; a GeoNames
+feature is its sibling, and so a position too, establishing nothing: GeoNames merges two rows of one place by deleting
+one, with no forwarding from the row that went (its daily deletes file), and one place may still have two rows. Its
+id is digits, and digits alone are a geohash's spelling, a port's and a year's, so the form carries the system's name
+in itself (`geonames:112931`), as `ordinal:` does: a bare id would be read as a cell of the geohash grid.
+
+## core/law/registries.yaml: knowledge_schemes[geonames]
+
+THE WORLD'S PLACE NAMES, FETCHED A COUNTRY AT A TIME (2026-10-11). GeoNames exports the whole gazetteer every day, one
+file a country, under CC BY 4.0: a garden needs the countries it works in, not the world's 422 MB zip, so the scheme is
+fetched in parts, each country alone, and the parts a machine holds are read as one table. Its names include each
+place's names in other scripts (Iran's in Persian), which a lookup searches; its population and feature code say which
+of two places of one name a reader more likely means. Nothing of it is shipped: a machine reaches the provider, or a
+person hands it an unchanged copy, which the licence allows.
+
+## core/law/registries.yaml: knowledge_schemes[osm-places]
+
+THE MAP'S PLACES, AS THE PLACE SEARCH READS THEM (2026-10-11). A lookup served by Photon reads OpenStreetMap through a
+dump of each country that GraphHopper publishes every week; the law names that dump as its provider's file, so a
+garden can say which copy its places were read against, by its data timestamp and its SHA-256, and a machine inside a
+national cut can be handed the same bytes the place search was built from, checked by their checksum. Of a dump's
+objects the gazetteer keeps those at the scale a person names where something is — a country, its divisions, a city,
+a village, a district, a locality — by Photon's own layers, with their names in the law's English and its widgets'
+Persian and Turkish: some seventy thousand for Iran, of a million and more that also hold every street and house,
+which stay the search's. The map is a capture of its contributors' truth (ODbL 1.0), and its element ids establish no
+identity.
+
+## core/law/registries.yaml: knowledge_scheme_form.fetch
+
+A PROVIDER THAT SERVES ITS TABLE IN PARTS IS FETCHED A PART AT A TIME (2026-10-11). A gazetteer of the world is
+gigabytes; its provider serves it by country, and a garden uses the countries it works in. `part` names the form a
+part's name takes, and `{part}` in `from` where it goes; each part is kept as its own copy under its own checksum, a
+later copy of a part replaces that part alone, and the newest copy of each is read as one table — so no country is
+privileged by being the one a release happened to fetch, and none is fetched that a garden does not need.

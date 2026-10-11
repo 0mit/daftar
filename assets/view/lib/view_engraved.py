@@ -55,9 +55,25 @@ def _bean(bid):
 
 
 def title_of(bid):
+    """How a being is called on a page: its title — and where its title is only its id, or its id and words after it
+    (`<id> — <words>`), the words, else (but for a person) its summary's first sentence: an id is no name a reader
+    reads. A person kept under an opaque id stays it here, and a page calls them by what they are (`opaque`)."""
     b = _bean(bid)
     t = b.header.get('title') if b is not None else None
-    return t if isinstance(t, str) and t.strip() else bid
+    if not (isinstance(t, str) and t.strip()):
+        return bid
+    t = t.strip()
+    if t == bid or t.startswith(bid + ' '):
+        rest = t[len(bid):].strip().lstrip('—–-:').strip()
+        if rest:
+            return rest
+        if b.kind == 'person':                  # a person kept under an opaque id is called by what they are, never by
+            return t                            # words about them; a host that keeps their name gives it (`opaque`)
+        summary = b.header.get('summary')
+        if isinstance(summary, str) and summary.strip():
+            first = re.split(r'(?<=[.!?؟])\s', summary.strip(), maxsplit=1)[0]
+            return first if len(first) <= 80 else first[:79].rstrip() + '…'
+    return t
 
 
 def today():
@@ -431,6 +447,87 @@ def facts_shown(kind):
             if str(e.get('genos')) == str(kind) and e.get('term')]
 
 
+def labels_shown(kind):
+    """What the page calls each fact it names for a kind, in its own words (`fields` … `label`): {fact: label}."""
+    return {str(e.get('term')): str(e['label']) for _i, e in vm.entries_of_view('fields')
+            if str(e.get('genos')) == str(kind) and e.get('term') and isinstance(e.get('label'), str) and e['label'].strip()}
+
+
+def details_at(b, fact):
+    """What `details` keeps at a fact a page names: a key of it, or a path into it (`case.opened_on`),
+    as it is held; None where it keeps nothing there."""
+    node = b.header.get('details')
+    for part in fact.split('.'):
+        if not isinstance(node, dict) or part not in node:
+            return None
+        node = node[part]
+    return node
+
+
+_REF = re.compile(r'([a-z0-9][a-z0-9-]*)#([A-Za-z0-9][A-Za-z0-9_.-]*)')
+
+
+def words_of(b, sid, depth=0):
+    """The words a statement is said by, for a reader who never reads its id: a step's `as`; a clause or a figure by what
+    it is `of` (the words of the statement it is of, or its own words); a course on a walk by the walk's title; any other
+    by its `as` or its note. None where it has no words."""
+    r = next((r for _i, _v, r in b.items if isinstance(r, dict) and r.get('id') == sid), None) if b is not None else None
+    if r is None or depth > 3:
+        return None
+    v = next(v for _i, v, x in b.items if x is r)
+    if v == 'be' and r.get('as') == 'order' and _bean(r.get('at')) is not None:
+        return title_of(r['at'])
+    of = r.get('of')
+    if isinstance(of, str) and of != 'self':
+        if any(isinstance(x, dict) and x.get('id') == of for _i, _v, x in b.items):
+            return words_of(b, of, depth + 1)
+        if v not in ('move', 'concern', 'own') and _bean(of) is None:
+            return of
+    if v == 'step' and isinstance(r.get('as'), str) and r['as'].strip():
+        return r['as']
+    if isinstance(r.get('note'), str) and r['note'].strip():
+        return r['note']
+    return None
+
+
+def said_refs(b, values):
+    """{reference: words} for every statement a value names — `<bean>#<id>` (a walk's step), or an id of a statement of
+    this bean — that has words."""
+    out = {}
+
+    def walk(x):
+        if isinstance(x, list):
+            for y in x:
+                walk(y)
+        elif isinstance(x, dict):
+            for y in x.values():
+                walk(y)
+        elif isinstance(x, str) and x not in out:
+            m = _REF.fullmatch(x)
+            w = words_of(_bean(m.group(1)), m.group(2)) if m else words_of(b, x) if any(
+                isinstance(r, dict) and r.get('id') == x for _i, _v, r in b.items) else None
+            if w:
+                out[x] = w
+    walk(values)
+    return out
+
+
+def courses_of(b):
+    """{course id: {walk, steps: [{ref, says}]}} — each walk the being is on (`be { id, at: <walk>, as: order }`), its
+    steps in their order, each by its own words: what a move of it may reach."""
+    out = {}
+    for _i, v, r in b.items:
+        if v == 'be' and isinstance(r, dict) and r.get('as') == 'order' and isinstance(r.get('id'), str):
+            w = _bean(r.get('at'))
+            if w is None:
+                continue
+            steps = [{'ref': f"{r['at']}#{x['id']}", 'says': str(x.get('as') or x['id'])}
+                     for _j, sv, x in w.items if sv == 'step' and isinstance(x, dict) and isinstance(x.get('id'), str)]
+            if steps:
+                out[r['id']] = {'walk': r['at'], 'title': title_of(r['at']), 'steps': steps}
+    return out
+
+
 def sheet(bid, may, held=None):
     """One being as its sheet shows it: its header facts, then each verb the page's `fields` names for its kind, its
     statements of that verb in the order the bean holds them, each with the statements that take it as their `of`
@@ -511,11 +608,14 @@ def sheet(bid, may, held=None):
     header = {h: b.header.get(h) for h in HEADER if h in [f for f, _l in shown] or h == 'title'}
     forms = sorted({s['form'] for v in verbs for s in list(verb_row(v)['roles'].values()) + list(verb_row(v)['qualifiers'].values())
                     if s.get('form')})
+    details = {f: details_at(b, f) for f, _l in shown if f not in L.verbs and f not in HEADER}
     return {'bean': bid, 'kind': b.kind, 'title': title_of(bid), 'forms': {f: form_def(f, b) for f in forms},
             'header': {h: {'value': x, 'may': may_part(h)} for h, x in header.items()},
-            'details': {f: (b.header.get('details') or {}).get(f) for f, _l in shown
-                        if f not in L.verbs and f not in HEADER and isinstance(b.header.get('details'), dict)
-                        and f in b.header['details']},
+            'details': {f: x for f, x in details.items() if x is not None},
+            'labels': labels_shown(b.kind),
+            'said': said_refs(b, [s.get('roles') for r in rows for s in r['statements']]
+                              + [d.get('roles') for r in rows for s in r['statements'] for d in s['dependents']]),
+            'courses': courses_of(b),
             'rows': rows, 'verbs': {v: verb_row(v) for v in verbs}, 'may_write': whole_write,
             'statements': sorted(by_id), 'new': False}
 
@@ -691,10 +791,122 @@ def settings():
             'durations': [{'unit': u, 'name': str(r.get('name') or u)} for u, r in (L.units or {}).items()
                           if r.get('quantity') == 'duration'],
             'currencies': [{'code': c, 'digits': r.get('digits')} for c, r in sorted(dmledger.core_units().items())
-                           if str(r.get('digits') or '').isdigit()]}
+                           if str(r.get('digits') or '').isdigit()],
+            # the reference systems a place is written in, and how well each is known, as the law states it
+            'crs': reference_systems()}
 
 
-def page(may, reader, held=None, keep=None):
+def reference_systems():
+    """For a place (widgets/place.js): each reference system of the law (places.yaml `reference_systems`, read by
+    bin/geo.py) with its ensemble's accuracy, the unit named as CLDR names it (the law's own crossing, units-cldr-units)
+    so the reader is shown it in their words beside a coordinate — WGS 84 is accurate to 2 m, and nothing finer is read
+    from it."""
+    import geo as dmgeo
+    import units as dmunits
+    out = []
+    names = {str(r.get('name')): u for u, r in (vm.CORE.L.units or {}).items()}
+    for crs, r in sorted(dmgeo.systems(vm.ROOT).items()):
+        row = {'crs': crs}
+        acc = r.get('ensemble_accuracy')
+        if isinstance(acc, dict) and acc.get('count'):
+            unit = str(acc.get('unit') or '')
+            try:
+                unit = dmunits.code_of('cldr-units', {'unit': names.get(unit, unit)})[0]
+            except (ValueError, KeyError, OSError):
+                pass                                # a unit CLDR does not name is shown as the law writes it
+            row['accuracy'] = {'count': str(acc['count']), 'unit': unit}
+        out.append(row)
+    return out
+
+
+_COORD = re.compile(r'^EPSG:4326;(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:@\d{4}(?:\.\d+)?)?$')
+_OSM = re.compile(r'^osm:((?:node|way|relation)/[1-9][0-9]*)$')
+_GEONAMES = re.compile(r'^geonames:([1-9][0-9]{0,9})$')
+
+
+def places(may):
+    """THE GARDEN'S OWN PLACES a reader may read, carried with a served page for a place lookup (widgets/place.js),
+    which offers them first and works with them alone offline: each being the reader may read whole whose `be … as:
+    location` or `as: place`, not held, holds a coordinate in EPSG:4326, a map's element or a gazetteer's feature — by
+    its title, and landing as the being itself, whose coordinates stay said once, in its own bean. Only a page that can
+    write carries them (`scoped`): the offline report edits nothing, and may be published."""
+    out = []
+    for bid, b in sorted(vm.CORE.G.beans.items()):
+        if b.unread or os.path.basename(os.path.dirname(b.path or '')) != 'beans' or not may('read', bid):
+            continue
+        p = {'id': bid, 'title': title_of(bid), 'kind': b.kind}
+        for _i, verb, r in b.items:
+            if verb != 'be' or 'held' in r or r.get('as') not in ('location', 'place'):
+                continue
+            for x in _listed(r.get('at')):
+                m = _COORD.match(x) if isinstance(x, str) else None
+                if m and 'point' not in p:
+                    p['point'] = [float(m.group(1)), float(m.group(2))]
+                m = _OSM.match(x) if isinstance(x, str) else None
+                if m and 'osm' not in p:
+                    p['osm'] = m.group(1)
+                m = _GEONAMES.match(x) if isinstance(x, str) else None
+                if m and 'geonames' not in p:
+                    p['geonames'] = m.group(1)
+        if any(k in p for k in ('point', 'osm', 'geonames')):
+            out.append(p)
+    return out
+
+
+_CONTACT = re.compile(r'(root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32})`?(?: on ([A-Za-z0-9][A-Za-z0-9_.-]*(?:#[A-Za-z0-9_.-]+)?))?')
+
+
+def contact_of(bid):
+    """(pointer, record, basis) of the contact a person kept off git under an opaque id holds here — what `bin/held.py
+    person` writes: a record `{bean, term: person, key: contact, entry: {name, …}}` whose pointer the person's own bean
+    names in its words, `Held: `<pointer>` on <basis>.`, the basis the word they were kept on (`--basis`: their agree,
+    `<bean>#<id>`), None where none is written — or (None, None, None) where this host's stores hold none of theirs
+    (another machine's, erased, or none)."""
+    b = _bean(bid)
+    if b is None or b.kind != 'person' or not b.path:
+        return None, None, None
+    import held as dmheld
+    try:
+        with open(b.path, encoding='utf-8') as fh:
+            text = fh.read()
+    except OSError:
+        return None, None, None
+    for pointer, basis in dict.fromkeys(_CONTACT.findall(text)):
+        try:
+            rec = dmheld.resolve(pointer, root=vm.ROOT)
+        except (dmheld.NotHere, dmheld.Erased, ValueError, OSError):
+            continue
+        if isinstance(rec, dict) and rec.get('bean') == bid and rec.get('term') == 'person' and rec.get('key') == 'contact':
+            return pointer, rec, basis.rstrip('.') or None
+    return None, None, None
+
+
+def names_part(grants, bean, part):
+    """Whether one of `grants` — (holder, id) of each grant a law's answer read (bin/pass.py `may`; one with no id is
+    `grant@<its place>`) — opens `part` of `bean` by NAMING it: its `cover` names the part. What a host keeps off git of a
+    being is opened so, by name; a grant of the whole bean opens what the bean holds, never by itself what is held of it
+    elsewhere."""
+    for holder, gid in grants or ():
+        hb = _bean(holder)
+        for i, verb, r in (hb.items if hb is not None else ()):
+            if verb != 'grant' or (r.get('id') if isinstance(r.get('id'), str) else f'grant@{i}') != gid:
+                continue
+            cv = r.get('cover') if isinstance(r.get('cover'), dict) else {}
+            if part in [str(x) for x in _listed(cv.get('parts'))]:   # the answer read it as covering `bean`
+                return True
+    return False
+
+
+def stands(ref, bid):
+    """Whether the word `ref` names still stands in the ledger: a statement (`<bean>#<id>`, or an id of `bid`'s own
+    bean), or a bean of the garden — as a held statement's `while` is read."""
+    if ref in vm.CORE.G.beans and not vm.CORE.G.beans[ref].unread:
+        return True
+    from core import engine
+    return engine.Judge(vm.CORE.L, vm.CORE.G).statement(ref, _bean(bid)) is not None
+
+
+def page(may, reader, held=None, keep=None, contact=None):
     """For one reader: each engraved drawing's reading (of those `keep` names, where it names some: the drawings the
     reader is sent), the sheet of every being one of them shows, an empty sheet of each kind a drawing makes, the beings
     a role may name, and the widgets' settings."""
@@ -719,12 +931,31 @@ def page(may, reader, held=None, keep=None):
         for kind in _listed(v.get('new')):
             if isinstance(kind, str) and kind in vm.CORE.L.kinds:
                 out['blank'][kind] = blank(kind, may)
-    for bid in sorted(show):
+    # A PERSON KEPT OFF GIT BY NAME (`bin/held.py person`): to a reader who may read them and whom their contact is
+    # opened to (`contact`, the host's question: scoped's), the host that keeps it sends it — their name as how the page
+    # calls them, their contact on their sheet, marked as kept here; every other host and reader has their opaque id, as
+    # the ledger does. A page of one file (`contact` None) sends none.
+    named = {}
+    if contact:
+        for bid, b in sorted(vm.CORE.G.beans.items()):
+            if b.kind == 'person' and not b.unread and may('read', bid):
+                c = contact(bid)
+                if isinstance(c, dict) and str(c.get('name') or '').strip():
+                    named[bid] = c
+    for bid in sorted(show | set(named)):
         s = sheet(bid, may, held)
         if s is not None:
+            if bid in named:
+                s['contact'] = {k: str(x) for k, x in named[bid].items() if isinstance(x, (str, int))}
+                s['title'] = str(named[bid]['name'])
             out['sheets'][bid] = s
     # THE BEINGS A ROLE MAY NAME: every bean the reader may read, by its title — what a sheet's picker offers
-    out['beings'] = [{'id': bid, 'title': title_of(bid), 'kind': b.kind} for bid, b in sorted(vm.CORE.G.beans.items())
+    # a person kept under an opaque id whose name this host does not hold is `opaque`: the page calls them by what they
+    # are, never by the id
+    out['beings'] = [dict({'id': bid, 'title': str(named[bid]['name']) if bid in named else title_of(bid), 'kind': b.kind},
+                          **({'held_name': True} if bid in named else {}),
+                          **({'opaque': True} if b.kind == 'person' and bid not in named and title_of(bid) == bid else {}))
+                     for bid, b in sorted(vm.CORE.G.beans.items())
                      if not b.unread and os.path.basename(os.path.dirname(b.path or '')) == 'beans' and may('read', bid)]
     return out
 
@@ -763,7 +994,25 @@ def scoped(host, user, keep=None):
             return None
         e = rec.get('entry') if isinstance(rec, dict) and rec.get('key') == sid else None
         return {k: x for k, x in e.items() if k != 'while'} if isinstance(e, dict) else None
-    p = page(may, u.get('bean'), held, keep)
+    def contact(bid):
+        """A held person's name and ways to reach them, held to the bar of a held statement and more: sent to the
+        gardener, or to a reader a grant opens by name the part of the person's bean that says where they are held
+        (`cover: { parts: [body] }`) — a grant of the whole bean opens the bean, never by itself what this host keeps of
+        them — and only while the word they were kept on (`Held: … on <basis>`, bin/held.py --basis) stands, where one
+        is written: once their consent is taken out, nobody has their name or contact, the gardener neither."""
+        _pointer, rec, basis = contact_of(bid)
+        if not (isinstance(rec, dict) and isinstance(rec.get('entry'), dict)):
+            return None
+        if not (gardener and u.get('bean') == gardener):    # nobody unnamed is the gardener
+            v = host.may(user, bid, positions=['body'])
+            if not v[0] or not names_part(getattr(v, 'grants', ()), bid, 'body'):
+                return None
+        if basis and not stands(basis, bid):
+            return None
+        return rec['entry']
+    gardener = getattr(host, 'gardener', None) or str(vm.fm_path(os.path.join(vm.ROOT, 'GARDEN.md')).get('gardener') or '')
+    p = page(may, u.get('bean'), held, keep, contact)
+    p['places'] = places(may)                                     # what a place lookup offers first: the reader's own
     g = p['settings']['garden']
     if isinstance(u.get('calendar'), str) and u['calendar']:
         g['calendar'] = u['calendar']

@@ -134,12 +134,18 @@ jobs:
       - name: "bidi: the view's widgets and renderers in a browser, read as they land on the screen, in a right-to-left and a left-to-right page"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/bidi.py
+      - name: "view_held_names: a person kept off git by name shown by it to a reader who may read them, on the host that keeps it — and by their opaque id to every other reader, host and page of one file"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_held_names.py
       - name: "view_pages: a garden's handplace is its pages — several page beans each checked as its own, listed in the order the garden places them, and a table of a reading drawn with no module"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_pages.py
       - name: "view_forms: a form's value on a sheet drawn by its entries — a clause's day, repetition, notice and state, a payment's settlement — edited by its widgets and written through the gate"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_forms.py
+      - name: "view_places: a place on a sheet — looked up as it is typed, the garden's own first, the reader's position only when asked, a whereabouts never sent — landing as a coordinate in its system with the element it was read from and a `read` of its source, and an element that never establishes an identity"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_places.py
       - name: "view_details: what a page names of a being's details drawn on its sheet, kept whole — in the reader's calendar and digits, never edited there"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_details.py
@@ -152,6 +158,9 @@ jobs:
       - name: "names: the law's words a page shows — verbs, roles, qualifiers, kinds, header keys, a form's attributes — named in every language the tables carry, and a sheet drawn in its reader's"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/names.py
+      - name: "view_sheet_words: a sheet in its reader's words — each fact by its page's word, no id, the reader's calendar; Edit draws what a reader keeps, and a step chosen by its walk's words"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_sheet_words.py
       - name: "view_reader_prefs: each reader's own calendar, digits, hours, first day, zone, date and currency — one BCP 47 tag kept with their account on the host, never in the garden"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_reader_prefs.py

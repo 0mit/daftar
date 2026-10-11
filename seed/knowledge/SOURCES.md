@@ -258,6 +258,30 @@ Commission." Modified or adapted versions must be marked as such.
   `length-meter`: metre, متر, metre (`python3 bin/units.py --name m fa cldr-units`). The pairings and reasons are
   daftar's own, CC BY 4.0.
 
+## geonames — the GeoNames gazetteer, a country at a time (fetched)
+
+- **Not shipped.** Each machine fetches the countries its garden needs from GeoNames' daily export with
+  `python3 bin/fetch.py geonames <CC>` (`https://download.geonames.org/export/dump/<CC>.zip`), and reads each feature
+  of the country's table in the nineteen columns its readme.txt names: its geonameid, name and ASCII name, its alternate
+  names as GeoNames writes them, its point in WGS 84, its feature class and code, its country and first two divisions,
+  its population, its zone and the day it last changed. The reader was built on 2026-10-11 against that day's export of
+  Iran (`IR.zip`, 254,654 features, sha-256 795df164b7d90d31c4a739af18e772bed8d7883948a0d73584f386e021e0d2c9) and of
+  Turkey (`TR.zip`, 99,888 features, sha-256 887a47909f77121dcd2632eea0a66d63c7f5b43b1ecd4b6eae521f16425db66b), read
+  as one table.
+- **Its licence** is CC BY 4.0: what a garden shows of it credits GeoNames, and an unchanged copy may be handed on.
+
+## osm-places — OpenStreetMap's places, as the dumps Photon reads give them (fetched)
+
+- **Not shipped.** Each machine fetches a region's dump with `python3 bin/fetch.py osm-places <continent>/<country>`
+  (`https://download1.graphhopper.com/public/<continent>/<country>/photon-dump-<country>-1.0-latest.jsonl.zst`, its
+  `.md5` beside it), and reads, of the places at a country's scale (Photon's layers country, state, county, city,
+  district, locality), the element, its tag, its own name and its English, Persian and Turkish names, its centroid in
+  WGS 84 and its country; a dump is streamed, never held decompressed. The reader was built on 2026-10-11 against the
+  dump of Iran with the data of 2026-10-03 (112,376,109 bytes, md5 260427949b1214b85e6b36f77e5e6018 as published,
+  sha-256 b15bdec0e72ac9fdf85dc27bff5e5ee1a01429e86c2c88c66da9d8ccecc72768): 72,840 places of its 1,196,260 objects.
+- **Its licence** is the Open Database Licence 1.0, © OpenStreetMap contributors: what a garden shows of it says so,
+  and a database made from it stays under it.
+
 ## cldr-bcp47.tsv — the types of the Unicode keys a reader sets (CLDR)
 
 - **Source:** CLDR's own `common/bcp47` — `calendar.xml` (the keys `ca`, `fw`, `hc`), `number.xml` (`nu`) and

@@ -6,7 +6,9 @@
                                              entry (view.engraved: its archetype, axes, layouts, forms, kinds it makes),
                                              state.engraved the page's reading for its reader (drawings, sheets, empty
                                              sheets, settings), state.write(body) a served page's write (a Promise of
-                                             {status, answer}), absent offline
+                                             {status, answer}), absent offline; state.places a host's place lookup
+                                             ({here(q, {near}), far(q, {near})}, each a Promise of {places, sources}),
+                                             absent offline, when a place is looked up among the garden's own alone
      daftarEngraved.open(bean | {kind}, state)  the sheet of a being, or an empty sheet of a kind, in a dialog
 
    EVERY VALUE THROUGH ITS WIDGET, EVERY LINE OF HTML THROUGH safe.js. The widgets come from `window.daftarWidgets`
@@ -28,8 +30,12 @@
       lang: lang, dir: w.locale.dirOf(lang),
       say: function (key, vars) { return w.locale.say(key, {}, vars || {}); },
       write: state && typeof state.write === 'function' ? state.write : null,
+      places: state && state.places && typeof state.places === 'object' ? state.places : null,
+      // a being by how the page calls it; a person kept under an opaque id whose name this host does not hold, by what
+      // they are — never by the id
       titleOf: function (id) {
         var s = (E.sheets || {})[id], b = (E.beings || []).filter(function (x) { return x.id === id; })[0];
+        if (b && b.opaque) return w.locale.say('being-opaque', {}, {});
         return s && s.title || b && b.title || null;
       }
     };
@@ -60,7 +66,7 @@
     }
     if (v && typeof v === 'object') {
       if (v.someone) return h`<span class="eg-someone">${t.say('flows-someone')} (${v.someone})</span>`;
-      return t.join(Object.keys(v).map(function (k) { return h`<span class="eg-form"><b>${k}</b> ${show(t, v[k], {}, o)}</span>`; }), ' ');
+      return t.join(Object.keys(v).map(function (k) { return h`<span class="eg-form"><b>${k}</b> ${show(t, v[k], {shape: ['position', 'text']}, o)}</span>`; }), ' ');
     }
     var s = String(v == null ? '' : v);
     if (shapes.indexOf('being') >= 0 && (t.titleOf(s) || (t.E.beings || []).some(function (b) { return b.id === s; }))) {
@@ -69,6 +75,7 @@
     if (shapes.indexOf('position') >= 0 && w.moment.parse(s)) return w.moment.show(s, {style: 'long'});
     if (shapes.indexOf('row') >= 0 && spec.rows) return w.choice.show(s, spec.rows);
     if (shapes.indexOf('text') >= 0 && shapes.length === 1) return w.text.show(s);
+    if (o.said && o.said[s]) return w.text.show(o.said[s]);   // a statement named by its words, never by its id
     if (shapes.indexOf('statement') >= 0 || shapes.indexOf('position') >= 0 || shapes.indexOf('row') >= 0) return w.name.show(s);
     return w.text.show(s);
   }
