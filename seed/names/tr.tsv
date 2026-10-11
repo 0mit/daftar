@@ -90,3 +90,133 @@ view_lenses:operate	işletme	işlemek (to work, to run: iş, work)	proposed	agen
 view_lenses:inspect	inceleme	ince (fine, thin): looking at the fine grain	proposed	agent (claude opus-5.5), by hand
 section:manifest	bahçe	Persian bāghche (a little garden)	proposed	agent (claude opus-5.5), by hand
 section:name_form	ad	ad (a name)	proposed	agent (claude opus-5.5), by hand
+roles:by	tarafından	taraf (Arabic ṭaraf: a side): the doer of a Turkish passive, «from the side of»	proposed	agent (claude opus-5.5), by hand
+roles:of	konusu	konu (from konmak, to put down: what is laid down to be spoken of) — the same image as موضوع	proposed	agent (claude opus-5.5), by hand
+roles:through	yoluyla	yol (a road, a way): by way of	proposed	agent (claude opus-5.5), by hand
+roles:to	için	için (for): the one it is for	proposed	agent (claude opus-5.5), by hand
+roles:from	kaynağı	kaynak (from kaynamak, to well up: a spring): where it comes from	proposed	agent (claude opus-5.5), by hand
+roles:at	yeri	yer (a place, the ground): where it stands	proposed	agent (claude opus-5.5), by hand
+roles:as	olarak	olmak (to be): «being as»	proposed	agent (claude opus-5.5), by hand
+verbs:say	söyleme	söylemek (to say); söz (a word — and a pledge)	proposed	agent (claude opus-5.5), by hand
+verbs:read	okuma	okumak (to read; first, to call out)	proposed	agent (claude opus-5.5), by hand
+verbs:derive	türetme	türetmek (to make spring from: türemek, to arise)	proposed	agent (claude opus-5.5), by hand
+verbs:make	yapma	yapmak (to make, to do)	proposed	agent (claude opus-5.5), by hand
+verbs:be	bulunma	bulunmak (to be found: to be where one is) — as in bulunduğu yer (term:located_at)	proposed	agent (claude opus-5.5), by hand
+verbs:stand	dayanma	dayanmak (to lean on, to rest on): what a step stands on	proposed	agent (claude opus-5.5), by hand
+verbs:part	parçası olma	parça (a piece): being a piece of a whole	proposed	agent (claude opus-5.5), by hand
+verbs:name	adlandırma	ad (a name): to give a name	proposed	agent (claude opus-5.5), by hand
+verbs:come	meydana gelme	meydan (an open ground) + gelmek (to come): to come out into being	proposed	agent (claude opus-5.5), by hand
+verbs:own	sahip olma	sahip (Arabic ṣāḥib: a companion, an owner): being its owner	proposed	agent (claude opus-5.5), by hand
+verbs:answer	sorumluluk	sormak (to ask): being the one who is asked — as sorumlu (term:responsibility)	proposed	agent (claude opus-5.5), by hand
+verbs:acquire	edinme	edinmek (to come to have) — as term:acquired	proposed	agent (claude opus-5.5), by hand
+verbs:pass	geçiş	geçmek (to pass, to cross)	proposed	agent (claude opus-5.5), by hand
+verbs:necessary	zorunlu	zor (force): what must be — vâcip in the old philosophy	proposed	agent (claude opus-5.5), by hand
+verbs:contingent	olumsal	olmak (to be, to happen): what may or may not come to be	proposed	agent (claude opus-5.5), by hand
+verbs:possible	mümkün	Arabic mumkin: what can be	proposed	agent (claude opus-5.5), by hand
+verbs:impossible	imkânsız	imkân (Arabic: possibility) + -sız (without)	proposed	agent (claude opus-5.5), by hand
+verbs:obligatory	yükümlü	yük (a load): what one is laden with	proposed	agent (claude opus-5.5), by hand
+verbs:omissible	terk edilebilir	terk (Arabic tark: a leaving): what may be left	proposed	agent (claude opus-5.5), by hand
+verbs:permitted	izinli	izin (leave, permission)	proposed	agent (claude opus-5.5), by hand
+verbs:forbidden	yasak	yasa (the law, layers:law): what the law bars	proposed	agent (claude opus-5.5), by hand
+verbs:agree	anlaşma	anlaşmak (to understand one another)	proposed	agent (claude opus-5.5), by hand
+verbs:decline	reddetme	Arabic radd (a turning back)	proposed	agent (claude opus-5.5), by hand
+verbs:pay	ödeme	ödemek (to pay, to repay)	proposed	agent (claude opus-5.5), by hand
+verbs:bear	üstlenme	üst (top): to take upon oneself	proposed	agent (claude opus-5.5), by hand
+verbs:grant	yetki verme	yetki (authority, from yetmek, to suffice) + vermek (to give)	proposed	agent (claude opus-5.5), by hand
+verbs:can	yapabilme	-ebilmek (to be able): may, or must	proposed	agent (claude opus-5.5), by hand
+verbs:represent	temsil	Arabic tamthīl (a likeness, a standing-for)	proposed	agent (claude opus-5.5), by hand
+verbs:need	ihtiyaç	Arabic iḥtiyāj (need)	proposed	agent (claude opus-5.5), by hand
+verbs:meet	karşılama	karşı (opposite): to go out to meet	proposed	agent (claude opus-5.5), by hand
+verbs:use	kullanma	kul (a servant): to put into service	proposed	agent (claude opus-5.5), by hand
+verbs:do	görev	görmek (to see, to see to): a duty, a function	proposed	agent (claude opus-5.5), by hand
+verbs:hold	barındırma	barınmak (to shelter): to hold within	proposed	agent (claude opus-5.5), by hand
+verbs:run	çalıştırma	çalışmak (to work): to set to work	proposed	agent (claude opus-5.5), by hand
+verbs:open	açma	açmak (to open)	proposed	agent (claude opus-5.5), by hand
+verbs:move	ilerletme	ileri (forward): to carry forward	proposed	agent (claude opus-5.5), by hand
+verbs:step	adım	adım (a pace, a step)	proposed	agent (claude opus-5.5), by hand
+verbs:attend	katılma	katılmak (to join)	proposed	agent (claude opus-5.5), by hand
+verbs:measure	ölçme	ölçmek (to measure)	proposed	agent (claude opus-5.5), by hand
+verbs:record	kayıt	kayd (Arabic: a fetter, a binding — what is bound down in writing)	proposed	agent (claude opus-5.5), by hand
+verbs:reckon	hesaplama	hesap (Arabic ḥisāb: a reckoning)	proposed	agent (claude opus-5.5), by hand
+verbs:pin	sabitleme	sabit (Arabic thābit: fixed)	proposed	agent (claude opus-5.5), by hand
+verbs:classify	sınıflandırma	sınıf (Arabic ṣinf: a kind)	proposed	agent (claude opus-5.5), by hand
+verbs:concern	ilgilendirme	ilgi (a bond, an interest)	proposed	agent (claude opus-5.5), by hand
+verbs:rate	hassasiyet derecesi	hassas (Arabic: sensitive) + derece (a degree)	proposed	agent (claude opus-5.5), by hand
+verbs:fail	arıza	Arabic ʿāriḍa (what befalls)	proposed	agent (claude opus-5.5), by hand
+verbs:repair	onarım	onarmak (to mend, to make well)	proposed	agent (claude opus-5.5), by hand
+verbs:rule	hüküm	Arabic ḥukm (a judgment)	proposed	agent (claude opus-5.5), by hand
+verbs:respond	yanıt	yanıt (an answer)	proposed	agent (claude opus-5.5), by hand
+verbs:weigh	ağırlıklandırma	ağırlık (weight)	proposed	agent (claude opus-5.5), by hand
+verbs:propose	öneri	önermek (to put forward: ön, the front)	proposed	agent (claude opus-5.5), by hand
+verbs:take	alma	almak (to take)	proposed	agent (claude opus-5.5), by hand
+verbs:rehearse	prova	Italian prova (a trial)	proposed	agent (claude opus-5.5), by hand
+verbs:serve	hizmet verme	hizmet (Arabic khidma: service) + vermek	proposed	agent (claude opus-5.5), by hand
+verbs:carry	taşıma	taşımak (to carry)	proposed	agent (claude opus-5.5), by hand
+verbs:route	yönlendirme	yön (a direction)	proposed	agent (claude opus-5.5), by hand
+verbs:translate	adres çevirme	çevirmek (to turn, to translate)	proposed	agent (claude opus-5.5), by hand
+verbs:filter	süzme	süzmek (to strain)	proposed	agent (claude opus-5.5), by hand
+verbs:book	muhasebe kaydı	muhasebe (Arabic: an accounting) + kayıt (a record)	proposed	agent (claude opus-5.5), by hand
+verbs:renew	yenileme	yeni (new)	proposed	agent (claude opus-5.5), by hand
+verbs:mark	işaretleme	işaret (Persian: a sign)	proposed	agent (claude opus-5.5), by hand
+verbs:produce	üretme	üremek (to multiply, to arise)	proposed	agent (claude opus-5.5), by hand
+verbs:draw	çizme	çizmek (to draw a line)	proposed	agent (claude opus-5.5), by hand
+qualifiers:channel	kanal	canalis	proposed	agent (claude opus-5.5), by hand
+qualifiers:charged	karşılığı	karşılık (an equivalent, a counterpart)	proposed	agent (claude opus-5.5), by hand
+qualifiers:class	sınıf	Arabic ṣinf (a kind)	proposed	agent (claude opus-5.5), by hand
+qualifiers:clause	bent	Persian band (a tie, a clause): a clause of an agreement — madde, an article, is the table's word for matter	proposed	agent (claude opus-5.5), by hand
+qualifiers:cover	kapsam	kapsamak (to embrace)	proposed	agent (claude opus-5.5), by hand
+qualifiers:drawing	çizim	çizmek (to draw)	proposed	agent (claude opus-5.5), by hand
+qualifiers:method	yöntem	yön (a direction) + -tem: a way	proposed	agent (claude opus-5.5), by hand
+qualifiers:page	sayfa	Arabic ṣafḥa	proposed	agent (claude opus-5.5), by hand
+qualifiers:placed	yerleşim	yer (a place): settling into a place	proposed	agent (claude opus-5.5), by hand
+qualifiers:presence	mevcudiyet	Arabic mawjūd (found, existing)	proposed	agent (claude opus-5.5), by hand
+qualifiers:reading	hesap	Arabic ḥisāb (a reckoning)	proposed	agent (claude opus-5.5), by hand
+qualifiers:result	sonuç	son (the end)	proposed	agent (claude opus-5.5), by hand
+qualifiers:series	dizi	dizmek (to string, to line up)	proposed	agent (claude opus-5.5), by hand
+qualifiers:settles	mahsup	Arabic maḥsūb (reckoned): set against what was owed	proposed	agent (claude opus-5.5), by hand
+qualifiers:share	pay	pay (a share, a portion)	proposed	agent (claude opus-5.5), by hand
+qualifiers:value	değer	değmek (to touch, to be worth)	proposed	agent (claude opus-5.5), by hand
+qualifiers:walk	süreç	sürmek (to drive on, to last): a course	proposed	agent (claude opus-5.5), by hand
+qualifiers:weighing	karşılaştırmalar	karşı (opposite): set against each other	proposed	agent (claude opus-5.5), by hand
+beside_roles:id	tanıtıcı	tanımak (to recognise)	proposed	agent (claude opus-5.5), by hand
+beside_roles:while	sürece	sürmek (to last): as long as	proposed	agent (claude opus-5.5), by hand
+beside_roles:why	neden	neden (why, a cause) — gerekçe is the table's word for the reasoning layer	proposed	agent (claude opus-5.5), by hand
+beside_roles:note	not	nota	proposed	agent (claude opus-5.5), by hand
+beside_roles:held	emanet	Arabic amāna (a trust)	proposed	agent (claude opus-5.5), by hand
+kinds:codebase	kod tabanı	kod + taban (a base)	proposed	agent (claude opus-5.5), by hand
+kinds:product	ürün	ürmek (to grow, to yield)	proposed	agent (claude opus-5.5), by hand
+kinds:org	kuruluş	kurmak (to set up)	proposed	agent (claude opus-5.5), by hand
+kinds:person	kişi	kişi (a person)	proposed	agent (claude opus-5.5), by hand
+kinds:instance	örnek	örnek (a sample, an example)	proposed	agent (claude opus-5.5), by hand
+kinds:host	ana makine	ana (mother, main) + makine	proposed	agent (claude opus-5.5), by hand
+kinds:virtual-host	sanal ana makine	sanal (imagined) + ana makine	proposed	agent (claude opus-5.5), by hand
+kinds:domain	alan adı	alan (a field) + ad (a name)	proposed	agent (claude opus-5.5), by hand
+kinds:service	hizmet	Arabic khidma	proposed	agent (claude opus-5.5), by hand
+kinds:program	program	πρόγραμμα	proposed	agent (claude opus-5.5), by hand
+kinds:design	tasarım	tasarlamak (to plan)	proposed	agent (claude opus-5.5), by hand
+kinds:session	oturum	oturmak (to sit)	proposed	agent (claude opus-5.5), by hand
+kinds:contract	sözleşme	söz (a word, a pledge)	proposed	agent (claude opus-5.5), by hand
+kinds:garden	bahçe	Persian bāghche (a little garden)	proposed	agent (claude opus-5.5), by hand
+kinds:document	belge	belge (a proof, a token)	proposed	agent (claude opus-5.5), by hand
+kinds:event	olay	olmak (to happen)	proposed	agent (claude opus-5.5), by hand
+header:title	başlık	baş (a head)	proposed	agent (claude opus-5.5), by hand
+header:summary	özet	öz (the essence)	proposed	agent (claude opus-5.5), by hand
+header:tags	etiketler	French étiquette (a label)	proposed	agent (claude opus-5.5), by hand
+forms:clause.due	vade	Arabic waʿd (a promise): the appointed day	proposed	agent (claude opus-5.5), by hand
+forms:clause.every	tekrar	Arabic takrār (a return)	proposed	agent (claude opus-5.5), by hand
+forms:clause.notice	ön bildirim	ön (before) + bildirim (a telling)	proposed	agent (claude opus-5.5), by hand
+forms:clause.state	hâl	Arabic ḥāl (a condition)	proposed	agent (claude opus-5.5), by hand
+forms:clause.amount	miktar	Arabic miqdār (a measure)	proposed	agent (claude opus-5.5), by hand
+forms:clause.during	geçerlilik	geçmek (to pass, to be current)	proposed	agent (claude opus-5.5), by hand
+forms:clause.within	sayım aralığı	saymak (to count) + aralık (a span)	proposed	agent (claude opus-5.5), by hand
+forms:clause.used_by	kullananlar	kullanmak (to use)	proposed	agent (claude opus-5.5), by hand
+forms:clause.when	şartı	Arabic sharṭ (a condition)	proposed	agent (claude opus-5.5), by hand
+forms:clause.each	her biri için	her (every)	proposed	agent (claude opus-5.5), by hand
+forms:clause.of	payı	pay (a share)	proposed	agent (claude opus-5.5), by hand
+forms:clause.falls_due	göreli vade	göreli (relative) + vade	proposed	agent (claude opus-5.5), by hand
+forms:clause.by_role	rolü için	rol (French rôle)	proposed	agent (claude opus-5.5), by hand
+forms:clause.over	kısmı için	kısım (Arabic qism: a part)	proposed	agent (claude opus-5.5), by hand
+forms:settlement.clause	hangi madde	madde (an article)	proposed	agent (claude opus-5.5), by hand
+forms:settlement.occurrence	hangi sefer	sefer (Arabic safar: a journey, a time)	proposed	agent (claude opus-5.5), by hand
+forms:settlement.amount	mahsup tutarı	tutar (an amount)	proposed	agent (claude opus-5.5), by hand
+forms:settlement.note	açıklama	açmak (to open, to make clear)	proposed	agent (claude opus-5.5), by hand

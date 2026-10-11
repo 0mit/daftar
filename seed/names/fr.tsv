@@ -90,3 +90,133 @@ view_lenses:operate	exploitation	explicitare (to unfold, to carry out)	proposed	
 view_lenses:inspect	examen	examen (the tongue of a balance: to weigh)	proposed	agent (claude opus-5.5), by hand
 section:manifest	jardin	Frankish *gardo (an enclosure)	proposed	agent (claude opus-5.5), by hand
 section:name_form	nom	nomen	proposed	agent (claude opus-5.5), by hand
+roles:by	par	per (through): the doer of a French passive — dit par, payé par; the means is au moyen de (`through`)	proposed	agent (claude opus-5.5), by hand
+roles:of	objet	obiectum (thrown before): what the act reaches, or what it is about — l'objet du contrat, its subject matter	proposed	agent (claude opus-5.5), by hand
+roles:through	au moyen de	moyen (medianus: what stands in the middle): by means of — a tool, a document, words, a link, an agreement; par is the doer's (`by`)	proposed	agent (claude opus-5.5), by hand
+roles:to	à	ad (to, towards): the one it is for, or what it goes towards — payer à, accorder à; de … à (from … to)	proposed	agent (claude opus-5.5), by hand
+roles:from	de	de (Latin de: down from, away from): the fixed point it departs from — a source, a giver, a parent; de … à (from … to)	proposed	agent (claude opus-5.5), by hand
+roles:at	en	in (in): a position in a frame — en date du, en position trois, en ce moment — or the being a thing stands on, runs on or is kept at; à is kept for `to`	proposed	agent (claude opus-5.5), by hand
+roles:as	en tant que	tant (tantum: so much): in so far as — Aristotle's ᾗ (qua) in French: in what capacity, or as what; comme (as, like)	proposed	agent (claude opus-5.5), by hand
+verbs:say	dire	dicere (to say): to give one's word — whose deed is dit (acts:said)	proposed	agent (claude opus-5.5), by hand
+verbs:read	lire	legere (to gather, to read): what a body read off a thing, a gauge, a page — whose deed is lu (acts:read); relever (to take a reading)	proposed	agent (claude opus-5.5), by hand
+verbs:derive	dériver	derivare (de + rivus: to draw off a stream): to come to it from what was given — whose deed is dérivé (acts:derived)	proposed	agent (claude opus-5.5), by hand
+verbs:make	faire	facere (to make, to do): made here from nothing given — whose deed is fait (acts:made)	proposed	agent (claude opus-5.5), by hand
+verbs:be	être	esse (to be): where a being is — at a position, or at a being, and the way it is placed; situé (term:located_at, which `be` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:stand	reposer	re + pausare (to rest): reposer sur, to rest on — what a step stands on, made of it or possible on it	proposed	agent (claude opus-5.5), by hand
+verbs:part	faire partie	pars (a part): faire partie de, to be a part of a whole; partie de (term:part_of, which `part` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:name	nommer	nomen (a name): a namespace names a being — once, or more	proposed	agent (claude opus-5.5), by hand
+verbs:come	advenir	ad + venire (to come to): through whom a being came to be; par (term:via, which `come` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:own	appartenir	ad + pertinere (to reach to): whose a being is — la propriété, kept apart from la possession; propriétaire (term:owned_by, which `own` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:answer	répondre de	respondere (to pledge in return): répondre de, to answer for a being, in a mode; responsable (term:responsibility, which `answer` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:acquire	acquérir	acquirere (ad + quaerere, to seek besides): from whom a being came to us; acquisition (term:acquired, which `acquire` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:pass	passer	passus (a step): statements passed from one layer to another	proposed	agent (claude opus-5.5), by hand
+verbs:necessary	nécessaire	necesse (ne + cedere: not yielding): what cannot not be; l'Être nécessaire (crown:theone)	proposed	agent (claude opus-5.5), by hand
+verbs:contingent	contingent	contingere (to touch, to befall): what may be and may not be — Leibniz's vérités contingentes	proposed	agent (claude opus-5.5), by hand
+verbs:possible	possible	posse (to be able): what is not impossible	proposed	agent (claude opus-5.5), by hand
+verbs:impossible	impossible	in + possibilis: what cannot be	proposed	agent (claude opus-5.5), by hand
+verbs:obligatory	obligatoire	obligare (ob + ligare: to bind to): what must be done	proposed	agent (claude opus-5.5), by hand
+verbs:omissible	facultatif	facultas (an ability, a leave): what one is free to leave undone — what need not be done; omissible (what may be omitted) beside it	proposed	agent (claude opus-5.5), by hand
+verbs:permitted	permis	permittere (to let through): what may be done	proposed	agent (claude opus-5.5), by hand
+verbs:forbidden	interdit	interdicere (to speak between: the praetor's interdictum): what must not be done	proposed	agent (claude opus-5.5), by hand
+verbs:agree	consentir	consentire (to feel together): each party's yes	proposed	agent (claude opus-5.5), by hand
+verbs:decline	refuser	refusare (to pour back): a party's no; décliner (to turn aside)	proposed	agent (claude opus-5.5), by hand
+verbs:pay	payer	pacare (to pacify — to settle with a creditor): to give an amount	proposed	agent (claude opus-5.5), by hand
+verbs:bear	supporter	sub + portare (to carry from beneath): supporter les frais, to bear the costs, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:grant	accorder	accorder (to bring into accord; to grant): to open an act to someone — read, write, enact or ratify	proposed	agent (claude opus-5.5), by hand
+verbs:can	pouvoir	posse (to be able): may, or must, as the square says — and a power	proposed	agent (claude opus-5.5), by hand
+verbs:represent	représenter	repraesentare (to make present again): to act for another, who is bound by what is done	proposed	agent (claude opus-5.5), by hand
+verbs:need	nécessiter	necesse (what cannot give way): to need something to function — how badly is a position on the necessity square; avoir besoin de (to have need of)	proposed	agent (claude opus-5.5), by hand
+verbs:meet	satisfaire	satis + facere (to do enough): satisfaire un besoin, to meet a need	proposed	agent (claude opus-5.5), by hand
+verbs:use	utiliser	uti (to use): a being, an allowance, a technology	proposed	agent (claude opus-5.5), by hand
+verbs:do	faire office	officium (a duty, a service): faire office de, to serve as — a router, a file server	proposed	agent (claude opus-5.5), by hand
+verbs:hold	contenir	continere (to hold together): what a being can hold, and what it holds — contenance (capacity)	proposed	agent (claude opus-5.5), by hand
+verbs:run	exécuter	exsequi (to follow out): a machine runs an operating system, a program, an instance	proposed	agent (claude opus-5.5), by hand
+verbs:open	ouvrir	aperire (to open): a session, an account	proposed	agent (claude opus-5.5), by hand
+verbs:move	faire avancer	abante (before, forward): a case moved forward on its walk; déplacer (moving a body) is not this	proposed	agent (claude opus-5.5), by hand
+verbs:step	étape	étape (first a stopping place on a road): a step of a walk, the line a case moves along	proposed	agent (claude opus-5.5), by hand
+verbs:attend	assister	ad + sistere (to stand by): assister à, to be present at an event	proposed	agent (claude opus-5.5), by hand
+verbs:measure	mesurer	mensura (a measuring, from metiri): a property read, at a moment, through an instrument	proposed	agent (claude opus-5.5), by hand
+verbs:record	enregistrer	registrum (a register): what a line held at each position	proposed	agent (claude opus-5.5), by hand
+verbs:reckon	calculer	calculus (a pebble): a reckoning declared, read each time it is asked and never stored	proposed	agent (claude opus-5.5), by hand
+verbs:pin	fixer	fixus (fastened): the moment and the commit a reading was read at, fixed; épingler (to pin — the image, not the act)	proposed	agent (claude opus-5.5), by hand
+verbs:classify	classer	classis (a division of the Roman people): a being set in its class by a code of a scheme	proposed	agent (claude opus-5.5), by hand
+verbs:concern	concerner	concernere (to sift together): the person a record is about — la personne concernée, the data subject of French data protection	proposed	agent (claude opus-5.5), by hand
+verbs:rate	évaluer	ex + valere (to draw out the worth): how much harm a being can do a person if it leaves the garden	proposed	agent (claude opus-5.5), by hand
+verbs:fail	défaillir	de + fallere (to fall short): a way a being can fail, or is failing — défaillance, the failure of a mode de défaillance	proposed	agent (claude opus-5.5), by hand
+verbs:repair	réparer	reparare (to make ready again): to remedy a failure, where the fix lives	proposed	agent (claude opus-5.5), by hand
+verbs:rule	trancher	trinicare (to cut in three): trancher un différend, to cut a dispute — the one statement chosen; statuer (the court's)	proposed	agent (claude opus-5.5), by hand
+verbs:respond	se prononcer	pronuntiare (to proclaim): se prononcer sur, to give one's verdict on another's reading — confirms, disputes, abstains — or one's words at a hearing; répondre de is `answer`'s	proposed	agent (claude opus-5.5), by hand
+verbs:weigh	pondérer	pondus (a weight): criteria weighted against each other, pair by pair	proposed	agent (claude opus-5.5), by hand
+verbs:propose	proposer	proponere (to put forth): beans offered to another garden	proposed	agent (claude opus-5.5), by hand
+verbs:take	recueillir	recolligere (to gather in): a proposal taken in, whole; accepter (to accept) is not this	proposed	agent (claude opus-5.5), by hand
+verbs:rehearse	répéter	repetere (to go over again): répétition, a rehearsal — a garden holding no facts about the world; essai (a trial)	proposed	agent (claude opus-5.5), by hand
+verbs:serve	servir	servire (to be a servant): to listen at an address and a port, through a protocol	proposed	agent (claude opus-5.5), by hand
+verbs:carry	porter	portare (to carry): a link carries a tunnel, a disk a volume — onde porteuse (a carrier wave)	proposed	agent (claude opus-5.5), by hand
+verbs:route	acheminer	chemin (a way): traffic sent on to its next hop — acheminement, French networking's routing	proposed	agent (claude opus-5.5), by hand
+verbs:translate	traduire	traducere (to lead across): an address rewritten as traffic crosses — traduction d'adresses réseau	proposed	agent (claude opus-5.5), by hand
+verbs:filter	filtrer	filtrum (felt, which strains): letting traffic cross or stopping it	proposed	agent (claude opus-5.5), by hand
+verbs:book	imputer	imputare (to put to one's account): imputer une charge à un compte analytique — an amount booked, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:renew	renouveler	re + novellus (new again): a registration renewed	proposed	agent (claude opus-5.5), by hand
+verbs:mark	borner	borne (a boundary stone): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
+verbs:produce	produire	producere (to lead forth): an artifact brought into being — a file, a build, a report	proposed	agent (claude opus-5.5), by hand
+verbs:draw	dessiner	designare (to mark out): a page draws	proposed	agent (claude opus-5.5), by hand
+qualifiers:channel	canal	canalis (a pipe, a groove): what a listening surface, a link or a treatment is as a channel	proposed	agent (claude opus-5.5), by hand
+qualifiers:charged	contre-valeur	contra + valere: the bankers' contre-valeur — what a payment came to in another currency	proposed	agent (claude opus-5.5), by hand
+qualifiers:class	classe	classis (a division of the Roman people): a class of the Contract of Parts	proposed	agent (claude opus-5.5), by hand
+qualifiers:clause	clause	clausula (a closing, a provision): what a clause holds beside its words	proposed	agent (claude opus-5.5), by hand
+qualifiers:cover	portée	portare (to carry): the reach of a grant — which parts it opens, and whether each use states a reason	proposed	agent (claude opus-5.5), by hand
+qualifiers:drawing	dessin	designare (to mark out): a drawing — what it draws, its story and its lenses	proposed	agent (claude opus-5.5), by hand
+qualifiers:method	méthode	μέθοδος (a way after: μετά + ὁδός): how a reading was made	proposed	agent (claude opus-5.5), by hand
+qualifiers:page	page	pagina (a column of writing): a page of drawings	proposed	agent (claude opus-5.5), by hand
+qualifiers:placed	emplacement	platea (a broad street): a place where a thing is put — what a placement holds there	proposed	agent (claude opus-5.5), by hand
+qualifiers:presence	présence	praesentia (being before): found, or looked for and not found	proposed	agent (claude opus-5.5), by hand
+qualifiers:reading	lecture	legere (to gather, to read): a reading — what a reckoning selects and computes, read each time	proposed	agent (claude opus-5.5), by hand
+qualifiers:result	résultat	resultare (to spring back): what came of a measuring — a code	proposed	agent (claude opus-5.5), by hand
+qualifiers:series	série	series (a row, from serere, to join): what a line held at each position	proposed	agent (claude opus-5.5), by hand
+qualifiers:settles	règlement	regula (a rule): régler une facture, to settle — which occurrences of which clauses a payment settles	proposed	agent (claude opus-5.5), by hand
+qualifiers:share	quote-part	quota pars (how great a part): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
+qualifiers:value	valeur	valere (to be strong, to be worth): the value a measuring read	proposed	agent (claude opus-5.5), by hand
+qualifiers:walk	parcours	percursus (a running through): how a walk goes at a step	proposed	agent (claude opus-5.5), by hand
+qualifiers:weighing	comparaisons par paires	comparare (to pair together): the judgments, pair by pair	proposed	agent (claude opus-5.5), by hand
+beside_roles:id	identifiant	idem (the same): what a statement is known by in its bean	proposed	agent (claude opus-5.5), by hand
+beside_roles:while	tant que	tantum (so much): as long as — the statement holds while what it names matches	proposed	agent (claude opus-5.5), by hand
+beside_roles:why	motif	movere (to move): what moves it — the reason, in prose; exposé des motifs (layers:reasoning) is the law's own	proposed	agent (claude opus-5.5), by hand
+beside_roles:note	note	nota (a mark): a remark, in prose	proposed	agent (claude opus-5.5), by hand
+beside_roles:held	en dépôt	depositum (a thing laid down in trust): kept off git, in a store a host resolves — this is its pointer	proposed	agent (claude opus-5.5), by hand
+kinds:codebase	base de code	βάσις (a footing) + codex: a codebase	proposed	agent (claude opus-5.5), by hand
+kinds:product	produit	productum (what is led forth): a product	proposed	agent (claude opus-5.5), by hand
+kinds:org	organisation	ὄργανον (a tool, an organ): an organisation	proposed	agent (claude opus-5.5), by hand
+kinds:person	personne	persona (a mask, a role): a person	proposed	agent (claude opus-5.5), by hand
+kinds:instance	instance	instantia (a standing near, a presence): a running instance of a product	proposed	agent (claude opus-5.5), by hand
+kinds:host	hôte	hospes (a host, and a guest): a machine that hosts	proposed	agent (claude opus-5.5), by hand
+kinds:virtual-host	hôte virtuel	virtus (power, efficacy) + hospes: a host in effect, not in body	proposed	agent (claude opus-5.5), by hand
+kinds:domain	domaine	dominium (lordship): a domain of the DNS — nom de domaine	proposed	agent (claude opus-5.5), by hand
+kinds:service	service	servitium (servitude, service): a service offered	proposed	agent (claude opus-5.5), by hand
+kinds:program	programme	πρόγραμμα (a public notice, written before): a program	proposed	agent (claude opus-5.5), by hand
+kinds:design	conception	concipere (to take in, to conceive): a design; dessin (a drawing) is `drawing`'s	proposed	agent (claude opus-5.5), by hand
+kinds:session	session	sessio (a sitting): an agent's session	proposed	agent (claude opus-5.5), by hand
+kinds:contract	contrat	contrahere (to draw together): a contract	proposed	agent (claude opus-5.5), by hand
+kinds:garden	jardin	Frankish *gardo (an enclosure): a garden this one records — as section:manifest	proposed	agent (claude opus-5.5), by hand
+kinds:document	document	documentum (a lesson, a proof): a document	proposed	agent (claude opus-5.5), by hand
+kinds:event	événement	evenire (to come out, to happen): an event	proposed	agent (claude opus-5.5), by hand
+header:title	titre	titulus (an inscription): what a bean is called	proposed	agent (claude opus-5.5), by hand
+header:summary	résumé	resumere (to take up again): one sentence of what a bean is	proposed	agent (claude opus-5.5), by hand
+header:tags	étiquettes	Frankish *stikkan (to stick): labels — a bean's tags	proposed	agent (claude opus-5.5), by hand
+forms:clause.due	échéance	cadere (to fall): the day a clause falls due — the first, when it repeats	proposed	agent (claude opus-5.5), by hand
+forms:clause.every	récurrence	recurrere (to run back): how a clause repeats — each month of a calendar, six times	proposed	agent (claude opus-5.5), by hand
+forms:clause.notice	préavis	prae + avis (ad visum: as seen): notice given before — how long before it falls due a reader is told	proposed	agent (claude opus-5.5), by hand
+forms:clause.state	statut	status (a standing): how a clause stands — en vigueur, exécutée, levée, violée, contestée; état (term:status) is the retired table's	proposed	agent (claude opus-5.5), by hand
+forms:clause.amount	montant	monter (to mount up — the image of amount): how much — money, time, anything	proposed	agent (claude opus-5.5), by hand
+forms:clause.during	durée de validité	durare (to last) + validus (strong): the window in which a clause holds	proposed	agent (claude opus-5.5), by hand
+forms:clause.within	période de décompte	περίοδος + computare (to reckon): the window an amount is counted within	proposed	agent (claude opus-5.5), by hand
+forms:clause.used_by	utilisé par	uti (to use): the entries whose spans use the allowance	proposed	agent (claude opus-5.5), by hand
+forms:clause.when	entrée en vigueur	vigor (liveliness, force): what brings a clause into force, where that is not a day	proposed	agent (claude opus-5.5), by hand
+forms:clause.each	pour chaque	pro + quisque (each): the clause occurs once for each bean or entry a reading holds	proposed	agent (claude opus-5.5), by hand
+forms:clause.of	quote-part de	quota pars (how great a part): what the clause's amount is a share of	proposed	agent (claude opus-5.5), by hand
+forms:clause.falls_due	échéance relative	cadere (to fall) + relatus (carried back): when a clause falls due relative to another position	proposed	agent (claude opus-5.5), by hand
+forms:clause.by_role	selon le rôle	rotulus (a roll: the part an actor read from it): every party whose role this is, each bound alike	proposed	agent (claude opus-5.5), by hand
+forms:clause.over	pour la partie	pars (a part): the part of what the agreement concerns that this clause is for	proposed	agent (claude opus-5.5), by hand
+forms:settlement.clause	clause réglée	clausula + régler (to settle): the clause a payment settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.occurrence	occurrence	occurrere (to run towards, to meet): which occurrence of the clause it settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.amount	montant réglé	montant + régler (to settle): how much of the occurrence it settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.note	remarque	re + marquer (to mark again): a remark on a settlement; note is the note beside the roles	proposed	agent (claude opus-5.5), by hand
