@@ -661,53 +661,27 @@ def adopt_apply(a, rel, sha, source, current, before, copy, count):
         pin = pin_of_garden(ROOT)
         if not pin.startswith('core@'):
             sys.exit(f"REFUSING: the translation left GARDEN.md pinning {pin or 'nothing'}, not the core")
-        gline = f'daftar_release: "{a.tag}"  # the daftar release this garden runs; bin/dmupgrade.py moves it'
-        gtext = RELEASE.sub(gline, gtext, count=1) if RELEASE.search(gtext) else \
-            re.sub(r'^extends:.*$', lambda m: m.group(0) + '\n' + gline, gtext, count=1, flags=re.M)
-        write_text(gpath, gtext, gform)
-        install()
-        sys.path.insert(0, os.path.join(ROOT, 'bin')); import journal as _journal   # the release's own tool, just applied
-        _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
-        lines = ['\n' + _journal.stamp(_who, f"RULE-CHANGE: language adopted: the core ({pin}), daftar {a.tag}", ROOT),
-                 "- ratified_by: (fill in who ratified — the gardener's word, given here)",
-                 f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; std-vocab {before} -> "
-                 f"{pin}; release {current or 'unrecorded'} -> {a.tag}. The garden adopts the core: its beans written in "
-                 f"the core's statements by the release's translator, in place and in this one commit, which the core's "
-                 f"gate grants the moments history recorded, this once (core/commit.py, `knowing`).",
-                 f"- count: {count[len('translate: '):]}",
-                 f"- changed: {', '.join(changed + law) or 'none'}",
-                 f"- added: {', '.join(added) or 'none'}",
-                 f"- removed: {', '.join(removed) or 'none'}",
-                 "- why: (fill in — what adopting the core brings this garden)",
-                 f"- beans: {', '.join(beans) or 'none'}"]
-        jpath = os.path.join(ROOT, 'log', 'journal.md')
-        with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1].nl) as j:
-            j.write('\n'.join(lines) + '\n')
-        gate = run(sys.executable, os.path.join(ROOT, 'bin', 'check.py'), check=False)
+        gate = recorded(a, gpath, gtext, gform, f"RULE-CHANGE: language adopted: the core ({pin}), daftar {a.tag}", [
+            f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; std-vocab {before} -> "
+            f"{pin}; release {current or 'unrecorded'} -> {a.tag}. The garden adopts the core: its beans written in "
+            f"the core's statements by the release's translator, in place and in this one commit, which the core's "
+            f"gate grants the moments history recorded, this once (core/commit.py, `knowing`).",
+            f"- count: {count[len('translate: '):]}",
+            f"- changed: {', '.join(changed + law) or 'none'}",
+            f"- added: {', '.join(added) or 'none'}",
+            f"- removed: {', '.join(removed) or 'none'}",
+            "- why: (fill in — what adopting the core brings this garden)",
+            f"- beans: {', '.join(beans) or 'none'}"])
     except BaseException as e:
-        put_back(added, was_hooks)
-        print("NOT ADOPTED: the adoption stopped midway" + ('' if isinstance(e, SystemExit) else
-              f" ({type(e).__name__}{': ' + str(e) if str(e) else ''})") + ", so every file was put back as it was.",
-              file=sys.stderr, flush=True)
+        stopped(e, "NOT ADOPTED: the adoption stopped midway", added, was_hooks)
         raise
-    last = (gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1]
-    if gate.returncode != 0 and not a.keep_on_failure:
-        put_back(added, was_hooks)
-        errs = [ln for ln in gate.stdout.splitlines() if ln.strip() and not ln.startswith('core check')]
-        print(f"NOT ADOPTED: in the core's statements this garden fails the core's gate, so every file was put back as "
-              f"it was.\n" + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') + f"\n{last}\n"
-              "Fix what these name in today's words (or pass --keep-on-failure to look at the translation in place), "
-              "then run this again.")
-        return 1
-    print(f"adopted the core at {a.tag} ({sha[:12]}): std-vocab {before} -> {pin}; {len(beans)} bean(s) in statements, "
-          f"{len(changed) + len(law)} changed, {len(added)} added, {len(removed)} removed.\n{count}\n{last}")
-    print("\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n"
-          "  git add -A\n"
-          "  git commit\n"
-          "The commit is judged by the core's gate, which grants it the moments history recorded, this once.\n"
-          "To abandon it instead:\n"
-          "  git checkout -- ." + (f"\n  git clean -f -- {' '.join(_arg(f) for f in added)}" if added else ""))
-    return 0 if gate.returncode == 0 else 1
+    return ended(a, gate, added, was_hooks,
+                 "NOT ADOPTED: in the core's statements this garden fails the core's gate",
+                 "Fix what these name in today's words (or pass --keep-on-failure to look at the translation in place), "
+                 "then run this again.",
+                 f"adopted the core at {a.tag} ({sha[:12]}): std-vocab {before} -> {pin}; {len(beans)} bean(s) in "
+                 f"statements, {len(changed) + len(law)} changed, {len(added)} added, {len(removed)} removed.\n{count}",
+                 "The commit is judged by the core's gate, which grants it the moments history recorded, this once.\n")
 
 
 def core_version(root):
@@ -759,48 +733,70 @@ def move(a, rel, sha, source, current):
         gtext, gform = read_text(gpath)
         new_pin = f"core@{gives}"
         gtext = MANIFEST_PIN.sub(lambda m: m.group(1) + new_pin, gtext, count=1)
-        gline = f'daftar_release: "{a.tag}"  # the daftar release this garden runs; bin/dmupgrade.py moves it'
-        gtext = RELEASE.sub(gline, gtext, count=1) if RELEASE.search(gtext) else \
-            re.sub(r'^extends:.*$', lambda m: m.group(0) + '\n' + gline, gtext, count=1, flags=re.M)
-        write_text(gpath, gtext, gform)
-        install()
-        sys.path.insert(0, os.path.join(ROOT, 'bin')); import journal as _journal   # the release's own tool, just applied
-        _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
         title = f"RULE-CHANGE: language upgraded to daftar {a.tag}, the core {have} -> {gives}" if current != a.tag else \
             f"RULE-CHANGE: the profiles this garden takes, {', '.join(before) or 'none'} -> {', '.join(profiles) or 'none'}"
-        lines = ['\n' + _journal.stamp(_who, title, ROOT),
-                 "- ratified_by: (fill in who ratified — the gardener's word, given here)",
-                 f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; the core {pin} -> "
-                 f"{new_pin}; release {current or 'unrecorded'} -> {a.tag}. The beans are as they were: no step rewrites "
-                 f"them between these versions of the core."
-                 + (f" The profiles it takes: {', '.join(before) or 'none'} -> {', '.join(profiles) or 'none'}"
-                    f" (VOCAB.md `profiles`)." if profiles != before else ''),
-                 f"- changed: {', '.join(changed + ['GARDEN.md']) or 'none'}",
-                 f"- added: {', '.join(added) or 'none'}",
-                 f"- removed: {', '.join(removed) or 'none'}",
-                 "- why: (fill in — what this release brings the garden)"]
-        jpath = os.path.join(ROOT, 'log', 'journal.md')
-        with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1].nl) as j:
-            j.write('\n'.join(lines) + '\n')
-        gate = run(sys.executable, os.path.join(ROOT, 'bin', 'check.py'), check=False)
+        gate = recorded(a, gpath, gtext, gform, title, [
+            f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; the core {pin} -> "
+            f"{new_pin}; release {current or 'unrecorded'} -> {a.tag}. The beans are as they were: no step rewrites "
+            f"them between these versions of the core."
+            + (f" The profiles it takes: {', '.join(before) or 'none'} -> {', '.join(profiles) or 'none'}"
+               f" (VOCAB.md `profiles`)." if profiles != before else ''),
+            f"- changed: {', '.join(changed + ['GARDEN.md']) or 'none'}",
+            f"- added: {', '.join(added) or 'none'}",
+            f"- removed: {', '.join(removed) or 'none'}",
+            "- why: (fill in — what this release brings the garden)"])
     except BaseException as e:
-        put_back(added, was_hooks)
-        print("NOT UPGRADED: the move stopped midway" + ('' if isinstance(e, SystemExit) else
-              f" ({type(e).__name__}{': ' + str(e) if str(e) else ''})") + ", so every file was put back as it was.",
-              file=sys.stderr, flush=True)
+        stopped(e, "NOT UPGRADED: the move stopped midway", added, was_hooks)
         raise
+    return ended(a, gate, added, was_hooks, f"NOT UPGRADED: under {a.tag}'s law this garden fails the gate", '',
+                 f"upgraded to {a.tag} ({sha[:12]}): the core {have} -> {gives}; {len(changed) + 1} changed, "
+                 f"{len(added)} added, {len(removed)} removed.")
+
+
+# THE END OF AN UPGRADE, ADOPTED OR MOVED: one way, in three steps, each given its own words by its caller
+def recorded(a, gpath, gtext, gform, title, lines):
+    """The release recorded in GARDEN.md (`daftar_release` moved, or written after the pin) and the text written, the
+    release's hooks installed, its journal entry appended — stamped by the release's own journal tool, then who
+    ratified, then `lines` — and the gate run over the garden; returns that run."""
+    gline = f'daftar_release: "{a.tag}"  # the daftar release this garden runs; bin/dmupgrade.py moves it'
+    gtext = RELEASE.sub(gline, gtext, count=1) if RELEASE.search(gtext) else \
+        re.sub(r'^extends:.*$', lambda m: m.group(0) + '\n' + gline, gtext, count=1, flags=re.M)
+    write_text(gpath, gtext, gform)
+    install()
+    sys.path.insert(0, os.path.join(ROOT, 'bin')); import journal as _journal   # the release's own tool, just applied
+    _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
+    lines = ['\n' + _journal.stamp(_who, title, ROOT),
+             "- ratified_by: (fill in who ratified — the gardener's word, given here)"] + lines
+    jpath = os.path.join(ROOT, 'log', 'journal.md')
+    with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1].nl) as j:
+        j.write('\n'.join(lines) + '\n')
+    return run(sys.executable, os.path.join(ROOT, 'bin', 'check.py'), check=False)
+
+
+def stopped(e, said, added, was_hooks):
+    """A run stopped midway: every file put back, and `said` printed with what stopped it."""
+    put_back(added, was_hooks)
+    print(said + ('' if isinstance(e, SystemExit) else f" ({type(e).__name__}{': ' + str(e) if str(e) else ''})")
+          + ", so every file was put back as it was.", file=sys.stderr, flush=True)
+
+
+def ended(a, gate, added, was_hooks, refused, fix, done, judged=''):
+    """The gate's verdict on the garden as the run left it. Refused, and not --keep-on-failure: every file put back,
+    `refused` printed with what the gate named and its last line (then `fix`, where given), and 1. Otherwise `done` and
+    the gate's last line printed, and how to commit the run or abandon it (`judged`: how the commit is judged, where it
+    says); 0 where the gate passed, else 1."""
     last = (gate.stdout.strip().splitlines() or ['(the gate printed nothing)'])[-1]
     if gate.returncode != 0 and not a.keep_on_failure:
         put_back(added, was_hooks)
         errs = [ln for ln in gate.stdout.splitlines() if ln.strip() and not ln.startswith('core check')]
-        print(f"NOT UPGRADED: under {a.tag}'s law this garden fails the gate, so every file was put back as it was.\n"
-              + '\n'.join(errs[:12]) + ('\n…' if len(errs) > 12 else '') + f"\n{last}")
+        print(f"{refused}, so every file was put back as it was.\n" + '\n'.join(errs[:12])
+              + ('\n…' if len(errs) > 12 else '') + f"\n{last}" + (f"\n{fix}" if fix else ''))
         return 1
-    print(f"upgraded to {a.tag} ({sha[:12]}): the core {have} -> {gives}; {len(changed) + 1} changed, {len(added)} added, "
-          f"{len(removed)} removed.\n{last}")
+    print(f"{done}\n{last}")
     print("\nNOT COMMITTED. Read `git diff`, complete the journal entry's two `fill in` fields, then\n"
           "  git add -A\n"
           "  git commit\n"
+          + judged +
           "To abandon it instead:\n"
           "  git checkout -- ." + (f"\n  git clean -f -- {' '.join(_arg(f) for f in added)}" if added else ""))
     return 0 if gate.returncode == 0 else 1
