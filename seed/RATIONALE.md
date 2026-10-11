@@ -5316,6 +5316,17 @@ A PAGE OF READINGS NAMES NO CODE. A drawing module is the garden's code, which t
 engraved from readings need none, so a page whose drawings are all of them names none, and a garden whose pages are
 only readings carries no code of its own; the module is required where a drawing is drawn by it (`view check`).
 
+A TABLE OF A READING IS A READING TOO (2026-10-11). A table of the members of a reading, one line each and a column per
+path, needs nothing a module adds: its lines are the reading's members, its cells the values at each path as they
+stand, read each time as every other reading is. Asking a garden for code to draw one — a list of its clients, its
+cases, its contracts, the plainest page a person keeps — gave that garden code of its own for what the release can
+read, and code a host must run. So on a page that names no module a table of a reading is engraved: each line a member
+the reader may read (or whose parts its columns read, as a grant's `cover` may open parts alone), each cell shown by
+the widget of what it holds, a day in the reader's calendar, an amount at its currency's places, a being by its title,
+and each line opening its being's sheet. The alternative, a `table` row of its own among the engraved archetypes beside
+the module's, would have made two archetypes of one shape; a table of a series, and a table on a page that names a
+module, stay the module's, so no page that draws one today changes.
+
 ## core/law/registries.yaml: knowledge_schemes[ifc-4x3]
 
 A BUILDING MODEL'S MEASURES ARE THE LAW'S KINDS (2026-10-11). An IFC model types every number by a measure type

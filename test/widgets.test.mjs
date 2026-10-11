@@ -152,6 +152,50 @@ ok('exact: sums of written amounts, never a float, n/d where they do not end', (
   assert.deepEqual(exact.of('−3'), [-3n, 1n]);
   assert.equal(exact.of('1/0'), null);
 });
+// ---- a repetition and a form's value, drawn by their entries (recurrence.js, form.js): the systems and the units of a
+// length of time are the law's, as a host sends them; the reader's calendar, digits and words are theirs
+const recurrence = await import(new URL('recurrence.js', lib));
+const form = await import(new URL('form.js', lib));
+const SYSTEMS = [{system: 'gregorian-civil', calendar: 'gregory', prefix: '', week: false, levels: ['year', 'month', 'day']},
+  {system: 'iso-week', calendar: 'iso8601', prefix: '', week: true, levels: ['year', 'week', 'day']},
+  {system: 'persian-calendar', calendar: 'persian', prefix: 'persian:', week: false, levels: ['year', 'month', 'day']}];
+configure({systems: SYSTEMS, durations: [{unit: 'min', name: 'minute'}, {unit: 'h', name: 'hour'}, {unit: 'a_j', name: 'julian-year'}]});
+const weekly = {of: 'time', in: 'iso-week', each: 'week', at: ['2', '7'], from: '2026-W40-7', lasts: {of: 'time', measure: {count: '150', unit: 'min'}}};
+ok('recurrence: implements the values tree\'s recurrence, and says one in the reader\'s words, calendar and digits', () => {
+  assert.equal(recurrence.implements, 'recurrence');
+  const en = recurrence.text(weekly, {lang: 'en'}), fa = recurrence.text(weekly, {lang: 'fa'});
+  assert.ok(/^each week on Tuesday and Sunday|^each week on Sunday and Tuesday/.test(en) && en.includes('150 minutes'), en);
+  assert.ok(fa.startsWith('هر هفته') && fa.includes('۱۵۰') && !/[0-9]/.test(fa.replace(/\u2068|\u2069/g, '')), fa);
+  assert.ok(recurrence.text({of: 'time', in: 'gregorian-civil', each: 'month', at: '1', times: '6'}, {lang: 'en'}).includes('6 times'));
+});
+ok('recurrence: taken back as the law writes it — untouched fields give the bean\'s own value, places in the system\'s order', () => {
+  const back = recurrence.take({each: 'week', at: ['7', '2'], from: '2026-10-04', in: 'iso-week', 'lasts.count': '۱۵۰', 'lasts.unit': 'min',
+    keep: JSON.stringify({of: 'time'})}, {lang: 'fa'});
+  assert.deepEqual(back, {value: weekly});
+  assert.deepEqual(recurrence.take({each: 'month', at: '۱۵', from: '۱۴۰۵/۰۷/۱۲'}, {lang: 'fa', calendar: 'persian'}),
+    {value: {of: 'time', in: 'persian-calendar', each: 'month', at: '15', from: 'persian:1405-07-12'}});
+  assert.equal(recurrence.dayOf('persian:1405-07-12', 'persian-calendar'), '2026-10-04');
+  assert.equal(recurrence.written('2026-10-04', 'iso-week'), '2026-W40-7');
+  assert.ok(recurrence.take({each: 'week', times: 'six'}, {lang: 'en'}).error);
+  assert.ok(recurrence.take({each: 'week', 'lasts.count': '150'}, {lang: 'en'}).error, 'a length needs its unit');
+  assert.deepEqual(recurrence.take({}, {lang: 'en'}), {value: ''});
+});
+ok('recurrence: offers only the units of a length of time a language names (CLDR\'s), never a deep-time unit', () => {
+  assert.deepEqual(recurrence.durations({lang: 'fa'}).map(d => d.unit), ['min', 'h']);
+});
+ok('form: a clause drawn by its entries — a day, a repetition, a length, a state — and taken back as the law writes it', () => {
+  const clause = {name: 'clause', attrs: {due: {value: 'moment'}, every: {value: 'recurrence'}, notice: {value: 'duration'},
+    state: {value: 'choice', rows: ['in-force', 'met']}, when: {value: 'form', attrs: {said: {value: 'text'}}}}};
+  const html = String(form.edit('c', {due: '2026-10-01'}, clause, {lang: 'en'}));
+  assert.ok(html.includes('name="c.due"') && html.includes('<details class="w-form-more">'), 'what the value holds drawn, the rest under more');
+  assert.deepEqual(form.take({due: '1405/07/09', 'every.each': 'month', 'every.at': '1', 'every.times': '6', state: 'met',
+    'notice.count': '3', 'notice.unit': 'd'}, clause, {lang: 'fa', calendar: 'persian'}),
+    {value: {due: '2026-10-01', every: {of: 'time', in: 'persian-calendar', each: 'month', at: '1', times: '6'},
+             notice: {count: '3', unit: 'd'}, state: 'met'}});
+  assert.deepEqual(form.take({keep: JSON.stringify({when: {said: 'kept as written'}})}, clause, {lang: 'en'}),
+    {value: {when: {said: 'kept as written'}}}, 'what the form does not draw is kept, never dropped');
+  assert.equal(form.take({state: 'gone'}, clause, {lang: 'en'}).at, 'state');
+});
 // DIRECTION, solved once (core/law/profiles.yaml `orientations`): direction.js is a classic script — the view's page and the
 // site load it as one — so it is run here in a page of its own: a document whose <html dir> is ltr or rtl, with or without
 // the law's rows in <script id="orientations">.
@@ -201,4 +245,4 @@ ok('direction: the law\'s rows, where the page carries them, decide — as the l
   assert.equal(R.command(key('ArrowRight'), ['time']), 'later');
   assert.equal(R.axis('flow'), null);                                                    // what the law does not name, nothing
 });
-console.log(`PASS: widgets — ${n} groups of checks: safe, settings, locale, number, money, moment in ten calendars, text, name, choice, being, exact, direction.`);
+console.log(`PASS: widgets — ${n} groups of checks: safe, settings, locale, number, money, moment in ten calendars, text, name, choice, being, exact, a repetition and a form's value, direction.`);

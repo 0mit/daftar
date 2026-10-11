@@ -344,7 +344,7 @@ forms:
     attrs:
       drawings:
         in: { pointer: bean_field_pointer }
-        meaning: "`file:<path>` of the garden's own drawing module: the garden's code, never the law's. A page whose drawings are all engraved from readings — a queue, a timeline, flows, a sheet — names none"
+        meaning: "`file:<path>` of the garden's own drawing module: the garden's code, never the law's. A page whose drawings are all engraved from readings — a queue, a timeline, flows, a sheet, a table of a reading — names none: the view draws a table of a reading by its columns where its page names no module"
       palette:
         in: { pointer: bean_field_pointer }
         meaning: "`file:<path>` of the garden's own palette: the colours its sheets are drawn in, in each mode — day, night, print — as tokens (`{ modes: { <mode>: { <token>: <colour> } } }`). The grammar is the asset's and every garden's; the palette is the garden's. Absent, the asset's own"
