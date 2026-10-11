@@ -1089,7 +1089,8 @@ else:
 for name, data, says in (("a file whose first object is no dump's header", DUMP.split(b'\n', 1)[1], 'no dump Photon reads'),
                          ("a dump with no place at a country's scale",
                           b'\n'.join(DUMP.split(b'\n')[:2] + DUMP.split(b'\n')[3:4]), 'holds no place'),
-                         ("a line that is no JSON", DUMP + b'{"type": "Place", "content": [\n', 'is no JSON object')):
+                         ("a line that is no JSON", DUMP + b'{"type": "Place", "content": [\n', 'is no JSON object'),
+                         ("a file that is not UTF-8 text", b'\xff\xfe' + DUMP, 'not UTF-8')):
     try:
         dmfetch.keep('osm-places', data, 'test', part='asia/iran')
         refused = ''

@@ -449,9 +449,9 @@ def photon_dump(data):
     layer, kind (its tag, `place=city`), name (its own), name_en, name_fa, name_tr, latitude, longitude (its centroid,
     WGS 84) and country. Its addresses, extra tags, importance, bounding box and geometry are the dump's, and are not
     read; an element the dump gives twice is read once. The release is the header's data timestamp."""
-    lines = _zstd_lines(data) if data[:4] == b'\x28\xb5\x2f\xfd' else iter(io.StringIO(data.decode('utf-8', 'strict')))
     out, seen, release = [], set(), None
     try:
+        lines = _zstd_lines(data) if data[:4] == b'\x28\xb5\x2f\xfd' else iter(io.StringIO(data.decode('utf-8')))
         for n, line in enumerate(lines, 1):
             if not line.strip():
                 continue
