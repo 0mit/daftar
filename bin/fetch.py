@@ -131,7 +131,49 @@ def unece_rec20_xlsx(data):
     return out
 
 
-READERS = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx}
+def loinc_table_csv(data):
+    """LOINC's table (`LoincTable/Loinc.csv`, alone or inside the release's zip): one row a term — `LOINC_NUM`, `PROPERTY`,
+    `SCALE_TYP`, `STATUS`, `LONG_COMMON_NAME` — read into code, status, property, scale and name_en, the status as LOINC
+    writes it in lower case (`active`, `trial`, `discouraged`, `deprecated`). The table's other columns — the component,
+    the system, the method, the definitions, the example units — are LOINC's text, and are not read."""
+    if data[:2] == b'PK':
+        import zipfile
+        try:
+            z = zipfile.ZipFile(io.BytesIO(data))
+        except zipfile.BadZipFile as e:
+            raise Refused(f"LOINC's file is no zip it can be read in: {e}") from None
+        inside = [n for n in z.namelist() if n.replace('\\', '/').endswith('LoincTable/Loinc.csv')]
+        if len(inside) != 1:
+            raise Refused(f"LOINC's zip holds {len(inside)} LoincTable/Loinc.csv, and one is read")
+        data = z.read(inside[0])
+    try:
+        text = data.decode('utf-8-sig')
+    except UnicodeDecodeError:
+        raise Refused("LOINC's table is not UTF-8 text: no LoincTable/Loinc.csv") from None
+    rows = csv.reader(io.StringIO(text))
+    head = [h.strip() for h in next(rows, [])]
+    want = ('LOINC_NUM', 'PROPERTY', 'SCALE_TYP', 'STATUS', 'LONG_COMMON_NAME')
+    if any(w not in head for w in want):
+        raise Refused(f"LOINC's file has not the columns read here ({', '.join(want)}): its first row is "
+                      f"{', '.join(h for h in head if h)[:200]} — the table is LoincTable/Loinc.csv of LOINC's release")
+    at = {w: head.index(w) for w in want}
+    out, seen = [], set()
+    for r in rows:
+        if not r or all(not c.strip() for c in r):
+            continue
+        code, prop, scale, status, name = (r[at[w]].strip() if at[w] < len(r) else '' for w in want)
+        if not re.fullmatch(r'[1-9][0-9]{0,6}-[0-9]', code) or code in seen or not prop or not scale:
+            raise Refused(f"a row of LOINC's table is no term read here: code {code!r}, property {prop!r}, scale {scale!r}"
+                          + (" (a second row of it)" if code in seen else ''))
+        seen.add(code)
+        out.append({'code': code, 'status': status.lower(), 'property': prop, 'scale': scale, 'name_en': name})
+    if not out:
+        raise Refused("LOINC's table holds no term")
+    return out
+
+
+READERS = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx,
+           'loinc-table-csv': loinc_table_csv}
 
 
 # ------------------------------------------------------------------------------------------------ the law's rows
@@ -268,7 +310,14 @@ def main(argv):
         else:
             print(__doc__)
             return 2
-        sha, rows, d = keep(scheme, data, source)
+        try:
+            sha, rows, d = keep(scheme, data, source)
+        except Refused as e:
+            if rest:
+                raise
+            raise Refused(f"{e} — what {source} answered is not the table its reader reads: a provider that serves its "
+                          f"table to a person signed in is downloaded there by hand, and read with: python3 bin/fetch.py "
+                          f"{scheme} --from <file>") from None
     except (Refused, OSError) as e:
         print(f"fetch: NOT FETCHED: {e}", file=sys.stderr)
         return 1

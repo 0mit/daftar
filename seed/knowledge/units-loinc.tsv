@@ -1,0 +1,223 @@
+axis	code	quantity	line	shape	back	vacant	why
+property	-						a panel or an order set, holding other terms' results: no value of its own
+property	Accel	acceleration					
+property	ACnc	arbitrary-unit					an amount fixed by a reference per volume: the law holds every such amount in one kind, [iU]/L with it
+property	ACnt	arbitrary-unit					as ACnc, per mass
+property	Addr						an address: no quantity — its value is written as its scale says
+property	AFr	ratio					
+property	Anat						an anatomical site: no quantity — its value is written as its scale says
+property	Angle	plane-angle					
+property	Aper						an appearance: no quantity — its value is written as its scale says
+property	ArArea	ratio					
+property	ARat	arbitrary-unit					as ACnc, through time
+property	Arb	arbitrary-unit			true		
+property	Area	area					
+property	AreaFr	ratio					
+property	AreaRto	ratio					
+property	ArEnrg					universal	an energy per area: no kind of the law yet
+property	ArLen					universal	a length per area: no kind of the law yet
+property	ArMass	surface-density					
+property	ArResis					universal	a resistance per area: no kind of the law yet
+property	ArVol					universal	a volume per area: a length's exponents, its own kind, which the law holds not yet
+property	ArVRat					universal	a volume flow per area: no kind of the law yet
+property	AUC						an area under a curve: its kind is its curve's two axes', which the property does not name
+property	Bib						a citation: no quantity — its value is written as its scale says
+property	CAct	catalytic-activity			true		
+property	CCnc					universal	a catalytic activity per volume (U/L, kat/L, an enzyme in blood): no kind of the law yet
+property	CCnt					universal	a catalytic activity per mass: no kind of the law yet
+property	CFr	ratio					
+property	CFr.DF	ratio					
+property	Circ	length					a circumference: a length
+property	CircFr	ratio					
+property	Class						a class: no quantity — its value is written as its scale says
+property	ClockTime		time				a time of day: a position on the time line, never a duration
+property	Cmplx						a complex of results: no quantity — its value is written as its scale says
+property	ColorRto	ratio					
+property	Compli					universal	a compliance (a volume per pressure, a lung's): no kind of the law yet
+property	CompliRto	ratio					
+property	CRat					universal	a catalytic activity through time: no kind of the law yet
+property	CRto	ratio					
+property	CSub						LOINC's catalytic substance: no kind of the law is read from it
+property	Date		time				
+property	DateRange		time				two positions on the time line: an extent
+property	Desc						a description: no quantity — its value is written as its scale says
+property	Diam	length					a diameter: a length
+property	Dosage						a dosage: an amount of a medicine per a body, a time or an occasion, whose kind its unit says
+property	DtTmRange		time				two positions on the time line: an extent
+property	Elcur	current					
+property	Elpot	potential-difference					an electrical potential as LOINC measures it (an EKG wave's amplitude): a voltage between two leads
+property	ElpotRat						LOINC names it a voltage rate and an amperage at once: no one kind of the law
+property	ElpotRto	ratio					
+property	EmailAddr						an e-mail address: no quantity — its value is written as its scale says
+property	EngCnc					universal	an energy per volume: no kind of the law yet
+property	EngCnt					universal	an energy per mass (a specific energy, a food's kcal/g): no kind of the law yet
+property	EngDiff	energy					
+property	EngFr	ratio					
+property	EngRat	power					energy through time: LOINC's own name for it is power
+property	EngRatFr	ratio					
+property	EngRto	ratio					
+property	Enrg	energy			true		
+property	EntCat	catalytic-activity					of one entity, a cell's
+property	EntLen	length					of one entity, a cell's
+property	EntLogNum						a logarithm of a count of entities: no kind of the law
+property	EntMass	mass					the mass of one entity: a red cell's haemoglobin
+property	EntNum	number					
+property	EntSRto	ratio					
+property	EntSub	amount-of-substance					of one entity, a cell's
+property	EntVol	volume					the volume of one entity: a red cell's
+property	Equ						an equation: no quantity — its value is written as its scale says
+property	ExtendedID						an identifier: no quantity — its value is written as its scale says
+property	Fcn						a function: no quantity — its value is written as its scale says
+property	Find						a finding: no quantity — its value is written as its scale says
+property	FldConduct					universal	a fluid conductance (a flow per pressure): no kind of the law yet
+property	FldResist					universal	a fluid resistance (a pressure per flow): no kind of the law yet
+property	Force	force					
+property	Freq	frequency			true		
+property	Geno						a genotype: no quantity — its value is written as its scale says
+property	Hx						a history: no quantity — its value is written as its scale says
+property	ID						an identifier: no quantity — its value is written as its scale says
+property	Imp						an impression or interpretation: no quantity — its value is written as its scale says
+property	Instrct						instructions: no quantity — its value is written as its scale says
+property	Inverse VI						LOINC's inverse inspired volume: no quantity — its value is written as its scale says
+property	InvLen					universal	an inverse length (a wavenumber): no kind of the law yet
+property	LaCnc						the logarithm of an arbitrary concentration: no kind of the law
+property	Len	length			true		
+property	LenFr	ratio					
+property	LenRto	ratio					
+property	Likelihood						a likelihood: no quantity — its value is written as its scale says
+property	LnCnc						the logarithm of a number concentration (a viral load's log): no kind of the law
+property	LnRto						the logarithm of a ratio of counts: no kind of the law
+property	Loc						a location: no quantity — its value is written as its scale says
+property	LogInvPct						the logarithm of an inverse percentage: no kind of the law
+property	LogLenRto						the logarithm of a ratio of lengths: no kind of the law
+property	LogRtoElp						the logarithm of a ratio of potentials, whose reference LOINC does not name: no level of the law
+property	LRat	speed					a length through time
+property	LsCnc	ph					LOINC writes a pH as the logarithm of a substance concentration, in [pH]
+property	Mass	mass			true		
+property	MCnc	mass-concentration			true		
+property	MCncDiff	mass-concentration					
+property	MCncSq					universal	a mass concentration squared: no kind of the law
+property	MCnt	ratio					a mass of a component per mass of what holds it: a ratio of masses, dimensionless
+property	MCPctDiff	ratio					
+property	MDiff	mass					
+property	MFr	ratio					
+property	MFr.DF	ratio					
+property	MFrDiff	ratio					
+property	MoM	ratio					a multiple of the median: a ratio to the median
+property	Morph						a morphology: no quantity — its value is written as its scale says
+property	MRat	mass-flow					a mass through time: an excretion over a day
+property	MRto	ratio					
+property	MSCnc						a mass or a substance concentration, either: no one kind of the law is it
+property	Naric					universal	a count per area: no kind of the law yet
+property	NCnc					universal	things counted per volume (cells in blood): the law's substance concentration counts the entities of a substance, and holds no number concentration yet
+property	NCncRange						a range of number concentrations, binned: no one value
+property	NCnt					universal	things counted per mass: no kind of the law yet
+property	NFr	ratio					
+property	NFr.DF	ratio					
+property	NRat	frequency					events counted per time — a heart rate, a breathing rate: a frequency of counted events, its being an organism
+property	NRto	ratio					
+property	Num	number			true		
+property	NumDiff	number					
+property	NumRange						a range of numbers: no quantity — its value is written as its scale says
+property	OD					universal	an optical density (an absorbance, a logarithm): no kind of the law yet
+property	Osmol	osmolality					
+property	Osmolarity					universal	osmoles per volume of solution: the law holds osmolality, per mass, and no osmolarity yet
+property	PctDiff	ratio					
+property	Pn						a person's name: no quantity — its value is written as its scale says
+property	PPres	pressure					a partial pressure: a gas's share of a pressure, itself a pressure
+property	PPresDiff	pressure					
+property	PPresRto	ratio					
+property	Pr						a presence (as LOINC wrote it before PrThr): no quantity — its value is written as its scale says
+property	Prctl	ratio					a percentile: the share of a population below the value
+property	Pres	pressure			true		
+property	PresRat					universal	a pressure through time: no kind of the law yet
+property	PresRto	ratio					
+property	PressDiff	pressure					
+property	Prid						a presence, or an identity: no quantity — its value is written as its scale says
+property	PrThr						a presence, or a threshold crossed: no quantity — its value is written as its scale says
+property	Quintile		ordinal				which fifth of an order: a position on the ordinal line
+property	Range						a range: no quantity — its value is written as its scale says
+property	RatDiff						a difference of rates, of no stated kind: no quantity — its value is written as its scale says
+property	Ratio	ratio			true		
+property	Rden	ratio					a density relative to water's: a ratio
+property	RelACnc	ratio					
+property	RelCCnc	ratio					
+property	RelEngRat	ratio					
+property	RelFldResist	ratio					
+property	RelMCnc	ratio					
+property	RelMRat	ratio					
+property	RelRto	ratio					
+property	RelSCnc	ratio					
+property	RelSoundInt	level					a sound's intensity against a listener's threshold, in decibels: a level
+property	RelSRat	ratio					
+property	RelTime	ratio					
+property	RelVol	ratio					
+property	RelVRat	ratio					
+property	Resis					universal	LOINC's resistance is an airway's — a pressure per flow; the law's resistance is electrical, and it holds no fluid resistance yet
+property	SatFr	ratio					a saturation: the share of a carrier occupied (SpO2)
+property	SCnc	substance-concentration			true		
+property	SCncDiff	substance-concentration					
+property	SCncSq					universal	a substance concentration squared: no kind of the law
+property	SCnt					universal	an amount of substance per mass (a molality): the law holds an osmolality, and no kind of it yet
+property	Score						a score on its instrument's own scale: no quantity — its value is written as its scale says
+property	ScoreDiff						a difference of scores: no quantity — its value is written as its scale says
+property	ScoreRange						a range of scores: no quantity — its value is written as its scale says
+property	Seq						a nucleotide sequence: no quantity — its value is written as its scale says
+property	SFr	ratio					
+property	SFr.DF	ratio					
+property	Shape						a shape: no quantity — its value is written as its scale says
+property	SRat					universal	an amount of substance through time (an excretion in mol a day): no kind of the law yet
+property	SRto	ratio					
+property	Sub	amount-of-substance			true		
+property	Susc						a susceptibility: no quantity — its value is written as its scale says
+property	Tele						a telephone number: no quantity — its value is written as its scale says
+property	Temp		temperature				a temperature read: a position on its scale, never a quantity
+property	TempDiff	temperature-difference					
+property	ThrACnc	arbitrary-unit					
+property	ThreshNum	number					
+property	Threshold						a threshold crossed: no quantity — its value is written as its scale says
+property	ThrMCnc	mass-concentration					
+property	ThrSCnc	substance-concentration					
+property	Time	duration			true		
+property	TimeDif	duration					
+property	TimeFr	ratio					
+property	Titr						a dilution factor written 1:N, read in its own form: no quantity — its value is written as its scale says
+property	TmElpot					universal	a potential difference times a time: no kind of the law
+property	TmMCnc					universal	a mass concentration times a time (an exposure): no kind of the law
+property	TmSCnc					universal	a substance concentration times a time: no kind of the law
+property	TmStp		time		true		
+property	TmStpRange		time				two positions on the time line: an extent
+property	TQ2						HL7's timing quantity: a structure of its own, no value of the law
+property	TRto	ratio					
+property	Tscore						a T score: no quantity — its value is written as its scale says
+property	TscoreDiff						a difference of T scores: no quantity — its value is written as its scale says
+property	Txt						a text: no quantity — its value is written as its scale says
+property	Type						a type: no quantity — its value is written as its scale says
+property	URI						a resource identifier: no quantity — its value is written as its scale says
+property	VCF						a variant call file: no quantity — its value is written as its scale says
+property	VCnt					universal	a volume per mass: no kind of the law yet
+property	Vel	speed			true		
+property	VelRat						LOINC's velocity rate: no kind of the law is read from its name
+property	VelRto	ratio					
+property	VFr	ratio					
+property	VFr.DF	ratio					
+property	VFrDiff	ratio					
+property	Visc					universal	a viscosity: no kind of the law yet
+property	Vol	volume			true		
+property	VPctDiff	ratio					
+property	VRat	volume-flow					
+property	VRatCnt					universal	a volume flow per mass: no kind of the law yet
+property	VRatRto	ratio					
+property	VRto	ratio					
+property	VRtoPctDiff	ratio					
+property	Zscore						a Z score, in standard deviations of its reference: no quantity — its value is written as its scale says
+scale	-						a panel or an order set, holding other terms' results: no value of its own
+scale	Doc						a document: a bean of its own, never a value
+scale	Multi			text			many results in one text
+scale	Nar			text	true		
+scale	Nom			row			a name: a code of an answer list or of another scheme
+scale	Ord		ordinal				an ordered answer (negative, 1+, 2+): a position in its answer list's order
+scale	OrdQn						ordinal or quantitative, as the result came: judged by the value written
+scale	Qn			quantity			a number on a continuous scale: a quantity — or, where the property names a line, a position on it
+scale	SemiQn						a value from a range of buckets (a test strip's): the property's kind holds, and the bucket is the value's own
+scale	Set						an attachment: a document of its own

@@ -41,6 +41,14 @@ Third-party data, distributed alongside daftar as separate works, each under its
     with the law's units and the reasons are daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt).
     Recommendation No. 20's own table is not distributed: each machine fetches it from UNECE (bin/fetch.py).
 
+  seed/knowledge/units-loinc.tsv
+    This material contains content from LOINC (http://loinc.org). LOINC is copyright © Regenstrief Institute, Inc. and
+    the Logical Observation Identifiers Names and Codes (LOINC) Committee and is available at no cost under the license
+    at http://loinc.org/license. LOINC® is a registered United States trademark of Regenstrief Institute, Inc.
+    The file cites the abbreviations of LOINC's properties and scales, as LOINC's table writes them, and links each to
+    the law's kinds; the pairings and the reasons are daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt)
+    for what is daftar's. LOINC's table itself is not distributed: each machine's person fetches it (bin/fetch.py).
+
   seed/knowledge/isced-f-2013.tsv
     Source: UNESCO Institute for Statistics, ISCED Fields of Education and Training 2013 (ISCED-F 2013).
     Licensed under CC BY-SA 3.0 IGO (LICENSES/CC-BY-SA-3.0-IGO.txt); its share-alike applies to that file only.

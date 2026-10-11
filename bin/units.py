@@ -10,6 +10,7 @@
     python3 bin/units.py 12.5 kg unece-rec20                         # -> 12.5 unece-rec20:KGM: written back
     python3 bin/units.py --codes unece-rec20                         # every code of it, and what each crosses to
     python3 bin/units.py --code unece-rec20:MON                      # what one code crosses to, or through its axes
+    python3 bin/units.py --judge loinc:2345-7 95 mg/dL               # is this value what the code says one is
 
 A unit names the QUANTITY it measures and its FACTOR to that quantity's coherent unit, as a pair of whole numbers, so a
 conversion is exact arithmetic and never a rounded float — and the result is PRINTED exactly too: a terminating decimal in
@@ -609,6 +610,25 @@ def _code(text):
         print(speakable(f"units: {e}")); return 1
 
 
+def _judge(text, value):
+    """Whether a value — `<count> <unit>`, or a position — is what a code says a value of it is."""
+    scheme, code = dmparse.split_coding(text) if ':' in text else (None, None)
+    v = {'count': value[0], 'unit': named(value[1], _law()[0])} if len(value) == 2 else value[0]
+    try:
+        if not scheme:
+            raise ValueError(f"{text!r} is no code written with its scheme, `<scheme>:<code>`")
+        why = judge(scheme, code, v)
+    except ValueError as e:
+        print(speakable(f"units: {e}")); return 1
+    shown = _shown(v) if isinstance(v, dict) else v
+    unread = [f"its {a} {x} — {w}" for a, (x, tg, w) in (through(scheme, code).items()
+                                                          if any(a for a, _c in crossing(scheme)) else []) if not tg]
+    print(speakable(f"units: {shown} is not what {text} says: {why}" if why else
+                    f"{shown} is what {text} says" + (", as far as the law reads it; not read: " + '; '.join(unread)
+                                                     if unread else '')))
+    return 1 if why else 0
+
+
 def _codes(scheme):
     """Every row of `scheme`'s crossing: each code and what it crosses to, or why it crosses to nothing."""
     try:
@@ -640,6 +660,8 @@ def main(argv):
         return _codes(argv[1])
     if argv[:1] == ['--code'] and len(argv) == 2:
         return _code(argv[1])
+    if argv[:1] == ['--judge'] and len(argv) in (3, 4):
+        return _judge(argv[1], argv[2:])
     coded = len(argv) in (2, 3) and _coded(argv[1])
     if coded or (len(argv) == 3 and argv[2] in _crossings()[0]):
         return _crossed(argv, coded, rate, digits)
