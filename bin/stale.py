@@ -580,6 +580,147 @@ def next_due(first, rec, today, systems=None, units=None, skipped=None):
     return last[0], last[1], rec.get('times'), True
 
 
+# ---------------------------------------------------------------------------------------------------
+# AT WHAT MOMENT A REPETITION FALLS DUE, AND FOR HOW LONG. A routine (bin/routines.py) runs at a clock time, not on a
+# day: "each Friday at 17:45", "every five minutes". Its first occurrence is a MOMENT — the clause's `due`, `2026-10-16
+# 17:45` — and each occurrence after it is the same clock reading on the day the walk above finds, read in the bearer's
+# zone, so a routine kept at 03:30 is at 03:30 on both sides of a change of the clocks. A stride finer than a day
+# (`every: {count: 5, unit: min}`) is a stride of instants, counted from the first. `lasts` is each occurrence's window.
+# The days are still walked by `_occurrences`, the one walker: this adds the clock to what it finds, and nothing else.
+# ---------------------------------------------------------------------------------------------------
+_CLOCK = re.compile(r'^(?P<date>[^ T]+)[T ](?P<h>\d{2}):(?P<m>\d{2})(?::(?P<s>\d{2}))?(?P<off>[+-]\d{2}:\d{2}|Z)?$')
+
+
+def _ms_of(units, q, what):
+    """A quantity of time, `{count, unit}`, in milliseconds — exactly, or Unreckoned."""
+    unit = _unit(units, (q or {}).get('unit')) if isinstance(q, dict) else None
+    second = _unit(units, 's')
+    count = dmunits.exact((q or {}).get('count')) if isinstance(q, dict) else None
+    if not unit or not second or not isinstance(unit.get('factor'), (list, tuple)) or count is None or count < 0:
+        raise Unreckoned(f"{what} `{brief(q, 80)}` is not a length of time this tool can measure")
+    ms = count * Fraction(*unit['factor']) / Fraction(*second['factor']) * 1000
+    if ms.denominator != 1:
+        raise Unreckoned(f"{what} `{brief(q, 80)}` is not a whole number of milliseconds")
+    return int(ms)
+
+
+def _offset_minutes(zone, day, h, m, s, fixed):
+    """The offset, in minutes east of UTC, of the wall clock h:m:s on `day` in `zone` — the zone's rule at that local
+    time (an hour the clocks skip is read as the zone reads it, fold 0) — or `fixed` where no zone is given."""
+    if zone is None:
+        if fixed is None:
+            raise Unreckoned("the first occurrence names no offset, and no zone is given to read its clock in")
+        return fixed
+    import zoneinfo
+    try:
+        tz = zoneinfo.ZoneInfo(str(zone))
+    except (zoneinfo.ZoneInfoNotFoundError, ValueError) as e:
+        raise Unreckoned(f"the zone {zone!r} is not read here ({e})") from None
+    y, mo, d = dmcal.g_from_day(day)
+    td = datetime.datetime(y, mo, d, h, m, s, tzinfo=tz).utcoffset()
+    return (td.days * 86400 + td.seconds) // 60
+
+
+def first_moment(first, zone=None):
+    """(the day, the clock (h, m, s), the offset written or None) of a first occurrence written as a moment
+    (`2026-10-16 17:45+03:00`), a clock reading with no offset (`2026-10-16 17:45`: read in `zone`), or a day (its
+    midnight). Unreckoned for anything else."""
+    t = str(dmcal.written(first) if isinstance(first, dict) else first).strip()
+    m = _CLOCK.match(t)
+    try:
+        if not m:
+            return dmcal.to_day(t), (0, 0, 0), None
+        day = dmcal.to_day(m.group('date'))
+    except (ValueError, dmcal.NotByRule) as e:
+        raise Unreckoned(f"`{brief(t)}` is no day or moment this can read: {e}") from None
+    h, mi, s = int(m.group('h')), int(m.group('m')), int(m.group('s') or 0)
+    if h > 23 or mi > 59 or s > 59:
+        raise Unreckoned(f"`{brief(t)}` names no clock reading")
+    off = m.group('off')
+    fixed = None if off is None else 0 if off == 'Z' else (1 if off[0] == '+' else -1) * (int(off[1:3]) * 60 + int(off[4:6]))
+    if fixed is not None and zone is not None:
+        # WRITTEN WITH AN OFFSET, KEPT IN A ZONE: the wall clock is the zone's at the first instant
+        inst = (day * 86400 + h * 3600 + mi * 60 + s) - fixed * 60
+        own = _offset_minutes(zone, day, h, mi, s, None)
+        local = inst + own * 60
+        day, rest = divmod(local, 86400)
+        h, rest = divmod(rest, 3600)
+        mi, s = divmod(rest, 60)
+        fixed = None
+    return day, (h, mi, s), fixed
+
+
+def moments(first, rec, start, end, zone=None, systems=None, units=None, window=None, limit=None):
+    """[(begin, end)] — the occurrences of a repetition first due at `first` (a moment, as `first_moment` reads it) that
+    are open at some instant in [start, end), each as UNIX milliseconds, its end its `lasts` after its beginning (or
+    `window` ms where it says none). `rec` None is the first occurrence alone. `zone`: the IANA zone the clock is kept
+    in, the bearer's; where none is given, the offset the first was written with. `limit`: at most so many (the next
+    one of a routine every minute is one moment, not a year's). Unreckoned where it cannot be read."""
+    systems = systems if systems is not None else _law('SYSTEMS')
+    units = units if units is not None else _law('UNITS')
+    day, (h, mi, s), fixed = first_moment(first, zone)
+    rec = rec if isinstance(rec, dict) else None
+    lasts = (rec or {}).get('lasts')
+    if isinstance(lasts, dict) and lasts.get('measure') is not None:
+        span = _ms_of(units, lasts['measure'], 'the window `lasts`')
+    elif lasts is not None:
+        raise Unreckoned(f"`lasts: {brief(lasts, 80)}` is a window this reads only as a measure, `{{of: time, measure: "
+                         f"{{count, unit}}}}`")
+    else:
+        span = window if window is not None else 60_000
+    epoch = dmcal.UNIX_DAY
+
+    def at(n):
+        off = _offset_minutes(zone, n, h, mi, s, fixed)
+        return ((n - epoch) * 86400 + h * 3600 + mi * 60 + s - off * 60) * 1000
+
+    out = []
+    every = (rec or {}).get('every')
+    stride = None
+    if isinstance(every, dict) and every.get('unit') is not None:
+        ms = _ms_of(units, every, 'the stride `every`')
+        if ms <= 0:
+            raise Unreckoned("a stride of nothing repeats nothing")
+        if ms < 86_400_000 or ms % 86_400_000:
+            stride = ms
+    if rec is None:
+        b = at(day)
+        return [(b, b + span)] if b < end and b + span > start else []
+    if stride is not None:
+        # A STRIDE OF INSTANTS: every N minutes from the first, counted, never walked
+        times = rec.get('times')
+        times = int(times) if isinstance(times, str) and times.isdigit() else times if isinstance(times, int) else None
+        to = None
+        if rec.get('to') is not None:
+            tday, tclock, tfix = first_moment(rec['to'], zone)
+            to = ((tday - epoch) * 86400 + tclock[0] * 3600 + tclock[1] * 60 + tclock[2]
+                  - _offset_minutes(zone, tday, *tclock, tfix) * 60) * 1000 + (0 if _CLOCK.match(str(rec['to'])) else 86_400_000)
+        closed = closure_days(rec, systems)
+        b0 = at(day)
+        k = max(0, -(-(start - span - b0) // stride))
+        while True:
+            b = b0 + k * stride
+            if b >= end or (times is not None and k >= times) or (to is not None and b >= to):
+                return out
+            if b + span > start:
+                n = (b // 1000 + _offset_minutes(zone, (b // 86_400_000) + epoch, 0, 0, 0, fixed) * 60) // 86400 + epoch
+                if not any(a <= n <= z for a, z in closed):
+                    out.append((b, b + span))
+                    if limit is not None and len(out) >= limit:
+                        return out
+            k += 1
+    near = max(day, (start - span) // 86_400_000 + epoch - 1)
+    for _i, n in _occurrences(day, rec, systems, units, None, near=near):
+        b = at(n)
+        if b >= end:
+            break
+        if b + span > start:
+            out.append((b, b + span))
+            if limit is not None and len(out) >= limit:
+                break
+    return out
+
+
 def nth(i, times=None):
     """Which occurrence, in words: `occurrence 3 of 12` — or, where the walk jumped rather than count, that it did."""
     if i is None:
@@ -1164,6 +1305,27 @@ def _out(line=''):
     print(say(line))
 
 
+def routine_clauses():
+    """{(bean, clause id)} of every routine's clause: a clause on a position of the permission square of a `run`
+    (bin/routines.py). The machine that runs it keeps it, so it is no obligation a person is warned of here or by
+    bin/leads.py: bin/routines.py reads when it falls due, and a person hears of a run that waits, fails or is rolled
+    back. Empty outside a garden of the core."""
+    if not os.path.isfile(os.path.join(ROOT, 'GARDEN.md')):
+        return set()
+    try:
+        import seq as dmseq
+        _law, G = dmseq.core(ROOT)
+    except Exception:      # noqa: BLE001 — a garden not of the core has no `run` statements
+        return set()
+    out = set()
+    for bid, b in G.beans.items():
+        for _i, _v, r in b.items:
+            of = r.get('of')
+            if isinstance(r.get('clause'), dict) and isinstance(of, str) and (b.ids.get(of) or (0, None))[1] == 'run':
+                out.add((bid, r.get('id')))
+    return out
+
+
 def report():
     new_run()
     # A PIPE ON WINDOWS IS WRITTEN IN THE ANSI CODE PAGE, and a date in another calendar's script, or a title in
@@ -1209,6 +1371,7 @@ def report():
     # runs out — so a tool that warned about every date would be wrong nine times in ten, and a warning
     # that is usually wrong is one people stop reading.
     exp_rows, expiring, notes, docs_fm = [], 0, [], {}
+    routine = routine_clauses()
     for fm in _fronts():
         docs_fm[fm.get('bean')] = fm
         for term, decl in expiry_terms().items():
@@ -1223,6 +1386,8 @@ def report():
                                                     f"of this report stands"))
                 continue
             for label, held, day, shown, detail, rwhy in due:
+                if (fm.get('bean'), label.strip('[]')) in routine:
+                    continue                        # a routine's: bin/routines.py reads it
                 if day is None:
                     notes.append((fm.get('bean'), term + label, detail))
                     notes.extend((fm.get('bean'), term + label, t) for l, t in asides if l == label)

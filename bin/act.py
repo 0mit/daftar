@@ -21,14 +21,31 @@ is read by bin/seq.py `where`, the one reader. The walk every action shares:
                                                                                           verify-mismatch (`restore` run)
   done (final), refused and rolled-back (exits)
 
-A step whose `by` is `engine` is the engine's; any other is a person's, and the run stops there: a lead to them
+A step whose `by` is `engine` is the engine's, and on arriving at it the engine runs the tool's verb of the same name
+(all but `show`, which is the plan, captured); any other is a person's, and the run stops there: a lead to them
 (bin/leads.py). THE TOOL is what the walk `use`s: a bean of kind `program`, `be`ing at a position on a host (`<host>:
 <path>` or `root:<name>/…`) — run only on that host, as `<tool> <step> <bean> <course>` in the garden, `apply` with
 the captured plan's path in DAFTAR_ACTION_PLAN. Each step's output is kept in captures/actions/ (history), and the moves
 of one run are saved in one commit with their entry; the engine's moves are this machine's (its host bean's), a
 ratification is the person's.
+
+WHERE A STEP LEADS is its own `to` where the walk states one (the first, for the engine), and the shared order above
+where it does not — so a walk may leave out `ratify` (`check` leading to `apply`): such a walk runs with nobody's
+ratification, and the engine runs it only where a `grant … as: enact` of the walk to this machine stands, said by the
+gardener (an automatic run is named, never assumed; bin/routines.py). WHAT A WALK NEEDS — each `need` of the walk a
+`reckon` reading meets, its inputs probe readings — is its INTERLOCKS, read after the tool's `check` and again the moment
+before `apply`: one that does not hold moves the course to the walk's pause (`resumes`, reason `interlock-held`) where
+the walk has one, else refuses it (`check-failed`) — and so does a step before `apply` whose tool fails while one does
+not hold (the key out at the check, or pulled while a copy runs); `bin/routines.py tick` reads them again and returns
+it. WHAT THE
+BEING NEEDS — the needs of the bean the course is in, read the same way — is the run's PROOF, read after the tool's
+`verify`: one that does not hold rolls the run back (`verify-mismatch`, `restore` run), and its crossing is written
+beside the moves: the `measure` that showed it and a `fail` through it (bin/leads.py: a health lead for the keeper).
+Readings are those DAFTAR_READINGS names (files of probe readings, as `probe --json` prints them), else each tool's
+`probe`, read now.
 """
 import hashlib
+import json
 import os
 import re
 import subprocess
@@ -46,6 +63,7 @@ import safe as dmsafe  # noqa: E402 — a statement added, losing nothing
 import where as dmwhere  # noqa: E402 — this host, and what a position means on it
 
 ENGINE = 'engine'
+IN_PROGRESS = 75            # a tool's step not finished yet (EX_TEMPFAIL): the walk pauses, and the next tick runs it again
 NEXT = {'plan': 'show', 'show': 'check', 'check': 'ratify', 'apply': 'verify', 'verify': 'done'}
 FAILS = {'plan': ('refused', 'cannot-plan'), 'check': ('refused', 'check-failed'),
          'apply': ('rolled-back', 'apply-failed'), 'verify': ('rolled-back', 'verify-mismatch')}
@@ -132,7 +150,7 @@ def add_moves(bean, wid, course, moves, knower, act):
         mid = f"{course}-{n}"
         ids.append(mid)
         block += (f'- move: {{ id: {mid}, by: {by}, of: self, through: {course}, at: [now, "{wid}#{step}"]'
-                  + (f', as: {reason}' if reason else '') + (f', note: "{note}"' if note else '') + ' }\n')
+                  + (f', as: {reason}' if reason else '') + (f', note: {json.dumps(note, ensure_ascii=False)}' if note else '') + ' }\n')
     block += f'- {act}: {{ by: {knower}, of: [{", ".join(ids)}], at: now }}\n'
     dmsafe.add_statements(path, block)
     return ids
@@ -143,8 +161,47 @@ def where_now(bean, course):
     return w.get('step'), w
 
 
-RUNS = ('plan', 'check', 'apply', 'verify')
-ENDS = ('done', 'refused', 'rolled-back')
+ENDS = ('done', 'refused', 'rolled-back', 'skipped')
+
+
+def fail_of(steps, step):
+    """Where a failing engine step leads: the shared exits for plan, check, apply and verify; any other step of the walk
+    (a copy made before the person ratifies) is refused, citing `<step>-failed` where its walk lists that reason."""
+    if step in FAILS:
+        return FAILS[step]
+    rs = listed(((steps.get('refused') or {}).get('walk') or {}).get('reasons'))
+    return 'refused', f"{step}-failed" if f"{step}-failed" in rs else 'check-failed'
+
+
+def leads_to(steps, step):
+    """Where the engine goes from a step: the walk's own first `to`, else the shared order (NEXT)."""
+    to = listed((steps.get(step) or {}).get('to'))
+    return str(to[0]) if to else NEXT.get(step)
+
+
+def pause_of(steps, reason):
+    """The walk's pause (`resumes`) a move may enter citing `reason`, or None."""
+    for sid, s in steps.items():
+        w = s.get('walk') if isinstance(s.get('walk'), dict) else {}
+        if str(w.get('resumes')) == 'true' and reason in listed(w.get('reasons')):
+            return sid
+    return None
+
+
+def automatic(steps):
+    """True where no step of the walk is a person's: it would run from plan to its end with nobody's ratification."""
+    for s in steps.values():
+        w = s.get('walk') if isinstance(s.get('walk'), dict) else {}
+        if s.get('by') not in (None, ENGINE) and not any(str(w.get(k)) == 'true' for k in ('exit', 'final', 'resumes')):
+            return False
+    return True
+
+
+def readings_here(G):
+    """The readings a walk's needs are read against: the files DAFTAR_READINGS names, else each tool's probe, now."""
+    import routines as dmroutines
+    paths = [p for p in os.environ.get('DAFTAR_READINGS', '').split(os.pathsep) if p]
+    return dmroutines.Readings(G, dmroutines.load_readings(paths))
 
 
 def fresh():
@@ -152,18 +209,35 @@ def fresh():
     dmseq._CORE.clear()
 
 
-def engine(bean, course, arrived=False, before=None):
-    """Run the engine's steps from where the course stands, until a person's step, an end or an exit: (where it stopped,
-    why). A move is the course arriving at a step; an engine's step's tool runs on arrival. `arrived`: the course was
-    just moved into its step by a person (apply, after a ratification), whose tool runs now; `before`, (who, the
-    entry's lines) of that person's act, written already and saved in the same commit as the engine's."""
+def engine(bean, course, arrived=False, before=None, readings=None):
+    """Run the engine's steps from where the course stands, until a person's step, an end, an exit or a pause: (where it
+    stopped, why). A move is the course arriving at a step; an engine's step's tool runs on arrival. `arrived`: the course
+    was just moved into its step by a person (apply, after a ratification), or returned from a pause, and its tool runs
+    now; `before`, (who, the entry's lines) of that act, written already and saved in the same commit as the engine's."""
+    import routines as dmroutines
     fresh()
     wid, steps, tool, hid = walk_of(bean, course)
     if hid is None:
         raise Refused("this machine has no bean in the garden (a host named by its hostname): its acts are nobody's")
+    _law, G = dmseq.core(ROOT)
+    if automatic(steps) and not dmroutines.granted(G, wid, hid, ROOT):
+        raise Refused(f"the walk {wid} has no person's step, so it would run with nobody's ratification, and no `grant … "
+                      f"as: enact` of it to this machine ({hid}), said by the gardener, stands: an automatic run is named, "
+                      f"never assumed — nothing was run")
     by = lambda step: str((steps.get(step) or {}).get('by') or '')
     at, _w = where_now(bean, course)
-    moves, lines = [], []
+    moves, lines, beside = [], [], []
+    got, applied = [], None
+
+    def reads():
+        if not got:
+            got.append(readings or readings_here(G))
+        return got[0]
+
+    def held_back():
+        got[0] = reads().again()           # read now: what was read at the last step is not what holds now
+        ok, failing = dmroutines.interlocks(G, wid, bean, got[0], ROOT)
+        return None if ok else '; '.join(f"{f['need']} ({f['of']}): {f['why'] or 'not known'}" for f in failing)
 
     def go(step, reason=None, note=None):
         if step not in steps:
@@ -171,12 +245,23 @@ def engine(bean, course, arrived=False, before=None):
                           f"verify, done, refused and rolled-back")
         moves.append([step, hid, reason, note])
         return step
+
+    def wait(why):
+        """An interlock that does not hold: the walk's pause where it has one — never forced — else refused."""
+        lines.append(f"- interlock: {why} — nothing applied")
+        p = pause_of(steps, 'interlock-held')
+        return go(p, 'interlock-held', why[:300]) if p else go('refused', 'check-failed', why[:300])
     if at is None:
         at, arrived = go('plan'), True
     while at not in ENDS and by(at) == ENGINE:
-        if arrived and at in RUNS:
+        if arrived and at != 'show':          # an engine's step runs its tool's verb; `show` is the plan, captured
             if not tool:
                 raise Refused(f"the walk {wid} uses no tool this machine holds (a program bean `be`ing here)")
+            if at == 'apply':
+                why = held_back()        # read again the moment before anything changes
+                if why:
+                    at = wait(why)
+                    break
             env = {}
             if at == 'apply':
                 plans = sorted(f for f in os.listdir(os.path.join(ROOT, 'captures', 'actions'))
@@ -185,19 +270,48 @@ def engine(bean, course, arrived=False, before=None):
                 if plans:
                     env['DAFTAR_ACTION_PLAN'] = os.path.join(ROOT, 'captures', 'actions', plans[-1])
             code, out = run_tool(tool, at, bean, course, env)
+            if at == 'apply':
+                applied = dmroutines.now_ms()
             rel, sha = capture(bean, course, at, out)
             lines.append(f"- {at}: {'passed' if code == 0 else f'failed (exit {code})'} — {rel} (sha-256 {sha[:16]})")
             if at == 'plan' and moves:
                 moves[-1][3] = f"sha-256 {sha}"           # what the person is shown, and ratifies
-            if code != 0:
-                ex, reason = FAILS[at]
+            if code == IN_PROGRESS and pause_of(steps, 'in-progress'):
+                # A STEP NOT FINISHED (a copy of hours, in slices): the walk's pause, and the next tick runs it again
+                at = go(pause_of(steps, 'in-progress'), 'in-progress', 'the step is under way: run again')
+                break
+            if code == 0 and at == 'check':
+                why = held_back()
+                if why:
+                    at = wait(why)
+                    break
+            if code != 0 and at not in ('apply', 'verify'):
+                why = held_back()           # a step that fails before anything changed while an interlock does not hold (a
+                if why and pause_of(steps, 'interlock-held'):   # check with the key out, a copy with the key pulled): a wait
+                    at = wait(why)
+                    break
+            failing = []
+            if at == 'verify':         # the proof is read whether or not the tool's own read-back passed: its crossings say why
+                after = reads().again(after=applied if applied else dmroutines.now_ms())   # read back, after the apply
+                ok, failing = dmroutines.proof(G, bean, after, ROOT)
+                rows = dmroutines.read_needs(G, bean, bean, after, ROOT)
+                stamp = dmroutines.at_now()
+                for row in rows:            # a crossing of each need the run left failing (once); a repair of each it mended
+                    was_open = bool(dmroutines.open_fails(G.beans[bean], row['need']))
+                    if row['inputs'] and row['holds'] is not None and (row['holds'] is False) != was_open:
+                        block, _ids = dmroutines.crossing_block(G, bean, row, hid, stamp, row['holds'] is True)
+                        beside += block
+                if not ok:
+                    lines.append("- proof: " + '; '.join(f"{f['need']} ({f['of']}): {f['why'] or 'not known'}" for f in failing))
+            if code != 0 or failing:
+                ex, reason = fail_of(steps, at)
                 if ex == 'rolled-back':
                     rc, rout = run_tool(tool, 'restore', bean, course)
                     rrel, _ = capture(bean, course, 'restore', rout)
                     lines.append(f"- restore: {'passed' if rc == 0 else f'FAILED (exit {rc})'} — {rrel}")
                 at = go(ex, reason)
                 break
-        nxt = NEXT.get(at)
+        nxt = leads_to(steps, at)
         if nxt is None:
             break
         at, arrived = go(nxt), True
@@ -205,12 +319,52 @@ def engine(bean, course, arrived=False, before=None):
         return at, f"nothing for the engine to do: the course is at {at}"
     if moves:
         add_moves(bean, wid, course, [tuple(m) for m in moves], hid, 'make')
+    if beside:
+        dmsafe.add_statements(os.path.join(ROOT, 'beans', bean + '.md'), '\n'.join(beside) + '\n')
     who, said = before or (hid, [])
-    save(who, f"{bean} {course}: " + ('ratified' + (', then ' if moves else '') if before else '')
+    save(who, f"{bean} {course}: " + ('ratified' + (', then ' if moves else '') if before and before[0] != hid else '')
          + ', '.join(m[0] for m in moves), said + (
         [f"- action: the engine moved [[{bean}]]'s course {course} on [[{wid}]]: "
          + ' → '.join(m[0] + (f" ({m[2]})" if m[2] else '') for m in moves)] if moves else []) + lines)
-    return at, f"stopped at {at}" + (" — a person's step: a lead to them" if at not in ENDS else '')
+    stood = steps.get(at) or {}
+    kind = (" — a pause: read again on the next tick" if str((stood.get('walk') or {}).get('resumes')) == 'true'
+            else " — a person's step: a lead to them" if at not in ENDS and by(at) not in ('', ENGINE) else '')
+    return at, f"stopped at {at}" + kind
+
+
+def step_of(move):
+    """The step a move reached: the `<walk>#<step>` among its `at`."""
+    return next((str(x).split('#', 1)[1] for x in listed(move.get('at')) if '#' in str(x)), None)
+
+
+def move(bean, course, step, reason, who, note=None):
+    """One move of a course, by `who` (this machine), saved with its entry: a run skipped when its window closed."""
+    fresh()
+    wid, steps, _tool, _hid = walk_of(bean, course)
+    if step not in steps:
+        raise Refused(f"the walk {wid} has no step {step!r}")
+    add_moves(bean, wid, course, [(step, who, reason, note)], who, 'make')
+    save(who, f"{bean} {course}: {step}", [f"- action: the engine moved [[{bean}]]'s course {course} on [[{wid}]] to "
+                                           f"{step} ({reason})" + (f": {note}" if note else '')])
+    return step
+
+
+def resume(bean, course, readings=None):
+    """A course at a pause, returned to the step it was entered from, and the engine run from there (its tool again)."""
+    fresh()
+    wid, steps, _tool, hid = walk_of(bean, course)
+    so_far = moves_so_far(bean, course)
+    seq = [step_of(m) for m in so_far]
+    if not seq or str(((steps.get(seq[-1]) or {}).get('walk') or {}).get('resumes')) != 'true':
+        raise Refused(f"{bean}'s course {course} is at {seq[-1] if seq else 'no step'}, not at a pause")
+    back = next((s for s in reversed(seq) if str(((steps.get(s) or {}).get('walk') or {}).get('resumes')) != 'true'), None)
+    if back is None:
+        raise Refused(f"{bean}'s course {course} entered its pause from no step")
+    why = 'its step was under way: run again' if so_far[-1].get('as') == 'in-progress' else 'its interlocks hold again'
+    add_moves(bean, wid, course, [(back, hid, None, why)], hid, 'make')
+    return engine(bean, course, arrived=True, readings=readings,
+                  before=(hid, [f"- action: [[{bean}]]'s course {course} on [[{wid}]] returned from its pause to {back}: "
+                                f"{why}"]))
 
 
 def ratify(bean, course, who, decline=False):

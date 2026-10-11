@@ -264,7 +264,7 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `seed/germinate.py`, `seed/LANGUAGE` | how a garden is grown (Python, so on Windows too; `germinate.sh` hands over to it), and what it receives |
 | `bin/check.py` | the gate |
 | `bin/daftar.py` | the one entry: `daftar catalog` (the language and its relations), `daftar why`, `daftar rules`, `daftar form` |
-| `bin/<verb>.py` | the other tools — merge, proposals between gardens (`propose`), what is owed (`ledger`), readings computed from what is recorded (`reckon`), upgrade, rules (`rules`), reasons (`why`), safe edits, the journal entry (`journal`), a change saved in one command (`save`), cursors, sessions, staleness, calendars, coordinates, units. Each says what it does in its first lines |
+| `bin/<verb>.py` | the other tools — merge, proposals between gardens (`propose`), what is owed (`ledger`), readings computed from what is recorded (`reckon`), upgrade, rules (`rules`), reasons (`why`), safe edits, the journal entry (`journal`), a change saved in one command (`save`), cursors, sessions, staleness, routines (what a machine runs, when, what it waits on and what proves it), calendars, coordinates, units. Each says what it does in its first lines |
 | `assets/<profile>/` | what a profile brings besides its rules — the `view` profile's page drawer and server, `assets/view/README.md` |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
 | `seed/RATIONALE.md` | why each rule is as it is, keyed by the law item's own path; `python3 bin/why.py <name>` reads law and reason together |
