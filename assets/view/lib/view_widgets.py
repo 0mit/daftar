@@ -18,7 +18,8 @@ import os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 WIDGETS = os.path.join(HERE, 'widgets')
-ORDER = ('safe', 'settings', 'locale', 'number', 'exact', 'money', 'moment', 'text', 'name', 'choice', 'being')
+ORDER = ('safe', 'settings', 'locale', 'number', 'exact', 'money', 'moment', 'text', 'name', 'choice', 'being', 'recurrence',
+         'form')
 _IMPORT = re.compile(r"^import\s+(?:\{([^}]*)\}|\*\s+as\s+([A-Za-z_$][\w$]*))\s+from\s+'\./([a-z]+)\.js';\s*$")
 _DECL = re.compile(r"^export\s+(?:const|let|function\*?|class)\s+([A-Za-z_$][\w$]*)")
 _LIST = re.compile(r"^export\s+\{([^}]*)\}\s*;\s*$")

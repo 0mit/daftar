@@ -8,6 +8,9 @@ never stored, and handed to its renderer (`view_queue.js`, `view_timeline.js`, `
                               occurrence of its repetition within the drawing's `span`, walked by bin/stale.py
     flows(v, may)             who owes whom (bin/ledger.py's reading, netted per currency), or what went between gardens
     sheet(bean, may, held)    one being: its header, its statements verb by verb with their dependents, its held values
+    table(v, may)             a table of a reading on a page that names no drawing module: one line per member the
+                              reader may read, each cell the values at its column's path as they are, each line opening
+                              its being's sheet
     data(key, v, may, reader) the reading a drawing of the page draws, by its archetype
 
 ONE QUESTION SCOPES EACH. `may(act, bean, positions=None)` answers whether the reader may read (or write) a being, or
@@ -36,7 +39,11 @@ SPAN_DAYS = 42                       # a timeline's span where the drawing state
 
 
 def engraved(v):
-    return isinstance(v, dict) and v.get('archetype') in ENGRAVED
+    """Whether a drawing is engraved from a reading: a queue, a timeline, flows or a sheet always; a table of a reading
+    where its page names no drawing module — its lines are the reading's, and nothing is drawn for it but them."""
+    if not isinstance(v, dict):
+        return False
+    return v.get('archetype') in ENGRAVED or (v.get('archetype') == 'table' and not vm.page_view().get('drawings'))
 
 
 def _listed(x):
@@ -280,6 +287,46 @@ def crossings(may):
             'partial': False}
 
 
+# --------------------------------------------------------------------------------------------------------------- table
+def table(v, may):
+    """A table of a reading with no module to draw it: one line per member of its `selection` the reader may read —
+    the whole being, or every part its columns read, as a grant's `cover` may open parts alone — each cell the values
+    at its column's path AS THEY ARE (a day, an amount, a being, text; a step a move reached by its walk's own words),
+    for the line's widgets to show in the reader's calendar and digits, and each line opening its being's sheet. A table of a series is drawn by its module."""
+    import reckon as dmreckon
+    cols = [{'label': str(c.get('label') or c.get('path')), 'path': str(c.get('path'))}
+            for c in v.get('columns') or [] if isinstance(c, dict) and c.get('path')]
+    reads = sorted({re.split(r"[.\[>]", c['path'])[0] for c in cols if c['path'] not in ('at', 'position')})
+    out = {'columns': cols, 'rows': [], 'notes': []}
+    try:
+        members = vm.members(v['selection']) if v.get('selection') else []
+    except Exception as e:                      # a reading the gate passed and this cannot read: said
+        members, out['notes'] = [], [f"the reading {v.get('selection')} is not read: {e}"]
+    for m in members:
+        if _bean(m) is None or not (may('read', m) or (reads and may('read', m, reads))):
+            continue
+        out['rows'].append({'bean': m, 'title': title_of(m),
+                            'cells': [_steps_said(dmreckon.path_values(vm.fm(m), c['path'], root=vm.ROOT)) for c in cols]})
+    return out
+
+
+_STEP = re.compile(r'([a-z0-9][a-z0-9-]*)#([A-Za-z0-9][A-Za-z0-9_.-]*)')
+
+
+def _steps_said(v):
+    """A cell's values, a step of a walk (`<walk>#<step>`, where a move reached) said by the walk's own words for it,
+    as the walk writes them; every other value as it is."""
+    if isinstance(v, list):
+        return [_steps_said(x) for x in v]
+    m = _STEP.fullmatch(v) if isinstance(v, str) else None
+    if m:
+        steps = (vm.fm(m.group(1), 'mappings') or vm.fm(m.group(1)) or {}).get('steps') or []
+        st = next((s for s in steps if isinstance(s, dict) and s.get('id') == m.group(2)), {})
+        if st.get('do'):
+            return str(st['do'])
+    return v
+
+
 # --------------------------------------------------------------------------------------------------------------- sheet
 def verb_row(verb):
     """The row of a verb as a form is derived from it: its roles and qualifiers, each with the shapes that fill it,
@@ -307,6 +354,57 @@ def verb_row(verb):
             'one_of': [str(x) for x in _listed((row.get('choice') or {}).get('one_of'))] if isinstance(row.get('choice'), dict) else [],
             'default': {'says': str(d.get('says') or ''), 'fill': d.get('fill'), 'when': d.get('when'),
                         'alone': bool(d.get('alone'))} if d else None}
+
+
+def value_of(dom, rows=None):
+    """The value of the values tree (core/law/values.yaml) an attribute of a form holds, read from its domain in the law:
+    a position is the value written as a position (`written: position`), a length of time `duration`, any other quantity
+    `quantity`, a table's rows or a key of the bean's own (its readings, its clauses) a `choice`, prose `text`, a pattern
+    or a path a `name`, a nested form its own entries. The browser draws it by the widget that implements that value."""
+    L = vm.CORE.L
+    written = {str(r.get('written')): v for v, r in (getattr(L, 'values', None) or {}).items() if r.get('written')}
+    if isinstance(dom, dict) and 'in' in dom and len(dom) <= 3 and not ({'type', 'quantity', 'key_of', 'pattern', 'entries'} & set(dom)):
+        dom = dom['in']                                  # an entry's own record: its domain is its `in`
+    if dom in ('extent', 'recurrence'):
+        return {'value': dom}
+    if dom == 'prose' or dom is None:
+        return {'value': 'text'}
+    if isinstance(dom, list):
+        return {'value': 'choice', 'rows': [str(x) for x in dom]}
+    if isinstance(dom, dict):
+        if 'quantity' in dom:
+            return {'value': 'duration' if dom['quantity'] == 'duration' else 'quantity'}
+        if 'key_of' in dom:
+            return {'value': 'choice', 'rows': list((rows or {}).get(dom['key_of']) or [])}
+        if dom.get('type') == 'clause':
+            return {'value': 'statement', 'rows': list((rows or {}).get('clauses') or [])}
+        if dom.get('type') in written:
+            return {'value': written[dom['type']]}
+        if 'entries' in dom:
+            return dict(form_def_of(dom, rows), value='form')
+        return {'value': 'name'}
+    return {'value': 'text'}
+
+
+def form_def_of(rec, rows=None):
+    attrs = rec.get('attrs') or rec.get('entries') or {}
+    return {'attrs': {str(k): dict(value_of(a, rows), required=str(a.get('required')) == 'true' if isinstance(a, dict) else False)
+                      for k, a in attrs.items()},
+            'one_of': [str(x) for x in _listed(rec.get('one_of'))], 'keyed_by': [str(x) for x in _listed(rec.get('keyed_by'))]}
+
+
+def form_def(name, b=None):
+    """A form of the law (`clause`, `settlement`, …) as a sheet's widget draws it: each attribute and the value it holds;
+    a choice of the bean's own — its readings (`key_of: selections`), its clauses — given its rows from the bean."""
+    rec = (vm.CORE.L.forms or {}).get(name)
+    if not isinstance(rec, dict):
+        return None
+    rows = {}
+    if b is not None:
+        rows['selections'] = sorted(r['id'] for _i, v, r in b.items if v == 'reckon' and isinstance(r.get('id'), str))
+        from core import measures
+        rows['clauses'] = sorted((measures.clauses_of(b, vm.ROOT) or {}).keys())
+    return dict(form_def_of(rec, rows), name=name)
 
 
 def statement_key(verb, r, nth):
@@ -411,7 +509,9 @@ def sheet(bid, may, held=None):
         rows.append({'verb': f, 'statements': sts, 'may_add': may_part(f)})
     verbs = sorted(set(verbs_shown) | {dv for ds in dependents.values() for _k, dv, _r in ds})
     header = {h: b.header.get(h) for h in HEADER if h in [f for f, _l in shown] or h == 'title'}
-    return {'bean': bid, 'kind': b.kind, 'title': title_of(bid),
+    forms = sorted({s['form'] for v in verbs for s in list(verb_row(v)['roles'].values()) + list(verb_row(v)['qualifiers'].values())
+                    if s.get('form')})
+    return {'bean': bid, 'kind': b.kind, 'title': title_of(bid), 'forms': {f: form_def(f, b) for f in forms},
             'header': {h: {'value': x, 'may': may_part(h)} for h, x in header.items()},
             'details': {f: (b.header.get('details') or {}).get(f) for f, _l in shown
                         if f not in L.verbs and f not in HEADER and isinstance(b.header.get('details'), dict)
@@ -532,6 +632,8 @@ def data(key, v, may, reader):
         return timeline(v, may)
     if a == 'flows':
         return flows(v, may)
+    if a == 'table':
+        return table(v, may)
     kk, target, _f = vm.draws_of(v)
     return {'bean': target if kk == 'bean' and may('read', target) else None}
 
@@ -573,8 +675,21 @@ def settings():
     for the reader; a host adds the reader's own where it knows them."""
     import ledger as dmledger
     g = vm.fm_path(os.path.join(vm.ROOT, 'GARDEN.md'))
+    L = vm.CORE.L
+    systems = []
+    for sid, r in sorted((L.std_systems() or {}).items()):
+        if r.get('dimension') != 'time' or not r.get('calendar'):
+            continue
+        levels = [str(lv.get('level')) for lv in r.get('levels') or [] if isinstance(lv, dict)]
+        ex = str(r.get('example') or '')
+        prefix = ex.split(':', 1)[0] + ':' if re.match(r'^[a-z][a-z0-9-]*:', ex) else ''
+        systems.append({'system': sid, 'calendar': str(r['calendar']), 'prefix': prefix, 'week': 'week' in levels, 'levels': levels})
     return {'garden': {'gardener': str(g.get('gardener') or ''), 'zone': str(g.get('zone') or ''), 'title': vm.garden_name()},
             'asOf': today().isoformat(),
+            # the systems a repetition may be counted in, and the units of a length of time: the law's, for the widgets
+            'systems': systems,
+            'durations': [{'unit': u, 'name': str(r.get('name') or u)} for u, r in (L.units or {}).items()
+                          if r.get('quantity') == 'duration'],
             'currencies': [{'code': c, 'digits': r.get('digits')} for c, r in sorted(dmledger.core_units().items())
                            if str(r.get('digits') or '').isdigit()]}
 
@@ -597,6 +712,8 @@ def page(may, reader, held=None, keep=None):
         elif v.get('archetype') == 'flows':
             show |= {n['id'] for n in d['nodes'] if _bean(n['id']) is not None} | \
                     {a['bean'] for a in d.get('agreements') or []}
+        elif v.get('archetype') == 'table':
+            show |= {r['bean'] for r in d['rows']}
         elif d.get('bean'):
             show.add(d['bean'])
         for kind in _listed(v.get('new')):

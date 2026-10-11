@@ -24,13 +24,19 @@
     if (data && !data.rows) data = data.bean ? (t.E.sheets || {})[data.bean] : null;   // a sheet drawing: its being's
     var h = t.h, w = t.w;
     if (!data) { t.mount(el, h`<p class="eg-empty">—</p>`); return; }
-    var editing = false, n = 0;
+    var editing = false, n = 0, fo = {names: (t.E.names || {}).forms || {}};   // a form's attributes in the reader's language
     var mayAny = data.may_write || data.rows.some(function (r) { return r.may_add || r.statements.some(function (s) { return s.may; }); })
       || Object.keys(data.header || {}).some(function (k) { return data.header[k].may; });
 
     function label(verb, k) {
       var row = data.verbs[verb] || {roles: {}, qualifiers: {}};
       return t.name(k in (row.roles || {}) ? 'roles' : k in (row.qualifiers || {}) ? 'qualifiers' : 'beside_roles', k);
+    }
+    // a value as it is shown: a form's value by its entries (widgets/form.js), one or many, every other by its shape
+    function shown(v, spec) {
+      var def = spec.form && (data.forms || {})[spec.form];
+      if (!def) return root.daftarEngraved.show(t, v, spec);
+      return Array.isArray(v) ? t.join(v.map(function (e) { return w.form.show(e, def, fo); }), '; ') : w.form.show(v, def, fo);
     }
     function known(s) {
       if (!s.known || !s.known.by) return '';
@@ -41,7 +47,7 @@
       var row = data.verbs[verb] || {roles: {}, qualifiers: {}}, specs = Object.assign({}, row.roles, row.qualifiers);
       var keys = Object.keys(specs).filter(function (k) { return roles && k in roles; }).concat(BESIDE.filter(function (k) { return roles && k in roles; }));
       return t.join(keys.map(function (k) {
-        return h`<span class="eg-role" data-role="${k}"><span class="eg-role-name">${label(verb, k)}</span> ${root.daftarEngraved.show(t, roles[k], specs[k] || {shape: ['text']})}</span>`;
+        return h`<span class="eg-role" data-role="${k}"><span class="eg-role-name">${label(verb, k)}</span> ${shown(roles[k], specs[k] || {shape: ['text']})}</span>`;
       }), ' ');
     }
     function readOne(s) {
@@ -63,8 +69,13 @@
       return t.join(keys.map(function (k) {
         var spec = specs[k] || {shape: ['text']}, v = roles ? roles[k] : undefined, shapes = spec.shape || ['text'];
         var req = (row.required || []).indexOf(k) >= 0, nm = nameOf(prefix, k), input;
-        if (!may) return v === undefined ? '' : h`<span class="eg-role"><span class="eg-role-name">${label(verb, k)}</span> ${root.daftarEngraved.show(t, v, spec)}</span>`;
-        if (spec.many === 'true' || Array.isArray(v)) {
+        if (!may) return v === undefined ? '' : h`<span class="eg-role"><span class="eg-role-name">${label(verb, k)}</span> ${shown(v, spec)}</span>`;
+        var def = shapes.indexOf('form') >= 0 && spec.form && (data.forms || {})[spec.form];
+        if (def) {                                  // a form's value, drawn by its entries (widgets/form.js)
+          input = spec.many === 'true'
+            ? t.join((Array.isArray(v) ? v : []).concat([{}]).map(function (e, i) { return h`<span class="eg-form-entry">${w.form.edit(nm + '.' + i, e, def, fo)}</span>`; }), '')
+            : w.form.edit(nm, v, def, fo);
+        } else if (spec.many === 'true' || Array.isArray(v)) {
           input = w.name.edit(nm, Array.isArray(v) ? v.join(', ') : (v || ''));
         } else if (shapes.indexOf('quantity') >= 0 && (v === undefined || (v && typeof v === 'object'))) {
           input = h`${w.number.edit(nm + '.count', v ? v.count : '')} ${w.name.edit(nm + '.unit', v ? v.unit : '')}`;
@@ -111,14 +122,35 @@
         <div class="eg-fields">${editor(verb, of ? {of: of} : {}, p, true)}</div><span class="eg-err" data-err-op=""></span></li>`;
     }
 
+    // WHAT A PAGE NAMES OF `details` (its `fields`): what fits no verb yet, kept whole until one is proposed — drawn as it
+    // is held, key by key, each value by the widget of what it looks like (a day, an amount, words), and never edited
+    // here: a sheet changes statements and the header, and what `details` keeps waits for its verb
+    function details() {
+      var keys = Object.keys(data.details || {});
+      if (!keys.length) return '';
+      function one(v) {
+        if (v && typeof v === 'object' && !Array.isArray(v) && !('count' in v)) {
+          return h`<dl class="eg-details-map">${Object.keys(v).map(function (k) { return h`<dt>${w.text.show(k)}</dt><dd>${one(v[k])}</dd>`; })}</dl>`;
+        }
+        return root.daftarEngraved.show(t, v, {shape: ['position', 'text']});
+      }
+      return h`<section class="eg-row eg-details" data-fact="details"><h4>${t.say('sheet-details')}</h4>${keys.map(function (k) {
+        return h`<div class="eg-detail" data-detail="${k}"><span class="eg-role-name">${w.text.show(k)}</span> ${one(data.details[k])}</div>`;
+      })}<p class="eg-known">${t.say('sheet-details-kept')}</p></section>`;
+    }
+    // THE TAGS, a set of words the page names among a being's facts: each a word of its own, in its own isolate
+    function tagsOf(tags) {
+      return tags && (tags.value || []).length ? h`<p class="eg-tags" data-fact="header:tags">${t.join(tags.value.map(function (x) { return h`<span class="eg-tag">${w.text.show(x)}</span>`; }), ' ')}</p>` : '';
+    }
     function draw() {
       n = 0;
-      var hd = data.header || {}, title = hd.title || {}, summary = hd.summary;
+      var hd = data.header || {}, title = hd.title || {}, summary = hd.summary, tags = hd.tags;
       var named = data.new ? (t.say('sheet-new') + ' ' + t.name('kinds', data.kind)) : data.title;
       var head = editing
         ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">${t.name('header', 'title')}</span> ${w.text.edit('header.title', title.value || '')}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
-            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${t.name('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>`
-        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}</div>`;
+            ${tags ? (tags.may ? h`<label class="eg-field" data-fact="header:tags"><span class="eg-role-name">${t.name('header', 'tags')}</span> ${w.text.edit('header.tags', (tags.value || []).join(t.say('sheet-tags-sep')))}<span class="eg-err" data-err-fact="header:tags"></span></label>` : tagsOf(tags)) : ''}
+            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${t.name('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>${details()}`
+        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}${tagsOf(tags)}</div>${details()}`;
       var rows = data.rows.length ? data.rows.map(function (r) {
         var meaning = (data.verbs[r.verb] || {}).meaning || '';
         return h`<section class="eg-row" data-verb="${r.verb}"><h4 title="${meaning}">${t.name('verbs', r.verb)}</h4><ol class="eg-statements">${
@@ -166,6 +198,23 @@
           if (c.value !== '' || u.value) roles[k] = {count: c.value, unit: u.value};
           return;
         }
+        var def = spec.form && (data.forms || {})[spec.form];
+        if (def) {                                  // a form's value, as the law writes it, or an error at its field
+          var takeOne = function (n2) {
+            var r = w.form.take(w.form.collect(li, n2), def);
+            if (r.error) { errs.push([n2 + '.' + r.at, r.error]); return undefined; }
+            return Object.keys(r.value).length ? r.value : undefined;
+          };
+          if (spec.many === 'true') {
+            var list = [];
+            for (var i = 0; li.querySelector('[data-name="' + nm + '.' + i + '"]'); i++) { var e = takeOne(nm + '.' + i); if (e) list.push(e); }
+            if (list.length) roles[k] = list;
+          } else {
+            var one = takeOne(nm);
+            if (one) roles[k] = one;
+          }
+          return;
+        }
         if (q(nm + '.json')) {
           var s = q(nm + '.json').value.trim();
           if (s) { try { roles[k] = JSON.parse(s); } catch (e) { errs.push([nm, String(e.message || e)]); } }
@@ -200,6 +249,11 @@
           ops.push({op: 'change', header: k, value: f.value.trim()}); where.push(f.closest('[data-fact]'));
         }
       });
+      var tf = el.querySelector('[name="header.tags"]');
+      if (tf) {                                     // the tags: words, as the reader's language separates a list of them
+        var words = tf.value.split(new RegExp('[' + t.say('sheet-tags-sep').trim() + ',]')).map(function (x) { return x.trim(); }).filter(Boolean);
+        if (JSON.stringify(words) !== JSON.stringify((hd.tags || {}).value || [])) { ops.push({op: 'change', header: 'tags', value: words}); where.push(tf.closest('[data-fact]')); }
+      }
       var originals = {};
       data.rows.forEach(function (r) { r.statements.forEach(function (s) { originals[s.key] = s; (s.dependents || []).forEach(function (d) { originals[d.key] = d; }); }); });
       el.querySelectorAll('[data-remove]').forEach(function (c) {

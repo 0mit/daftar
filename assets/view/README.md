@@ -23,9 +23,15 @@ through bin/save.py. The cookbook's recipe (seed/COOKBOOK.md, "A page of drawing
 
 ## What it draws
 
-A **page** is the one bean that carries `view`. It names the garden's own **drawing module** (`view.drawings`, a
+A **page** is a bean that carries `view`. It names the garden's own **drawing module** (`view.drawings`, a
 `file:` pointer to a Python file inside the garden, with no `..`) — the garden's code, never the release's — and lists
 what it draws in `views`, one entry per drawing, under the key the module draws it by.
+
+A garden may keep **several pages**: its handplace, one page bean for each entry of its navigation. Each is checked as
+the page it is (`view check --page <bean>`), another page's terms its own and not strays on this one; and a host lists
+them in the order the garden places them, each page's `be { by: self, at: "ordinal:<n>", as: order }` (its place in
+the taxis: the first, the second), a page that says none after them by its id — `view_model.handplace()`, read each
+time.
 
 **The drawing module is code the view host runs**, and so is every adapter under `lib/sources/`: whoever may change
 one may run code on the host, and the host runs it again on each new commit that passes `view check`. So a garden
@@ -121,7 +127,7 @@ A value a shape reads is the key of a `view_bindings` entry on the page.
 | funnel | `funnels` (each stream's stages, stops and marks), `window`, `numbers`, `rollcall` |
 | race | `step_at` (0 before the first step, n at the n-th of the procedure it draws), `elapsed`, `eta`, `progress`, `deadline` (an extent) or `deadline_from`, `checkpoints`, `numbers`, `parts` |
 | health-chain | nothing of its own: a tile per bound element, and a blind spot for every part nothing measures |
-| table | the members of one reading (`selection`) or the rows of one series (`series`, a `{bean, field}` pointer), one line each, and its `columns` (a field path of each member, or a channel and `at`) |
+| table | the members of one reading (`selection`) or the rows of one series (`series`, a `{bean, field}` pointer), one line each, and its `columns` (a field path of each member, or a channel and `at`) — on a page that names no module, a table of a reading is engraved (below) |
 | queue | nothing of its own: the reader's leads (`bin/leads.py`) — engraved, no module draws it |
 | timeline | a reading (`selection`), its `span` (a length each side of today; six weeks absent) and its `layouts` (week, month, list) — engraved |
 | flows | `nodes` — `parties` (the agreements a `selection` holds, every one absent, read by `bin/ledger.py`) or `gardens` — engraved |
@@ -132,10 +138,10 @@ Any shape may add `correlate`: values on one time axis (`traces`), how far back 
 (`relate`). The gate refuses a shape without what it answers with, a length written as a bare number, and a stride
 on a walk with no meter.
 
-## Pages of readings: the queue, the timeline, flows and the sheet
+## Pages of readings: the queue, the timeline, flows, the sheet and a table
 
-Four shapes are **engraved from readings**, and no drawing module draws them: a page whose drawings are all of them
-names no module (`drawings`), and a garden's pages of them are pages of its own, never code of its own. What each draws
+Four shapes are **engraved from readings**, and no drawing module draws them — and a fifth, a table of a reading,
+where its page names no module: a page whose drawings are all of them names no module (`drawings`), and a garden's pages of them are pages of its own, never code of its own. What each draws
 is read each time it is asked, as the release's tools read it, never computed again in a page
 (`lib/view_engraved.py`):
 
@@ -153,7 +159,11 @@ is read each time it is asked, as the release's tools read it, never computed ag
 - **flows** — who owes whom: `bin/ledger.py`'s reading (`ledger.reading`, what `--json` prints) of the agreements the
   reader may read, netted per currency across them, an arrow from the one who owes to the one owed, its head the glyph
   of `next`; or, with `nodes: gardens`, what went between this garden and the others (`take`, `propose`, `pass`);
-- a **sheet** — one being as it stands, and the one place it is changed (below).
+- a **sheet** — one being as it stands, and the one place it is changed (below);
+- a **table** of a reading, on a page that names no module — its members the reader may read, one line each, every
+  cell the values at its column's path as they are (a day, an amount, a being, text; a step of a walk by the walk's own
+  words for it), shown by the widget of what it holds, and each line opening its being's sheet. A table of a series, or on a page that names a module, is the
+  module's.
 
 **Every direction from `axes`.** A drawing names, per axis (`inline`, `block`, `vertical`, `map`), the order of
 `orientations` that runs along it — `{ inline: time }` — and the gate refuses an order on an axis its row does not run
@@ -164,17 +174,25 @@ runs and name every key, glyph and swipe by meaning (`earlier`, `later`, `next`)
 its title and summary, and each verb the page's `fields` names for its kind, its statements in the order the bean holds
 them, each with the statements that take it as their `of` beneath it (a payment with its `bear` shares and the clauses
 that ask it), who knows it (its knowing act), and the default the law derives where nothing is written (a payment no
-`bear` names: its payer bears it, alone, as the ledger reads it). Where the reader may write the being — the gardener,
-or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns every fact they may
-write into the widget of its shape (read from the verb's row: never typed in a page), with a remove mark on each
-statement and an add for each verb; **one Save** is one write; Cancel drops the draft. There is no button per field.
+`bear` names: its payer bears it, alone, as the ledger reads it), and its tags where the page names them, each a word
+of its own. What the page's `fields` names of the being's
+`details` — what fits no verb yet, kept whole until one is proposed — is drawn beneath its head as it is held, key by
+key, each value by the widget of what it looks like, and never edited on the sheet. Where the reader may write the
+being — the gardener, or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns
+every fact they may write into the widget of its shape (read from the verb's row: never typed in a page), with a
+remove mark on each statement and an add for each verb; **one Save** is one write; Cancel drops the draft. There is no
+button per field.
+A value in one of the law's forms — what a clause holds beside its words, what a payment settles — is drawn and edited
+by its entries (`widgets/form.js`): its day in the reader's calendar, its repetition in their words, a choice of the
+bean's own clauses, never a text of JSON to type; what the form holds that no widget draws is written back as it was.
 A page a `new` names opens an empty sheet of a kind, whose first Save mints the bean (`p-<8 hex>` for a person, titled
 by the id; `<kind>-<8 hex>` for another) and writes it whole — the gardener's alone, since no grant names a being not
 yet made.
 
 **The one write path** (`lib/view_write.py`, `write(root, who, bean, ops, kind=None, may=None)`): a sheet's Save and a
 drawing's form of a verb (`writes: [{ verb, preset }]`) both send statements — `[{op: add|change|remove, key?, verb,
-roles, held?}]`, and `{op: change, header: title|summary, value}` — and both are written by it: each op read against its
+roles, held?}]`, `{op: change, header: title|summary, value}`, and `{op: change, header: tags, value: [words]}`, the
+tags as a set of words (none: the key taken out) — and both are written by it: each op read against its
 verb's row; `may` asked for the bean, or for the part each op touches; each edit through `bin/safe.py` by its key, one
 line, an expected count of 1; a held value sealed by `bin/held.py` before its statement is written; the statements added
 or changed known by the writer's `say`; each written statement read back and judged by the gate's own judge; then
@@ -366,6 +384,8 @@ copy of the release the garden runs, so a value is shown by the law the garden k
 | `lib/widgets/choice.js` | choice, choices, code | a row by its label, taken by its key |
 | `lib/widgets/being.js` | being | a bean by its title, reached by its id |
 | `lib/widgets/exact.js` | number | sums of written amounts as fractions of two integers |
+| `lib/widgets/recurrence.js` | recurrence | a repetition said in the reader's words, calendar and digits — each week on Tuesday and Thursday, ninety minutes each time — and edited by its parts: the cell it repeats in, the places in it (a week's days as the reader's region begins a week), where it starts, how many times, how long each lasts; the time systems and the units of a length of time are the law's, sent by the host |
+| `lib/widgets/form.js` | a form's value | what a clause holds beside its words (`clause`), what a payment settles (`settlement`): drawn by its entries, each attribute by the widget that implements its value, as the host resolves it from the law (`view_engraved.form_def`); what it cannot draw is kept as written |
 | `lib/widgets/safe.js` | — | `h```: the one way HTML is built; `mount`: the one door into a page |
 | `lib/widgets/locale.js` | — | the reader's digits, separators, calendar, direction and words, all CLDR's through `Intl` |
 | `lib/widgets/settings.js` | — | what the garden's host sends with a page: its language, calendar, zone, each currency's places |

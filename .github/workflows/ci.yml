@@ -134,6 +134,18 @@ jobs:
       - name: "bidi: the view's widgets and renderers in a browser, read as they land on the screen, in a right-to-left and a left-to-right page"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/bidi.py
+      - name: "view_pages: a garden's handplace is its pages — several page beans each checked as its own, listed in the order the garden places them, and a table of a reading drawn with no module"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_pages.py
+      - name: "view_forms: a form's value on a sheet drawn by its entries — a clause's day, repetition, notice and state, a payment's settlement — edited by its widgets and written through the gate"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_forms.py
+      - name: "view_details: what a page names of a being's details drawn on its sheet, kept whole — in the reader's calendar and digits, never edited there"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_details.py
+      - name: "view_tags: a being's tags on its sheet, changed in the one Edit as a set of words and written through the gate"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_tags.py
       - name: "view_said: the queue's leads and the timeline's sessions said in the reader's language and calendar — a step by its walk's words, a clause's day in the reader's calendar, an attendance at its own hour"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_said.py

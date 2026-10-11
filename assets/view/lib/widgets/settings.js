@@ -10,6 +10,9 @@ export function configure(data = {}) {
   s.me = g.me || g.gardener || s.me;
   s.asOf = data.asOf || s.asOf;
   for (const c of data.currencies || []) if (/^\d+$/.test(String(c.digits ?? ''))) s.places[c.code] = Number(c.digits);
+  // the systems a repetition may be counted in, and the units of a length of time: the law's, as the host sends them
+  if (Array.isArray(data.systems)) s.systems = data.systems;
+  if (Array.isArray(data.durations)) s.durations = data.durations;
 }
 export const settings = s;
 export const me = () => s.me || s.gardener;
