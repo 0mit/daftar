@@ -374,12 +374,13 @@ def read(path):
 # A character that ends a line or drives a terminal: C0, DEL, C1 (NEL and the 8-bit CSI among them) and the Unicode
 # line and paragraph separators. Printed raw, one moves the cursor, erases what was written, or hides what follows —
 # so a value a document holds is printed with each of them spelt out, never sent to the terminal.
-_CTRL = re.compile('[\x00-\x1f\x7f-\x9f  ]')
+CONTROL = re.compile('[\x00-\x1f\x7f-\x9f\u2028\u2029]')
 
 
 def escaped(s):
-    """`s` as it may be printed: every character `_CTRL` names spelt `\\xNN` or `\\uNNNN`."""
-    return _CTRL.sub(lambda m: (f"\\x{ord(m.group(0)):02x}" if ord(m.group(0)) < 0x100 else
+    """`s` as it may be printed: every character `CONTROL` names spelt `\\xNN` or `\\uNNNN` — the one escaper: every tool
+    that prints a value a document holds prints it through this."""
+    return CONTROL.sub(lambda m: (f"\\x{ord(m.group(0)):02x}" if ord(m.group(0)) < 0x100 else
                                 f"\\u{ord(m.group(0)):04x}"), str(s))
 
 
