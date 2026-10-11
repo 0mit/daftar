@@ -9,7 +9,11 @@
 #                       row of that model selects (a department, through `part … of`, reaches its company)
 # A FIELD is read from the bean:
 #   from: title | summary | bean       the bean's own title, summary or id
-#   from: <verb>[<role>=<value>,…].<role>   the role of the bean's first own statement of that verb (and those roles)
+#   from: <verb>[<role>=<value>,…].<role>   the role of the bean's first own statement of that verb (and those roles;
+#                                      a value may name alternatives, `<role>=<a>|<b>`)
+#   from: <path>/<path>                the second read from the bean the first reaches: a path runs through beans
+#     held: true                       ...from a SEALED statement only, as the host that keeps it resolves it: never from
+#                                      git. A reader the host resolves none for reads none
 #   value: <scalar>                    given, the same for every record
 #   model: <model>                     the field holds the record of that model the path reaches (one), or
 #     inverse: true                    the records of that model whose path reaches this one (many), or
@@ -20,7 +24,7 @@
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 forms:
   crosswalk: { crosswalk: required, system: required, series: required, model: required, kind: required, select: optional, fields: required, meaning: required }
-  field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional }
+  field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional, held: optional }
 crosswalks:
   - crosswalk: odoo-17.0-res.company
     system: odoo
@@ -52,3 +56,22 @@ crosswalks:
       company_id: { from: part.of, model: res.company, chain: true }
       active: { value: true }
     meaning: "a company's departments: each organisation that is part of one of the garden's companies, or of a department of one"
+  - crosswalk: odoo-17.0-hr.employee
+    system: odoo
+    series: "17.0"
+    model: hr.employee
+    kind: contract
+    select: { with: "agree[as=employee].by", within: { along: "agree[as=employer].by", model: res.company } }
+    fields:
+      name: { from: "agree[as=employee].by/title" }
+      display_name: { from: "agree[as=employee].by/title" }
+      work_email: { from: "agree[as=employee].by/name[by=mail].as" }
+      work_phone: { from: "agree[as=employee].by/name[by=e164].as" }
+      job_title: { from: represent.as }
+      company_id: { from: "agree[as=employer].by", model: res.company }
+      department_id: { from: part.of, model: hr.department }
+      active: { value: true }
+      identification_id: { from: "agree[as=employee].by/name[by=tr-tckn|ir-national-code].as", held: true }
+      private_email: { from: "agree[as=employee].by/name[by=mail].as", held: true }
+      private_phone: { from: "agree[as=employee].by/name[by=e164].as", held: true }
+    meaning: "a company's employees: each employment, an agreement a person agrees to as employee and one of the garden's companies as employer — the record is the agreement, so one person employed twice is two records, as in Odoo; the name, work mail and work phone are the person's own, from their bean; the job title what they act for the employer as (`represent … as`); the department the one the employment is part of; the identity number, private mail and private phone are held only, read from sealed statements as the host that keeps them resolves them, never from git"

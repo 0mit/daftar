@@ -7,6 +7,14 @@ THE ONE READER of the crosswalks: daftard's answers to Odoo's client and any oth
 two readers can never disagree about what a record is. Nothing is written and nothing is kept: a record is read from
 the beans each time it is asked for.
 
+A PATH MAY RUN THROUGH BEANS: `agree[as=employee].by/title` is the title of the bean the first step reaches. A filter
+may name alternatives, `[by=tr-tckn|ir-national-code]`, so no one country's numbers stand above another's.
+
+WHAT IS HELD IS NEVER READ FROM GIT. A field marked `held` is read only from sealed statements (MODEL: what harm can come
+of, git does not keep), through what the host that keeps them resolves: `unseal(bean, verb, sealed roles)` gives what a
+sealed statement said, or None. A reader handed no `unseal` reads no held field: it is empty, as what the garden does
+not say. Which reader a host resolves them for is the host's to ask of the garden's grants, never this reader's.
+
 A record's `id` is a number the system's client can hold, the same for a bean every time and on every machine: the
 first 31 bits of the SHA-256 of `<model>:<bean>`. Two beans whose numbers meet are refused, by name, never guessed.
 """
@@ -26,25 +34,53 @@ class Refused(Exception):
 
 
 def parse_path(path):
-    """(verb, {role: value}, role) of a statement path, or None where it is the bean's own title, summary or id."""
+    """(verb, {role: (value, …)}, role) of a statement path, or None where it is the bean's own title, summary or id."""
     if path in OWN:
         return None
     m = PATH.match(str(path))
     if not m:
         raise Refused(f"{path!r} is no path: title, summary, bean, or <verb>[<role>=<value>,…].<role>")
-    filters = dict(f.split('=', 1) for f in (m.group('filters') or '').split(',') if f)
+    filters = {k: tuple(v.split('|')) for k, v in (f.split('=', 1) for f in (m.group('filters') or '').split(',') if f)}
     return m.group('verb'), filters, m.group('role')
 
 
-def follow(bean, path):
-    """What the path reads in the bean: its title, summary or id, or the role of its first own statement of the verb
-    that the filters allow — None where it holds none."""
-    p = parse_path(path)
+def steps(path):
+    """The steps of a path, split at each `/` outside a filter's brackets: each but the last reaches a bean, through the
+    role it reads."""
+    out, depth, cur = [], 0, ''
+    for c in str(path):
+        depth += (c == '[') - (c == ']')
+        if c == '/' and depth == 0:
+            out.append(cur)
+            cur = ''
+        else:
+            cur += c
+    return out + [cur]
+
+
+def follow(bean, path, garden=None, unseal=None, held=False):
+    """What the path reads, from the bean: its title, summary or id, or the role of its first own statement of the verb
+    that the filters allow; through each step but the last, the bean that step reaches (in `garden`, a {id: bean}) —
+    None where any step reaches none. `held`: the last step reads sealed statements only, through `unseal`."""
+    *through, last = steps(path)
+    for step in through:
+        nxt = follow(bean, step)
+        nxt = nxt.split('#', 1)[0] if isinstance(nxt, str) else None     # a statement's bean, where it names one
+        bean = (garden or {}).get(nxt) if nxt else None
+        if bean is None:
+            return None
+    p = parse_path(last)
     if p is None:
-        return bean.id if path == 'bean' else bean.header.get(path)
+        return None if held else (bean.id if last == 'bean' else bean.header.get(last))
     verb, filters, role = p
     for _i, v, r in bean.items:
-        if v == verb and all(str(r.get(k)) == val for k, val in filters.items()) and role in r:
+        if v != verb or ('held' in r) != bool(held):
+            continue
+        if held:
+            r = unseal(bean.id, v, r) if unseal else None
+            if not isinstance(r, dict):
+                continue
+        if all(str(r.get(k)) in vals for k, vals in filters.items()) and role in r:
             return r[role]
     return None
 
@@ -56,9 +92,10 @@ def number(model, bean_id):
 class Reader:
     """The crosswalks of one system and series over one garden, read once."""
 
-    def __init__(self, root, system, series, law=None, garden=None):
+    def __init__(self, root, system, series, law=None, garden=None, unseal=None):
         self.law = law or garden_law(root)
         self.G = garden or engine.Garden.read(root)
+        self.unseal = unseal
         rows = [r for r in getattr(self.law, 'crosswalks', {}).values()
                 if str(r.get('system')) == system and str(r.get('series')) == series]
         self.rows = {str(r['model']): r for r in rows}
@@ -82,9 +119,9 @@ class Reader:
             b = self.G.beans[bid]
             if b.kind != r.get('kind') or getattr(b, 'unread', False):
                 continue
-            if 'with' in sel and follow(b, sel['with']) is None:
+            if 'with' in sel and self.follow(b, sel['with']) is None:
                 continue
-            if 'without' in sel and follow(b, sel['without']) is not None:
+            if 'without' in sel and self.follow(b, sel['without']) is not None:
                 continue
             if 'within' in sel and self.reach(b, sel['within']['along'], sel['within']['model']) is None:
                 continue
@@ -102,13 +139,18 @@ class Reader:
         """The first bean the model's row selects, reached by following the path from the bean (never the bean itself)."""
         seen, here = {bean.id}, bean
         while True:
-            nxt = follow(here, path)
+            nxt = self.follow(here, path)
+            nxt = nxt.split('#', 1)[0] if isinstance(nxt, str) else nxt
             if not isinstance(nxt, str) or nxt in seen or nxt not in self.G.beans:
                 return None
             if nxt in self.selected(model):
                 return nxt
             seen.add(nxt)
             here = self.G.beans[nxt]
+
+    def follow(self, bean, path, held=False):
+        """What a path reads from a bean of this garden (`follow`), through the beans it holds."""
+        return follow(bean, path, self.G.beans, self.unseal, held)
 
     def display(self, model, bid):
         rec = self.record(model, bid, fields=('display_name', 'name'))
@@ -129,22 +171,23 @@ class Reader:
             return {'true': True, 'false': False}.get(v, v) if isinstance(v, str) else v
         path = spec.get('from', 'title')
         target = spec.get('model')
+        held = spec.get('held') in (True, 'true')
         if spec.get('join') is not None:                # titles along the path within this model, farthest first
-            names, seen, here = [follow(b, path)], {b.id}, b
+            names, seen, here = [self.follow(b, path)], {b.id}, b
             while True:
-                up = follow(here, spec.get('along'))
+                up = self.follow(here, spec.get('along'))
                 if not isinstance(up, str) or up in seen or up not in self.selected(model):
                     break
                 seen.add(up)
                 here = self.G.beans[up]
-                names.insert(0, follow(here, path))
+                names.insert(0, self.follow(here, path))
             return str(spec['join']).join(str(n) for n in names if n is not None)
         if target is None:
-            v = follow(b, path)
+            v = self.follow(b, path, held)
             return False if v is None else v
         if spec.get('inverse') in (True, 'true'):
-            return [number(target, oid) for oid, o in self.selected(target).items() if follow(o, path) == b.id]
-        hit = self.reach(b, path, target) if spec.get('chain') in (True, 'true') else follow(b, path)
+            return [number(target, oid) for oid, o in self.selected(target).items() if self.follow(o, path) == b.id]
+        hit = self.reach(b, path, target) if spec.get('chain') in (True, 'true') else self.follow(b, path)
         if not isinstance(hit, str) or hit not in self.selected(target):
             return False
         return [number(target, hit), self.display(target, hit)]

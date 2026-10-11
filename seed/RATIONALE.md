@@ -5093,6 +5093,27 @@ company. A record's number is the first 31 bits of the SHA-256 of its model and 
 beans that meet are refused by name.
 
 
+## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.employee]
+
+AN EMPLOYEE IS AN EMPLOYMENT, NOT A PERSON (2026-10-11, the unified-tools design's P5.4; DECISIONS-NEXT §4, C4). Odoo's
+`hr.employee` is one person's work for one company: a person employed by two companies, or employed again after
+leaving, is two records there. So the record is the employment — the agreement the person `agree`s to as employee and
+one of the garden's companies as employer, as an employment is already written (seed/COOKBOOK.md, the tile workshop) —
+and what is the person's own is read from their bean, through it: a path runs through beans
+(`agree[as=employee].by/title`), so a fact stays where it is about and is read where it is needed. The job is what the
+employee acts for the employer as (`represent … as`, whose meaning names an employee): `agree … as` already says the
+part each party takes. The department is the one the employment is `part` of, as a department is `part` of its company.
+The work mail and phone are the person's names by `mail` and `e164`; the private ones are the same names sealed.
+
+WHAT IS PRIVATE IS HELD, AND ONLY WHAT A FORM NEEDS (C4; MODEL: what harm can come of, git does not keep). The form's
+private tab is carried by three fields, each `held`: the identity number (a name of a namespace that keeps its names
+held, `tr-tckn` or `ir-national-code`, either, so neither country's stands above the other's), the private mail and
+the private phone. A held field is read from sealed statements only, through what the host that keeps them resolves;
+the reader decides nothing about who may see them, and a reader handed nothing to resolve them with reads none. A
+birthday has no statement the law can say yet (a being's coming to be holds no day), and health no scheme the law
+holds for it: neither is carried, rather than bent into a verb that nearly fits.
+
+
 ## core/law/profiles.yaml: orientations
 
 A DRAWING KEEPS THE FRAME OF WHAT IT DRAWS (2026-10-10, the direction design; the operator: "solve the right to left

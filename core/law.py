@@ -659,6 +659,22 @@ class Law:
         roles = set(self.roles)
 
         def path_ok(where, p):
+            from core.crosswalk import steps
+            *through, last = steps(p)
+            for step in through:                    # a step a path goes on from names a being, or a statement in one
+                m = path.match(step)
+                if not m:
+                    out.append((where, f"{p!r}: {step!r} is no step a path goes on from: <verb>[<role>=<value>,…].<role>"))
+                    continue
+                spec = ((self.verbs.get(m.group(1)) or {}).get('roles') or {}).get(m.group(5)) or {}
+                shape = spec.get('shape') if isinstance(spec, dict) else None
+                shapes = shape if isinstance(shape, list) else [shape]
+                if m.group(1) in self.verbs and not ({'being', 'statement'} & set(shapes)):
+                    out.append((where, f"{p!r}: {step!r} reads no being, so no path goes on from it"))
+                step_ok(where, step)
+            step_ok(where, last)
+
+        def step_ok(where, p):
             if p in ('title', 'summary', 'bean'):
                 return
             m = path.match(str(p))
@@ -712,6 +728,14 @@ class Law:
                     path_ok(fw, spec['along'])
                 if 'value' in spec and 'from' in spec:
                     out.append((fw, "a field is read `from` the bean, or given as a `value`, never both"))
+                if 'held' in spec:
+                    from core.crosswalk import steps
+                    last = steps(spec.get('from', 'title'))[-1]
+                    if spec['held'] not in (True, 'true'):
+                        out.append((fw, "`held` is true, or left out"))
+                    elif last in ('title', 'summary', 'bean') or {'model', 'value', 'join'} & set(spec):
+                        out.append((fw, "a held field reads the role of a sealed statement: a path to a verb's role, and "
+                                        "no `model`, `value` or `join`"))
         return out
 
     # ------------------------------------------------------------------------------------------------ proof
