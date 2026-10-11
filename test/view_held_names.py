@@ -14,6 +14,12 @@ may read the lessons alone. Then:
   one file      the report, a page of one file, carries the opaque id and never the name or the phone
   a browser     Sam's page in Persian: the lessons' `agree` shows the person by their name; their sheet shows how to reach
                 them under «نشانی و تماس», the phone left to right as it is written, and says it is held on this machine
+  by the law   asked of the law's own grants: a reader whom a grant opens the person's whole bean to has their opaque
+                id and nothing of their contact — a held contact is opened by a grant that names the part of the bean that
+                says where it is held (`cover: {parts: [body]}`), never by a grant of the bean alone; a reader such a
+                grant names it to has it; the gardener has both persons by name, the second kept on their consent (an
+                `agree` named by bin/held.py --basis); and once that consent is taken out, the gardener too has only their
+                opaque id and nothing of their contact
   erased        once the person is erased from the store, the page no longer calls them by their name
 
 Run: python3 test/view_held_names.py   (0 = green; a NOTE, and no browser check, where no Chromium is on the machine)
@@ -69,8 +75,23 @@ SCOPED = ("import json, os, sys, types; sys.path[:0] = [os.path.join('.', 'asset
           "head='h', may=may); print(json.dumps({u: ve.scoped(host, u) for u in ('sam', 'guest')}, default=str, ensure_ascii=False))")
 
 
-def scoped():
-    rc, out = run(PY, '-c', SCOPED)
+# the page as a host gives it, asked of the law's own grants (bin/pass.py `may`, as view_serve.Host.may asks it)
+SCOPED_LAW = """import importlib, json, os, sys, types
+sys.path[:0] = [os.path.join('.', 'assets', 'view', 'lib'), 'bin']
+import view_model as vm, view_engraved as ve, view_serve as vs
+vm.init('.', 'page')
+dmpass = importlib.import_module('pass')
+USERS = ('sam', 'p-0a0a0a0a', 'p-0b0b0b0b')
+def may(user, bean, positions=None, write=False):
+    a = dmpass.may(user, 'write' if write else 'read', bean, positions=positions, root='.', gardener='sam')
+    return vs.Verdict(a.granted, a.why, a.grants, a.reason_asked)
+host = types.SimpleNamespace(cfg={'users': {u: {'bean': u} for u in USERS}}, head='h', gardener='sam', may=may)
+print(json.dumps({u: ve.scoped(host, u) for u in USERS}, default=str, ensure_ascii=False))
+"""
+
+
+def scoped(code=SCOPED):
+    rc, out = run(PY, '-c', code)
     try:
         return json.loads(out.strip().splitlines()[-1])
     except (ValueError, IndexError):
@@ -196,6 +217,72 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
         check("...their sheet shows how to reach them under «نشانی و تماس», the phone left to right as it is written, and "
               "says it is held on this machine only", 'نشانی و تماس' in (B.get('contact') or '') and PHONE in (B.get('contact') or '')
               and B.get('phoneDir') == 'ltr' and 'فقط روی همین دستگاه' in (B.get('contact') or ''), B)
+
+    # ------------------------------------------------------------------ by the law's own grants, and a consent taken out
+    NAME2, PHONE2 = 'Mina Kaya', '+15555550111'
+    rc, out = run(PY, 'bin/held.py', 'person', '--basis', 'consents#kept', f'name={NAME2}', f'phone={PHONE2}')
+    m = re.search(r'(p-[0-9a-f]{8}): written', out)
+    PID2 = m.group(1) if m else 'p-none'
+    for rid in ('p-0a0a0a0a', 'p-0b0b0b0b'):
+        put(f'beans/{rid}.md', f'''---
+bean: {rid}
+kind: person
+title: "{rid}"
+summary: "a reader of the garden's pages"
+statements:
+  - say:    {{ by: sam, at: now }}
+  - own:    {{ by: theone, of: self }}
+---
+A reader.
+''')
+    put('beans/consents.md', f'''---
+bean: consents
+kind: contract
+title: "consents"
+summary: "what a person agreed to be kept as"
+statements:
+  - say:   {{ by: sam, at: now }}
+  - own:   {{ by: sam, of: self }}
+  - agree: {{ id: kept, by: [{PID2}], of: "to be kept by name on Sam's laptop", at: "2026-09-01" }}
+---
+Consents.
+''')
+    put('beans/sam.md', get('beans/sam.md').replace('\n---\n', (
+        '\n  - grant: { id: readers-read, by: self, to: [p-0a0a0a0a, p-0b0b0b0b], of: [lessons, page, %s, %s], as: read }\n'
+        '  - grant: { id: b-reaches, by: self, to: [p-0b0b0b0b], of: [%s], as: read, cover: { parts: [body] } }\n'
+        '  - say: { by: sam, of: [readers-read, b-reaches], at: now }\n---\n') % (PID, PID2, PID), 1))
+    rc, out = run(PY, 'bin/save.py', 'sam', 'two readers, a second person kept on their consent', '--body',
+                  f'- action: wrote [[{PID2}]], [[p-0a0a0a0a]], [[p-0b0b0b0b]] and [[consents]]; [[sam]] grants the readers to read')
+    check("a second person is kept by name on their consent, and two readers are granted the person's bean — the second "
+          "also the part that says where they are held", rc == 0 and NAME2 not in get(f'beans/{PID2}.md'), out[-1500:])
+    L = scoped(SCOPED_LAW)
+    a, b, s_ = L.get('p-0a0a0a0a') or {}, L.get('p-0b0b0b0b') or {}, L.get('sam') or {}
+    ja = json.dumps(a, ensure_ascii=False)
+    pa = (a.get('sheets') or {}).get(PID) or {}
+    ba = next((x for x in a.get('beings') or [] if x.get('id') == PID), {})
+    check("a reader granted the person's whole bean, and not the part their contact is held in, has their opaque id and "
+          "nothing of their contact", ba.get('title') == PID and not ba.get('held_name') and 'contact' not in pa
+          and NAME not in ja and PHONE not in ja, (ba, pa, L.get('error')))
+    pb = (b.get('sheets') or {}).get(PID) or {}
+    check("...a reader a grant names that part to has their name and their contact",
+          pb.get('title') == NAME and (pb.get('contact') or {}).get('phone') == PHONE, (pb, L.get('error')))
+    p1, p2 = (s_.get('sheets') or {}).get(PID) or {}, (s_.get('sheets') or {}).get(PID2) or {}
+    check("...the gardener has both persons by their names and contacts, the second while their consent stands",
+          p1.get('title') == NAME and (p1.get('contact') or {}).get('phone') == PHONE and p2.get('title') == NAME2
+          and (p2.get('contact') or {}).get('phone') == PHONE2, (p1, p2, L.get('error')))
+    put('beans/consents.md', get('beans/consents.md').replace(
+        f'  - agree: {{ id: kept, by: [{PID2}], of: "to be kept by name on Sam\'s laptop", at: "2026-09-01" }}\n', '', 1))
+    rc, out = run(PY, 'bin/save.py', 'sam', 'a consent taken out', '--body',
+                  '- action: took out `kept`, the agree in [[consents]]: the consent is withdrawn')
+    L = scoped(SCOPED_LAW)
+    s_ = L.get('sam') or {}
+    js = json.dumps(s_, ensure_ascii=False)
+    p2 = (s_.get('sheets') or {}).get(PID2) or {}
+    b2 = next((x for x in s_.get('beings') or [] if x.get('id') == PID2), {})
+    check("once the consent they were kept on is taken out, even the gardener has only the second person's opaque id and "
+          "nothing of their contact; the first, kept on none, still by name", rc == 0 and b2.get('title') == PID2
+          and not b2.get('held_name') and 'contact' not in p2 and NAME2 not in js and PHONE2 not in js
+          and ((s_.get('sheets') or {}).get(PID) or {}).get('title') == NAME, (out[-600:], b2, p2, L.get('error')))
 
     rc, out = run(PY, 'bin/held.py', 'erase', PID)
     P = scoped()

@@ -528,30 +528,57 @@ def settings():
                            if str(r.get('digits') or '').isdigit()]}
 
 
-_CONTACT = re.compile(r'root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32}')
+_CONTACT = re.compile(r'(root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32})`?(?: on ([A-Za-z0-9][A-Za-z0-9_.-]*(?:#[A-Za-z0-9_.-]+)?))?')
 
 
 def contact_of(bid):
-    """(pointer, record) of the contact a person kept off git under an opaque id holds here — what `bin/held.py person`
-    writes: a record `{bean, term: person, key: contact, entry: {name, …}}` whose pointer the person's own bean names in
-    its words — or (None, None) where this host's stores hold none of theirs (another machine's, erased, or none)."""
+    """(pointer, record, basis) of the contact a person kept off git under an opaque id holds here — what `bin/held.py
+    person` writes: a record `{bean, term: person, key: contact, entry: {name, …}}` whose pointer the person's own bean
+    names in its words, `Held: `<pointer>` on <basis>.`, the basis the word they were kept on (`--basis`: their agree,
+    `<bean>#<id>`), None where none is written — or (None, None, None) where this host's stores hold none of theirs
+    (another machine's, erased, or none)."""
     b = _bean(bid)
     if b is None or b.kind != 'person' or not b.path:
-        return None, None
+        return None, None, None
     import held as dmheld
     try:
         with open(b.path, encoding='utf-8') as fh:
             text = fh.read()
     except OSError:
-        return None, None
-    for pointer in dict.fromkeys(_CONTACT.findall(text)):
+        return None, None, None
+    for pointer, basis in dict.fromkeys(_CONTACT.findall(text)):
         try:
             rec = dmheld.resolve(pointer, root=vm.ROOT)
         except (dmheld.NotHere, dmheld.Erased, ValueError, OSError):
             continue
         if isinstance(rec, dict) and rec.get('bean') == bid and rec.get('term') == 'person' and rec.get('key') == 'contact':
-            return pointer, rec
-    return None, None
+            return pointer, rec, basis.rstrip('.') or None
+    return None, None, None
+
+
+def names_part(grants, bean, part):
+    """Whether one of `grants` — (holder, id) of each grant a law's answer read (bin/pass.py `may`; one with no id is
+    `grant@<its place>`) — opens `part` of `bean` by NAMING it: its `cover` names the part. What a host keeps off git of a
+    being is opened so, by name; a grant of the whole bean opens what the bean holds, never by itself what is held of it
+    elsewhere."""
+    for holder, gid in grants or ():
+        hb = _bean(holder)
+        for i, verb, r in (hb.items if hb is not None else ()):
+            if verb != 'grant' or (r.get('id') if isinstance(r.get('id'), str) else f'grant@{i}') != gid:
+                continue
+            cv = r.get('cover') if isinstance(r.get('cover'), dict) else {}
+            if part in [str(x) for x in _listed(cv.get('parts'))]:   # the answer read it as covering `bean`
+                return True
+    return False
+
+
+def stands(ref, bid):
+    """Whether the word `ref` names still stands in the ledger: a statement (`<bean>#<id>`, or an id of `bid`'s own
+    bean), or a bean of the garden — as a held statement's `while` is read."""
+    if ref in vm.CORE.G.beans and not vm.CORE.G.beans[ref].unread:
+        return True
+    from core import engine
+    return engine.Judge(vm.CORE.L, vm.CORE.G).statement(ref, _bean(bid)) is not None
 
 
 def page(may, reader, held=None, keep=None, contact=None):
@@ -577,9 +604,10 @@ def page(may, reader, held=None, keep=None, contact=None):
         for kind in _listed(v.get('new')):
             if isinstance(kind, str) and kind in vm.CORE.L.kinds:
                 out['blank'][kind] = blank(kind, may)
-    # A PERSON KEPT OFF GIT BY NAME (`bin/held.py person`): to a reader who may read them, the host that keeps their
-    # contact sends it — their name as how the page calls them, their contact on their sheet, marked as kept here; every
-    # other host and reader has their opaque id, as the ledger does. A page of one file (`contact` None) sends none.
+    # A PERSON KEPT OFF GIT BY NAME (`bin/held.py person`): to a reader who may read them and whom their contact is
+    # opened to (`contact`, the host's question: scoped's), the host that keeps it sends it — their name as how the page
+    # calls them, their contact on their sheet, marked as kept here; every other host and reader has their opaque id, as
+    # the ledger does. A page of one file (`contact` None) sends none.
     named = {}
     if contact:
         for bid, b in sorted(vm.CORE.G.beans.items()):
@@ -637,8 +665,22 @@ def scoped(host, user, keep=None):
         e = rec.get('entry') if isinstance(rec, dict) and rec.get('key') == sid else None
         return {k: x for k, x in e.items() if k != 'while'} if isinstance(e, dict) else None
     def contact(bid):
-        _pointer, rec = contact_of(bid)
-        return rec.get('entry') if isinstance(rec, dict) and isinstance(rec.get('entry'), dict) else None
+        """A held person's name and ways to reach them, held to the bar of a held statement and more: sent to the
+        gardener, or to a reader a grant opens by name the part of the person's bean that says where they are held
+        (`cover: { parts: [body] }`) — a grant of the whole bean opens the bean, never by itself what this host keeps of
+        them — and only while the word they were kept on (`Held: … on <basis>`, bin/held.py --basis) stands, where one
+        is written: once their consent is taken out, nobody has their name or contact, the gardener neither."""
+        _pointer, rec, basis = contact_of(bid)
+        if not (isinstance(rec, dict) and isinstance(rec.get('entry'), dict)):
+            return None
+        if not (gardener and u.get('bean') == gardener):    # nobody unnamed is the gardener
+            v = host.may(user, bid, positions=['body'])
+            if not v[0] or not names_part(getattr(v, 'grants', ()), bid, 'body'):
+                return None
+        if basis and not stands(basis, bid):
+            return None
+        return rec['entry']
+    gardener = getattr(host, 'gardener', None) or str(vm.fm_path(os.path.join(vm.ROOT, 'GARDEN.md')).get('gardener') or '')
     p = page(may, u.get('bean'), held, keep, contact)
     g = p['settings']['garden']
     if isinstance(u.get('calendar'), str) and u['calendar']:
