@@ -178,6 +178,43 @@ def problems(J, b):
                 out.append((path, f"{n!r} is no drawing of this page ({', '.join(map(str, drawings))})"))
             elif kind == 'readings' and n not in readings:
                 out.append((path, f"{n!r} is no reading of this bean (a `reckon` it holds by that id)"))
+    # A SHEET SHOWS WHAT ITS PAGE SAYS A SHEET OF ITS KIND SHOWS (the view finished for a handplace): a sheet drawing's
+    # being, and each kind a drawing may make (`new`), have the facts the page's `fields` names for their kind; and an
+    # entry form of a verb (`writes`) names a verb the law has, presets only roles the verb takes, and names a verb or a
+    # term of today's words, one of the two
+    page_form = pages[0][1]['page'] if pages else {}
+    shown = {str(e.get('kind')) for e in _listed(page_form.get('fields')) if isinstance(e, dict)}
+    for did, (i, r) in drawings.items():
+        where = f"{b.id}: statements[{i}] draw.drawing"
+        d = r['drawing']
+        if str(d.get('archetype')) == 'sheet':
+            target = next((x for x in _listed(r.get('of')) if isinstance(x, str)), None)
+            k = J.kind_of(target, b) if target else None
+            if k and k not in shown:
+                out.append((where, f"a sheet of {target} shows the facts its page names for a {k} (the page's `fields`), "
+                                   f"and the page names none"))
+        for k in _listed(d.get('new')):
+            if isinstance(k, str) and k in L.kinds and k not in shown:
+                out.append((f"{where}.new", f"a new {k} opens as a sheet of the facts its page names for a {k} (the "
+                                            f"page's `fields`), and the page names none"))
+        for n, w in enumerate(_listed(d.get('writes'))):
+            if not isinstance(w, dict):
+                continue
+            ww = f"{where}.writes[{n}]"
+            if ('verb' in w) == ('term' in w):
+                out.append((ww, "an entry form names a verb of the law, or a term of today's words: one of the two"))
+            elif 'preset' in w and 'verb' not in w:
+                out.append((ww, "`preset` fills roles of a verb: it stands with `verb`"))
+            row = L.verbs.get(str(w.get('verb'))) if 'verb' in w else None
+            if isinstance(row, dict) and w.get('preset') is not None:
+                if not isinstance(w['preset'], dict):
+                    out.append((f"{ww}.preset", "is a mapping of the verb's roles to what fills them"))
+                else:
+                    takes = set(row.get('roles') or {}) | set(row.get('qualifiers') or {})
+                    for role in w['preset']:
+                        if role not in takes:
+                            out.append((f"{ww}.preset.{role}", f"`{w['verb']}` takes no `{role}`: it takes "
+                                                               f"{', '.join(sorted(takes))}"))
     return out
 
 
@@ -220,6 +257,17 @@ def domain_why(J, b, M, where, v, dom):
         return [(where, f"{s!r} is no line a drawing can run along: one of {', '.join(sorted(M.lines))}")]
     if reg in ('lenses', 'archetypes', 'planes') and L.has(reg, s):
         return [(where, L.has(reg, s))]
+    if reg == 'orientations':                  # AN ORDER RUNS ON ITS OWN AXIS (the drawing's `axes`): its row says which
+        row = next((r for r in L.profile_tables.get('orientations') or [] if str(r.get('order')) == s), None)
+        if row is None:
+            return [(where, L.has(reg, s) or f"{s!r} is no order of `orientations`")]
+        axes = [str(a) for a in _listed((dom.get('where') or {}).get('axis'))]
+        if axes and str(row.get('axis')) not in axes:
+            return [(where, f"`{s}` runs on the {row.get('axis')} axis (its row of `orientations`), never {' or '.join(axes)}"
+                            + (": a body's frame never turns with the reader's script" if str(row.get('follows')) != 'true'
+                               else ''))]
+    if reg == 'verbs' and s not in L.verbs:
+        return [(where, f"{s!r} is no verb of the law (core/law/core.yaml, core/law/verbs.yaml, or the garden's VOCAB.md)")]
     if reg == 'kinds' and s not in L.kinds:
         return [(where, f"{s!r} is no kind of the law")]
     if reg == 'systems' and s not in J.systems:

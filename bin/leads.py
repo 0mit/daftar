@@ -50,14 +50,20 @@ HEAD = re.compile(r'^## (.+?)(?: · |$)')
 
 def pending(root):
     """[(id, class, status)] of log/pending.md's entries, as each writes them: `## <id> · …`, `- class: X …`,
-    `- status: …`."""
+    `- status: …`. What a fenced block holds is the file's own example of an entry (the seed's "Entry shape"), never an
+    entry: read, it was a decision `<slug>` waiting on every gardener of every garden grown from the seed."""
     path = os.path.join(root, 'log', 'pending.md')
-    out, cur = [], None
+    out, cur, fenced = [], None, False
     try:
         lines = open(path, encoding='utf-8').read().splitlines()
     except OSError:
         return out
     for ln in lines:
+        if ln.lstrip().startswith('```'):
+            fenced = not fenced
+            continue
+        if fenced:
+            continue
         m = HEAD.match(ln)
         if m:
             cur = [m.group(1).strip(), '', '']

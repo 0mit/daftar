@@ -159,9 +159,14 @@ _fixture_ids = set(re.findall(r'(?m)^    "([a-z0-9][a-z0-9-]*)": \'\'\'(?:bean|m
 _words = (dmpublic.estate_words(_G, dmpublic.public_words(_G)) | {w for w in _fixture_ids if len(w) >= 4}) \
          - dmpublic.public_words(_G)
 _leak = [(f, w) for f in _AFILES for w in dmpublic.hits(_text(f), _words)]
+# the view's archetypes engraved from readings and its one write path read and write a garden of the core's statements,
+# and run in no other garden: they speak the core's words, as its reader does
+CORE_ONLY = ("view_engraved.py", "view_write.py", "view_engraved.js", "view_queue.js", "view_timeline.js",
+             "view_flows.js", "view_sheet.js")
 _retired = [(f, n) for f in _AFILES if f.endswith(CODE_EXT)
             and not f.endswith("_core.py")     # an asset's reader of the core (v1 part 11) writes the core's words, and
             # `kind` is the core's name of today's genos (core/law/kinds.yaml), not the word 22.0 retired
+            and os.path.basename(f) not in CORE_ONLY
             for n, line in enumerate(_text(f).split("\n"), 1) if CODE_WORD.search(line)]
 check(f"7. an asset's {len(_AFILES)} files name no harness directory and sit in no hidden one, name nothing a garden "
       f"holds ({len(_words)} words: the grown garden's and the fixtures'), and write no retired word as a key",

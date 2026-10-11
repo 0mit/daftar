@@ -1,0 +1,48 @@
+/* The archetypes engraved from readings (view_engraved.js and its four renderers). Every side is a logical one —
+   inline and block, start and end — so a page in a right-to-left script is laid out by its own direction and no rule
+   is written for one script. A grid position a renderer computes is set by safe.js `mount` from a data attribute. */
+.eg{font-family:Vazirmatn,system-ui,sans-serif}
+.eg h4{margin:.9em 0 .35em;font-size:.95em;color:var(--muted,#5a6a7b)}
+.eg-btn{padding:4px 10px;border:1px solid var(--line,#cfd8e2);border-radius:7px;background:transparent;color:var(--fg,#17202b);cursor:pointer;font:inherit;font-size:.92em}
+.eg-btn.eg-on,.eg-btn.eg-primary{border-color:var(--accent,#ff9d4a);color:var(--accent,#c45f00)}
+.eg-head{display:flex;justify-content:flex-end;gap:6px;margin-block-end:6px}
+.eg-empty,.eg-copy{color:var(--muted,#5a6a7b)}
+.eg-leads,.eg-events,.eg-flows,.eg-statements,.eg-dependents,.eg-list,.eg-notes{list-style:none;margin:0;padding:0}
+.eg-lead{padding:6px 10px;border-inline-start:3px solid var(--line,#cfd8e2);margin-block-end:6px}
+.eg-lead.eg-late{border-inline-start-color:#f85149}
+.eg-lead-why{color:var(--muted,#5a6a7b);font-size:.9em}
+.eg-late-word{color:#f85149}
+.eg-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-block:6px}
+.eg-layouts,.eg-nav{display:inline-flex;gap:4px}
+.eg-label{font-weight:600}
+.eg-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.eg-day{border:1px solid var(--line,#cfd8e2);border-radius:6px;padding:4px 6px;min-height:4.5em;font-size:.9em}
+.eg-day.eg-today{border-color:var(--accent,#ff9d4a)}
+.eg-day.eg-beyond{opacity:.5}
+.eg-day-head{color:var(--muted,#5a6a7b);font-size:.85em;margin-block-end:3px}
+.eg-dn{font-weight:600;color:var(--fg,#17202b)}
+.eg-event{margin-block-end:3px}
+.eg-list-day{display:grid;grid-template-columns:minmax(9em,auto) 1fr;gap:10px;padding-block:5px;border-block-end:1px solid var(--line,#cfd8e2)}
+.eg-list-day.eg-today .eg-list-when{color:var(--accent,#c45f00)}
+.eg-flow{display:flex;justify-content:space-between;gap:12px;padding:6px 10px;border-block-end:1px solid var(--line,#cfd8e2)}
+.eg-arrow{font-weight:700;padding-inline:6px;color:var(--accent,#c45f00)}
+.eg-partial{color:#a0522d}
+.eg-someone{font-style:italic;color:var(--muted,#5a6a7b)}
+.eg-sheet-head h3{margin:.2em 0}
+.eg-summary{color:var(--muted,#5a6a7b);margin:.2em 0 .6em}
+.eg-row{margin-block-end:8px}
+.eg-statement{padding:6px 10px;border:1px solid var(--line,#cfd8e2);border-radius:8px;margin-block-end:6px}
+.eg-statement.eg-sealed{border-style:dashed}
+.eg-statement.eg-refused,.eg-field.eg-refused{border-color:#f85149}
+.eg-role{display:inline-block;margin-inline-end:10px}
+.eg-role-name{color:var(--muted,#5a6a7b);font-size:.82em;margin-inline-end:4px}
+.eg-known,.eg-default{color:var(--muted,#5a6a7b);font-size:.82em}
+.eg-held{font-size:.82em;color:#8250df;margin-inline-start:6px}
+.eg-dependents{margin-inline-start:14px;margin-block-start:4px;border-inline-start:2px solid var(--line,#cfd8e2);padding-inline-start:8px}
+.eg-field{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-block:3px}
+.eg-req-word{color:#a0522d}
+.eg-err{color:#f85149;font-size:.85em}
+.eg-err:empty{display:none}
+.eg-remove{font-size:.85em;color:var(--muted,#5a6a7b)}
+.eg-dialog{max-width:min(860px,96vw);max-height:90vh;overflow:auto;border:1px solid var(--line,#cfd8e2);border-radius:12px;background:var(--panel,#fff);color:var(--fg,#17202b)}
+.eg-dialog::backdrop{background:rgba(0,0,0,.35)}

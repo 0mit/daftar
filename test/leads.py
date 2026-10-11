@@ -2,7 +2,8 @@
 """Leads: what waits, and for whom — a reading of the garden for each person, never stored, read from what the garden
 already says (bin/leads.py). Who is told is never configured.
 
-Grows a garden of the core and writes in it: a decision parked for the gardener (`status: proposed`, class G); one of
+Grows a garden of the core and writes in it: a decision parked for the gardener (`status: proposed`, class G), beside
+the queue's own example of an entry in a fenced block, which is none; one of
 class F, which a `grant … as: ratify, class: F` of the gardener's opens to another person; a bicycle repair on a walk,
 waiting at a step whose `by` names the part the repairer took in its agreement, and past the step's `usually`; a step
 whose part nobody took; a case at a final step; and an agent session left open. Then each lead is for whom the garden
@@ -193,6 +194,9 @@ A machine.
     check("...one of a class a ratify grant opens is the grant's holder's too",
           sorted(x['for'] for x in by('decision', 'a-new-name')) == ['p-1a2b3c4d', 'sam'], by('decision', 'a-new-name'))
     check("...and one taken already is nobody's", not by('decision', 'settled-already'), leads)
+    check("...and the queue's own example of an entry (the seed's `## <slug>`, in a fenced block) is no decision of "
+          "anyone's", not [x for x in leads if x['kind'] == 'decision' and '<' in x['about']],
+          [x for x in leads if x['kind'] == 'decision'])
     w = by('case', 'repair-waiting')
     check("leads: a case at a step is the party's whose part the step names — the repairer's — and overdue past its usual",
           [x['for'] for x in w] == ['sam'] and w[0]['step'] == 'looked-at' and w[0]['overdue'] is True

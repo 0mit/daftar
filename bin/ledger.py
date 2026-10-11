@@ -4,6 +4,7 @@
     python3 bin/ledger.py                                      # every agreement in this garden
     python3 bin/ledger.py <contract-bean> [<contract-bean> ...] # these agreements
     python3 bin/ledger.py --between <party-bean> <party-bean>  # two parties, netted across the agreements they share
+    python3 bin/ledger.py [...] --json                         # the same reading, structured, for a page to draw
 
 WHAT IS OWED IS NEVER STORED (std-vocab 21.0, `transactions`, and the retired `balance`). "ali owes sam 300" is
 derivable from "900 paid by sam, borne two to one", and a bean that stored both kept a second copy that would drift the
@@ -36,6 +37,13 @@ TWO CURRENCIES ARE NEVER ADDED. No factor joins two currencies (the `money` quan
 every position, debt and net is per currency. A transaction priced in one currency and `charged` in another shows the
 rate it implies — charged over amount, exactly — as a reading of the statement, never as a rate to reuse.
 
+THE SAME READING, FOR A PAGE (`--json`, in a garden of the core): what is printed above, as data — each agreement's
+parties, transactions, positions, debts netted within it, its clauses (when each falls due, and next), its notes and
+what it left out; and `net`, every pair of parties netted per currency across the agreements read, as
+--between nets one pair (the view's flows draw it; a page never reads this prose). Every amount is a COUNT AS TEXT —
+a decimal where it terminates, `n/d` where it does not, with `uneven` where it does not come out even in its
+currency's places — never a JSON number, which a reader would take as a float.
+
 WHAT IS NOT READ IS SAID (manifesto: never-pathless). A transaction whose figures cannot be read exactly, a bean whose front matter does not parse,
 an entry a merge left as a disagreement for a person (`{conflict: [a, b]}`): each is left out of every total and named
 in a NOTE, so a total is never smaller than it looks without the reader being told why — under its agreement, and
@@ -50,7 +58,7 @@ from that rule, the parties from the `key_of` its parts name and the party's bea
 clauses from every term that falls due between those parties (`expiry` and a `key_of` the parties). Never writes.
 Exit 0; 2 when this is not a garden, or a bean named is not here or does not parse, or `--between` is not two parties.
 """
-import datetime, os, re, sys
+import datetime, json, os, re, sys
 from fractions import Fraction
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -942,7 +950,7 @@ def core_print(ag, units):
         emit()
 
 
-def core_main(argv, between):
+def core_main(argv, between, as_json=False):
     sys.path.insert(0, ROOT)
     from core import engine
     G = engine.Garden.read(ROOT)
@@ -953,10 +961,13 @@ def core_main(argv, between):
         if G.beans[b].unread:
             emit(f"ledger: the bean '{b}' is here and cannot be read: {G.beans[b].unread}"); return 2
     unread = {k: b.unread for k, b in G.beans.items() if b.unread}
-    for stem, why in sorted(unread.items()):
-        emit(f"NOTE {stem} is not read — {why}; whatever it records is missing from every total below")
     chosen = argv or sorted(k for k, b in G.beans.items() if not b.unread and any(v == 'pay' for _i, v, _r in b.items))
     ags = [core_agreement(G.beans[k], G, units) for k in chosen]
+    if as_json:
+        print(json.dumps(reading_json(ags, units, unread, between), ensure_ascii=False, indent=1))
+        return 0
+    for stem, why in sorted(unread.items()):
+        emit(f"NOTE {stem} is not read — {why}; whatever it records is missing from every total below")
     if between:
         for ag in ags:
             ag.pop('clauses', None)
@@ -966,6 +977,148 @@ def core_main(argv, between):
     for ag in ags:
         core_print(ag, units)
     return 0
+
+
+# ============================================================================ --json: the same reading, for a page
+def figure(x, unit, units):
+    """An amount exactly, as a page draws it: its count as text — a decimal where it terminates, `n/d` where it does not
+    (bin/units.py `show`) — its unit, and whether it comes out even in the currency's places. Never a JSON number."""
+    return {'count': dmunits.show(x), 'unit': str(unit), 'uneven': amount(x, unit, units)[1]}
+
+
+def _day(n):
+    """A day number as the day the law writes, in the Gregorian calendar a page converts from."""
+    return datetime.date.fromordinal(n).isoformat()
+
+
+def _plain(v):
+    """A value a bean holds, as JSON carries it: text stays text, and nothing becomes a number a reader would round."""
+    if isinstance(v, dict):
+        return {str(k): _plain(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_plain(x) for x in v]
+    return v if v is None or isinstance(v, (str, bool)) else str(v)
+
+
+def clause_json(cid, e, figs, due, rep, today):
+    """One clause, as data: who it binds and to whom, what it asks, its stance, when it falls due and — for one that
+    repeats — when next, walked by bin/stale.py as the prose's `due_words` walks it, and what could not be walked."""
+    out = {'id': cid, 'figures': list(figs), 'notes': []}
+    for k in ('by', 'to', 'what', 'permission', 'state', 'when', 'amount', 'notice', 'during', 'falls_due', 'each'):
+        if e.get(k) is not None:
+            out[k] = _plain(e[k])
+    v = e.get(due) if due else None
+    rec = e.get(rep) if rep else None
+    if v is None:
+        return out
+    out['due'] = _plain(v)
+    if isinstance(rec, dict):
+        out['every'] = _plain(rec)
+    try:
+        first = dmstale.day_of(v)
+    except (ValueError, dmcal.NotByRule) as why:
+        out['notes'].append(f"{due} {dmstale.day_words(v)} is not walked here: {why}")
+        return out
+    if not isinstance(rec, dict):
+        out['next'] = {'day': _day(first), 'index': 1, 'times': '1', 'ended': first < today}
+        return out
+    try:
+        day, i, times, ended = dmstale.next_due(first, rec, today)
+    except dmstale.Unreckoned as why:
+        out['notes'].append(f"the next occurrence cannot be walked here: {why}")
+        return out
+    out['next'] = {'day': _day(day), 'index': i, 'times': None if times is None else str(times), 'ended': ended}
+    return out
+
+
+def agreement_json(ag, units, today):
+    """One agreement of the core as `core_print` reads it, as data."""
+    def party(k):
+        return ag['parties'].get(k) or k
+    txs = []
+    for tx in ag['txs']:
+        t = {'id': str(tx['key']), 'day': _plain(tx.get('day')), 'what': tx.get('what') or None,
+             'notes': list(tx.get('notes') or [])}
+        if tx.get('whole') is not None:
+            t['whole'] = figure(tx['whole'], tx['unit'], units)
+        if tx.get('paid') is not None:
+            t['paid'] = [dict(figure(x, tx['unit'], units), by=p) for p, x in sorted(tx['paid'].items())]
+            t['borne'] = [dict(figure(x, tx['unit'], units), by=p) for p, x in sorted(tx['borne'].items())]
+            t['borne_by_payer'] = tx['borne'] == tx['paid']
+        if tx.get('priced'):
+            c, u = tx['priced']
+            t['priced'] = figure(c, u, units)
+        txs.append(t)
+    clauses = []
+    for cid, r, figs, e in ag.get('clauses') or []:     # a `can`, or a position on the square, and its form (core_agreement)
+        e = dict(e or {}, **{k: r.get(k) for k in ('by', 'to') if r.get(k) is not None and not (e or {}).get(k)})
+        if 'what' not in e and isinstance(r.get('of'), str):
+            e['what'] = r['of']
+        clauses.append(clause_json(cid, e, [f for f in figs if isinstance(f, str)], 'due', 'every', today))
+    return {
+        'bean': ag['bean'], 'title': ag['title'] if isinstance(ag.get('title'), str) else None,
+        'parties': {str(k): b for k, b in sorted(ag['parties'].items())},
+        'transactions': txs,
+        'positions': [dict(figure(x, cur, units), party=party(p)) for cur in sorted(ag['position'])
+                      for p, x in sorted(ag['position'][cur].items())],
+        'debts': [dict(figure(x, cur, units), **{'from': party(d), 'to': party(c)}) for cur in sorted(ag['owed'])
+                  for d, c, x in net(ag['owed'][cur])],
+        'clauses': clauses,
+        'notes': list(ag['notes']), 'left_out': [{'what': w, 'why': y} for w, y in ag['left_out']],
+    }
+
+
+def net_across(ags, pair=None):
+    """({currency: [(debtor, creditor, amount)]}, partial) — what each party owes each other across the agreements
+    read, each pair netted per currency as --between nets one pair; with `pair`, that pair alone, and only the agreements
+    both are party to. Parties by their beans; `partial` where an agreement left something out, or a party in it is
+    nobody until a person chooses."""
+    total, partial = {}, False
+    for ag in ags:
+        beans = ag['parties']
+        if pair and not all(any(b == p for b in beans.values()) for p in pair):
+            continue
+        if ag['left_out']:
+            partial = True
+        for cur, pairs in ag['owed'].items():
+            for (d, c), x in pairs.items():
+                bd, bc = beans.get(d, d), beans.get(c, c)
+                if bd is None or bc is None:
+                    partial = True
+                    continue
+                if pair and {bd, bc} != set(pair):
+                    continue
+                total.setdefault(cur, {})
+                total[cur][(bd, bc)] = total[cur].get((bd, bc), Fraction(0)) + x
+    return {cur: net(pairs) for cur, pairs in sorted(total.items())}, partial
+
+
+def reading_json(ags, units, unread, between=None):
+    """The whole reading as one document: each agreement, the net across them, and what was not read."""
+    today = datetime.date.today().toordinal()
+    if between:
+        ags = [ag for ag in ags if all(any(b == p for b in ag['parties'].values()) for p in between)]
+    nets, partial = net_across(ags, between)
+    out = {'agreements': [agreement_json(ag, units, today) for ag in ags],
+           'net': [dict(figure(x, cur, units), **{'from': d, 'to': c}) for cur, rows in nets.items() for d, c, x in rows],
+           'partial': partial or bool(unread), 'unread': {str(k): str(v) for k, v in sorted(dict(unread).items())}}
+    if between:
+        out['between'] = list(between)
+    return out
+
+
+def reading(chosen=None, between=None):
+    """What --json prints, for a reader in this process (the view's flows and sheets): the agreements `chosen` — every
+    bean of this garden of the core that records a `pay`, where none are named — read as `core_main` reads them."""
+    sys.path.insert(0, ROOT)
+    from core import engine
+    G = engine.Garden.read(ROOT)
+    units = core_units()
+    unread = {k: b.unread for k, b in G.beans.items() if b.unread}
+    if chosen is None:
+        chosen = sorted(k for k, b in G.beans.items() if not b.unread and any(v == 'pay' for _i, v, _r in b.items))
+    ags = [core_agreement(G.beans[k], G, units) for k in chosen if k in G.beans and not G.beans[k].unread]
+    return reading_json(ags, units, unread, between)
 
 
 def main(argv):
@@ -983,6 +1136,8 @@ def main(argv):
                                                    + ' bin/')).split('\n'):
             emit(l)                             # one line a call: the guard escapes a line feed
         return 0
+    as_json = '--json' in argv
+    argv = [a for a in argv if a != '--json']
     between = None
     if '--between' in argv:
         i = argv.index('--between')
@@ -991,11 +1146,14 @@ def main(argv):
         if len(between) != 2 or between[0] == between[1]:
             emit("ledger: --between takes two party beans, e.g. --between sam ali"); return 2
     if runs_core():
-        return core_main(argv, between)
+        return core_main(argv, between, as_json)
     try:
         terms, units, systems = law()
     except NotAGarden as e:
         emit(f"ledger: {e}"); return 2
+    if as_json:
+        emit("ledger: --json reads a garden of the core; this one is in today's words — its prose reading is above")
+        return 2
     mterms = money_terms(terms)
     pterms = sorted({r['parties'] for _t, r in mterms if r['parties']})
     prefs = party_refs(terms, pterms)
