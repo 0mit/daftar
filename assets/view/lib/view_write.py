@@ -10,6 +10,7 @@ garden's pages (a worker that imports this file from the release the garden runs
     {op: change, key, verb?, roles, held?, while?}         the statement `key` names, rewritten in place
     {op: remove, key}                                      the statement `key` names, taken out
     {op: change, header: title | summary, value}           a header fact, rewritten (an empty summary is taken out)
+    {op: change, header: tags, value: [words]}             the bean's tags, as a set (none: the key taken out)
 `key` names a statement as bin/safe.py names it: `<verb>#<id>`, or `<verb>@<n>` for one with no id — changed or removed
 only where it is the one statement of its verb. With `bean` None and `kind`, the ops make a NEW being of that kind:
 its id minted opaque (`p-<8 hex>` for a person, its title the id; `<kind>-<8 hex>` for any other), its file written
@@ -33,7 +34,7 @@ writers of one clone.
 import json, os, re, secrets, subprocess, sys
 
 OPS = ('add', 'change', 'remove')
-HEADERS = ('title', 'summary')
+HEADERS = ('title', 'summary', 'tags')
 BESIDE = ('note', 'why')                     # what a statement carries beside its roles that a sheet writes
 _CTRL = re.compile('[\x00-\x08\x0a-\x1f\x7f-\x9f  ]')
 _KEY = re.compile(r'^([a-z][a-z0-9-]*)(?:#([A-Za-z0-9][A-Za-z0-9_.-]*)|@(\d+))$')
@@ -158,7 +159,17 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         if 'header' in op:
             h, v = op.get('header'), op.get('value')
             if op['op'] != 'change' or h not in HEADERS:
-                refuse(n, f"header:{h}", "a header fact is changed: the title, or the summary")
+                refuse(n, f"header:{h}", "a header fact is changed: the title, the summary, or the tags")
+            elif h == 'tags':                    # A SET OF WORDS: each one line, none twice; the order as given
+                words = [x.strip() for x in v] if isinstance(v, list) and all(isinstance(x, str) for x in v) else None
+                if words is None or any(not x or _CTRL.search(x) for x in words) or len(set(words)) != len(words):
+                    refuse(n, 'header:tags', "the tags are a list of words, each one line, none empty and none twice")
+                elif 'header:tags' in touched:
+                    refuse(n, 'header:tags', "the tags are changed once in a write")
+                else:
+                    touched.add('header:tags')
+                    if b is None or sorted(b.header.get('tags') or []) != sorted(words):
+                        plan.append((n, 'header', 'tags', words, None))
             elif not isinstance(v, str) or (h == 'title' and not v.strip()) or _CTRL.search(v):
                 refuse(n, f"header:{h}", f"the {h} is one line of text" + (", and a title is never empty" if h == 'title' else ''))
             elif new and h == 'title' and kind == 'person':
@@ -291,9 +302,11 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         if new:
             title = next((v for _n, a, h, v, _x in plan if a == 'header' and h == 'title'), None) or bean
             summary = next((v for _n, a, h, v, _x in plan if a == 'header' and h == 'summary'), None)
+            tags = next((v for _n, a, h, v, _x in plan if a == 'header' and h == 'tags'), None)
             body = [f"- say: {{ by: {who}, at: now }}\n"] + [line(n, verb, x) for n, act, _k, verb, x in plan if act == 'add']
             head = f"---\nbean: {bean}\nkind: {kind}\ntitle: {json.dumps(title, ensure_ascii=False)}\n" + \
-                   (f"summary: {json.dumps(summary, ensure_ascii=False)}\n" if summary else '')
+                   (f"summary: {json.dumps(summary, ensure_ascii=False)}\n" if summary else '') + \
+                   (f"tags: {json.dumps(tags, ensure_ascii=False)}\n" if tags else '')
             safe.write_atomic(path, head + "statements:\n" + ''.join('  ' + s for s in body) + f"---\n{title}\n")
             entry.insert(0, f"- action: made [[{bean}]], a {kind}, from an empty sheet, by [[{who}]]" +
                          ''.join(f"; added `{verb}#{x['id']}`" for _n, act, _k, verb, x in plan if act == 'add') + '.')
@@ -303,7 +316,20 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
                 try:
                     if act == 'header':
                         h, v = key, verb
-                        if h == 'summary' and not v:
+                        if h == 'tags':
+                            if not v:
+                                if 'tags' in b.header:
+                                    safe.remove_block(path, 'tags')
+                                    done.append("took out the tags")
+                            elif 'tags' in b.header:
+                                safe.replace_block(path, 'tags', f"tags: {json.dumps(v, ensure_ascii=False)}\n",
+                                                   allow_remove=tuple(f"tags[{i}]" for i in range(len(b.header['tags']))))
+                                done.append("changed the tags")
+                            else:
+                                safe.insert_after(path, 'summary' if 'summary' in b.header else 'title',
+                                                  f"tags: {json.dumps(v, ensure_ascii=False)}\n")
+                                done.append("wrote the tags")
+                        elif h == 'summary' and not v:
                             if 'summary' in b.header:
                                 safe.remove_block(path, 'summary')
                                 done.append("took out the summary")
