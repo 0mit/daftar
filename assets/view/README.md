@@ -159,10 +159,13 @@ runs and name every key, glyph and swipe by meaning (`earlier`, `later`, `next`)
 its title and summary, and each verb the page's `fields` names for its kind, its statements in the order the bean holds
 them, each with the statements that take it as their `of` beneath it (a payment with its `bear` shares and the clauses
 that ask it), who knows it (its knowing act), and the default the law derives where nothing is written (a payment no
-`bear` names: its payer bears it, alone, as the ledger reads it). Where the reader may write the being — the gardener,
-or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns every fact they may
-write into the widget of its shape (read from the verb's row: never typed in a page), with a remove mark on each
-statement and an add for each verb; **one Save** is one write; Cancel drops the draft. There is no button per field.
+`bear` names: its payer bears it, alone, as the ledger reads it). What the page's `fields` names of the being's
+`details` — what fits no verb yet, kept whole until one is proposed — is drawn beneath its head as it is held, key by
+key, each value by the widget of what it looks like, and never edited on the sheet. Where the reader may write the
+being — the gardener, or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns
+every fact they may write into the widget of its shape (read from the verb's row: never typed in a page), with a
+remove mark on each statement and an add for each verb; **one Save** is one write; Cancel drops the draft. There is no
+button per field.
 A page a `new` names opens an empty sheet of a kind, whose first Save mints the bean (`p-<8 hex>` for a person, titled
 by the id; `<kind>-<8 hex>` for another) and writes it whole — the gardener's alone, since no grant names a being not
 yet made.
