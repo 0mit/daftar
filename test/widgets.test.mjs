@@ -287,7 +287,7 @@ ok('place: what lands — the garden\'s own as the being it is; any other as a W
   assert.deepEqual(place.take(mine), {value: ['bookshop'], read: null});
   assert.deepEqual(place.take(here), {value: ['EPSG:4326;35.6976,51.4023', 'osm:way/42'], read: {
     from: {someone: 'org', at: 'uri:https://www.openstreetmap.org/copyright'},
-    through: 'OpenStreetMap way/42, as this machine’s place search holds it (© OpenStreetMap contributors, ODbL-1.0)'}});
+    through: 'OpenStreetMap way/42, as this machine’s place search holds it (© OpenStreetMap contributors, ODbL-1.0)'}, area: true});
   assert.match(place.take(far).read.through, /^OpenStreetMap relation\/223474, as a place service beyond this machine found it/);
   const [tiny] = place.merge({here: [{code: 'x', label: 'x', point: [1e-7, -0.5]}], hereSources: HERE.sources});
   assert.deepEqual(tiny.at, ['EPSG:4326;0.0000001,-0.5']);                              // never an exponent
@@ -295,6 +295,19 @@ ok('place: what lands — the garden\'s own as the being it is; any other as a W
   const [host] = place.merge({own: [{code: 'cafe-b', label: 'Cafe B', kind: 'org', point: [35.6976, 51.4023], osm: 'way/42'}]});
   assert.deepEqual([host.source, host.at, host.read, host.what], ['own', ['cafe-b'], null, 'org']);   // a host's read of the garden
   assert.ok(!JSON.stringify(place.take(far)).includes('"name"'), 'a map\'s id never lands as a name');
+});
+ok('place: an area — a country, a city, a street, as its source names what it is, or a way or a relation of the map, or a gazetteer\'s feature — is said to be one; a house at a node, a shop, and the garden\'s own beings are not', () => {
+  const s = place.merge({own: place.own('کاخ', OWN), here: [HERE.places[0],
+    {code: 'zz-tehran', label: 'تهران', kind: 'city', point: [35.6893, 51.3896], osm: 'node/29'},
+    {code: 'zz-house', label: 'پلاک ۱۲', kind: 'house', point: [35.6977, 51.4024], osm: 'node/77'},
+    {code: 'zz-bushehr-p', label: 'بوشهر', kind: 'province', point: [28.9, 51.0]},
+    {code: 'zz-feature', label: 'Feature', kind: 'other', point: [35.7, 51.4], geonames: '112931'}], hereSources: HERE.sources,
+    far: [FAR.places[1], {label: 'A shop', point: [41.01, 28.98], osm: 'node/8'}], farSources: FAR.sources});
+  assert.deepEqual(s.map(x => [x.label, !!x.area]), [['کاخ', false], ['کاخ کتاب', false], ['فلسطین', true], ['تهران', true],
+    ['پلاک ۱۲', false], ['بوشهر', true], ['Feature', true], ['Istanbul', true], ['A shop', false]]);   // the own café stands at a way, and is a being
+  assert.equal(place.take(s[2]).area, true);
+  assert.ok(!('area' in place.take(s[4])) && !('area' in place.take(s[0])));
+  assert.ok(!('area' in place.take('osm:relation/6663864')), 'a position typed is the gate\'s to judge, not the widget\'s');
 });
 ok('place: a position typed with its system is taken as written, a bare coordinate never — in the reader\'s words, with its form', () => {
   assert.deepEqual(place.take('EPSG:4326;35.69,51.39'), {value: ['EPSG:4326;35.69,51.39'], read: null});
@@ -354,6 +367,7 @@ await (async () => {
   const picked = api.pick(0);                                                    // the machine's «فلسطین»; the far one is the same element
   assert.equal(picked.osm, 'way/42');
   assert.deepEqual(place.take(place.collect(f.box)).value, ['EPSG:4326;35.6976,51.4023', 'osm:way/42']);
+  assert.equal(place.take(place.collect(f.box)).area, true, 'a street picked is kept as an area');
   lookups++;
 })();
 await (async () => {      // A SEALED FIELD: where a person will be is looked up here alone — the place service is never asked

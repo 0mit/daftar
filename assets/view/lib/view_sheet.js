@@ -284,7 +284,7 @@
     /* what a field holds, as the law writes it — or an error said at the field */
     function readFields(li, verb, errs, known) {
       var p = li.getAttribute('data-prefix'), row = data.verbs[verb] || {roles: {}, qualifiers: {}}, specs = Object.assign({}, row.roles, row.qualifiers);
-      var roles = {};
+      var roles = {}, area = false;
       if (li.hasAttribute('data-move')) {
         var step = li.querySelector('[name="' + p + '.step"]'), note = li.querySelector('[name="' + p + '.note"]');
         if (!step || !step.value) { errs.push([p + '.step', t.say('sheet-step-needed')]); return {}; }
@@ -300,6 +300,7 @@
           if (r.error) { errs.push([nm, r.error]); return; }
           if (r.value.length) roles[k] = r.value.length === 1 ? r.value[0] : r.value;
           if (r.read && known) known.read = r.read;  // where it was read: the save's `read` of that source
+          area = area || !!r.area;
           return;
         }
         if (q(nm + '.count')) {
@@ -348,6 +349,9 @@
       });
       var kept = JSON.parse(li.getAttribute('data-kept') || '{}');
       Object.keys(kept).forEach(function (k) { roles[k] = kept[k]; });
+      // AN AREA PICKED where a `be` says nothing of how it places is placed as a place: an area holds many, and two
+      // bodies are not in one room only at a point (the room rule; each system's `covers`)
+      if (area && verb === 'be' && !roles.as) roles.as = 'place';
       return roles;
     }
 
