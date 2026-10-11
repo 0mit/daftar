@@ -238,7 +238,7 @@ window.addEventListener('load', () => { const out = {}; let sheet = '';
               f"the reader's line start ({want}), and a line's being opening its sheet, with no exception",
               not res['errs'] and o.get('dir') == want and o.get('orient') == 0
               and all(o.get(l) == 2 for l in ('understand', 'operate', 'inspect')) and o.get('firstAtStart') is True
-              and 'repair-1' in (res.get('sheet') or ''), res)
+              and 'the red bicycle' in (res.get('sheet') or ''), res)
     if not browser:
         print("NOTE  the pages were not drawn in a browser: none on this machine")
 finally:
