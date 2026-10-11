@@ -209,3 +209,20 @@ Commission." Modified or adapted versions must be marked as such.
   model's, and IFC fixes none.
 - **Its licence** is CC BY-ND 4.0 (© buildingSMART International): the schema is fetched, never redistributed, and the
   crossing cites its type and unit names and links each to the law's rows, changing nothing of the schema.
+
+## epsg-uom — EPSG's units of measure (ISO 19111), fetched
+
+- **Not shipped.** A person signed in at epsg.org downloads the EPSG Dataset as its SQL scripts (a zip);
+  `python3 bin/fetch.py epsg-uom --from <the zip or its …Data_Script.sql>` keeps it unchanged outside git and reads each
+  row of `epsg_unitofmeasure`: code, name, type, target unit, factor_b, factor_c and whether it is deprecated. The
+  reader was built on 2026-10-11 against an unchanged public copy of the PostgreSQL data script of the EPSG Dataset
+  13.103 (its 95 units), the download itself asking for an account.
+- **units-epsg-uom.tsv** names all 95: 22 cross — the metric lengths, the international foot, yard and mile, the US
+  survey foot (`[ft_us]`, added to the law with it), the radian, degree, arc-minute, arc-second and grad, unity and
+  the parts per million and billion, the second, and EPSG's year, which is the annus the law holds (31 556 925.445 s)
+  — and 73 cross to nothing with their reasons: the surveys' own historical feet, yards, chains and links, the
+  notations of a degree in minutes and seconds or with its hemisphere, the rates per year, a seismic grid's bin widths.
+  Every crossed unit is the size EPSG states (its factor_b / factor_c of its target; π, written to fourteen decimals,
+  as π): test/core_standards.py holds the crossing to it.
+- **Its terms** are the EPSG Dataset's terms of use (epsg.org/terms-of-use.html): the dataset is fetched by each
+  machine, never redistributed; the crossing cites EPSG's codes.

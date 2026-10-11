@@ -5295,3 +5295,15 @@ mass's (kg·m², IFC's rotational mass): one name, two kinds, kept apart. A conv
 naming of a factor to an SI unit; it is read by that factor, exactly, so a foot is the law's foot whatever the model
 calls it, and a factor that is a rounding of π meets no unit at all. The schema is buildingSMART's, CC BY-ND, fetched by
 each machine; the crossing names its types and changes none.
+
+## core/law/registries.yaml: knowledge_schemes[epsg-uom]
+
+A COORDINATE'S UNIT IS EPSG'S, AND THE LAW'S (2026-10-11). The law places a being by EPSG's coordinate reference
+systems, and each says the units its axes are counted in by EPSG's code: 9001 the metre, 9122 the degree, 9003 the US
+survey foot of the American state planes. The crossing names every one of EPSG's 95 units, and each it crosses is the
+size EPSG states — so the crossing is checked against the provider, not only written beside it. The US survey foot
+(1200/3937 m) and the yard join the law's units, being units of length the world counts in; the surveys' own historical
+feet and chains, each defined by its own bar or ratio, do not, and say so. A degree written in minutes and seconds, or
+with its hemisphere's letter, is a notation of a degree, read by its parts, never one count. EPSG's year is the annus
+the law already holds (31 556 925.445 s), so a rate of plate motion per EPSG's year is per annus, and is not the law's
+millimetre per Julian year. The dataset is downloaded by a person who signs in; it is fetched, never shipped.

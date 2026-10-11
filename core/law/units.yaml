@@ -83,6 +83,8 @@ units:
   - { unit: "[in_i]", name: inch, quantity: length, factor: ["127", "5000"] }
   - { unit: "[ft_i]", name: foot, quantity: length, factor: ["381", "1250"] }
   - { unit: "[mi_i]", name: mile, quantity: length, factor: ["201168", "125"] }
+  - { unit: "[yd_i]", name: yard, quantity: length, factor: ["1143", "1250"] }
+  - { unit: "[ft_us]", name: us-survey-foot, quantity: length, factor: ["1200", "3937"] }
   - { unit: "mg", name: milligram, quantity: mass, factor: ["1", "1000000"] }
   - { unit: "ug", name: microgram, quantity: mass, factor: ["1", "1000000000"] }
   - { unit: "t", name: tonne, quantity: mass, factor: ["1000", "1"] }

@@ -55,6 +55,12 @@ Third-party data, distributed alongside daftar as separate works, each under its
     the law's units and kinds and the reasons are daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt).
     The schema itself is not distributed: each machine fetches it from buildingSMART (bin/fetch.py).
 
+  seed/knowledge/units-epsg-uom.tsv
+    Cites the codes of the units of measure of the EPSG Geodetic Parameter Dataset, maintained by the Geomatics
+    Committee of IOGP (epsg.org), used under its terms of use; nothing of the dataset is copied beyond its codes. The
+    pairings with the law's units and the reasons are daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt).
+    The dataset itself is not distributed: each machine's person fetches it (bin/fetch.py).
+
   seed/knowledge/isced-f-2013.tsv
     Source: UNESCO Institute for Statistics, ISCED Fields of Education and Training 2013 (ISCED-F 2013).
     Licensed under CC BY-SA 3.0 IGO (LICENSES/CC-BY-SA-3.0-IGO.txt); its share-alike applies to that file only.
