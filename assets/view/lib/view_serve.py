@@ -30,10 +30,16 @@ says what it would run, and audits that. Every attempt, dry or real or refused, 
 
 SESSIONS. A sign-in form; a signed, expiring, HttpOnly, SameSite=Strict cookie; a CSRF token on every POST. Passwords
 are stored as PBKDF2-SHA256 hashes in the host's configuration, never in git. `view serve-init` writes the
-configuration with a random password in a 0600 file beside it — never printed.
+configuration with a random password in a 0600 file beside it — never printed — and `serve` refuses a configuration
+others may read: it holds the session key and the password hashes.
 
-ITS OWN SCRIPTS. Every answer carries a Content-Security-Policy: no source by default, and the page's own scripts
-(view_report.SCRIPTS) by their hashes, nothing else that runs.
+ONE ADDRESS, ITS OWN NAMES, ITS OWN SCRIPTS. The page listens on the loopback (`listen`, 127.0.0.1:8780 by default);
+an address beyond it is refused unless the configuration says `"listen_beyond_loopback": true` — passwords and
+sessions would otherwise cross a network in clear: serve it beyond this machine through a proxy that speaks TLS, which
+passes `X-Forwarded-Proto: https` (or set `"secure_cookie": true`). It answers only to its own names — its address,
+the loopback's and the `hosts` its configuration lists, such as the name a proxy passes on — so a page served under a
+stranger's name (DNS rebinding) is refused. Every answer carries a Content-Security-Policy: no source by default, and
+the page's own scripts (view_report.SCRIPTS) by their hashes, nothing else that runs.
 
 THE LEDGER IS READ AGAIN when the garden's git HEAD moves (asked at most every `recheck_seconds`, 30 by default, and
 only for a signed-in viewer: a health check answers from what is held). When it moves, or the release GARDEN.md records
@@ -49,7 +55,7 @@ Usage (through assets/view/bin/view.py):
   view serve-init --config <path> --user <name> [--orgs "*"|org-a,org-b] [--shared] [--no-actions]
   view serve --config <path>
 """
-import base64, hashlib, hmac, html, json, math, os, re, secrets, subprocess, sys, threading, time, urllib.parse
+import base64, hashlib, hmac, html, ipaddress, json, math, os, re, secrets, socket, subprocess, sys, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -93,6 +99,44 @@ def _write_private(path, text):
         fh.write(text)
 
 
+def loopback(host):
+    """Whether `host` is this machine's loopback: 127.0.0.0/8, ::1, or `localhost`."""
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def listen_of(cfg):
+    """(host, port) the page listens on: the configuration's `listen` — no address at all is the loopback, as `serve` has
+    always read it — refused (SystemExit, before anything is bound) where it is beyond the loopback and the configuration
+    does not choose that in as many words, `"listen_beyond_loopback": true` (security audit 2026-10-10, 3.2)."""
+    listen = str(cfg.get("listen") or "127.0.0.1:8780")
+    host, _, port = listen.rpartition(":")
+    host = host.strip("[]") or "127.0.0.1"
+    if not port.isdigit():
+        raise SystemExit("view serve: `listen` is <address>:<port>, and %r is not — nothing is bound" % listen)
+    if not loopback(host) and cfg.get("listen_beyond_loopback") is not True:
+        raise SystemExit("view serve: `listen` is %s, beyond this machine's loopback, where passwords and sessions would "
+                         "cross the network in clear — listen on 127.0.0.1 and serve the page beyond this machine through "
+                         "a proxy that speaks TLS, or say `\"listen_beyond_loopback\": true` in the host's configuration "
+                         "to choose it; nothing is bound" % listen)
+    return host, int(port)
+
+
+def private_config(path):
+    """Refuse (SystemExit) a configuration others may read: it holds the session key, which signs every viewer's session,
+    and the password hashes (security audit 2026-10-10, 3.11). Where the system has no such modes, nothing is asked."""
+    if os.name != "posix":
+        return
+    mode = os.stat(path).st_mode & 0o777
+    if mode & 0o077:
+        raise SystemExit("view serve: %s may be read by others (mode %o), and it holds the session key and the password "
+                         "hashes — `chmod 0600` it, as `serve-init` writes it; nothing is served" % (path, mode))
+
+
 def finite(x):
     """A monitor's value as JSON can carry it: a number that is no finite number — Prometheus's NaN for a ratio of 0/0,
     and ±Inf — is written as the word JavaScript reads it back by, "NaN", "Infinity" or "-Infinity", apart from null,
@@ -104,6 +148,19 @@ def finite(x):
     if isinstance(x, (list, tuple)):
         return [finite(v) for v in x]
     return x
+
+
+def _tail_lines(path, n, block=65536):
+    """The last `n` lines of a file, read from its end: a log that grows for years costs what is asked of it."""
+    with open(path, "rb") as fh:
+        fh.seek(0, os.SEEK_END)
+        pos, buf = fh.tell(), b""
+        while pos > 0 and buf.count(b"\n") <= n:
+            step = min(block, pos)
+            pos -= step
+            fh.seek(pos)
+            buf = fh.read(step) + buf
+    return buf.decode("utf-8", "replace").splitlines()[-n:]
 
 
 def serve_init(config, user, orgs="*", actions=True, shared=False, bean=None):
@@ -675,7 +732,7 @@ class Host:
 
     def audit_tail(self, user, n=30):
         try:
-            lines = open(self.cfg["audit_log"]).read().splitlines()[-400:]
+            lines = _tail_lines(self.cfg["audit_log"], 400)   # from its end: the log is never rotated (3.11)
         except OSError:
             return []
         rows = [json.loads(l) for l in lines if l.strip()]
@@ -785,6 +842,11 @@ def _add_entry(text, term, line):
 
 def make_handler(F):
     title = view_report.esc(str(vm.page().get("title") or vm.PAGE))
+    # THE NAMES IT ANSWERS TO (3.11): its own address, the loopback's, and the `hosts` its configuration lists — the name
+    # a proxy in front of it passes on as the Host. A page served under another name (DNS rebinding) is refused.
+    own = listen_of(F.cfg)[0].lower()
+    names = {"127.0.0.1", "localhost", "::1"} | ({own} if own not in ("0.0.0.0", "::") else set()) | \
+        {str(h).strip().lower() for h in F.cfg.get("hosts") or [] if str(h).strip()}
 
     class H(BaseHTTPRequestHandler):
         timeout = float(F.cfg.get("request_seconds", 15))   # a connection that sends nothing is closed (audit 3.3)
@@ -813,6 +875,11 @@ def make_handler(F):
             # a value JSON cannot carry fails here, loudly, rather than reach a page as JSON no browser parses (3.7)
             self._send(code, json.dumps(obj, ensure_ascii=False, allow_nan=False), "application/json")
 
+        def _host_ok(self):
+            h = (self.headers.get("Host") or "").strip().lower()
+            name = h[1:h.index("]")] if h.startswith("[") and "]" in h else h.rsplit(":", 1)[0] if h.count(":") == 1 else h
+            return bool(name) and name in names
+
         def _secure(self):
             """`; Secure` where the viewer reached the host over HTTPS — said by the host's configuration, or by the proxy
             in front of it — so the cookie never travels in the clear; over plain HTTP a browser would refuse it."""
@@ -828,8 +895,11 @@ def make_handler(F):
 
         def do_GET(self):
             u = urllib.parse.urlparse(self.path)
+            if not self._host_ok():
+                return self._send(421, "this page answers to its own names only", "text/plain; charset=utf-8")
             if u.path == "/healthz":   # answered from what is held; a stranger's request starts no work (audit 3.4)
-                return self._send(200, "ok", "text/plain", headers={"X-View-Release": F.release_at_start})
+                # which release it runs is a signed-in viewer's to be told, not a stranger's (3.11)
+                return self._send(200, "ok", "text/plain", headers={"X-View-Release": F.release_at_start} if self._session()[1] else None)
             if u.path == "/login":
                 return self._send(200, LOGIN % {"title": title, "err": ""})
             if u.path == "/logout":
@@ -882,6 +952,8 @@ def make_handler(F):
 
         def do_POST(self):
             u = urllib.parse.urlparse(self.path)
+            if not self._host_ok():
+                return self._send(421, "this page answers to its own names only", "text/plain; charset=utf-8")
             try:
                 n = int(self.headers.get("Content-Length") or 0)
             except ValueError:
@@ -959,10 +1031,22 @@ class Bounded(ThreadingHTTPServer):
             self.slots.release()
 
 
+class Bounded6(Bounded):
+    address_family = socket.AF_INET6
+
+
 def serve(config, argv=None):
+    # refused before anything is read of the garden or bound: a configuration others may read, an address beyond the
+    # loopback nobody chose (3.11, 3.2)
+    private_config(config)
+    with open(config, encoding="utf-8") as fh:
+        host, port = listen_of(json.load(fh))
     F = Host(config, argv)
-    host, _, port = F.cfg.get("listen", "127.0.0.1:8780").rpartition(":")
-    srv = Bounded((host or "127.0.0.1", int(port)), make_handler(F))
+    srv = (Bounded6 if ":" in host else Bounded)((host, port), make_handler(F))
+    if not loopback(host) and F.cfg.get("secure_cookie") is not True:
+        sys.stderr.write("view serve: listening beyond the loopback, as the configuration chooses: unless a proxy that "
+                         "speaks TLS stands in front (and passes X-Forwarded-Proto: https), passwords and sessions cross "
+                         "the network in clear\n")
     sys.stderr.write("view serve: %s:%s · page %s of %s @ %s · %d viewers · %d tools (%d enabled)\n" % (
         host, port, vm.PAGE, vm.garden_name(), (F.head or "")[:10], len(F.cfg["users"]), len(F.cfg.get("tools") or {}),
         sum(1 for t in (F.cfg.get("tools") or {}).values() if t.get("enabled"))))

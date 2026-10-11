@@ -1,5 +1,6 @@
 {
  "listen": "127.0.0.1:8780",
+ "hosts": [],
  "monitors": {"<the monitor's bean id>": {"url": "http://127.0.0.1:9090"}},
  "history": "",
  "session_key": "<view serve-init writes a random key here>",

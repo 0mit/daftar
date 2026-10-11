@@ -1063,6 +1063,7 @@ C["recheck_seconds"] = 1
 C["request_seconds"] = 2
 C["monitors"] = {"yard-monitor": {"url": "http://127.0.0.1:%d" % _pp}, "radio-monitor": {"url": "http://127.0.0.1:1"}}
 C["users"]["dave"]["beans"] = ["field-radio"]
+C["hosts"] = ["view.example.org"]     # the name a proxy in front of the host passes on as the Host (3.11)
 C["tools"] = {"start-fans": {"argv": [sys.executable, "-c", "print('ran-for-real')"], "enabled": True, "timeout": 20},
               "radio-reset": {"argv": ["/bin/false"], "enabled": False}, "pump-stop": {"argv": ["/bin/false"], "enabled": False}}
 json.dump(C, open(CFG, "w"))
@@ -1085,6 +1086,102 @@ check("...and it says why, and refuses to act for a viewer who may view but not 
       "no grant" in _H.may("alice", "field-radio")[1] and _H.may("dave", "hill-pump", act=True) == (False, "this viewer may view but not act"),
       (_H.may("alice", "field-radio"), _H.may("dave", "hill-pump", act=True)))
 
+# THE LOOPBACK BY DEFAULT (security audit 2026-10-10, 3.2): the page listens where its host's configuration says, and
+# beyond the loopback only where the configuration chooses it in as many words — an address alone never opens it.
+def _listen(cfg):
+    try:
+        return _vs.listen_of(cfg)
+    except SystemExit as e:
+        return "refused: %s" % e
+    except Exception as e:  # noqa: BLE001 — what happened is the answer
+        return "%s: %s" % (type(e).__name__, e)
+
+
+_ls = {a: _listen({"listen": a}) for a in ("127.0.0.1:8780", "127.0.0.2:8780", "localhost:8780", "[::1]:8780",
+                                           "0.0.0.0:8780", ":8780", "192.0.2.1:8780")}
+check("serve: the page listens on the loopback — 127.0.0.0/8, ::1, localhost, and no address at all, as it always read "
+      "it — and an address beyond it, or every interface, is refused unless the host's configuration says "
+      "`listen_beyond_loopback`",
+      _ls["127.0.0.1:8780"] == ("127.0.0.1", 8780) and _ls["127.0.0.2:8780"] == ("127.0.0.2", 8780)
+      and _ls["localhost:8780"] == ("localhost", 8780) and _ls["[::1]:8780"] == ("::1", 8780) and _ls[":8780"] == ("127.0.0.1", 8780)
+      and all(str(_ls[a]).startswith("refused") and "listen_beyond_loopback" in str(_ls[a]) for a in ("0.0.0.0:8780", "192.0.2.1:8780")), _ls)
+check("...and chosen in as many words (`true`, nothing else), it listens where it is told",
+      _listen({"listen": "0.0.0.0:8780", "listen_beyond_loopback": True}) == ("0.0.0.0", 8780)
+      and str(_listen({"listen": "0.0.0.0:8780", "listen_beyond_loopback": "yes"})).startswith("refused"),
+      (_listen({"listen": "0.0.0.0:8780", "listen_beyond_loopback": True}),
+       _listen({"listen": "0.0.0.0:8780", "listen_beyond_loopback": "yes"})))
+_far = os.path.join(T, "host", "far.json")
+_vs._write_private(_far, json.dumps(dict(C, listen="192.0.2.1:%d" % free_port())))
+try:
+    _fp = subprocess.run([sys.executable, DMVIEW, "serve", "--config", _far], cwd=G, capture_output=True, text=True,
+                         encoding="utf-8", errors="replace", timeout=60)
+    _fo = (_fp.returncode, _fp.stderr[-700:])
+except subprocess.TimeoutExpired:
+    _fo = (None, "still serving after a minute")
+check("serve: started on an address beyond the loopback with no such choice, it says why and binds nothing",
+      _fo[0] not in (0, None) and "listen_beyond_loopback" in _fo[1] and "Traceback" not in _fo[1], _fo)
+# A CONFIGURATION OTHERS MAY READ IS REFUSED (3.11): it holds the session key, which signs every viewer's session, and
+# the password hashes — a host's file made by hand at 0644 would hand both to every account of the machine.
+if os.name == "posix":
+    _loose = os.path.join(T, "host", "loose.json")
+    with open(_loose, "w", encoding="utf-8") as _fh:
+        json.dump(dict(C, listen="127.0.0.1:%d" % free_port()), _fh)
+    os.chmod(_loose, 0o644)
+    try:
+        _lp = subprocess.run([sys.executable, DMVIEW, "serve", "--config", _loose], cwd=G, capture_output=True, text=True,
+                             encoding="utf-8", errors="replace", timeout=20)
+        _lo = (_lp.returncode, _lp.stderr[-700:])
+    except subprocess.TimeoutExpired:
+        _lo = (None, "it served")
+    check("serve: a configuration others may read (it holds the session key and the password hashes) is refused, and "
+          "nothing is served", _lo[0] not in (0, None) and "0600" in _lo[1] and "Traceback" not in _lo[1], _lo)
+# THE AUDIT LOG IS READ FROM ITS END (3.11): a log that grows for years costs the viewer who asks for the last rows
+# the last rows, not the whole file.
+_alog = os.path.join(T, "host", "long-actions.log")
+with open(_alog, "w", encoding="utf-8") as _fh:
+    for _i in range(60000):
+        _fh.write(json.dumps({"user": "alice" if _i % 2 else "carol", "n": _i, "pad": "x" * 100}) + "\n")
+_read = [0]
+_real_open = open
+
+
+class _Counted:
+    def __init__(self, f):
+        self.f = f
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        self.f.close()
+
+    def __iter__(self):
+        for ln in self.f:
+            _read[0] += len(ln)
+            yield ln
+
+    def read(self, *a):
+        got = self.f.read(*a)
+        _read[0] += len(got)
+        return got
+
+    def __getattr__(self, k):
+        return getattr(self.f, k)
+
+
+_vs.open = lambda *a, **k: _Counted(_real_open(*a, **k))      # found by the module before the builtin
+_alog_was = _H.cfg["audit_log"]
+_H.cfg["audit_log"] = _alog
+try:
+    _tail = [r.get("n") for r in _H.audit_tail("root")]
+except Exception as e:  # noqa: BLE001
+    _tail = repr(e)
+finally:
+    del _vs.open
+    _H.cfg["audit_log"] = _alog_was
+check("the audit log's last rows are read from its end, not the whole file: %d bytes of %d read" % (_read[0], os.path.getsize(_alog)),
+      _tail == list(range(59970, 60000)) and 0 < _read[0] < 1 << 20, (str(_tail)[:200], _read[0]))
+os.remove(_alog)
 # A MONITOR'S ANSWER IS BOUNDED (3.6): one deadline for the whole answer, a cap on its size, and no redirect followed — a
 # monitor that drips its answer, floods it or sends the host elsewhere costs a poll seconds, and reaches nothing else.
 
@@ -1550,6 +1647,20 @@ window.addEventListener('load', async () => { const out = []; let pwn = null, to
               and (_lv.get("toast") or "").startswith("Ran start-fans"), (_plog[-8:], _lv.get("toast")))
     else:
         print("NOTE  the served page was not driven in a browser: none on this machine")
+    # A HEALTH CHECK SAYS IT IS UP, AND NOTHING MORE TO A STRANGER (3.11): which release it runs is a signed-in viewer's
+    _hz = _raw("/healthz", None, "127.0.0.1:%d" % _sp_)
+    _hza = _raw("/healthz", _alice_ck, "127.0.0.1:%d" % _sp_)
+    check("serve: the health check tells a stranger it is up, and not which release it runs; a signed-in viewer is told",
+          _hz[0] == 200 and "X-View-Release" not in _hz[1] and _hza[1].get("X-View-Release") == TAG, (_hz[:2], _hza[1].get("X-View-Release")))
+    # THE PAGE ANSWERS TO ITS OWN NAMES (3.11): its address, the loopback's, and the `hosts` a proxy in front passes on — a
+    # page served under another name (DNS rebinding: a stranger's name, resolved to this host) is refused
+    _hs = {h: _raw("/", _alice_ck, h)[0] for h in ("attacker.example", "attacker.example:%d" % _sp_, "127.0.0.1:%d" % _sp_,
+                                                     "localhost:%d" % _sp_, "view.example.org", "VIEW.example.org:443")}
+    _hs[None] = _raw("/", _alice_ck, None)[0]
+    check("serve: the page answers only to its own names — its address, the loopback's, the `hosts` its configuration "
+          "names — and refuses another, or none (421)",
+          _hs["attacker.example"] == _hs["attacker.example:%d" % _sp_] == _hs[None] == 421
+          and all(_hs[h] == 200 for h in ("127.0.0.1:%d" % _sp_, "localhost:%d" % _sp_, "view.example.org", "VIEW.example.org:443")), _hs)
     # THE CSV IS TEXT (3.10): a cell a spreadsheet would run as a formula is written with a quote before it; a number stays
     import view_export as _vx
     _csv = _vx.csv_text({"columns": ["=label", "n"], "rows": [{"bean": "x", "cells": ["=HYPERLINK(\"http://x\")", -3]},
@@ -1590,7 +1701,7 @@ window.addEventListener('load', async () => { const out = []; let pwn = null, to
     # GARDEN.md records moves, and nothing else; /healthz answers from what is held, and the next signed-in request reloads.
     def _release():
         try:
-            return urllib.request.urlopen(BASE + "/healthz", timeout=3).headers.get("X-View-Release")
+            return alice.open(BASE + "/healthz", timeout=3).headers.get("X-View-Release")
         except Exception:
             return None
     _rel0 = _release()

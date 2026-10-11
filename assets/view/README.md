@@ -235,6 +235,16 @@ pass through it; where only a part of a bean is granted (`positions`), only that
 The server reads the ledger again when its head moves, and starts itself again on a new head or a new release only
 once `check` passes on it.
 
+**Where it listens, and to whom it answers.** The page listens on the loopback: `listen`, `127.0.0.1:8780` by default
+(`localhost`, `::1` and the rest of `127.0.0.0/8` are the loopback too). An address beyond it is refused, and nothing
+is bound, unless the configuration says `"listen_beyond_loopback": true` — the page carries passwords and sessions,
+and over plain HTTP they cross the network in clear. To serve it beyond its machine, keep it on the loopback and put a
+proxy that speaks TLS in front of it, which passes `X-Forwarded-Proto: https` (the session's cookie is then `Secure`;
+`"secure_cookie": true` says so where no proxy does). The page answers only to its own names — its
+address, the loopback's, and the names `"hosts": [...]` lists, such as the name the proxy passes on as the `Host` — and
+refuses any other (421), so a stranger's name made to resolve to the host (DNS rebinding) opens nothing. `serve` refuses
+a configuration others may read (it holds the session key and the password hashes): `serve-init` writes it 0600.
+
 **What runs on the page.** Every answer carries a Content-Security-Policy: nothing loads by default, the page's own
 scripts run by their hashes — the ones the asset declares in `view_report.SCRIPTS`, never a script a page happens to
 hold — and its calls go to itself alone. A script the page needs is added to `SCRIPTS`; what a page knows travels as
