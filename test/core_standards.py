@@ -240,6 +240,17 @@ check("every code crossed to a unit, a system's positions or its cells is read a
       not trips and len([1 for rows in crossed.values() for r in rows.values() if dmunits.target(r)]) >= 150, trips[:6])
 check("...and what it is read as is judged as the gate judges it: a quantity in its form, an extent of cells "
       "(`extent_form`), a position of the system the code is the unit of", not judged, judged[:6])
+kinds = []
+for scheme, rows in sorted(crossed.items()):
+    for (axis, code), row in sorted(rows.items()):
+        t = dmunits.target(row)
+        if not t or {'unit', 'in'} & set(t):
+            continue
+        back = dmunits.code_of(scheme, t, axis)[0]
+        if dmunits.target(dmunits.cross(scheme, back, axis)[0]) != t:
+            kinds.append(f"{scheme}:{axis}:{code} -> {t} -> {back}")
+check("every code crossed to a kind, a line or a shape — one by one or on an axis — is written back as a code crossing "
+      "to the same: itself, or of several the one marked `back`", not kinds, kinds[:6])
 
 # the form's refusals, in a release's copy: each breach named by the law's proof
 tmp = tempfile.mkdtemp(prefix='core-standards-crossing-')
@@ -511,6 +522,105 @@ check("...and a garden's crossing is held to the form by its gate: a unit the la
       g.returncode != 0 and "units-weighings LBn: 'lb' is no unit of the law" in g.out, g.out[-600:])
 shutil.rmtree(CACHE, ignore_errors=True)
 shutil.rmtree(SHOP, ignore_errors=True)
+
+# LOINC: a lab's and a clinic's observations, read through each term's property and scale
+lo = next(r for r in reg['knowledge_schemes'] if r['scheme'] == 'loinc')
+check("LOINC is held fetched from loinc.org (a person signed in downloads it), read by a reader the law lists and this "
+      "release has, special-category as every health observation is, and crossed on its two axes, property and scale",
+      lo['holding'] == 'fetched' and lo['fetch']['from'].startswith('https://loinc.org/')
+      and lo['fetch']['reader'] == 'loinc-table-csv' and 'loinc-table-csv' in dmfetch.READERS
+      and 'loinc-table-csv' in reg['fetch_shape']['readers'] and lo['sensitive'] == 'special-category'
+      and lo['units'] == 'units-loinc' and {a for a, _c in dmunits.crossing('loinc')} == {'property', 'scale'}
+      and not next(r for r in reg['registry_files'] if r['registry'] == 'loinc').get('file'), lo)
+ax = dmunits.crossing('loinc')
+check("...its crossing names each property LOINC's guide lists and each of its scales, every one crossing to a kind, a "
+      "line or a shape, or saying why not",
+      len([1 for a, _c in ax if a == 'property']) >= 210 and {c for a, c in ax if a == 'scale'} >=
+      {'Qn', 'SemiQn', 'Ord', 'OrdQn', 'Nom', 'Nar', 'Multi', 'Doc', 'Set', '-'}
+      and all(dmunits.target(r) or r.get('why') for r in ax.values())
+      and dmunits.target(ax[('property', 'MCnc')]) == {'quantity': 'mass-concentration'}
+      and dmunits.target(ax[('property', 'Temp')]) == {'line': 'temperature'}
+      and dmunits.target(ax[('property', 'NRat')]) == {'quantity': 'frequency'}
+      and dmunits.target(ax[('scale', 'Ord')]) == {'line': 'ordinal'}
+      and dmunits.target(ax[('scale', 'Nom')]) == {'shape': 'row'} and ax[('property', 'CCnc')].get('vacant') == 'universal',
+      len(ax))
+CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
+os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
+HEAD = ['LOINC_NUM', 'COMPONENT', 'PROPERTY', 'TIME_ASPCT', 'SYSTEM', 'SCALE_TYP', 'METHOD_TYP', 'CLASS', 'STATUS',
+        'LONG_COMMON_NAME', 'EXAMPLE_UCUM_UNITS']
+TERMS = [('2345-7', 'MCnc', 'Qn', 'ACTIVE', 'glucose, mass per volume, serum', 'mg/dL'),
+         ('2823-3', 'SCnc', 'Qn', 'ACTIVE', 'potassium, moles per volume, serum', 'mmol/L'),
+         ('8310-5', 'Temp', 'Qn', 'ACTIVE', 'body temperature', 'Cel'),
+         ('8867-4', 'NRat', 'Qn', 'ACTIVE', 'heart rate', '/min'),
+         ('3184-9', 'Time', 'Qn', 'ACTIVE', 'clotting time, blood', 's'),
+         ('94500-6', 'PrThr', 'Ord', 'ACTIVE', 'a virus, present or not, by amplification', ''),
+         ('600-7', 'Prid', 'Nom', 'ACTIVE', 'bacteria identified, blood culture', ''),
+         ('19096-7', 'Imp', 'Nar', 'DEPRECATED', 'an interpretation, in words', ''),
+         ('24323-8', '-', '-', 'ACTIVE', 'a panel', ''),
+         ('99999-9', 'Xyz', 'Qn', 'TRIAL', 'a property no row names', '')]
+import csv, zipfile  # noqa: E402 — LOINC's table is a CSV, and its release a zip
+
+
+def loinc_csv(rows, head=HEAD):
+    buf = io.StringIO()
+    w = csv.writer(buf, quoting=csv.QUOTE_ALL, lineterminator='\r\n')
+    w.writerow(head)
+    for code, prop, scale, status, name, unit in rows:
+        w.writerow([code, 'x', prop, 'Pt', 'Ser', scale, '', 'CHEM', status, name, unit][:len(head)])
+    return ('﻿' + buf.getvalue()).encode('utf-8')
+
+
+z = io.BytesIO()
+with zipfile.ZipFile(z, 'w') as zf:
+    zf.writestr('Loinc_2.81/LoincTable/Loinc.csv', loinc_csv(TERMS))
+    zf.writestr('Loinc_2.81/LoincTable/Readme.txt', 'x')
+src = os.path.join(CACHE, 'Loinc_2.81.zip')
+with open(src, 'wb') as fh:
+    fh.write(z.getvalue())
+r = subprocess.run([PY, os.path.join(ROOT, 'bin', 'fetch.py'), 'loinc', '--from', src], capture_output=True, text=True,
+                   encoding='utf-8', env=dict(os.environ))
+K = dmknowledge.Knowledge(ROOT)
+check("fetch: LOINC's release zip is kept unchanged, its LoincTable/Loinc.csv read into code, status, property, scale "
+      "and name, and the property its crossing does not name listed",
+      r.returncode == 0 and '10 rows' in r.stdout and (K.row('loinc', '2345-7') or {}).get('property') == 'MCnc'
+      and (K.row('loinc', '19096-7') or {}).get('status') == 'deprecated'
+      and 'on its axis property, values no row of the law\'s crossing names: Xyz' in r.stdout, r.stdout + r.stderr)
+for name, data, says in (("a table without its columns", loinc_csv(TERMS, HEAD[:3]), 'has not the columns read here'),
+                         ("a term whose code is no LOINC code", loinc_csv([('2345', 'MCnc', 'Qn', 'ACTIVE', 'x', '')]),
+                          'no term read here'),
+                         ("a zip with no table", (lambda b: (zipfile.ZipFile(b, 'w').close(), b.getvalue())[1])(io.BytesIO()),
+                          'holds 0 LoincTable/Loinc.csv')):
+    try:
+        dmfetch.keep('loinc', data, 'test')
+        refused = ''
+    except dmfetch.Refused as e:
+        refused = str(e)
+    check(f"fetch: LOINC — {name} — is refused, and nothing is kept", says in refused and len(dmfetch.fetched('loinc')) == 1,
+          refused)
+judged = {k: units('--judge', *a) for k, a in {
+    'glucose': ('loinc:2345-7', '95', 'mg/dL'), 'glucose-moles': ('loinc:2345-7', '5.3', 'mmol/L'),
+    'potassium': ('loinc:2823-3', '4.1', 'mmol/L'), 'temperature': ('loinc:8310-5', 'C:37.2'),
+    'temperature-quantity': ('loinc:8310-5', '37.2', 'K'), 'heart': ('loinc:8867-4', '72', '/min'),
+    'clotting': ('loinc:3184-9', '480', 's'), 'presence': ('loinc:94500-6', 'ordinal:2'),
+    'presence-word': ('loinc:94500-6', 'positive'), 'identified': ('loinc:600-7', 'snomed:3092008'),
+    'interpretation': ('loinc:19096-7', 'within the reference range'), 'panel': ('loinc:24323-8', '1', '{item}'),
+    'unknown': ('loinc:99999-9', '1', '{item}')}.items()}
+check("LOINC: a value is read through its term's property and scale — a glucose's 95 mg/dL a mass concentration, never "
+      "5.3 mmol/L; a body temperature a reading on its scale (C:37.2), never a quantity; a heart rate a frequency; a "
+      "presence an ordinal position; an identity a code; an interpretation text — a panel says nothing the law reads, and "
+      "a property no row names is refused",
+      judged['glucose'][0] == 0 and judged['glucose-moles'][0] == 1 and 'measures substance-concentration'
+      in judged['glucose-moles'][1] and judged['potassium'][0] == 0 and judged['temperature'][0] == 0
+      and judged['temperature-quantity'][0] == 1 and judged['heart'][0] == 0 and judged['clotting'][0] == 0
+      and judged['presence'][0] == 0 and judged['presence-word'][0] == 1 and judged['identified'][0] == 0
+      and judged['interpretation'][0] == 0 and 'says nothing the law reads' in judged['panel'][1]
+      and "writes 'Xyz' on its axis property, and no row of its crossing names it" in judged['unknown'][1], judged)
+check("LOINC: the law's kind is written back as its property — mass concentration MCnc, substance concentration SCnc, a "
+      "temperature read Temp, a duration Time — and a frequency as Freq, of the two crossing to it the one marked `back`",
+      [dmunits.code_of('loinc', t, 'property')[0] for t in ({'quantity': 'mass-concentration'},
+       {'quantity': 'substance-concentration'}, {'line': 'temperature'}, {'quantity': 'duration'},
+       {'quantity': 'frequency'})] == ['MCnc', 'SCnc', 'Temp', 'Time', 'Freq'])
+shutil.rmtree(CACHE, ignore_errors=True)
 
 print(f"\ncore_standards: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)
