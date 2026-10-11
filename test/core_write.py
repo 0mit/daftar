@@ -384,6 +384,13 @@ try:
     check("...committed through the gate of the later core", r.returncode == 0 and clean(), r.out[-800:])
     r = upgrade('v1.1.0')
     check("...and the same release again is nothing to do", r.returncode == 0 and 'nothing to do' in r.out, r.out[-400:])
+    # the pin read as the gate reads it (bin/check.py `pin`): quoted, as YAML may write it, it is the same pin
+    write('GARDEN.md', re.sub(r'(?m)^extends: (core@\S+)$', r'extends: "\1"', text('GARDEN.md'), count=1))
+    g = save('RULE-CHANGE: the pin quoted', '- action: RULE-CHANGE, GARDEN.md writes its pin quoted; ratified by sam')
+    r = upgrade('v1.1.0')
+    check("...and so it is where GARDEN.md writes its pin quoted, which the gate saves as the same pin",
+          g.returncode == 0 and 'extends: "core@' in text('GARDEN.md') and r.returncode == 0 and 'nothing to do' in r.out
+          and clean(), (g.out[-400:], r.out[-600:]))
 except Exception as e:
     import traceback
     traceback.print_exc()

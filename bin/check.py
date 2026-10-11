@@ -32,7 +32,9 @@ CORE_ONLY = ('--law',)
 
 
 def pin(root, ref=None):
-    """GARDEN.md's `extends`: in the working tree (ref None), at a commit (`HEAD`), or in the index (''); '' where none."""
+    """GARDEN.md's `extends`: in the working tree (ref None), at a commit (`HEAD`), or in the index (''); '' where none.
+    THE ONE READER OF THE PIN: every tool asks it, or `pin_of` for a manifest's text it holds already (a commit the hub
+    reads), and none reads the key its own way: a pattern took a pin written quoted, as YAML may write it, for no pin."""
     if ref is None:
         p = os.path.join(root, 'GARDEN.md')
         try:
@@ -45,8 +47,13 @@ def pin(root, ref=None):
         if r.returncode != 0:
             return ''
         text = r.stdout.decode('utf-8', 'replace')
+    return pin_of(text)
+
+
+def pin_of(text):
+    """The `extends` of a manifest's text, as the gate reads it (every value as written); '' where none."""
     try:
-        fm = _loads(dmparse.split_front_matter(text)[0] or '') or {}
+        fm = _loads(dmparse.split_front_matter(text or '')[0] or '') or {}
     except _unread:
         return ''
     return str(fm.get('extends') or '') if isinstance(fm, dict) else ''

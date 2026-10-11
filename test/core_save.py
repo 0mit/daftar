@@ -293,6 +293,30 @@ try:
     reset()
     r = run(PY, 'core/check.py')
     check("the garden as saved passes the core's check", r.returncode == 0, r.stdout)
+
+    # THE PIN IS READ AS THE GATE READS IT (bin/check.py `pin`), quoted as YAML may write it. A bean saved twice in one
+    # minute, its act said `now` both times, would hold the moment the last commit gave it already — an act no commit
+    # adds — so in a garden of the core the second save waits for the next minute
+    g = text('GARDEN.md')
+    pinned = re.search(r'(?m)^extends: (core@\S+)$', g).group(1)
+    with open(os.path.join(G, 'GARDEN.md'), 'w', encoding='utf-8') as fh:
+        fh.write(g.replace(f'extends: {pinned}\n', f'extends: "{pinned}"\n', 1))
+    r = save('sam', 'RULE-CHANGE: the pin quoted', '- action: RULE-CHANGE, GARDEN.md writes its pin quoted; ratified by sam')
+    check(f'a pin written quoted (`extends: "{pinned}"`) is the same pin: the gate saves it', r.returncode == 0, r.out[-600:])
+    import time
+
+    def sam_now(job, does):
+        st = read.loads(git('show', 'HEAD:beans/sam.md').stdout.split('---\n')[1])['statements']
+        st[0] = {'say': {'by': 'sam', 'at': 'now'}}                  # the act that knows what no other act knows
+        bean('sam', 'person', st + [{'do': {'id': job, 'by': 'self', 'as': does}}])
+    while time.localtime().tm_sec > 45:       # both saves in one minute
+        time.sleep(1)
+    sam_now('desk', 'web')
+    r1 = save('sam', 'a desk', '- action: [[sam]] keeps a desk')
+    sam_now('lab', 'app-host')
+    r2 = save('sam', 'a lab', '- action: [[sam]] keeps a lab')
+    check("...and a bean saved twice in one minute under a quoted pin waits for the next minute, and is saved",
+          r1.returncode == 0 and r2.returncode == 0 and 'waiting for the next' in r2.out, (r1.out[-400:], r2.out[-900:]))
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

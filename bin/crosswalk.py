@@ -35,11 +35,8 @@ import yaml
 
 def runs_core():
     """True in a garden that runs the core (GARDEN.md pins `core@…`, bin/check.py the one reader of the pin)."""
-    try:
-        import check
-        return check.runs_core(check.pin(ROOT))
-    except Exception:
-        return False
+    import check
+    return check.runs_core(check.pin(ROOT))
 
 
 def _law():
