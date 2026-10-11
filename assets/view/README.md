@@ -149,6 +149,13 @@ computes a shown number: its path), `check_binding(binding)` and `check_monitor(
 `history(url, binds, selector, hours, step, now)` (what the served page shows), `alerts(settings, beings, binds)`,
 and, where it deploys anything, `bundle(monitor, views, out)`.
 
+A monitor is read within one deadline for its whole answer (5 s; one poll of a Prometheus, 10 s in all), up to 4 MiB,
+and where it was asked: an answer that sends the host elsewhere is not followed (`lib/view_fetch.py`). A value a monitor
+gives that is no finite number — Prometheus's `NaN` for a ratio of 0/0, `+Inf`, `-Inf` — is sent to the page as the word
+JavaScript reads it back by (`"NaN"`, `"Infinity"`, `"-Infinity"`), apart from `null`, a value nobody gave: the page shows
+`NaN`, `∞` or `−∞` where the value stands, and `—` for none; a NaN counts as no data, `+Inf` is past every threshold
+and `-Inf` below them, and neither is drawn in a line of history.
+
 ## The sheet
 
 Every drawing is a **sheet**, as a technical drawing is. Its **title block** is made of facts the ledger holds — the page,
@@ -221,9 +228,45 @@ pass through it; where only a part of a bean is granted (`positions`), only that
   log, with the answer that decided it.
 - `monitors` gives each monitor's address (`{"<being>": {"url": …}}`); `history`, where a history page exists, the
   base its links open.
+- A page names only the beings its viewer may see, whole or in part: a part of a drawing that depicts another is drawn
+  as the drawing draws it, without saying which being it is, and the values, actions, steps and story parts that name
+  one are not sent.
 
 The server reads the ledger again when its head moves, and starts itself again on a new head or a new release only
-once `check` passes on it.
+once `check` passes on it — and never when the drawing module the page names, or the release's assets, changed since it
+was started: code runs only when a person starts `view serve` again (security audit 2026-10-10, 3.4).
+
+**Where it listens, and to whom it answers.** The page listens on the loopback: `listen`, `127.0.0.1:8780` by default
+(`localhost`, `::1` and the rest of `127.0.0.0/8` are the loopback too). An address beyond it is refused, and nothing
+is bound, unless the configuration says `"listen_beyond_loopback": true` — the page carries passwords and sessions,
+and over plain HTTP they cross the network in clear. To serve it beyond its machine, keep it on the loopback and put a
+proxy that speaks TLS in front of it, which passes `X-Forwarded-Proto: https` (the session's cookie is then `Secure`;
+`"secure_cookie": true` says so where no proxy does) and `X-Forwarded-For`, and name that proxy's own addresses in
+`"trusted_proxies": ["127.0.0.1", "::1"]`: from those peers alone, the client counted at sign-in is the rightmost address
+of `X-Forwarded-For` that is no trusted proxy; with none named (the default), the header is ignored from everyone and
+each connection counts as the address it comes from. The page answers only to its own names — its
+address, the loopback's, and the names `"hosts": [...]` lists, such as the name the proxy passes on as the `Host` — and
+refuses any other (421), so a stranger's name made to resolve to the host (DNS rebinding) opens nothing. Listening on
+every interface (`0.0.0.0` or `::`, chosen as above), it has no one address of its own: `hosts` then lists each address
+and name it is reached by. `serve` refuses
+a configuration others may read (it holds the session key and the password hashes): `serve-init` writes it 0600.
+
+**Signing in.** A session is signed over the viewer's stored password as well, so a password changed ends every session
+begun before it; signing out is the page's own button, a POST with its CSRF token; and a sign-in is taken only from
+the page's own origin (a form another site posts to `/login`, which would sign the browser in as a name of that site's
+choosing, is refused). Failures are counted per address and
+name, and per address: five for one name from one address, or twenty from one address for any names, and that address
+waits a quarter of an hour. Past thirty failures for one name from anywhere, a stranger is refused even with the right
+password — but a browser the viewer has signed in with before (the `view_known` cookie, signed over their password) is
+asked the password still, and waits only after five failures of its own: no stranger locks out a viewer — even where
+every connection comes through one address (a proxy not named in `trusted_proxies`, a tunnel), when strangers can hold
+that address.
+
+**What runs on the page.** Every answer carries a Content-Security-Policy: nothing loads by default, the page's own
+scripts run by their hashes — the ones the asset declares in `view_report.SCRIPTS`, never a script a page happens to
+hold — and its calls go to itself alone. A script the page needs is added to `SCRIPTS`; what a page knows travels as
+JSON in a `<script type="application/json">`, which nothing runs. Every word the page shows is escaped, a unit too, and
+a link goes only to an `http:` or `https:` address.
 
 ## The widgets: what shows a value, and takes one in
 

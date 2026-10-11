@@ -338,7 +338,10 @@ function wire(){
 }
 function renderLive(){
   $('#livebar').innerHTML = 'live · signed in as <b>' + esc(LIVE.user) + '</b> · ledger ' + esc(LIVE.head) +
-    (LIVE.history && P.views[tab] ? ' · <a href="' + esc(LIVE.history) + '/d/' + esc(P.views[tab].uid) + '" target="_blank" rel="noopener">history ↗</a>' : '') + ' · <a href="/logout">sign out</a>'; }
+    (/^https?:\/\//i.test(LIVE.history || '') && P.views[tab] ? ' · <a href="' + esc(LIVE.history) + '/d/' + esc(P.views[tab].uid) + '" target="_blank" rel="noopener">history ↗</a>' : '') +
+    ' · <button class="btn mini" id="signout">sign out</button>';
+  // signing out is the page's own act, a POST with its CSRF token: a link elsewhere signs nobody out
+  $('#signout').onclick = () => fetch('/logout', {method: 'POST', headers: {'X-View-CSRF': LIVE.csrf}}).finally(() => { location.href = '/login'; }); }
 if (LIVE || !P.author) { $('#authbtn').style.display = 'none'; }
 if (LIVE) { setInterval(poll, (LIVE.poll || 30) * 1000); }
 $('#authbtn').onclick = () => { document.body.classList.toggle('authoring'); $('#authbtn').classList.toggle('on'); render(); };
@@ -348,6 +351,12 @@ render();
 
 # where each order runs on the page: the law's rows and the one module that reads them (widgets/direction.js)
 DIRECTION_JS = open(os.path.join(HERE, "widgets", "direction.js"), encoding="utf-8").read()
+
+# THE PAGE'S SCRIPTS, ONCE: what runs on the page, in its order, and nothing else. build_html writes exactly these, and a
+# host's Content-Security-Policy allows exactly these by their hashes (view_serve, and daftard's /view), never a script a
+# page happens to hold (security audit 2026-10-10, 2.4 and 3.9). A script the page needs is added here; the page's data
+# travels as JSON (`<script type="application/json">`), which nothing runs.
+SCRIPTS = (DIRECTION_JS, kit.RUNTIME_JS, SCRIPT)
 
 
 def build_html(p):
@@ -362,9 +371,9 @@ def build_html(p):
             '<div class="seg" id="lens"></div><button class="btn" id="authbtn">Author</button></div><div id="livebar" class="kd"></div></header>'
             '<main><div id="view"></div><section id="author"></section></main>'
             '<script type="application/json" id="viewdata">%s</script>'
-            '<script type="application/json" id="orientations">%s</script><script>%s</script><script>%s</script><script>%s</script></body></html>'
+            '<script type="application/json" id="orientations">%s</script>%s</body></html>'
             % (title, PAGE_CSS, kit.SCHEMA_CSS + p.get("palette_css", ""), title, esc(p["page"]["id"]), esc(p.get("garden", "")), esc(p.get("release", "")),
-               stamp, data, json.dumps(vm.orientations()).replace("</", "<\\/"), DIRECTION_JS, kit.RUNTIME_JS, SCRIPT))
+               stamp, data, json.dumps(vm.orientations()).replace("</", "<\\/"), "".join("<script>%s</script>" % x for x in SCRIPTS)))
 
 
 def main(args):
