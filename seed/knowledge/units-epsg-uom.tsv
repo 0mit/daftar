@@ -1,0 +1,96 @@
+code	unit	back	why
+1024			a grid's bin: its size is the transformation's own
+1025	mm		
+1026	m/s		
+1027			millimetres per EPSG's year (the annus): the law writes millimetres per Julian year, another year
+1028	[ppb]		
+1029	31556925445.ms		EPSG's year is 31 556 925.445 seconds: the annus, as IUPAC and IUGS define it, which the law holds
+1030			parts per billion per year: the law writes none
+1031			a milliarc-second: the law writes no milliarc-second
+1032			milliarc-seconds per year: the law writes none
+1033	cm		
+1034			centimetres per EPSG's year (the annus): the law writes none
+1035	rad/s		
+1036			a scale's change per second: no kind of the law
+1040	s		
+1041			parts per million per year: the law writes none
+1042			metres per EPSG's year (the annus): the law writes none
+1043			arc-seconds per year: the law writes none
+9001	m		
+9002	[ft_i]		
+9003	[ft_us]		the US survey foot, 1200/3937 m exactly, which UCUM writes [ft_us]
+9005			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9014			a fathom: the law writes no fathom
+9030			a nautical mile, 1852 m: the law writes no nautical mile yet (UCUM [nmi_i])
+9031			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9033			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9034			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9035			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9036	km		
+9037			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9038			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9039			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9040			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9041			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9042			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9043			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9050			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9051			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9052			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9053			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9060			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9061			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9062			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9063			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9070			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9080			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9081			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9082			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9083			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9084			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9085			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9086			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9087			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9093	[mi_i]		
+9094			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9095			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9096	[yd_i]		
+9097			an international chain, 66 feet: the law writes no chain
+9098			an international link, a hundredth of a chain: the law writes no link
+9099			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9101	rad		
+9102	deg	true	
+9103	'		
+9104	''		
+9105	gon	true	the grad, a four-hundredth of a turn: the law's gon
+9106	gon		EPSG's gon, which it deprecates for grad (9105)
+9107			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9108			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9109			a microradian: the law writes no microradian
+9110			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9111			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9112			a centesimal minute: the law writes none
+9113			a centesimal second: the law writes none
+9114			a mil of 6400 to the turn: the law writes none
+9115			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9116			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9117			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9118			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9119			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9120			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9121			an angle written in degrees, minutes and seconds, or with its hemisphere's letter: a notation of the degree, read by its parts, never one count
+9122	deg		a degree whose written form its supplier defines: the law's degree
+9201	1		
+9202	[ppm]		
+9203			a polynomial's coefficient: a number of no kind
+9204			a seismic grid's bin width, a length of its own that EPSG deprecates: no unit of the law
+9205			a seismic grid's bin width, a length of its own that EPSG deprecates: no unit of the law
+9206			a seismic grid's bin width, a length of its own that EPSG deprecates: no unit of the law
+9207			a seismic grid's bin width, a length of its own that EPSG deprecates: no unit of the law
+9208			a seismic grid's bin width, a length of its own that EPSG deprecates: no unit of the law
+9209			a seismic grid's bin width, a length of its own that EPSG deprecates: no unit of the law
+9210			a seismic grid's bin width, a length of its own that EPSG deprecates: no unit of the law
+9211			a seismic grid's bin width, a length of its own that EPSG deprecates: no unit of the law
+9300			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9301			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them
+9302			a survey's own unit, defined by its own standard or ratio (a Clarke's, a British, an Indian, a Gold Coast foot, a US survey chain or link): the law writes none of them

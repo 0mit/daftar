@@ -199,8 +199,74 @@ def ifc_express(data):
     return out
 
 
+def _sql_inserts(text, table):
+    """Each `INSERT INTO <table> (columns) VALUES (...);` of an SQL script, as {column: value}: a string with its doubled
+    quotes undone, a number as written, NULL as ''. A statement may span lines, as a remark's line break makes it."""
+    head = re.compile(r'INSERT INTO ' + re.escape(table) + r' \(([^)]*)\) VALUES \(')
+    for m in head.finditer(text):
+        cols, vals, i = [c.strip() for c in m.group(1).split(',')], [], m.end()
+        while i < len(text) and text[i] != ')':
+            if text[i] == "'":
+                j, buf = i + 1, []
+                while j < len(text) and not (text[j] == "'" and text[j + 1:j + 2] != "'"):
+                    buf.append(text[j])
+                    j += 2 if text[j] == "'" else 1
+                vals.append(''.join(buf))
+                i = j + 1
+            elif text[i] in ' ,\t\r\n':
+                i += 1
+            else:
+                j = i
+                while j < len(text) and text[j] not in ',)':
+                    j += 1
+                v = text[i:j].strip()
+                vals.append('' if v.upper() == 'NULL' else v)
+                i = j
+        if len(vals) != len(cols):
+            raise Refused(f"an insert into {table} holds {len(vals)} values for {len(cols)} columns")
+        yield dict(zip(cols, vals))
+
+
+def epsg_sql(data):
+    """EPSG's dataset as its SQL scripts (`EPSG-v<N>-PostgreSQL.zip`, or its `…Data_Script.sql`): each row of
+    `epsg_unitofmeasure` — `uom_code`, `unit_of_meas_name`, `unit_of_meas_type`, `target_uom_code`, `factor_b`,
+    `factor_c`, `deprecated` — read into code, name_en, type, target, factor_b, factor_c and status (`deprecated`, or
+    none): a unit is factor_b / factor_c of its target, written as EPSG writes them. The dataset's other tables (the
+    reference systems, the transformations) and its remarks are EPSG's, and are not read here."""
+    if data[:2] == b'PK':
+        import zipfile
+        try:
+            z = zipfile.ZipFile(io.BytesIO(data))
+        except zipfile.BadZipFile as e:
+            raise Refused(f"EPSG's file is no zip it can be read in: {e}") from None
+        inside = [n for n in z.namelist() if n.endswith('Data_Script.sql')]
+        if len(inside) != 1:
+            raise Refused(f"EPSG's zip holds {len(inside)} data scripts (…Data_Script.sql), and one is read")
+        data = z.read(inside[0])
+    try:
+        text = data.decode('utf-8-sig')
+    except UnicodeDecodeError:
+        raise Refused("EPSG's data script is not UTF-8 text") from None
+    want = ('uom_code', 'unit_of_meas_name', 'unit_of_meas_type', 'target_uom_code', 'factor_b', 'factor_c', 'deprecated')
+    out, seen = [], set()
+    for r in _sql_inserts(text, 'epsg_unitofmeasure'):
+        if any(w not in r for w in want):
+            raise Refused(f"EPSG's units of measure have not the columns read here ({', '.join(want)})")
+        code = r['uom_code']
+        if not code.isdigit() or code in seen or not r['unit_of_meas_name']:
+            raise Refused(f"a unit of EPSG's dataset is none read here: code {code!r}"
+                          + (" (a second row of it)" if code in seen else ''))
+        seen.add(code)
+        out.append({'code': code, 'name_en': r['unit_of_meas_name'], 'type': r['unit_of_meas_type'],
+                    'target': r['target_uom_code'], 'factor_b': r['factor_b'], 'factor_c': r['factor_c'],
+                    'status': 'deprecated' if r['deprecated'] == '1' else ''})
+    if not out:
+        raise Refused("EPSG's file holds no unit of measure (`INSERT INTO epsg_unitofmeasure`): its data script is read")
+    return out
+
+
 READERS = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx,
-           'loinc-table-csv': loinc_table_csv, 'ifc-express': ifc_express}
+           'loinc-table-csv': loinc_table_csv, 'ifc-express': ifc_express, 'epsg-sql': epsg_sql}
 
 
 # ------------------------------------------------------------------------------------------------ the law's rows

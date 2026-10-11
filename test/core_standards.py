@@ -699,5 +699,93 @@ check("IFC: a conversion-based unit is read by the exact factor the model states
       and 'only through what defines it' in degree and dmunits.unit_of('6894.75729316836', 'Pa') == [])
 shutil.rmtree(CACHE, ignore_errors=True)
 
+# EPSG / ISO 19111: the units a coordinate reference system's axes are counted in
+eg = next(r for r in reg['knowledge_schemes'] if r['scheme'] == 'epsg-uom')
+check("EPSG's units of measure are held fetched from epsg.org's dataset (a person signed in downloads it), read by a "
+      "reader the law lists, and crossed to UCUM",
+      eg['holding'] == 'fetched' and eg['fetch']['from'].startswith('https://epsg.org/') and eg['fetch']['reader'] == 'epsg-sql'
+      and 'epsg-sql' in dmfetch.READERS and 'epsg-sql' in reg['fetch_shape']['readers'] and eg['units'] == 'units-epsg-uom'
+      and dmunits.target(dmunits.crossing('epsg-uom')[('', '9003')]) == {'unit': '[ft_us]'}, eg)
+CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
+os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
+COLS = ('uom_code, unit_of_meas_name, unit_of_meas_type, target_uom_code, factor_b, factor_c, remarks, '
+        'information_source, data_source, revision_date, change_id, deprecated')
+UOM = [("9001, 'metre', 'length', 9001, 1, 1, 'a remark', 'a source'", 0),
+       ("9002, 'foot', 'length', 9001, 0.3048, 1, '', ''", 0), ("9003, 'US survey foot', 'length', 9001, 12, 39.37, '', ''", 0),
+       ("9096, 'yard', 'length', 9001, 0.9144, 1, '=3 international feet.', ''", 0),
+       ("9101, 'radian', 'angle', 9101, 1, 1, '', ''", 0),
+       ("9102, 'degree', 'angle', 9101, 3.14159265358979, 180, '', ''", 0),
+       ("9104, 'arc-second', 'angle', 9101, 3.14159265358979, 648000, '', ''", 0),
+       ("9105, 'grad', 'angle', 9101, 3.14159265358979, 200, '', ''", 0),
+       ("9106, 'gon', 'angle', 9101, 3.14159265358979, 200, '', ''", 1),
+       ("9107, 'degree minute second', 'angle', 9102, NULL, NULL, 'a notation', ''", 0),
+       ("9095, 'British foot (1936)', 'length', 9001, 0.3048007491, 1, 'a remark, ''quoted'' here', "
+        "'1. a source\nover two lines'", 0),
+       ("1029, 'year', 'time', 1040, 31556925.445, 1, '', ''", 0), ("1040, 'second', 'time', 1040, 1, 1, '', ''", 0)]
+SQL = ("INSERT INTO epsg_alias (alias_code, object_table_name, object_code, naming_system_code, alias, remarks) VALUES "
+       "(76, 'epsg_unitofmeasure', 9003, 7301, 'American foot', '');\n"
+       + ''.join(f"INSERT INTO epsg_unitofmeasure ({COLS}) VALUES ({v}, 'EPSG', '2015-11-25', '2015.062', {d});\n"
+                 for v, d in UOM))
+z = io.BytesIO()
+with zipfile.ZipFile(z, 'w') as zf:
+    zf.writestr('PostgreSQL_Data_Script.sql', SQL)
+    zf.writestr('PostgreSQL_Table_Script.sql', 'CREATE TABLE epsg_unitofmeasure ();')
+src = os.path.join(CACHE, 'EPSG-v13_103-PostgreSQL.zip')
+with open(src, 'wb') as fh:
+    fh.write(z.getvalue())
+r = subprocess.run([PY, os.path.join(ROOT, 'bin', 'fetch.py'), 'epsg-uom', '--from', src], capture_output=True, text=True,
+                   encoding='utf-8', env=dict(os.environ))
+K = dmknowledge.Knowledge(ROOT)
+check("fetch: EPSG's dataset zip is kept unchanged, its data script's units of measure read — a statement over two lines "
+      "and a doubled quote whole, an alias of another table passed over — and the deprecated gon so marked",
+      r.returncode == 0 and '13 rows' in r.stdout and (K.row('epsg-uom', '9095') or {}).get('factor_b') == '0.3048007491'
+      and (K.row('epsg-uom', '9106') or {}).get('status') == 'deprecated'
+      and (K.row('epsg-uom', '9107') or {}).get('factor_b') == '' and 'marked by the provider: 9106 (deprecated)' in r.stdout,
+      r.stdout + r.stderr)
+from fractions import Fraction  # noqa: E402
+law_units = dmunits._law()[0]
+agree = []
+for (a, c), row in dmunits.crossing('epsg-uom').items():
+    t, p = dmunits.target(row), K.row('epsg-uom', c)
+    if 'unit' not in t or not p:
+        continue
+    tgt = dmunits.target(dmunits.crossing('epsg-uom').get(('', p['target'])) or {}).get('unit')
+    mine, base = law_units[t['unit']].get('factor'), law_units.get(tgt, {}).get('factor')
+    if p['factor_b'] == '3.14159265358979':           # through π, against the radian: the law counts angles in degrees
+        ok = tgt == 'rad' and mine and Fraction(*mine) == Fraction(180) / Fraction(p['factor_c'])
+    else:
+        ok = (not mine and c == p['target']) or (mine and base and Fraction(*mine)
+              == Fraction(p['factor_b']) / Fraction(p['factor_c']) * Fraction(*base))
+    if not ok:
+        agree.append(f"{c} {t['unit']}: EPSG {p['factor_b']}/{p['factor_c']} of {p['target']}")
+check("EPSG: each unit the law crosses is the size EPSG states it is — a foot 0.3048 m, a US survey foot 12/39.37 m, a "
+      "degree π/180 rad, EPSG's year 31 556 925.445 s, the annus — exactly", not agree, agree)
+try:
+    dmunits.read('epsg-uom', '1', '9107')
+    dms = ''
+except ValueError as e:
+    dms = str(e)
+check("EPSG: 2 in unit 9002 is 2 [ft_i], written back as 9002; a US survey foot is [ft_us]; a degree its supplier writes "
+      "(9122) is read as the law's degree and written back as 9102; EPSG's year is the annus; a degree-minute-second "
+      "notation crosses to nothing, and says why",
+      dmunits.read('epsg-uom', '2', '9002') == {'count': '2', 'unit': '[ft_i]'}
+      and dmunits.write('epsg-uom', {'count': '2', 'unit': '[ft_i]'}) == ('2', '9002')
+      and dmunits.read('epsg-uom', '1', '9003')['unit'] == '[ft_us]'
+      and dmunits.write('epsg-uom', dmunits.read('epsg-uom', '45', '9122')) == ('45', '9102')
+      and dmunits.read('epsg-uom', '1', '1029')['unit'] == '31556925445.ms' and 'notation' in dms, dms)
+for name, data, says in (("a script with no unit of measure", b"INSERT INTO epsg_alias (a) VALUES (1);", 'no unit of measure'),
+                         ("an insert whose values are not its columns",
+                          f"INSERT INTO epsg_unitofmeasure ({COLS}) VALUES (9001, 'metre');".encode(), 'values for 12 columns'),
+                         ("a zip with no data script", (lambda b: (zipfile.ZipFile(b, 'w').close(), b.getvalue())[1])(io.BytesIO()),
+                          '0 data scripts')):
+    try:
+        dmfetch.keep('epsg-uom', data, 'test')
+        refused = ''
+    except dmfetch.Refused as e:
+        refused = str(e)
+    check(f"fetch: EPSG — {name} — is refused, and nothing is kept", says in refused and len(dmfetch.fetched('epsg-uom')) == 1,
+          refused)
+shutil.rmtree(CACHE, ignore_errors=True)
+
 print(f"\ncore_standards: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)
