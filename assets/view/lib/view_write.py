@@ -6,10 +6,11 @@ garden's pages (a worker that imports this file from the release the garden runs
     write(root, who, bean, ops, kind=None, may=None, what=None) -> {ok, bean, commit, refusals, output}
 
 `ops` is a list for one bean, each one of:
-    {op: add,    verb, roles, id?, held?, while?}         a statement appended; its id minted where it gives none
-    {op: change, key, verb?, roles, held?, while?}         the statement `key` names, rewritten in place
+    {op: add,    verb, roles, id?, held?, while?, read?}  a statement appended; its id minted where it gives none
+    {op: change, key, verb?, roles, held?, while?, read?}  the statement `key` names, rewritten in place
     {op: remove, key}                                      the statement `key` names, taken out
     {op: change, header: title | summary, value}           a header fact, rewritten (an empty summary is taken out)
+    {op: change, header: tags, value: [words]}             the bean's tags, as a set (none: the key taken out)
 `key` names a statement as bin/safe.py names it: `<verb>#<id>`, or `<verb>@<n>` for one with no id — changed or removed
 only where it is the one statement of its verb. With `bean` None and `kind`, the ops make a NEW being of that kind:
 its id minted opaque (`p-<8 hex>` for a person, its title the id; `<kind>-<8 hex>` for any other), its file written
@@ -20,7 +21,10 @@ the roles and qualifiers it takes, and text that is one line. `may(act, bean, po
 where the whole is not open, for the part each op touches (the statement by its id, a verb for one added, `title` or
 `summary`), as a grant's `cover` opens parts. Each edit goes through bin/safe.py by its key with an expected count of 1;
 a held value is sealed by bin/held.py before its statement is written, so what it says reaches the store and never the
-bean's file. The statements added or changed are known by a `say` of the writer's, at `now`. The bean is read again,
+bean's file. The statements added or changed are known by a `say` of the writer's, at `now` — or, where an op says the
+writer read it from a source (`read: {from, through}`: a place a lookup found, from the map or the gazetteer that has
+it), by a `read` of the writer's from that source, so the ledger says where the value came from (design §12). The bean
+is read again,
 each statement written is read back as intended and judged by the gate's own judge (core/engine.py `Judge.one`), and
 then bin/save.py saves it — ONE journal entry naming each statement added, changed or removed — and the gate judges the
 whole commit. A REFUSAL UNDOES EVERYTHING: the working tree and the index as they were, every store record this write
@@ -33,7 +37,7 @@ writers of one clone.
 import json, os, re, secrets, subprocess, sys
 
 OPS = ('add', 'change', 'remove')
-HEADERS = ('title', 'summary')
+HEADERS = ('title', 'summary', 'tags')
 BESIDE = ('note', 'why')                     # what a statement carries beside its roles that a sheet writes
 _CTRL = re.compile('[\x00-\x08\x0a-\x1f\x7f-\x9f  ]')
 _KEY = re.compile(r'^([a-z][a-z0-9-]*)(?:#([A-Za-z0-9][A-Za-z0-9_.-]*)|@(\d+))$')
@@ -158,7 +162,17 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         if 'header' in op:
             h, v = op.get('header'), op.get('value')
             if op['op'] != 'change' or h not in HEADERS:
-                refuse(n, f"header:{h}", "a header fact is changed: the title, or the summary")
+                refuse(n, f"header:{h}", "a header fact is changed: the title, the summary, or the tags")
+            elif h == 'tags':                    # A SET OF WORDS: each one line, none twice; the order as given
+                words = [x.strip() for x in v] if isinstance(v, list) and all(isinstance(x, str) for x in v) else None
+                if words is None or any(not x or _CTRL.search(x) for x in words) or len(set(words)) != len(words):
+                    refuse(n, 'header:tags', "the tags are a list of words, each one line, none empty and none twice")
+                elif 'header:tags' in touched:
+                    refuse(n, 'header:tags', "the tags are changed once in a write")
+                else:
+                    touched.add('header:tags')
+                    if b is None or sorted(b.header.get('tags') or []) != sorted(words):
+                        plan.append((n, 'header', 'tags', words, None))
             elif not isinstance(v, str) or (h == 'title' and not v.strip()) or _CTRL.search(v):
                 refuse(n, f"header:{h}", f"the {h} is one line of text" + (", and a title is never empty" if h == 'title' else ''))
             elif new and h == 'title' and kind == 'person':
@@ -241,8 +255,19 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         if old is not None and not sealed and not op.get('held') and wh == old.get('while') and \
                 {k: y for k, y in old.items() if k not in ('id', 'while')} == roles:
             continue                             # it says what the statement says already: nothing to write for it
+        rd = op.get('read')
+        if rd is not None:                       # read from a source: `from` a being or someone, `through` one line
+            frm = rd.get('from') if isinstance(rd, dict) else None
+            source = isinstance(frm, str) or (isinstance(frm, dict) and isinstance(frm.get('someone'), str)
+                                              and not _text_only(frm, 'read.from'))
+            why = ("`read` says where the value was read: {from, through}" if not isinstance(rd, dict)
+                   else _text_only(rd.get('through'), 'read.through')
+                   or ('' if source else "`read.from` is the being the value was read from, or `{someone: <kind>}`"))
+            if why:
+                refuse(n, key, why)
+                continue
         plan.append((n, op['op'], key, verb, {'id': sid, 'roles': dict(roles), 'held': bool(op.get('held') or sealed),
-                                              'while': wh, 'old': old}))
+                                              'while': wh, 'old': old, 'read': rd}))
     if refusals:
         return result(False)
     if not plan:
@@ -291,9 +316,15 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         if new:
             title = next((v for _n, a, h, v, _x in plan if a == 'header' and h == 'title'), None) or bean
             summary = next((v for _n, a, h, v, _x in plan if a == 'header' and h == 'summary'), None)
-            body = [f"- say: {{ by: {who}, at: now }}\n"] + [line(n, verb, x) for n, act, _k, verb, x in plan if act == 'add']
+            tags = next((v for _n, a, h, v, _x in plan if a == 'header' and h == 'tags'), None)
+            read_ids = {x['id'] for _n, act, _k, _v, x in plan if act == 'add' and x.get('read')}
+            said_ids = [x['id'] for _n, act, _k, _v, x in plan if act == 'add' and not x.get('read')]
+            body = ([f"- say: {{ by: {who}, of: [{', '.join(said_ids)}], at: now }}\n"] if read_ids and said_ids
+                    else [] if read_ids else [f"- say: {{ by: {who}, at: now }}\n"]) + \
+                [line(n, verb, x) for n, act, _k, verb, x in plan if act == 'add'] + reads(who, plan)
             head = f"---\nbean: {bean}\nkind: {kind}\ntitle: {json.dumps(title, ensure_ascii=False)}\n" + \
-                   (f"summary: {json.dumps(summary, ensure_ascii=False)}\n" if summary else '')
+                   (f"summary: {json.dumps(summary, ensure_ascii=False)}\n" if summary else '') + \
+                   (f"tags: {json.dumps(tags, ensure_ascii=False)}\n" if tags else '')
             safe.write_atomic(path, head + "statements:\n" + ''.join('  ' + s for s in body) + f"---\n{title}\n")
             entry.insert(0, f"- action: made [[{bean}]], a {kind}, from an empty sheet, by [[{who}]]" +
                          ''.join(f"; added `{verb}#{x['id']}`" for _n, act, _k, verb, x in plan if act == 'add') + '.')
@@ -303,7 +334,20 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
                 try:
                     if act == 'header':
                         h, v = key, verb
-                        if h == 'summary' and not v:
+                        if h == 'tags':
+                            if not v:
+                                if 'tags' in b.header:
+                                    safe.remove_block(path, 'tags')
+                                    done.append("took out the tags")
+                            elif 'tags' in b.header:
+                                safe.replace_block(path, 'tags', f"tags: {json.dumps(v, ensure_ascii=False)}\n",
+                                                   allow_remove=tuple(f"tags[{i}]" for i in range(len(b.header['tags']))))
+                                done.append("changed the tags")
+                            else:
+                                safe.insert_after(path, 'summary' if 'summary' in b.header else 'title',
+                                                  f"tags: {json.dumps(v, ensure_ascii=False)}\n")
+                                done.append("wrote the tags")
+                        elif h == 'summary' and not v:
                             if 'summary' in b.header:
                                 safe.remove_block(path, 'summary')
                                 done.append("took out the summary")
@@ -337,8 +381,12 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
                 except (ValueError, KeyError, dmheld.NotHere) as e:
                     refuse(n, key, f"it cannot be held here, nothing written: {e}")
                     raise
+            read_ids = {x['id'] for _n, act, _k, _v, x in plan if act in ('add', 'change') and x.get('read')}
+            said = [i for i in said if i not in read_ids]
             if said:
                 safe.add_statements(path, f"- say: {{ by: {who}, of: [{', '.join(said)}], at: now }}\n")
+            for st in reads(who, plan):
+                safe.add_statements(path, st)
             entry.insert(0, f"- action: [[{bean}]] written from its sheet by [[{who}]]: {'; '.join(done)}.")
     except Exception as e:                              # what bin/safe.py or bin/held.py refused: undone, said
         if not refusals:
@@ -390,6 +438,18 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         except (dmheld.NotHere, ValueError, OSError):
             pass
     return result(True, out, _git(root, 'rev-parse', 'HEAD').stdout.strip())
+
+
+def reads(who, plan):
+    """The `read` statements of a write: one for each source a value was read from, knowing each statement read from
+    it (`of`), by the writer, at `now`."""
+    by_source = {}
+    for _n, act, _k, _verb, x in plan:
+        if act in ('add', 'change') and x.get('read'):
+            key = (_flow({'from': x['read']['from']}), x['read']['through'])
+            by_source.setdefault(key, (x['read']['from'], []))[1].append(x['id'])
+    return [f"- read: {_flow({'by': who, 'of': ids, 'from': frm, 'through': through, 'at': 'now'})}\n"
+            for (_k, through), (frm, ids) in by_source.items()]
 
 
 def _tie(out, bean, plan, at, refuse):

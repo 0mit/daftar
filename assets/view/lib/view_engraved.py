@@ -77,7 +77,8 @@ def queue(reader, may):
         about = x.get('about')
         if _bean(about) is not None and not may('read', about):
             continue
-        out.append(dict(x, title=title_of(about) if _bean(about) is not None else None, opens=about if _bean(about) is not None else None))
+        out.append(dict(x, title=title_of(about) if _bean(about) is not None else None, opens=about if _bean(about) is not None else None,
+                        **said_of(x)))
 
     def urgency(x):
         k = x.get('kind')
@@ -89,6 +90,38 @@ def queue(reader, may):
         return (g, str(x.get('since') or ''), str(x.get('about')))
     out.sort(key=urgency)
     return {'reader': reader, 'groups': [k for k in LEAD_ORDER if any(x.get('kind') == k for x in out)], 'leads': out}
+
+
+def said_of(x):
+    """What a lead's sentence says, read from the garden, for the reader's language to say it in (view_queue.js composes
+    it from the widgets' sentences; bin/leads.py's own `why` is its English, kept beside): a case's step by its walk's
+    own words; a clause by its words and the day it falls due, as a day of the Gregorian calendar the widgets convert
+    from (a day written in another calendar, or as an ISO week's day, is read by bin/stale.py); a failure by its `as`."""
+    k, out = x.get('kind'), {}
+    if k == 'case' and isinstance(x.get('walk'), str):
+        steps = (vm.fm(x['walk'], 'mappings') or vm.fm(x['walk'])).get('steps') or []
+        st = next((s for s in steps if isinstance(s, dict) and s.get('id') == x.get('step')), {})
+        if st.get('do'):
+            out['step_says'] = str(st['do'])
+    elif k == 'obligation':
+        b = _bean(x.get('about'))
+        if b is not None:
+            from core import measures
+            e = (measures.clauses_of(b, vm.ROOT) or {}).get(x.get('clause')) or {}
+            w = e.get('what')
+            if isinstance(w, str) and w and w not in {r.get('id') for _i, _v, r in b.items if isinstance(r, dict)}:
+                out['what'] = w                       # words, never a statement's id standing in for them
+        if x.get('due') is not None:
+            m = _moment(str(x['due']))
+            if m:
+                out['day'] = m[0]
+    elif k == 'health':
+        b = _bean(x.get('about'))
+        f = next((r for _i, v, r in (b.items if b is not None else []) if v == 'fail' and isinstance(r, dict)
+                  and r.get('id') == x.get('fail')), None)
+        if f and isinstance(f.get('as'), str):
+            out['fails_as'] = f['as']
+    return out
 
 
 # ------------------------------------------------------------------------------------------------------------ timeline
@@ -135,13 +168,24 @@ def timeline(v, may, on=None):
         if b is None or not may('read', bid):
             continue
         t = title_of(bid)
+        times = {}                              # a statement's own time of day, by its id: what a repetition of it keeps
+        sessions = {}                           # the days a statement's own session is on, by its id
         for _i, verb, r in b.items:
-            if verb == 'be' and isinstance(r, dict) and 'held' not in r and r.get('by') in ('self', bid):
-                for x in _listed(r.get('at')):
-                    m = _moment(x)
-                    if m and lo <= datetime.date.fromisoformat(m[0]).toordinal() <= hi:   # a day of its own calendar
-                        events.append({'day': m[0], 'time': m[1], 'at': x, 'bean': bid, 'title': t, 'kind': 'happening',
-                                       'statement': r.get('id')})
+            # A HAPPENING'S TIME: its `be` at a moment, or an attendance at its own moment (`attend … at`: a session of a
+            # series, a sitting moved to another day) — each placed once, at the day of its own calendar
+            if not isinstance(r, dict) or 'held' in r:
+                continue
+            if not (verb == 'be' and r.get('by') in ('self', bid) or verb == 'attend' and r.get('of') in ('self', bid)):
+                continue
+            for x in _listed(r.get('at')):
+                m = _moment(x)
+                if m and isinstance(r.get('id'), str):
+                    times.setdefault(r['id'], m[1])
+                    sessions.setdefault(r['id'], set()).add(m[0])
+                if m and lo <= datetime.date.fromisoformat(m[0]).toordinal() <= hi and \
+                        not any(e['bean'] == bid and e['day'] == m[0] and e['time'] == m[1] for e in events):
+                    events.append({'day': m[0], 'time': m[1], 'at': x, 'bean': bid, 'title': t, 'kind': 'happening',
+                                   'statement': r.get('id')})
         for cid, e in (measures.clauses_of(b, vm.ROOT) or {}).items():
             if not isinstance(e, dict) or e.get('state') in ('met', 'waived', 'broken') or e.get('due') is None:
                 continue
@@ -151,18 +195,25 @@ def timeline(v, may, on=None):
                 notes.append(f"{bid} {cid}: its due day {e['due']} is not walked here: {why}")
                 continue
             rec = e.get('every') if isinstance(e.get('every'), dict) else None
-            base = {'bean': bid, 'title': t, 'kind': 'due', 'clause': cid, 'what': e.get('what'), 'by': e.get('by'),
-                    'to': e.get('to'), 'amount': e.get('amount'), 'permission': e.get('permission')}
+            # A REPETITION OF A STATEMENT (a series' sessions: `can { of: <its attend> }` with an `every`): each occurrence
+            # at that statement's own time of day, and its words the being's, never the statement's id
+            of_statement = e.get('what') in times
+            base = {'bean': bid, 'title': t, 'kind': 'due', 'clause': cid, 'what': None if of_statement else e.get('what'),
+                    'by': e.get('by'), 'to': e.get('to'), 'amount': e.get('amount'), 'permission': e.get('permission'),
+                    'at_time': times.get(e.get('what')) if of_statement else None}
             if rec is None:
                 if lo <= first <= hi:
-                    events.append(dict(base, day=datetime.date.fromordinal(first).isoformat(), time=None, index=1, times='1'))
+                    events.append(dict(base, day=datetime.date.fromordinal(first).isoformat(), time=base['at_time'], index=1, times='1'))
                 continue
             try:
                 for i, n in enumerate(dmstale.occurrences(first, rec), 1):
                     if n > hi:
                         break
-                    if n >= lo:
-                        events.append(dict(base, day=datetime.date.fromordinal(n).isoformat(), time=None, index=i,
+                    day = datetime.date.fromordinal(n).isoformat()
+                    # a series' occurrence on the day of its own statement's session is that session, drawn already; any
+                    # other clause is drawn whatever else its being has that day (a rent due on the day of a meeting)
+                    if n >= lo and not (of_statement and day in sessions.get(e.get('what'), ())):
+                        events.append(dict(base, day=day, time=base['at_time'], index=i,
                                            times=None if rec.get('times') is None else str(rec.get('times'))))
             except dmstale.Unreckoned as why:
                 notes.append(f"{bid} {cid}: its repetition is not walked here: {why}")
@@ -640,10 +691,122 @@ def settings():
             'durations': [{'unit': u, 'name': str(r.get('name') or u)} for u, r in (L.units or {}).items()
                           if r.get('quantity') == 'duration'],
             'currencies': [{'code': c, 'digits': r.get('digits')} for c, r in sorted(dmledger.core_units().items())
-                           if str(r.get('digits') or '').isdigit()]}
+                           if str(r.get('digits') or '').isdigit()],
+            # the reference systems a place is written in, and how well each is known, as the law states it
+            'crs': reference_systems()}
 
 
-def page(may, reader, held=None, keep=None):
+def reference_systems():
+    """For a place (widgets/place.js): each reference system of the law (places.yaml `reference_systems`, read by
+    bin/geo.py) with its ensemble's accuracy, the unit named as CLDR names it (the law's own crossing, units-cldr-units)
+    so the reader is shown it in their words beside a coordinate — WGS 84 is accurate to 2 m, and nothing finer is read
+    from it."""
+    import geo as dmgeo
+    import units as dmunits
+    out = []
+    names = {str(r.get('name')): u for u, r in (vm.CORE.L.units or {}).items()}
+    for crs, r in sorted(dmgeo.systems(vm.ROOT).items()):
+        row = {'crs': crs}
+        acc = r.get('ensemble_accuracy')
+        if isinstance(acc, dict) and acc.get('count'):
+            unit = str(acc.get('unit') or '')
+            try:
+                unit = dmunits.code_of('cldr-units', {'unit': names.get(unit, unit)})[0]
+            except (ValueError, KeyError, OSError):
+                pass                                # a unit CLDR does not name is shown as the law writes it
+            row['accuracy'] = {'count': str(acc['count']), 'unit': unit}
+        out.append(row)
+    return out
+
+
+_COORD = re.compile(r'^EPSG:4326;(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:@\d{4}(?:\.\d+)?)?$')
+_OSM = re.compile(r'^osm:((?:node|way|relation)/[1-9][0-9]*)$')
+_GEONAMES = re.compile(r'^geonames:([1-9][0-9]{0,9})$')
+
+
+def places(may):
+    """THE GARDEN'S OWN PLACES a reader may read, carried with a served page for a place lookup (widgets/place.js),
+    which offers them first and works with them alone offline: each being the reader may read whole whose `be … as:
+    location` or `as: place`, not held, holds a coordinate in EPSG:4326, a map's element or a gazetteer's feature — by
+    its title, and landing as the being itself, whose coordinates stay said once, in its own bean. Only a page that can
+    write carries them (`scoped`): the offline report edits nothing, and may be published."""
+    out = []
+    for bid, b in sorted(vm.CORE.G.beans.items()):
+        if b.unread or os.path.basename(os.path.dirname(b.path or '')) != 'beans' or not may('read', bid):
+            continue
+        p = {'id': bid, 'title': title_of(bid), 'kind': b.kind}
+        for _i, verb, r in b.items:
+            if verb != 'be' or 'held' in r or r.get('as') not in ('location', 'place'):
+                continue
+            for x in _listed(r.get('at')):
+                m = _COORD.match(x) if isinstance(x, str) else None
+                if m and 'point' not in p:
+                    p['point'] = [float(m.group(1)), float(m.group(2))]
+                m = _OSM.match(x) if isinstance(x, str) else None
+                if m and 'osm' not in p:
+                    p['osm'] = m.group(1)
+                m = _GEONAMES.match(x) if isinstance(x, str) else None
+                if m and 'geonames' not in p:
+                    p['geonames'] = m.group(1)
+        if any(k in p for k in ('point', 'osm', 'geonames')):
+            out.append(p)
+    return out
+
+
+_CONTACT = re.compile(r'(root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32})`?(?: on ([A-Za-z0-9][A-Za-z0-9_.-]*(?:#[A-Za-z0-9_.-]+)?))?')
+
+
+def contact_of(bid):
+    """(pointer, record, basis) of the contact a person kept off git under an opaque id holds here — what `bin/held.py
+    person` writes: a record `{bean, term: person, key: contact, entry: {name, …}}` whose pointer the person's own bean
+    names in its words, `Held: `<pointer>` on <basis>.`, the basis the word they were kept on (`--basis`: their agree,
+    `<bean>#<id>`), None where none is written — or (None, None, None) where this host's stores hold none of theirs
+    (another machine's, erased, or none)."""
+    b = _bean(bid)
+    if b is None or b.kind != 'person' or not b.path:
+        return None, None, None
+    import held as dmheld
+    try:
+        with open(b.path, encoding='utf-8') as fh:
+            text = fh.read()
+    except OSError:
+        return None, None, None
+    for pointer, basis in dict.fromkeys(_CONTACT.findall(text)):
+        try:
+            rec = dmheld.resolve(pointer, root=vm.ROOT)
+        except (dmheld.NotHere, dmheld.Erased, ValueError, OSError):
+            continue
+        if isinstance(rec, dict) and rec.get('bean') == bid and rec.get('term') == 'person' and rec.get('key') == 'contact':
+            return pointer, rec, basis.rstrip('.') or None
+    return None, None, None
+
+
+def names_part(grants, bean, part):
+    """Whether one of `grants` — (holder, id) of each grant a law's answer read (bin/pass.py `may`; one with no id is
+    `grant@<its place>`) — opens `part` of `bean` by NAMING it: its `cover` names the part. What a host keeps off git of a
+    being is opened so, by name; a grant of the whole bean opens what the bean holds, never by itself what is held of it
+    elsewhere."""
+    for holder, gid in grants or ():
+        hb = _bean(holder)
+        for i, verb, r in (hb.items if hb is not None else ()):
+            if verb != 'grant' or (r.get('id') if isinstance(r.get('id'), str) else f'grant@{i}') != gid:
+                continue
+            cv = r.get('cover') if isinstance(r.get('cover'), dict) else {}
+            if part in [str(x) for x in _listed(cv.get('parts'))]:   # the answer read it as covering `bean`
+                return True
+    return False
+
+
+def stands(ref, bid):
+    """Whether the word `ref` names still stands in the ledger: a statement (`<bean>#<id>`, or an id of `bid`'s own
+    bean), or a bean of the garden — as a held statement's `while` is read."""
+    if ref in vm.CORE.G.beans and not vm.CORE.G.beans[ref].unread:
+        return True
+    from core import engine
+    return engine.Judge(vm.CORE.L, vm.CORE.G).statement(ref, _bean(bid)) is not None
+
+
+def page(may, reader, held=None, keep=None, contact=None):
     """For one reader: each engraved drawing's reading (of those `keep` names, where it names some: the drawings the
     reader is sent), the sheet of every being one of them shows, an empty sheet of each kind a drawing makes, the beings
     a role may name, and the widgets' settings."""
@@ -668,12 +831,28 @@ def page(may, reader, held=None, keep=None):
         for kind in _listed(v.get('new')):
             if isinstance(kind, str) and kind in vm.CORE.L.kinds:
                 out['blank'][kind] = blank(kind, may)
-    for bid in sorted(show):
+    # A PERSON KEPT OFF GIT BY NAME (`bin/held.py person`): to a reader who may read them and whom their contact is
+    # opened to (`contact`, the host's question: scoped's), the host that keeps it sends it — their name as how the page
+    # calls them, their contact on their sheet, marked as kept here; every other host and reader has their opaque id, as
+    # the ledger does. A page of one file (`contact` None) sends none.
+    named = {}
+    if contact:
+        for bid, b in sorted(vm.CORE.G.beans.items()):
+            if b.kind == 'person' and not b.unread and may('read', bid):
+                c = contact(bid)
+                if isinstance(c, dict) and str(c.get('name') or '').strip():
+                    named[bid] = c
+    for bid in sorted(show | set(named)):
         s = sheet(bid, may, held)
         if s is not None:
+            if bid in named:
+                s['contact'] = {k: str(x) for k, x in named[bid].items() if isinstance(x, (str, int))}
+                s['title'] = str(named[bid]['name'])
             out['sheets'][bid] = s
     # THE BEINGS A ROLE MAY NAME: every bean the reader may read, by its title — what a sheet's picker offers
-    out['beings'] = [{'id': bid, 'title': title_of(bid), 'kind': b.kind} for bid, b in sorted(vm.CORE.G.beans.items())
+    out['beings'] = [{'id': bid, 'title': str(named[bid]['name']) if bid in named else title_of(bid), 'kind': b.kind,
+                      **({'held_name': True} if bid in named else {})}
+                     for bid, b in sorted(vm.CORE.G.beans.items())
                      if not b.unread and os.path.basename(os.path.dirname(b.path or '')) == 'beans' and may('read', bid)]
     return out
 
@@ -712,7 +891,25 @@ def scoped(host, user, keep=None):
             return None
         e = rec.get('entry') if isinstance(rec, dict) and rec.get('key') == sid else None
         return {k: x for k, x in e.items() if k != 'while'} if isinstance(e, dict) else None
-    p = page(may, u.get('bean'), held, keep)
+    def contact(bid):
+        """A held person's name and ways to reach them, held to the bar of a held statement and more: sent to the
+        gardener, or to a reader a grant opens by name the part of the person's bean that says where they are held
+        (`cover: { parts: [body] }`) — a grant of the whole bean opens the bean, never by itself what this host keeps of
+        them — and only while the word they were kept on (`Held: … on <basis>`, bin/held.py --basis) stands, where one
+        is written: once their consent is taken out, nobody has their name or contact, the gardener neither."""
+        _pointer, rec, basis = contact_of(bid)
+        if not (isinstance(rec, dict) and isinstance(rec.get('entry'), dict)):
+            return None
+        if not (gardener and u.get('bean') == gardener):    # nobody unnamed is the gardener
+            v = host.may(user, bid, positions=['body'])
+            if not v[0] or not names_part(getattr(v, 'grants', ()), bid, 'body'):
+                return None
+        if basis and not stands(basis, bid):
+            return None
+        return rec['entry']
+    gardener = getattr(host, 'gardener', None) or str(vm.fm_path(os.path.join(vm.ROOT, 'GARDEN.md')).get('gardener') or '')
+    p = page(may, u.get('bean'), held, keep, contact)
+    p['places'] = places(may)                                     # what a place lookup offers first: the reader's own
     g = p['settings']['garden']
     if isinstance(u.get('calendar'), str) and u['calendar']:
         g['calendar'] = u['calendar']

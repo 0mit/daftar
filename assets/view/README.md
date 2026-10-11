@@ -146,9 +146,14 @@ is read each time it is asked, as the release's tools read it, never computed ag
 (`lib/view_engraved.py`):
 
 - a **queue** — what waits for the reader: `bin/leads.py`'s leads for them, grouped by what each waits on (a decision,
-  a case at a step, an obligation falling due, a failure, an open session), the most urgent first;
-- a **timeline** — the members of a reading at their moments: a happening's time, and a clause's due day and each
-  occurrence of its repetition within the `span`, walked by `bin/stale.py`'s `occurrences`, the function that warns.
+  a case at a step, an obligation falling due, a failure, an open session), the most urgent first. Each is said in the
+  reader's language from what it is and what it is about — a case by its walk's own words for its step, a clause by
+  its words and the day it falls due in the reader's calendar, whatever calendar it counts in — and bin/leads.py's
+  English `why`, a log's sentence, is the line's title;
+- a **timeline** — the members of a reading at their moments: a happening's time (its `be` at a moment, or an
+  attendance at its own, `attend … at`), and a clause's due day and each occurrence of its repetition within the
+  `span`, walked by `bin/stale.py`'s `occurrences`, the function that warns; a repetition of an attendance (a series'
+  sessions) keeps that attendance's hour, and is named by its being, never by the statement's id.
   Week, month and list are three readings of one line; the week begins on the day the reader's region begins one
   (CLDR's `firstDay`), in the reader's calendar and digits;
 - **flows** — who owes whom: `bin/ledger.py`'s reading (`ledger.reading`, what `--json` prints) of the agreements the
@@ -169,23 +174,33 @@ runs and name every key, glyph and swipe by meaning (`earlier`, `later`, `next`)
 its title and summary, and each verb the page's `fields` names for its kind, its statements in the order the bean holds
 them, each with the statements that take it as their `of` beneath it (a payment with its `bear` shares and the clauses
 that ask it), who knows it (its knowing act), and the default the law derives where nothing is written (a payment no
-`bear` names: its payer bears it, alone, as the ledger reads it). Where the reader may write the being — the gardener,
-or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns every fact they may
-write into the widget of its shape (read from the verb's row: never typed in a page), with a remove mark on each
-statement and an add for each verb; **one Save** is one write; Cancel drops the draft. There is no button per field.
+`bear` names: its payer bears it, alone, as the ledger reads it), and its tags where the page names them, each a word
+of its own. What the page's `fields` names of the being's
+`details` — what fits no verb yet, kept whole until one is proposed — is drawn beneath its head as it is held, key by
+key, each value by the widget of what it looks like, and never edited on the sheet. Where the reader may write the
+being — the gardener, or a reader a `grant … as: write` opens, its `cover` perhaps the title alone — **one Edit** turns
+every fact they may write into the widget of its shape (read from the verb's row: never typed in a page), with a
+remove mark on each statement and an add for each verb; **one Save** is one write; Cancel drops the draft. There is no
+button per field.
 A value in one of the law's forms — what a clause holds beside its words, what a payment settles — is drawn and edited
 by its entries (`widgets/form.js`): its day in the reader's calendar, its repetition in their words, a choice of the
 bean's own clauses, never a text of JSON to type; what the form holds that no widget draws is written back as it was.
+Where a being is (`be`'s `at`) is a place (`widgets/place.js`), looked up as it is typed; on the sheet of a happening,
+or of a being that holds an `attend`, and for a place held off git, the lookup is the machine's alone: where a person
+will be is never asked of a place service (design §12). A place picked from a source is saved with that source, and
+the write path knows it by a `read` (below).
 A page a `new` names opens an empty sheet of a kind, whose first Save mints the bean (`p-<8 hex>` for a person, titled
 by the id; `<kind>-<8 hex>` for another) and writes it whole — the gardener's alone, since no grant names a being not
 yet made.
 
 **The one write path** (`lib/view_write.py`, `write(root, who, bean, ops, kind=None, may=None)`): a sheet's Save and a
 drawing's form of a verb (`writes: [{ verb, preset }]`) both send statements — `[{op: add|change|remove, key?, verb,
-roles, held?}]`, and `{op: change, header: title|summary, value}` — and both are written by it: each op read against its
+roles, held?}]`, `{op: change, header: title|summary, value}`, and `{op: change, header: tags, value: [words]}`, the
+tags as a set of words (none: the key taken out) — and both are written by it: each op read against its
 verb's row; `may` asked for the bean, or for the part each op touches; each edit through `bin/safe.py` by its key, one
 line, an expected count of 1; a held value sealed by `bin/held.py` before its statement is written; the statements added
-or changed known by the writer's `say`; each written statement read back and judged by the gate's own judge; then
+or changed known by the writer's `say` — or, where an op says it was read from a source (`read: {from, through}`, a
+place a lookup found), by the writer's `read` from it; each written statement read back and judged by the gate's own judge; then
 `bin/save.py`, with ONE journal entry naming each statement added, changed or removed, and the gate judges the commit.
 A refusal undoes everything — the tree, the index, every store record the write made — and each message is returned
 tied to the op whose statement it names. `view serve` calls it for `/api/write` with `ops`; a host that serves a
@@ -197,6 +212,16 @@ holds one — the host bean whose `roots` declare it — sends its value only to
 the word it is held on (`while`) stands; every other page says where it is kept. It is edited in the same Edit and
 sealed in the same Save; the commit keeps only the pointer. `view check` refuses a public page that would show one, and
 the offline report carries none.
+
+**A person kept off git by name** (`bin/held.py person`: an opaque `p-<8 hex>` in git, their name and contacts held on
+a machine's store) is called by their name by the host whose store keeps it — the title of their sheet and of every
+role that names them, and their contact on their sheet, marked as held on that machine (`view_engraved.contact_of`) —
+to the gardener, and to a reader who may read them and whom a grant opens BY NAME the part of their bean that says
+where they are held (`cover: { parts: [body] }`): a grant of the whole bean opens the bean, never by itself what a
+host keeps of them off git. And only while the word they were kept on stands (`Held: … on <bean>#<id>`, `bin/held.py
+--basis`: their agree), where one is written: once it is taken out, nobody has their name or contact, the gardener
+neither. Every other reader, every other host and the page of one file have their opaque id, as the ledger does; once
+they are erased from the store, so does the host that kept them.
 
 **Where they are drawn.** The renderers — `lib/view_engraved.js`, `view_queue.js`, `view_timeline.js`,
 `view_flows.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`
@@ -375,6 +400,7 @@ copy of the release the garden runs, so a value is shown by the law the garden k
 | `lib/widgets/being.js` | being | a bean by its title, reached by its id |
 | `lib/widgets/exact.js` | number | sums of written amounts as fractions of two integers |
 | `lib/widgets/recurrence.js` | recurrence | a repetition said in the reader's words, calendar and digits — each week on Tuesday and Thursday, ninety minutes each time — and edited by its parts: the cell it repeats in, the places in it (a week's days as the reader's region begins a week), where it starts, how many times, how long each lasts; the time systems and the units of a length of time are the law's, sent by the host |
+| `lib/widgets/place.js` | place | where something is, taken in through a place lookup: suggestions as typed, each its own words and where it is — the garden's own places first (carried with a served page, `places`, only those its reader may read), then the host's (`state.places.here`), then a place service beyond the machine (`state.places.far`), never for a field the host seals; the reader's position only when they press its button. A pick lands as the being it is, or as `EPSG:4326;<lat>,<lon>` with its element (`osm:way/42`, `geonames:112931`) and the source it was read from; a coordinate is shown in the reader's digits with the accuracy the law states for its system (WGS 84, ±2 m) |
 | `lib/widgets/form.js` | a form's value | what a clause holds beside its words (`clause`), what a payment settles (`settlement`): drawn by its entries, each attribute by the widget that implements its value, as the host resolves it from the law (`view_engraved.form_def`); what it cannot draw is kept as written |
 | `lib/widgets/safe.js` | — | `h```: the one way HTML is built; `mount`: the one door into a page |
 | `lib/widgets/locale.js` | — | the reader's digits, separators, calendar, direction and words, all CLDR's through `Intl` |
@@ -395,7 +421,7 @@ than written, never as a JSON float; a widget never rounds a value it takes in.
 
 **What a widget reads comes from the law, sent by the host:** a currency's places (the currencies table), a calendar
 (the reader's or the garden's), a unit's name. Configure with `settings.js` `configure({garden: {lang, calendar, zone,
-gardener}, asOf, currencies})`.
+gardener}, asOf, currencies, crs})` — `crs` the law's reference systems and how well each is known, for a place.
 
 **Every bidi control is an escape in this source**, never the character itself (Trojan Source, CVE-2021-42574):
 `test/core_law.py` refuses a file that holds one.
