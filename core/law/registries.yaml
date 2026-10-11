@@ -32,6 +32,8 @@ registry_files:
   - { registry: units-gs1-ai, file: "seed/knowledge/units-gs1-ai.tsv", key: code }
   - { registry: cldr-units, file: "seed/knowledge/cldr-units.tsv", key: code }
   - { registry: units-cldr-units, file: "seed/knowledge/units-cldr-units.tsv", key: code }
+  - { registry: geonames, key: code }
+  - { registry: osm-places, key: code }
 knowledge_schemes:
   - scheme: isced-f-2013
     classifies: "fields of knowledge (education and training)"
@@ -197,9 +199,39 @@ knowledge_schemes:
     neighbours: none
     sources: "seed/knowledge/SOURCES.md"
     units: units-cldr-units
+  - scheme: geonames
+    classifies: "the world's named places by the gazetteer's feature id — a populated place, a division of a country, a mountain, a river — each with its name and the other names it is written by, its feature class and code, its country and divisions, its population, and its point in WGS 84; a position in the system `geonames` is a row of it"
+    holding: fetched
+    fetch:
+      from: "https://download.geonames.org/export/dump/{part}.zip"
+      part: "^[A-Z]{2}$"
+      reader: geonames-dump
+      latest: "GeoNames exports the whole gazetteer every day, one file a country (export/dump/<CC>.zip, its readme.txt saying the columns), and what changed the day before in its modifications and deletes files; a later copy is the same file fetched again"
+    licence: CC-BY-4.0
+    release: "the day's export (GeoNames numbers no release: a copy is known by the day it was read, and its SHA-256)"
+    publisher: "GeoNames (geonames.org), compiled from public sources and its users' edits"
+    url: "https://www.geonames.org"
+    levels: [{ level: feature }]
+    neighbours: none
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: osm-places
+    classifies: "OpenStreetMap's places of a country at the scale a person names where something is — the country, its divisions, its cities, villages, districts and localities — by their element, each with its tag, its names in English, Persian and Turkish beside its own, and its centroid in WGS 84; a position in the system `osm` is an element of it, and the streets and houses a place search finds are the search's"
+    holding: fetched
+    fetch:
+      from: "https://download1.graphhopper.com/public/{part}/photon-dump-{part}-1.0-latest.jsonl.zst"
+      part: "^[a-z-]+/[a-z-]+$"
+      reader: photon-dump
+      latest: "OpenStreetMap is edited continuously; GraphHopper publishes, for Photon, a dump of each country every week (download1.graphhopper.com/public/<continent>/<country>/, its .md5 beside it), in the dump format Photon reads; a major release of Photon names its own dump"
+    licence: ODbL-1.0
+    release: "the dump's data timestamp, as its first line states it (a copy is known by it and its SHA-256)"
+    publisher: "OpenStreetMap contributors (the OpenStreetMap Foundation); the dumps prepared by GraphHopper GmbH, for Photon"
+    url: "https://www.openstreetmap.org/copyright"
+    levels: [{ level: element }]
+    neighbours: none
+    sources: "seed/knowledge/SOURCES.md"
 knowledge_scheme_form:
   holding: "shipped | extract | at-authority | fetched — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); held at the publisher and looked up there, checked here only by `code_pattern`; or fetched — each machine downloads the provider's own table (`fetch`) into a cache outside git (bin/fetch.py), under the provider's terms, and reads its codes there; while the release still carries a copy, a machine that has fetched none reads that"
-  fetch: "with `fetched`: { from: the provider's own download, reader: how its rows are read, one of `fetch_shape.readers` (bin/fetch.py), latest: how to learn of its latest release }"
+  fetch: "with `fetched`: { from: the provider's own download, reader: how its rows are read, one of `fetch_shape.readers` (bin/fetch.py), latest: how to learn of its latest release, part: where the provider serves its table in parts (a country, a region) — `{part}` in `from`, and the form a part is named in, a regular expression; each part is fetched alone, the parts a garden needs, and read as one table }"
   licence: "the SPDX identifier of the terms its rows are under — `LicenseRef-<name>` where the publisher's terms have none"
   release: "the publisher's release the rows are from"
   sensitive: "special-category — every code of it is special-category material wherever it is written (a diagnosis, a procedure; F3); absent, not"
@@ -252,4 +284,4 @@ forms:
 # holds, and refuses a file whose columns are not the ones it reads (bin/fetch.py READERS).
 fetch_shape:
   readers: [ilo-isco-08-xlsx, unece-rec20-xlsx, loinc-table-csv, ifc-express, epsg-sql, gs1-syntax-dictionary,
-            cldr-units-json]
+            cldr-units-json, geonames-dump, photon-dump]
