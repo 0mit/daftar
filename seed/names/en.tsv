@@ -96,7 +96,7 @@ roles:through	through	through (Old English þurh); Pāṇini's karaṇa: the mea
 roles:to	to	to (Old English tō); Pāṇini's sampradāna: for whom, or towards what	proposed	agent (claude opus-5.5), by hand
 roles:from	from	from (Old English fram); Pāṇini's apādāna: the fixed point it departs from	proposed	agent (claude opus-5.5), by hand
 roles:at	at	at (Old English æt); Pāṇini's adhikaraṇa: the locus — a position, or the being it stands on	proposed	agent (claude opus-5.5), by hand
-roles:as	as	as (Old English ealswā: just so); Aristotle's ᾗ (qua): in what capacity, or as what	proposed	agent (claude opus-5.5), by hand
+roles:as	as	as (Old English ealswā: just so); Aristotle's ὡς: the way in which, what a thing is taken as — ὡς ὕλη, as matter (Physics II.3 195a)	proposed	agent (claude opus-5.5), by hand
 verbs:say	say	say (Old English secgan): to give one's word	proposed	agent (claude opus-5.5), by hand
 verbs:read	read	read (Old English rǣdan: to advise, to interpret): what a body read off a thing	proposed	agent (claude opus-5.5), by hand
 verbs:derive	derive	derivare (to draw off a stream: de + rivus): to come to it from what was given	proposed	agent (claude opus-5.5), by hand

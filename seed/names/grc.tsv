@@ -96,7 +96,7 @@ roles:through	διά	διά with the genitive (through): the means — a tool, a
 roles:to	πρός	πρός with the accusative (towards, to): what it goes towards, or the one it is for; the dative names the receiver	proposed	agent (claude opus-5.5), by hand
 roles:from	ἀπό	ἀπό with the genitive (away from): the fixed point it departs from; ἐκ (out of: a parent, a source) and παρά with the genitive (from beside: a giver)	proposed	agent (claude opus-5.5), by hand
 roles:at	ἐν	ἐν with the dative (in, at): a position — ἐν τόπῳ, ἐν χρόνῳ — or the being it stands on; ἐπί (upon) and παρά with the dative (beside, in the keeping of)	proposed	agent (claude opus-5.5), by hand
-roles:as	ᾗ	ᾗ (in which way: qua): Aristotle's ᾗ — τὸ ὂν ᾗ ὄν, being qua being (Metaphysics Γ.1): in what capacity, or as what; ὡς (as)	proposed	agent (claude opus-5.5), by hand
+roles:as	ὡς	ὡς (the way in which): Aristotle's ὡς — ὡς ὕλη, ὡς τὸ ἐξ οὗ (Physics II.3 195a): what a thing is taken as (LSJ ὡς Ab.II.3); its neighbour ᾗ (qua) is a doer's capacity (Physics I.8 191b4; Metaphysics Γ 1003a21)	proposed	agent (claude opus-5.5), by hand
 verbs:say	λέγειν	λέγω (to gather, to lay in order, to say): to give one's word — whose deed is λεχθέν (acts:said); φάναι (to affirm)	proposed	agent (claude opus-5.5), by hand
 verbs:read	ἀναγιγνώσκειν	ἀναγιγνώσκω (to know again, to recognise: to read): what a body read off a thing — whose deed is ἀναγνωσθέν (acts:read)	proposed	agent (claude opus-5.5), by hand
 verbs:derive	παράγειν	παράγω (to lead aside, to bring forth): whose deed is παράγωγον (acts:derived); συνάγειν (to gather a conclusion: the logicians' inferring)	proposed	agent (claude opus-5.5), by hand
