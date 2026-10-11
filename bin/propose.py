@@ -96,24 +96,17 @@ GUARDS = {
 ROOT = os.path.dirname(HERE)
 PY = 'python' if os.name == 'nt' else 'python3'
 BLOCK = re.compile(r'^(`{3,})daftar-(bean|stub|journal)(?:[ \t]+(\S+))?[ \t]*\r?$')
+
+
 # A character that ends a line or controls a terminal (C0, DEL, C1 — NEL among them — and the Unicode line and paragraph
-# separators). A proposal's names reach journal headings and file names here.
-_CTRL = re.compile('[\x00-\x1f\x7f-\x9f\u2028\u2029]')
-
-
-# ...and what a proposal carries, PRINTED to the gardener's terminal, shows each of them as its escape, as `repr` does:
-# an ESC sequence sent raw can retitle the window or conceal every line printed after it, the refusal and the verdict
-# among them, and a line feed can print a line the proposal wrote as if this tool had.
-def _esc(s):
-    """A carried string as it may be printed: every character `_CTRL` names as `\\xNN` or `\\uNNNN`."""
-    return _CTRL.sub(lambda m: (f"\\x{ord(m.group(0)):02x}" if ord(m.group(0)) < 0x100 else
-                                f"\\u{ord(m.group(0)):04x}"), str(s))
-
-
-def _say(line):
-    """A line of this tool's own output: its line feeds kept, every other control character escaped — the guard
-    behind the escaping of each carried value where the line is built."""
-    return '\n'.join(_esc(x) for x in str(line).split('\n'))
+# separators: bin/parse.py's CONTROL) never reaches a journal heading or a file name from a proposal's names (id_ok);
+# and what a proposal carries, PRINTED to the gardener's terminal, shows each of them as its escape, as `repr` does: an
+# ESC sequence sent raw can retitle the window or conceal every line printed after it, the refusal and the verdict among
+# them, and a line feed can print a line the proposal wrote as if this tool had. The escaper is bin/parse.py's, the one;
+# a line of this tool's own output keeps its line feeds and escapes every other such character — the guard behind the
+# escaping of each carried value where the line is built.
+_esc = dmparse.escaped
+_say = dmparse.said
 
 
 # A proposal is read before anyone trusts it, so what it may make the reader BUILD is bounded: no YAML alias (an alias
@@ -175,7 +168,7 @@ def id_ok(s):
                 pat = next((r.get('pattern') for r in (rows or []) if isinstance(r, dict) and r.get('form') == 'name'), None)
         _KEBAB.append(re.compile(str(pat), re.ASCII) if pat else None)
     s = str(s)
-    return bool(s) and not _CTRL.search(s) and (_KEBAB[0] is None or bool(_KEBAB[0].match(s)))
+    return bool(s) and not dmparse.CONTROL.search(s) and (_KEBAB[0] is None or bool(_KEBAB[0].match(s)))
 
 
 def _inside(path, directory):

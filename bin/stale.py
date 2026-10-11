@@ -1014,14 +1014,9 @@ def due_entries(fm, term, decl, today=None, notes=None):
 # instruction to the reader's terminal: `\e[2A\e[2K` climbs back over the line above and writes a debt the other way
 # round, `\e[8m` conceals every line after it, `\r` writes over the start of its own line. The gate refuses them in a
 # bean; a working tree, or a garden older than that refusal, may still hold them — so every value a reader here shows
-# passes through ONE escaper, the one bin/propose.py prints a proposal with: each such character as its escape.
-_CTRL = re.compile('[\x00-\x1f\x7f-\x9f\u2028\u2029]')
-
-
-def esc(s):
-    """A string as it may be printed: every character `_CTRL` names as `\\xNN` or `\\uNNNN`, the rest as it is."""
-    return _CTRL.sub(lambda m: (f"\\x{ord(m.group(0)):02x}" if ord(m.group(0)) < 0x100 else
-                                f"\\u{ord(m.group(0)):04x}"), str(s))
+# passes through ONE escaper, bin/parse.py's, which bin/propose.py prints a proposal with: each such character as its
+# escape (`\xNN` or `\uNNNN`), the rest as it is.
+esc = dmparse.escaped
 
 
 def say(line):

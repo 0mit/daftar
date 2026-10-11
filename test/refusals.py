@@ -238,6 +238,19 @@ try:
     refused("a key holding a control character is refused", bean('mark: { by: sam, at: now, "no\\x07te": x }'),
             'U+0007')
 
+    # ---- text a tool prints: what a working tree, a proposal or an older garden still holds is spelt out, never sent
+    # to the terminal, by ONE escaper (bin/parse.py's), which the proposal's reader and stale's reports print with
+    sys.path.insert(0, os.path.join(ROOT, 'bin'))
+    import parse as dmparse, propose as dmpropose, stale as dmstale  # noqa: E401,E402
+    raw = 'a\x1b]0;x\x07b\x85c\u2028d\ne'
+    check("one escaper: bin/propose.py and bin/stale.py print with bin/parse.py's, and judge a name by its pattern",
+          dmpropose._esc is dmparse.escaped and dmpropose._say is dmparse.said and dmstale.esc is dmparse.escaped
+          and getattr(dmpropose, '_CTRL', None) is None and getattr(dmstale, '_CTRL', None) is None,
+          (dmpropose._esc, dmstale.esc))
+    check("...each control character as its escape, a tool's own line keeping its line feeds and a report's escaping them",
+          dmparse.said(raw) == 'a\\x1b]0;x\\x07b\\x85c\\u2028d\ne' and dmstale.say(raw) == dmparse.escaped(raw)
+          == 'a\\x1b]0;x\\x07b\\x85c\\u2028d\\x0ae' and not dmpropose.id_ok('a\u2029b'), repr(dmstale.say(raw)))
+
     # ---- bidi: a code and a name a namespace gives hold no character of Unicode's Bidi_Control, which makes them read
     # as another (Trojan Source); free text keeps them as written
     r = refused("a code holding U+202E (RIGHT-TO-LEFT OVERRIDE) is refused by name",
