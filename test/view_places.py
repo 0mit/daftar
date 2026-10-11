@@ -135,7 +135,11 @@ A page.
           "says nowhere, or only when, carries none",
           sorted(own) == ['bookshop', 'cafe-b'] and own['bookshop'].get('title') == 'کاخ کتاب'
           and own['bookshop'].get('point') == [35.7001, 51.4012] and own['bookshop'].get('osm') == 'way/9001', R)
-    check("...only those the reader may read", [p.get('id') for p in R.get('closed') or []] == ['cafe-b'], R.get('closed'))
+    check("...only those the reader may read whole", [p.get('id') for p in R.get('closed') or []] == ['cafe-b']
+          and py("[p['id'] for p in ve.places(lambda act, bean, positions=None: bean == 'bookshop' and bool(positions))]") == [],
+          (R.get('closed'), 'a bean opened only in part'))
+    check("...and the offline report, which edits nothing and may be published, carries none",
+          'places' not in (py("ve.page(may, 'sam')") or {}), 'places in the report')
     crs = {r.get('crs'): r for r in (R.get('settings') or {}).get('crs') or []}
     check("the page's settings carry the law's reference systems: WGS 84 (EPSG:4326) accurate to 2 m, its unit as CLDR "
           "names it", (crs.get('EPSG:4326') or {}).get('accuracy') == {'count': '2', 'unit': 'length-meter'}, crs)

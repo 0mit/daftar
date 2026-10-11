@@ -725,19 +725,18 @@ _GEONAMES = re.compile(r'^geonames:([1-9][0-9]{0,9})$')
 
 
 def places(may):
-    """THE GARDEN'S OWN PLACES a reader may read, carried with the page for a place lookup (widgets/place.js), which
-    offers them first and works with them alone offline: each being whose `be … as: location` or `as: place`, not held,
-    holds a coordinate in EPSG:4326, a map's element or a gazetteer's feature — by its title, and landing as the being
-    itself, whose coordinates stay said once, in its own bean."""
+    """THE GARDEN'S OWN PLACES a reader may read, carried with a served page for a place lookup (widgets/place.js),
+    which offers them first and works with them alone offline: each being the reader may read whole whose `be … as:
+    location` or `as: place`, not held, holds a coordinate in EPSG:4326, a map's element or a gazetteer's feature — by
+    its title, and landing as the being itself, whose coordinates stay said once, in its own bean. Only a page that can
+    write carries them (`scoped`): the offline report edits nothing, and may be published."""
     out = []
     for bid, b in sorted(vm.CORE.G.beans.items()):
-        if b.unread or os.path.basename(os.path.dirname(b.path or '')) != 'beans':
+        if b.unread or os.path.basename(os.path.dirname(b.path or '')) != 'beans' or not may('read', bid):
             continue
         p = {'id': bid, 'title': title_of(bid), 'kind': b.kind}
         for _i, verb, r in b.items:
             if verb != 'be' or 'held' in r or r.get('as') not in ('location', 'place'):
-                continue
-            if not (may('read', bid) or (isinstance(r.get('id'), str) and may('read', bid, [r['id']]))):
                 continue
             for x in _listed(r.get('at')):
                 m = _COORD.match(x) if isinstance(x, str) else None
@@ -786,7 +785,6 @@ def page(may, reader, held=None, keep=None):
     # THE BEINGS A ROLE MAY NAME: every bean the reader may read, by its title — what a sheet's picker offers
     out['beings'] = [{'id': bid, 'title': title_of(bid), 'kind': b.kind} for bid, b in sorted(vm.CORE.G.beans.items())
                      if not b.unread and os.path.basename(os.path.dirname(b.path or '')) == 'beans' and may('read', bid)]
-    out['places'] = places(may)
     return out
 
 
@@ -825,6 +823,7 @@ def scoped(host, user, keep=None):
         e = rec.get('entry') if isinstance(rec, dict) and rec.get('key') == sid else None
         return {k: x for k, x in e.items() if k != 'while'} if isinstance(e, dict) else None
     p = page(may, u.get('bean'), held, keep)
+    p['places'] = places(may)                                     # what a place lookup offers first: the reader's own
     g = p['settings']['garden']
     if isinstance(u.get('calendar'), str) and u['calendar']:
         g['calendar'] = u['calendar']

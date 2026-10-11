@@ -13,7 +13,7 @@ export function configure(data = {}) {
   // the systems a repetition may be counted in, and the units of a length of time: the law's, as the host sends them
   if (Array.isArray(data.systems)) s.systems = data.systems;
   if (Array.isArray(data.durations)) s.durations = data.durations;
-  // the reference systems a coordinate is written in: each `{crs, name, accuracy: {count, unit}}`, the law's
+  // the reference systems a coordinate is written in: each `{crs, name?, accuracy?: {count, unit}}`, the law's
   // (places.yaml `reference_systems`), its unit as CLDR names it, so a place is shown with how well its system knows it
   if (Array.isArray(data.crs)) s.crs = data.crs;
 }
