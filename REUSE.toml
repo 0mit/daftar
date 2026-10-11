@@ -42,6 +42,12 @@ SPDX-FileCopyrightText = "2015-2024 Unicode, Inc."
 SPDX-License-Identifier = "Unicode-3.0"
 
 [[annotations]]
+path = "seed/knowledge/cldr-units.tsv"
+precedence = "override"
+SPDX-FileCopyrightText = "2004-2026 Unicode, Inc."
+SPDX-License-Identifier = "Unicode-3.0"
+
+[[annotations]]
 path = ["seed/knowledge/ics-chart-2026-06.tsv", "seed/knowledge/ics-gssps-2026-09.tsv"]
 precedence = "override"
 SPDX-FileCopyrightText = "International Commission on Stratigraphy"

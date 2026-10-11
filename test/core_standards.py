@@ -865,5 +865,70 @@ for name, data, says in (("a line with no identifier", DICT + "XX   N6   # A TIT
           refused_)
 shutil.rmtree(CACHE, ignore_errors=True)
 
+# CLDR: the units' names in English, Persian and Turkish, for a widget, shipped and fetched
+cl = next(r for r in reg['knowledge_schemes'] if r['scheme'] == 'cldr-units')
+CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
+os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
+shipped = list(csv.DictReader(open(os.path.join(ROOT, 'seed', 'knowledge', 'cldr-units.tsv'), encoding='utf-8'),
+                              delimiter='\t'))
+_n, missing, _m, _u = dmunits.against('cldr-units', shipped)
+check("CLDR's unit names are shipped (Unicode-3.0, their licence lets them) and fetched from Unicode's own package; a "
+      "machine that fetched none reads the release's names: the law's m is `length-meter`, متر in Persian, metre in "
+      "Turkish — and every code the crossing names is one of them",
+      cl['holding'] == 'fetched' and cl['licence'] == 'Unicode-3.0' and cl['fetch']['reader'] == 'cldr-units-json'
+      and 'cldr-units-json' in dmfetch.READERS and 'cldr-units-json' in reg['fetch_shape']['readers']
+      and len(shipped) >= 200 and set(shipped[0]) == {'code', 'name_en', 'name_fa', 'name_tr'}
+      and dmunits.name_of('cldr-units', {'unit': 'm'}, 'fa') == ('length-meter', 'متر')
+      and dmunits.name_of('cldr-units', {'unit': 'm'}, 'tr') == ('length-meter', 'metre') and not missing, missing)
+import tarfile  # noqa: E402
+
+
+def cldr_tgz(langs=('en', 'fa', 'tr')):
+    names = {'en': ('meters', 'months', 'kilocalories', 'Calories'), 'fa': ('متر', 'ماه', 'کیلوکالری', 'کالری'),
+             'tr': ('metre', 'ay', 'kilokalori', 'Kalori')}
+    out = io.BytesIO()
+    with tarfile.open(fileobj=out, mode='w:gz') as tf:
+        for lang in langs:
+            m, mo, kc, fc = names[lang]
+            doc = {'main': {lang: {'units': {'long': {
+                '10p-3': {'unitPrefixPattern': 'milli{0}'}, 'per': {'compoundUnitPattern': '{0} per {1}'},
+                'length-meter': {'displayName': m}, 'duration-month': {'displayName': mo},
+                'energy-kilocalorie': {'displayName': kc}, 'energy-foodcalorie': {'displayName': fc}}}}}}
+            b = json.dumps(doc, ensure_ascii=False).encode()
+            info = tarfile.TarInfo(f'package/main/{lang}/units.json')
+            info.size = len(b)
+            tf.addfile(info, io.BytesIO(b))
+    return out.getvalue()
+
+
+src = os.path.join(CACHE, 'cldr-units-full-48.2.0.tgz')
+with open(src, 'wb') as fh:
+    fh.write(cldr_tgz())
+r = subprocess.run([PY, os.path.join(ROOT, 'bin', 'fetch.py'), 'cldr-units', '--from', src], capture_output=True,
+                   text=True, encoding='utf-8', env=dict(os.environ))
+check("fetch: CLDR's package is kept unchanged, each unit's long name read in English, Persian and Turkish — its "
+      "prefixes and patterns passed over — and the names then read from this machine's copy",
+      r.returncode == 0 and '4 rows' in r.stdout
+      and dmunits.name_of('cldr-units', {'in': 'gregorian-civil', 'level': 'month'}, 'tr') == ('duration-month', 'ay'),
+      r.stdout + r.stderr)
+for name, data, says in (("a package without Turkish", cldr_tgz(('en', 'fa')), '0 main/tr/units.json'),
+                         ("a file that is no archive", b'nothing', 'neither a tar nor a zip')):
+    try:
+        dmfetch.keep('cldr-units', data, 'test')
+        refused = ''
+    except dmfetch.Refused as e:
+        refused = str(e)
+    check(f"fetch: CLDR — {name} — is refused, and nothing is kept", says in refused and len(dmfetch.fetched('cldr-units')) == 1,
+          refused)
+check("CLDR: `length-meter` is read as the law's m and written back as it; `duration-month` is a calendar's cells, never "
+      "a duration; a Celsius temperature a reading; the law's kcal written back as `energy-kilocalorie`, of the two "
+      "naming it the one marked `back`",
+      dmunits.read('cldr-units', '3', 'length-meter') == {'count': '3', 'unit': 'm'}
+      and dmunits.write('cldr-units', {'count': '3', 'unit': 'm'}) == ('3', 'length-meter')
+      and dmunits.read('cldr-units', '2', 'duration-month')['level'] == 'month'
+      and dmunits.read('cldr-units', '21', 'temperature-celsius') == 'C:21'
+      and dmunits.code_of('cldr-units', {'unit': 'kcal'})[0] == 'energy-kilocalorie')
+shutil.rmtree(CACHE, ignore_errors=True)
+
 print(f"\ncore_standards: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)

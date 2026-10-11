@@ -244,3 +244,16 @@ Commission." Modified or adapted versions must be marked as such.
   is written back as the first of them, a net weight or a length: the law's quantity says how much, never which
   dimension of a parcel it was.
 - **Its licence** would let it ship; daftar ships no one's table, so it is fetched like the others.
+
+## cldr-units.tsv, units-cldr-units.tsv — the units' names in English, Persian and Turkish (CLDR)
+
+- **cldr-units.tsv** is read by `bin/fetch.py`'s `cldr-units-json` from Unicode's own package of CLDR's unit names,
+  `cldr-units-full` 48.2.0 (registry.npmjs.org, sha-256
+  754d55f183570c53029a77493302f432fb3e905df35a715f9cb022e2ebcb093c): for each of CLDR's 232 units its code and its long
+  display name in English, Persian and Turkish, as CLDR writes them, and nothing else. Unicode License v3: the release
+  carries it, and each machine may fetch a later one (`python3 bin/fetch.py cldr-units`).
+- **units-cldr-units.tsv** crosses 111 of CLDR's unit ids into the law — each whose unit the law writes, a month, a week
+  and a year to a calendar's cells, the three temperatures to their scales — and says why seven cross to nothing (a
+  quarter, a century, a night's stay, a degree of no stated scale…). So a widget names the law's `m` as CLDR names
+  `length-meter`: metre, متر, metre (`python3 bin/units.py --name m fa cldr-units`). The pairings and reasons are
+  daftar's own, CC BY 4.0.

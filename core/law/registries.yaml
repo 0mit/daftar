@@ -30,6 +30,8 @@ registry_files:
   - { registry: units-epsg-uom, file: "seed/knowledge/units-epsg-uom.tsv", key: code }
   - { registry: gs1-ai, key: code }
   - { registry: units-gs1-ai, file: "seed/knowledge/units-gs1-ai.tsv", key: code }
+  - { registry: cldr-units, file: "seed/knowledge/cldr-units.tsv", key: code }
+  - { registry: units-cldr-units, file: "seed/knowledge/units-cldr-units.tsv", key: code }
 knowledge_schemes:
   - scheme: isced-f-2013
     classifies: "fields of knowledge (education and training)"
@@ -180,6 +182,21 @@ knowledge_schemes:
     neighbours: none
     sources: "seed/knowledge/SOURCES.md"
     units: units-gs1-ai
+  - scheme: cldr-units
+    classifies: "the units Unicode CLDR names for people — `length-meter`, `duration-month` — with their names in English, Persian and Turkish, which a widget shows beside a value"
+    holding: fetched
+    fetch:
+      from: "https://registry.npmjs.org/cldr-units-full/-/cldr-units-full-48.2.0.tgz"
+      reader: cldr-units-json
+      latest: "Unicode releases CLDR twice a year, and publishes its JSON as packages (cldr-units-full, versioned as CLDR is); a later release is the same package at its version"
+    licence: Unicode-3.0
+    release: "CLDR 48.2"
+    publisher: "Unicode, Inc. (the Unicode CLDR project)"
+    url: "https://cldr.unicode.org"
+    levels: [{ level: unit }]
+    neighbours: none
+    sources: "seed/knowledge/SOURCES.md"
+    units: units-cldr-units
 knowledge_scheme_form:
   holding: "shipped | extract | at-authority | fetched — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); held at the publisher and looked up there, checked here only by `code_pattern`; or fetched — each machine downloads the provider's own table (`fetch`) into a cache outside git (bin/fetch.py), under the provider's terms, and reads its codes there; while the release still carries a copy, a machine that has fetched none reads that"
   fetch: "with `fetched`: { from: the provider's own download, reader: how its rows are read, one of `fetch_shape.readers` (bin/fetch.py), latest: how to learn of its latest release }"
@@ -234,4 +251,5 @@ forms:
 # How a fetched table's rows are read: each reader turns the provider's own file into the rows its `registry_files` file
 # holds, and refuses a file whose columns are not the ones it reads (bin/fetch.py READERS).
 fetch_shape:
-  readers: [ilo-isco-08-xlsx, unece-rec20-xlsx, loinc-table-csv, ifc-express, epsg-sql, gs1-syntax-dictionary]
+  readers: [ilo-isco-08-xlsx, unece-rec20-xlsx, loinc-table-csv, ifc-express, epsg-sql, gs1-syntax-dictionary,
+            cldr-units-json]

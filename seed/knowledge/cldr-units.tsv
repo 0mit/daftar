@@ -1,0 +1,233 @@
+code	name_en	name_fa	name_tr
+acceleration-g-force	g-force	گرانش	g kuvveti
+acceleration-meter-per-square-second	meters per second squared	متر بر مجذور ثانیه	metre/saniye²
+angle-revolution	revolutions	دور	devir
+angle-radian	radians	رادیان	radyan
+angle-degree	degrees	درجه	derece
+angle-arc-minute	arcminutes	دقیقهٔ قوسی	açısal dakika
+angle-arc-second	arcseconds	ثانیهٔ قوسی	açısal saniye
+area-square-kilometer	square kilometers	کیلومتر مربع	kilometrekare
+area-hectare	hectares	هکتار	hektar
+area-square-meter	square meters	متر مربع	metrekare
+area-square-centimeter	square centimeters	سانتی‌متر مربع	santimetrekare
+area-square-mile	square miles	مایل مربع	mil kare
+area-acre	acres	جریب	akre
+area-square-yard	square yards	یارد مربع	yarda kare
+area-square-foot	square feet	فوت مربع	fit kare
+area-square-inch	square inches	اینچ مربع	inç kare
+area-dunam	dunams	دونوم	dunam
+concentr-karat	karats	عیار	ayar
+concentr-milligram-ofglucose-per-deciliter	milligrams per deciliter	میلی‌گرم در دسی‌لیتر	miligram/desilitre
+concentr-millimole-per-liter	millimoles per liter	میلی‌مول در لیتر	milimol/litre
+concentr-item	items	مورد	öğe
+concentr-part	parts	پارت	part
+concentr-part-per-1e6	parts per million	بخش در میلیون	parça/milyon
+concentr-percent	percent	درصد	yüzde
+concentr-permille	permille	هزارم	binde
+concentr-permyriad	permyriad	ده‌هزارم	onbinde
+concentr-mole	moles	مول	mol
+concentr-ofglucose	of glucose	گلوکز	glikoz
+consumption-liter-per-kilometer	liters per kilometer	لیتر در کیلومتر	litre/kilometre
+consumption-liter-per-100-kilometer	liters per 100 kilometers	لیتر در ۱۰۰ کیلومتر	litre/100 kilometre
+consumption-mile-per-gallon	miles per gallon	مایل در گالن	mil/galon
+consumption-mile-per-gallon-imperial	miles per Imp. gallon	مایل در امپریال گالن	mil/İng. galonu
+digital-petabyte	petabytes	پتابایت	petabayt
+digital-terabyte	terabytes	ترابایت	terabayt
+digital-terabit	terabits	ترابیت	terabit
+digital-gigabyte	gigabytes	گیگابایت	gigabayt
+digital-gigabit	gigabits	گیگابیت	gigabit
+digital-megabyte	megabytes	مگابایت	megabayt
+digital-megabit	megabits	مگابیت	megabit
+digital-kilobyte	kilobytes	کیلوبایت	kilobayt
+digital-kilobit	kilobits	کیلوبیت	kilobit
+digital-byte	bytes	بایت	bayt
+digital-bit	bits	بیت	bit
+duration-century	centuries	سده	yüzyıl
+duration-decade	decades	دهه	on yıl
+duration-year	years	سال	yıl
+duration-quarter	quarters	سه‌ماه	çeyrek
+duration-month	months	ماه	ay
+duration-week	weeks	هفته	hafta
+duration-day	days	روز	gün
+duration-hour	hours	ساعت	saat
+duration-minute	minutes	دقیقه	dakika
+duration-second	seconds	ثانیه	saniye
+duration-millisecond	milliseconds	میلی‌ثانیه	milisaniye
+duration-microsecond	microseconds	میکروثانیه	mikrosaniye
+duration-nanosecond	nanoseconds	نانوثانیه	nanosaniye
+electric-ampere	amperes	آمپر	amper
+electric-milliampere	milliamperes	میلی‌آمپر	miliamper
+electric-ohm	ohms	اهم	ohm
+electric-volt	volts	ولت	volt
+energy-kilocalorie	kilocalories	کیلوکالری	kilokalori
+energy-calorie	calories	کالری	kalori
+energy-foodcalorie	Calories	کالری	kilokalori
+energy-kilojoule	kilojoules	کیلوژول	kilojul
+energy-joule	joules	ژول	jul
+energy-kilowatt-hour	kilowatt-hours	کیلووات‌ساعت	kilovatsaat
+energy-electronvolt	electronvolts	الکترون ولت	elektronvolt
+energy-british-thermal-unit	British thermal units	بی‌تی‌یو	İngiliz ısı birimi
+energy-therm-us	US therms	ترم آمریکایی	ABD ısı birimi
+force-pound-force	pounds of force	پوند-نیرو	pound kuvvet
+force-newton	newtons	نیوتن	newton
+force-kilowatt-hour-per-100-kilometer	kilowatt-hours per 100 kilometers	کیلووات-ساعت در ۱۰۰ کیلومتر	100 kilometre / kilowatt-saat
+frequency-gigahertz	gigahertz	گیگاهرتز	gigahertz
+frequency-megahertz	megahertz	مگاهرتز	megahertz
+frequency-kilohertz	kilohertz	کیلوهرتز	kilohertz
+frequency-hertz	hertz	هرتز	hertz
+graphics-em	typographic ems	em تایپوگرافی	tipografik em
+graphics-pixel	pixels	پیکسل	piksel
+graphics-megapixel	megapixels	مگاپیکسل	megapiksel
+graphics-pixel-per-centimeter	pixels per centimeter	پیکسل در سانتی‌متر	piksel/santimetre
+graphics-pixel-per-inch	pixels per inch	پیکسل در اینچ	piksel/inç
+graphics-dot-per-centimeter	dots per centimeter	نقطه در سانتی‌متر	nokta/santimetre
+graphics-dot-per-inch	dots per inch	نقطه در اینچ	nokta/inç
+graphics-dot	dots	نقطه	nokta
+length-earth-radius	earth radius	شعاع زمین	Dünya yarıçapı
+length-kilometer	kilometers	کیلومتر	kilometre
+length-meter	meters	متر	metre
+length-decimeter	decimeters	دسی‌متر	desimetre
+length-centimeter	centimeters	سانتی‌متر	santimetre
+length-millimeter	millimeters	میلی‌متر	milimetre
+length-micrometer	micrometers	میکرومتر	mikrometre
+length-nanometer	nanometers	نانومتر	nanometre
+length-picometer	picometers	پیکومتر	pikometre
+length-mile	miles	مایل	mil
+length-yard	yards	یارد	yarda
+length-foot	feet	فوت	fit
+length-inch	inches	اینچ	inç
+length-parsec	parsecs	پارسک	parsek
+length-light-year	light years	سال نوری	ışık yılı
+length-astronomical-unit	astronomical units	واحد نجومی	astronomik birim
+length-furlong	furlongs	فرلانگ	furlong
+length-fathom	fathoms	فاتوم	fathom
+length-nautical-mile	nautical miles	مایل دریایی	deniz mili
+length-mile-scandinavian	miles-scandinavian	مایل اسکاندیناوی	smi
+length-point	points	پوینت	punto
+length-solar-radius	solar radii	شعاع خورشید	Güneş yarıçapı
+light-lux	lux	لوکس	lüks
+light-candela	candela	شمع	kandela
+light-lumen	lumen	لومن	lümen
+light-solar-luminosity	solar luminosities	تابندگی خورشید	Güneş parlaklığı
+mass-tonne	metric tons	تن متریک	ton
+mass-kilogram	kilograms	کیلوگرم	kilogram
+mass-gram	grams	گرم	gram
+mass-milligram	milligrams	میلی‌گرم	miligram
+mass-microgram	micrograms	میکروگرم	mikrogram
+mass-ton	tons	تن	Amerikan tonu
+mass-stone	stones	سنگ	stone
+mass-pound	pounds	lb	libre
+mass-ounce	ounces	اونس	ons
+mass-ounce-troy	troy ounces	اونس تروا	troy ons
+mass-carat	carats	قیراط	karat
+mass-dalton	daltons	دالتون	dalton
+mass-earth-mass	Earth masses	جرم زمین	Dünya kütlesi
+mass-solar-mass	solar masses	جرم خورشید	Güneş kütlesi
+mass-grain	grains	دانه	tane
+power-gigawatt	gigawatts	گیگاوات	gigavat
+power-megawatt	megawatts	مگاوات	megavat
+power-kilowatt	kilowatts	کیلووات	kilovat
+power-watt	watts	وات	vat
+power-milliwatt	milliwatts	میلی‌وات	milivat
+power-horsepower	horsepower	اسب بخار	beygir gücü
+pressure-millimeter-ofhg	millimeters of mercury	میلی‌متر جیوه	milimetre cıva
+pressure-ofhg	of mercury	جیوه	cıva
+pressure-pound-force-per-square-inch	pounds-force per square inch	پوند در اینچ مربع	libre/inç kare
+pressure-inch-ofhg	inches of mercury	اینچ جیوه	inç cıva
+pressure-bar	bars	بار	bar
+pressure-millibar	millibars	میلی‌بار	milibar
+pressure-atmosphere	atmospheres	اتمسفر	atmosfer
+pressure-pascal	pascals	پاسکال	paskal
+pressure-hectopascal	hectopascals	هکتوپاسکال	hektopaskal
+pressure-kilopascal	kilopascals	کیلوپاسکال	kilopaskal
+pressure-megapascal	megapascals	مگاپاسکال	megapaskal
+speed-kilometer-per-hour	kilometers per hour	کیلومتر در ساعت	kilometre/saat
+speed-meter-per-second	meters per second	متر در ثانیه	metre/saniye
+speed-mile-per-hour	miles per hour	مایل در ساعت	mil/saat
+speed-knot	knots	گره	knot
+speed-beaufort	Beaufort	بوفورت	Beaufort
+temperature-generic	degrees temperature	°	°
+temperature-celsius	degrees Celsius	درجهٔ سلسیوس	santigrat derece
+temperature-fahrenheit	degrees Fahrenheit	درجهٔ فارنهایت	fahrenhayt derece
+temperature-kelvin	kelvins	درجهٔ کلوین	kelvin
+torque-pound-force-foot	pound-force-feet	پوند-فوت	pound fit
+torque-newton-meter	newton-meters	نیوتن‌متر	newton metre
+volume-cubic-kilometer	cubic kilometers	کیلومتر مکعب	kilometreküp
+volume-cubic-meter	cubic meters	متر مکعب	metreküp
+volume-cubic-centimeter	cubic centimeters	سانتی‌متر مکعب	santimetreküp
+volume-cubic-mile	cubic miles	مایل مکعب	mil küp
+volume-cubic-yard	cubic yards	یارد مکعب	yarda küp
+volume-cubic-foot	cubic feet	فوت مکعب	fit küp
+volume-cubic-inch	cubic inches	اینچ مکعب	inç küp
+volume-megaliter	megaliters	مگالیتر	megalitre
+volume-hectoliter	hectoliters	هکتولیتر	hektolitre
+volume-liter	liters	لیتر	litre
+volume-deciliter	deciliters	دسی‌لیتر	desilitre
+volume-centiliter	centiliters	سانتی‌لیتر	santilitre
+volume-milliliter	milliliters	میلی‌لیتر	mililitre
+volume-pint-metric	metric pints	پاینت متریک	metrik pint
+volume-cup-metric	metric cups	پیمانهٔ متریک	metrik su bardağı
+volume-fluid-ounce-metric	metric fluid ounces	اونس مایع متریک	metrik sıvı ons
+volume-acre-foot	acre-feet	جریب فوت	akre fit
+volume-bushel	bushels	بوشل	buşel
+volume-gallon	gallons	گالن	galon
+volume-gallon-imperial	Imp. gallons	گالن امپریال	İng. galonu
+volume-quart	quarts	کوارت	quart
+volume-pint	pints	پاینت	pint
+volume-pint-imperial	pints Imperial	pint Imp.	pint Imp.
+volume-cup	cups	پیمانه	su bardağı
+volume-cup-imperial	cups Imperial	cup Imp.	cup Imp.
+volume-fluid-ounce	fluid ounces	اونس سیال	sıvı ons
+volume-fluid-ounce-imperial	Imp. fluid ounces	اونس سیال انگلیسی	İng. sıvı ons
+volume-tablespoon	tablespoons	قاشق غذاخوری	yemek kaşığı
+volume-teaspoon	teaspoons	قاشق چای‌خوری	çay kaşığı
+volume-barrel	barrels	بشکه	varil
+volume-dessert-spoon	dessert spoons	قاشق دسرخوری	tatlı kaşığı
+volume-dessert-spoon-imperial	Imp. dessert spoons	قاشق دسرخوری انگلیسی	İng. tatlı kaşığı
+volume-drop	drops	قطره	damla
+volume-dram	drams	درم	dram
+volume-jigger	jiggers	گیلاس	jigger
+volume-pinch	pinches	سرانگشت	tutam
+volume-quart-imperial	Imp. quarts	کوارت انگلیسی	İng. quart
+angle-steradian	steradians	استرادیان	steradyan
+concentr-katal	katals	کاتال	katal
+electric-coulomb	coulombs	کولن	coulomb
+electric-farad	farads	فاراد	farad
+electric-henry	henrys	هنری	henry
+electric-siemens	siemens	زیمنس	siemens
+energy-calorie-it	calories [IT]	کالری [IT]	kalori [IT]
+energy-british-thermal-unit-it	British thermal units [IT]	BTU-IT	BTU-IT
+energy-becquerel	becquerels	بکرل	bekerel
+energy-sievert	sieverts	سیورت	sievert
+energy-gray	grays	گری	gray
+force-kilogram-force	kilograms-force	کیلوگرم-نیرو	kilogram-kuvvet
+length-rod	rods	rod	rod
+length-chain	chains	chain	chain
+magnetic-tesla	teslas	تسلا	tesla
+magnetic-weber	webers	وبر	weber
+temperature-rankine	rankines	°R	°R
+duration-fortnight	fortnights	fortnight	fortnight
+mass-slug	slugs	slug	slug
+pressure-gasoline-energy-density	of gasoline equivalent	gas E	gas E
+length-rin	rin [JP]	rin [JP]	rin [JP]
+length-sun	sun [JP]	sun [JP]	sun [JP]
+length-shaku-length	shaku [JP]	shaku [JP]	shaku [JP]
+length-shaku-cloth	shaku [cloth, JP]	shaku [cloth, JP]	shaku [cloth, JP]
+length-ken	ken [JP]	ken [JP]	ken [JP]
+length-jo-jp	jo [JP]	jo [JP]	jo [JP]
+length-ri-jp	ri [JP]	ri [JP]	ri [JP]
+area-bu-jp	bu [JP]	bu [JP]	bu [JP]
+area-se-jp	se [JP]	se [JP]	se [JP]
+area-cho	cho [JP]	cho [JP]	cho [JP]
+volume-kosaji	kosaji [JP]	kosaji [JP]	kosaji [JP]
+volume-osaji	osaji [JP]	osaji [JP]	osaji [JP]
+volume-cup-jp	cup [JP]	cup [JP]	cup [JP]
+volume-shaku	shaku [volume, JP]	shaku [vol, JP]	shaku [vol, JP]
+volume-sai	sai [JP]	sai [JP]	sai [JP]
+volume-to-jp	to [JP]	to [JP]	to [JP]
+volume-koku	koku [JP]	koku [JP]	koku [JP]
+speed-light-speed	light	نور	ışık
+mass-fun	fun [JP]	fun [JP]	fun [JP]
+concentr-part-per-1e9	parts per billion	بخش در بیلیون	parça/milyar
+duration-night	nights	شب	gece
+coordinateUnit	cardinal direction	جهت اصلی	ana yön

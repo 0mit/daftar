@@ -1,0 +1,119 @@
+code	unit	in	level	back	why
+acceleration-g-force	[g]				standard gravity, 9.80665 m/s², as CLDR defines it
+acceleration-meter-per-square-second	m/s2				
+angle-arc-minute	'				
+angle-arc-second	''				
+angle-degree	deg				
+angle-radian	rad				
+angle-steradian	sr				
+area-hectare	har				
+area-square-foot	[sft_i]				
+area-square-inch	[sin_i]				
+area-square-kilometer	km2				
+area-square-meter	m2				
+area-square-yard	[syd_i]				
+concentr-item	{item}				
+concentr-katal	kat				
+concentr-milligram-ofglucose-per-deciliter	mg/dL				CLDR names it for glucose; the law's mg/dL is any substance's mass concentration
+concentr-millimole-per-liter	mmol/L				
+concentr-mole	mol				
+concentr-ofglucose					glucose itself, named as a unit: no unit of the law
+concentr-part					a part, of no stated whole: no unit of the law
+concentr-part-per-1e6	[ppm]				
+concentr-part-per-1e9	[ppb]				
+concentr-percent	%				
+concentr-permille	[ppth]				
+concentr-permyriad	10*-4				
+digital-bit	bit				
+digital-byte	By				
+digital-gigabyte	GBy				
+digital-kilobyte	kBy				
+digital-megabyte	MBy				
+digital-petabyte	PBy				
+digital-terabyte	TBy				
+duration-century					a century of the calendar: no level of a calendar of the law
+duration-day	d				
+duration-decade					a decade of the calendar: no level of a calendar of the law
+duration-hour	h				
+duration-millisecond	ms				
+duration-minute	min				
+duration-month		gregorian-civil	month		a calendar's cell, as a duration's name is shown: never a duration
+duration-night					a night's stay: a happening of its own, never a unit
+duration-quarter					a quarter of a year: three calendar months, and no calendar of the law has quarters as a level
+duration-second	s				
+duration-week		iso-week	week		a calendar's cell, as a duration's name is shown: never a duration
+duration-year		gregorian-civil	year		a calendar's cell, as a duration's name is shown: never a duration
+electric-ampere	A				
+electric-coulomb	C				
+electric-farad	F				
+electric-henry	H				
+electric-milliampere	mA				
+electric-ohm	Ohm				
+electric-siemens	S				
+electric-volt	V				
+energy-becquerel	Bq				CLDR files the becquerel under energy; it is an activity
+energy-calorie	cal				the thermochemical calorie, 4.184 J, as CLDR defines it
+energy-foodcalorie	kcal				the food Calorie, a thermochemical kilocalorie
+energy-gray	Gy				CLDR files the gray under energy; it is an absorbed dose
+energy-joule	J				
+energy-kilocalorie	kcal			true	
+energy-kilojoule	kJ				
+energy-kilowatt-hour	kW.h				
+energy-sievert	Sv				CLDR files the sievert under energy; it is a dose equivalent
+force-kilogram-force	kgf				
+force-newton	N				
+force-pound-force	[lbf_av]				
+frequency-gigahertz	GHz				
+frequency-hertz	Hz				
+frequency-kilohertz	kHz				
+frequency-megahertz	MHz				
+graphics-pixel	{px}				
+length-centimeter	cm				
+length-foot	[ft_i]				
+length-inch	[in_i]				
+length-kilometer	km				
+length-meter	m				
+length-mile	[mi_i]				
+length-millimeter	mm				
+length-yard	[yd_i]				
+light-candela	cd				
+light-lumen	lm				
+light-lux	lx				
+magnetic-tesla	T				
+magnetic-weber	Wb				
+mass-gram	g				
+mass-kilogram	kg				
+mass-microgram	ug				
+mass-milligram	mg				
+mass-ounce-troy	[oz_tr]				
+mass-pound	[lb_av]				
+mass-tonne	t				
+power-horsepower	[HP]				
+power-kilowatt	kW				
+power-megawatt	MW				
+power-milliwatt	mW				
+power-watt	W				
+pressure-atmosphere	atm				
+pressure-bar	bar				
+pressure-kilopascal	kPa				
+pressure-megapascal	MPa				
+pressure-millibar	mbar				
+pressure-millimeter-ofhg	mm[Hg]				
+pressure-pascal	Pa				
+pressure-pound-force-per-square-inch	[psi]				
+speed-kilometer-per-hour	km/h				
+speed-meter-per-second	m/s				
+temperature-celsius		celsius-scale			a temperature read: a position on its scale
+temperature-fahrenheit		fahrenheit-scale			a temperature read: a position on its scale
+temperature-generic					a degree of no stated scale: no position of the law
+temperature-kelvin		kelvin-scale			a temperature read: a position on its scale
+torque-newton-meter	N.m				
+volume-cubic-centimeter	mL				a cubic centimetre, a millilitre exactly
+volume-cubic-foot	[cft_i]				
+volume-cubic-inch	[cin_i]				
+volume-cubic-meter	m3				
+volume-cubic-yard	[cyd_i]				
+volume-gallon	[gal_us]				the US gallon, as CLDR's `gallon` is
+volume-liter	L				
+volume-milliliter	mL			true	
+volume-quart	[qt_us]				the US quart, as CLDR's `quart` is

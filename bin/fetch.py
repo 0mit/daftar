@@ -298,9 +298,52 @@ def gs1_syntax_dictionary(data):
     return out
 
 
+CLDR_LANGUAGES = ('en', 'fa', 'tr')     # the names read: the law's English, and the languages of its widgets
+
+
+def cldr_units_json(data):
+    """Unicode CLDR's unit names (`cldr-units-full`, the package Unicode publishes, a gzipped tar; or a zip of
+    cldr-json): for each unit of `main/en/units.json` — each entry of its `long` names that has a `displayName`, its
+    prefixes and patterns passed over — the code, and its long display name in English, Persian and Turkish, read into
+    code, name_en, name_fa and name_tr. Its patterns (`{0} metres`), short and narrow forms and other languages are
+    CLDR's, and are not read."""
+    import tarfile
+    import zipfile
+    files = {}
+    try:
+        if data[:2] == b'PK':
+            z = zipfile.ZipFile(io.BytesIO(data))
+            names = z.namelist()
+            get = z.read
+        else:
+            tf = tarfile.open(fileobj=io.BytesIO(data), mode='r:*')
+            names = [m.name for m in tf.getmembers() if m.isfile()]
+            get = lambda n: tf.extractfile(n).read()  # noqa: E731
+    except (zipfile.BadZipFile, tarfile.TarError) as e:
+        raise Refused(f"CLDR's file is neither a tar nor a zip it can be read in: {e}") from None
+    for lang in CLDR_LANGUAGES:
+        hit = [n for n in names if n.replace('\\', '/').endswith(f'main/{lang}/units.json')]
+        if len(hit) != 1:
+            raise Refused(f"CLDR's file holds {len(hit)} main/{lang}/units.json, and one of each of "
+                          f"{', '.join(CLDR_LANGUAGES)} is read")
+        try:
+            files[lang] = json.loads(get(hit[0]).decode('utf-8'))['main'][lang]['units']['long']
+        except (ValueError, KeyError) as e:
+            raise Refused(f"CLDR's main/{lang}/units.json holds no units' long names: {e}") from None
+    out = []
+    for code, entry in files['en'].items():
+        if not (isinstance(entry, dict) and entry.get('displayName')):
+            continue
+        out.append({'code': code, **{f'name_{lang}': str((files[lang].get(code) or {}).get('displayName') or '')
+                                     for lang in CLDR_LANGUAGES}})
+    if not out:
+        raise Refused("CLDR's English units name no unit")
+    return out
+
+
 READERS = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx,
            'loinc-table-csv': loinc_table_csv, 'ifc-express': ifc_express, 'epsg-sql': epsg_sql,
-           'gs1-syntax-dictionary': gs1_syntax_dictionary}
+           'gs1-syntax-dictionary': gs1_syntax_dictionary, 'cldr-units-json': cldr_units_json}
 
 
 # ------------------------------------------------------------------------------------------------ the law's rows
