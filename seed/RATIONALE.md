@@ -5114,6 +5114,22 @@ birthday has no statement the law can say yet (a being's coming to be holds no d
 holds for it: neither is carried, rather than bent into a verb that nearly fits.
 
 
+## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.leave]
+
+AN ABSENCE IS A HAPPENING OVER DAYS, UNDER AN ALLOWANCE, DECIDED ON A WALK (2026-10-11, the unified-tools design's P5.4;
+DECISIONS-NEXT §4). Odoo's `hr.leave` is one request for time off: whose, which days, and where its approval stands. In
+the law a leave is a happening (`event`) placed over its days, `be … at: <extent>, as: presence` — the placement that
+takes nothing of anyone, where `attend` takes the hours of those present. It is taken under the employment: it `use`s
+the employment's allowance (the `hold` the clause of its leave is `of`, as the cookbook's tile workshop writes it), so
+the employee is the employment and the department the employment's, read through it. Its days are read from its
+extent as Odoo writes them — the first and last day in the Gregorian calendar, whatever calendar wrote them (no
+calendar stands above another), how many, and the first and last moments of those days in the garden's own zone — and
+never stored beside it. Its approval is the law's own walk (`procedure`, a course `be … as: order`, its `move`s): where
+it stands is read from its last move by the walk's own form — a final step approved, an exit refused, any other to
+approve, none yet to submit — the reading core/lines.py already gives, so no second state can drift from the moves.
+A course on a walk the reader does not hold stands nowhere the reader can say, and says nothing.
+
+
 ## core/law/profiles.yaml: orientations
 
 A DRAWING KEEPS THE FRAME OF WHAT IT DRAWS (2026-10-10, the direction design; the operator: "solve the right to left

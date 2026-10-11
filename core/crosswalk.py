@@ -7,6 +7,11 @@ THE ONE READER of the crosswalks: daftard's answers to Odoo's client and any oth
 two readers can never disagree about what a record is. Nothing is written and nothing is kept: a record is read from
 the beans each time it is asked for.
 
+A FIELD MAY READ WHAT A STATEMENT HOLDS AS ODOO WRITES IT: a position (`position: from | to | days | moment-from |
+moment-to`: an extent's first or last day, the days it spans, or the first or last moment of its days in the garden's
+zone, given in UTC), the records of a model a path reaches (`many`), or where the bean's course stands on its walk, by
+the walk's own form (`stands`: no move yet, a step, a final step, an exit).
+
 A PATH MAY RUN THROUGH BEANS: `agree[as=employee].by/title` is the title of the bean the first step reaches. A filter
 may name alternatives, `[by=tr-tckn|ir-national-code]`, so no one country's numbers stand above another's.
 
@@ -85,6 +90,63 @@ def follow(bean, path, garden=None, unseal=None, held=False):
     return None
 
 
+def zone_of(root):
+    """The zone a garden reckons its days in (GARDEN.md `zone`), or None."""
+    try:
+        from core import read
+        return read.document(os.path.join(root, 'GARDEN.md'))[0].get('zone') if root else None
+    except Exception:
+        return None
+
+
+def position(value, how, systems, zone=None):
+    """A position (one, or an extent) as Odoo writes it, read by the law's one reader of positions (core/frame.py) in
+    its `systems`: `from`/`to` its first or last day (YYYY-MM-DD, Gregorian, whatever calendar wrote it), `days` how
+    many days it spans, both ends counted, `moment-from`/`moment-to` its first or last moment — a day's first or last in
+    `zone` — in UTC (YYYY-MM-DD HH:MM:SS). False where it is no position of a calendar."""
+    import datetime
+    from core import frame
+    dmcal = engine.dmcal
+    try:
+        p = frame.read(str(value), systems, zone)
+    except frame.Refused:
+        return False
+    tz = None
+    try:
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo(str(zone or 'UTC'))
+    except Exception:
+        return False
+
+    def utc(q):                                         # a moment it names, as a UTC datetime
+        return datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc) + \
+            datetime.timedelta(milliseconds=q.moment - dmcal.UNIX_DAY * dmcal.DAY_MS)
+
+    def day(q):                                         # its day number: a day's own, or a moment's day in the zone
+        if q.day is not None:
+            return q.day
+        return datetime.date.toordinal(utc(q).astimezone(tz).date()) if q.moment is not None else None
+    first, last = p, p.end or p
+    d0, d1 = day(first), day(last)
+    if d0 is None or d1 is None:
+        return False
+    if how == 'days':
+        return d1 - d0 + 1
+    if how in ('from', 'to'):
+        return '%04d-%02d-%02d' % dmcal.g_from_day(d0 if how == 'from' else d1)
+    if how in ('moment-from', 'moment-to'):
+        q = first if how == 'moment-from' else last
+        if q.moment is not None:
+            t = utc(q)
+        else:
+            y, m, d = dmcal.g_from_day(q.day)
+            t = datetime.datetime(y, m, d) + (datetime.timedelta(0) if how == 'moment-from' else
+                                              datetime.timedelta(hours=23, minutes=59, seconds=59))
+            t = t.replace(tzinfo=tz).astimezone(datetime.timezone.utc)
+        return t.strftime('%Y-%m-%d %H:%M:%S')
+    return False
+
+
 def number(model, bean_id):
     return int.from_bytes(hashlib.sha256(f'{model}:{bean_id}'.encode('utf-8')).digest()[:4], 'big') & 0x7fffffff
 
@@ -96,6 +158,7 @@ class Reader:
         self.law = law or garden_law(root)
         self.G = garden or engine.Garden.read(root)
         self.unseal = unseal
+        self.zone = self.G.zone or zone_of(root)
         rows = [r for r in getattr(self.law, 'crosswalks', {}).values()
                 if str(r.get('system')) == system and str(r.get('series')) == series]
         self.rows = {str(r['model']): r for r in rows}
@@ -169,9 +232,18 @@ class Reader:
         if 'value' in spec:
             v = spec['value']
             return {'true': True, 'false': False}.get(v, v) if isinstance(v, str) else v
+        if 'stands' in spec:
+            return self.stands(b, spec['stands'])
         path = spec.get('from', 'title')
         target = spec.get('model')
         held = spec.get('held') in (True, 'true')
+        if 'position' in spec:
+            v = self.follow(b, path)
+            return False if v is None else position(v, spec['position'], self.law.systems, self.zone)
+        if spec.get('many') in (True, 'true') and target is not None:
+            v = self.follow(b, path)
+            hits = [str(x).split('#', 1)[0] for x in (v if isinstance(v, list) else [v]) if isinstance(x, str)]
+            return [number(target, h) for h in hits if h in self.selected(target)]
         if spec.get('join') is not None:                # titles along the path within this model, farthest first
             names, seen, here = [self.follow(b, path)], {b.id}, b
             while True:
@@ -188,9 +260,26 @@ class Reader:
         if spec.get('inverse') in (True, 'true'):
             return [number(target, oid) for oid, o in self.selected(target).items() if self.follow(o, path) == b.id]
         hit = self.reach(b, path, target) if spec.get('chain') in (True, 'true') else self.follow(b, path)
+        hit = hit.split('#', 1)[0] if isinstance(hit, str) else hit       # a statement's bean, where it names one
         if not isinstance(hit, str) or hit not in self.selected(target):
             return False
         return [number(target, hit), self.display(target, hit)]
+
+    def stands(self, b, kinds):
+        """Where the bean's course stands on its walk, by the walk's own form (core/lines.py, the walk's one reading):
+        `none` before its first move, `final` or `exit` at such a step, `step` at any other — each given as `kinds`
+        names it. A course on a walk this reader does not hold stands nowhere it can say: False."""
+        from core import lines
+        courses = lines.courses_of(b, self.G)
+        if not courses:
+            placed = any(v == 'be' and r.get('as') == 'order' for _i, v, r in b.items)
+            return False if placed else kinds.get('none', False)
+        cid, course = next(iter(courses.items()))
+        moves = [m for _i, m in lines.moves_of(b) if m.get('course') == cid]
+        if not moves:
+            return kinds.get('none', False)
+        st = next((s for s in lines.steps_of(self.G.beans[course['walk']]) if s.get('id') == moves[-1].get('step')), {})
+        return kinds.get('final' if st.get('final') else 'exit' if st.get('exit') else 'step', False)
 
     def records(self, model, beans=None):
         """Every record of the model, or those of the beans named."""
