@@ -5,10 +5,10 @@
 
 # The law's version. A garden that runs this law pins it in GARDEN.md, `extends: core@<version>`, and the gate holds the
 # pin to it; it moves with a change to the law, a RULE-CHANGE.
-version: "2.3"
+version: "2.4"
 
 # ---------------------------------------------------------------------------------------------------------------- roles
-# The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ᾗ.
+# The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ὡς.
 roles:
   - { role: by,      source: "kartṛ — 1.4.54 svatantraḥ kartā",                  meaning: "the independent one: who does it, or the subject of a verb that takes no object" }
   - { role: of,      source: "karman — 1.4.49 kartur īpsitatamaṃ karma",          meaning: "what the act reaches, or what it is about" }
@@ -16,7 +16,7 @@ roles:
   - { role: to,      source: "sampradāna — 1.4.32 karmaṇā yam abhipraiti sa sampradānam", meaning: "for whom, or towards what" }
   - { role: from,    source: "apādāna — 1.4.24 dhruvam apāye 'pādānam",          meaning: "the fixed point it departs from: a source, a giver, a parent" }
   - { role: at,      source: "adhikaraṇa — 1.4.45 ādhāro 'dhikaraṇam",            meaning: "the locus, the ground: a position in a frame — where and when, for a body; which, in the taxis, for a sayable — or the being a thing stands on, runs on or is kept at" }
-  - { role: as,      source: "ᾗ (qua) — Aristotle, Metaphysics Γ 1003a21",        meaning: "in what capacity, or as what: the name a namer gives, the job a being does, the way a thing stands" }
+  - { role: as,      source: "ὡς (as) — Aristotle, Physics II.3 195a; ᾗ (qua), the capacity a doer acts in: Metaphysics Γ 1003a21, Physics I.8 191b4", meaning: "in what capacity, or as what: the name a namer gives, the job a being does, the way a thing stands" }
 
 # ---------------------------------------------------------------------------------------------------------------- grammar
 # What a filler can be, and the few words a statement may carry beside its roles.
