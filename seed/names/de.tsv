@@ -90,3 +90,133 @@ view_lenses:operate	Betrieb	treiben (to drive): a plant in Betrieb is running	pr
 view_lenses:inspect	Prüfung	prüfen (probare, to test)	proposed	agent (claude opus-5.5), by hand
 section:manifest	Garten	Garten (an enclosure; kin to yard); Paradies	proposed	agent (claude opus-5.5), by hand
 section:name_form	Name	Name	proposed	agent (claude opus-5.5), by hand
+roles:by	von	von (from, of): the doer of a German passive — gesagt von, gezahlt von; durch names the means (`through`)	proposed	agent (claude opus-5.5), by hand
+roles:of	Gegenstand	gegen (over against) + stehen (to stand): the German calque of obiectum — what stands before the act; Gegenstand des Vertrags (a contract's subject matter): what the act reaches, or what it is about	proposed	agent (claude opus-5.5), by hand
+roles:through	durch	durch (through): the means — a tool, a document, words, a link, an agreement, a cause; mittels (by means of: Mittel, the middle), a tool's word; durch was term:via's, whose place `come` with `through` now takes	proposed	agent (claude opus-5.5), by hand
+roles:to	für	für (for): the one it is for, or what it is towards; an (to: zahlen an) is kept for `at`, zu (towards) beside it	proposed	agent (claude opus-5.5), by hand
+roles:from	aus	aus (out of): the fixed point it comes out of — a source, a giver, a parent; von is the doer's (`by`)	proposed	agent (claude opus-5.5), by hand
+roles:at	an	an (at, on): a position — am Tag, am Ort, an dritter Stelle — or the being a thing stands on, runs on or is kept at; bei (at, near)	proposed	agent (claude opus-5.5), by hand
+roles:as	als	als (as, from all-so: just so): in what capacity, or as what — als Vermieter, als Name	proposed	agent (claude opus-5.5), by hand
+verbs:say	Sagen	sagen (to say): to give one's word — whose deed is gesagt (acts:said); Aussage (a statement)	proposed	agent (claude opus-5.5), by hand
+verbs:read	Ablesen	ablesen (to read off, as a dial is read): what a body read off a thing — whose deed is abgelesen (acts:read); lesen (to gather)	proposed	agent (claude opus-5.5), by hand
+verbs:derive	Ableiten	ableiten (to lead off, as a channel from a stream): to come to it from what was given — whose deed is abgeleitet (acts:derived)	proposed	agent (claude opus-5.5), by hand
+verbs:make	Machen	machen (to fit together, to make): made here from nothing given — whose deed is gemacht (acts:made)	proposed	agent (claude opus-5.5), by hand
+verbs:be	Sein	sein (to be): where a being is — at a position, or at a being, and the way it is placed; befindet sich (term:located_at, which `be` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:stand	Stehen	stehen auf (to stand on): what a step stands on — made of it, or possible on it; Hartmann's strata, each carried by the one below	proposed	agent (claude opus-5.5), by hand
+verbs:part	Teilsein	Teil (a part) + sein: being a part of a whole; Teil von (term:part_of, which `part` replaces); das Ganze (the whole)	proposed	agent (claude opus-5.5), by hand
+verbs:name	Benennen	Name (a name): a namespace names a being — once, or more	proposed	agent (claude opus-5.5), by hand
+verbs:come	Entstehen	ent + stehen (to come to stand): through whom a being came to be — entstanden durch; durch (term:via, which `come` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:own	Gehören	gehören (to belong): whose a being is — Eigentum (ownership), which German law keeps apart from Besitz (possession); Eigentümer (term:owned_by, which `own` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:answer	Verantworten	Antwort (an answer): to answer for — who answers for a being, and in which mode; Verantwortlicher (term:responsibility, which `answer` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:acquire	Erwerben	erwerben (to gain by effort: werben, to strive): from whom a being came to us; Erwerb (term:acquired, which `acquire` replaces); Kauf (a purchase: one way of the five)	proposed	agent (claude opus-5.5), by hand
+verbs:pass	Weitergeben	weiter (onward) + geben (to give): statements passed on from one layer to another	proposed	agent (claude opus-5.5), by hand
+verbs:necessary	notwendig	die Not wendend (turning need away): what cannot not be; das notwendig Seiende (crown:theone)	proposed	agent (claude opus-5.5), by hand
+verbs:contingent	kontingent	contingere (to touch, to befall): what may be and may not be — Kant's zufällig, which today reads 'by chance'	proposed	agent (claude opus-5.5), by hand
+verbs:possible	möglich	mögen (to be able): what is not impossible	proposed	agent (claude opus-5.5), by hand
+verbs:impossible	unmöglich	un + möglich: what cannot be	proposed	agent (claude opus-5.5), by hand
+verbs:obligatory	geboten	gebieten (to bid, to command): what must be done — the word of German deontic logic, with verboten, erlaubt, freigestellt	proposed	agent (claude opus-5.5), by hand
+verbs:omissible	freigestellt	frei (free) + stellen (to set): left free — what need not be done	proposed	agent (claude opus-5.5), by hand
+verbs:permitted	erlaubt	erlauben (to give leave — Urlaub, a leave): what may be done	proposed	agent (claude opus-5.5), by hand
+verbs:forbidden	verboten	verbieten (to bid against): what must not be done	proposed	agent (claude opus-5.5), by hand
+verbs:agree	Zustimmen	zu + stimmen (to give one's voice to): each party's yes; Einigung (the agreement reached)	proposed	agent (claude opus-5.5), by hand
+verbs:decline	Ablehnen	ab + lehnen (to lean away): a party's no	proposed	agent (claude opus-5.5), by hand
+verbs:pay	Bezahlen	be + zahlen (zählen, to count: money counted out): to give an amount	proposed	agent (claude opus-5.5), by hand
+verbs:bear	Übernehmen	über + nehmen (to take over, to take upon oneself): Kosten übernehmen, to bear costs, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:grant	Gewähren	gewähren (to grant, to warrant): to open an act to someone — read, write, enact or ratify; Freigabe (an opening)	proposed	agent (claude opus-5.5), by hand
+verbs:can	Können	können (to know how, to be able): may, or must, as the square says	proposed	agent (claude opus-5.5), by hand
+verbs:represent	Vertreten	vertreten (to step in for): to act for another, who is bound — Stellvertretung, the German law's agency	proposed	agent (claude opus-5.5), by hand
+verbs:need	Benötigen	nötig (needful: Not, need): to need something to function — how badly is a position on the necessity square	proposed	agent (claude opus-5.5), by hand
+verbs:meet	Decken	decken (to cover): den Bedarf decken, to meet a need	proposed	agent (claude opus-5.5), by hand
+verbs:use	Verwenden	verwenden (to turn to a use): a being, an allowance, a technology	proposed	agent (claude opus-5.5), by hand
+verbs:do	Fungieren	fungi (to perform): fungieren als, to work as — a router, a file server	proposed	agent (claude opus-5.5), by hand
+verbs:hold	Fassen	fassen (to grasp, to hold): what a being can hold, and what it holds — Fassungsvermögen (capacity)	proposed	agent (claude opus-5.5), by hand
+verbs:run	Ausführen	aus + führen (to lead out, to carry out): a machine runs an operating system, a program, an instance; Betrieb (view_lenses:operate)	proposed	agent (claude opus-5.5), by hand
+verbs:open	Eröffnen	er + öffnen (to open up): ein Konto eröffnen, a session or an account opened	proposed	agent (claude opus-5.5), by hand
+verbs:move	Voranbringen	voran (forward) + bringen (to bring): a case brought forward on its walk; Bewegen (moving a body) is not this	proposed	agent (claude opus-5.5), by hand
+verbs:step	Schritt	schreiten (to stride): a step of a walk, the line a case moves along	proposed	agent (claude opus-5.5), by hand
+verbs:attend	Teilnehmen	Teil (a part) + nehmen (to take): to take part in an event, which takes the hours of those present	proposed	agent (claude opus-5.5), by hand
+verbs:measure	Messen	messen (to measure): reading a property of a being, at a moment, through an instrument	proposed	agent (claude opus-5.5), by hand
+verbs:record	Aufzeichnen	auf + zeichnen (to mark down): what a line held at each position — Aufzeichnung, a record	proposed	agent (claude opus-5.5), by hand
+verbs:reckon	Berechnen	rechnen (to reckon): a reckoning declared, read each time it is asked and never stored	proposed	agent (claude opus-5.5), by hand
+verbs:pin	Festschreiben	fest (fast) + schreiben (to write): to fix in writing the moment and the commit a reading was read at	proposed	agent (claude opus-5.5), by hand
+verbs:classify	Einordnen	ein + ordnen (to set in order): a being set in its class by a code of a scheme	proposed	agent (claude opus-5.5), by hand
+verbs:concern	Betreffen	betreffen (to hit upon, to concern): the person a record is about — die betroffene Person, the data subject of German data protection	proposed	agent (claude opus-5.5), by hand
+verbs:rate	Einstufen	Stufe (a step): to grade how much harm a being can do a person if it leaves the garden	proposed	agent (claude opus-5.5), by hand
+verbs:fail	Ausfallen	aus + fallen (to fall out): a way a being can fail, or is failing — Ausfallart, a failure mode	proposed	agent (claude opus-5.5), by hand
+verbs:repair	Beheben	beheben (to lift off, to remove): einen Fehler beheben, to remedy a failure, where the fix lives	proposed	agent (claude opus-5.5), by hand
+verbs:rule	Entscheiden	ent + scheiden (to separate): a person's ruling on a disagreement — the one statement chosen	proposed	agent (claude opus-5.5), by hand
+verbs:respond	Erwidern	erwidern (to give back against): an observer's verdict on another's reading — it confirms, disputes or abstains — or a speaker's own words at a hearing	proposed	agent (claude opus-5.5), by hand
+verbs:weigh	Gewichten	Gewicht (weight): criteria weighted against each other, pair by pair	proposed	agent (claude opus-5.5), by hand
+verbs:propose	Vorschlagen	vor + schlagen (to strike before, to put forward): beans offered to another garden	proposed	agent (claude opus-5.5), by hand
+verbs:take	Aufnehmen	auf + nehmen (to take up, to take in, as a house takes in a guest): a proposal taken in, whole; annehmen (to accept) is not this	proposed	agent (claude opus-5.5), by hand
+verbs:rehearse	Proben	probare (to test): Probe, a rehearsal and a test — a garden holding no facts about the world	proposed	agent (claude opus-5.5), by hand
+verbs:serve	Dienen	dienen (to serve): listening at an address and a port, through a protocol; Dienst is the kind `service`	proposed	agent (claude opus-5.5), by hand
+verbs:carry	Tragen	tragen (to carry): a link carries a tunnel, a disk a volume — Trägerdienst (a bearer service); Träger (complements:bearer) is another sense	proposed	agent (claude opus-5.5), by hand
+verbs:route	Weiterleiten	weiter (onward) + leiten (to lead): traffic sent on to its next hop — Leitweg (a route)	proposed	agent (claude opus-5.5), by hand
+verbs:translate	Umsetzen	um + setzen (to set over, to convert): an address rewritten as traffic crosses — Netzwerkadressumsetzung	proposed	agent (claude opus-5.5), by hand
+verbs:filter	Filtern	filtrum (felt, which strains): letting traffic cross or stopping it	proposed	agent (claude opus-5.5), by hand
+verbs:book	Buchen	Buch (a book): an amount booked to an account of the analytic scheme, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:renew	Verlängern	lang (long): a registration lengthened; erneuern (to make new)	proposed	agent (claude opus-5.5), by hand
+verbs:mark	Abgrenzen	Grenze (a boundary): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
+verbs:produce	Erzeugen	zeugen (to beget): an artifact brought into being — a file, a build, a report	proposed	agent (claude opus-5.5), by hand
+verbs:draw	Zeichnen	zeichnen (to mark, to draw — Zeichen, a sign): a page draws	proposed	agent (claude opus-5.5), by hand
+qualifiers:channel	Kanal	canalis (a pipe, a groove): what a listening surface, a link or a treatment is as a channel	proposed	agent (claude opus-5.5), by hand
+qualifiers:charged	Gegenwert	gegen (against) + Wert (worth): what a payment came to in another currency	proposed	agent (claude opus-5.5), by hand
+qualifiers:class	Klasse	classis (a division of the Roman people): a class of the Contract of Parts	proposed	agent (claude opus-5.5), by hand
+qualifiers:clause	Klausel	clausula (a closing, a provision): what a clause holds beside its words	proposed	agent (claude opus-5.5), by hand
+qualifiers:cover	Umfang	um + fangen (to take in around): which parts a grant opens, and whether each use states a reason	proposed	agent (claude opus-5.5), by hand
+qualifiers:drawing	Zeichnung	zeichnen (to draw): a drawing — what it draws, its story and its lenses	proposed	agent (claude opus-5.5), by hand
+qualifiers:method	Verfahren	verfahren (to proceed): how a reading was made	proposed	agent (claude opus-5.5), by hand
+qualifiers:page	Seite	Seite (a side, a page): a page of drawings	proposed	agent (claude opus-5.5), by hand
+qualifiers:placed	Lage	liegen (to lie): where a thing lies — what a placement holds there, how well its position is known	proposed	agent (claude opus-5.5), by hand
+qualifiers:presence	Vorhandensein	vor + Hand (before the hand, at hand): found, or looked for and not found	proposed	agent (claude opus-5.5), by hand
+qualifiers:reading	Auswertung	aus + werten (to draw the worth out): what a reckoning selects and computes, read each time	proposed	agent (claude opus-5.5), by hand
+qualifiers:result	Ergebnis	ergeben (to yield): what came of a measuring — a code	proposed	agent (claude opus-5.5), by hand
+qualifiers:series	Reihe	Reihe (a row): a series — Zeitreihe, a time series; what a line held at each position	proposed	agent (claude opus-5.5), by hand
+qualifiers:settles	Begleichung	gleich (even): begleichen, to make even — which occurrences of which clauses a payment settles	proposed	agent (claude opus-5.5), by hand
+qualifiers:share	Anteil	an + Teil (a part): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
+qualifiers:value	Wert	Wert (worth): the value a measuring read, with how well it is known	proposed	agent (claude opus-5.5), by hand
+qualifiers:walk	Ablauf	ab + laufen (to run off): the course a walk runs at a step	proposed	agent (claude opus-5.5), by hand
+qualifiers:weighing	Paarvergleiche	Paar (a pair) + vergleichen (to make alike, to compare): the judgments, pair by pair	proposed	agent (claude opus-5.5), by hand
+beside_roles:id	Kennung	kennen (to know): what a statement is known by in its bean	proposed	agent (claude opus-5.5), by hand
+beside_roles:while	solange	so + lange (so long): the statement holds as long as what it names matches	proposed	agent (claude opus-5.5), by hand
+beside_roles:why	Grund	Grund (the ground): the reason, in prose; Begründung (layers:reasoning) is the law's own	proposed	agent (claude opus-5.5), by hand
+beside_roles:note	Anmerkung	an + merken (to mark, to notice): a remark, in prose	proposed	agent (claude opus-5.5), by hand
+beside_roles:held	verwahrt	verwahren (to keep in safe custody — Verwahrung): kept off git, in a store a host resolves — this is its pointer	proposed	agent (claude opus-5.5), by hand
+kinds:codebase	Codebasis	codex (a book of laws) + Basis (βάσις, a footing): a codebase	proposed	agent (claude opus-5.5), by hand
+kinds:product	Produkt	productum (what is led forth): a product	proposed	agent (claude opus-5.5), by hand
+kinds:org	Organisation	ὄργανον (a tool, an organ): an organisation	proposed	agent (claude opus-5.5), by hand
+kinds:person	Person	persona (a mask, a role): a person	proposed	agent (claude opus-5.5), by hand
+kinds:instance	Instanz	instantia (a standing near, a presence): a running instance of a product	proposed	agent (claude opus-5.5), by hand
+kinds:host	Rechner	rechnen (to reckon): a reckoner — a machine on a network that hosts; Gerät (complexity:device) is its level	proposed	agent (claude opus-5.5), by hand
+kinds:virtual-host	virtueller Rechner	virtus (power, efficacy): a machine in effect, not in body — a rented virtual server	proposed	agent (claude opus-5.5), by hand
+kinds:domain	Domäne	dominium (lordship): a domain of the DNS	proposed	agent (claude opus-5.5), by hand
+kinds:service	Dienst	dienen (to serve): a service offered	proposed	agent (claude opus-5.5), by hand
+kinds:program	Programm	πρόγραμμα (a public notice, written before): a program	proposed	agent (claude opus-5.5), by hand
+kinds:design	Entwurf	entwerfen (to cast out, to sketch): a design	proposed	agent (claude opus-5.5), by hand
+kinds:session	Sitzung	sitzen (to sit): a sitting — an agent's session	proposed	agent (claude opus-5.5), by hand
+kinds:contract	Vertrag	vertragen (to bear with one another, to come to terms): a contract	proposed	agent (claude opus-5.5), by hand
+kinds:garden	Garten	Garten (an enclosure; kin to yard): a garden this one records — as section:manifest	proposed	agent (claude opus-5.5), by hand
+kinds:document	Schriftstück	Schrift (a writing) + Stück (a piece): a document	proposed	agent (claude opus-5.5), by hand
+kinds:event	Ereignis	eräugnen (to bring before the eyes): an event	proposed	agent (claude opus-5.5), by hand
+header:title	Titel	titulus (an inscription): what a bean is called	proposed	agent (claude opus-5.5), by hand
+header:summary	Zusammenfassung	zusammen (together) + fassen (to grasp): one sentence of what a bean is	proposed	agent (claude opus-5.5), by hand
+header:tags	Schlagwörter	Schlagwort (a catchword — the librarian's subject heading): a bean's tags	proposed	agent (claude opus-5.5), by hand
+forms:clause.due	Fälligkeit	fällig (falling: what has fallen due): the day a clause falls due — the first, when it repeats	proposed	agent (claude opus-5.5), by hand
+forms:clause.every	Wiederholung	wieder (again) + holen (to fetch): how a clause repeats	proposed	agent (claude opus-5.5), by hand
+forms:clause.notice	Vorankündigung	voran (ahead) + ankündigen (to make known): how long before it falls due a reader is told	proposed	agent (claude opus-5.5), by hand
+forms:clause.state	Zustand	zu + stehen (to stand to): how a clause stands — in force, met, waived, broken, disputed; Stand (term:status) is the retired table's	proposed	agent (claude opus-5.5), by hand
+forms:clause.amount	Betrag	betragen (to amount to): how much — money, time, anything	proposed	agent (claude opus-5.5), by hand
+forms:clause.during	Geltungsdauer	gelten (to be valid) + Dauer (a lasting): the window in which a clause holds	proposed	agent (claude opus-5.5), by hand
+forms:clause.within	Zählzeitraum	zählen (to count) + Zeitraum (a room of time): the window an amount is counted within	proposed	agent (claude opus-5.5), by hand
+forms:clause.used_by	genutzt von	nutzen (to use): the entries whose spans use the allowance — a person's stays, their leave	proposed	agent (claude opus-5.5), by hand
+forms:clause.when	Inkrafttreten	in Kraft treten (to step into force): what brings a clause into force, where that is not a day	proposed	agent (claude opus-5.5), by hand
+forms:clause.each	je	je (each, per): the clause occurs once for each bean or entry a reading holds — je Verkauf, per sale	proposed	agent (claude opus-5.5), by hand
+forms:clause.of	Anteil an	an + Teil (a part): what the clause's amount is a share of, read from each occurrence	proposed	agent (claude opus-5.5), by hand
+forms:clause.falls_due	relative Fälligkeit	relatus (carried back) + fällig: when a clause falls due relative to another position, read each time	proposed	agent (claude opus-5.5), by hand
+forms:clause.by_role	nach Rolle	Rolle (a roll: the part an actor read from it): every party whose role this is, each bound alike	proposed	agent (claude opus-5.5), by hand
+forms:clause.over	für den Teil	Teil (a part): the part of what the agreement concerns that this clause is for	proposed	agent (claude opus-5.5), by hand
+forms:settlement.clause	beglichene Klausel	begleichen (to make even) + clausula: the clause a payment settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.occurrence	Fall	fallen (to fall): a case — which occurrence of the clause it settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.amount	beglichener Betrag	begleichen (to make even) + Betrag: how much of the occurrence it settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.note	Bemerkung	bemerken (to notice): a remark on a settlement; Anmerkung is the note beside the roles	proposed	agent (claude opus-5.5), by hand

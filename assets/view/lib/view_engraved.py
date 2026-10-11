@@ -534,6 +534,37 @@ def data(key, v, may, reader):
     return {'bean': target if kk == 'bean' and may('read', target) else None}
 
 
+NAMED = ('verbs', 'roles', 'qualifiers', 'beside_roles', 'kinds', 'header', 'forms')
+
+
+def names(lang):
+    """The law's words a page shows — each verb, role, qualifier, key beside the roles, kind, header key and attribute
+    of a form (`forms:<form>.<attribute>`) — in the reader's language, as the names layer gives them
+    (seed/names/<lang>.tsv, `<group>:<word>`, the language's own word for the item as the law uses it):
+    {group: {word: name}}. A language with no table, or a word its table does not
+    name, gives nothing, and the page shows the law's own word: no language stands in for another."""
+    lang = str(lang or '').split('-')[0].lower()
+    out = {g: {} for g in NAMED}
+    path = os.path.join(vm.ROOT, 'seed', 'names', f'{lang}.tsv') if re.fullmatch(r'[a-z]{2,3}', lang) else None
+    if not path or not os.path.isfile(path):
+        return out
+    with open(path, encoding='utf-8') as fh:
+        for ln in fh.read().splitlines()[1:]:
+            c = ln.split('\t')
+            g, _sep, w = c[0].partition(':')
+            if len(c) >= 2 and g in out and w and c[1].strip():
+                out[g][w] = c[1].strip()
+    return out
+
+
+def localize(p, lang):
+    """A page's readings for a reader of `lang`: the widgets' language, and the law's words in it (`names`)."""
+    if isinstance(lang, str) and lang:
+        p['settings']['garden']['lang'] = lang
+        p['names'] = names(lang)
+    return p
+
+
 def settings():
     """What the widgets read, sent with the page (widgets/settings.js `configure`): the garden's gardener, zone and the
     day it is read on, each currency's places (the currencies table) — never a language, a calendar or a zone assumed
@@ -617,9 +648,9 @@ def scoped(host, user, keep=None):
         return {k: x for k, x in e.items() if k != 'while'} if isinstance(e, dict) else None
     p = page(may, u.get('bean'), held, keep)
     g = p['settings']['garden']
-    for k in ('lang', 'calendar'):
-        if isinstance(u.get(k), str) and u[k]:
-            g[k] = u[k]
+    if isinstance(u.get('calendar'), str) and u['calendar']:
+        g['calendar'] = u['calendar']
+    localize(p, u.get('lang'))                                    # the reader's language, and the law's words in it
     g['me'] = u.get('bean') or ''
     if g.get('gardener') and not may('read', g['gardener']):   # the gardener too is named only to whom may read them
         g['gardener'] = ''
