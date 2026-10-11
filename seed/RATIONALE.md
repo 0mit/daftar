@@ -4499,6 +4499,22 @@ The roots are chosen for what they show about the item's use here, and they show
 from λέγω, first to gather and lay in order, as a lekton is placed in an order; tissue is woven in all nine; a lens is
 a lentil in all nine; the order of bodies is Pascal's first order, Hartmann's strata and Ibn Miskawayh's ranks.
 
+THE WORDS A PAGE SHOWS ARE NAMED TOO (2026-10-11). A sheet shows a being's statements by their verbs and roles, and
+until now it showed them in the law's English: a Persian reader of their own garden met `pay`, `by`, `through` and
+`obligatory` on a page whose every other word was theirs. So the tables name, beside the registries and the terms, every
+verb, every role, every qualifier a verb declares, the keys beside the roles, every kind, the header's keys and the
+attributes of the forms a sheet draws (`verbs:pay`, `roles:by`, `qualifiers:clause`, `beside_roles:why`,
+`kinds:contract`, `header:title`, `forms:clause.due`), and the view reads them for its reader. The page's words stand in the
+same tables as the glossary's, because a reader who looks one up must find the word they saw. Each is the language's
+own word for the item as the law uses it: `by` is از سوی, the side the act comes from, not به دستِ, by the hand of,
+which is a person's only where the law's `by` is a document or a tool too; `hold` is دربرداشتن, what a being holds
+within it, not گنجایش, which is only what it can hold; `obligatory` is الزامی, binding, and not واجب, which the
+necessity square already keeps. A name is never the law's: the view shows it, and every check, every save and every
+reading uses the code. A word no table of the reader's language names is shown as the law writes it, never in a
+sibling's word, so a missing name is seen and not hidden. The tables' form — siblings, each row whole, each item a part
+of the law that exists, no two of a page's words alike in one language — is held by `test/names.py`, since the gate
+reads nothing of this layer.
+
 ## core/law/layers.yaml: standing
 
 (std-vocab 32: `layers`)

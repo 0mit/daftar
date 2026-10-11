@@ -90,3 +90,133 @@ view_lenses:operate	ἐνέργεια	ἐν + ἔργον (at work): Aristotle's
 view_lenses:inspect	ἐξέτασις	ἐξετάζω (to examine closely, to test — Apology 38a: ὁ ἀνεξέταστος βίος, the unexamined life)	proposed	agent (claude opus-5.5), by hand
 section:manifest	κῆπος	κῆπος (a garden: Epicurus's school); παράδεισος (from Persian pairi-daēza: Xenophon's word for the Persian king's walled parks)	proposed	agent (claude opus-5.5), by hand
 section:name_form	ὄνομα	ὄνομα (a name)	proposed	agent (claude opus-5.5), by hand
+roles:by	ὑπό	ὑπό with the genitive (under, by the agency of): the doer of a Greek passive — λεχθὲν ὑπὸ Σωκράτους	proposed	agent (claude opus-5.5), by hand
+roles:of	περί	περί (about, concerning): what the act reaches, or what it is about — ἀντικείμενον is passed over, since in the logic of the squares it names opposites	proposed	agent (claude opus-5.5), by hand
+roles:through	διά	διά with the genitive (through): the means — a tool, a document, words, an agreement; δι' οὗ (through whom) was term:via's	proposed	agent (claude opus-5.5), by hand
+roles:to	πρός	πρός with the accusative (towards, to): what it goes towards, or the one it is for; the dative names the receiver	proposed	agent (claude opus-5.5), by hand
+roles:from	ἀπό	ἀπό with the genitive (away from): the fixed point it departs from; ἐκ (out of: a parent, a source) and παρά with the genitive (from beside: a giver)	proposed	agent (claude opus-5.5), by hand
+roles:at	ἐν	ἐν with the dative (in, at): a position — ἐν τόπῳ, ἐν χρόνῳ — or the being it stands on; ἐπί (upon) and παρά with the dative (beside, in the keeping of)	proposed	agent (claude opus-5.5), by hand
+roles:as	ὡς	ὡς (the way in which): Aristotle's ὡς — ὡς ὕλη, ὡς τὸ ἐξ οὗ (Physics II.3 195a): what a thing is taken as (LSJ ὡς Ab.II.3); its neighbour ᾗ (qua) is a doer's capacity (Physics I.8 191b4; Metaphysics Γ 1003a21)	proposed	agent (claude opus-5.5), by hand
+verbs:say	λέγειν	λέγω (to gather, to lay in order, to say): to give one's word — whose deed is λεχθέν (acts:said); φάναι (to affirm)	proposed	agent (claude opus-5.5), by hand
+verbs:read	ἀναγιγνώσκειν	ἀναγιγνώσκω (to know again, to recognise: to read): what a body read off a thing — whose deed is ἀναγνωσθέν (acts:read)	proposed	agent (claude opus-5.5), by hand
+verbs:derive	παράγειν	παράγω (to lead aside, to bring forth): whose deed is παράγωγον (acts:derived); συνάγειν (to gather a conclusion: the logicians' inferring)	proposed	agent (claude opus-5.5), by hand
+verbs:make	ποιεῖν	ποιέω (to make — the root of poetry): made here from nothing given — whose deed is ποιηθέν (acts:made)	proposed	agent (claude opus-5.5), by hand
+verbs:be	εἶναι	εἰμί (to be): where a being is — ποῦ ἐστιν; κεῖσθαι (to lie: term:located_at, which `be` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:stand	ἑστάναι	ἵστημι (to set, to stand): ἑστάναι ἐπί, to stand on — what a step stands on, made of it (ἐξ οὗ) or possible on it; στάσις (a standing)	proposed	agent (claude opus-5.5), by hand
+verbs:part	μέρος εἶναι	μέρος (a part, a share, from μείρομαι, to receive one's portion) + εἶναι: to be a part of a whole; ὅλον (the whole)	proposed	agent (claude opus-5.5), by hand
+verbs:name	ὀνομάζειν	ὄνομα (a name): a namespace names a being; Plato's Cratylus: names by convention (θέσει), as here	proposed	agent (claude opus-5.5), by hand
+verbs:come	γίγνεσθαι	γίγνομαι (to come to be): through whom a being came to be — Aristotle, Metaphysics Z.7: all that comes to be comes to be by something, from something, and becomes something (ὑπό τέ τινος γίγνεται καὶ ἔκ τινος καὶ τί); δι' οὗ (term:via, which `come` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:own	κεκτῆσθαι	κτάομαι (to acquire), in the perfect: to have acquired, so to own — whose a being is; ὁ κεκτημένος (term:owned_by, which `own` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:answer	λόγον ὑπέχειν	λόγος (an account) + ὑπέχω (to hold under, to submit): to be held to account — who answers for a being, and in which mode; ὑπεύθυνος (term:responsibility, which `answer` replaces)	proposed	agent (claude opus-5.5), by hand
+verbs:acquire	κτᾶσθαι	κτάομαι (to get, to acquire): from whom a being came to us — its perfect, κεκτῆσθαι, is to own (`own`); κτῆσις (term:acquired, which `acquire` replaces); ὠνή (a purchase)	proposed	agent (claude opus-5.5), by hand
+verbs:pass	μεταφέρειν	μετά + φέρω (to carry across — as Aristotle's μεταφορά carries a name across): statements carried from one layer to another	proposed	agent (claude opus-5.5), by hand
+verbs:necessary	ἀναγκαῖον	ἀνάγκη (constraint): what cannot be otherwise (Metaphysics Δ.5); τὸ ἐξ ἀνάγκης ὄν (crown:theone)	proposed	agent (claude opus-5.5), by hand
+verbs:contingent	ἐνδεχόμενον	ἐνδέχεται (it admits): Aristotle's two-sided possible, Prior Analytics I.13 — neither necessary nor impossible	proposed	agent (claude opus-5.5), by hand
+verbs:possible	δυνατόν	δύναμαι (to be able): what is not impossible (De Interpretatione 12–13)	proposed	agent (claude opus-5.5), by hand
+verbs:impossible	ἀδύνατον	ἀ + δυνατόν: what cannot be	proposed	agent (claude opus-5.5), by hand
+verbs:obligatory	δέον	δεῖ (it is needful, one must): τὸ δέον, what ought to be done — the word deontic is made from	proposed	agent (claude opus-5.5), by hand
+verbs:omissible	ἀφετόν	ἀφίημι (to let go — omittere's own image, ob + mittere): what may be let go, left undone	proposed	agent (claude opus-5.5), by hand
+verbs:permitted	ἐξόν	ἔξεστι (it is allowed, it is open): τὸ ἐξόν, what may be done	proposed	agent (claude opus-5.5), by hand
+verbs:forbidden	ἀπειρημένον	ἀπεῖπον (to speak off, to forbid): Aristotle, Nicomachean Ethics V.11 — what the law does not bid, it forbids (ἃ δὲ μὴ κελεύει, ἀπαγορεύει)	proposed	agent (claude opus-5.5), by hand
+verbs:agree	ὁμολογεῖν	ὁμοῦ + λέγω (to say the same thing): each party's yes; ὁμολογία (an agreement)	proposed	agent (claude opus-5.5), by hand
+verbs:decline	ἀρνεῖσθαι	ἀρνέομαι (to say no, to refuse): a party's no	proposed	agent (claude opus-5.5), by hand
+verbs:pay	καταβάλλειν	κατά + βάλλω (to throw down, to pay down): to give an amount; τελεῖν (to pay a due)	proposed	agent (claude opus-5.5), by hand
+verbs:bear	ἀναδέχεσθαι	ἀναδέχομαι (to take upon oneself): a cost borne, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:grant	ἐπιτρέπειν	ἐπιτρέπω (to turn over to, to entrust, to permit): to open an act to someone	proposed	agent (claude opus-5.5), by hand
+verbs:can	δύνασθαι	δύναμις (power, ability): may, or must, as the square says; δυνατόν is kept for the necessity square's possible	proposed	agent (claude opus-5.5), by hand
+verbs:represent	προΐστασθαι	προΐστημι (to set before; in the middle, to stand before another, to stand for him): the προστάτης who stood for a metic before Athenian law	proposed	agent (claude opus-5.5), by hand
+verbs:need	χρῄζειν	χρεία (need, use): to need something to function; δεῖσθαι (to want) is passed over, since its δεῖ is the permission square's δέον	proposed	agent (claude opus-5.5), by hand
+verbs:meet	ἐκπληροῦν	ἐκ + πληρόω (to fill full, to fulfil): a need filled	proposed	agent (claude opus-5.5), by hand
+verbs:use	χρῆσθαι	χράομαι (to use, to have dealings with): a being, an allowance, a technology; χρήματα (things of use)	proposed	agent (claude opus-5.5), by hand
+verbs:do	λειτουργεῖν	λειτουργία (a public service; in later Greek any office, and in Modern Greek a machine's working): to do a job — a router's, a file server's	proposed	agent (claude opus-5.5), by hand
+verbs:hold	χωρεῖν	χώρα (room): to have room for, to hold — a jar χωρεῖ so many measures: what a being can hold, and what it holds	proposed	agent (claude opus-5.5), by hand
+verbs:run	ἐκτελεῖν	ἐκ + τελέω (to carry to its end, to accomplish) — coined: a machine running a program, an instance	proposed	agent (claude opus-5.5), by hand
+verbs:open	ἀνοιγνύναι	ἀνοίγνυμι (to open): a session, an account; ἄρχεσθαι (to begin)	proposed	agent (claude opus-5.5), by hand
+verbs:move	προάγειν	πρό + ἄγω (to lead forward): a case led forward on its walk	proposed	agent (claude opus-5.5), by hand
+verbs:step	βῆμα	βαίνω (to go, to step): a step of a walk, the line a case moves along	proposed	agent (claude opus-5.5), by hand
+verbs:attend	παρεῖναι	πάρειμι (to be beside, to be present): at an event, which takes the hours of those present	proposed	agent (claude opus-5.5), by hand
+verbs:measure	μετρεῖν	μέτρον (a measure): a property read, at a moment, through an instrument; Protagoras' man the measure (πάντων χρημάτων μέτρον ἄνθρωπος)	proposed	agent (claude opus-5.5), by hand
+verbs:record	ἀναγράφειν	ἀνά + γράφω (to write up — as a city wrote up its decrees on stone): what a line held at each position; ἀναγραφή (a register)	proposed	agent (claude opus-5.5), by hand
+verbs:reckon	λογίζεσθαι	λογίζομαι (to reckon, to count up — λόγος, a reckoning): read each time it is asked, never stored	proposed	agent (claude opus-5.5), by hand
+verbs:pin	πηγνύναι	πήγνυμι (to make fast, to fix): the moment and the commit a reading was read at, fixed	proposed	agent (claude opus-5.5), by hand
+verbs:classify	κατατάσσειν	κατά + τάσσω (to set in its rank): a being set in its class by a code of a scheme	proposed	agent (claude opus-5.5), by hand
+verbs:concern	προσήκειν	πρός + ἥκω (to have come to, to belong to): the person a record is about; οἱ προσήκοντες (one's own people)	proposed	agent (claude opus-5.5), by hand
+verbs:rate	τιμᾶν	τιμή (worth, price): to assess — as an Athenian court assessed a penalty (τίμησις): how much harm a being can do a person	proposed	agent (claude opus-5.5), by hand
+verbs:fail	σφάλλεσθαι	σφάλλω (to trip up): a way a being can fail, or is failing — σφάλμα (a slip, a fault)	proposed	agent (claude opus-5.5), by hand
+verbs:repair	ἐπανορθοῦν	ἐπί + ἀνά + ὀρθόω (to set upright again): a failure set right, where the fix lives	proposed	agent (claude opus-5.5), by hand
+verbs:rule	κρίνειν	κρίνω (to separate, to judge): a person's ruling on a disagreement — κρίσις	proposed	agent (claude opus-5.5), by hand
+verbs:respond	ἀποκρίνεσθαι	ἀποκρίνομαι (to answer — the respondent of a dialectical exchange): a verdict on another's reading, or one's words at a hearing	proposed	agent (claude opus-5.5), by hand
+verbs:weigh	σταθμᾶσθαι	σταθμός (a balance): criteria weighed against each other, pair by pair	proposed	agent (claude opus-5.5), by hand
+verbs:propose	προτείνειν	πρό + τείνω (to stretch forth, to put forward): beans offered to another garden; πρότασις (a proposal)	proposed	agent (claude opus-5.5), by hand
+verbs:take	παραλαμβάνειν	παρά + λαμβάνω (to take over what is handed on, as a tradition is received): a proposal taken in, whole; δέχεσθαι (to accept) is not this	proposed	agent (claude opus-5.5), by hand
+verbs:rehearse	μελετᾶν	μελέτη (practice, a rehearsal — the declaimers' exercise): a garden holding no facts about the world	proposed	agent (claude opus-5.5), by hand
+verbs:serve	ὑπηρετεῖν	ὑπηρέτης (an under-rower, an attendant): to serve — coined: listening at an address and a port, through a protocol	proposed	agent (claude opus-5.5), by hand
+verbs:carry	ὀχεῖν	ὀχέω (to carry, to bear up — ὄχημα, a carriage): coined, a link carrying a tunnel, a disk a volume	proposed	agent (claude opus-5.5), by hand
+verbs:route	ὁδηγεῖν	ὁδός (a road) + ἡγέομαι (to lead): to show the way — coined, traffic sent on to its next hop	proposed	agent (claude opus-5.5), by hand
+verbs:translate	μεταγράφειν	μετά + γράφω (to rewrite, to transcribe): coined, an address rewritten as traffic crosses	proposed	agent (claude opus-5.5), by hand
+verbs:filter	διηθεῖν	διά + ἠθέω (to strain through — ἠθμός, a strainer): coined for a packet filter, letting traffic cross or stopping it	proposed	agent (claude opus-5.5), by hand
+verbs:book	καταχωρίζειν	κατά + χωρίζω (to put in its place: to enter in a register — the papyri's word for entering accounts): an amount booked, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:renew	ἀνανεοῦν	ἀνά + νέος (new again): a registration renewed — as a treaty was renewed	proposed	agent (claude opus-5.5), by hand
+verbs:mark	ὁρίζειν	ὅρος (a boundary stone — and a definition): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
+verbs:produce	ἀπεργάζεσθαι	ἀπό + ἐργάζομαι (to work off, to finish a work): an artifact brought into being — a file, a build, a report	proposed	agent (claude opus-5.5), by hand
+verbs:draw	διαγράφειν	διά + γράφω (to mark out by lines — as a geometer draws a figure): a page draws	proposed	agent (claude opus-5.5), by hand
+qualifiers:channel	ὀχετός	ὀχετός (a conduit for water): coined for a network channel — where it is bound, what it protects, who may reach it	proposed	agent (claude opus-5.5), by hand
+qualifiers:charged	ἀντάξιον	ἀντάξιος (worth as much as): what a payment came to in another currency	proposed	agent (claude opus-5.5), by hand
+qualifiers:class	τάγμα	τάσσω (to array): a division, a rank — a class of the Contract of Parts; τάξις is the frame of sayables	proposed	agent (claude opus-5.5), by hand
+qualifiers:clause	ῥήτρα	ῥήτρα (a spoken compact — Lycurgus' Great Rhetra; Modern Greek's ρήτρα, a clause): what a clause holds beside its words	proposed	agent (claude opus-5.5), by hand
+qualifiers:cover	περιοχή	περιέχω (to encompass): which parts a grant opens, and whether each use states a reason	proposed	agent (claude opus-5.5), by hand
+qualifiers:drawing	διάγραμμα	διαγράφω (to mark out by lines): a figure — what it draws, its story and its lenses	proposed	agent (claude opus-5.5), by hand
+qualifiers:method	μέθοδος	μετά + ὁδός (a way after, a pursuit): how a reading was made	proposed	agent (claude opus-5.5), by hand
+qualifiers:page	σελίς	σελίς (a column of writing on a roll): a page of drawings	proposed	agent (claude opus-5.5), by hand
+qualifiers:placed	θέσις	τίθημι (to set, to place): a placing — what a placement holds there	proposed	agent (claude opus-5.5), by hand
+qualifiers:presence	ὕπαρξις	ὑπάρχω (to be there, to be at hand): found, or looked for and not found; παρεῖναι is kept for `attend`	proposed	agent (claude opus-5.5), by hand
+qualifiers:reading	λογισμός	λογίζομαι (to reckon): a reckoning — what it selects and computes, read each time	proposed	agent (claude opus-5.5), by hand
+qualifiers:result	ἀποτέλεσμα	ἀποτελέω (to bring to its end): an outcome — what came of a measuring	proposed	agent (claude opus-5.5), by hand
+qualifiers:series	σειρά	σειρά (a cord, a chain — Modern Greek's series): coined for what a line held at each position, row by row	proposed	agent (claude opus-5.5), by hand
+qualifiers:settles	λύσις	λύω (to loose): a debt loosed — which occurrences of which clauses a payment settles	proposed	agent (claude opus-5.5), by hand
+qualifiers:share	μερίς	μείρομαι (to receive one's portion): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
+qualifiers:value	ἀξία	ἄξιος (weighing as much): the value a measuring read	proposed	agent (claude opus-5.5), by hand
+qualifiers:walk	πορεία	πορεύομαι (to go, to journey): how a walk goes at a step	proposed	agent (claude opus-5.5), by hand
+qualifiers:weighing	συγκρίσεις	συγκρίνω (to judge together, to compare): the judgments, pair by pair	proposed	agent (claude opus-5.5), by hand
+beside_roles:id	γνώρισμα	γνωρίζω (to make known, to recognise): a token a thing is known by — a statement's in its bean	proposed	agent (claude opus-5.5), by hand
+beside_roles:while	ἐφ' ὅσον	ἐπί + ὅσος (for as much as, for as long as): the statement holds while what it names matches	proposed	agent (claude opus-5.5), by hand
+beside_roles:why	διότι	διὰ τί (on account of what): Aristotle's τὸ διότι, the reason why, beside τὸ ὅτι, the fact (Posterior Analytics I.13) — the reason, in prose	proposed	agent (claude opus-5.5), by hand
+beside_roles:note	σημείωσις	σημειόω (to mark — σημεῖον, a sign): a remark, in prose	proposed	agent (claude opus-5.5), by hand
+beside_roles:held	παρακαταθήκη	παρακατατίθημι (to lay down beside, to entrust): a deposit in trust — kept off git, in a store a host resolves	proposed	agent (claude opus-5.5), by hand
+kinds:codebase	κωδικοθήκη	κῶδιξ (the Byzantine Greek of codex) + θήκη (a case, a store), after βιβλιοθήκη: coined, a codebase	proposed	agent (claude opus-5.5), by hand
+kinds:product	προϊόν	πρόειμι (to go forth): what comes forth — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+kinds:org	κοινόν	κοινός (common): a common body — as τὸ κοινὸν τῶν Ἀχαιῶν, the Achaean League	proposed	agent (claude opus-5.5), by hand
+kinds:person	πρόσωπον	πρός + ὤψ (what faces one): a face, a mask, then a person	proposed	agent (claude opus-5.5), by hand
+kinds:instance	δεῖγμα	δείκνυμι (to show): a specimen, one shown of a kind — coined: a running instance of a product	proposed	agent (claude opus-5.5), by hand
+kinds:host	ξενιστής	ξενίζω (to receive as a guest): a host — the Modern Greek word, in the ancient form	proposed	agent (claude opus-5.5), by hand
+kinds:virtual-host	εἰκονικὸς ξενιστής	εἰκών (an image — Modern Greek's word for virtual) + ξενιστής: coined, a host in image, not in body	proposed	agent (claude opus-5.5), by hand
+kinds:domain	τομεύς	τέμνω (to cut): a sector (Archimedes' τομεύς of a circle) — the Modern Greek word, in the ancient form, for a domain	proposed	agent (claude opus-5.5), by hand
+kinds:service	ὑπηρεσία	ὑπηρέτης (an attendant): a service — coined in this sense	proposed	agent (claude opus-5.5), by hand
+kinds:program	πρόγραμμα	προγράφω (to write before, to post publicly): a public notice — coined in this sense, a program a machine runs	proposed	agent (claude opus-5.5), by hand
+kinds:design	σχέδιον	σχεδιάζω (to make offhand, to sketch): a draft — Modern Greek's design	proposed	agent (claude opus-5.5), by hand
+kinds:session	συνεδρία	σύν + ἕδρα (a sitting together) — the Modern Greek word, in the ancient form, for an agent's session	proposed	agent (claude opus-5.5), by hand
+kinds:contract	συμβόλαιον	σύμβολον (a token broken between two): a contract — the Athenian courts' word	proposed	agent (claude opus-5.5), by hand
+kinds:garden	κῆπος	κῆπος (a garden — Epicurus' school): a garden this one records — as section:manifest	proposed	agent (claude opus-5.5), by hand
+kinds:document	ἔγγραφον	ἐν + γράφω (written in): a written document	proposed	agent (claude opus-5.5), by hand
+kinds:event	συμβάν	συμβαίνω (to come together, to befall): what befell — an event	proposed	agent (claude opus-5.5), by hand
+header:title	ἐπιγραφή	ἐπιγράφω (to write upon): an inscription, a title — what a bean is called	proposed	agent (claude opus-5.5), by hand
+header:summary	ἐπιτομή	ἐπιτέμνω (to cut short): an abridgement — one sentence of what a bean is	proposed	agent (claude opus-5.5), by hand
+header:tags	πιττάκια	πιττάκιον (a tablet, a label): a bean's tags	proposed	agent (claude opus-5.5), by hand
+forms:clause.due	προθεσμία	πρό + θέσθαι (set beforehand): an appointed day — the day a clause falls due	proposed	agent (claude opus-5.5), by hand
+forms:clause.every	ἐπανάληψις	ἐπαναλαμβάνω (to take up again): how a clause repeats	proposed	agent (claude opus-5.5), by hand
+forms:clause.notice	προαγγελία	πρό + ἀγγέλλω (to announce before): how long before it falls due a reader is told	proposed	agent (claude opus-5.5), by hand
+forms:clause.state	ἕξις	ἔχω (to have, to hold — πῶς ἔχει, how it stands): how a clause stands; κατάστασις (term:status) is the retired table's	proposed	agent (claude opus-5.5), by hand
+forms:clause.amount	ποσόν	πόσος (how much): Aristotle's category of quantity — money, time, anything	proposed	agent (claude opus-5.5), by hand
+forms:clause.during	διάστημα	διΐστημι (to set apart): an interval — the window in which a clause holds	proposed	agent (claude opus-5.5), by hand
+forms:clause.within	περίοδος	περί + ὁδός (a way round, a cycle): the window an amount is counted within	proposed	agent (claude opus-5.5), by hand
+forms:clause.used_by	οἱ χρώμενοι	χράομαι (to use): those using — the entries whose spans use the allowance	proposed	agent (claude opus-5.5), by hand
+forms:clause.when	ὅταν	ὅτε + ἄν (whenever): what brings a clause into force — a reading that holds, or the condition in words	proposed	agent (claude opus-5.5), by hand
+forms:clause.each	καθ' ἕκαστον	κατά + ἕκαστος (each by each): the clause occurs once for each bean or entry a reading holds	proposed	agent (claude opus-5.5), by hand
+forms:clause.of	μερὶς ἐκ	μερίς (a portion) + ἐκ (out of): what the clause's amount is a share of	proposed	agent (claude opus-5.5), by hand
+forms:clause.falls_due	σχετικὴ προθεσμία	σχέσις (a holding towards: a relation — the commentators' σχετικός, of Aristotle's πρός τι) + προθεσμία: when a clause falls due relative to another position	proposed	agent (claude opus-5.5), by hand
+forms:clause.by_role	κατὰ σχῆμα	σχῆμα (a figure, the bearing an actor takes on): every party whose role this is, each bound alike	proposed	agent (claude opus-5.5), by hand
+forms:clause.over	ὑπὲρ τοῦ μέρους	ὑπέρ (on behalf of, for) + μέρος (a part): the part of what the agreement concerns that this clause is for	proposed	agent (claude opus-5.5), by hand
+forms:settlement.clause	ῥήτρα λυθεῖσα	ῥήτρα (a clause) + λύω (to loose): the clause a payment settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.occurrence	περίπτωσις	περιπίπτω (to fall in with): an incident, a case — which occurrence of the clause it settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.amount	ποσὸν ἀποδοθέν	ποσόν (how much) + ἀποδίδωμι (to give back what is owed): how much of the occurrence it settles	proposed	agent (claude opus-5.5), by hand
+forms:settlement.note	ὑπόμνημα	ὑπομιμνῄσκω (to remind): a memorandum — a remark on a settlement; σημείωσις is the note beside the roles	proposed	agent (claude opus-5.5), by hand
