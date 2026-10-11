@@ -141,25 +141,23 @@ def resolve_here(p):
         return None
 
 
-DAYS_PER = {'day': 1, 'minute': 1 / 1440, 'second': 1 / 86400, 'millisecond': 1 / 86_400_000,
-            'd': 1, 'min': 1 / 1440, 's': 1 / 86400, 'ms': 1 / 86_400_000}       # and by their UCUM codes
-
-
 def notice_days(notice, default=90):
     """An extent on time -> how many days of notice, for comparing against a countdown in days.
 
     ONLY A LENGTH IS MEANINGFUL HERE. A notice bounded by `from`/`to` is a region of the calendar, not an
     amount of warning, so it is not converted and the default stands rather than a number being invented
-    from it. The units it can convert are the ones `units` declares, which is why there is no month: a
-    month is 28 to 31 days and `extent_form.not_a_calendar_bucket` says so at length.
+    from it. The units it converts are the ones the law declares for a duration, converted exactly
+    (bin/units.py), a count as the law writes one, which is why there is no month: a month is 28 to 31 days
+    and `extent_form.not_a_calendar_bucket` says so at length. Rounded to the nearest day, a half to the even.
     """
     m = (notice or {}).get('measure') if isinstance(notice, dict) else None
-    if not isinstance(m, dict) or m.get('unit') not in DAYS_PER:
+    if not isinstance(m, dict):
         return default
     try:
-        return max(0, int(round(int(m['count']) * DAYS_PER[m['unit']])))
-    except (TypeError, ValueError):
+        days = dmunits.convert(str(m.get('count')), str(m.get('unit')), 'd')
+    except (TypeError, ValueError):      # no count, or a unit that is no duration the law declares (a length, nothing)
         return default
+    return max(0, int(round(days)))
 
 
 def expiry_terms():
