@@ -2,7 +2,7 @@
    Font License 1.1 (Vazirmatn-OFL.txt), served beside this file so a page reads well offline. It writes the Arabic
    script and the Latin; every other script is the reader's own fonts'. */
 @font-face{font-family:Vazirmatn;src:url(Vazirmatn.woff2) format("woff2");font-weight:100 900;font-display:swap}
-.w-root,.w-num,.w-money,.w-moment,.w-text,.w-name,.w-choice,.w-being{font-family:Vazirmatn,system-ui,sans-serif}
+.w-root,.w-num,.w-money,.w-moment,.w-text,.w-name,.w-choice,.w-being,.w-place,.w-place-value{font-family:Vazirmatn,system-ui,sans-serif}
 .w-num{unicode-bidi:isolate;white-space:nowrap}
 table .w-num,.num .w-num,.amount .w-num{font-variant-numeric:tabular-nums}
 .w-frac{position:relative;display:inline-block;vertical-align:-.45em;text-align:center;font-size:.78em;line-height:1.1;margin:0 .08em;font-weight:600}
@@ -13,3 +13,13 @@ table .w-num,.num .w-num,.amount .w-num{font-variant-numeric:tabular-nums}
 .w-unit{font-size:.85em;opacity:.8}
 .w-money{white-space:nowrap}
 .w-bad{color:#a0522d}
+/* a place (place.js): what is typed, and the suggestions under it, each its own words and where it is */
+.w-place{position:relative;display:inline-block}
+.w-place-list{position:absolute;z-index:10;inset-inline-start:0;min-width:100%;max-height:18em;overflow:auto;margin:2px 0 0;padding:0;list-style:none;background:Canvas;color:CanvasText;border:1px solid GrayText}
+.w-place-option{padding:.25em .5em;cursor:pointer}
+.w-place-option[aria-selected="true"]{background:Highlight;color:HighlightText}
+.w-place-main{display:block}
+.w-place-sub,.w-place-note,.w-place-credit{display:block;font-size:.82em;opacity:.8}
+.w-place-credit,.w-place-empty{padding:.2em .5em}
+.w-place-near[aria-pressed="true"]{font-weight:600}
+.w-place-coord{unicode-bidi:isolate;white-space:nowrap}

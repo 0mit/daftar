@@ -185,6 +185,10 @@ button per field.
 A value in one of the law's forms — what a clause holds beside its words, what a payment settles — is drawn and edited
 by its entries (`widgets/form.js`): its day in the reader's calendar, its repetition in their words, a choice of the
 bean's own clauses, never a text of JSON to type; what the form holds that no widget draws is written back as it was.
+Where a being is (`be`'s `at`) is a place (`widgets/place.js`), looked up as it is typed; on the sheet of a happening,
+or of a being that holds an `attend`, and for a place held off git, the lookup is the machine's alone: where a person
+will be is never asked of a place service (design §12). A place picked from a source is saved with that source, and
+the write path knows it by a `read` (below).
 A page a `new` names opens an empty sheet of a kind, whose first Save mints the bean (`p-<8 hex>` for a person, titled
 by the id; `<kind>-<8 hex>` for another) and writes it whole — the gardener's alone, since no grant names a being not
 yet made.
@@ -195,7 +199,8 @@ roles, held?}]`, `{op: change, header: title|summary, value}`, and `{op: change,
 tags as a set of words (none: the key taken out) — and both are written by it: each op read against its
 verb's row; `may` asked for the bean, or for the part each op touches; each edit through `bin/safe.py` by its key, one
 line, an expected count of 1; a held value sealed by `bin/held.py` before its statement is written; the statements added
-or changed known by the writer's `say`; each written statement read back and judged by the gate's own judge; then
+or changed known by the writer's `say` — or, where an op says it was read from a source (`read: {from, through}`, a
+place a lookup found), by the writer's `read` from it; each written statement read back and judged by the gate's own judge; then
 `bin/save.py`, with ONE journal entry naming each statement added, changed or removed, and the gate judges the commit.
 A refusal undoes everything — the tree, the index, every store record the write made — and each message is returned
 tied to the op whose statement it names. `view serve` calls it for `/api/write` with `ops`; a host that serves a
@@ -385,6 +390,7 @@ copy of the release the garden runs, so a value is shown by the law the garden k
 | `lib/widgets/being.js` | being | a bean by its title, reached by its id |
 | `lib/widgets/exact.js` | number | sums of written amounts as fractions of two integers |
 | `lib/widgets/recurrence.js` | recurrence | a repetition said in the reader's words, calendar and digits — each week on Tuesday and Thursday, ninety minutes each time — and edited by its parts: the cell it repeats in, the places in it (a week's days as the reader's region begins a week), where it starts, how many times, how long each lasts; the time systems and the units of a length of time are the law's, sent by the host |
+| `lib/widgets/place.js` | place | where something is, taken in through a place lookup: suggestions as typed, each its own words and where it is — the garden's own places first (carried with the page, `places`), then the host's (`state.places.here`), then a place service beyond the machine (`state.places.far`), never for a field the host seals; the reader's position only when they press its button. A pick lands as the being it is, or as `EPSG:4326;<lat>,<lon>` with its element (`osm:way/42`, `geonames:112931`) and the source it was read from; a coordinate is shown in the reader's digits with the accuracy the law states for its system (WGS 84, ±2 m) |
 | `lib/widgets/form.js` | a form's value | what a clause holds beside its words (`clause`), what a payment settles (`settlement`): drawn by its entries, each attribute by the widget that implements its value, as the host resolves it from the law (`view_engraved.form_def`); what it cannot draw is kept as written |
 | `lib/widgets/safe.js` | — | `h```: the one way HTML is built; `mount`: the one door into a page |
 | `lib/widgets/locale.js` | — | the reader's digits, separators, calendar, direction and words, all CLDR's through `Intl` |
@@ -405,7 +411,7 @@ than written, never as a JSON float; a widget never rounds a value it takes in.
 
 **What a widget reads comes from the law, sent by the host:** a currency's places (the currencies table), a calendar
 (the reader's or the garden's), a unit's name. Configure with `settings.js` `configure({garden: {lang, calendar, zone,
-gardener}, asOf, currencies})`.
+gardener}, asOf, currencies, crs})` — `crs` the law's reference systems and how well each is known, for a place.
 
 **Every bidi control is an escape in this source**, never the character itself (Trojan Source, CVE-2021-42574):
 `test/core_law.py` refuses a file that holds one.

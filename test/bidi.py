@@ -135,6 +135,13 @@ try {
   page('rtl', 'fa'); d = box('rtl');
   W.safe.mount(d, W.safe.h`<p id="t1">عنوان: ${W.text.show('loan — وام سام به علی، Sam to Ali')} ${W.number.show('3')}</p>`);
   out.cases.title = visual(d.querySelector('#t1')); out.cases.titleOnly = visual(d.querySelector('#t1 .w-text'));
+  // 8. A PLACE: its own words on the main line, where it is beneath, the coordinate in the reader's digits left to right
+  const placeCase = (dir, lang, label) => { page(dir, lang); const dd = box(dir);
+    W.settings.configure({crs: [{crs: 'EPSG:4326', accuracy: {count: '2', unit: 'length-meter'}}]});
+    W.safe.mount(dd, W.place.show(['EPSG:4326;41.0082,28.9784', 'osm:relation/223474'], {label}));
+    return {main: visual(dd.querySelector('.w-place-main')), coord: visual(dd.querySelector('.w-place-coord')),
+            sub: visual(dd.querySelector('.w-place-sub'))}; };
+  out.cases.placeFa = placeCase('rtl', 'fa', 'Istanbul'); out.cases.placeEn = placeCase('ltr', 'en', '\u0627\u0633\u062a\u0627\u0646\u0628\u0648\u0644');
 } catch (e) { out.errs.push('driver: ' + e.message + ' ' + (e.stack || '').split('\\n')[1]); }
 const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = JSON.stringify(out); document.body.appendChild(pre);
 </script></body></html>"""
@@ -207,5 +214,15 @@ try:
 finally:
     shutil.rmtree(T, ignore_errors=True)
 
+    pf, pe = C.get('placeFa') or {}, C.get('placeEn') or {}
+    check("place, rtl (fa): a Latin name on its own line reads as written; the coordinate in Persian digits left to "
+          "right, latitude first; its system, its accuracy in the reader's words, then the map's element",
+          pf.get('main') == 'Istanbul' and pf.get('coord') == '۴۱٫۰۰۸۲, ۲۸٫۹۷۸۴'
+          and pf.get('sub') == 'OpenStreetMap relation/223474 · رتم±۲ EPSG:4326 ۴۱٫۰۰۸۲, ۲۸٫۹۷۸۴', pf)   # read from the right:
+    # the coordinate, its system, «±۲متر» as CLDR writes it — Persian digits are numbers of the European class, so the
+    # sign goes with them, left to right — then the element
+    check("place, ltr (en): a Persian name reads right to left in its isolate; the coordinate as written, its system, "
+          "±2 m, the element", pe.get('main') == 'لوبناتسا' and pe.get('coord') == '41.0082, 28.9784'
+          and pe.get('sub') == '41.0082, 28.9784 EPSG:4326 ±2 m · OpenStreetMap relation/223474', pe)
 print(f"\nbidi: {len(FAILS)} failed" + (": " + ", ".join(FAILS) if FAILS else ""))
 sys.exit(1 if FAILS else 0)

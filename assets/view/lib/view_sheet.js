@@ -63,6 +63,16 @@
 
     /* ---------------- editing: a widget per role, by its shape ---------------- */
     function nameOf(prefix, role) { return prefix + '.' + role; }
+    // WHERE A PERSON WILL BE IS LOOKED UP HERE ALONE (design §12): a happening's place, or a being's that holds an
+    // `attend`, is never sent to a place service beyond the machine; nor is a place held off git (editOne)
+    var whereabouts = data.kind === 'event' || (data.rows || []).some(function (r) { return r.verb === 'attend'; }), sealed = whereabouts;
+    // a `be` that says where a being is — placed as a location or a place, or not yet said, or at a position a place
+    // lookup reads — and never one that says when (a happening's time)
+    function placeLike(roles, v) {
+      var as = roles && roles.as, list = v === undefined ? [] : [].concat(v);
+      if (as === 'location' || as === 'place') return true;
+      return !as && (!list.length || list.some(function (x) { return /^(EPSG:|osm:|geonames:)/.test(String(x)); }));
+    }
     function editor(verb, roles, prefix, may) {
       var row = data.verbs[verb] || {roles: {}, qualifiers: {}, required: []}, specs = Object.assign({}, row.roles, row.qualifiers);
       var keys = Object.keys(specs).concat(BESIDE);
@@ -75,6 +85,8 @@
           input = spec.many === 'true'
             ? t.join((Array.isArray(v) ? v : []).concat([{}]).map(function (e, i) { return h`<span class="eg-form-entry">${w.form.edit(nm + '.' + i, e, def, fo)}</span>`; }), '')
             : w.form.edit(nm, v, def, fo);
+        } else if (verb === 'be' && k === 'at' && w.place && placeLike(roles, v)) {   // where a being is (widgets/place.js)
+          input = w.place.edit(nm, v, {sealed: sealed, label: typeof v === 'string' ? t.titleOf(v) || '' : ''});
         } else if (spec.many === 'true' || Array.isArray(v)) {
           input = w.name.edit(nm, Array.isArray(v) ? v.join(', ') : (v || ''));
         } else if (shapes.indexOf('quantity') >= 0 && (v === undefined || (v && typeof v === 'object'))) {
@@ -102,6 +114,7 @@
     }
     function editOne(s, parentId) {
       var p = 's' + (n++), may = s.may && !!s.roles;
+      sealed = whereabouts || !!s.held;
       return h`<li class="eg-statement eg-editing" data-fact="${s.key}" data-prefix="${p}" data-verb="${s.verb}"${s.held ? h` data-held=""` : ''}>
         <div class="eg-fields">${editor(s.verb, s.roles, p, may)}</div>
         ${s.held && !s.roles ? h`<span class="eg-held">${s.held.host ? t.say('sheet-kept-on', {host: t.titleOf(s.held.host) || s.held.host}) : t.say('sheet-kept-off')}</span>` : ''}
@@ -118,6 +131,7 @@
     }
     function blankOne(verb, of) {
       var p = 'a' + (n++);
+      sealed = whereabouts;
       return h`<li class="eg-statement eg-editing eg-added" data-prefix="${p}" data-verb="${verb}" data-add-op="">
         <div class="eg-fields">${editor(verb, of ? {of: of} : {}, p, true)}</div><span class="eg-err" data-err-op=""></span></li>`;
     }
@@ -165,8 +179,17 @@
       wire();
     }
 
+    // a place field's lookup: the garden's own places the page carries, then the host's, where it has one
+    function wirePlaces(within) {
+      if (!w.place) return;
+      within.querySelectorAll('[data-place]').forEach(function (box) {
+        w.place.wire(box, {own: t.E.places || [], here: t.places && t.places.here, far: t.places && t.places.far},
+          {sealed: box.classList.contains('w-place-sealed')});
+      });
+    }
     function wire() {
       t.wire(el);
+      wirePlaces(el);
       el.querySelectorAll('[data-do]').forEach(function (b) {
         b.addEventListener('click', function () {
           var d = b.getAttribute('data-do');
@@ -182,16 +205,25 @@
           var li = holder.firstElementChild, list = b.previousElementSibling && b.previousElementSibling.tagName === 'OL'
             ? b.previousElementSibling : b.parentNode.querySelector('ol');
           (list || b.parentNode).appendChild(li);
+          wirePlaces(li);
         });
       });
     }
 
     /* what a field holds, as the law writes it — or an error said at the field */
-    function readFields(li, verb, errs) {
+    function readFields(li, verb, errs, known) {
       var p = li.getAttribute('data-prefix'), row = data.verbs[verb] || {roles: {}, qualifiers: {}}, specs = Object.assign({}, row.roles, row.qualifiers);
       var roles = {};
       Object.keys(specs).concat(BESIDE).forEach(function (k) {
         var nm = p + '.' + k, spec = specs[k] || {shape: ['text']}, q = function (x) { return li.querySelector('[name="' + x + '"]'); };
+        var pl = li.querySelector('[data-place="' + nm + '"]');
+        if (pl) {                                   // a place: the one picked, or a position typed with its system
+          var r = w.place.take(w.place.collect(pl), {free: true});
+          if (r.error) { errs.push([nm, r.error]); return; }
+          if (r.value.length) roles[k] = r.value.length === 1 ? r.value[0] : r.value;
+          if (r.read && known) known.read = r.read;  // where it was read: the save's `read` of that source
+          return;
+        }
         if (q(nm + '.count')) {
           var c = w.number.take(q(nm + '.count').value), u = w.name.take(q(nm + '.unit').value);
           if (c.error) { errs.push([nm, c.error]); return; }
@@ -261,16 +293,17 @@
       });
       el.querySelectorAll('li.eg-editing').forEach(function (li) {
         var verb = li.getAttribute('data-verb'), key = li.getAttribute('data-fact');
+        var known = {};
         if (li.hasAttribute('data-add-op')) {
-          var roles = readFields(li, verb, errs);
-          if (Object.keys(roles).length) { ops.push({op: 'add', verb: verb, roles: roles}); where.push(li); }
+          var roles = readFields(li, verb, errs, known);
+          if (Object.keys(roles).length) { ops.push(Object.assign({op: 'add', verb: verb, roles: roles}, known.read ? {read: known.read} : {})); where.push(li); }
           return;
         }
         var s = originals[key];
         if (!s || !s.may || !s.roles || (el.querySelector('[data-remove="' + key + '"]') || {}).checked) return;
-        var now = readFields(li, verb, errs);
+        var now = readFields(li, verb, errs, known);
         if (canon(now) !== canon(s.roles)) {
-          ops.push(Object.assign({op: 'change', key: key, roles: now}, s.held ? {held: true} : {})); where.push(li);
+          ops.push(Object.assign({op: 'change', key: key, roles: now}, s.held ? {held: true} : {}, known.read ? {read: known.read} : {})); where.push(li);
         }
       });
       if (errs.length) {
