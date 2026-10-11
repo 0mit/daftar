@@ -18,7 +18,8 @@ const W=(typeof window!=='undefined')?window:this;
 /* DIRECTION, from widgets/direction.js and the law's `orientations`: a flow's arrow is the glyph of `next` on this page —
    it points to the reader's line end, mirrored with the script; a body's up is never turned. */
 const GLYPH=m=>(W.daftarDirection?W.daftarDirection.glyph(m):({next:'→',down:'↓'})[m]||'');
-function h(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+/* the one escaping rule, widgets/safe.js's: five characters, a quote of either kind among them (test/view.py holds the two equal) */
+function h(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 /* where a link may go: an address on the web (http, https), never one that runs script — a catalogue's or a host's word */
 function web(u){u=String(u==null?'':u).trim();return /^https?:\/\//i.test(u)?u:'';}
 function plain(s){return new DOMParser().parseFromString(String(s==null?'':s),'text/html').body.textContent;}   // a title is HTML; a text place shows this

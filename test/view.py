@@ -771,6 +771,20 @@ _node = _sh.which("node")
 if _node:
     r = run(_node, "--check", os.path.join(G, "assets", "view", "lib", "view_runtime.js"))
     check("the runtime parses (node --check)", r.returncode == 0, r.stdout + r.stderr)
+    # ONE ESCAPING RULE: the runtime is a classic script and cannot import widgets/safe.js, so its own h() is held to
+    # safe.js's escape() on every code point; the hook names h inside the runtime's closure, where it is hoisted
+    ESC = ("import vm from 'node:vm'; import {readFileSync} from 'node:fs'; import {pathToFileURL} from 'node:url';"
+           "const [rt, sf] = process.argv.slice(1); const {escape} = await import(pathToFileURL(sf));"
+           "const c = {}; vm.createContext(c); vm.runInContext(readFileSync(rt, 'utf8').replace('(function(){', '(function(){this.__h=h;'), c);"
+           "const differ = []; for (let p = 0; p <= 0x10FFFF; p++) { const s = String.fromCodePoint(p);"
+           " if (c.__h(s) !== escape(s)) differ.push([p.toString(16), c.__h(s), escape(s)]); }"
+           "const v = `a\"b'c<d>&e`; console.log(JSON.stringify({hooked: typeof c.__h, differ, value: [c.__h(v), escape(v)]}));")
+    r = run(_node, "--input-type=module", "-e", ESC, os.path.join(G, "assets", "view", "lib", "view_runtime.js"),
+            os.path.join(G, "assets", "view", "lib", "widgets", "safe.js"))
+    _esc = json.loads(r.stdout) if r.returncode == 0 else {"error": r.stderr[-600:]}
+    check("the runtime escapes every character as widgets/safe.js does — five of them, a single quote among them as "
+          "&#39; — so a value stays one attribute whichever quote holds it", _esc.get("hooked") == "function"
+          and _esc.get("differ") == [] and _esc.get("value", [0, 1])[0] == _esc.get("value", [0, 1])[1], _esc)
 else:
     print("NOTE  the runtime's syntax was not checked: no node on this machine")
 _browser = next((b for b in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable") if _sh.which(b)), None)
