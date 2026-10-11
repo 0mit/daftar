@@ -153,7 +153,7 @@ export const SAID = {
   'sheet-self': {en: 'this one', fa: 'همین'},
   'sheet-required': {en: 'required', fa: 'لازم'},
   'sheet-copy': {en: 'A copy of the page, read only: a being is changed where its garden is served.',
-                 fa: 'نسخه‌ای فقط‌خواندنی از صفحه: هر چیز همان‌جا تغییر می‌کند که باغش سرو می‌شود.'},
+                 fa: 'نسخه‌ای فقط‌خواندنی از صفحه: هر چیز همان‌جا تغییر می‌کند که باغش خدمت‌دهی می‌شود.'},
   'sheet-none': {en: 'This page names no facts of a {kind}.', fa: 'این صفحه هیچ واقعیتی از یک {kind} را نام نمی‌برد.'},
 };
 export function say(key, o = {}, vars = {}) {
