@@ -245,4 +245,134 @@ ok('direction: the law\'s rows, where the page carries them, decide — as the l
   assert.equal(R.command(key('ArrowRight'), ['time']), 'later');
   assert.equal(R.axis('flow'), null);                                                    // what the law does not name, nothing
 });
-console.log(`PASS: widgets — ${n} groups of checks: safe, settings, locale, number, money, moment in ten calendars, text, name, choice, being, exact, a repetition and a form's value, direction.`);
+// ---- a place (place.js): suggestions as typed, the garden's own first, the reader's position only when asked
+const place = await import(new URL('place.js', lib));
+ok('place: what a position says — a coordinate in its system, a map\'s element, a gazetteer\'s feature, a being', () => {
+  assert.deepEqual(place.parse('EPSG:4326;35.6976,51.4023'), {is: 'coordinate', crs: 'EPSG:4326', a: '35.6976', b: '51.4023', c: '', epoch: ''});
+  assert.deepEqual(place.parse('osm:way/42'), {is: 'osm', element: 'way/42'});
+  assert.deepEqual(place.parse('geonames:112931'), {is: 'geonames', id: '112931'});
+  assert.deepEqual(place.parse('cafe-1'), {is: 'other', text: 'cafe-1'});
+  assert.equal(place.parse('osm:way/042').is, 'other');
+});
+ok('place: a lookup folds what a keyboard changes and a reader does not — the two yehs and kafs, a hamza, marks, case, digits, a joiner', () => {
+  assert.deepEqual(place.fold('كاخ'), place.fold('کاخ'));                 // kaf, keheh
+  assert.deepEqual(place.fold('علي'), place.fold('علی'));                 // two yehs
+  assert.deepEqual(place.fold('آشپز'), place.fold('اشپز'));     // an alef with a madda
+  assert.deepEqual(place.fold('Café Crème'), ['cafe', 'creme']);
+  assert.deepEqual(place.fold('İstanbul'), ['istanbul']);
+  assert.deepEqual(place.fold('منطقه ۶'), place.fold('منطقه 6'));   // the reader's digits
+  assert.deepEqual(place.fold('\u0648\u0644\u06CC\u200C\u0639\u0635\u0631'), place.fold('\u0648\u0644\u06CC \u0639\u0635\u0631'));
+});
+const OWN = [{id: 'bookshop', title: 'کاخ کتاب', kind: 'org', point: [35.7001, 51.4012], osm: 'way/9001'},
+             {id: 'kakh', title: 'کاخ', kind: 'org'}, {id: 'office', title: 'Head office', kind: 'org'}];
+ok('place: the garden\'s own places, matched by every word typed beginning a word of the title — what is typed first', () => {
+  assert.deepEqual(place.own('كاخ', OWN).map(s => s.at[0]), ['kakh', 'bookshop']);   // typed with an Arabic kaf
+  assert.deepEqual(place.own('head off', OWN).map(s => [s.at, s.read]), [[['office'], null]]);
+  assert.deepEqual(place.own('', OWN), []);
+});
+const HERE = {places: [{code: 'zz-tehran-palestine', label: 'فلسطین', detail: 'تهران', kind: 'street', point: [35.6976, 51.4023], osm: 'way/42'},
+                       {code: 'zz-bushehr', label: 'Bushehr Province', kind: 'province'}],
+              sources: [{name: 'OpenStreetMap', licence: 'ODbL-1.0', attribution: '© OpenStreetMap contributors', url: 'https://www.openstreetmap.org/copyright'}]};
+const FAR = {places: [{label: 'خیابان فلسطین', detail: 'تهران', point: [35.6976, 51.4023], osm: 'way/42'},
+                      {label: 'Istanbul', detail: 'Türkiye', point: [41.0082, 28.9784], osm: 'relation/223474'}],
+             sources: [{name: 'OpenStreetMap', licence: 'ODbL-1.0', attribution: '© OpenStreetMap contributors', url: 'https://www.openstreetmap.org/copyright'}], sent: true};
+ok('place: suggestions in their order — the garden\'s own, then the machine\'s, then from beyond; one element offered once; nowhere never', () => {
+  const s = place.merge({own: place.own('کاخ', OWN), here: HERE.places, hereSources: HERE.sources, far: FAR.places, farSources: FAR.sources});
+  assert.deepEqual(s.map(x => [x.source, x.label]), [['own', 'کاخ'], ['own', 'کاخ کتاب'],
+    ['here', 'فلسطین'], ['far', 'Istanbul']]);   // the far «فلسطین» is way/42 again; Bushehr has no point
+});
+ok('place: what lands — the garden\'s own as the being it is; any other as a WGS 84 coordinate, latitude first, its element beside it, read from its source', () => {
+  const [mine, here, far] = place.merge({own: [OWN[0]].map(p => place.own(p.title, [p])[0]), here: [HERE.places[0]], hereSources: HERE.sources,
+    far: [FAR.places[1]], farSources: FAR.sources});
+  assert.deepEqual(place.take(mine), {value: ['bookshop'], read: null});
+  assert.deepEqual(place.take(here), {value: ['EPSG:4326;35.6976,51.4023', 'osm:way/42'], read: {
+    from: {someone: 'org', at: 'uri:https://www.openstreetmap.org/copyright'},
+    through: 'OpenStreetMap way/42, as this machine’s place search holds it (© OpenStreetMap contributors, ODbL-1.0)'}});
+  assert.match(place.take(far).read.through, /^OpenStreetMap relation\/223474, as a place service beyond this machine found it/);
+  const [tiny] = place.merge({here: [{code: 'x', label: 'x', point: [1e-7, -0.5]}], hereSources: HERE.sources});
+  assert.deepEqual(tiny.at, ['EPSG:4326;0.0000001,-0.5']);                              // never an exponent
+  assert.deepEqual(place.merge({here: [{code: 'y', label: 'y', point: [91, 0]}, {code: 'z', label: 'z', point: [NaN, 1]}]}), []);
+  const [host] = place.merge({own: [{code: 'cafe-b', label: 'Cafe B', kind: 'org', point: [35.6976, 51.4023], osm: 'way/42'}]});
+  assert.deepEqual([host.source, host.at, host.read, host.what], ['own', ['cafe-b'], null, 'org']);   // a host's read of the garden
+  assert.ok(!JSON.stringify(place.take(far)).includes('"name"'), 'a map\'s id never lands as a name');
+});
+ok('place: a position typed with its system is taken as written, a bare coordinate never — in the reader\'s words, with its form', () => {
+  assert.deepEqual(place.take('EPSG:4326;35.69,51.39'), {value: ['EPSG:4326;35.69,51.39'], read: null});
+  assert.deepEqual(place.take('osm:node/7'), {value: ['osm:node/7'], read: null});
+  assert.equal(place.take('35.69, 51.39', {lang: 'en'}).error, 'A coordinate is never bare: choose a place, or write it with its system, as EPSG:4326;35.69,51.39.');
+  assert.ok(place.take('۳۵٫۶۹، ۵۱', {lang: 'fa'}).error.startsWith('مختصات'));
+  assert.ok(place.take('somewhere', {lang: 'en'}).error.startsWith('Choose a place'));
+  assert.deepEqual(place.take('rack-a', {free: true}), {value: ['rack-a'], read: null});        // a being, for the gate to judge
+  assert.deepEqual(place.take('', {}), {value: []});
+  assert.equal(place.take({at: []}, {lang: 'en'}).error, 'This place says no coordinate: choose another, or write its position.');
+});
+ok('place: shown in the reader\'s digits, left to right in its isolate, with the accuracy the law states for its system', () => {
+  configure({crs: [{crs: 'EPSG:4326', accuracy: {count: '2', unit: 'length-meter'}}]});
+  const en = strip(place.show(['EPSG:4326;35.6976,51.4023', 'osm:way/42'], {lang: 'en'}));
+  assert.equal(en, '35.6976, 51.4023 EPSG:4326 ±2 m · OpenStreetMap way/42');
+  const fa = String(place.show('EPSG:4326;35.6976,51.4023', {lang: 'fa'}));
+  assert.ok(fa.includes('<bdi dir="ltr" class="w-place-coord">۳۵٫۶۹۷۶, ۵۱٫۴۰۲۳</bdi>'), fa);
+  assert.equal(strip(place.show('cafe-1', {titleOf: id => '<b>Café</b>'})), '&lt;b&gt;Café&lt;/b&gt;');
+  assert.equal(String(place.show([])), '<span class="w-none">—</span>');
+});
+ok('place: the field — its own direction, a list a keyboard moves through, a button for the reader\'s position, the value escaped', () => {
+  const html = String(place.edit('s0.at', ['EPSG:4326;1,2'], {lang: 'en', sealed: true}));
+  assert.ok(html.includes('role="combobox"') && html.includes('dir="auto"') && html.includes('role="listbox"') && html.includes('data-place-near'));
+  assert.ok(html.includes('value="{&quot;at&quot;:[&quot;EPSG:4326;1,2&quot;],&quot;read&quot;:null}"'), html);
+  assert.ok(html.includes('w-place-sealed') && html.includes('where a person will be is never sent'));
+  assert.ok(!String(place.edit('x', [], {lang: 'en', label: '"><script>'})).includes('"><script>'));
+});
+
+// the lookup, driven as a person drives it: a page of the least it needs, and sources that count what they are asked
+function fakeField(html) {
+  const ev = {}, mk = (attrs = {}) => ({attrs, value: attrs.value || '', hidden: !!attrs.hidden, innerHTML: '', classList: {contains: c => (attrs.class || '').split(' ').includes(c)},
+    setAttribute(k, v) { this.attrs[k] = String(v); }, getAttribute(k) { return this.attrs[k] ?? null; }, removeAttribute(k) { delete this.attrs[k]; },
+    addEventListener(t, f) { (ev[t] = ev[t] || []).push(f); }, querySelectorAll() { return []; }});
+  const attr = (re) => { const m = re.exec(html); return m ? m[1] : ''; };
+  const input = mk({class: 'w-input w-place-input', value: attr(/class="w-input w-place-input"[^>]*value="([^"]*)"/)});
+  const kept = mk({type: 'hidden', value: attr(/type="hidden" name="[^"]*" value="([^"]*)"/).replace(/&quot;/g, '"')});
+  const list = mk({id: attr(/role="listbox" id="([^"]*)"/), hidden: true}), near = mk({});
+  const box = {matches: s => s === '[data-place]', classList: {contains: () => html.includes('w-place-sealed')},
+    querySelector: s => s === '.w-place-input' ? input : s === '.w-place-list' ? list : s === '[data-place-near]' ? near : s === 'input[type="hidden"]' ? kept : null};
+  return {box, input, list, kept, near, ev};
+}
+const asked = {here: [], far: []};
+const SOURCES = {own: OWN, here: async (q, o) => { asked.here.push([q, o]); return HERE; }, far: async (q, o) => { asked.far.push([q, o]); return FAR; }};
+let lookups = 0;
+await (async () => {
+  const f = fakeField(String(place.edit('s0.at', [], {lang: 'en'})));
+  const api = place.wire(f.box, SOURCES, {lang: 'en'});
+  const got = await api.ask('کاخ');
+  assert.deepEqual(got.map(s => s.source), ['own', 'own', 'here', 'far']);
+  assert.deepEqual(asked.here, [['کاخ', {}]]);
+  assert.deepEqual(asked.far, [['کاخ', {}]]);                     // no position: none was asked for
+  assert.ok(f.list.innerHTML.indexOf('کاخ') < f.list.innerHTML.indexOf('فلسطین'));
+  assert.ok(f.list.innerHTML.includes('© OpenStreetMap contributors'), 'whom the places are from is said');
+  api.near('35.69760,51.40230');                                                 // the reader asked: now, and only now
+  await api.ask('فلسطین');
+  assert.deepEqual(asked.far[1], ['فلسطین', {near: '35.69760,51.40230'}]);
+  const picked = api.pick(0);                                                    // the machine's «فلسطین»; the far one is the same element
+  assert.equal(picked.osm, 'way/42');
+  assert.deepEqual(place.take(place.collect(f.box)).value, ['EPSG:4326;35.6976,51.4023', 'osm:way/42']);
+  lookups++;
+})();
+await (async () => {      // A SEALED FIELD: where a person will be is looked up here alone — the place service is never asked
+  const before = asked.far.length;
+  const f = fakeField(String(place.edit('s1.at', [], {lang: 'en', sealed: true})));
+  const api = place.wire(f.box, SOURCES, {lang: 'en', sealed: true});
+  api.near('35.7,51.4');
+  const got = await api.ask('فلسطین');
+  assert.equal(asked.far.length, before, 'a sealed field asked beyond the machine');
+  assert.deepEqual(got.map(s => s.source), ['here']);
+  lookups++;
+})();
+await (async () => {      // OFFLINE: a host that does not answer leaves the garden's own standing
+  const f = fakeField(String(place.edit('s2.at', [], {lang: 'en'})));
+  const api = place.wire(f.box, {own: OWN, here: async () => { throw new Error('offline'); }, far: async () => { throw new Error('offline'); }}, {lang: 'en'});
+  assert.deepEqual((await api.ask('کاخ')).map(s => s.at[0]), ['kakh', 'bookshop']);
+  lookups++;
+})();
+ok('place: the lookup — own first, then the machine\'s, then beyond; the reader\'s position only once given; a sealed field never asks beyond the machine; offline, the garden\'s own', () => {
+  assert.equal(lookups, 3);
+});
+console.log(`PASS: widgets — ${n} groups of checks: safe, settings, locale, number, money, moment in ten calendars, text, name, choice, being, exact, a repetition and a form's value, direction, a place.`);

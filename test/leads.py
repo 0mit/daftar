@@ -225,6 +225,14 @@ A machine.
           and 'looked-at' in r3.out and 'rows-for-hives' in r3.out, r3.out[-800:])
     check("a reading writes nothing", grow.run('git', 'status', '--porcelain', cwd=G).out.strip() == '',
           grow.run('git', 'status', '--porcelain', cwd=G).out)
+    # how long before it falls due an obligation is a lead: its notice, a duration the law declares, in days — in
+    # any of the law's units of time and with a decimal count, as the law writes a count
+    sys.path.insert(0, os.path.join(ROOT, 'bin'))
+    import stale as dmstale  # noqa: E402
+    got = [dmstale.notice_days({'of': 'time', 'measure': {'count': c, 'unit': u}})
+           for c, u in (('48', 'h'), ('1', 'a_j'), ('1.5', 'd'), ('7', 'd'), ('90', 'min'), ('2', 'm'))]
+    check("leads: a notice of 48 h, one julian year or 1.5 d is 2, 365 and 2 days, as one of 7 d is 7 and of 90 min is 0 "
+          "— and one that is no duration (2 m) falls back to the 90 days of no notice", got == [2, 365, 2, 7, 0, 90], got)
 except Exception as e:  # noqa: BLE001
     import traceback
     traceback.print_exc()

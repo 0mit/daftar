@@ -122,21 +122,24 @@ class Knowledge:
             if path and not os.path.isfile(path):          # a table of the law this tree carries none of (a garden in
                 mine = os.path.join(os.path.dirname(HERE), d["file"])   # today's words, read by this release's law):
                 path = mine if os.path.isfile(mine) else path           # the release's own, beside this tool
+            paths = [path]
             if (self.schemes.get(registry) or {}).get("holding") == "fetched":     # this machine's newest copy of the
-                import fetch as dmfetch                                            # provider's own, else the release's
-                got = dmfetch.fetched(registry)
+                import fetch as dmfetch                                            # provider's own — of each part, for a
+                got = dmfetch.current(registry)                                    # scheme in parts — else the release's
                 if got:
-                    path = got[0][2]
+                    paths = got
                 elif not path or not os.path.isfile(path):
                     raise KeyError("%s is fetched from its provider, and this machine has fetched none: python3 "
                                    "bin/fetch.py %s" % (registry, registry))
             elif not path:
                 raise KeyError("the registry %s names no file, and is no scheme fetched from its provider" % registry)
-            with open(path, encoding="utf-8") as fh:
-                if d.get("format") == "yaml":
-                    self._rows[registry] = [r for r in (dmparse.loads(fh.read()) or []) if isinstance(r, dict)]
-                else:
-                    self._rows[registry] = list(csv.DictReader(fh, delimiter="\t"))
+            self._rows[registry] = []
+            for path in paths:
+                with open(path, encoding="utf-8") as fh:
+                    if d.get("format") == "yaml":
+                        self._rows[registry] += [r for r in (dmparse.loads(fh.read()) or []) if isinstance(r, dict)]
+                    else:
+                        self._rows[registry] += list(csv.DictReader(fh, delimiter="\t"))
         return self._rows[registry]
 
     def held(self, scheme):

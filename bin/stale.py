@@ -141,25 +141,23 @@ def resolve_here(p):
         return None
 
 
-DAYS_PER = {'day': 1, 'minute': 1 / 1440, 'second': 1 / 86400, 'millisecond': 1 / 86_400_000,
-            'd': 1, 'min': 1 / 1440, 's': 1 / 86400, 'ms': 1 / 86_400_000}       # and by their UCUM codes
-
-
 def notice_days(notice, default=90):
     """An extent on time -> how many days of notice, for comparing against a countdown in days.
 
     ONLY A LENGTH IS MEANINGFUL HERE. A notice bounded by `from`/`to` is a region of the calendar, not an
     amount of warning, so it is not converted and the default stands rather than a number being invented
-    from it. The units it can convert are the ones `units` declares, which is why there is no month: a
-    month is 28 to 31 days and `extent_form.not_a_calendar_bucket` says so at length.
+    from it. The units it converts are the ones the law declares for a duration, converted exactly
+    (bin/units.py), a count as the law writes one, which is why there is no month: a month is 28 to 31 days
+    and `extent_form.not_a_calendar_bucket` says so at length. Rounded to the nearest day, a half to the even.
     """
     m = (notice or {}).get('measure') if isinstance(notice, dict) else None
-    if not isinstance(m, dict) or m.get('unit') not in DAYS_PER:
+    if not isinstance(m, dict):
         return default
     try:
-        return max(0, int(round(int(m['count']) * DAYS_PER[m['unit']])))
-    except (TypeError, ValueError):
+        days = dmunits.convert(str(m.get('count')), str(m.get('unit')), 'd')
+    except (TypeError, ValueError):      # no count, or a unit that is no duration the law declares (a length, nothing)
         return default
+    return max(0, int(round(days)))
 
 
 def expiry_terms():
@@ -1014,14 +1012,9 @@ def due_entries(fm, term, decl, today=None, notes=None):
 # instruction to the reader's terminal: `\e[2A\e[2K` climbs back over the line above and writes a debt the other way
 # round, `\e[8m` conceals every line after it, `\r` writes over the start of its own line. The gate refuses them in a
 # bean; a working tree, or a garden older than that refusal, may still hold them — so every value a reader here shows
-# passes through ONE escaper, the one bin/propose.py prints a proposal with: each such character as its escape.
-_CTRL = re.compile('[\x00-\x1f\x7f-\x9f\u2028\u2029]')
-
-
-def esc(s):
-    """A string as it may be printed: every character `_CTRL` names as `\\xNN` or `\\uNNNN`, the rest as it is."""
-    return _CTRL.sub(lambda m: (f"\\x{ord(m.group(0)):02x}" if ord(m.group(0)) < 0x100 else
-                                f"\\u{ord(m.group(0)):04x}"), str(s))
+# passes through ONE escaper, bin/parse.py's, which bin/propose.py prints a proposal with: each such character as its
+# escape (`\xNN` or `\uNNNN`), the rest as it is.
+esc = dmparse.escaped
 
 
 def say(line):
