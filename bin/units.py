@@ -472,10 +472,12 @@ def judge(scheme, code, value):
                 f"its {a} {v} — {w}" for a, (v, _t, w) in through(scheme, code).items()))
     else:
         said = {'': (code, target(cross(scheme, code)[0]))}
-    on_line = any('line' in t for _v, t in said.values())   # a number on a line is a position on it: a temperature read
+    # A LINE WINS: read through axes, a line named on one makes the value a position on it, and a quantity or a kind
+    # named on another says what is placed there — a temperature read as a number, a concentration read as 1+, 2+
+    on_line = any('line' in t for _v, t in said.values())
     for axis, (v, t) in said.items():
         on = f"{scheme}:{code}" + (f" (its {axis} {v})" if axis else '')
-        if t.get('shape') == 'quantity' and on_line:
+        if on_line and axis and ('quantity' in t or t.get('shape') == 'quantity'):
             continue
         if 'unit' in t or 'quantity' in t or t.get('shape') == 'quantity':
             if not (isinstance(value, dict) and 'unit' in value) or quantity_why(L, value):

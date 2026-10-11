@@ -440,10 +440,11 @@ VOCAB = ('---\nnamespaces: []\nschemes:\n'
 EXTRACTS = {
     'gauges.tsv': 'code\tname\treads\tshows\noven\tthe oven\'s thermometer\theat\tnumber\n'
                   'scale\tthe platform scale\tweight\tnumber\npress\tthe press\'s stage\tstage\trank\n'
-                  'log\tthe press\'s log\tremark\twords\ndoor\tthe oven\'s door\tajar\twords\n',
+                  'log\tthe press\'s log\tremark\twords\ndoor\tthe oven\'s door\tajar\twords\n'
+                  'strip\tthe dough\'s test strip\tweight\trank\n',
     'units-gauges.tsv': 'axis\tcode\tquantity\tline\tshape\twhy\nreads\theat\t\ttemperature\t\t\n'
                         'reads\tweight\tmass\t\t\t\nreads\tstage\t\tordinal\t\t\nshows\tnumber\t\t\tquantity\t\n'
-                        'shows\trank\t\t\tposition\t\nreads\tremark\t\t\t\ta remark: nothing measured\n'
+                        'shows\trank\t\tordinal\t\t\nreads\tremark\t\t\t\ta remark: nothing measured\n'
                         'shows\twords\t\t\ttext\t\n',
     'weighings.tsv': 'code\tname\nWT0\tkilograms, whole\nWT2\tkilograms, two places\nWT3\tkilograms, three places\n',
     'units-weighings.tsv': 'code\tunit\tdecimals\tvacant\twhy\nWTn\tkg\tn\t\t\nTARE\t\t\tuniversal\t'
@@ -471,7 +472,8 @@ cases = {'oven-reading': ['gauges', 'oven', 'C:21.5'], 'oven-difference': ['gaug
          'scale-kg': ['gauges', 'scale', {'count': '12.5', 'unit': 'kg'}], 'scale-newton': ['gauges', 'scale',
          {'count': '120', 'unit': 'N'}], 'press-stage': ['gauges', 'press', 'ordinal:3'],
          'press-text': ['gauges', 'press', 'the third'], 'log-text': ['gauges', 'log', 'the oven ran hot'],
-         'log-number': ['gauges', 'log', {'count': '3', 'unit': '{item}'}]}
+         'log-number': ['gauges', 'log', {'count': '3', 'unit': '{item}'}], 'strip-rank': ['gauges', 'strip', 'ordinal:2'],
+         'strip-mass': ['gauges', 'strip', {'count': '2', 'unit': 'kg'}]}
 j = grow.run(PY, '-c', JUDGE, json.dumps(cases), cwd=G)
 got = json.loads(j.stdout) if j.returncode == 0 and j.stdout.strip() else {}
 code = grow.run(PY, 'bin/units.py', '--code', 'gauges:oven', cwd=G)
@@ -491,6 +493,9 @@ check("...an axis value crossing to nothing is passed over and the other axis st
       got.get('log-text') == '' and 'is text' in got.get('log-number', '')
       and "writes 'ajar' on its axis reads, and no row of its crossing names it" in got.get('door', '')
       and got.get('against') == {'reads': ['ajar']}, got)
+check("...and a line named on one axis wins over a kind named on another: the strip's mass read as a rank is a position "
+      "on the ordinal line, never a mass", got.get('strip-rank') == '' and 'is a position' in got.get('strip-mass', ''),
+      got)
 w = [grow.run(PY, 'bin/units.py', *a, cwd=G) for a in (('001250', 'weighings:WT3'), ('1.25', 'kg', 'weighings'),
                                                         ('12', 'weighings:WT0'), ('1.25', 'weighings:WT2'),
                                                         ('1', 'weighings:TARE'))]

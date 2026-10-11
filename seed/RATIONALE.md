@@ -5127,9 +5127,10 @@ and does not take the provider's: a month an invoice bills is a cell of the cale
 duration its provider defines; a temperature read is a position on its scale (`lines[temperature]`), never a quantity;
 and a code whose unit the law writes under another kind than the provider's is not crossed, since read through the
 shared unit it would change its kind. Where a list says what a code measures on one axis and how its result is written
-on another (LOINC's property and scale), a code is read through both, and a line named on one wins over a number named
-on the other: a body temperature reported as a number is a reading on its scale, a position, as the law has every
-temperature read. A factor stays the unit's (units.yaml): a crossing names a unit, never a size, so a conversion has one
+on another (LOINC's property and scale), a code is read through both, and a line named on one wins over a number or a
+kind named on the other, which then says what is placed on the line: a body temperature reported as a number is a
+reading on its scale, as the law has every temperature read, and a concentration reported as 1+, 2+ is a position on
+the ordinal line, as the law has every ordinal judgment. A factor stays the unit's (units.yaml): a crossing names a unit, never a size, so a conversion has one
 source.
 
 ## core/law/registries.yaml: knowledge_schemes[unece-rec20]
