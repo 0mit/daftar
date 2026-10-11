@@ -13,8 +13,10 @@ never stored, and handed to its renderer (`view_queue.js`, `view_timeline.js`, `
 ONE QUESTION SCOPES EACH. `may(act, bean, positions=None)` answers whether the reader may read (or write) a being, or
 some of its parts: the host's own (view_serve.Host.may), the offline report's (the gardener's, who drew the report). A
 being the reader may not read is not named — a lead about it is left out, a debt in an agreement they may not read is
-not netted, a party they may not read is drawn as `someone` — and a held value is sent only where `held` says it may be:
-by the host that holds its store, to a reader who may read that statement (view_serve). The report sends none.
+not netted, a party they may not read is drawn as `someone`; the machine that keeps a held value and the gardener
+are named, and a default's payer given their title, only to a reader who may read them (what a bean they may read
+states of another is its own, as on the rest of the served page) — and a held value is sent only where `held` says it
+may be: by the host that holds its store, to a reader who may read that statement (view_serve). The report sends none.
 
 THE LAW GIVES EACH FORM. A sheet carries the rows of the verbs it shows — their roles and the shape that fills each,
 their qualifiers, what is required, the default the row derives — so a widget is chosen by shape in the browser and no
@@ -325,7 +327,9 @@ def sheet(bid, may, held=None):
         if 'held' in r:
             sid = r.get('id')
             value = held(bid, sid, r) if held and isinstance(sid, str) else None
-            out['held'] = {'host': held_host(r['held']), 'while': r.get('while'), 'here': value is not None}
+            host = held_host(r['held'])
+            host = host if host and may('read', host) else None   # else "kept on a machine this page does not name"
+            out['held'] = {'host': host, 'while': r.get('while'), 'here': value is not None}
             if value is not None:
                 out['roles'] = value
         else:
@@ -342,7 +346,7 @@ def sheet(bid, may, held=None):
             if isinstance(x, str) and x in by_id and by_id[x] != k:
                 dependents.setdefault(by_id[x], []).append((k, v, r))
                 nested.add(k)
-    derived = defaults_of(bid)
+    derived = defaults_of(bid, may)
     rows = []
     for f in verbs_shown:
         sts = []
@@ -365,10 +369,11 @@ def sheet(bid, may, held=None):
             'statements': sorted(by_id), 'new': False}
 
 
-def defaults_of(bid):
+def defaults_of(bid, may=None):
     """{statement id: [default]} — what the law derives beside a statement where nothing is written, as the reading that
     applies it says: a payment bin/ledger.py reads as borne by its payer alone carries the default of the verb whose
-    default fills its `by` from the statement it is `of` (`bear`: whoever paid bears it, alone), in the row's words."""
+    default fills its `by` from the statement it is `of` (`bear`: whoever paid bears it, alone), in the row's words. The
+    payer is the payment's own word; their title is sent only where `may` lets the reader read them."""
     L = vm.CORE.L
     w = next((v for v, row in sorted(L.verbs.items()) if isinstance(row.get('default'), dict)
               and isinstance(row['default'].get('fill'), dict) and isinstance(row['default']['fill'].get('by'), dict)
@@ -382,8 +387,9 @@ def defaults_of(bid):
         for t in ag['transactions']:
             payers = [x['by'] for x in t.get('paid') or []]
             if t.get('borne_by_payer') and len(payers) == 1:
-                out[t['id']] = [{'verb': w, 'says': str(d.get('says') or ''), 'by': payers[0], 'title': title_of(payers[0]),
-                                 'alone': bool(d.get('alone'))}]
+                shown = may is None or may('read', payers[0])
+                out[t['id']] = [{'verb': w, 'says': str(d.get('says') or ''), 'by': payers[0],
+                                 'title': title_of(payers[0]) if shown else None, 'alone': bool(d.get('alone'))}]
     return out
 
 
@@ -559,9 +565,13 @@ def scoped(host, user, keep=None):
         e = rec.get('entry') if isinstance(rec, dict) and rec.get('key') == sid else None
         return {k: x for k, x in e.items() if k != 'while'} if isinstance(e, dict) else None
     p = page(may, u.get('bean'), held, keep)
+    g = p['settings']['garden']
     for k in ('lang', 'calendar'):
         if isinstance(u.get(k), str) and u[k]:
-            p['settings']['garden'][k] = u[k]
+            g[k] = u[k]
+    g['me'] = u.get('bean') or ''
+    if g.get('gardener') and not may('read', g['gardener']):   # the gardener too is named only to whom may read them
+        g['gardener'] = ''
     kept[key] = p
     return p
 

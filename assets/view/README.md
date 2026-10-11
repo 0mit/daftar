@@ -190,10 +190,12 @@ the offline report carries none.
 (`h```, `mount`; a position a page computes is a data attribute `mount` sets, never a style attribute) with every value
 through its widget; a host that serves files loads them, and the widgets as the modules they are
 (`window.daftarWidgets`). The page of one file — the report and `view serve`'s page — carries the widgets written into
-one classic script (`lib/view_widgets.py`) and `lib/view_engraved.css`. `view report --lang <tag>` draws the page in a
-reader's language, its direction CLDR's for the language's script. `test/view_handplace.py` holds the readings to
-the tools' own, the write path to one commit, and the pages in Chromium; `test/bidi.py` reads them as they land on the
-screen, right to left and left to right.
+one classic script (`lib/view_widgets.py`) with the renderers, `view_report.ENGRAVED_SCRIPT`, one of the page's own
+scripts (`SCRIPTS`, below: allowed by its hash, as every other), and `lib/view_engraved.css` in the page's style.
+`view report --lang <tag>` draws the page in a reader's language, its direction CLDR's for the language's script.
+`test/view_handplace.py` holds the readings to the tools' own, the write path to one commit, and the pages in Chromium —
+the served one under its policy, a sheet's Save from it; `test/bidi.py` reads them as they land on the screen, right to
+left and left to right.
 
 ## Live values, and the monitors they come from
 

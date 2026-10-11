@@ -24,12 +24,15 @@ a module. Then:
                     and the gate passes it; a refused Save keeps nothing, its message at its fact; the title edited by
                     the gardener, refused to a reader with no grant, written by one a `cover: {parts: [title]}` opens it
                     to, and nothing else of the being; a new being minted from an empty sheet; a drawing's form of a verb
-                    with its presets; a held value changed in the Save, sealed, the commit keeping only the pointer
+                    with its presets; a held value changed in the Save, sealed, the commit keeping only the pointer;
+                    no being named to a reader who may not read it (a default's payer, the machine that keeps a held
+                    value, the gardener); and the served page in a browser UNDER ITS POLICY — the renderers allowed by
+                    their hashes (view_report.SCRIPTS), a script injected refused, and a sheet's Save from the page
   part 4, the browser   the report in `en` and in `fa`, and the served page in `fa`: every drawing at every lens, the
                     timeline's three layouts and a sheet opened, in a left-to-right and a right-to-left page, with no
                     exception; and on the served page the sheet's one Edit
 
-Run: python3 test/view_handplace.py   (0 = green; about three minutes: a save waits for its minute to turn)
+Run: python3 test/view_handplace.py   (0 = green; about four minutes: a save waits for its minute to turn)
 """
 import datetime, json, os, re, shutil, socket, subprocess, sys, tempfile
 
@@ -358,6 +361,13 @@ try:
                if x['key'] == 'name#phone'), {})
     check("held: the report — the gardener's page of one file — carries the held phone's place and never its value",
           (ph.get('held') or {}).get('host') == 'laptop' and 'roles' not in ph and '5555550100' not in json.dumps(P), ph)
+    code = ("import json, os, sys; sys.path.insert(0, os.path.join(%r, 'assets', 'view', 'lib')); import view_model as vm, "
+            "view_engraved as ve; p = vm.init(%r); assert not p, p; s = ve.sheet('ali', lambda a, b, p=None: b != 'laptop'); "
+            "print(json.dumps([x['held'] for r in s['rows'] for x in r['statements'] if x['key'] == 'name#phone']))" % (G, G))
+    rc, out = run(PY, '-c', code)
+    check("...and to a reader who may not read the machine that keeps it, the machine is not named: kept on one this page "
+          "does not name", rc == 0 and [(x['host'], x['here']) for x in json.loads(out.strip().splitlines()[-1])] == [(None, False)],
+          out[-600:])
     for lang in ('en', 'fa'):
         rc, out = run(PY, 'assets/view/bin/view.py', 'report', '--out', os.path.join(T, f'page-{lang}.html'), '--lang', lang)
         check(f"view report --lang {lang}: the offline page is written", rc == 0, out[-600:])
@@ -446,6 +456,15 @@ try:
               [n['id'] for n in PR['engraved']['drawings']['money']['nodes'] if n.get('someone')]
               and all(a['from'].startswith('someone-') or a['from'] != 'ali' for a in PR['engraved']['drawings']['money']['arrows']),
               PR['engraved']['drawings']['money'])
+        dflt = lambda p: next((x for r in ((p['engraved']['sheets'].get('loan') or {}).get('rows') or [])
+                               for x in r['statements'] if x['key'] == 'pay#deposit'), {}).get('defaults') or [{}]
+        check("...and nowhere else a being is named: the deposit's default names its payer by the payment's own word, "
+              "and her title only to whom may read her; the gardener only to whom may read the gardener",
+              dflt(PS)[0].get('title') == 'Ali' and dflt(PR)[0].get('by') == 'ali' and dflt(PR)[0].get('title') is None
+              and PS['engraved']['settings']['garden']['gardener'] == 'sam'
+              and PR['engraved']['settings']['garden']['gardener'] == ''
+              and PR['engraved']['settings']['garden']['me'] == READER and '"title": "Ali"' not in json.dumps(PR['engraved']),
+              (dflt(PS), dflt(PR), PR['engraved']['settings']))
         csrf_s, csrf_r = PS['live']['csrf'], PR['live']['csrf']
         h0, j0 = head(), get('log/journal.md')
         st, a = post(SAM, {'bean': 'camera', 'ops': [
@@ -528,6 +547,121 @@ try:
               and '"mode": "refused"' in audit and 'no grant opens the title' in audit, audit[-600:])
         st, PS2, html_sam = page_of(SAM)
         open(os.path.join(T, 'served-fa.html'), 'w', encoding='utf-8').write(html_sam)
+
+        # THE SERVED PAGE, LIVE, UNDER ITS POLICY (view_serve's Content-Security-Policy: the page's scripts by their
+        # hashes, view_report.SCRIPTS, the renderers among them): a proxy in front of the host signs the gardener in and
+        # adds a driver, allowed by its own hash and nothing else of the policy changed, and a script the policy must
+        # refuse; the driver draws every drawing at every lens, opens Ali's sheet, edits her summary and Saves — the
+        # renderers' own fetch, with the page's CSRF token — and the page the Save reloads shows the new head.
+        _browser = next((b for b in ('chromium', 'chromium-browser', 'google-chrome', 'google-chrome-stable') if shutil.which(b)), None)
+        if _browser:
+            import base64, hashlib, http.client, threading
+            from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+            jar = next(x.cookiejar for x in SAM.handlers if isinstance(x, urllib.request.HTTPCookieProcessor))
+            cookie = '; '.join('%s=%s' % (c.name, c.value) for c in jar if c.name == 'view_session')
+            SUMMARY = 'Ali, who shares costs with Sam — and a lens, now'
+            LIVE_DRIVE = """<script>
+window.__errs = []; window.__csp = [];
+window.addEventListener('error', e => window.__errs.push(String(e.message)));
+window.addEventListener('unhandledrejection', e => window.__errs.push('unhandled: ' + e.reason));
+document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.effectiveDirective + ' ' + (e.sample || e.blockedURI)));
+const __kept = v => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('__first') || 'null'); sessionStorage.setItem('__first', JSON.stringify(v)); } catch (e) { return null; } };
+// what the Save's write answered, kept as it comes, before the page the Save reloads replaces this one
+let __wrote; const __written = new Promise(r => { __wrote = r; });
+const __fetch = window.fetch.bind(window);
+window.fetch = (u, o) => __fetch(u, o).then(r => { if (String(u) === '/api/write') r.clone().json().then(j => {
+  const k = __kept() || {}; k.writes = (k.writes || []).concat([r.status]); k.ok = !!j.ok; k.refusals = j.refusals || []; __kept(k); __wrote(k); }); return r; });
+const __wait = ms => new Promise(r => setTimeout(r, ms));
+const __done = o => { const pre = document.createElement('pre'); pre.id = '__result'; pre.textContent = JSON.stringify(o); document.body.appendChild(pre); };
+const __go = (t, l) => { document.querySelector('.tab[data-t="' + t + '"]').click(); document.querySelector('#lens button[data-l="' + l + '"]').click(); };
+window.addEventListener('load', async () => {
+ const first = __kept();
+ if (first && first.saving) { let summary = '';
+  try { __go('ali', 'operate'); summary = (document.querySelector('#view .eg-summary') || {}).textContent || ''; } catch (e) { window.__errs.push('driver: ' + e.message); }
+  return __done({first, errs: window.__errs, csp: window.__csp, summary, injected: window.__injected === 1}); }
+ const out = {}; let editing = false;
+ try {
+  const tabs = [...document.querySelectorAll('.tab')].map(b => b.dataset.t), lens = [...document.querySelectorAll('#lens button')].map(b => b.dataset.l);
+  for (const t of tabs) for (const l of lens) { __go(t, l); out[t + '/' + l] = (document.querySelector('#view').innerText || '').length; }
+  __go('ali', 'operate'); document.querySelector('#view [data-do="edit"]').click();
+  const s = document.querySelector('#view [name="header.summary"]'); editing = !!s; s.value = %s;
+ } catch (e) { window.__errs.push('driver: ' + e.message); }
+ __kept({errs: window.__errs.slice(), csp: window.__csp.slice(), out, editing, injected: window.__injected === 1, saving: true});
+ try { document.querySelector('#view [data-do="save"]').click(); } catch (e) { window.__errs.push('driver: ' + e.message); }
+ const k = (await Promise.race([__written, __wait(60000)])) || __kept(); await __wait(3000);
+ __done({first: k, errs: window.__errs, csp: window.__csp, summary: null, reloaded: false}); });   // a Save refused stays here
+</script>""" % json.dumps(SUMMARY)
+            body = LIVE_DRIVE[len('<script>'):-len('</script>')]
+            dh = "'sha256-%s'" % base64.b64encode(hashlib.sha256(body.encode('utf-8')).digest()).decode()
+            plog = []
+
+            class Proxy(BaseHTTPRequestHandler):
+                def log_message(self, *a):
+                    pass
+
+                def _fwd(self, method):
+                    n = int(self.headers.get('Content-Length') or 0)
+                    data = self.rfile.read(n) if n else None
+                    plog.append((method, self.path))
+                    c = http.client.HTTPConnection('127.0.0.1', PORT, timeout=300)
+                    hd = {'Cookie': cookie}
+                    for k in ('Content-Type', 'X-View-CSRF'):
+                        if self.headers.get(k):
+                            hd[k] = self.headers[k]
+                    c.request(method, self.path, data, hd)
+                    r = c.getresponse()
+                    data, ctype, csp = r.read(), r.getheader('Content-Type') or '', r.getheader('Content-Security-Policy') or ''
+                    if self.path == '/' and ctype.startswith('text/html'):
+                        pg = data.decode('utf-8').replace('<head>', '<head>' + LIVE_DRIVE, 1)
+                        data = pg.replace('<main>', '<main><script>window.__injected = 1</script>', 1).encode('utf-8')
+                        csp = csp.replace('script-src ', 'script-src %s ' % dh, 1)
+                    self.send_response(r.status)
+                    if ctype:
+                        self.send_header('Content-Type', ctype)
+                    if csp:
+                        self.send_header('Content-Security-Policy', csp)
+                    self.send_header('Content-Length', str(len(data)))
+                    self.end_headers()
+                    self.wfile.write(data)
+
+                def do_GET(self):
+                    self._fwd('GET')
+
+                def do_POST(self):
+                    self._fwd('POST')
+            settle(SAM)
+            _ps = socket.socket(); _ps.bind(('127.0.0.1', 0)); PXP = _ps.getsockname()[1]; _ps.close()
+            px = ThreadingHTTPServer(('127.0.0.1', PXP), Proxy)
+            px.daemon_threads = True
+            threading.Thread(target=px.serve_forever, daemon=True).start()
+            h2, j2 = head(), get('log/journal.md')
+            try:
+                r = subprocess.run([_browser, '--headless=new', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=120000',
+                                    '--dump-dom', 'http://127.0.0.1:%d/' % PXP], capture_output=True, text=True,
+                                   encoding='utf-8', errors='replace', timeout=400)
+                m = re.search(r'<pre id="__result">(.*?)</pre>', r.stdout, re.S)
+                import html as _html
+                lv = json.loads(_html.unescape(m.group(1))) if m else {'errs': ['no result: ' + (r.stderr or '')[-300:]]}
+            except (OSError, subprocess.SubprocessError) as e:
+                lv = {'errs': ['the browser did not run: %s' % e]}
+            finally:
+                px.shutdown()
+            f1 = lv.get('first') or {}
+            draws = {k: v for k, v in (f1.get('out') or {}).items() if '/' in k}
+            check("served under its policy, in a browser: every drawing at every lens is drawn by the renderers the policy "
+                  "allows by their hashes, with no error and no script refused but the one injected, which does not run",
+                  not f1.get('errs') and len(draws) == 4 * 5 and all(v > 20 for v in draws.values())
+                  and f1.get('csp') == ['script-src-elem inline'] and f1.get('injected') is False, lv)
+            entry2 = get('log/journal.md')[len(j2):]
+            check("...and a sheet's Save there is the renderers' own write, its CSRF token the page's: one commit, one "
+                  "journal entry, and the page the Save reloads, again under its policy, shows the new head",
+                  f1.get('editing') and f1.get('writes') == [200] and f1.get('ok') is True
+                  and ('POST', '/api/write') in plog and len(run('git', 'log', '--format=%H', f'{h2}..HEAD')[1].split()) == 1
+                  and SUMMARY in get('beans/ali.md') and 'changed the summary' in entry2 and clean()
+                  and lv.get('summary') == SUMMARY and not lv.get('errs') and lv.get('csp') == ['script-src-elem inline'],
+                  (lv, plog[-6:], entry2[-400:]))
+        else:
+            print("NOTE  the served page was not driven in a browser under its policy: none on this machine")
     finally:
         srv.terminate()
         srv.wait(timeout=20)
