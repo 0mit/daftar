@@ -1074,6 +1074,83 @@ check("...and it says why, and refuses to act for a viewer who may view but not 
       "no grant" in _H.may("alice", "field-radio")[1] and _H.may("dave", "hill-pump", act=True) == (False, "this viewer may view but not act"),
       (_H.may("alice", "field-radio"), _H.may("dave", "hill-pump", act=True)))
 
+# A MONITOR'S ANSWER IS BOUNDED (3.6): one deadline for the whole answer, a cap on its size, and no redirect followed — a
+# monitor that drips its answer, floods it or sends the host elsewhere costs a poll seconds, and reaches nothing else.
+
+
+class BadMonitor(BaseHTTPRequestHandler):
+    hits = []
+
+    def log_message(self, *a):
+        pass
+
+    def _out(self, body, code=200, headers=()):
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        for k, v in headers:
+            self.send_header(k, v)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        return body
+
+    def do_GET(self):
+        BadMonitor.hits.append((self.server.server_address[1], self.path))
+        answer = json.dumps({"n": 7, "status": "success", "data": {"resultType": "vector",
+                                                                  "result": [{"metric": {}, "value": [0, "7"]}]}}).encode()
+        try:
+            if self.path.startswith("/drip"):                # the right answer, a byte at a time
+                for i in range(len(self._out(answer))):
+                    self.wfile.write(answer[i:i + 1])
+                    self.wfile.flush()
+                    time.sleep(0.15)
+            elif self.path.startswith("/big"):                # the right answer, padded past any page's need
+                big = answer[:-1] + b', "pad": "' + b"x" * (5 << 20) + b'"}'
+                self.wfile.write(self._out(big))
+            elif self.path.startswith("/away"):               # sent elsewhere
+                self.wfile.write(self._out(b"{}", 302, [("Location", "http://127.0.0.1:%d/elsewhere" % _bp2)]))
+            else:
+                self.wfile.write(self._out(answer))
+        except OSError:
+            pass                                              # the reader went away: that is the point
+
+
+_bp, _bp2 = free_port(), free_port()
+_bad = [ThreadingHTTPServer(("127.0.0.1", p), BadMonitor) for p in (_bp, _bp2)]
+for _b in _bad:
+    _b.daemon_threads = True
+    threading.Thread(target=_b.serve_forever, daemon=True).start()
+_http_a, _prom_a = _vm.adapter("http"), _vm.adapter("prometheus")
+_bv = {"id": "probe-v", "live": "live-value", "query": {"http": "/n", "prometheus": "vector(7)"}}
+
+
+def _timed(f):
+    t0 = time.time()
+    try:
+        r = f()
+    except Exception as e:  # noqa: BLE001
+        r = "raised %s: %s" % (type(e).__name__, e)
+    return r, round(time.time() - t0, 1)
+
+
+_ok7 = (_timed(lambda: _http_a.values("http://127.0.0.1:%d/fine" % _bp, [_bv])),
+        _timed(lambda: _prom_a.values("http://127.0.0.1:%d/fine" % _bp, [_bv])))
+check("(a monitor that answers well is read by both adapters)", [x[0] for x in _ok7] == [{"probe-v": 7.0}] * 2, _ok7)
+_drip = (_timed(lambda: _http_a.values("http://127.0.0.1:%d/drip" % _bp, [_bv])),
+         _timed(lambda: _prom_a.values("http://127.0.0.1:%d/drip" % _bp, [_bv])))
+check("a monitor that drips its answer costs a poll one deadline, not the whole drip, and gives nothing — each adapter",
+      all(x[0] == {"probe-v": None} and x[1] < 8 for x in _drip), _drip)
+_big = _timed(lambda: _http_a.values("http://127.0.0.1:%d/big" % _bp, [_bv]))
+check("a monitor whose answer is larger than any page needs (5 MiB) is not read whole: nothing is taken from it",
+      _big[0] == {"probe-v": None}, _big)
+BadMonitor.hits.clear()
+_away = (_timed(lambda: _http_a.values("http://127.0.0.1:%d/away" % _bp, [_bv])),
+         _timed(lambda: _prom_a.values("http://127.0.0.1:%d/away" % _bp, [_bv])))
+check("a monitor that sends the host elsewhere is not followed: nothing is read, and the other address is never asked",
+      all(x[0] == {"probe-v": None} for x in _away) and not any(p == _bp2 for p, _ in BadMonitor.hits),
+      (_away, BadMonitor.hits))
+for _b in _bad:
+    _b.shutdown()
+
 srv = subprocess.Popen([sys.executable, DMVIEW, "serve", "--config", CFG], cwd=G, stderr=subprocess.PIPE, text=True, encoding="utf-8")
 BASE = "http://127.0.0.1:%d" % _sp_
 for _ in range(80):

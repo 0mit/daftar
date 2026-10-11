@@ -149,6 +149,9 @@ computes a shown number: its path), `check_binding(binding)` and `check_monitor(
 `history(url, binds, selector, hours, step, now)` (what the served page shows), `alerts(settings, beings, binds)`,
 and, where it deploys anything, `bundle(monitor, views, out)`.
 
+A monitor is read within one deadline for its whole answer (5 s; one poll of a Prometheus, 10 s in all), up to 4 MiB,
+and where it was asked: an answer that sends the host elsewhere is not followed (`lib/view_fetch.py`).
+
 ## The sheet
 
 Every drawing is a **sheet**, as a technical drawing is. Its **title block** is made of facts the ledger holds — the page,
