@@ -55,5 +55,8 @@
 .eg-details-map{display:grid;grid-template-columns:max-content 1fr;gap:2px 10px;margin:2px 0 2px 0;margin-inline-start:12px}
 .eg-details-map dt{color:var(--muted,#5a6a7b);font-size:.85em}
 .eg-details-map dd{margin:0}
+.eg-field input,.eg-field textarea,.eg-field select{color:var(--fg,#17202b);background:var(--panel,#fff)}
+.eg-field input::placeholder,.eg-field textarea::placeholder{color:var(--muted,#5a6a7b);font-style:italic}
+.eg-more{margin-block:4px}.eg-more>summary{cursor:pointer;color:var(--muted,#5a6a7b);font-size:.85em}
 .eg-tags{margin:.2em 0 .5em}
 .eg-tag{display:inline-block;padding:1px 8px;border:1px solid var(--line,#cfd8e2);border-radius:10px;font-size:.85em;margin-inline-end:4px}

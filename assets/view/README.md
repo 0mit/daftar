@@ -170,6 +170,15 @@ is read each time it is asked, as the release's tools read it, never computed ag
 on. Absent, the archetype's row says it (`archetypes` `axes`). The renderers ask `widgets/direction.js` where an order
 runs and name every key, glyph and swipe by meaning (`earlier`, `later`, `next`).
 
+**A sheet in its reader's words.** A page calls each fact it names what its gardener calls it (`fields` … `label`), a
+key `details` keeps or a path into one among them; the sheet heads each verb's statements by that word, and names every
+other law word as the reader's language does. A role that is the being itself or a link to another of its statements
+is structure, kept and never shown; a statement another names is said by its words (a step by its walk's); a being by
+its title — where a title is only the bean's id, by what follows it or by its summary's first sentence — and a person
+whose name this host does not hold, as such, never by an id. Edit draws the facts that hold a value and those the verb
+requires, the rest under «more»; a moment written and a step reached are history, shown in the reader's calendar; a new
+move is a step chosen by the walk's words, from now, on the being's course.
+
 **The sheet.** Every being drawn — a lead, an event, a node of a flow, a sheet drawing's own being — opens as a sheet:
 its title and summary, and each verb the page's `fields` names for its kind, its statements in the order the bean holds
 them, each with the statements that take it as their `of` beneath it (a payment with its `bear` shares and the clauses
