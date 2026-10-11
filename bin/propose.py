@@ -670,7 +670,8 @@ def core_make(argv):
         n += 1
         pid = f"{name}-{stamp_min}-{n}"
     dest = os.path.join(out_dir, f"PROPOSAL-{pid}.md")
-    frm = {'garden': own, 'name': name, 'gardener': gardener, 'pin': mf.get('extends')}
+    import check                                # the one reader of a garden's pin (bin/check.py)
+    frm = {'garden': own, 'name': name, 'gardener': gardener, 'pin': check.pin(ROOT)}
     if mf.get('test'):
         frm['test'] = mf['test']
     journal_text = (f"- proposed by: {gardener}, the gardener of {name} (garden {own}), under {under_id}\n"
@@ -759,8 +760,10 @@ def core_analyse(path, as_test=False):
     frm, to = env.get('from') or {}, env.get('to') or {}
     if to.get('garden') != own:
         refusals.append((f"it is for the garden {to.get('garden')}, and this one is {own}", None))
-    if frm.get('pin') != mf.get('extends'):
-        refusals.append((f"it was made in a garden that runs {frm.get('pin')}, and this one runs {mf.get('extends')}: "
+    import check                                # the one reader of a garden's pin (bin/check.py)
+    pin = check.pin(ROOT)
+    if frm.get('pin') != pin:
+        refusals.append((f"it was made in a garden that runs {frm.get('pin')}, and this one runs {pin}: "
                          f"two gardens exchange only while they run the same law", None))
     local = core_local()
     sender = [b for b, (fm, _b, _p) in sorted(local.items()) if fm.get('kind') == 'garden'

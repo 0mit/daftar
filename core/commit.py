@@ -52,6 +52,7 @@ sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import engine, frame, read  # noqa: E402
 from core.law import listed  # noqa: E402
 import journal as dmjournal  # noqa: E402 — the register of the headings the clock wrote
+import check as dmcheck  # noqa: E402 — bin/check.py (bin/ stands first above), the one reader of a garden's pin
 import importlib
 dmpass = importlib.import_module('pass')     # noqa: E402 — the one reader of seed/LANGUAGE, and the one matcher of a path
 
@@ -97,19 +98,6 @@ def statements_of(root, ref, path):
             (verb, roles), = s.items()
             out.append((i, verb, roles))
     return out
-
-
-def pin(root, ref):
-    """GARDEN.md's `extends` at `ref` (`HEAD`, or '' for the index), or ''."""
-    text = git(root, 'show', f"{ref}:{MANIFEST}")
-    if text is None:
-        return ''
-    import parse as dmparse
-    try:
-        fm = read.loads(dmparse.split_front_matter(text)[0] or '') or {}
-    except read.Unread:
-        return ''
-    return str(fm.get('extends') or '') if isinstance(fm, dict) else ''
 
 
 def history(root):
@@ -180,7 +168,7 @@ def findings(root, law, changes=None, garden=None):
                                             f"is written by `bin/save.py` (or bin/journal.py), never typed"))
     said = ' or '.join(sorted(moments)) or 'none: this commit adds no entry'
     adopting = any(p == MANIFEST for _s, p in changes) and bool(RULE_CHANGE.search(entry)) \
-        and pin(root, 'HEAD').startswith('std-vocab@') and pin(root, '').startswith('core@')
+        and dmcheck.pin(root, 'HEAD').startswith('std-vocab@') and dmcheck.pin(root, '').startswith('core@')
     past = history(root) if adopting else set()
     for status, path in changes:
         if not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):

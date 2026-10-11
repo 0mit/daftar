@@ -44,11 +44,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def runs_core(root=ROOT):
     """True in a garden that runs the core (GARDEN.md pins `core@…`, bin/check.py the one reader of the pin)."""
-    try:
-        import check
-        return check.runs_core(check.pin(root))
-    except Exception:
-        return False
+    import check
+    return check.runs_core(check.pin(root))
 
 
 @functools.lru_cache(maxsize=None)

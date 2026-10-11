@@ -589,17 +589,14 @@ def law_of_release(root):
             text = fh.read()
     except OSError:
         return 'std-vocab'
+    # a template, not a manifest: YAML does not read its placeholders (`garden: @@GARDEN@@`), so its line is read
     return 'core' if re.search(r'(?m)^extends:[ \t]*core@', text) else 'std-vocab'
 
 
 def pin_of_garden(root):
-    """GARDEN.md's `extends`, as written, or ''."""
-    try:
-        with open(os.path.join(root, 'GARDEN.md'), encoding='utf-8') as fh:
-            m = MANIFEST_PIN.search(dmparse.split_front_matter(fh.read())[0] or '')
-    except OSError:
-        return ''
-    return m.group(2) if m else ''
+    """GARDEN.md's `extends`, as the gate reads it, or ''."""
+    import check                                   # the one reader of a garden's pin (bin/check.py)
+    return check.pin(root)
 
 
 def law_of_garden(root):

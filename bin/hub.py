@@ -53,6 +53,7 @@ import io, json, os, posixpath, re, shutil, subprocess, sys, tarfile, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the core beside it
 import parse as dmparse   # noqa: E402 — bin/parse.py
+import check as dmcheck   # noqa: E402 — bin/check.py, the one reader of a garden's pin
 import importlib
 dmpass = importlib.import_module('pass')    # noqa: E402 — bin/pass.py (`pass` is a keyword of Python)
 
@@ -152,8 +153,8 @@ class Tree:
         self.commit, self.env = commit, env
         _c, out, _e = git('ls-tree', '-r', '--name-only', commit, env=env)
         self.files = [p for p in out.split('\n') if p]
-        g = _fm(self.text('GARDEN.md')) if 'GARDEN.md' in self.files else None
-        self.core = isinstance(g, dict) and str(g.get('extends') or '').startswith('core@')   # the law this commit pins
+        manifest = self.text('GARDEN.md') if 'GARDEN.md' in self.files else ''
+        self.core = dmcheck.pin_of(manifest).startswith('core@')   # the law this commit pins
 
     def text(self, path):
         c, out, _e = git('show', f'{self.commit}:{path}', env=self.env)

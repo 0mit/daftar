@@ -92,15 +92,6 @@ def _law():
     return _core_law()
 
 
-def runs_core():
-    """True in a garden that runs the core (GARDEN.md pins `core@…`, bin/check.py the one reader of the pin)."""
-    try:
-        import check
-        return check.runs_core(check.pin(ROOT))
-    except Exception:
-        return False
-
-
 def _core_law():
     """(units, quantities) of a garden of the core (v1 part 7): each unit by its UCUM code, its English name and its
     factor attached (core/law/units.yaml and the garden's own `units`), each currency of ISO 4217 a unit of the

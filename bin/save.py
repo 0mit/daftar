@@ -380,7 +380,8 @@ def the_minute_turns():
     minute's and a document this save writes holds this minute's moment as committed, the save waits for the next
     minute, and says so. Moments finer than the minute were let go (33.0, 2026-10-01)."""
     out = lambda *a: (lambda r: r.stdout if r.returncode == 0 else '')(git(*a))
-    if not re.search(r'(?m)^extends:[ \t]*core@', out('show', 'HEAD:GARDEN.md')):
+    import check                                # the one reader of a garden's pin (bin/check.py)
+    if not check.pin(ROOT, 'HEAD').startswith('core@'):
         return
     heads = [ln for ln in out('show', 'HEAD:log/journal.md').split('\n') if ln.startswith('## ')]
     now = lambda: datetime.datetime.now().astimezone().isoformat(timespec='minutes').replace('T', ' ')

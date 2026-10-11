@@ -1002,14 +1002,6 @@ def status(fl, regs):
     return out
 
 
-def _read_front(root, p):
-    try:
-        with open(os.path.join(root, *p.split('/')), encoding='utf-8') as fh:
-            return _front(fh.read())
-    except (OSError, UnicodeDecodeError):
-        return None
-
-
 # ============================== WHO MAY SEE WHAT, AND HOW MUCH HARM IT CAN DO (24.0; step 1, N31) ==============================
 # Two questions every reader asks of a bean, answered here and by no copy: how sensitive it is — DERIVED from what it
 # holds, never stored — and whether an actor may read, write, act on or ratify it, read from the garden's `grants`.
@@ -1425,15 +1417,11 @@ CORE_GRANTS = {'read': 'read', 'write': 'write'}        # today's act -> the cor
                                                         # `ratify:<class>` ratify with its class
 
 
-def pins_core(manifest):
-    """True but for a garden in today's words (`std-vocab@…`), which this release's tools do not read: a garden of the
-    core, and a release's own tree, which pins nothing (bin/check.py `runs_core`)."""
-    e = manifest.get('extends') if isinstance(manifest, dict) else None
-    return not (isinstance(e, str) and e.startswith('std-vocab@'))
-
-
 def runs_core(root=ROOT):
-    return pins_core(_read_front(root, 'GARDEN.md'))
+    """True but for a garden in today's words (`std-vocab@…`), which this release's tools do not read: a garden of the
+    core, and a release's own tree, which pins nothing (bin/check.py, the one reader of the pin)."""
+    import check
+    return check.runs_core(check.pin(root))
 
 
 def core_law(root=ROOT):

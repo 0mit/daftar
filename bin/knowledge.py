@@ -57,11 +57,8 @@ def _words(text):
 
 def _runs_core(root):
     """True in a garden that runs the core (GARDEN.md pins `core@…`, bin/check.py the one reader of the pin)."""
-    try:
-        import check
-        return check.runs_core(check.pin(root))
-    except Exception:
-        return False
+    import check
+    return check.runs_core(check.pin(root))
 
 
 def _core_law(root):
