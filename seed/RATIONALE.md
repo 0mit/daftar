@@ -5310,6 +5310,21 @@ first Save mints the bean's id and writes the file whole, then saves it. A perso
 its title the id, because a person is kept by name only on their own word (rule `consent`), and a sheet opened from a
 page has no such word yet.
 
+## core/law/profiles.yaml: forms.page.attrs.fields
+
+A SHEET IN ITS READER'S WORDS (2026-10-11). A sheet headed each fact by the law's word for it and drew every role of
+every statement as a field: a gardener editing a case met `concern`, `move` and `can`, a picker offering `self`, a
+course by its id, a person kept off git by the id git keeps, and a moment typed as the law writes it — the law's
+internals, where they keep their clients, the step each case is at and what they are to do next. The law's words are the
+page's to name: a `fields` entry may say what the page calls its fact (`label`, in the page's language), and name a path
+into what `details` keeps, so a page names the parts of a record no verb holds yet as its gardener does. What a sheet
+shows of a statement is what a reader keeps of it: a role that is the being itself, or a link to another of its
+statements (the course a move is on, the request a clause asks), is structure, kept as written and never shown; a
+statement another names is said by its own words (a step by its walk's); a being by how the page calls it, and a person
+whose name this host does not hold as a person, never an id; a move made is history, and a new one is a step chosen by
+its walk's words. The alternative — a names layer of a garden's own for its keys — would put a page's words outside the
+page that shows them; a label sits on the page and changes with it.
+
 ## core/law/profiles.yaml: forms.page.attrs.drawings
 
 A PAGE OF READINGS NAMES NO CODE. A drawing module is the garden's code, which the host runs. The four archetypes

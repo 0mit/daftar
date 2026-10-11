@@ -55,9 +55,25 @@ def _bean(bid):
 
 
 def title_of(bid):
+    """How a being is called on a page: its title — and where its title is only its id, or its id and words after it
+    (`<id> — <words>`), the words, else (but for a person) its summary's first sentence: an id is no name a reader
+    reads. A person kept under an opaque id stays it here, and a page calls them by what they are (`opaque`)."""
     b = _bean(bid)
     t = b.header.get('title') if b is not None else None
-    return t if isinstance(t, str) and t.strip() else bid
+    if not (isinstance(t, str) and t.strip()):
+        return bid
+    t = t.strip()
+    if t == bid or t.startswith(bid + ' '):
+        rest = t[len(bid):].strip().lstrip('—–-:').strip()
+        if rest:
+            return rest
+        if b.kind == 'person':                  # a person kept under an opaque id is called by what they are, never by
+            return t                            # words about them; a host that keeps their name gives it (`opaque`)
+        summary = b.header.get('summary')
+        if isinstance(summary, str) and summary.strip():
+            first = re.split(r'(?<=[.!?؟])\s', summary.strip(), maxsplit=1)[0]
+            return first if len(first) <= 80 else first[:79].rstrip() + '…'
+    return t
 
 
 def today():
@@ -380,6 +396,87 @@ def facts_shown(kind):
             if str(e.get('genos')) == str(kind) and e.get('term')]
 
 
+def labels_shown(kind):
+    """What the page calls each fact it names for a kind, in its own words (`fields` … `label`): {fact: label}."""
+    return {str(e.get('term')): str(e['label']) for _i, e in vm.entries_of_view('fields')
+            if str(e.get('genos')) == str(kind) and e.get('term') and isinstance(e.get('label'), str) and e['label'].strip()}
+
+
+def details_at(b, fact):
+    """What `details` keeps at a fact a page names: a key of it, or a path into it (`case.opened_on`),
+    as it is held; None where it keeps nothing there."""
+    node = b.header.get('details')
+    for part in fact.split('.'):
+        if not isinstance(node, dict) or part not in node:
+            return None
+        node = node[part]
+    return node
+
+
+_REF = re.compile(r'([a-z0-9][a-z0-9-]*)#([A-Za-z0-9][A-Za-z0-9_.-]*)')
+
+
+def words_of(b, sid, depth=0):
+    """The words a statement is said by, for a reader who never reads its id: a step's `as`; a clause or a figure by what
+    it is `of` (the words of the statement it is of, or its own words); a course on a walk by the walk's title; any other
+    by its `as` or its note. None where it has no words."""
+    r = next((r for _i, _v, r in b.items if isinstance(r, dict) and r.get('id') == sid), None) if b is not None else None
+    if r is None or depth > 3:
+        return None
+    v = next(v for _i, v, x in b.items if x is r)
+    if v == 'be' and r.get('as') == 'order' and _bean(r.get('at')) is not None:
+        return title_of(r['at'])
+    of = r.get('of')
+    if isinstance(of, str) and of != 'self':
+        if any(isinstance(x, dict) and x.get('id') == of for _i, _v, x in b.items):
+            return words_of(b, of, depth + 1)
+        if v not in ('move', 'concern', 'own') and _bean(of) is None:
+            return of
+    if v == 'step' and isinstance(r.get('as'), str) and r['as'].strip():
+        return r['as']
+    if isinstance(r.get('note'), str) and r['note'].strip():
+        return r['note']
+    return None
+
+
+def said_refs(b, values):
+    """{reference: words} for every statement a value names — `<bean>#<id>` (a walk's step), or an id of a statement of
+    this bean — that has words."""
+    out = {}
+
+    def walk(x):
+        if isinstance(x, list):
+            for y in x:
+                walk(y)
+        elif isinstance(x, dict):
+            for y in x.values():
+                walk(y)
+        elif isinstance(x, str) and x not in out:
+            m = _REF.fullmatch(x)
+            w = words_of(_bean(m.group(1)), m.group(2)) if m else words_of(b, x) if any(
+                isinstance(r, dict) and r.get('id') == x for _i, _v, r in b.items) else None
+            if w:
+                out[x] = w
+    walk(values)
+    return out
+
+
+def courses_of(b):
+    """{course id: {walk, steps: [{ref, says}]}} — each walk the being is on (`be { id, at: <walk>, as: order }`), its
+    steps in their order, each by its own words: what a move of it may reach."""
+    out = {}
+    for _i, v, r in b.items:
+        if v == 'be' and isinstance(r, dict) and r.get('as') == 'order' and isinstance(r.get('id'), str):
+            w = _bean(r.get('at'))
+            if w is None:
+                continue
+            steps = [{'ref': f"{r['at']}#{x['id']}", 'says': str(x.get('as') or x['id'])}
+                     for _j, sv, x in w.items if sv == 'step' and isinstance(x, dict) and isinstance(x.get('id'), str)]
+            if steps:
+                out[r['id']] = {'walk': r['at'], 'title': title_of(r['at']), 'steps': steps}
+    return out
+
+
 def sheet(bid, may, held=None):
     """One being as its sheet shows it: its header facts, then each verb the page's `fields` names for its kind, its
     statements of that verb in the order the bean holds them, each with the statements that take it as their `of`
@@ -460,11 +557,14 @@ def sheet(bid, may, held=None):
     header = {h: b.header.get(h) for h in HEADER if h in [f for f, _l in shown] or h == 'title'}
     forms = sorted({s['form'] for v in verbs for s in list(verb_row(v)['roles'].values()) + list(verb_row(v)['qualifiers'].values())
                     if s.get('form')})
+    details = {f: details_at(b, f) for f, _l in shown if f not in L.verbs and f not in HEADER}
     return {'bean': bid, 'kind': b.kind, 'title': title_of(bid), 'forms': {f: form_def(f, b) for f in forms},
             'header': {h: {'value': x, 'may': may_part(h)} for h, x in header.items()},
-            'details': {f: (b.header.get('details') or {}).get(f) for f, _l in shown
-                        if f not in L.verbs and f not in HEADER and isinstance(b.header.get('details'), dict)
-                        and f in b.header['details']},
+            'details': {f: x for f, x in details.items() if x is not None},
+            'labels': labels_shown(b.kind),
+            'said': said_refs(b, [s.get('roles') for r in rows for s in r['statements']]
+                              + [d.get('roles') for r in rows for s in r['statements'] for d in s['dependents']]),
+            'courses': courses_of(b),
             'rows': rows, 'verbs': {v: verb_row(v) for v in verbs}, 'may_write': whole_write,
             'statements': sorted(by_id), 'new': False}
 
@@ -673,7 +773,11 @@ def page(may, reader, held=None, keep=None):
         if s is not None:
             out['sheets'][bid] = s
     # THE BEINGS A ROLE MAY NAME: every bean the reader may read, by its title — what a sheet's picker offers
-    out['beings'] = [{'id': bid, 'title': title_of(bid), 'kind': b.kind} for bid, b in sorted(vm.CORE.G.beans.items())
+    # a person kept under an opaque id whose name this host does not hold is `opaque`: the page calls them by what they
+    # are, never by the id
+    out['beings'] = [dict({'id': bid, 'title': title_of(bid), 'kind': b.kind},
+                          **({'opaque': True} if b.kind == 'person' and title_of(bid) == bid else {}))
+                     for bid, b in sorted(vm.CORE.G.beans.items())
                      if not b.unread and os.path.basename(os.path.dirname(b.path or '')) == 'beans' and may('read', bid)]
     return out
 

@@ -27,6 +27,20 @@
     var editing = false, n = 0, fo = {names: (t.E.names || {}).forms || {}};   // a form's attributes in the reader's language
     var mayAny = data.may_write || data.rows.some(function (r) { return r.may_add || r.statements.some(function (s) { return s.may; }); })
       || Object.keys(data.header || {}).some(function (k) { return data.header[k].may; });
+    var said = data.said || {}, labels = data.labels || {}, courses = data.courses || {};
+
+    // THE PAGE'S WORD FOR A FACT (its `fields` … `label`, in the page's language), else the law's word as the names layer
+    // names it in the reader's language, else the law's own
+    function word(group, x) { return t.name(group, x); }
+    function heading(verb) { return labels[verb] || word('verbs', verb); }
+    // A ROLE THAT IS STRUCTURE, NOT A FACT A READER KEEPS: the being itself (`self`), or a link to another statement of
+    // this being (a clause to what it asks, a move to the course it is on). Kept as written, never shown, never edited.
+    function structural(v) {
+      var local = function (x) { return typeof x === 'string' && (x === 'self' || (data.statements || []).indexOf(x) >= 0); };
+      return Array.isArray(v) ? v.length > 0 && v.every(local) : local(v);
+    }
+    function showRole(v, spec) { return spec.form && (data.forms || {})[spec.form] ? shown(v, spec) : root.daftarEngraved.show(t, v, spec, {said: said}); }
+    var DAY = /^\d{4}-\d{2}-\d{2}$/;
 
     function label(verb, k) {
       var row = data.verbs[verb] || {roles: {}, qualifiers: {}};
@@ -45,9 +59,10 @@
     }
     function rolesOf(verb, roles) {
       var row = data.verbs[verb] || {roles: {}, qualifiers: {}}, specs = Object.assign({}, row.roles, row.qualifiers);
-      var keys = Object.keys(specs).filter(function (k) { return roles && k in roles; }).concat(BESIDE.filter(function (k) { return roles && k in roles; }));
+      var keys = Object.keys(specs).filter(function (k) { return roles && k in roles; }).concat(BESIDE.filter(function (k) { return roles && k in roles; }))
+        .filter(function (k) { return !structural(roles[k]); });
       return t.join(keys.map(function (k) {
-        return h`<span class="eg-role" data-role="${k}"><span class="eg-role-name">${label(verb, k)}</span> ${shown(roles[k], specs[k] || {shape: ['text']})}</span>`;
+        return h`<span class="eg-role" data-role="${k}"><span class="eg-role-name">${label(verb, k)}</span> ${showRole(roles[k], specs[k] || {shape: ['text']})}</span>`;
       }), ' ');
     }
     function readOne(s) {
@@ -55,40 +70,48 @@
       return h`<li class="eg-statement${s.held ? ' eg-sealed' : ''}" data-fact="${s.key}">
         <div class="eg-roles">${s.roles ? rolesOf(s.verb, s.roles) : ''} ${held}</div>${known(s)}
         ${(s.defaults || []).map(function (d) {
-          return h`<div class="eg-default">${t.name('verbs', d.verb)}: ${w.being.show(d.by, d.title || d.by, {action: 'open'})} — ${t.say('sheet-default', {says: d.says})}</div>`; })}
+          return h`<div class="eg-default">${heading(d.verb)}: ${w.being.show(d.by, t.titleOf(d.by) || d.title || d.by, {action: 'open'})} — ${t.say('sheet-default', {says: d.says})}</div>`; })}
         ${(s.dependents || []).length ? h`<ol class="eg-dependents">${s.dependents.map(function (d) {
-          return h`<li class="eg-dependent" data-fact="${d.key}"><span class="eg-verb">${t.name('verbs', d.verb)}</span> ${d.roles ? rolesOf(d.verb, d.roles) : ''}${known(d)}</li>`;
+          return h`<li class="eg-dependent" data-fact="${d.key}"><span class="eg-verb">${heading(d.verb)}</span> ${d.roles ? rolesOf(d.verb, d.roles) : ''}${known(d)}</li>`;
         })}</ol>` : ''}</li>`;
     }
 
     /* ---------------- editing: a widget per role, by its shape ---------------- */
     function nameOf(prefix, role) { return prefix + '.' + role; }
+    // A FIELD FOR EACH FACT THE READER KEEPS, by its shape: what holds a value and what the verb requires are drawn, the
+    // rest waits under «more»; what is structure (`structural`) and what is history (a moment written, a step a move
+    // reached) is shown as it is and kept as written — never an id, never a moment typed as the law writes it
     function editor(verb, roles, prefix, may) {
       var row = data.verbs[verb] || {roles: {}, qualifiers: {}, required: []}, specs = Object.assign({}, row.roles, row.qualifiers);
-      var keys = Object.keys(specs).concat(BESIDE);
-      return t.join(keys.map(function (k) {
+      var keys = Object.keys(specs).concat(BESIDE).filter(function (k) { return !(roles && k in roles && structural(roles[k])); });
+      function field(k) {
         var spec = specs[k] || {shape: ['text']}, v = roles ? roles[k] : undefined, shapes = spec.shape || ['text'];
         var req = (row.required || []).indexOf(k) >= 0, nm = nameOf(prefix, k), input;
-        if (!may) return v === undefined ? '' : h`<span class="eg-role"><span class="eg-role-name">${label(verb, k)}</span> ${shown(v, spec)}</span>`;
+        var asIs = h`<span class="eg-role" data-role="${k}" data-kept=""><span class="eg-role-name">${label(verb, k)}</span> ${showRole(v, spec)}</span>`;
+        if (!may) return v === undefined ? '' : asIs;
         var def = shapes.indexOf('form') >= 0 && spec.form && (data.forms || {})[spec.form];
+        if (!def && shapes.indexOf('position') >= 0 && v !== undefined && !(typeof v === 'string' && DAY.test(v))) return asIs;
         if (def) {                                  // a form's value, drawn by its entries (widgets/form.js)
           input = spec.many === 'true'
             ? t.join((Array.isArray(v) ? v : []).concat([{}]).map(function (e, i) { return h`<span class="eg-form-entry">${w.form.edit(nm + '.' + i, e, def, fo)}</span>`; }), '')
             : w.form.edit(nm, v, def, fo);
+        } else if (shapes.indexOf('being') >= 0 && (v === undefined || typeof v === 'string') && spec.many !== 'true') {
+          var rows = (t.E.beings || []).filter(function (b) { return !spec.kind || [].concat(spec.kind).indexOf(b.kind) >= 0; })
+            .map(function (b) { return {value: b.id, label: b.opaque ? t.say('being-opaque') : b.title || b.id}; });
+          [['theone', t.say('being-theone')], ['unknown', t.say('sheet-unknown')]].forEach(function (x) { rows.push({value: x[0], label: x[1]}); });
+          if (v && !rows.some(function (r) { return r.value === v; })) rows.push({value: v, label: t.titleOf(v) || t.say('being-opaque')});
+          input = w.choice.edit(nm, v || '', rows, {none: '—'});
         } else if (spec.many === 'true' || Array.isArray(v)) {
+          if (v !== undefined && (shapes.indexOf('being') >= 0 || shapes.indexOf('statement') >= 0)) return asIs;
           input = w.name.edit(nm, Array.isArray(v) ? v.join(', ') : (v || ''));
         } else if (shapes.indexOf('quantity') >= 0 && (v === undefined || (v && typeof v === 'object'))) {
           input = h`${w.number.edit(nm + '.count', v ? v.count : '')} ${w.name.edit(nm + '.unit', v ? v.unit : '')}`;
-        } else if (shapes.indexOf('being') >= 0 && (v === undefined || typeof v === 'string')) {
-          var rows = (t.E.beings || []).filter(function (b) { return !spec.kind || [].concat(spec.kind).indexOf(b.kind) >= 0; })
-            .map(function (b) { return {value: b.id, label: b.title || b.id}; });
-          ['self', 'theone', 'unknown'].concat(v ? [v] : []).forEach(function (x) { if (!rows.some(function (r) { return r.value === x; })) rows.push({value: x, label: x}); });
-          input = w.choice.edit(nm, v || '', rows, {none: '—'});
         } else if (shapes.indexOf('statement') >= 0 && (v === undefined || typeof v === 'string') && shapes.length === 1) {
-          input = w.choice.edit(nm, v || '', (data.statements || []).concat(v && data.statements.indexOf(v) < 0 ? [v] : []), {none: '—'});
+          if (v !== undefined) return asIs;
+          input = w.choice.edit(nm, '', (data.statements || []).map(function (x) { return {value: x, label: said[x] || x}; }), {none: '—'});
         } else if (shapes.indexOf('row') >= 0 && spec.rows && (v === undefined || spec.rows.indexOf(v) >= 0)) {
           input = w.choice.edit(nm, v || '', spec.rows, {none: '—'});
-        } else if (shapes.indexOf('position') >= 0 && (v === undefined || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)))) {
+        } else if (shapes.indexOf('position') >= 0) {
           input = w.moment.edit(nm, v || '');
         } else if (shapes.indexOf('form') >= 0 && v && typeof v === 'object') {
           input = w.name.edit(nm + '.json', JSON.stringify(v));
@@ -98,17 +121,44 @@
           input = w.name.edit(nm, typeof v === 'string' ? v : v === undefined ? '' : JSON.stringify(v));
         }
         return h`<label class="eg-field${req ? ' eg-req' : ''}" data-role="${k}"><span class="eg-role-name">${label(verb, k)}${req ? h` <span class="eg-req-word">(${t.say('sheet-required')})</span>` : ''}</span> ${input}<span class="eg-err" data-err="${nm}"></span></label>`;
-      }), '');
+      }
+      var main = keys.filter(function (k) { return (roles && roles[k] !== undefined && roles[k] !== '') || (row.required || []).indexOf(k) >= 0; });
+      var more = keys.filter(function (k) { return main.indexOf(k) < 0; });
+      // a statement holding nothing but its structure (a clause not yet given a day) offers what it may hold, open
+      if (!main.length) return h`${t.join(more.map(field), '')}`;
+      return h`${t.join(main.map(field), '')}${may && more.length ? h`<details class="eg-more"><summary>${t.say('sheet-more')}</summary>${t.join(more.map(field), '')}</details>` : ''}`;
+    }
+    // what a statement keeps as written whatever the fields say: its structure, and what is shown as it is
+    function keptOf(verb, roles) {
+      var row = data.verbs[verb] || {roles: {}, qualifiers: {}}, specs = Object.assign({}, row.roles, row.qualifiers), out = {};
+      Object.keys(roles || {}).forEach(function (k) {
+        var v = roles[k], shapes = (specs[k] || {}).shape || [];
+        if (structural(v) || (shapes.indexOf('position') >= 0 && !(typeof v === 'string' && DAY.test(v)))
+            || ((Array.isArray(v) || (specs[k] || {}).many === 'true') && (shapes.indexOf('being') >= 0 || shapes.indexOf('statement') >= 0))
+            || (shapes.indexOf('statement') >= 0 && shapes.length === 1 && typeof v === 'string')) out[k] = v;
+      });
+      return out;
+    }
+    // A MOVE ALONG A WALK is history once made: shown as it is; a new one is a step chosen by the walk's own words, from
+    // now, on the course the being is on
+    function moveFields(prefix) {
+      var ids = Object.keys(courses);
+      if (!ids.length) return '';
+      var c = courses[ids[0]];
+      return h`<label class="eg-field eg-req" data-role="at"><span class="eg-role-name">${heading('move')}</span> ${
+        w.choice.edit(prefix + '.step', '', c.steps.map(function (x) { return {value: x.ref, label: x.says}; }), {none: '—'})}<span class="eg-err" data-err="${prefix}.step"></span></label>
+        <label class="eg-field" data-role="note"><span class="eg-role-name">${label('move', 'note')}</span> ${w.text.edit(prefix + '.note', '')}</label>`;
     }
     function editOne(s, parentId) {
-      var p = 's' + (n++), may = s.may && !!s.roles;
-      return h`<li class="eg-statement eg-editing" data-fact="${s.key}" data-prefix="${p}" data-verb="${s.verb}"${s.held ? h` data-held=""` : ''}>
-        <div class="eg-fields">${editor(s.verb, s.roles, p, may)}</div>
+      var p = 's' + (n++), may = s.may && !!s.roles && s.verb !== 'move';
+      return h`<li class="eg-statement eg-editing" data-fact="${s.key}" data-prefix="${p}" data-verb="${s.verb}" data-kept="${JSON.stringify(keptOf(s.verb, s.roles))}"${may ? '' : h` data-asis=""`}${s.held ? h` data-held=""` : ''}>
+        ${parentId ? h`<span class="eg-verb">${heading(s.verb)}</span>` : ''}
+        <div class="eg-fields">${may ? editor(s.verb, s.roles, p, true) : h`<div class="eg-roles">${s.roles ? rolesOf(s.verb, s.roles) : ''}</div>`}</div>
         ${s.held && !s.roles ? h`<span class="eg-held">${s.held.host ? t.say('sheet-kept-on', {host: t.titleOf(s.held.host) || s.held.host}) : t.say('sheet-kept-off')}</span>` : ''}
         ${s.may && (!s.held || s.held.here) ? h`<label class="eg-remove"><input type="checkbox" data-remove="${s.key}"> ${t.say('sheet-remove')}</label>` : ''}
         ${(s.dependents || []).length ? h`<ol class="eg-dependents">${s.dependents.map(function (d) { return editOne(d, s.id); })}</ol>` : ''}
         ${s.may && s.id ? t.join(Object.keys(depVerbs(s)).map(function (v) {
-          return h`<button type="button" class="eg-btn eg-add" data-add="${v}" data-of="${s.id}">+ ${t.say('sheet-add')} ${t.name('verbs', v)}</button>`; }), ' ') : ''}
+          return h`<button type="button" class="eg-btn eg-add" data-add="${v}" data-of="${s.id}">+ ${t.say('sheet-add')} ${heading(v)}</button>`; }), ' ') : ''}
         <span class="eg-err" data-err-fact="${s.key}"></span></li>`;
     }
     function depVerbs(s) {
@@ -117,9 +167,15 @@
       return out;
     }
     function blankOne(verb, of) {
-      var p = 'a' + (n++);
-      return h`<li class="eg-statement eg-editing eg-added" data-prefix="${p}" data-verb="${verb}" data-add-op="">
-        <div class="eg-fields">${editor(verb, of ? {of: of} : {}, p, true)}</div><span class="eg-err" data-err-op=""></span></li>`;
+      var p = 'a' + (n++), preset = of ? {of: of} : {}, me = ((t.E.settings || {}).garden || {}).me;
+      if (verb === 'move' && Object.keys(courses).length) {
+        preset = {of: 'self', through: Object.keys(courses)[0]};
+        if (me) preset.by = me;
+        return h`<li class="eg-statement eg-editing eg-added" data-prefix="${p}" data-verb="${verb}" data-add-op="" data-move="" data-kept="${JSON.stringify(preset)}">
+          <div class="eg-fields">${moveFields(p)}</div><span class="eg-err" data-err-op=""></span></li>`;
+      }
+      return h`<li class="eg-statement eg-editing eg-added" data-prefix="${p}" data-verb="${verb}" data-add-op="" data-kept="${JSON.stringify(keptOf(verb, preset))}">
+        <div class="eg-fields">${editor(verb, preset, p, true)}</div><span class="eg-err" data-err-op=""></span></li>`;
     }
 
     // WHAT A PAGE NAMES OF `details` (its `fields`): what fits no verb yet, kept whole until one is proposed — drawn as it
@@ -135,7 +191,7 @@
         return root.daftarEngraved.show(t, v, {shape: ['position', 'text']});
       }
       return h`<section class="eg-row eg-details" data-fact="details"><h4>${t.say('sheet-details')}</h4>${keys.map(function (k) {
-        return h`<div class="eg-detail" data-detail="${k}"><span class="eg-role-name">${w.text.show(k)}</span> ${one(data.details[k])}</div>`;
+        return h`<div class="eg-detail" data-detail="${k}"><span class="eg-role-name">${w.text.show(labels[k] || k)}</span> ${one(data.details[k])}</div>`;
       })}<p class="eg-known">${t.say('sheet-details-kept')}</p></section>`;
     }
     function draw() {
@@ -143,15 +199,21 @@
       var hd = data.header || {}, title = hd.title || {}, summary = hd.summary;
       var named = data.new ? (t.say('sheet-new') + ' ' + t.name('kinds', data.kind)) : data.title;
       var head = editing
-        ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">${t.name('header', 'title')}</span> ${w.text.edit('header.title', title.value || '')}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
-            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${t.name('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>${details()}`
+        ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">${labels.title || word('header', 'title')}</span> ${w.text.edit('header.title', title.value === data.bean ? '' : (title.value || ''), {placeholder: data.title})}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
+            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${labels.summary || word('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>${details()}`
         : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}</div>${details()}`;
-      var rows = data.rows.length ? data.rows.map(function (r) {
+      // a verb whose statements are each shown beneath the one they are `of` (a clause beneath what it asks) has no row of
+      // its own: it is added there
+      var ownRows = data.rows.filter(function (r) {
+        var dependent = ((data.verbs[r.verb] || {}).roles || {}).of && (((data.verbs[r.verb] || {}).roles.of.shape) || []).join() === 'statement';
+        return r.statements.length || (editing && r.may_add && !dependent);
+      });
+      var rows = ownRows.length ? ownRows.map(function (r) {
         var meaning = (data.verbs[r.verb] || {}).meaning || '';
-        return h`<section class="eg-row" data-verb="${r.verb}"><h4 title="${meaning}">${t.name('verbs', r.verb)}</h4><ol class="eg-statements">${
+        return h`<section class="eg-row" data-verb="${r.verb}"><h4 title="${meaning}">${heading(r.verb)}</h4><ol class="eg-statements">${
           editing ? r.statements.map(function (s) { return editOne(s); }) : r.statements.map(function (s) { return readOne(s); })}</ol>${
-          editing && r.may_add ? h`<button type="button" class="eg-btn eg-add" data-add="${r.verb}">+ ${t.say('sheet-add')} ${t.name('verbs', r.verb)}</button>` : ''}</section>`;
-      }) : h`<p class="eg-empty">${t.say('sheet-none', {kind: t.name('kinds', data.kind)})}</p>`;
+          editing && r.may_add ? h`<button type="button" class="eg-btn eg-add" data-add="${r.verb}">+ ${t.say('sheet-add')} ${heading(r.verb)}</button>` : ''}</section>`;
+      }) : h`<p class="eg-empty">${t.say('sheet-none', {kind: data.kind})}</p>`;
       var bar = !t.write ? h`<p class="eg-copy">${t.say('sheet-copy')}</p>`
         : !mayAny ? ''
           : editing ? h`<div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-do="save">${t.say('sheet-save')}</button> <button type="button" class="eg-btn" data-do="cancel">${t.say('sheet-cancel')}</button> <span class="eg-said" data-said=""></span></div>`
@@ -185,6 +247,13 @@
     function readFields(li, verb, errs) {
       var p = li.getAttribute('data-prefix'), row = data.verbs[verb] || {roles: {}, qualifiers: {}}, specs = Object.assign({}, row.roles, row.qualifiers);
       var roles = {};
+      if (li.hasAttribute('data-move')) {
+        var step = li.querySelector('[name="' + p + '.step"]'), note = li.querySelector('[name="' + p + '.note"]');
+        if (!step || !step.value) { errs.push([p + '.step', t.say('sheet-step-needed')]); return {}; }
+        roles = Object.assign({}, JSON.parse(li.getAttribute('data-kept') || '{}'), {at: ['now', step.value]});
+        if (note && note.value.trim()) roles.note = note.value.trim();
+        return roles;
+      }
       Object.keys(specs).concat(BESIDE).forEach(function (k) {
         var nm = p + '.' + k, spec = specs[k] || {shape: ['text']}, q = function (x) { return li.querySelector('[name="' + x + '"]'); };
         if (q(nm + '.count')) {
@@ -231,6 +300,8 @@
         }
         if (v !== '') roles[k] = v;
       });
+      var kept = JSON.parse(li.getAttribute('data-kept') || '{}');
+      Object.keys(kept).forEach(function (k) { roles[k] = kept[k]; });
       return roles;
     }
 
@@ -239,8 +310,9 @@
       el.querySelectorAll('[data-err],[data-err-fact],[data-err-op],[data-err-general]').forEach(function (e) { e.textContent = ''; });
       var hd = data.header || {};
       ['title', 'summary'].forEach(function (k) {
-        var f = el.querySelector('[name="header.' + k + '"]');
-        if (f && ((hd[k] || {}).value || '') !== f.value.trim()) {
+        var f = el.querySelector('[name="header.' + k + '"]'), was = (hd[k] || {}).value || '';
+        if (k === 'title' && was === data.bean) was = '';          // offered empty: left so, it stays as it was
+        if (f && was !== f.value.trim()) {
           ops.push({op: 'change', header: k, value: f.value.trim()}); where.push(f.closest('[data-fact]'));
         }
       });
@@ -257,7 +329,7 @@
           return;
         }
         var s = originals[key];
-        if (!s || !s.may || !s.roles || (el.querySelector('[data-remove="' + key + '"]') || {}).checked) return;
+        if (!s || !s.may || !s.roles || li.hasAttribute('data-asis') || (el.querySelector('[data-remove="' + key + '"]') || {}).checked) return;
         var now = readFields(li, verb, errs);
         if (canon(now) !== canon(s.roles)) {
           ops.push(Object.assign({op: 'change', key: key, roles: now}, s.held ? {held: true} : {})); where.push(li);
