@@ -90,3 +90,133 @@ view_lenses:operate	operate	operari (to work, from opus): what the person on cal
 view_lenses:inspect	inspect	inspicere (to look into): what exactly the parts are and how that is known	proposed	agent (claude opus-5.5), by hand
 section:manifest	garden	garden (Frankish *gardo: an enclosure; kin to yard): a repository of beans, stating itself in GARDEN.md; paradise (Avestan pairi-daēza: walled around)	proposed	agent (claude opus-5.5), by hand
 section:name_form	a name	name (Old English nama): a row of a names file — an item of the law named in one language, with its roots	proposed	agent (claude opus-5.5), by hand
+roles:by	by	by (Old English bī: beside); Pāṇini's kartṛ, the independent one: who does it	proposed	agent (claude opus-5.5), by hand
+roles:of	of	of (Old English of: away from); Pāṇini's karman: what the act reaches, or what it is about	proposed	agent (claude opus-5.5), by hand
+roles:through	through	through (Old English þurh); Pāṇini's karaṇa: the means — a tool, a document, words, an agreement	proposed	agent (claude opus-5.5), by hand
+roles:to	to	to (Old English tō); Pāṇini's sampradāna: for whom, or towards what	proposed	agent (claude opus-5.5), by hand
+roles:from	from	from (Old English fram); Pāṇini's apādāna: the fixed point it departs from	proposed	agent (claude opus-5.5), by hand
+roles:at	at	at (Old English æt); Pāṇini's adhikaraṇa: the locus — a position, or the being it stands on	proposed	agent (claude opus-5.5), by hand
+roles:as	as	as (Old English ealswā: just so); Aristotle's ὡς: the way in which, what a thing is taken as — ὡς ὕλη, as matter (Physics II.3 195a)	proposed	agent (claude opus-5.5), by hand
+verbs:say	say	say (Old English secgan): to give one's word	proposed	agent (claude opus-5.5), by hand
+verbs:read	read	read (Old English rǣdan: to advise, to interpret): what a body read off a thing	proposed	agent (claude opus-5.5), by hand
+verbs:derive	derive	derivare (to draw off a stream: de + rivus): to come to it from what was given	proposed	agent (claude opus-5.5), by hand
+verbs:make	make	make (Old English macian: to fashion): made here from nothing given	proposed	agent (claude opus-5.5), by hand
+verbs:be	be	be (Old English bēon): where a being is — at a position, or at a being	proposed	agent (claude opus-5.5), by hand
+verbs:stand	stand	stand (Old English standan): what stands on what, on the ladder	proposed	agent (claude opus-5.5), by hand
+verbs:part	part	pars (a share, a piece): a part of a whole	proposed	agent (claude opus-5.5), by hand
+verbs:name	name	name (Old English nama; ὄνομα): a namespace gives a being a name	proposed	agent (claude opus-5.5), by hand
+verbs:come	come	come (Old English cuman): through whom a being came to be	proposed	agent (claude opus-5.5), by hand
+verbs:own	own	own (Old English āgan: to have): whose a being is — one owner	proposed	agent (claude opus-5.5), by hand
+verbs:answer	answer	andswaru (a reply, a sworn rebuttal): who answers for a being, and in which mode	proposed	agent (claude opus-5.5), by hand
+verbs:acquire	acquire	acquirere (to get besides: ad + quaerere): from whom it came to us	proposed	agent (claude opus-5.5), by hand
+verbs:pass	pass	passus (a step): statements carried from one layer to another	proposed	agent (claude opus-5.5), by hand
+verbs:necessary	necessary	necesse (not yielding: ne + cedere): what cannot not be	proposed	agent (claude opus-5.5), by hand
+verbs:contingent	contingent	contingere (to touch, to befall): what may be and may not be	proposed	agent (claude opus-5.5), by hand
+verbs:possible	possible	possibilis (able to be): not impossible	proposed	agent (claude opus-5.5), by hand
+verbs:impossible	impossible	impossibilis (not able to be)	proposed	agent (claude opus-5.5), by hand
+verbs:obligatory	obligatory	obligare (to bind to: ob + ligare): what must be done	proposed	agent (claude opus-5.5), by hand
+verbs:omissible	omissible	omittere (to let go: ob + mittere): what need not be done	proposed	agent (claude opus-5.5), by hand
+verbs:permitted	permitted	permittere (to let through): what may be done	proposed	agent (claude opus-5.5), by hand
+verbs:forbidden	forbidden	forbēodan (to bid against)	proposed	agent (claude opus-5.5), by hand
+verbs:agree	agree	à gré (to one's liking, from gratus): each party's yes	proposed	agent (claude opus-5.5), by hand
+verbs:decline	decline	declinare (to turn aside): a party's no	proposed	agent (claude opus-5.5), by hand
+verbs:pay	pay	pacare (to pacify, to settle): to give an amount	proposed	agent (claude opus-5.5), by hand
+verbs:bear	bear	bear (Old English beran: to carry): to carry a cost, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:grant	grant	credentare (to warrant, from credere): to open an act to someone	proposed	agent (claude opus-5.5), by hand
+verbs:can	can	can (Old English cunnan: to know how): may, or must	proposed	agent (claude opus-5.5), by hand
+verbs:represent	represent	repraesentare (to make present again): to act for another	proposed	agent (claude opus-5.5), by hand
+verbs:need	need	nēod (Old English: compulsion, necessity)	proposed	agent (claude opus-5.5), by hand
+verbs:meet	meet	mētan (Old English: to come upon)	proposed	agent (claude opus-5.5), by hand
+verbs:use	use	uti (to use, to enjoy)	proposed	agent (claude opus-5.5), by hand
+verbs:do	do	dōn (Old English: to put, to make): a job a being does	proposed	agent (claude opus-5.5), by hand
+verbs:hold	hold	healdan (Old English: to keep): what a being can hold, and what it holds	proposed	agent (claude opus-5.5), by hand
+verbs:run	run	rinnan (Old English: to flow): to run code	proposed	agent (claude opus-5.5), by hand
+verbs:open	open	open (Old English: not shut)	proposed	agent (claude opus-5.5), by hand
+verbs:move	move	movere (to set in motion): a case moved along its walk	proposed	agent (claude opus-5.5), by hand
+verbs:step	step	stæpe (Old English: a pace): a step of a walk	proposed	agent (claude opus-5.5), by hand
+verbs:attend	attend	attendere (to stretch towards): to be present at an event	proposed	agent (claude opus-5.5), by hand
+verbs:measure	measure	mensura (a measuring, from metiri)	proposed	agent (claude opus-5.5), by hand
+verbs:record	record	recordari (to call to mind: re + cor, the heart): what a line held at each position	proposed	agent (claude opus-5.5), by hand
+verbs:reckon	reckon	recenian (Old English: to recount): a reading declared, read each time	proposed	agent (claude opus-5.5), by hand
+verbs:pin	pin	pinn (Old English: a peg): what rests on a reading, fixed	proposed	agent (claude opus-5.5), by hand
+verbs:classify	classify	classis (a division of the Roman people)	proposed	agent (claude opus-5.5), by hand
+verbs:concern	concern	concernere (to sift together): the person a record is about	proposed	agent (claude opus-5.5), by hand
+verbs:rate	rate	rata (fixed, reckoned): how much harm a being can do a person	proposed	agent (claude opus-5.5), by hand
+verbs:fail	fail	fallere (to deceive, to disappoint)	proposed	agent (claude opus-5.5), by hand
+verbs:repair	repair	reparare (to make ready again)	proposed	agent (claude opus-5.5), by hand
+verbs:rule	rule	regula (a straight stick): a person's ruling	proposed	agent (claude opus-5.5), by hand
+verbs:respond	respond	respondere (to pledge in return)	proposed	agent (claude opus-5.5), by hand
+verbs:weigh	weigh	wegan (Old English: to carry, to weigh)	proposed	agent (claude opus-5.5), by hand
+verbs:propose	propose	proponere (to put forth)	proposed	agent (claude opus-5.5), by hand
+verbs:take	take	taka (Old Norse: to grasp): a proposal taken in, whole	proposed	agent (claude opus-5.5), by hand
+verbs:rehearse	rehearse	rehercier (to harrow again)	proposed	agent (claude opus-5.5), by hand
+verbs:serve	serve	servire (to be a servant): to listen at an address and a port	proposed	agent (claude opus-5.5), by hand
+verbs:carry	carry	carrus (a wagon)	proposed	agent (claude opus-5.5), by hand
+verbs:route	route	rupta (a broken way, a road cut through)	proposed	agent (claude opus-5.5), by hand
+verbs:translate	translate	translatus (carried across)	proposed	agent (claude opus-5.5), by hand
+verbs:filter	filter	filtrum (felt, through which liquid was strained)	proposed	agent (claude opus-5.5), by hand
+verbs:book	book	bōc (Old English: a written document)	proposed	agent (claude opus-5.5), by hand
+verbs:renew	renew	re + new	proposed	agent (claude opus-5.5), by hand
+verbs:mark	mark	mearc (Old English: a boundary)	proposed	agent (claude opus-5.5), by hand
+verbs:produce	produce	producere (to lead forth)	proposed	agent (claude opus-5.5), by hand
+verbs:draw	draw	dragan (Old English: to drag, to draw)	proposed	agent (claude opus-5.5), by hand
+qualifiers:channel	channel	canalis (a pipe, a groove)	proposed	agent (claude opus-5.5), by hand
+qualifiers:charged	charged	carricare (to load a cart): what it came to in another currency	proposed	agent (claude opus-5.5), by hand
+qualifiers:class	class	classis (a division)	proposed	agent (claude opus-5.5), by hand
+qualifiers:clause	clause	clausula (a closing, a provision)	proposed	agent (claude opus-5.5), by hand
+qualifiers:cover	cover	cooperire (to cover wholly)	proposed	agent (claude opus-5.5), by hand
+qualifiers:drawing	drawing	dragan (to draw)	proposed	agent (claude opus-5.5), by hand
+qualifiers:method	method	μέθοδος (a way after: μετά + ὁδός)	proposed	agent (claude opus-5.5), by hand
+qualifiers:page	page	pagina (a column of writing)	proposed	agent (claude opus-5.5), by hand
+qualifiers:placed	placed	platea (a broad street): what a placement holds there	proposed	agent (claude opus-5.5), by hand
+qualifiers:presence	presence	praesentia (being before)	proposed	agent (claude opus-5.5), by hand
+qualifiers:reading	reading	rǣdan (to interpret): what a reckoning selects and computes	proposed	agent (claude opus-5.5), by hand
+qualifiers:result	result	resultare (to spring back)	proposed	agent (claude opus-5.5), by hand
+qualifiers:series	series	series (a row, from serere, to join)	proposed	agent (claude opus-5.5), by hand
+qualifiers:settles	settles	setl (Old English: a seat): which occurrences of which clauses it pays, and how much	proposed	agent (claude opus-5.5), by hand
+qualifiers:share	share	scearu (Old English: a cutting, a division)	proposed	agent (claude opus-5.5), by hand
+qualifiers:value	value	valere (to be strong, to be worth)	proposed	agent (claude opus-5.5), by hand
+qualifiers:walk	walk	wealcan (Old English: to roll, to go): how a walk goes at a step	proposed	agent (claude opus-5.5), by hand
+qualifiers:weighing	weighing	wegan (to weigh): the judgments, pair by pair	proposed	agent (claude opus-5.5), by hand
+beside_roles:id	id	idem (the same): its name in its bean	proposed	agent (claude opus-5.5), by hand
+beside_roles:while	while	hwīl (Old English: a time): it holds while what it names holds	proposed	agent (claude opus-5.5), by hand
+beside_roles:why	why	hwȳ (Old English: for what)	proposed	agent (claude opus-5.5), by hand
+beside_roles:note	note	nota (a mark)	proposed	agent (claude opus-5.5), by hand
+beside_roles:held	held	healdan (to keep): kept off git, in a store a host resolves	proposed	agent (claude opus-5.5), by hand
+kinds:codebase	codebase	codex (a book of laws) + base	proposed	agent (claude opus-5.5), by hand
+kinds:product	product	productum (what is led forth)	proposed	agent (claude opus-5.5), by hand
+kinds:org	organisation	ὄργανον (a tool, an organ)	proposed	agent (claude opus-5.5), by hand
+kinds:person	person	persona (a mask, a role)	proposed	agent (claude opus-5.5), by hand
+kinds:instance	instance	instantia (a standing near)	proposed	agent (claude opus-5.5), by hand
+kinds:host	host	hospes (a guest, a host)	proposed	agent (claude opus-5.5), by hand
+kinds:virtual-host	virtual host	virtus (power) + hospes	proposed	agent (claude opus-5.5), by hand
+kinds:domain	domain	dominium (lordship)	proposed	agent (claude opus-5.5), by hand
+kinds:service	service	servitium	proposed	agent (claude opus-5.5), by hand
+kinds:program	program	πρόγραμμα (a public notice)	proposed	agent (claude opus-5.5), by hand
+kinds:design	design	designare (to mark out)	proposed	agent (claude opus-5.5), by hand
+kinds:session	session	sessio (a sitting)	proposed	agent (claude opus-5.5), by hand
+kinds:contract	contract	contrahere (to draw together)	proposed	agent (claude opus-5.5), by hand
+kinds:garden	garden	geard (an enclosure)	proposed	agent (claude opus-5.5), by hand
+kinds:document	document	documentum (a lesson, a proof)	proposed	agent (claude opus-5.5), by hand
+kinds:event	event	evenire (to come out, to happen)	proposed	agent (claude opus-5.5), by hand
+header:title	title	titulus (an inscription)	proposed	agent (claude opus-5.5), by hand
+header:summary	summary	summa (the whole)	proposed	agent (claude opus-5.5), by hand
+header:tags	tags	tagg (a point, a tab)	proposed	agent (claude opus-5.5), by hand
+forms:clause.due	falls due	debitum (owed)	proposed	agent (claude opus-5.5), by hand
+forms:clause.every	repeats	repetere (to seek again)	proposed	agent (claude opus-5.5), by hand
+forms:clause.notice	notice	notitia (a knowing)	proposed	agent (claude opus-5.5), by hand
+forms:clause.state	state	status (a standing)	proposed	agent (claude opus-5.5), by hand
+forms:clause.amount	amount	admontare (to mount up)	proposed	agent (claude opus-5.5), by hand
+forms:clause.during	holds during	durare (to last)	proposed	agent (claude opus-5.5), by hand
+forms:clause.within	counted within	within	proposed	agent (claude opus-5.5), by hand
+forms:clause.used_by	used by	uti (to use)	proposed	agent (claude opus-5.5), by hand
+forms:clause.when	in force when	hwanne (Old English: at what time)	proposed	agent (claude opus-5.5), by hand
+forms:clause.each	for each	ælc (Old English: every one)	proposed	agent (claude opus-5.5), by hand
+forms:clause.of	a share of	of	proposed	agent (claude opus-5.5), by hand
+forms:clause.falls_due	falls due after	debitum	proposed	agent (claude opus-5.5), by hand
+forms:clause.by_role	binds whoever is	role (a roll, a part)	proposed	agent (claude opus-5.5), by hand
+forms:clause.over	for the part	ofer (Old English: above)	proposed	agent (claude opus-5.5), by hand
+forms:settlement.clause	clause settled	clausula	proposed	agent (claude opus-5.5), by hand
+forms:settlement.occurrence	occurrence	occurrere (to run towards)	proposed	agent (claude opus-5.5), by hand
+forms:settlement.amount	amount settled	admontare	proposed	agent (claude opus-5.5), by hand
+forms:settlement.note	remark	remarquer (to note again)	proposed	agent (claude opus-5.5), by hand
