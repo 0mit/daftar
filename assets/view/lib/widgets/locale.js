@@ -126,6 +126,7 @@ export const SAID = {
   'timeline-empty': {en: 'Nothing falls in this span.', fa: 'در این بازه چیزی نیست.'},
   'timeline-beyond': {en: 'beyond the span this page reads', fa: 'بیرون از بازه‌ای که این صفحه می‌خواند'},
   'timeline-nth': {en: '{i} of {n}', fa: '{i} از {n}'},
+  'table-empty': {en: 'The reading holds nothing you may read.', fa: 'این خوانش چیزی ندارد که شما بتوانید بخوانید.'},
   'flows-empty': {en: 'Nobody owes anybody.', fa: 'کسی به کسی بدهکار نیست.'},
   'flows-partial': {en: 'Partial: something an agreement holds was not read, so this is not the whole of what is owed.',
                     fa: 'ناقص: چیزی از یک توافق خوانده نشد، پس این همهٔ بدهی‌ها نیست.'},
