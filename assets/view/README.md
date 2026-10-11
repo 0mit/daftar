@@ -150,7 +150,11 @@ computes a shown number: its path), `check_binding(binding)` and `check_monitor(
 and, where it deploys anything, `bundle(monitor, views, out)`.
 
 A monitor is read within one deadline for its whole answer (5 s; one poll of a Prometheus, 10 s in all), up to 4 MiB,
-and where it was asked: an answer that sends the host elsewhere is not followed (`lib/view_fetch.py`).
+and where it was asked: an answer that sends the host elsewhere is not followed (`lib/view_fetch.py`). A value a monitor
+gives that is no finite number — Prometheus's `NaN` for a ratio of 0/0, `+Inf`, `-Inf` — is sent to the page as the word
+JavaScript reads it back by (`"NaN"`, `"Infinity"`, `"-Infinity"`), apart from `null`, a value nobody gave: the page shows
+`NaN`, `∞` or `−∞` where the value stands, and `—` for none; a NaN counts as no data, `+Inf` is past every threshold
+and `-Inf` below them, and neither is drawn in a line of history.
 
 ## The sheet
 

@@ -29,14 +29,17 @@ function dur(s){if(s==null||isNaN(s))return '—';s=Math.max(0,Math.round(+s));
 function bytes(n){const u=['B','kB','MB','GB','TB','PB'];let i=0;while(Math.abs(n)>=1000&&i<u.length-1){n/=1000;i++;}return (i?n.toFixed(1):Math.round(n))+' '+u[i];}
 function bits(n){const u=['bit/s','kbit/s','Mbit/s','Gbit/s','Tbit/s'];let i=0;while(Math.abs(n)>=1000&&i<u.length-1){n/=1000;i++;}return (i?n.toFixed(1):Math.round(n))+' '+u[i];}
 function num(v){return (Math.abs(v)>=100?Math.round(v):v.toFixed(v%1?1:0))+'';}
-function fmt(v,b){if(v==null||isNaN(v))return '—';v=+v;const u=(b&&b.unit)||'',q=(b&&b.q)||'';
+/* A VALUE, AS ITS UNIT SAYS: '—' where nobody gave one; NaN where the monitor gave a number that is none (Prometheus's
+   NaN, a ratio of 0/0) and ∞ for an infinite one, as the host sends them ("NaN", "Infinity", "-Infinity"). */
+function fmt(v,b){if(v==='NaN')return 'NaN';if(v==null||isNaN(v))return '—';v=+v;const u=(b&&b.unit)||'',q=(b&&b.q)||'';
+ if(!isFinite(v))return (v<0?'−∞':'∞')+(u&&u!=='percent'?' '+u:u?'%':'');
  if(u==='percent')return v.toFixed(1)+'%';
  if(q==='duration')return v*b.f[0]/b.f[1]<1&&v>0?Math.round(v*b.f[0]/b.f[1]*1000)+' ms':dur(coherent(b,v));
  if(q==='information')return bytes(coherent(b,v));
  if(q==='data-rate')return bits(coherent(b,v)*8);
  return u?num(v)+' '+u:num(v);}
 function pctOf(b,v){return b&&b.q==='ratio'?coherent(b,v)*100:v;}
-function stateOf(b,v,live){if(!live)return 'nd';if(v==null)return 'nd';
+function stateOf(b,v,live){if(!live)return 'nd';if(v==null||v==='NaN')return 'nd';
  if(b.live==='live-state')return v>=1?'up':'down';
  return b.crit!=null&&v>=b.crit?'down':b.warn!=null&&v>=b.warn?'warn':'up';}
 
@@ -143,7 +146,7 @@ function schematic(root,view,lv,state){
   if(state.onOpen){g.style.cursor='zoom-in';g.addEventListener('click',()=>state.onOpen(o.view));}});}
 
 /* ---------------- operate · the health chain, the fallback ---------------- */
-function spark(pts,w,hh){if(!pts||pts.length<2)return '';const ys=pts.map(p=>+p[1]),mn=Math.min(...ys),mx=Math.max(...ys),r=(mx-mn)||1;
+function spark(pts,w,hh){pts=(pts||[]).filter(p=>isFinite(+p[1]));if(pts.length<2)return '';const ys=pts.map(p=>+p[1]),mn=Math.min(...ys),mx=Math.max(...ys),r=(mx-mn)||1;
  return '<svg class="spark" viewBox="0 0 '+w+' '+hh+'" preserveAspectRatio="none"><polyline points="'+
   pts.map((p,i)=>(i/(pts.length-1)*w).toFixed(1)+','+(hh-2-((+p[1]-mn)/r)*(hh-4)).toFixed(1)).join(' ')+'"/></svg>';}
 function histLink(view,state){return state.historyUrl?'<div><a href="'+h(state.historyUrl)+'/d/'+h(view.uid)+'" target="_blank" rel="noopener">history ↗</a></div>':'';}
@@ -384,11 +387,11 @@ function corrOne(view,c,ci,state){if(!c||!(c.rows||[]).length)return '';
  const w=view.window||{};
  let o='<div class="op-corr" data-corr="'+ci+'"><div class="corr-h"><b>'+h(c.title||'Together, over time')+'</b>'+(w.hours?'<span>'+h(winText(view))+', every '+h(dur(w.step))+'</span>':'')+'</div>';
  if(!state.live)return o+'<p class="bl">drawn '+ELSEWHERE+', from its history</p></div>';
- const H=state.history||{},rows=c.rows.map(id=>({b:B(view,id),pts:(H[id]||[]).filter(p=>!isNaN(+p[1]))})).filter(r=>r.b.id),band=c.band?(H[c.band]||[]):[];
+ const H=state.history||{},rows=c.rows.map(id=>({b:B(view,id),pts:(H[id]||[]).filter(p=>isFinite(+p[1]))})).filter(r=>r.b.id),band=c.band?(H[c.band]||[]):[];
  const all=[].concat(...rows.map(r=>r.pts),band);if(all.length<2)return o+'<p class="bl">no history yet — it gathers as the page is open</p></div>';
  const t0=Math.min(...all.map(p=>+p[0])),t1=Math.max(...all.map(p=>+p[0])),Wd=960,L=150,R=84,RH=54,G=12,top=6,Hb=rows.length*(RH+G)-G,Ht=top+Hb+24;
  const x=t=>L+(t-t0)/((t1-t0)||1)*(Wd-L-R);let g='';
- for(let i=0;i<band.length;i++){const v=+band[i][1];if(isNaN(v))continue;const ta=+band[i][0],tb=i+1<band.length?+band[i+1][0]:t1;
+ for(let i=0;i<band.length;i++){const v=+band[i][1];if(!isFinite(v))continue;const ta=+band[i][0],tb=i+1<band.length?+band[i+1][0]:t1;
   g+='<rect x="'+x(ta).toFixed(1)+'" y="'+top+'" width="'+Math.max(x(tb)-x(ta),0.6).toFixed(1)+'" height="'+Hb+'" class="corr-band" style="fill:'+PHC[Math.abs(v)%PHC.length]+'"/>';}
  rows.forEach((r,i)=>{const y0=top+i*(RH+G),vs=r.pts.map(p=>+p[1]),mn=Math.min(0,...vs),mx=Math.max(...vs,0),y=v=>y0+RH-(v-mn)/((mx-mn)||1)*RH;
   g+='<text x="'+(L-10)+'" y="'+(y0+RH/2+4)+'" class="corr-l" text-anchor="end">'+h(r.b.short||r.b.name)+'</text><line x1="'+L+'" x2="'+(Wd-R)+'" y1="'+(y0+RH)+'" y2="'+(y0+RH)+'" class="corr-ax"/>';

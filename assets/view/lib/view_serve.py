@@ -46,7 +46,7 @@ Usage (through assets/view/bin/view.py):
   view serve-init --config <path> --user <name> [--orgs "*"|org-a,org-b] [--shared] [--no-actions]
   view serve --config <path>
 """
-import base64, hashlib, hmac, html, json, os, re, secrets, subprocess, sys, threading, time, urllib.parse
+import base64, hashlib, hmac, html, json, math, os, re, secrets, subprocess, sys, threading, time, urllib.parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -88,6 +88,19 @@ def _write_private(path, text):
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as fh:
         fh.write(text)
+
+
+def finite(x):
+    """A monitor's value as JSON can carry it: a number that is no finite number — Prometheus's NaN for a ratio of 0/0,
+    and ±Inf — is written as the word JavaScript reads it back by, "NaN", "Infinity" or "-Infinity", apart from null,
+    a value nobody gave (security audit 2026-10-10, 3.7)."""
+    if isinstance(x, float) and not math.isfinite(x):
+        return "NaN" if x != x else "Infinity" if x > 0 else "-Infinity"
+    if isinstance(x, dict):
+        return {k: finite(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [finite(v) for v in x]
+    return x
 
 
 def serve_init(config, user, orgs="*", actions=True, shared=False, bean=None):
@@ -354,7 +367,7 @@ class Host:
             if not m or not m["adapter"] or not url:
                 out.update({b["id"]: None for b in binds}); continue
             sel = m["adapter"].selector(self.scope(user))
-            out.update(m["adapter"].values(url, binds, sel))
+            out.update(finite(m["adapter"].values(url, binds, sel)))
         return out
 
     def history(self, user, key):
@@ -374,7 +387,7 @@ class Host:
             url = ((self.cfg.get("monitors") or {}).get(mon) or {}).get("url") if mon else None
             if not m or not m["adapter"] or not url:
                 out.update({b["id"]: [] for b in binds}); continue
-            out.update(m["adapter"].history(url, binds, m["adapter"].selector(self.scope(user)), hours, step, now))
+            out.update(finite(m["adapter"].history(url, binds, m["adapter"].selector(self.scope(user)), hours, step, now)))
         return out
 
     # --- actions ---
@@ -700,7 +713,8 @@ def make_handler(F):
             self.wfile.write(b)
 
         def _json(self, code, obj):
-            self._send(code, json.dumps(obj, ensure_ascii=False), "application/json")
+            # a value JSON cannot carry fails here, loudly, rather than reach a page as JSON no browser parses (3.7)
+            self._send(code, json.dumps(obj, ensure_ascii=False, allow_nan=False), "application/json")
 
         def _secure(self):
             """`; Secure` where the viewer reached the host over HTTPS — said by the host's configuration, or by the proxy

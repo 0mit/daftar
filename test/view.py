@@ -970,6 +970,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 class FakeMonitor(BaseHTTPRequestHandler):
     queries = []
+    odd = None          # what Prometheus may answer that is no finite number: "NaN" (a ratio of 0/0), "+Inf", "-Inf"
 
     def log_message(self, *a):
         pass
@@ -978,11 +979,13 @@ class FakeMonitor(BaseHTTPRequestHandler):
         q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query).get("query", [""])[0]
         FakeMonitor.queries.append(q)
         if "query_range" in self.path:
-            res = [{"metric": {}, "values": [[1000, "1"], [1300, "2"]]}]
+            res = [{"metric": {}, "values": [[1000, FakeMonitor.odd or "1"], [1300, "-Inf" if FakeMonitor.odd else "2"]]}]
         elif "dryer_batches" in q:
-            res = [{"metric": {"bay": "a"}, "value": [0, "3"]}, {"metric": {"bay": "b"}, "value": [0, "1"]}]
+            res = [{"metric": {"bay": "a"}, "value": [0, "3"]}, {"metric": {"bay": "b"}, "value": [0, FakeMonitor.odd or "1"]}]
+        elif FakeMonitor.odd and "silo_days_to_full" in q:
+            res = [{"metric": {}, "value": [0, "+Inf"]}]
         else:
-            res = [{"metric": {}, "value": [0, "1"]}]
+            res = [{"metric": {}, "value": [0, FakeMonitor.odd or "1"]}]
         body = json.dumps({"status": "success", "data": {"resultType": "vector", "result": res}}).encode()
         self.send_response(200); self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
@@ -1296,6 +1299,31 @@ try:
     _au2 = {e.get("user") for e in json.loads(au2).get("entries", [])} if st2 == 200 else set()
     check("serve: a granted viewer reads only her own rows of the audit log, and the gardener everyone's",
           st == 200 and _au and set(_au) == {"alice"} and st2 == 200 and {"alice", "carol", "eve"} <= _au2, (st, _au, st2, _au2))
+    # A VALUE THAT IS NO FINITE NUMBER (security audit 2026-10-10, 3.7): Prometheus answers NaN for a ratio of 0/0, and
+    # ±Inf; the answer is still JSON a browser parses, and each is kept for what it is, apart from a value nobody gave.
+    FakeMonitor.odd = "NaN"
+    try:
+        st1, b1 = get_(alice, "/api/values?m=silo")
+        st2, b2 = get_(alice, "/api/history?m=drying")
+        st3, b3 = get_(alice, "/api/values?m=drying")
+    finally:
+        FakeMonitor.odd = None
+
+    def _strict(t):
+        def no(c):
+            raise ValueError("%s is no JSON" % c)
+        return json.loads(t, parse_constant=no)
+    try:
+        j1, j2, j3, _je = _strict(b1), _strict(b2), _strict(b3), None
+    except ValueError as e:
+        j1, j2, j3, _je = {}, {}, {}, str(e)
+    check("serve: a monitor's NaN or ±Inf is sent as JSON can carry it: the values and the history parse as strict JSON",
+          st1 == st2 == st3 == 200 and _je is None, (st1, st2, st3, _je, b1[:200]))
+    check("...each kept for what it is — NaN, Infinity, -Infinity — apart from a value nobody gave (null)",
+          (j1.get("values") or {}).get("silo-fill") == "NaN" and (j1.get("values") or {}).get("silo-full-in") == "Infinity"
+          and (j2.get("history") or {}).get("grain-temperature") == [[1000, "NaN"], [1300, "-Infinity"]]
+          and (j3.get("values") or {}).get("drying-batches") == [{"name": "a", "value": 3.0}, {"name": "b", "value": "NaN"}],
+          (j1.get("values"), j2.get("history"), j3.get("values")))
     # THE CSV IS TEXT (3.10): a cell a spreadsheet would run as a formula is written with a quote before it; a number stays
     import view_export as _vx
     _csv = _vx.csv_text({"columns": ["=label", "n"], "rows": [{"bean": "x", "cells": ["=HYPERLINK(\"http://x\")", -3]},
