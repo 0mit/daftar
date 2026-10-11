@@ -143,6 +143,9 @@ jobs:
       - name: "view_forms: a form's value on a sheet drawn by its entries — a clause's day, repetition, notice and state, a payment's settlement — edited by its widgets and written through the gate"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_forms.py
+      - name: "view_places: a place on a sheet — looked up as it is typed, the garden's own first, the reader's position only when asked, a whereabouts never sent — landing as a coordinate in its system with the element it was read from and a `read` of its source, and an element that never establishes an identity"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_places.py
       - name: "view_details: what a page names of a being's details drawn on its sheet, kept whole — in the reader's calendar and digits, never edited there"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_details.py

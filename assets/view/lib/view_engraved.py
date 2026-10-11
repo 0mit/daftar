@@ -691,7 +691,66 @@ def settings():
             'durations': [{'unit': u, 'name': str(r.get('name') or u)} for u, r in (L.units or {}).items()
                           if r.get('quantity') == 'duration'],
             'currencies': [{'code': c, 'digits': r.get('digits')} for c, r in sorted(dmledger.core_units().items())
-                           if str(r.get('digits') or '').isdigit()]}
+                           if str(r.get('digits') or '').isdigit()],
+            # the reference systems a place is written in, and how well each is known, as the law states it
+            'crs': reference_systems()}
+
+
+def reference_systems():
+    """For a place (widgets/place.js): each reference system of the law (places.yaml `reference_systems`, read by
+    bin/geo.py) with its ensemble's accuracy, the unit named as CLDR names it (the law's own crossing, units-cldr-units)
+    so the reader is shown it in their words beside a coordinate — WGS 84 is accurate to 2 m, and nothing finer is read
+    from it."""
+    import geo as dmgeo
+    import units as dmunits
+    out = []
+    names = {str(r.get('name')): u for u, r in (vm.CORE.L.units or {}).items()}
+    for crs, r in sorted(dmgeo.systems(vm.ROOT).items()):
+        row = {'crs': crs}
+        acc = r.get('ensemble_accuracy')
+        if isinstance(acc, dict) and acc.get('count'):
+            unit = str(acc.get('unit') or '')
+            try:
+                unit = dmunits.code_of('cldr-units', {'unit': names.get(unit, unit)})[0]
+            except (ValueError, KeyError, OSError):
+                pass                                # a unit CLDR does not name is shown as the law writes it
+            row['accuracy'] = {'count': str(acc['count']), 'unit': unit}
+        out.append(row)
+    return out
+
+
+_COORD = re.compile(r'^EPSG:4326;(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:@\d{4}(?:\.\d+)?)?$')
+_OSM = re.compile(r'^osm:((?:node|way|relation)/[1-9][0-9]*)$')
+_GEONAMES = re.compile(r'^geonames:([1-9][0-9]{0,9})$')
+
+
+def places(may):
+    """THE GARDEN'S OWN PLACES a reader may read, carried with a served page for a place lookup (widgets/place.js),
+    which offers them first and works with them alone offline: each being the reader may read whole whose `be … as:
+    location` or `as: place`, not held, holds a coordinate in EPSG:4326, a map's element or a gazetteer's feature — by
+    its title, and landing as the being itself, whose coordinates stay said once, in its own bean. Only a page that can
+    write carries them (`scoped`): the offline report edits nothing, and may be published."""
+    out = []
+    for bid, b in sorted(vm.CORE.G.beans.items()):
+        if b.unread or os.path.basename(os.path.dirname(b.path or '')) != 'beans' or not may('read', bid):
+            continue
+        p = {'id': bid, 'title': title_of(bid), 'kind': b.kind}
+        for _i, verb, r in b.items:
+            if verb != 'be' or 'held' in r or r.get('as') not in ('location', 'place'):
+                continue
+            for x in _listed(r.get('at')):
+                m = _COORD.match(x) if isinstance(x, str) else None
+                if m and 'point' not in p:
+                    p['point'] = [float(m.group(1)), float(m.group(2))]
+                m = _OSM.match(x) if isinstance(x, str) else None
+                if m and 'osm' not in p:
+                    p['osm'] = m.group(1)
+                m = _GEONAMES.match(x) if isinstance(x, str) else None
+                if m and 'geonames' not in p:
+                    p['geonames'] = m.group(1)
+        if any(k in p for k in ('point', 'osm', 'geonames')):
+            out.append(p)
+    return out
 
 
 _CONTACT = re.compile(r'(root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32})`?(?: on ([A-Za-z0-9][A-Za-z0-9_.-]*(?:#[A-Za-z0-9_.-]+)?))?')
@@ -850,6 +909,7 @@ def scoped(host, user, keep=None):
         return rec['entry']
     gardener = getattr(host, 'gardener', None) or str(vm.fm_path(os.path.join(vm.ROOT, 'GARDEN.md')).get('gardener') or '')
     p = page(may, u.get('bean'), held, keep, contact)
+    p['places'] = places(may)                                     # what a place lookup offers first: the reader's own
     g = p['settings']['garden']
     if isinstance(u.get('calendar'), str) and u['calendar']:
         g['calendar'] = u['calendar']

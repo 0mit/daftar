@@ -201,6 +201,24 @@ export const SAID = {
   'sheet-copy': {en: 'A copy of the page, read only: a being is changed where its garden is served.',
                  fa: 'نسخه‌ای فقط‌خواندنی از صفحه: هر چیز همان‌جا تغییر می‌کند که باغش خدمت‌دهی می‌شود.'},
   'sheet-none': {en: 'This page names no facts of a {kind}.', fa: 'این صفحه هیچ واقعیتی از یک {kind} را نام نمی‌برد.'},
+  // a place (place.js)
+  'place-near': {en: 'Near me', fa: 'نزدیک من', tr: 'Yakınımda'},
+  'place-own': {en: 'in this garden', fa: 'در همین باغ', tr: 'bu bahçede'},
+  'place-here': {en: 'on this machine', fa: 'روی همین دستگاه', tr: 'bu makinede'},
+  'place-far': {en: 'from a place service', fa: 'از یک خدمت جای‌یابی', tr: 'bir yer hizmetinden'},
+  'place-none': {en: 'No place found.', fa: 'جایی پیدا نشد.', tr: 'Yer bulunamadı.'},
+  'place-sealed': {en: 'Looked up on this machine only: where a person will be is never sent.',
+                   fa: 'فقط روی همین دستگاه جست‌وجو می‌شود: اینکه کسی کجا خواهد بود هرگز فرستاده نمی‌شود.',
+                   tr: 'Yalnızca bu makinede aranır: birinin nerede olacağı asla gönderilmez.'},
+  'place-bare': {en: 'A coordinate is never bare: choose a place, or write it with its system, as {example}.',
+                 fa: 'مختصات هرگز بی‌دستگاه نیست: جایی را انتخاب کنید، یا آن را با دستگاهش بنویسید، مانند {example}.',
+                 tr: 'Bir koordinat asla çıplak değildir: bir yer seçin ya da onu sistemiyle yazın, örneğin {example}.'},
+  'place-pick': {en: 'Choose a place from the list, or write a position with its system.',
+                 fa: 'جایی را از فهرست انتخاب کنید، یا موقعیتی را با دستگاهش بنویسید.',
+                 tr: 'Listeden bir yer seçin ya da bir konumu sistemiyle yazın.'},
+  'place-nowhere': {en: 'This place says no coordinate: choose another, or write its position.',
+                    fa: 'این جا مختصاتی ندارد: جای دیگری را انتخاب کنید، یا موقعیتش را بنویسید.',
+                    tr: 'Bu yerin koordinatı yok: başka birini seçin ya da konumunu yazın.'},
 };
 export function say(key, o = {}, vars = {}) {
   const row = SAID[key] || {};
