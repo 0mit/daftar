@@ -305,6 +305,57 @@ def verb_row(verb):
                         'alone': bool(d.get('alone'))} if d else None}
 
 
+def value_of(dom, rows=None):
+    """The value of the values tree (core/law/values.yaml) an attribute of a form holds, read from its domain in the law:
+    a position is the value written as a position (`written: position`), a length of time `duration`, any other quantity
+    `quantity`, a table's rows or a key of the bean's own (its readings, its clauses) a `choice`, prose `text`, a pattern
+    or a path a `name`, a nested form its own entries. The browser draws it by the widget that implements that value."""
+    L = vm.CORE.L
+    written = {str(r.get('written')): v for v, r in (getattr(L, 'values', None) or {}).items() if r.get('written')}
+    if isinstance(dom, dict) and 'in' in dom and len(dom) <= 3 and not ({'type', 'quantity', 'key_of', 'pattern', 'entries'} & set(dom)):
+        dom = dom['in']                                  # an entry's own record: its domain is its `in`
+    if dom in ('extent', 'recurrence'):
+        return {'value': dom}
+    if dom == 'prose' or dom is None:
+        return {'value': 'text'}
+    if isinstance(dom, list):
+        return {'value': 'choice', 'rows': [str(x) for x in dom]}
+    if isinstance(dom, dict):
+        if 'quantity' in dom:
+            return {'value': 'duration' if dom['quantity'] == 'duration' else 'quantity'}
+        if 'key_of' in dom:
+            return {'value': 'choice', 'rows': list((rows or {}).get(dom['key_of']) or [])}
+        if dom.get('type') == 'clause':
+            return {'value': 'statement', 'rows': list((rows or {}).get('clauses') or [])}
+        if dom.get('type') in written:
+            return {'value': written[dom['type']]}
+        if 'entries' in dom:
+            return dict(form_def_of(dom, rows), value='form')
+        return {'value': 'name'}
+    return {'value': 'text'}
+
+
+def form_def_of(rec, rows=None):
+    attrs = rec.get('attrs') or rec.get('entries') or {}
+    return {'attrs': {str(k): dict(value_of(a, rows), required=str(a.get('required')) == 'true' if isinstance(a, dict) else False)
+                      for k, a in attrs.items()},
+            'one_of': [str(x) for x in _listed(rec.get('one_of'))], 'keyed_by': [str(x) for x in _listed(rec.get('keyed_by'))]}
+
+
+def form_def(name, b=None):
+    """A form of the law (`clause`, `settlement`, …) as a sheet's widget draws it: each attribute and the value it holds;
+    a choice of the bean's own — its readings (`key_of: selections`), its clauses — given its rows from the bean."""
+    rec = (vm.CORE.L.forms or {}).get(name)
+    if not isinstance(rec, dict):
+        return None
+    rows = {}
+    if b is not None:
+        rows['selections'] = sorted(r['id'] for _i, v, r in b.items if v == 'reckon' and isinstance(r.get('id'), str))
+        from core import measures
+        rows['clauses'] = sorted((measures.clauses_of(b, vm.ROOT) or {}).keys())
+    return dict(form_def_of(rec, rows), name=name)
+
+
 def statement_key(verb, r, nth):
     """The key a statement is named by, as bin/safe.py names it: `<verb>#<id>`, or `<verb>@<n>` where it has no id."""
     return f"{verb}#{r['id']}" if isinstance(r.get('id'), str) else f"{verb}@{nth}"
@@ -407,7 +458,9 @@ def sheet(bid, may, held=None):
         rows.append({'verb': f, 'statements': sts, 'may_add': may_part(f)})
     verbs = sorted(set(verbs_shown) | {dv for ds in dependents.values() for _k, dv, _r in ds})
     header = {h: b.header.get(h) for h in HEADER if h in [f for f, _l in shown] or h == 'title'}
-    return {'bean': bid, 'kind': b.kind, 'title': title_of(bid),
+    forms = sorted({s['form'] for v in verbs for s in list(verb_row(v)['roles'].values()) + list(verb_row(v)['qualifiers'].values())
+                    if s.get('form')})
+    return {'bean': bid, 'kind': b.kind, 'title': title_of(bid), 'forms': {f: form_def(f, b) for f in forms},
             'header': {h: {'value': x, 'may': may_part(h)} for h, x in header.items()},
             'details': {f: (b.header.get('details') or {}).get(f) for f, _l in shown
                         if f not in L.verbs and f not in HEADER and isinstance(b.header.get('details'), dict)
@@ -571,8 +624,21 @@ def settings():
     for the reader; a host adds the reader's own where it knows them."""
     import ledger as dmledger
     g = vm.fm_path(os.path.join(vm.ROOT, 'GARDEN.md'))
+    L = vm.CORE.L
+    systems = []
+    for sid, r in sorted((L.std_systems() or {}).items()):
+        if r.get('dimension') != 'time' or not r.get('calendar'):
+            continue
+        levels = [str(lv.get('level')) for lv in r.get('levels') or [] if isinstance(lv, dict)]
+        ex = str(r.get('example') or '')
+        prefix = ex.split(':', 1)[0] + ':' if re.match(r'^[a-z][a-z0-9-]*:', ex) else ''
+        systems.append({'system': sid, 'calendar': str(r['calendar']), 'prefix': prefix, 'week': 'week' in levels, 'levels': levels})
     return {'garden': {'gardener': str(g.get('gardener') or ''), 'zone': str(g.get('zone') or ''), 'title': vm.garden_name()},
             'asOf': today().isoformat(),
+            # the systems a repetition may be counted in, and the units of a length of time: the law's, for the widgets
+            'systems': systems,
+            'durations': [{'unit': u, 'name': str(r.get('name') or u)} for u, r in (L.units or {}).items()
+                          if r.get('quantity') == 'duration'],
             'currencies': [{'code': c, 'digits': r.get('digits')} for c, r in sorted(dmledger.core_units().items())
                            if str(r.get('digits') or '').isdigit()]}
 
