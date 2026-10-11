@@ -5281,3 +5281,17 @@ page has no such word yet.
 A PAGE OF READINGS NAMES NO CODE. A drawing module is the garden's code, which the host runs. The four archetypes
 engraved from readings need none, so a page whose drawings are all of them names none, and a garden whose pages are
 only readings carries no code of its own; the module is required where a drawing is drawn by it (`view check`).
+
+## core/law/registries.yaml: knowledge_schemes[ifc-4x3]
+
+A BUILDING MODEL'S MEASURES ARE THE LAW'S KINDS (2026-10-11). An IFC model types every number by a measure type
+(IfcLengthMeasure, IfcThermalTransmittanceMeasure) and states once, for the project, the unit each kind is in — an SI
+unit with a prefix, or a unit converted from one. Both cross: a measure type to the kind it measures, an SI unit to
+UCUM, so a wall's U-value is a thermal transmittance in W/(m2.K) and a door's width 900 mm, as the law writes them. The
+structural and hygrothermal measures whose kinds the law does not hold — a modulus of elasticity, a section modulus, a
+warping constant, a viscosity — are vacant, `universal`: a garden that keeps a structure will want them, and none is
+made up before it does. IFC's moment of inertia is a section's second moment of area (m⁴), not the law's, which is a
+mass's (kg·m², IFC's rotational mass): one name, two kinds, kept apart. A conversion-based unit is the model's own
+naming of a factor to an SI unit; it is read by that factor, exactly, so a foot is the law's foot whatever the model
+calls it, and a factor that is a rounding of π meets no unit at all. The schema is buildingSMART's, CC BY-ND, fetched by
+each machine; the crossing names its types and changes none.

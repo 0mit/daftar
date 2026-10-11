@@ -1,0 +1,165 @@
+code	unit	quantity	line	in	shape	back	vacant	why
+IfcAbsorbedDoseMeasure		absorbed-dose						
+IfcAccelerationMeasure		acceleration						
+IfcAmountOfSubstanceMeasure		amount-of-substance						
+IfcAngularVelocityMeasure		angular-speed						
+IfcAreaDensityMeasure		surface-density						
+IfcAreaMeasure		area						
+IfcCompoundPlaneAngleMeasure								an angle written as its degrees, minutes, seconds and millionths, a list of whole numbers: a plane angle in parts, read by its parts and never as one count
+IfcContextDependentMeasure								a measure whose kind its context gives: no kind of its own
+IfcCountMeasure		number						
+IfcCurvatureMeasure							universal	a curvature (an inverse length): no kind of the law yet
+IfcDescriptiveMeasure					text			a measure given in words
+IfcDoseEquivalentMeasure		dose-equivalent						
+IfcDynamicViscosityMeasure							universal	a dynamic viscosity: no kind of the law yet
+IfcElectricCapacitanceMeasure		capacitance						
+IfcElectricChargeMeasure		charge						
+IfcElectricConductanceMeasure		conductance						
+IfcElectricCurrentMeasure		current						
+IfcElectricResistanceMeasure		resistance						
+IfcElectricVoltageMeasure		potential-difference						
+IfcEnergyMeasure		energy						
+IfcForceMeasure		force						
+IfcFrequencyMeasure		frequency				true		
+IfcHeatFluxDensityMeasure		heat-flux-density						
+IfcHeatingValueMeasure							universal	a heating value (energy per mass, a fuel's): no kind of specific energy in the law yet
+IfcIlluminanceMeasure		illuminance						
+IfcInductanceMeasure		inductance						
+IfcIntegerCountRateMeasure		frequency						things counted per time (people an hour): a frequency of counted events
+IfcIonConcentrationMeasure		mass-concentration						the ions of a substance per volume of water, in mass: a mass concentration
+IfcIsothermalMoistureCapacityMeasure							universal	a moisture capacity (a volume per mass): no kind of the law yet
+IfcKinematicViscosityMeasure							universal	a kinematic viscosity: no kind of the law yet
+IfcLengthMeasure		length				true		
+IfcLinearForceMeasure							universal	a force per length (a line load): the law writes N/m as a linear stiffness, and holds no kind of a line load yet
+IfcLinearMomentMeasure							universal	a moment per length: no kind of the law yet
+IfcLinearStiffnessMeasure		linear-stiffness						
+IfcLinearVelocityMeasure		speed						
+IfcLuminousFluxMeasure		luminous-flux						
+IfcLuminousIntensityDistributionMeasure							universal	a luminous intensity per flux (a lamp's distribution, cd/lm): no kind of the law yet
+IfcLuminousIntensityMeasure		luminous-intensity						
+IfcMagneticFluxDensityMeasure		magnetic-flux-density						
+IfcMagneticFluxMeasure		magnetic-flux						
+IfcMassDensityMeasure		density						
+IfcMassFlowRateMeasure		mass-flow						
+IfcMassMeasure		mass						
+IfcMassPerLengthMeasure		linear-density						
+IfcModulusOfElasticityMeasure							universal	a modulus of elasticity (a stress per strain): a pressure's exponents, its own kind, which the law holds not yet
+IfcModulusOfLinearSubgradeReactionMeasure							universal	a soil's reaction per length: no kind of the law yet
+IfcModulusOfRotationalSubgradeReactionMeasure							universal	a soil's rotational reaction: no kind of the law yet
+IfcModulusOfSubgradeReactionMeasure							universal	a soil's reaction per area: no kind of the law yet
+IfcMoistureDiffusivityMeasure							universal	a moisture diffusivity: no kind of the law yet
+IfcMolecularWeightMeasure							universal	a molar mass (a mass per amount of substance): no kind of the law yet
+IfcMomentOfInertiaMeasure							universal	a section's second moment of area (m⁴): the law's moment of inertia is a mass's (kg·m², IfcRotationalMassMeasure), and it holds no second moment of area yet
+IfcMonetaryMeasure		money						an amount in the currency its unit names (IfcMonetaryUnit, ISO 4217)
+IfcNonNegativeLengthMeasure		length						
+IfcNormalisedRatioMeasure		ratio						
+IfcNumericMeasure								a number of no stated kind
+IfcPHMeasure		ph						
+IfcPlanarForceMeasure		pressure						a force spread on an area (a surface load): a pressure's kind, a force on an area
+IfcPlaneAngleMeasure		plane-angle				true		
+IfcPositiveLengthMeasure		length						
+IfcPositivePlaneAngleMeasure		plane-angle						
+IfcPositiveRatioMeasure		ratio						
+IfcPowerMeasure		power				true		
+IfcPressureMeasure		pressure				true		
+IfcRadioActivityMeasure		activity						
+IfcRatioMeasure		ratio				true		
+IfcRotationalFrequencyMeasure		rotational-speed						turns per time: a rotational speed
+IfcRotationalMassMeasure		moment-of-inertia						a mass's moment of inertia (kg·m²)
+IfcRotationalStiffnessMeasure							universal	a rotational stiffness (a moment per angle): no kind of the law yet
+IfcSectionModulusMeasure							universal	a section modulus (m³): a volume's exponents, its own kind, which the law holds not yet
+IfcSectionalAreaIntegralMeasure							universal	a sectional area integral (m⁵): no kind of the law yet
+IfcShearModulusMeasure							universal	a shear modulus: a pressure's exponents, its own kind, which the law holds not yet
+IfcSolidAngleMeasure		solid-angle						
+IfcSoundPowerLevelMeasure		level						a sound power as a level, in decibels against its reference
+IfcSoundPowerMeasure		power						
+IfcSoundPressureLevelMeasure		level				true		a sound pressure as a level, in decibels against its reference
+IfcSoundPressureMeasure		pressure						
+IfcSpecificHeatCapacityMeasure		specific-heat-capacity						
+IfcTemperatureGradientMeasure							universal	a temperature per length: no kind of the law yet
+IfcTemperatureRateOfChangeMeasure							universal	a temperature per time: no kind of the law yet
+IfcThermalAdmittanceMeasure							universal	a thermal admittance: a U-value's exponents, its own kind (a dynamic one), which the law holds not yet
+IfcThermalConductivityMeasure		thermal-conductivity						
+IfcThermalExpansionCoefficientMeasure							universal	a thermal expansion coefficient (per kelvin): no kind of the law yet
+IfcThermalResistanceMeasure		thermal-resistance						
+IfcThermalTransmittanceMeasure		thermal-transmittance						
+IfcThermodynamicTemperatureMeasure			temperature					a temperature read: a position on its scale, never a quantity
+IfcTimeMeasure		duration						
+IfcTorqueMeasure		torque						
+IfcVaporPermeabilityMeasure							universal	a vapour permeability: no kind of the law yet
+IfcVolumeMeasure		volume						
+IfcVolumetricFlowRateMeasure		volume-flow						
+IfcWarpingConstantMeasure							universal	a section's warping constant (m⁶): no kind of the law yet
+IfcWarpingMomentMeasure							universal	a warping moment: no kind of the law yet
+AMPERE	A							
+BECQUEREL	Bq							
+CANDELA	cd							
+CENTI.CUBIC_METRE	mL							
+CENTI.METRE	cm							
+COULOMB	C							
+CUBIC_METRE	m3							
+DECI.CUBIC_METRE	L							
+FARAD	F							
+GIGA.HERTZ	GHz							
+GRAM	g							
+GRAY	Gy							
+HENRY	H							
+HERTZ	Hz							
+JOULE	J							
+KILO.BECQUEREL	kBq							
+KILO.GRAM	kg							
+KILO.HERTZ	kHz							
+KILO.JOULE	kJ							
+KILO.METRE	km							
+KILO.NEWTON	kN							
+KILO.OHM	kOhm							
+KILO.PASCAL	kPa							
+KILO.SQUARE_METRE	km2							
+KILO.VOLT	kV							
+KILO.WATT	kW							
+LUMEN	lm							
+LUX	lx							
+MEGA.BECQUEREL	MBq							
+MEGA.GRAM	t							
+MEGA.HERTZ	MHz							
+MEGA.JOULE	MJ							
+MEGA.OHM	MOhm							
+MEGA.PASCAL	MPa							
+MEGA.WATT	MW							
+METRE	m							
+MICRO.AMPERE	uA							
+MICRO.FARAD	uF							
+MICRO.GRAM	ug							
+MICRO.HENRY	uH							
+MICRO.MOLE	umol							
+MILLI.AMPERE	mA							
+MILLI.GRAM	mg							
+MILLI.GRAY	mGy							
+MILLI.HENRY	mH							
+MILLI.METRE	mm							
+MILLI.MOLE	mmol							
+MILLI.SECOND	ms							
+MILLI.SIEMENS	mS							
+MILLI.SIEVERT	mSv							
+MILLI.SQUARE_METRE	mm2							
+MILLI.TESLA	mT							
+MILLI.VOLT	mV							
+MILLI.WATT	mW							
+MOLE	mol							
+NANO.FARAD	nF							
+NEWTON	N							
+OHM	Ohm							
+PASCAL	Pa							
+PICO.FARAD	pF							
+RADIAN	rad							
+SECOND	s							
+SIEMENS	S							
+SIEVERT	Sv							
+SQUARE_METRE	m2							
+STERADIAN	sr							
+TESLA	T							
+VOLT	V							
+WATT	W							
+WEBER	Wb							
+DEGREE_CELSIUS				celsius-scale				a temperature read in degrees Celsius: a position on its scale
+KELVIN				kelvin-scale				a temperature read in kelvins: a position on its scale; a difference is a quantity in `K`

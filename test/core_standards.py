@@ -622,5 +622,82 @@ check("LOINC: the law's kind is written back as its property — mass concentrat
        {'quantity': 'frequency'})] == ['MCnc', 'SCnc', 'Temp', 'Time', 'Freq'])
 shutil.rmtree(CACHE, ignore_errors=True)
 
+# IFC 4.3: what a building model measures, and in what units
+fc = next(r for r in reg['knowledge_schemes'] if r['scheme'] == 'ifc-4x3')
+ic = dmunits.crossing('ifc-4x3')
+check("IFC 4.3 is held fetched from buildingSMART's schema (CC BY-ND 4.0), read by a reader the law lists, and crossed: "
+      "its measure types to kinds, its SI units (a prefix and a name) to UCUM",
+      fc['holding'] == 'fetched' and fc['fetch']['from'].startswith('https://standards.buildingsmart.org/')
+      and fc['fetch']['reader'] == 'ifc-express' and 'ifc-express' in dmfetch.READERS
+      and 'ifc-express' in reg['fetch_shape']['readers'] and fc['licence'] == 'CC-BY-ND-4.0'
+      and dmunits.target(ic[('', 'IfcThermalTransmittanceMeasure')]) == {'quantity': 'thermal-transmittance'}
+      and dmunits.target(ic[('', 'MILLI.METRE')]) == {'unit': 'mm'}
+      and dmunits.target(ic[('', 'DEGREE_CELSIUS')]) == {'in': 'celsius-scale'}, fc)
+check("...the structural measures whose kinds the law has not yet are vacant, `universal` — a warping constant, a "
+      "section modulus, a modulus of elasticity, and IFC's moment of inertia, a section's second moment of area (m⁴), "
+      "which is not the law's (a mass's, IFC's rotational mass); a linear stiffness is the law's",
+      all(ic[('', m)].get('vacant') == 'universal' for m in ('IfcWarpingConstantMeasure', 'IfcSectionModulusMeasure',
+          'IfcModulusOfElasticityMeasure', 'IfcMomentOfInertiaMeasure', 'IfcRotationalStiffnessMeasure'))
+      and dmunits.target(ic[('', 'IfcRotationalMassMeasure')]) == {'quantity': 'moment-of-inertia'}
+      and dmunits.target(ic[('', 'IfcLinearStiffnessMeasure')]) == {'quantity': 'linear-stiffness'}
+      and len([1 for (a, c), r in ic.items() if c.endswith('Measure')]) >= 90)
+CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
+os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
+EXP = ("(* a schema in IFC's shape *)\nSCHEMA IFC4X3_ADD2;\n\nTYPE IfcLengthMeasure = REAL;\nEND_TYPE;\n\n"
+       "TYPE IfcPositiveLengthMeasure = IfcLengthMeasure;\n WHERE\n\tWR1 : SELF > 0.;\nEND_TYPE;\n\n"
+       "TYPE IfcThermodynamicTemperatureMeasure = REAL;\nEND_TYPE;\n\nTYPE IfcPressureMeasure = REAL;\nEND_TYPE;\n\n"
+       "TYPE IfcSIPrefix = ENUMERATION OF\n\t(MEGA\n\t,KILO\n\t,MILLI);\nEND_TYPE;\n\n"
+       "TYPE IfcSIUnitName = ENUMERATION OF\n\t(DEGREE_CELSIUS\n\t,METRE\n\t,PASCAL);\nEND_TYPE;\n\nEND_SCHEMA;\n")
+src = os.path.join(CACHE, 'IFC4X3_ADD2.exp')
+with open(src, 'w', encoding='utf-8', newline='\n') as fh:
+    fh.write(EXP)
+r = subprocess.run([PY, os.path.join(ROOT, 'bin', 'fetch.py'), 'ifc-4x3', '--from', src], capture_output=True, text=True,
+                   encoding='utf-8', env=dict(os.environ))
+K = dmknowledge.Knowledge(ROOT)
+check("fetch: IFC's schema is kept unchanged, its measure types and its SI units — each name alone and after each prefix "
+      "— read into code, kind and base",
+      r.returncode == 0 and '16 rows' in r.stdout and (K.row('ifc-4x3', 'MILLI.METRE') or {}).get('base') == 'METRE'
+      and (K.row('ifc-4x3', 'IfcPositiveLengthMeasure') or {}).get('base') == 'IfcLengthMeasure'
+      and 'crossed by the law, and not in this copy' in r.stdout, r.stdout + r.stderr)
+for name, data, says in (("a file that is no schema", b'nothing here', 'no IFC schema'),
+                         ("a schema without its SI prefixes", EXP.replace('IfcSIPrefix', 'IfcOther').encode(), '0 prefixes')):
+    try:
+        dmfetch.keep('ifc-4x3', data, 'test')
+        refused = ''
+    except dmfetch.Refused as e:
+        refused = str(e)
+    check(f"fetch: IFC — {name} — is refused, and nothing is kept", says in refused and len(dmfetch.fetched('ifc-4x3')) == 1,
+          refused)
+mm = dmunits.read('ifc-4x3', '2500', 'MILLI.METRE')
+celsius = dmunits.read('ifc-4x3', '21.5', 'DEGREE_CELSIUS')
+mpa = dmunits.read('ifc-4x3', '30', 'MEGA.PASCAL')
+try:
+    dmunits.judge('ifc-4x3', 'IfcMomentOfInertiaMeasure', {'count': '1', 'unit': 'kg.m2'})
+    inertia = ''
+except ValueError as e:
+    inertia = str(e)
+check("IFC: a model's IfcLengthMeasure(2500.) in its MILLI.METRE is 2500 mm, a length, written back as MILLI.METRE and "
+      "IfcLengthMeasure; a temperature in DEGREE_CELSIUS a reading on its scale, never a quantity; a pressure in "
+      "MEGA.PASCAL 30 MPa, a surface load's kind too; a section's moment of inertia refused, vacant",
+      mm == {'count': '2500', 'unit': 'mm'} and dmunits.judge('ifc-4x3', 'IfcLengthMeasure', mm) == ''
+      and dmunits.write('ifc-4x3', mm) == ('2500', 'MILLI.METRE')
+      and dmunits.code_of('ifc-4x3', {'quantity': 'length'})[0] == 'IfcLengthMeasure'
+      and celsius == 'C:21.5' and dmunits.judge('ifc-4x3', 'IfcThermodynamicTemperatureMeasure', celsius) == ''
+      and dmunits.judge('ifc-4x3', 'IfcThermodynamicTemperatureMeasure', {'count': '21.5', 'unit': 'K'}) != ''
+      and mpa == {'count': '30', 'unit': 'MPa'} and dmunits.judge('ifc-4x3', 'IfcPressureMeasure', mpa) == ''
+      and dmunits.judge('ifc-4x3', 'IfcPlanarForceMeasure', mpa) == ''
+      and 'second moment of area' in inertia, (mm, celsius, mpa, inertia))
+try:
+    dmunits.unit_of('0.0174532925199433', 'rad')
+    degree = ''
+except ValueError as e:
+    degree = str(e)
+check("IFC: a conversion-based unit is read by the exact factor the model states — 0.3048 m is the law's foot, "
+      "0.45359237 kg its pound — and a factor that is a rounding (a degree as π/180, a psi to fourteen digits) meets "
+      "none of the law's units",
+      dmunits.unit_of('0.3048', 'm') == ['[ft_i]'] and dmunits.unit_of('0.45359237', 'kg') == ['[lb_av]']
+      and 'only through what defines it' in degree and dmunits.unit_of('6894.75729316836', 'Pa') == [])
+shutil.rmtree(CACHE, ignore_errors=True)
+
 print(f"\ncore_standards: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)
