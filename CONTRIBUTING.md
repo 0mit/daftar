@@ -82,6 +82,7 @@ parts, changes).
    python3 test/act.py
    python3 test/view.py
    python3 test/viewcap.py
+   python3 test/view_handplace.py
    python3 test/catalogue.py
    python3 test/garden.py
    reuse lint

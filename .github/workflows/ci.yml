@@ -125,6 +125,9 @@ jobs:
       - name: "viewcap: a page's asks put to the ledger's grants — parts, tables and CSV, entry forms through the gate, renders, a calendar as a pass, a schedule; daftar's own suite results drawn"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/viewcap.py
+      - name: "view_handplace: the archetypes engraved from readings — a queue, a timeline, flows, a sheet — their law, the readings they draw, the one write path a sheet's Save takes, held values, and the renderers in a browser"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_handplace.py
       - name: "catalogue: every part of the language, how the parts relate and what each is held to — read from the sources each time, the same bytes twice, and in a garden its copy of the language alone"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/catalogue.py

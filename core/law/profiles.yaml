@@ -210,6 +210,22 @@ profiles:
         position: health-chain
         reason: universal
         why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need"
+      - at: "table:archetypes"
+        position: queue
+        reason: universal
+        why: "the shapes engraved from readings, declared whole; a garden takes the ones its pages need"
+      - at: "table:archetypes"
+        position: timeline
+        reason: universal
+        why: "the shapes engraved from readings, declared whole; a garden takes the ones its pages need"
+      - at: "table:archetypes"
+        position: flows
+        reason: universal
+        why: "the shapes engraved from readings, declared whole; a garden takes the ones its pages need"
+      - at: "table:archetypes"
+        position: sheet
+        reason: universal
+        why: "the shapes engraved from readings, declared whole; a garden takes the ones its pages need"
       - at: "form:drawing.values.live"
         position: live-state
         reason: universal
@@ -277,8 +293,26 @@ archetypes:
     when: "what is drawn is a bounded run that must end before a moment"
   - archetype: table
     reads: [record]
+    axes: { inline: taxis, block: ordinal }
     meaning: "the members of a reading, or the rows of a series, one line each with a column per path: the report, and an offline file of it"
     when: "the question is which ones, and what each holds"
+  - archetype: queue
+    axes: { block: ordinal }
+    meaning: "what waits, and for whom: the reader's leads (bin/leads.py), grouped by what each waits on — a decision, a case at a step, an obligation falling due, a failure a reading shows, an open session — the most urgent first, each opening the sheet of the being it is about. Engraved from the reading: no drawing module draws it"
+    when: "the question is what needs the reader now"
+  - archetype: timeline
+    frame: [time]
+    axes: { inline: time }
+    meaning: "the members of a reading placed by their moments in the reader's calendar — a happening's time, a clause's due day and each occurrence of its repetition within the drawing's `span`, walked by bin/stale.py, the function that warns — as a week (a grid of days, its first the day the reader's region begins a week on), a month, or a list: three readings of one line. Engraved from the reading: no drawing module draws it"
+    when: "the question is when"
+  - archetype: flows
+    reads: [pay, bear, pass]
+    axes: { inline: flow }
+    meaning: "who owes whom, and what went between gardens: parties as nodes and, per currency, an arrow from the one who owes to the one owed, netted as bin/ledger.py nets it, its amount exact; or gardens as nodes, an arrow for what went from one to the other. The arrowhead is the glyph of `next` in the reader's script. Engraved from the reading: no drawing module draws it"
+    when: "the question is who owes whom, or what crossed between gardens"
+  - archetype: sheet
+    meaning: "one being as it stands: its title and summary, its statements verb by verb — each with the statements that take it as their `of` beneath it, a payment with its shares and the clauses that ask it — and its held values, marked as kept on the machine that holds them; the facts its page's `fields` names for its kind. For a reader who may write it, the one place it is changed: one Edit turns each fact they may write into its widget, and one Save is one commit with one journal entry. Engraved from the being: no drawing module draws it"
+    when: "the question is what one being is, or a change to it"
   - archetype: health-chain
     meaning: "tiles in flow order with value, limit and trend, and the blind spots"
     when: "no shape native to what is drawn is designed yet"
@@ -309,9 +343,8 @@ forms:
     replaces: [view, view_monitors]
     attrs:
       drawings:
-        required: "true"
         in: { pointer: bean_field_pointer }
-        meaning: "`file:<path>` of the garden's own drawing module: the garden's code, never the law's"
+        meaning: "`file:<path>` of the garden's own drawing module: the garden's code, never the law's. A page whose drawings are all engraved from readings — a queue, a timeline, flows, a sheet — names none"
       palette:
         in: { pointer: bean_field_pointer }
         meaning: "`file:<path>` of the garden's own palette: the colours its sheets are drawn in, in each mode — day, night, print — as tokens (`{ modes: { <mode>: { <token>: <colour> } } }`). The grammar is the asset's and every garden's; the palette is the garden's. Absent, the asset's own"
@@ -343,7 +376,7 @@ forms:
             fact:
               required: "true"
               in: { pattern: "^[a-z][a-z0-9_.-]*$" }
-              meaning: "the fact a card shows: a verb of the law (the being's statements of it), a key of the header (`title`, `summary`, `tags`), or a key `details` keeps"
+              meaning: "the fact a card shows: a verb of the law (the being's statements of it), a key of the header (`title`, `summary`, `tags`), or a key `details` keeps. A statement of the verb that is sealed (`held`) is shown by the host that holds its store, and only to a reader who may read it; every other reader is told where it is kept"
             shown_from:
               required: "true"
               in: { registry: lenses, take: lens }
@@ -440,6 +473,34 @@ forms:
       frame:
         in: { registry: lines, take: aspect, where: { figure: [sequence] } }
         meaning: "the aspect the drawing is laid out along — place (a map, a room, a rack), time (a timeline), routine or walk (its steps, a course), ordinal (a line) — and so what stands where in it; absent, placed by hand"
+      axes:
+        meaning: "where each order runs on the drawing, written as one mapping, `{ inline: time }`: per axis of the drawing, the order that runs along it, a row of `orientations` that runs on that axis — so an order is never laid on an axis its row does not take (a magnitude runs up, never along the reader's line). widgets/direction.js lays the drawing out from it. Absent, its archetype's own (`archetypes` `axes`)"
+        in:
+          entries:
+            inline:
+              in: { registry: orientations, take: order, where: { axis: [inline] } }
+              meaning: "the order that runs along the reader's line, from its start to its end, turning with the script"
+            block:
+              in: { registry: orientations, take: order, where: { axis: [block] } }
+              meaning: "the order that runs down the page, one line after another"
+            vertical:
+              in: { registry: orientations, take: order, where: { axis: [vertical] } }
+              meaning: "the order that runs up the page, the body's own up, which never turns with the script"
+            map:
+              in: { registry: orientations, take: order, where: { axis: [map] } }
+              meaning: "the order a map is laid out in: north up and east right, whatever the reader's script"
+      span:
+        in: extent
+        meaning: "timeline: how far it reaches on each side of the day it is read on, a length on `time` (`measure`); a repetition is walked within it and never beyond. Absent, six weeks on each side: a month's grid and the weeks around it"
+      layouts:
+        in: [week, month, list]
+        meaning: "timeline: the readings of its one line a reader switches between — week (a grid of days), month (a grid of weeks), list (a line for each day that holds something) — the first listed shown first; absent, all three, week first"
+      nodes:
+        in: [parties, gardens]
+        meaning: "flows: what its nodes are. parties — the parties to the agreements its `selection` holds (absent, every agreement here), and per currency an arrow from the one who owes to the one owed, netted as bin/ledger.py nets it | gardens — the garden and each other garden it records, and an arrow for what went from one to the other: what it took from it (`take`), what it proposed to it (`propose`), what passed to or from another garden (`pass`)"
+      new:
+        in: { registry: kinds, take: kind }
+        meaning: "the kinds of being a reader may make from this drawing: each opens as an empty sheet of its kind, whose first Save mints the bean's id — an opaque `p-<8 hex>` for a person, kept so until they give their word — and writes it whole. The page's `fields` says which facts a sheet of the kind shows"
       opens:
         meaning: "zoom: a drawn element that opens a drawing of its own — another drawing of the page, or, with no `view`, a DETAIL of this one: the region a boundary draws, at a larger scale, as a technical drawing's detail view is. A lens holds its limit by opening a part, never by crowding it"
         in:
@@ -559,9 +620,20 @@ forms:
       writes:
         in:
           entries:
-            term: { required: "true", in: { pattern: "^[a-z][a-z0-9_]*$" } }
-            attrs: { in: { entries: { attr: { required: "true", in: { type: kebab } } } } }
-        meaning: "an entry form for those attributes of that term, built from the law's form of it, saved through bin/save.py as the host with the person in `<who>`, after `write` is granted them; the gate judges it as any other commit"
+            verb:
+              in: { registry: verbs, take: verb }
+              meaning: "a verb of the law: its form is derived each time from the verb's row — each role and qualifier drawn by the widget of its shape, what is `required` and the row's default from the row — and the statement it adds is written as a sheet's Save writes one"
+            preset:
+              in: any
+              meaning: "with `verb`: roles the form fills itself, by the verb's own role names (`{ through: card }`), which the person writing does not change"
+            term:
+              in: { pattern: "^[a-z][a-z0-9_]*$" }
+              meaning: "in today's words: a term whose entry the form adds"
+            attrs:
+              in: { entries: { attr: { required: "true", in: { type: kebab } } } }
+              meaning: "with `term`: the attributes the form asks for"
+          one_of: [verb, term]
+        meaning: "an entry form: a statement of a verb of the law, added to the being the drawing draws, or to a new being of its `new`, by the one write path a sheet's Save takes — or, in today's words, an entry of a term for those attributes, built from the law's form of it. Saved through bin/save.py with the reader's being as `<who>`, after `write` is granted them; the gate judges it as any other commit"
       renders:
         in:
           entries:
@@ -663,8 +735,12 @@ forms:
         expects: [elapsed]
         why: "without how long it has run, the bar against the deadline cannot be drawn"
       - { when: { archetype: table }, requires: [columns], why: "a table answers with a column per path" }
+      - { when: { archetype: timeline }, requires: [selection], why: "a timeline places the members of a reading at their moments" }
+      - when: { archetype: flows }
+        requires: [nodes]
+        why: "flows answer with who owes whom, read from the ledger, or with what passed between gardens"
   lenses: { lens: required, depth: required, form: required, max: required, meaning: required }
-  archetypes: { archetype: required, meaning: required, when: required, frame: optional, reads: optional }
+  archetypes: { archetype: required, meaning: required, when: required, frame: optional, reads: optional, axes: optional }
   orientations: { order: required, of: required, axis: required, sense: required, follows: required, commands: optional, meaning: required }
   planes: { plane: required, meaning: required }
   profiles:
