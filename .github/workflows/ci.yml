@@ -146,6 +146,9 @@ jobs:
       - name: "view_tags: a being's tags on its sheet, changed in the one Edit as a set of words and written through the gate"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_tags.py
+      - name: "view_said: the queue's leads and the timeline's sessions said in the reader's language and calendar — a step by its walk's words, a clause's day in the reader's calendar, an attendance at its own hour"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_said.py
       - name: "names: the law's words a page shows — verbs, roles, qualifiers, kinds, header keys, a form's attributes — named in every language the tables carry, and a sheet drawn in its reader's"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/names.py

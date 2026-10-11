@@ -146,9 +146,14 @@ is read each time it is asked, as the release's tools read it, never computed ag
 (`lib/view_engraved.py`):
 
 - a **queue** — what waits for the reader: `bin/leads.py`'s leads for them, grouped by what each waits on (a decision,
-  a case at a step, an obligation falling due, a failure, an open session), the most urgent first;
-- a **timeline** — the members of a reading at their moments: a happening's time, and a clause's due day and each
-  occurrence of its repetition within the `span`, walked by `bin/stale.py`'s `occurrences`, the function that warns.
+  a case at a step, an obligation falling due, a failure, an open session), the most urgent first. Each is said in the
+  reader's language from what it is and what it is about — a case by its walk's own words for its step, a clause by
+  its words and the day it falls due in the reader's calendar, whatever calendar it counts in — and bin/leads.py's
+  English `why`, a log's sentence, is the line's title;
+- a **timeline** — the members of a reading at their moments: a happening's time (its `be` at a moment, or an
+  attendance at its own, `attend … at`), and a clause's due day and each occurrence of its repetition within the
+  `span`, walked by `bin/stale.py`'s `occurrences`, the function that warns; a repetition of an attendance (a series'
+  sessions) keeps that attendance's hour, and is named by its being, never by the statement's id.
   Week, month and list are three readings of one line; the week begins on the day the reader's region begins one
   (CLDR's `firstDay`), in the reader's calendar and digits;
 - **flows** — who owes whom: `bin/ledger.py`'s reading (`ledger.reading`, what `--json` prints) of the agreements the

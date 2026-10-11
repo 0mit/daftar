@@ -39,7 +39,7 @@
 
     function ev(e) {
       var what = e.kind === 'due'
-        ? h`${e.what ? w.text.show(e.what) : ''}${e.amount ? h` · ${t.w.money.show(e.amount.count, e.amount.unit)}` : ''}${
+        ? h`${e.time ? h`${w.moment.showTime(e.time)} ` : ''}${e.what ? w.text.show(e.what) : ''}${e.amount ? h` · ${t.w.money.show(e.amount.count, e.amount.unit)}` : ''}${
             e.times && e.times !== '1' ? h` · <span class="eg-nth">${t.say('timeline-nth', {i: w.locale.inDigits(String(e.index), ns), n: w.locale.inDigits(String(e.times), ns)})}</span>` : ''}`
         : (e.time ? w.moment.showTime(e.time) : '');
       return h`<li class="eg-event eg-${e.kind}" data-day="${e.day}">${w.being.show(e.bean, e.title, {action: 'open'})} ${what}</li>`;

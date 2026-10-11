@@ -77,7 +77,8 @@ def queue(reader, may):
         about = x.get('about')
         if _bean(about) is not None and not may('read', about):
             continue
-        out.append(dict(x, title=title_of(about) if _bean(about) is not None else None, opens=about if _bean(about) is not None else None))
+        out.append(dict(x, title=title_of(about) if _bean(about) is not None else None, opens=about if _bean(about) is not None else None,
+                        **said_of(x)))
 
     def urgency(x):
         k = x.get('kind')
@@ -89,6 +90,38 @@ def queue(reader, may):
         return (g, str(x.get('since') or ''), str(x.get('about')))
     out.sort(key=urgency)
     return {'reader': reader, 'groups': [k for k in LEAD_ORDER if any(x.get('kind') == k for x in out)], 'leads': out}
+
+
+def said_of(x):
+    """What a lead's sentence says, read from the garden, for the reader's language to say it in (view_queue.js composes
+    it from the widgets' sentences; bin/leads.py's own `why` is its English, kept beside): a case's step by its walk's
+    own words; a clause by its words and the day it falls due, as a day of the Gregorian calendar the widgets convert
+    from (a day written in another calendar, or as an ISO week's day, is read by bin/stale.py); a failure by its `as`."""
+    k, out = x.get('kind'), {}
+    if k == 'case' and isinstance(x.get('walk'), str):
+        steps = (vm.fm(x['walk'], 'mappings') or vm.fm(x['walk'])).get('steps') or []
+        st = next((s for s in steps if isinstance(s, dict) and s.get('id') == x.get('step')), {})
+        if st.get('do'):
+            out['step_says'] = str(st['do'])
+    elif k == 'obligation':
+        b = _bean(x.get('about'))
+        if b is not None:
+            from core import measures
+            e = (measures.clauses_of(b, vm.ROOT) or {}).get(x.get('clause')) or {}
+            w = e.get('what')
+            if isinstance(w, str) and w and w not in {r.get('id') for _i, _v, r in b.items if isinstance(r, dict)}:
+                out['what'] = w                       # words, never a statement's id standing in for them
+        if x.get('due') is not None:
+            m = _moment(str(x['due']))
+            if m:
+                out['day'] = m[0]
+    elif k == 'health':
+        b = _bean(x.get('about'))
+        f = next((r for _i, v, r in (b.items if b is not None else []) if v == 'fail' and isinstance(r, dict)
+                  and r.get('id') == x.get('fail')), None)
+        if f and isinstance(f.get('as'), str):
+            out['fails_as'] = f['as']
+    return out
 
 
 # ------------------------------------------------------------------------------------------------------------ timeline
@@ -135,13 +168,24 @@ def timeline(v, may, on=None):
         if b is None or not may('read', bid):
             continue
         t = title_of(bid)
+        times = {}                              # a statement's own time of day, by its id: what a repetition of it keeps
+        sessions = {}                           # the days a statement's own session is on, by its id
         for _i, verb, r in b.items:
-            if verb == 'be' and isinstance(r, dict) and 'held' not in r and r.get('by') in ('self', bid):
-                for x in _listed(r.get('at')):
-                    m = _moment(x)
-                    if m and lo <= datetime.date.fromisoformat(m[0]).toordinal() <= hi:   # a day of its own calendar
-                        events.append({'day': m[0], 'time': m[1], 'at': x, 'bean': bid, 'title': t, 'kind': 'happening',
-                                       'statement': r.get('id')})
+            # A HAPPENING'S TIME: its `be` at a moment, or an attendance at its own moment (`attend … at`: a session of a
+            # series, a sitting moved to another day) — each placed once, at the day of its own calendar
+            if not isinstance(r, dict) or 'held' in r:
+                continue
+            if not (verb == 'be' and r.get('by') in ('self', bid) or verb == 'attend' and r.get('of') in ('self', bid)):
+                continue
+            for x in _listed(r.get('at')):
+                m = _moment(x)
+                if m and isinstance(r.get('id'), str):
+                    times.setdefault(r['id'], m[1])
+                    sessions.setdefault(r['id'], set()).add(m[0])
+                if m and lo <= datetime.date.fromisoformat(m[0]).toordinal() <= hi and \
+                        not any(e['bean'] == bid and e['day'] == m[0] and e['time'] == m[1] for e in events):
+                    events.append({'day': m[0], 'time': m[1], 'at': x, 'bean': bid, 'title': t, 'kind': 'happening',
+                                   'statement': r.get('id')})
         for cid, e in (measures.clauses_of(b, vm.ROOT) or {}).items():
             if not isinstance(e, dict) or e.get('state') in ('met', 'waived', 'broken') or e.get('due') is None:
                 continue
@@ -151,18 +195,25 @@ def timeline(v, may, on=None):
                 notes.append(f"{bid} {cid}: its due day {e['due']} is not walked here: {why}")
                 continue
             rec = e.get('every') if isinstance(e.get('every'), dict) else None
-            base = {'bean': bid, 'title': t, 'kind': 'due', 'clause': cid, 'what': e.get('what'), 'by': e.get('by'),
-                    'to': e.get('to'), 'amount': e.get('amount'), 'permission': e.get('permission')}
+            # A REPETITION OF A STATEMENT (a series' sessions: `can { of: <its attend> }` with an `every`): each occurrence
+            # at that statement's own time of day, and its words the being's, never the statement's id
+            of_statement = e.get('what') in times
+            base = {'bean': bid, 'title': t, 'kind': 'due', 'clause': cid, 'what': None if of_statement else e.get('what'),
+                    'by': e.get('by'), 'to': e.get('to'), 'amount': e.get('amount'), 'permission': e.get('permission'),
+                    'at_time': times.get(e.get('what')) if of_statement else None}
             if rec is None:
                 if lo <= first <= hi:
-                    events.append(dict(base, day=datetime.date.fromordinal(first).isoformat(), time=None, index=1, times='1'))
+                    events.append(dict(base, day=datetime.date.fromordinal(first).isoformat(), time=base['at_time'], index=1, times='1'))
                 continue
             try:
                 for i, n in enumerate(dmstale.occurrences(first, rec), 1):
                     if n > hi:
                         break
-                    if n >= lo:
-                        events.append(dict(base, day=datetime.date.fromordinal(n).isoformat(), time=None, index=i,
+                    day = datetime.date.fromordinal(n).isoformat()
+                    # a series' occurrence on the day of its own statement's session is that session, drawn already; any
+                    # other clause is drawn whatever else its being has that day (a rent due on the day of a meeting)
+                    if n >= lo and not (of_statement and day in sessions.get(e.get('what'), ())):
+                        events.append(dict(base, day=day, time=base['at_time'], index=i,
                                            times=None if rec.get('times') is None else str(rec.get('times'))))
             except dmstale.Unreckoned as why:
                 notes.append(f"{bid} {cid}: its repetition is not walked here: {why}")
