@@ -14,6 +14,18 @@
    "body": "\nBody.\n"
   },
   {
+   "name": "a byte-order mark at the start of a document with no fence is let go too: not fenced, the rest the body",
+   "text": "\ufeffbean: a\n",
+   "front": null,
+   "body": "bean: a\n"
+  },
+  {
+   "name": "a byte-order mark before an opening fence with no closing one is let go: not fenced, the rest the body",
+   "text": "\ufeff---\nbean: a\n",
+   "front": null,
+   "body": "---\nbean: a\n"
+  },
+  {
    "name": "line ends CR LF: a fence takes the CR before its LF, and the lines between keep theirs",
    "text": "---\r\nbean: a\r\n---\r\nBody.\r\n",
    "front": "\nbean: a\r\n",

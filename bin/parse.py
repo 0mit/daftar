@@ -49,7 +49,7 @@ BOM = '﻿'
 
 
 def split_front_matter(text):
-    """(front_matter_text, body) for a fenced document, else (None, text).
+    """(front_matter_text, body) for a fenced document, else (None, text); a leading UTF-8 BOM let go either way.
 
     The opening fence must be the document's first line (a UTF-8 BOM is tolerated). The closing fence
     is the next line that is exactly `---`. Byte-for-byte compatible with the old naive split on every
