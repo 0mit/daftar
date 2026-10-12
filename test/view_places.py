@@ -17,6 +17,8 @@ which Sam attends, says when; a page draws a sheet of the café and of the meeti
                 secondary line, picked; Save sends the place as a coordinate, latitude first, with its element and the
                 source it was read from; the coordinate shown in the reader's digits, left to right in its isolate; on the
                 meeting's sheet, its place looked up here alone — the place service beyond the machine never asked; on
+                the other café's sheet, the place it already says is edited by the same lookup, and another picked in
+                its stead is sent as a change of that statement; on
                 the café's sheet again, a `be` that says nothing of how it places: the street picked, an area, is sent
                 `as: place`, and a house at a node of the map, a point, as the person left it
   the write     that add, through the view's one write path (view_write), lands as the law writes a place: the
@@ -130,7 +132,7 @@ A page.
           "one element both standing", rc == 0 and '0 error(s)' in out, out[-1500:])
 
     # ------------------------------------------------------------------ the reading
-    R = py("{'cafe': ve.sheet('cafe-a', may), 'meeting': ve.sheet('meeting', may), 'settings': ve.settings(), "
+    R = py("{'cafe': ve.sheet('cafe-a', may), 'cafeb': ve.sheet('cafe-b', may), 'meeting': ve.sheet('meeting', may), 'settings': ve.settings(), "
            "'places': ve.places(may), 'closed': ve.places(lambda act, bean, positions=None: bean == 'cafe-b')}")
     own = {p.get('id'): p for p in R.get('places') or []}
     check("the page carries the garden's own places, each by its title with its coordinate and its element; a being that "
@@ -166,7 +168,7 @@ A page.
         page = """<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>%(css)s
 body{font:18px system-ui,'Noto Sans Arabic',sans-serif}</style></head><body><div id="cafe" class="vw" dir="rtl"></div>
 <div id="meeting" class="vw" dir="rtl"></div><div id="shown" dir="rtl"></div>
-<div id="cafe2" class="vw" dir="rtl"></div><div id="cafe3" class="vw" dir="rtl"></div><script>%(js)s</script><script>
+<div id="cafeb" class="vw" dir="rtl"></div><div id="cafe2" class="vw" dir="rtl"></div><div id="cafe3" class="vw" dir="rtl"></div><script>%(js)s</script><script>
 const SKIP = /[\\u200e\\u200f\\u061c\\u2066-\\u2069\\u202a-\\u202e]/;
 function visual(el) {
   const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), glyphs = [];
@@ -219,6 +221,18 @@ window.addEventListener('error', e => out.errs.push(String(e.message)));
     if (mi) { mi.value = 'فلسطین'; mi.dispatchEvent(new Event('input')); }
     await sleep(400);
     out.farAfter = out.asked.far.length;
+    // A PLACE ALREADY SAID is a place to change, by the lookup: café B's street, and the house picked in its stead
+    { const eb = document.getElementById('cafeb');
+      A.sheet(eb, %(cafeb)s, t({write: body => { out.changed = body; return new Promise(() => {}); }}), null);
+      eb.querySelector('[data-do="edit"]').click();
+      const st = eb.querySelector('[data-fact="be#where"]'), field = st && st.querySelector('.w-place-input');
+      out.existingField = !!field;
+      if (field) {
+        field.value = 'پلاک'; field.dispatchEvent(new Event('input'));
+        await sleep(400);
+        st.querySelector('.w-place-list [role="option"]').click();
+        eb.querySelector('[data-do="save"]').click();
+      } }
     // A `be` THAT SAYS NOTHING OF HOW IT PLACES: an area picked is placed as a place; a point as the person left it
     for (const [id, q, key] of [['cafe2', 'فلسطین', 'area'], ['cafe3', 'پلاک', 'point']]) {
       const el = document.getElementById(id);
@@ -245,6 +259,7 @@ window.addEventListener('error', e => out.errs.push(String(e.message)));
                              'places': json.dumps(R.get('places') or [], ensure_ascii=False),
                              'here': json.dumps(here, ensure_ascii=False), 'house': json.dumps(house, ensure_ascii=False),
                              'cafe': json.dumps(R.get('cafe') or {}, ensure_ascii=False),
+                             'cafeb': json.dumps(R.get('cafeb') or {}, ensure_ascii=False),
                              'meeting': json.dumps(R.get('meeting') or {}, ensure_ascii=False)})
         r = subprocess.run([browser, '--headless=new', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=10000',
                             '--dump-dom', 'file://' + path], capture_output=True, text=True, encoding='utf-8', errors='replace',
@@ -278,6 +293,14 @@ window.addEventListener('error', e => out.errs.push(String(e.message)));
         check("on the meeting's sheet — a happening, attended — its time stays a time, and a place added to it is looked "
               "up on the machine alone: the field is sealed, and the place service beyond it is never asked",
               B.get('whenIsNoPlace') is True and B.get('sealedField') is True and B.get('farBefore') == B.get('farAfter') == 1, B)
+        ch = (B.get('changed') or {}).get('ops') or []
+        check("A PLACE ALREADY SAID is a place to change: café B's `be` is edited by the place lookup, not shown as the law "
+              "writes it, and the house picked replaces the street — sent as a change of that statement, as a location "
+              "still, with the source it was read from",
+              B.get('existingField') is True and len(ch) == 1 and ch[0].get('op') == 'change' and ch[0].get('key') == 'be#where'
+              and (ch[0].get('roles') or {}).get('at') == ['EPSG:4326;35.6977,51.4024', 'osm:node/77']
+              and (ch[0].get('roles') or {}).get('as') == 'location' and bool(ch[0].get('read')),
+              (B.get('existingField'), B.get('changed')))
         aops, pops = (B.get('area') or {}).get('ops') or [], (B.get('point') or {}).get('ops') or []
         check("AN AREA PICKED on a `be` that says nothing of how it places — a street, a way of the map — is sent placed as "
               "a place, which takes no room: an area holds many",

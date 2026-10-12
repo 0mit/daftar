@@ -194,7 +194,8 @@ button per field.
 A value in one of the law's forms — what a clause holds beside its words, what a payment settles — is drawn and edited
 by its entries (`widgets/form.js`): its day in the reader's calendar, its repetition in their words, a choice of the
 bean's own clauses, never a text of JSON to type; what the form holds that no widget draws is written back as it was.
-Where a being is (`be`'s `at`) is a place (`widgets/place.js`), looked up as it is typed; on the sheet of a happening,
+Where a being is (`be`'s `at`) is a place (`widgets/place.js`), looked up as it is typed — one already said too, which
+is no history: another is picked in its stead; on the sheet of a happening,
 or of a being that holds an `attend`, and for a place held off git, the lookup is the machine's alone: where a person
 will be is never asked of a place service (design §12). A place picked from a source is saved with that source, and
 the write path knows it by a `read` (below). An area picked — a country, a city, a street, as its source names what it

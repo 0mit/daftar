@@ -88,6 +88,8 @@
       if (as === 'location' || as === 'place') return true;
       return !as && (!list.length || list.some(function (x) { return /^(EPSG:|osm:|geonames:)/.test(String(x)); }));
     }
+    // where a being is: a place to change by the lookup, already said or not — a position, but no moment as the law writes it
+    function placeField(verb, k, roles, v) { return verb === 'be' && k === 'at' && !!w.place && placeLike(roles, v); }
     // A FIELD FOR EACH FACT THE READER KEEPS, by its shape: what holds a value and what the verb requires are drawn, the
     // rest waits under «more»; what is structure (`structural`) and what is history (a moment written, a step a move
     // reached) is shown as it is and kept as written — never an id, never a moment typed as the law writes it
@@ -100,12 +102,13 @@
         var asIs = h`<span class="eg-role" data-role="${k}" data-kept=""><span class="eg-role-name">${label(verb, k)}</span> ${showRole(v, spec)}</span>`;
         if (!may) return v === undefined ? '' : asIs;
         var def = shapes.indexOf('form') >= 0 && spec.form && (data.forms || {})[spec.form];
-        if (!def && shapes.indexOf('position') >= 0 && v !== undefined && !(typeof v === 'string' && DAY.test(v))) return asIs;
+        if (!def && shapes.indexOf('position') >= 0 && v !== undefined && !(typeof v === 'string' && DAY.test(v))
+            && !placeField(verb, k, roles, v)) return asIs;
         if (def) {                                  // a form's value, drawn by its entries (widgets/form.js)
           input = spec.many === 'true'
             ? t.join((Array.isArray(v) ? v : []).concat([{}]).map(function (e, i) { return h`<span class="eg-form-entry">${w.form.edit(nm + '.' + i, e, def, fo)}</span>`; }), '')
             : w.form.edit(nm, v, def, fo);
-        } else if (verb === 'be' && k === 'at' && w.place && placeLike(roles, v)) {   // where a being is (widgets/place.js)
+        } else if (placeField(verb, k, roles, v)) {   // where a being is (widgets/place.js)
           input = w.place.edit(nm, v, {sealed: sealed, label: typeof v === 'string' ? t.titleOf(v) || '' : ''});
         } else if (shapes.indexOf('being') >= 0 && (v === undefined || typeof v === 'string') && spec.many !== 'true') {
           var rows = (t.E.beings || []).filter(function (b) { return !spec.kind || [].concat(spec.kind).indexOf(b.kind) >= 0; })
@@ -145,6 +148,7 @@
       var row = data.verbs[verb] || {roles: {}, qualifiers: {}}, specs = Object.assign({}, row.roles, row.qualifiers), out = {};
       Object.keys(roles || {}).forEach(function (k) {
         var v = roles[k], shapes = (specs[k] || {}).shape || [];
+        if (placeField(verb, k, roles, v)) return;   // a place is the lookup's field, read back from it
         if (structural(v) || (shapes.indexOf('position') >= 0 && !(typeof v === 'string' && DAY.test(v)))
             || ((Array.isArray(v) || (specs[k] || {}).many === 'true') && (shapes.indexOf('being') >= 0 || shapes.indexOf('statement') >= 0))
             || (shapes.indexOf('statement') >= 0 && shapes.length === 1 && typeof v === 'string')) out[k] = v;
