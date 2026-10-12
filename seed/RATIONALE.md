@@ -694,6 +694,23 @@ material is written only sealed, its sensitivity following the code and not the 
 and a commit that seals one says so. Harm is read from what a bean holds, so a sensitivity below the one its bean
 derives is a person's own word (`core/law/verbs.yaml: verbs[rate]`).
 
+WHAT IS HELD IS OPENED ONLY BY A GRANT THAT NAMES IT (2026-10-12, ratified by the operator: "Naming rule for both"). A
+grant with no `cover` opens the whole of each bean it covers, and a sealed statement is a statement of the bean: so a
+grant made to let someone read a person's bean — their title, their agreements — opened what was held off git of them
+too, their phone, a number the law keeps only sealed. Nobody granting the bean meant that, and nothing in the grant said
+it. A held value is the one part of a bean whose opening must be said: a grant opens it only where it names it — its
+part in `cover` (the statement's verb, its verb narrowed by its `as`, or `body` and `details` where a record held off
+git is pointed to from), or the statement itself in its `of` — and the gardener, who keeps the store, as ever. The
+consent it was kept on still bounds it: once the word it is held `while` no longer stands, nobody is sent it. The rule
+is the law's own `may` (`bin/pass.py`, asked with `held`), so the view's pages, its one write path and any host ask the
+same question; a host whose `may` cannot ask it writes a held value for the gardener alone.
+
+## core/law/forms.yaml: forms.cover
+
+ABSENT, THE WHOLE — BUT NOT WHAT IS HELD (2026-10-12). The cover's default is the whole bean, its header, body and
+statements, and stays so; what is held off git is the exception, opened only by name (`core/law/core.yaml:
+rules[harm]`).
+
 ## core/law/core.yaml: rules[room]
 
 TWO BODIES ARE NOT IN ONE ROOM AT ONCE (taken over from today's gate in v1 part 2, §16 item 8, 2026-10-01: "do the

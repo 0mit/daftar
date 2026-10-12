@@ -1246,8 +1246,9 @@ def shares(holder, hfm, bid, fm):
     return bool(accepted & (_owners(fm) | _subjects(bid, fm)))
 
 
-def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None):
-    """Whether `actor` may `act` (read, write, act:<tool>, ratify:<class>) on `bean` — at `positions`, or the whole bean.
+def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None, held=False):
+    """Whether `actor` may `act` (read, write, act:<tool>, ratify:<class>) on `bean` — at `positions`, or the whole bean;
+    with `held`, at positions that hold a value held off git, which only a grant naming them opens (`may_core`).
     CLOSED BY DEFAULT: the gardener is granted; nobody is granted what no grant opens. A grant counts when its holder may
     decide it — the gardener; the person the bean is of or `about`; an agreement, over its own bean and what a party who
     accepted it owns or is the record of (`shares`) — and it matches the act, holds the bean (`over`, or the bean holding
@@ -1256,7 +1257,7 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
     gardener = gardener if gardener is not None else gardener_of(root)
     if runs_core(root):
         return may_core(actor, act, bean, positions=positions, at=at, reason=reason, root=root, beans=beans,
-                        gardener=gardener)
+                        gardener=gardener, held=held)
     if actor is None:
         return Answer(False, "nobody named: an actor no one can name is granted nothing")
     if actor == gardener:
@@ -1600,7 +1601,7 @@ def _marked_schemes(root=ROOT):
         return set()
 
 
-def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None):
+def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None, held=False):
     """`may` in a garden of the core. A `grant` statement opens an act — `as` read, write, enact or ratify; `of` the
     beans or the statements it covers (an id in its own bean, `<bean>#<id>` in another; none: its own bean); `to` whom;
     `at` the extent it holds over — where its holder may decide it: the gardener; the person the bean is, or concerns;
@@ -1615,7 +1616,13 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
     A grant with a `window` (a recurrence each of whose occurrences lasts: office hours on working days) holds at a
     MOMENT that lies in its `at` and in an occurrence of its window, both read in the garden's zone (GARDEN.md `zone`):
     asked with a day, or with nothing it can read, it opens nothing, and the answer says why. A grant without one holds
-    over the days of its `at`, as it always has."""
+    over the days of its `at`, as it always has.
+
+    A HELD VALUE (`held`: the positions asked hold what is kept off git — a sealed statement, by its id, or the part of
+    the bean a record held off git is pointed to from, `body` or `details.<key>`) is opened only by a grant that NAMES
+    it: its `cover` naming the part (a statement's id, its verb, its verb narrowed by its `as`), or its `of` naming the
+    statement (`<bean>#<id>`). A grant of the whole bean opens what the bean holds, never by itself what is held of it
+    elsewhere; the gardener aside (RULE-CHANGE 2026-10-12). Asked with no positions, nothing held is opened."""
     if actor is None:
         return Answer(False, "nobody named: an actor no one can name is granted nothing")
     if actor == gardener:
@@ -1677,6 +1684,8 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
                     continue
             elif not cover and not (parts and positions and set(positions) <= parts):
                 continue
+            elif cover and held:                            # the whole bean: what it holds, never what is held of it
+                continue
             to = set()
             for x in map(str, _list(r.get('to'))):
                 b_, sid = x.split('#', 1) if '#' in x else (holder, x)
@@ -1687,15 +1696,15 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
             gid = r.get('id') if isinstance(r.get('id'), str) else f"grant@{i}"
             span = str(r.get('at')) if r.get('at') else None
             if r.get('window') is None:
-                held = _during({'from': span.split('/')[0] or None, 'to': span.split('/')[1] or None}
-                               if span and '/' in span else None, at)
+                holds = _during({'from': span.split('/')[0] or None, 'to': span.split('/')[1] or None}
+                                if span and '/' in span else None, at)
             else:                                           # in its `at`, and in an occurrence of its window
                 if zone is False:
                     zone = zone_of(root)
-                held, why = _windowed(span, r['window'], at, zone, root)
+                holds, why = _windowed(span, r['window'], at, zone, root)
                 if why:
                     notes.append(f"{holder}#{gid}: {why}")
-            if not held:
+            if not holds:
                 continue
             read.append((holder, gid))
             if cv.get('reason') == 'asked':
@@ -1706,8 +1715,9 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
         return Answer(False, f"{forbid[0][0]}#{forbid[0][1]} would open it, and is forbidden" + tail, read)
     if permit:
         return Answer(True, f"granted by {permit[0][0]}#{permit[0][1]}" + tail, read, permit[0] in asks)
-    return Answer(False, f"no grant opens {asked} on {bean}" + (f" at {', '.join(positions)}" if positions else '')
-                  + f" to {actor} — closed by default" + tail, read)
+    return Answer(False, f"no grant {'names' if held else 'opens'} {asked} on {bean}"
+                  + (f" at {', '.join(positions)}" if positions else '') + f" to {actor}"
+                  + (", held off git: only a grant naming it opens it" if held else " — closed by default") + tail, read)
 
 
 def main(argv):

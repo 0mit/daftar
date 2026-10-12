@@ -70,7 +70,7 @@ STORY = ('purpose: "{p}", outcome: "{p}", stages: [{{label: Read, doer: the view
 # the guest the lessons and the page alone
 SCOPED = ("import json, os, sys, types; sys.path[:0] = [os.path.join('.', 'assets', 'view', 'lib'), 'bin']; "
           "import view_model as vm, view_engraved as ve; vm.init('.', 'page'); "
-          "may = lambda user, bean, positions=None, write=False: (user == 'sam' or bean in ('lessons', 'page'), ''); "
+          "may = lambda user, bean, positions=None, write=False, held=False: (user == 'sam' or bean in ('lessons', 'page'), ''); "
           "host = types.SimpleNamespace(cfg={'users': {'sam': {'bean': 'sam', 'lang': 'fa'}, 'guest': {'bean': 'guest'}}}, "
           "head='h', may=may); print(json.dumps({u: ve.scoped(host, u) for u in ('sam', 'guest')}, default=str, ensure_ascii=False))")
 
@@ -82,8 +82,9 @@ import view_model as vm, view_engraved as ve, view_serve as vs
 vm.init('.', 'page')
 dmpass = importlib.import_module('pass')
 USERS = ('sam', 'p-0a0a0a0a', 'p-0b0b0b0b')
-def may(user, bean, positions=None, write=False):
-    a = dmpass.may(user, 'write' if write else 'read', bean, positions=positions, root='.', gardener='sam')
+def may(user, bean, positions=None, write=False, held=False):
+    kw = {'held': True} if held else {}
+    a = dmpass.may(user, 'write' if write else 'read', bean, positions=positions, root='.', gardener='sam', **kw)
     return vs.Verdict(a.granted, a.why, a.grants, a.reason_asked)
 host = types.SimpleNamespace(cfg={'users': {u: {'bean': u} for u in USERS}}, head='h', gardener='sam', may=may)
 print(json.dumps({u: ve.scoped(host, u) for u in USERS}, default=str, ensure_ascii=False))
