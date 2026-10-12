@@ -14,7 +14,14 @@ zone, given in UTC), the records of a model a path reaches (`many`), or where th
 the walk's own form (`stands`: no move yet, a step, a final step, an exit).
 
 A PATH MAY RUN THROUGH BEANS: `agree[as=employee].by/title` is the title of the bean the first step reaches. A filter
-may name alternatives, `[by=tr-tckn|ir-national-code]`, so no one country's numbers stand above another's.
+may name alternatives, `[by=tr-tckn|ir-national-code]`, so no one country's numbers stand above another's. A step that
+names a statement (`<bean>#<id>`) reaches that statement: the next step, where it is of that statement's verb, reads it
+alone — `use.of/hold.of` is what the allowance an absence uses holds, never the employment's first allowance — and one
+of another verb reads the bean it is in, as `use.of/part.of` reads the employment's department.
+
+A ROW MAY SELECT WHAT REACHES IT (`reached`), the other side of `within`: the beans the records of another model reach
+by a path, through any of their statements its last step reads — an employment holds several allowances, each of one
+kind of time off.
 
 WHAT IS HELD IS NEVER READ FROM GIT. A field marked `held` is read only from sealed statements (MODEL: what harm can come
 of, git does not keep), through what the host that keeps them resolves: `unseal(bean, verb, sealed roles)` gives what a
@@ -64,22 +71,34 @@ def steps(path):
     return out + [cur]
 
 
-def follow(bean, path, garden=None, unseal=None, held=False):
+def follow(bean, path, garden=None, unseal=None, held=False, every=False):
     """What the path reads, from the bean: its title, summary or id, or the role of its first own statement of the verb
-    that the filters allow; through each step but the last, the bean that step reaches (in `garden`, a {id: bean}) —
-    None where any step reaches none. `held`: the last step reads sealed statements only, through `unseal`."""
+    that the filters allow; through each step but the last, what that step reaches (in `garden`, a {id: bean}) — a bean,
+    or a statement in one (`<bean>#<id>`), and then the next step, where it is of that statement's verb, reads that
+    statement alone (of another verb, the bean it is in) — None where any step reaches none. `held`: the last step reads
+    sealed statements only, through `unseal`. `every`: the last step's role in each statement it reads, a list."""
     *through, last = steps(path)
+    named = None                                        # the statement the step before reached, where it named one
     for step in through:
-        nxt = follow(bean, step)
-        nxt = nxt.split('#', 1)[0] if isinstance(nxt, str) else None     # a statement's bean, where it names one
-        bean = (garden or {}).get(nxt) if nxt else None
+        nxt = read_step(bean, step, named)
+        bid, _, named = nxt.partition('#') if isinstance(nxt, str) else (None, '', '')
+        bean = (garden or {}).get(bid) if bid else None
         if bean is None:
-            return None
-    p = parse_path(last)
+            return [] if every else None
+    return read_step(bean, last, named or None, unseal, held, every)
+
+
+def read_step(bean, step, named=None, unseal=None, held=False, every=False):
+    """What one step of a path reads from the bean (`follow`): where the step before named a statement of the bean
+    (`named`, its id) of this step's verb, that statement alone."""
+    p = parse_path(step)
     if p is None:
-        return None if held else (bean.id if last == 'bean' else bean.header.get(last))
+        v = None if held else (bean.id if step == 'bean' else bean.header.get(step))
+        return ([] if v is None else [v]) if every else v
     verb, filters, role = p
-    for _i, v, r in bean.items:
+    hit = (getattr(bean, 'ids', None) or {}).get(named) if named else None
+    out = []
+    for _i, v, r in ([hit] if hit is not None and hit[1] == verb else bean.items):
         if v != verb or ('held' in r) != bool(held):
             continue
         if held:
@@ -87,8 +106,10 @@ def follow(bean, path, garden=None, unseal=None, held=False):
             if not isinstance(r, dict):
                 continue
         if all(str(r.get(k)) in vals for k, vals in filters.items()) and role in r:
-            return r[role]
-    return None
+            if not every:
+                return r[role]
+            out.append(r[role])
+    return out if every else None
 
 
 def zone_of(root):
@@ -164,6 +185,7 @@ class Reader:
                 if str(r.get('system')) == system and str(r.get('series')) == series]
         self.rows = {str(r['model']): r for r in rows}
         self._selected = {}
+        self._reached = {}
 
     def row(self, model):
         r = self.rows.get(model)
@@ -189,6 +211,8 @@ class Reader:
                 continue
             if 'within' in sel and self.reach(b, sel['within']['along'], sel['within']['model']) is None:
                 continue
+            if 'reached' in sel and bid not in self.reached(sel['reached']['along'], sel['reached']['model']):
+                continue
             out[bid] = b
         ids = {}
         for bid in out:
@@ -212,9 +236,17 @@ class Reader:
             seen.add(nxt)
             here = self.G.beans[nxt]
 
-    def follow(self, bean, path, held=False):
+    def reached(self, path, model):
+        """{bean id}: the beans the records of the model reach by the path, through any of their statements its last
+        step reads — an employment holds several allowances, and reaches each one's kind of time off."""
+        if (path, model) not in self._reached:
+            self._reached[(path, model)] = {v.split('#', 1)[0] for o in self.selected(model).values()
+                                            for v in self.follow(o, path, every=True) if isinstance(v, str)}
+        return self._reached[(path, model)]
+
+    def follow(self, bean, path, held=False, every=False):
         """What a path reads from a bean of this garden (`follow`), through the beans it holds."""
-        return follow(bean, path, self.G.beans, self.unseal, held)
+        return follow(bean, path, self.G.beans, self.unseal, held, every)
 
     def display(self, model, bid):
         rec = self.record(model, bid, fields=('display_name', 'name'))

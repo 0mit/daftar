@@ -8,7 +8,9 @@ nothing the garden does not say is in a record. Then `hr.employee`: a person emp
 and once by the supplier, each employment a record, read through paths that run through beans; her identity number and
 private mail sealed in this host's store, read only where the host resolves them, never from git. Then `hr.leave`: her
 absences over extents of days, one written in the Persian calendar, each using an employment's allowance and decided on
-a walk. Then the law refuses crosswalks that break their form.
+a walk. Then `hr.leave.type`: the kinds of time off her employers grant, each the terms a company owns and an allowance
+of an employment holds, and each absence's type the one the allowance it uses holds — a path's step that names a
+statement reaches that statement. Then the law refuses crosswalks that break their form.
 
 Run: python3 test/core_crosswalks.py   (0 = green)
 """
@@ -164,10 +166,11 @@ try:
           '  - step: { id: approved, as: "the employer approves them", by: employer, walk: { final: "true" } }\n'
           '  - step: { id: refused, as: "the employer refuses them", by: employer, walk: { exit: "true" } }\n---\nLeave.\n')
 
-    def leave(bid, title, at, employment, *moves):
+    def leave(bid, title, at, employment, *moves, allowance='allowance'):
         write(G, f'beans/{bid}.md', f'---\nbean: {bid}\nkind: event\ntitle: "{title}"\nstatements:\n  - say: {{ by: sam, at: now }}\n'
               f'  - own: {{ by: theone, of: self }}\n  - concern: {{ of: lale }}\n'
-              f'  - be: {{ by: self, at: {at}, as: presence }}\n  - use: {{ by: self, of: "{employment}#allowance" }}\n'
+              f'  - be: {{ by: self, at: {at}, as: presence }}\n'
+              f'  - use: {{ by: self, of: "{employment}#{allowance}" }}\n'
               + ('  - be: { id: decided, by: self, at: walk-leave, as: order }\n' if moves else '')
               + ''.join(f'  - move: {{ by: lale, of: self, through: decided, at: [now, "walk-leave#{m}"] }}\n' for m in moves)
               + '---\nLeave.\n')
@@ -209,6 +212,81 @@ try:
           [lv.get(n, {}).get('state') for n in ('Summer', 'Autumn', 'Summer, in the Persian calendar', 'Winter')]
           == ['validate', 'refuse', 'confirm', 'draft'], {n: x.get('state') for n, x in lv.items()})
 
+    # ---- hr.leave.type: which allowance an absence uses. A kind of time off is the terms an employer gives, a document
+    #      it owns; an employment holds an allowance of one (`hold … of`, its statement); an absence uses one of the
+    #      employment's allowances by its id, and its type is what that allowance holds. Each employment's first
+    #      allowance holds only an amount, so a path that read the employment's first `hold` would read no type at all
+    def terms(bid, title, owner):
+        write(G, f'beans/{bid}.md', f'---\nbean: {bid}\nkind: document\ntitle: "{title}"\nstatements:\n'
+              f'  - say: {{ by: sam, at: now }}\n  - own: {{ by: {owner}, of: self }}\n---\n{title}.\n')
+    terms('acme-paid', 'Paid time off', 'acme')
+    terms('acme-sick', 'Sick time off', 'acme')
+    terms('unpaid-leave', 'Unpaid leave', 'sam')                    # every company's: none of the garden's owns it
+    terms('acme-handbook', "Acme's handbook", 'acme')               # a document of the company no allowance holds
+    terms('supplier-paid', "The supplier's paid leave", 'supplier')  # held only under the supplier's employment
+
+    def holds(employment, *allowances):
+        p = os.path.join(G, 'beans', f'{employment}.md')
+        with open(p, encoding='utf-8') as fh:
+            text = fh.read()
+        said = ', '.join(sid for sid, _of in allowances)
+        write(G, f'beans/{employment}.md', text.replace('---\nHer employment.', ''.join(
+            f'  - hold: {{ id: {sid}, by: lale, of: {of} }}\n' for sid, of in allowances)
+            + f'  - say: {{ by: sam, of: [{said}], at: now }}\n---\nHer employment.'))
+    holds('lale-acme', ('paid', 'acme-paid'), ('sick', 'acme-sick'))
+    holds('lale-beta', ('unpaid', 'unpaid-leave'))
+    holds('lale-supplier', ('paid', 'supplier-paid'))
+    leave('flu', 'Flu', '2026-11-02/2026-11-04', 'lale-acme', 'asked', 'approved', allowance='sick')
+    leave('spring', 'Spring', '2026-04-06/2026-04-10', 'lale-acme', 'asked', allowance='paid')
+    leave('friday', 'A Friday off', '2026-10-16/2026-10-16', 'lale-beta', allowance='unpaid')
+    r = grow.run(PY, 'bin/save.py', 'sam', "Lale's kinds of time off, her allowances of them, and absences under them",
+                 '--body', '- action: wrote [[acme-paid]], [[acme-sick]], [[unpaid-leave]], [[acme-handbook]] and '
+                 '[[supplier-paid]]; [[lale-acme]], [[lale-beta]] and [[lale-supplier]] hold allowances of them; wrote '
+                 '[[flu]], [[spring]] and [[friday]]', cwd=G)
+    check("...and the kinds of time off, the allowances that hold them and the absences taken under them pass the gate",
+          r.returncode == 0, r.out[-1500:])
+    R = crosswalk.Reader(G, 'odoo', '17.0')
+    try:
+        ty = {t['name']: t for t in R.records('hr.leave.type')}
+    except crosswalk.Refused as e:
+        ty = {'refused': str(e)}
+    check("hr.leave.type: the kinds of time off the garden's companies grant — each a document an allowance of one of "
+          "their employments holds; never one held only under the supplier's employment, nor one no allowance holds",
+          sorted(ty) == ['Paid time off', 'Sick time off', 'Unpaid leave'], ty)
+    paid, unpaid = ty.get('Paid time off', {}), ty.get('Unpaid leave', {})
+    check("...its company the one of the garden's that owns its terms, none where none does, and its number the same "
+          "for its bean every time",
+          paid.get('company_id') == acme and ty.get('Sick time off', {}).get('company_id') == acme
+          and unpaid.get('company_id') is False and paid.get('display_name') == 'Paid time off'
+          and paid.get('active') is True and paid.get('id') == crosswalk.number('hr.leave.type', 'acme-paid'), ty)
+    lv = {x['name']: x for x in R.records('hr.leave')}
+
+    def type_of(bid, title):
+        return [crosswalk.number('hr.leave.type', bid), title]
+    check("hr.leave: an absence's type is what the allowance it uses holds — of an employment's three allowances, the "
+          "one it names, never the employment's first",
+          lv.get('Flu', {}).get('holiday_status_id') == type_of('acme-sick', 'Sick time off')
+          and lv.get('Spring', {}).get('holiday_status_id') == type_of('acme-paid', 'Paid time off')
+          and lv.get('A Friday off', {}).get('holiday_status_id') == type_of('unpaid-leave', 'Unpaid leave'),
+          {n: x.get('holiday_status_id') for n, x in lv.items()})
+    check("...an absence under an allowance that holds only an amount has no type: the garden names none",
+          [lv.get(n, {}).get('holiday_status_id', 'unread') for n in ('Summer', 'Autumn', 'Winter')] == [False] * 3,
+          {n: x.get('holiday_status_id', 'unread') for n, x in lv.items()})
+    check("...and through the employment's other statements it reads the employment as before: its employee, its "
+          "department",
+          lv.get('Flu', {}).get('employee_id') == acme_lale
+          and lv.get('Flu', {}).get('department_id') == [deps['Quality']['id'], 'Engineering / Quality']
+          and lv.get('A Friday off', {}).get('department_id') is False, lv.get('Flu'))
+    B = R.G.beans
+    check("a path's step that names a statement (`<bean>#<id>`) reaches that statement: a next step of its verb reads "
+          "it alone, one of another verb the bean it is in",
+          crosswalk.follow(B['flu'], 'use.of/hold.of', B) == 'acme-sick'
+          and crosswalk.follow(B['flu'], 'use.of/hold[by=sam].of', B) is None
+          and crosswalk.follow(B['flu'], 'use.of/part.of', B) == 'qa'
+          and crosswalk.follow(B['flu'], 'use.of/hold.of/title', B) == 'Sick time off',
+          [crosswalk.follow(B['flu'], p, B) for p in ('use.of/hold.of', 'use.of/hold[by=sam].of', 'use.of/part.of',
+                                                       'use.of/hold.of/title')])
+
     L = Law.load(('VOCAB.md', {}))
     kept = dict(L.crosswalks)
     bad = dict(kept['odoo-17.0-hr.department'], kind='department', select={'within': {'along': 'part.over', 'model': 'res.partner'}},
@@ -234,6 +312,17 @@ try:
           and any('`many` is true, with the `model`' in m for m in probs) and any('`position` is one of' in m for m in probs)
           and any('`stands` names' in m for m in probs), probs)
     check("...and the law as it stands passes", not L.crosswalk_problems(), L.crosswalk_problems())
+    L.crosswalks['odoo-17.0-hr.leave.type'] = dict(
+        kept.get('odoo-17.0-hr.leave.type') or kept['odoo-17.0-hr.department'], crosswalk='odoo-17.0-hr.leave.type',
+        model='hr.leave.type', select={'reached': {'along': 'hold.over', 'model': 'res.partner'},
+                                       'beside': {'along': 'hold.of', 'model': 'hr.employee'}})
+    probs = [m for _w, m in L.crosswalk_problems()]
+    L.crosswalks.clear(); L.crosswalks.update(kept)
+    check("...and a select by what reaches the bean (`reached`) held to the form `within` is: a path of the law's "
+          "verbs and roles, a model a row of its series crosses; a select by a key the form lacks refused",
+          any("'hold.over': over is no role of hold" in m for m in probs)
+          and any("select.reached names 'res.partner', which no crosswalk of its series crosses" in m for m in probs)
+          and any('select.beside is none of with, without, within, reached' in m for m in probs), probs)
 
     # ---- A GARDEN'S OWN CROSSWALK: a row of its VOCAB.md in the core's form, read by the one reader beside the
     #      standard's; never a name nor a model the standard crosses; used by a bean of its kind, or vacant with its why

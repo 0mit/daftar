@@ -733,12 +733,12 @@ class Law:
             for k, v in sel.items():
                 if k in ('with', 'without'):
                     path_ok(where, v)
-                elif k == 'within' and isinstance(v, dict):
+                elif k in ('within', 'reached') and isinstance(v, dict):
                     path_ok(where, v.get('along'))
                     if str(v.get('model')) not in same:
-                        out.append((where, f"select.within names {v.get('model')!r}, which no crosswalk of its series crosses"))
+                        out.append((where, f"select.{k} names {v.get('model')!r}, which no crosswalk of its series crosses"))
                 else:
-                    out.append((where, f"select.{k} is none of with, without, within"))
+                    out.append((where, f"select.{k} is none of with, without, within, reached"))
             for fname, spec in (r.get('fields') or {}).items():
                 fw = f"{where} field {fname}"
                 if not isinstance(spec, dict):

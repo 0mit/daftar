@@ -5204,6 +5204,30 @@ birthday has no statement the law can say yet (a being's coming to be holds no d
 holds for it: neither is carried, rather than bent into a verb that nearly fits.
 
 
+## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.leave.type]
+
+A KIND OF TIME OFF IS WHAT AN ALLOWANCE HOLDS (2026-10-12; the operator ratified the draft that proposed it). Odoo's
+`hr.leave.type` is a kind of absence an employer grants — paid, sick, unpaid — and every request for time off names
+one, so an absence read from a garden and written back without it is not the absence that was read. In the law an
+absence already `use`s an allowance of its employment, a statement of it (`<employment>#<id>`); the kind is which
+allowance: the being that allowance holds (`hold … of`), the terms of one kind of absence, a document the employer owns.
+The amount, its window and what uses it stay the clause's (`amount`, `within`, `used_by`), on the allowance: they are
+each employment's, never the kind's. So the row selects what an allowance reaches, `reached`, the other side of
+`within`: the documents an allowance of one of the garden's employments holds, through any of the employment's `hold`s,
+since an employment holds several. A kind granted to nobody is no record yet, nor one held only under an employment of
+no company of the garden's. Its company is the one of the garden's that owns the terms, and none where none does, which
+Odoo reads as a kind every company grants.
+
+Considered and set aside: a path from the kind to its company alone, as a department is selected — every document a
+company owns would be read as a kind of time off, its statements and its contracts with them; `part … of` the company,
+which a set of terms is not; an agreement the company agrees to as employer and no person as employee, the employment's
+neighbour, which takes in a collective agreement; the walk an absence is decided on, which two kinds may share; a word
+in the allowance's `as`, which `hold` does not take and which would make the kinds words, not beings with a title. Not
+carried: whether a kind needs an allowance (the garden says it of each employment, by the amount its allowance holds),
+how its absences are approved (the walk's own form), the unit a request is counted in, whether it is paid, its colour
+and its order.
+
+
 ## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.leave]
 
 AN ABSENCE IS A HAPPENING OVER DAYS, UNDER AN ALLOWANCE, DECIDED ON A WALK (2026-10-11, the unified-tools design's P5.4;
@@ -5218,6 +5242,14 @@ never stored beside it. Its approval is the law's own walk (`procedure`, a cours
 it stands is read from its last move by the walk's own form — a final step approved, an exit refused, any other to
 approve, none yet to submit — the reading core/lines.py already gives, so no second state can drift from the moves.
 A course on a walk the reader does not hold stands nowhere the reader can say, and says nothing.
+
+ITS TYPE IS WHICH ALLOWANCE IT USES (2026-10-12, with `hr.leave.type`). An absence's type is read through the allowance
+it uses, `use.of/hold.of`. A path's step that names a statement reaches that statement, and a next step of its verb
+reads it alone: an employment holds several allowances, and its first would give every absence one kind. A step of
+another verb reads the bean the statement is in, so `use.of/part.of` is the employment's department, as before. An
+absence that uses the employment itself, and none of its allowances, is read through the employment's first, as every
+path reads a bean's first statement of a verb: an absence names its allowance to be read whole. One under an allowance
+that holds only an amount has no type, as the garden says none.
 
 
 ## core/law/profiles.yaml: orientations
