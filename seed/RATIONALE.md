@@ -4128,6 +4128,18 @@ Considered and refused: a calendar bucket as a unit (`every: { count: 1, unit: m
 is 28 to 31 days in one calendar, 29 or 30 in another — and writing it as a measure would make arithmetic of something
 that is not arithmetic.
 
+## core/law/measures.yaml: forms.recurrence.attrs.at
+
+A TIME OF DAY IN THE CELL, ISO 8601's WAY (2026-10-12, ratified with a grant's window). A place in a cell was a day:
+`15`, `5`. A routine run on Fridays at 17:45 said its clock in its first occurrence (`due`) alone, so Monday at 08:30
+and Friday at 17:45 could not be one repetition, and a window could not open at a time of day at all. ISO 8601 writes a
+time after a date with a `T`, and a place takes it the same way, `<place>T<hh:mm>`; in a cell of one day the place is
+the day itself, and the time stands alone, `T22:00`. A reader of days reads the day and nothing else (bin/stale.py
+`_one_at`), so every clause it walks is read as it was; a reader of moments reads the time — a routine's occurrences,
+a grant's window — and a cron line, which keeps one time of day, refuses a second rather than keep one of them. To the
+gate a place stays prose in a clause, as it always was; in a grant's window, which `may` reads at a moment, it is
+judged.
+
 ## core/law/measures.yaml: forms.recurrence.attrs.times
 
 (std-vocab 32: `recurrence_form.times`)
@@ -4636,6 +4648,30 @@ selected, so whoever could write one agreement could open any person's bean, or 
 An agreement speaks for the people who accepted it, and for nothing they did not bring: its own bean, and a bean one of
 them owns or is the record of. Beyond that its grant opens nothing, and the gate warns rather than refuses, because a
 selection grows with the garden and a bean somebody else adds must not stop their commit.
+
+A GRANT MAY HOLD IN A RECURRING WINDOW (2026-10-12, a rule-change the operator ratified). Viewing uses grants with time
+windows: a person may watch a camera from 08:30 for ten hours on working days, and not at night or at the weekend. A
+grant held `at` one extent, and nothing could say the window: `grant` takes no clause; `while` names a condition or a
+statement, and no reading's operation gives "now is within office hours in this zone"; a `forbidden` for every gap
+between windows says the same fact as its complement, many times over. So a grant holds a `window`, in the form the law
+already has for a repetition (`recurrence`), each of whose occurrences lasts (`lasts`), and it holds at a moment that
+lies in its `at` AND in an occurrence of its window. Its `at` keeps the grant's whole life, and the window narrows it,
+never widens it: a grant without a window holds over the days of its `at`, as it did. The window is read in the
+garden's zone, as every day and moment the garden writes without saying where (GARDEN.md `zone`), so 08:30 is 08:30 on
+both sides of a change of the clocks; and an occurrence that lasts past midnight holds on into the next day, which a
+pair of clock times compared within one day cannot say. The gate judges a window to what `may` reads (rule
+`measured`): each occurrence a length of time, its days a calendar's reckoned by rule and beginning at midnight, each
+place a place of its cell with its time of day, a start for what strides or counts — so a window the gate passes is one
+`may` reads, and one it cannot read opens nothing and says why. A grant asked with a day, not a moment, opens nothing
+through its window: a window is judged at a moment. The clause "in the garden's zone, unless the repetition's system
+names another" has no occupant today: no system of the law names a zone, and the one calendar that takes no bearer's
+half (the day count, `complement: [system]`) begins its day at noon, where a time of day counted from midnight is not
+read, and is refused.
+Considered and refused: a clause on the grant (`clause: { every, during }`) — a clause is what an agreement asks of its
+parties, and a viewing grant is the gardener's opening, not an obligation, and `during` is one window again; `while` on
+a reading — more general, more machinery, and every page that asks `may` would run a reading over the clock; a
+`forbidden` outside the hours — the fact said as its complement; and the window kept in a tool's own field beside the
+grant, which every reader but that tool is blind to.
 
 ## core/law/core.yaml: beside_roles[held]
 

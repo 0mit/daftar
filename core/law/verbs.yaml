@@ -59,7 +59,7 @@ verbs:
     replaces: [borne_by]
     home: core
   - verb: grant
-    meaning: "to open to someone an act on what a garden holds: closed by default, so nobody but the gardener may do what no grant opens. It covers what its `of` names — a bean, a statement, or a reading (a `reckon` statement), whose members it covers, read each time it is asked — and opens it to whom its `to` names: a being, or every member of a reading. Which parts of each it opens, and whether each use states a reason, is its `cover` (v1 part 12b): absent, the whole of each"
+    meaning: "to open to someone an act on what a garden holds: closed by default, so nobody but the gardener may do what no grant opens. It covers what its `of` names — a bean, a statement, or a reading (a `reckon` statement), whose members it covers, read each time it is asked — and opens it to whom its `to` names: a being, or every member of a reading. Which parts of each it opens, and whether each use states a reason, is its `cover` (v1 part 12b): absent, the whole of each. It holds over its `at`; with a `window` — a recurrence each of whose occurrences lasts a length of time, office hours on working days — only at a moment that lies in its `at` and in an occurrence of its window, read in the garden's zone (GARDEN.md `zone`): an occurrence that lasts past midnight holds on into the next day"
     roles:
       by:      { shape: being }
       to:      { shape: [being, statement], many: true }
@@ -67,7 +67,7 @@ verbs:
       as:      { shape: row, table: grants }
       through: { shape: text }
       at:      { shape: position }
-    qualifiers: { class: { shape: row, table: classes }, cover: { shape: form, form: cover } }
+    qualifiers: { class: { shape: row, table: classes }, cover: { shape: form, form: cover }, window: { shape: form, form: recurrence } }
     required: [by, to, as]
     replaces: [grants, audience, positions]
     home: core

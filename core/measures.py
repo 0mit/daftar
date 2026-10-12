@@ -1,6 +1,6 @@
 """measures — the forms of a measure, judged by rule `measured` (v1 part 7).
 
-What is measured is held in the core in four places, each in its form (core/law/measures.yaml):
+What is measured is held in the core in these places, each in its form (core/law/measures.yaml):
 
   a quantity    `{ count, unit }`, and how well it is known INSIDE it: `u`, its standard uncertainty, a positive count in
                 a unit of its own quantity (or of ratio, for a relative one), or `accuracy`, as its maker stated it, with
@@ -18,12 +18,16 @@ What is measured is held in the core in four places, each in its form (core/law/
   a placement   `be: { by, at: [<host>, <position>], as, placed: <form placement> }` — how far it is known to reach
                 (`openness`), how well its position is known (`u`, `u_vertical`, `accuracy`), its zone, its window
                 (`during`), and what it takes of its host (`takes`).
+  a window      `grant: { …, window: <form recurrence> }` — when a grant holds: a repetition each of whose occurrences
+                lasts a length of time, on days of a calendar reckoned by rule, each opening at its place's time of day
+                counted from midnight (`5T08:30`), so that what the gate accepts `bin/pass.py may` reads.
 
 Rule `measured` judges each of them by the tables the release carries — the lines a region lies on (`lines`), the
 systems (the standards' and the garden's own), the units in UCUM with their factors, the quantities and their
 dimensions, the kinds of accuracy — and sums what is placed in a host against what it holds (`hold`): room past it is
 refused, as two beings taking the same room at once are; shares past it are a host's to promise (a hypervisor
-overcommits its memory), and pass. Nothing here names a system, a unit or a line."""
+overcommits its memory), and pass. Nothing here names a system, a unit or a line: a window's day is the level a
+calendar counts in days (`unit: day`), as bin/stale.py finds it."""
 import os
 import re
 import sys
@@ -34,6 +38,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 from core import frame  # noqa: E402
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'bin'))
 import units as dmunits  # noqa: E402 — a count, read exactly: the one reader
+import cal as dmcal  # noqa: E402 — a place's time of day (`5T17:45`): the one reader
 
 WHOLE = re.compile(r'^[0-9]+$')
 
@@ -329,6 +334,71 @@ class Measures:
             out.append((f"{where}.every", f"{every['unit']} is no stride along {met}"))
         return out
 
+    def window(self, where, x):
+        """[problem] of `x` as a grant's window (core/law/verbs.yaml `grant.window`): a recurrence each of whose
+        occurrences lasts a length of time, opening on days of a calendar reckoned by rule at a time of day counted from
+        midnight — what `bin/pass.py may` reads (bin/stale.py `in_window`), so a window the gate accepts is one it reads."""
+        out = self.recurrence(where, x)
+        if not isinstance(x, dict):
+            return out
+        lasts = x.get('lasts')
+        if lasts is None:
+            out.append((where, "a window says how long each occurrence lasts: `lasts: { of: time, measure: { count, unit "
+                               "} }` — office hours from 08:30 last ten hours"))
+        elif not isinstance(lasts, dict) or lasts.get('measure') is None or set(lasts) & {'from', 'to', 'level', 'count'}:
+            out.append((f"{where}.lasts", "each occurrence of a window lasts a length of time, `measure: { count, unit "
+                                          "}`: cells of a level, or a day to a day, are not read at a moment"))
+        elif quantity_why(self.L, lasts['measure'], 'duration') and not any(w.startswith(f"{where}.lasts") for w, _m in out):
+            out.append((f"{where}.lasts", quantity_why(self.L, lasts['measure'], 'duration')))
+        for a in listed(x.get('at')):
+            try:
+                dmcal.place_clock(a)
+            except ValueError as e:
+                out.append((f"{where}.at", str(e)))
+        if (x.get('every') is not None or x.get('times') is not None) and x.get('from') is None:
+            out.append((where, "a window that strides by `every`, or counts its `times`, is counted from where it starts: "
+                               "name it, `from`"))
+        if isinstance(x.get('every'), dict) and 'unit' not in x['every']:
+            out.append((f"{where}.every", "a window strides by a length of time, `every: { count, unit }`: which moment is "
+                                          "a neighbour's is no system's to say"))
+        srow = self.systems.get(x.get('in')) if isinstance(x.get('in'), str) else None
+        if x.get('each') is not None and isinstance(srow, dict) and str(x['each']) in self.levels(srow):
+            out += self.window_cells(where, x, srow)
+        return out
+
+    def window_cells(self, where, x, srow):
+        """A window by cell: its days a calendar's, reckoned by rule, each beginning at midnight; its cell the day or a
+        level above it; each place `at` names written as its walker reads it (bin/stale.py `_one_at`)."""
+        name, each, levels = srow['system'], str(x['each']), self.levels(srow)
+        days = [str(lv.get('level')) for lv in listed(srow.get('levels')) if isinstance(lv, dict) and lv.get('unit') == 'day']
+        if not srow.get('calendar') or not days:
+            return [(where, f"{name} counts no days of a calendar, and a window opens on days, at a time of day")]
+        if srow.get('reckoning') not in (None, 'arithmetic'):
+            return [(where, f"{name} is reckoned {srow['reckoning']}, not by rule: a window's days are read by rule, each "
+                            f"time it is asked")]
+        if srow.get('day_begins') not in (None, 'midnight'):
+            return [(where, f"{name}'s day begins at {srow['day_begins']}, and a window's time of day is counted from "
+                            f"midnight: count it in a calendar whose day begins at midnight")]
+        k = levels.index(days[0]) - levels.index(each)
+        if k < 0:
+            return [(where, f"`each: {each}` is finer than the day: a window opens at a time of day in each cell of a day "
+                            f"or more — a stride finer than a day is `every: {{ count, unit }}` from its `from`")]
+        out = []
+        for a in listed(x.get('at')):
+            try:
+                place = dmcal.place_clock(a)[0]
+            except ValueError:
+                continue                                     # its time of day is refused above
+            parts = place.split('-') if place else []
+            if len(parts) != k or not all(p.isdigit() and p.isascii() for p in parts):
+                out.append((f"{where}.at", (f"{a!r}: a place in each {each} is a whole number (`5`)" if k == 1 else
+                                            f"{a!r}: a place in each {each} is {k} whole numbers joined by `-` (`12-01`)")
+                            if k else
+                            f"{a!r}: in a cell of one day the place is the day itself — the time of day alone, `T22:00`"))
+        if x.get('at') is None and k and x.get('from') is None:
+            out.append((where, f"a window says where in each {each} it opens (`at`), or the day it starts from (`from`)"))
+        return out
+
 
 # ------------------------------------------------------------------------------------------------ a clause, a placement
 def _reading(b, G, ref):
@@ -489,6 +559,8 @@ def problems(J, b):
             out += mark_problems(J, b, where, r)
         if verb == 'weigh' and r.get('weighing') is not None:
             out += weighing_problems(J, where, r)
+        if verb == 'grant' and r.get('window') is not None:
+            out += M.window(f"{where}.window", r['window'])
         if (verb == 'can' or verb in FIGURE_PERMISSION) and isinstance(r.get('clause'), dict) and \
                 isinstance(r['clause'].get('by_role'), str):
             roles = {rr.get('as') for _j, v, rr in b.items if v == 'agree' and 'held' not in rr}

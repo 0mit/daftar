@@ -1148,6 +1148,53 @@ def _during(d, at):
     return (lo is None or lo <= now) and (hi is None or now <= hi)
 
 
+def zone_of(root=ROOT):
+    """The civil time zone GARDEN.md says the garden reckons its days in, or None."""
+    try:
+        with open(os.path.join(root, 'GARDEN.md'), encoding='utf-8') as fh:
+            g = _front(fh.read())
+    except OSError:
+        return None
+    return g.get('zone') if isinstance(g, dict) and isinstance(g.get('zone'), str) else None
+
+
+def _windowed(span, window, at, zone, root):
+    """(holds, why not) of a grant with a `window` at `at` — a moment, or now where it names none: the moment lies in
+    the grant's `at`, read in `zone` (a day there is the zone's day, a moment its instant), and in an occurrence of its
+    window (bin/stale.py `in_window`), by the law the garden at `root` runs. A window, or a moment, this cannot read
+    holds nothing, and says why."""
+    import time
+    import stale as dmstale
+    try:
+        t = int(time.time() * 1000) if at is None else dmstale.instant(at, zone)
+    except dmstale.Unreckoned as e:
+        return False, f"its window is judged at a moment, and none is read in what was asked ({e})"
+    try:
+        for side, bound in zip(('from', 'to'), span.split('/', 1) if span and '/' in span else ()):
+            if not bound:
+                continue
+            try:
+                b = dmstale.instant(bound, zone)
+                ok = t >= b if side == 'from' else t <= b
+            except dmstale.Unreckoned:                  # a day: the zone's, the moment's day in it
+                d, n = dmstale.day_of(bound), dmstale.local_day(t, zone)
+                ok = n >= d if side == 'from' else n <= d
+            if not ok:
+                return False, None
+    except (dmstale.Unreckoned, ValueError, dmstale.dmcal.NotByRule) as e:
+        return False, f"its `at` is not read here ({e}), so it opens nothing"
+    try:
+        tables = dmgarden.law_tables(root)
+    except Exception as e:      # noqa: BLE001 — a law that does not load opens nothing through a window
+        return False, f"its window is not read here: the garden's law is not read ({e}), so it opens nothing"
+    try:
+        if dmstale.in_window(window, t, zone, tables.get('SYSTEMS') or {}, tables.get('UNITS') or {}) is None:
+            return False, "its window is closed then"
+    except (dmstale.Unreckoned, ValueError, OverflowError, KeyError, dmstale.dmcal.NotByRule) as e:
+        return False, f"its window is not read here ({e}), so it opens nothing"
+    return True, None
+
+
 def _select(holder, key, root):
     import reckon as dmreckon
     ref = key if ':' in str(key) else f"{holder}:{key}"
@@ -1204,8 +1251,8 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
     CLOSED BY DEFAULT: the gardener is granted; nobody is granted what no grant opens. A grant counts when its holder may
     decide it — the gardener; the person the bean is of or `about`; an agreement, over its own bean and what a party who
     accepted it owns or is the record of (`shares`) — and it matches the act, holds the bean (`over`, or the bean holding
-    it), covers the positions, names the actor and holds at `at`. A `forbidden` one refuses whatever a `permitted` one
-    opens."""
+    it), covers the positions, names the actor and holds at `at` (a day or a moment; now where it names none). A
+    `forbidden` one refuses whatever a `permitted` one opens."""
     gardener = gardener if gardener is not None else gardener_of(root)
     if runs_core(root):
         return may_core(actor, act, bean, positions=positions, at=at, reason=reason, root=root, beans=beans,
@@ -1563,7 +1610,12 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
     A grant `of` a reading (a `reckon` statement) covers each bean the reading holds, and one `to` a reading opens to
     each member it holds, read each time it is asked; its `cover` (v1 part 12b) opens only the parts it names — a key of
     the header, `body`, a verb's statements, a verb's narrowed by their `as` — so the whole bean, asked, is not opened by
-    it, and a part asked is, as is a statement of a verb it names; `reason: asked` asks each use its reason."""
+    it, and a part asked is, as is a statement of a verb it names; `reason: asked` asks each use its reason.
+
+    A grant with a `window` (a recurrence each of whose occurrences lasts: office hours on working days) holds at a
+    MOMENT that lies in its `at` and in an occurrence of its window, both read in the garden's zone (GARDEN.md `zone`):
+    asked with a day, or with nothing it can read, it opens nothing, and the answer says why. A grant without one holds
+    over the days of its `at`, as it always has."""
     if actor is None:
         return Answer(False, "nobody named: an actor no one can name is granted nothing")
     if actor == gardener:
@@ -1578,7 +1630,7 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
                {x for _i, v, r in sts if v == 'concern' for x in _list(r.get('of')) if isinstance(x, str)}
     owners = {r.get('by') for _i, v, r in sts if v == 'own' and r.get('of') in (None, 'self', bean)
               and isinstance(r.get('by'), str)}               # an owner nobody names (`{ someone: org }`) decides nothing
-    read, forbid, permit, asks = [], [], [], set()
+    read, forbid, permit, asks, notes, zone = [], [], [], set(), [], False
     verbs_of = {str(r.get('id')): (v, r) for _i, v, r in sts if isinstance(r.get('id'), str)}
 
     def members(b_, sid):
@@ -1632,22 +1684,30 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
                 to |= set(got) if got is not None else {x}
             if actor not in to:
                 continue
+            gid = r.get('id') if isinstance(r.get('id'), str) else f"grant@{i}"
             span = str(r.get('at')) if r.get('at') else None
-            held = _during({'from': span.split('/')[0] or None, 'to': span.split('/')[1] or None}
-                           if span and '/' in span else None, at)
+            if r.get('window') is None:
+                held = _during({'from': span.split('/')[0] or None, 'to': span.split('/')[1] or None}
+                               if span and '/' in span else None, at)
+            else:                                           # in its `at`, and in an occurrence of its window
+                if zone is False:
+                    zone = zone_of(root)
+                held, why = _windowed(span, r['window'], at, zone, root)
+                if why:
+                    notes.append(f"{holder}#{gid}: {why}")
             if not held:
                 continue
-            gid = r.get('id') if isinstance(r.get('id'), str) else f"grant@{i}"
             read.append((holder, gid))
             if cv.get('reason') == 'asked':
                 asks.add((holder, gid))
             (forbid if gid in refused or f"{holder}#{gid}" in refused else permit).append((holder, gid))
+    tail = ('; ' + '; '.join(notes)) if notes else ''
     if forbid:
-        return Answer(False, f"{forbid[0][0]}#{forbid[0][1]} would open it, and is forbidden", read)
+        return Answer(False, f"{forbid[0][0]}#{forbid[0][1]} would open it, and is forbidden" + tail, read)
     if permit:
-        return Answer(True, f"granted by {permit[0][0]}#{permit[0][1]}", read, permit[0] in asks)
+        return Answer(True, f"granted by {permit[0][0]}#{permit[0][1]}" + tail, read, permit[0] in asks)
     return Answer(False, f"no grant opens {asked} on {bean}" + (f" at {', '.join(positions)}" if positions else '')
-                  + f" to {actor} — closed by default", read)
+                  + f" to {actor} — closed by default" + tail, read)
 
 
 def main(argv):

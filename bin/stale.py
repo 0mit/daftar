@@ -362,7 +362,9 @@ def _ats(rec, k):
 
 
 def _one_at(at, k):
-    parts = str(at).split('-')
+    """The place in the cell `at` names, as k whole numbers — its DAY: a time of day after it (`5T17:45`, ISO 8601's way)
+    is read only where a moment is asked (`moments`, `in_window`), never here."""
+    parts = str(at).partition('T')[0].split('-')
     if isinstance(at, bool) or len(parts) != k or not all(p.isdigit() and p.isascii() for p in parts):
         want = '`15`' if k == 1 else '`' + '-'.join(['MM', 'DD', 'NN'][:k]) + '`' if k <= 3 else f"{k} numbers"
         raise Unreckoned(f"`at: {at}` is prose to this tool — in a cell {k} level{'s' if k != 1 else ''} above the day it "
@@ -372,6 +374,49 @@ def _one_at(at, k):
 
 def _place_words(at):
     return '-'.join('%02d' % x for x in at) if len(at) > 1 else str(at[0])
+
+
+def _depth(rec, systems):
+    """(the row of the system a repetition by cell is counted in, k): how many levels its `each` is above the day — 0 for
+    `each: day`, 1 for a week or a month, 2 for a year of months. Unreckoned where it cannot be walked by arithmetic."""
+    each = rec.get('each')
+    row = (systems or {}).get(rec.get('in')) or {}
+    cal = row.get('calendar')
+    if each is None or not cal:
+        raise Unreckoned(f"`each: {each}` needs the system it is counted in (`in:`), and '{rec.get('in')}' names no calendar")
+    if row.get('reckoning') not in (None, 'arithmetic'):
+        raise Unreckoned(f"{row.get('system')} is reckoned {row.get('reckoning')}, not by rule — look the next "
+                         f"occurrence up in what was published or observed")
+    # THE LEVELS ARE THE LAW'S: which the system has, in order, and which of them is the day (the level whose unit is
+    # the day — `day` in most calendars, `kin` in the Mayan count).
+    levels = [l.get('level') for l in row.get('levels') or [] if isinstance(l, dict)]
+    days = [l.get('level') for l in row.get('levels') or [] if isinstance(l, dict) and l.get('unit') == 'day']
+    if each not in levels:
+        raise Unreckoned(f"{row.get('system')} has no level `{each}` — its levels are {', '.join(map(str, levels))}")
+    if not days:
+        raise Unreckoned(f"{row.get('system')} declares no level whose unit is the day, and this tool walks days")
+    k = levels.index(days[0]) - levels.index(each)
+    if k < 0:
+        raise Unreckoned(f"`each: {each}` is finer than the day this tool reads")
+    return row, k
+
+
+def _clocked(rec, row, k):
+    """[(the place, as `_one_at` reads it, its time of day (h, m) or None)] of each place `at` names — `5T17:45`, `15`,
+    and in a cell of one day the time alone, `T22:00` (cal.py `place_clock`). Unreckoned for one out of its form."""
+    at = rec.get('at')
+    out = []
+    for a in at if isinstance(at, list) else [at]:
+        try:
+            place, clock = dmcal.place_clock(a)
+        except ValueError as e:
+            raise Unreckoned(str(e)) from None
+        if k == 0 and place:
+            alone = 'T%02d:%02d' % (clock or (0, 0))
+            raise Unreckoned(f"`at: {brief(a)}` — in a cell of one day the place is the day itself: write the time of "
+                             f"day alone, `{alone}`")
+        out.append((() if k == 0 else _one_at(place, k), clock))
+    return out
 
 
 def _after_first(first, rec, systems, units, skipped=None, near=None, times=None):
@@ -411,24 +456,7 @@ def _after_first(first, rec, systems, units, skipped=None, near=None, times=None
             _spend()
             yield k + 1, first + k * step
             k += 1
-    row = (systems or {}).get(rec.get('in')) or {}
-    cal = row.get('calendar')
-    if each is None or not cal:
-        raise Unreckoned(f"`each: {each}` needs the system it is counted in (`in:`), and '{rec.get('in')}' names no calendar")
-    if row.get('reckoning') not in (None, 'arithmetic'):
-        raise Unreckoned(f"{row.get('system')} is reckoned {row.get('reckoning')}, not by rule — look the next "
-                         f"occurrence up in what was published or observed")
-    # THE LEVELS ARE THE LAW'S: which the system has, in order, and which of them is the day (the level whose unit is
-    # the day — `day` in most calendars, `kin` in the Mayan count).
-    levels = [l.get('level') for l in row.get('levels') or [] if isinstance(l, dict)]
-    days = [l.get('level') for l in row.get('levels') or [] if isinstance(l, dict) and l.get('unit') == 'day']
-    if each not in levels:
-        raise Unreckoned(f"{row.get('system')} has no level `{each}` — its levels are {', '.join(map(str, levels))}")
-    if not days:
-        raise Unreckoned(f"{row.get('system')} declares no level whose unit is the day, and this tool walks days")
-    k = levels.index(days[0]) - levels.index(each)
-    if k < 0:
-        raise Unreckoned(f"`each: {each}` is finer than the day this tool reads")
+    row, k = _depth(rec, systems)
     if k == 0:
         n = max(first, near - 1) if near is not None else first                              # reckoned, not walked
         if times is not None:
@@ -581,10 +609,17 @@ def next_due(first, rec, today, systems=None, units=None, skipped=None):
 # ---------------------------------------------------------------------------------------------------
 # AT WHAT MOMENT A REPETITION FALLS DUE, AND FOR HOW LONG. A routine (bin/routines.py) runs at a clock time, not on a
 # day: "each Friday at 17:45", "every five minutes". Its first occurrence is a MOMENT — the clause's `due`, `2026-10-16
-# 17:45` — and each occurrence after it is the same clock reading on the day the walk above finds, read in the bearer's
-# zone, so a routine kept at 03:30 is at 03:30 on both sides of a change of the clocks. A stride finer than a day
-# (`every: {count: 5, unit: min}`) is a stride of instants, counted from the first. `lasts` is each occurrence's window.
-# The days are still walked by `_occurrences`, the one walker: this adds the clock to what it finds, and nothing else.
+# 17:45` — and each occurrence after it is the same clock reading on the day the walk above finds, or the time of day its
+# place names (`at: ["1T08:30", "5T17:45"]`), read in the bearer's zone, so a routine kept at 03:30 is at 03:30 on both
+# sides of a change of the clocks. A stride finer than a day (`every: {count: 5, unit: min}`) is a stride of instants,
+# counted from the first. `lasts` is each occurrence's window. The days are still walked by `_occurrences`, the one
+# walker: this adds the clock to what it finds, and nothing else.
+#
+# A WINDOW (a grant's `window`, core/law/verbs.yaml) names no first occurrence: it is open at an instant when the instant
+# lies in one of its occurrences, each beginning at its place's time of day (the day's start where it names none) and
+# lasting `lasts`, so one from 22:00 for four hours holds on past midnight. `in_window` reads that from the days an
+# occurrence open then could have begun on — the instant's own day in the zone and the days before it, as far back as
+# `lasts` reaches — bounded by `from` and `to`, closed on its closures; a stride (`every`) is counted from its `from`.
 # ---------------------------------------------------------------------------------------------------
 _CLOCK = re.compile(r'^(?P<date>[^ T]+)[T ](?P<h>\d{2}):(?P<m>\d{2})(?::(?P<s>\d{2}))?(?P<off>[+-]\d{2}:\d{2}|Z)?$')
 
@@ -668,9 +703,10 @@ def moments(first, rec, start, end, zone=None, systems=None, units=None, window=
         span = window if window is not None else 60_000
     epoch = dmcal.UNIX_DAY
 
-    def at(n):
-        off = _offset_minutes(zone, n, h, mi, s, fixed)
-        return ((n - epoch) * 86400 + h * 3600 + mi * 60 + s - off * 60) * 1000
+    def at(n, clock=None):
+        h_, mi_, s_ = clock or (h, mi, s)
+        off = _offset_minutes(zone, n, h_, mi_, s_, fixed)
+        return ((n - epoch) * 86400 + h_ * 3600 + mi_ * 60 + s_ - off * 60) * 1000
 
     out = []
     every = (rec or {}).get('every')
@@ -708,15 +744,134 @@ def moments(first, rec, start, end, zone=None, systems=None, units=None, window=
                         return out
             k += 1
     near = max(day, (start - span) // 86_400_000 + epoch - 1)
+    # A PLACE'S OWN TIME OF DAY (`5T17:45`): each occurrence on a day of that place begins at it; a place that names
+    # none keeps the first's clock. The first is the moment written, and the day it falls on holds the occurrences of
+    # its place that come after it (RFC 5545: DTSTART is the first, and the rule's instances follow it).
+    clocks, at_ = None, rec.get('at')
+    if rec.get('each') is not None and any('T' in str(a) for a in (at_ if isinstance(at_, list) else [at_])
+                                           if a is not None):
+        row, k = _depth(rec, systems)
+        cells, clocks = _Cells(row), {}
+        for place, c in _clocked(rec, row, k):
+            clocks.setdefault(place, set()).add((h, mi, s) if c is None else (c[0], c[1], 0))
     for _i, n in _occurrences(day, rec, systems, units, None, near=near):
-        b = at(n)
-        if b >= end:
-            break
-        if b + span > start:
-            out.append((b, b + span))
-            if limit is not None and len(out) >= limit:
-                break
+        if clocks is None:
+            begins = [at(n)]
+        else:
+            own = sorted(clocks.get(cells.place(n, k), {(h, mi, s)}))
+            begins = [at(n, c) for c in ([(h, mi, s)] + [c for c in own if c > (h, mi, s)] if n == day else own)]
+        for b in begins:
+            if b >= end:
+                return out
+            if b + span > start:
+                out.append((b, b + span))
+                if limit is not None and len(out) >= limit:
+                    return out
     return out
+
+
+def instant(t, zone=None):
+    """The instant a moment names, as UNIX milliseconds: written with its offset or as an epoch count, or a clock reading
+    with none, read in `zone`. Unreckoned for a day alone, which names no instant, and for what is no moment."""
+    s = str(t).strip()
+    try:
+        return dmcal.moment(s).ms - dmcal.UNIX_DAY * dmcal.DAY_MS
+    except dmcal.NotByRule as e:
+        raise Unreckoned(f"`{brief(s)}`: {e}") from None
+    except ValueError:
+        pass
+    if not _CLOCK.match(s):
+        raise Unreckoned(f"`{brief(s)}` names a day, or nothing, and no moment")
+    day, (h, mi, sec), fixed = first_moment(s, zone)
+    return ((day - dmcal.UNIX_DAY) * 86400 + h * 3600 + mi * 60 + sec
+            - _offset_minutes(zone, day, h, mi, sec, fixed) * 60) * 1000
+
+
+def local_day(ms, zone):
+    """The day number (cal.py's) on which the instant `ms` (UNIX milliseconds) falls in `zone`."""
+    import zoneinfo
+    try:
+        tz = zoneinfo.ZoneInfo(str(zone))
+    except (zoneinfo.ZoneInfoNotFoundError, ValueError) as e:
+        raise Unreckoned(f"the zone {zone!r} is not read here ({e})") from None
+    t = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc) + datetime.timedelta(milliseconds=ms)
+    return t.astimezone(tz).date().toordinal()
+
+
+def in_window(rec, at_ms, zone, systems=None, units=None):
+    """The occurrence (begin, end) of the window `rec` that the instant `at_ms` (UNIX milliseconds) lies in, or None
+    where it lies in none — read in `zone`, the garden's (see above). Unreckoned where it cannot be read: a window the
+    gate accepts (rule `measured`, core/measures.py `Measures.window`) is one this reads."""
+    systems = systems if systems is not None else _law('SYSTEMS')
+    units = units if units is not None else _law('UNITS')
+    if not isinstance(rec, dict):
+        raise Unreckoned("a window is a repetition, `{of, in, each | every, at, lasts, …}`")
+    lasts = rec.get('lasts')
+    if not isinstance(lasts, dict) or lasts.get('measure') is None or set(lasts) - {'of', 'in', 'measure'}:
+        raise Unreckoned("a window's occurrences last a length of time, `lasts: {of: time, measure: {count, unit}}`, and "
+                         "this one says none")
+    span = _ms_of(units, lasts['measure'], 'the window `lasts`')
+    if span <= 0:
+        raise Unreckoned("a window whose occurrences last nothing is never open")
+    if rec.get('every') is not None:
+        if rec.get('from') is None:
+            raise Unreckoned("a window that strides by `every` is counted from its `from`, and names none")
+        # ONE QUESTION, ITS OWN WALK: what it walks is bounded per repetition (_CLAUSE) and spends nothing of a run's
+        # budget, so a host that asks `may` all day never finds its windows closed by a budget it did not spend
+        kept = dict(_RUN)
+        _RUN['spent'] = 0
+        try:
+            got = moments(rec['from'], rec, at_ms, at_ms + 1, zone=zone, systems=systems, units=units, limit=1)
+        finally:
+            _RUN.update(kept)
+        return got[0] if got else None
+    row, k = _depth(rec, systems)
+    if row.get('day_begins') not in (None, 'midnight'):
+        raise Unreckoned(f"{row.get('system')}'s day begins at {row.get('day_begins')}, and a window's time of day is "
+                         f"counted from midnight")
+    cells = _Cells(row)
+    try:
+        lo = day_of(rec['from']) if rec.get('from') is not None else None
+        hi = day_of(rec['to']) if rec.get('to') is not None else None
+    except (ValueError, dmcal.NotByRule) as e:
+        raise Unreckoned(f"the window's `from` or `to` is not a day this can read ({e})") from None
+    if rec.get('at') is not None:
+        places = [(p, c or (0, 0)) for p, c in _clocked(rec, row, k)]
+    elif k == 0 or lo is not None:
+        places = [(() if k == 0 else cells.place(lo, k), (0, 0))]      # each day, or the place of the day it starts on
+    else:
+        raise Unreckoned(f"the window names no place in each {rec.get('each')} (`at`), nor the day it starts from")
+    times = rec.get('times')
+    times = int(times) if isinstance(times, str) and times.strip().isdigit() else \
+        times if isinstance(times, int) and not isinstance(times, bool) else None
+    if rec.get('times') is not None and (times is None or lo is None):
+        raise Unreckoned("a window counted by `times` is counted from its `from`: a whole number of occurrences, and the "
+                         "day it starts on")
+    closed = closure_days(rec, systems)
+    order = sorted(places, key=lambda pc: pc[1])
+
+    def begins(n):
+        """The occurrences that begin on day n, in the order of the day: [(begin ms, its time of day)]."""
+        if (lo is not None and n < lo) or (hi is not None and n > hi):
+            return []
+        place = cells.place(n, k)
+        return [(((n - dmcal.UNIX_DAY) * 86400 + c[0] * 3600 + c[1] * 60
+                  - _offset_minutes(zone, n, c[0], c[1], 0, None) * 60) * 1000, c) for p, c in order if p == place]
+    today = local_day(at_ms, zone)
+    for n in range(today - span // dmcal.DAY_MS - 1, today + 1):
+        if any(a <= n <= z for a, z in closed):
+            continue                  # a closure: no occurrence falls on it, though it counts toward `times` (RFC 5545)
+        for b, c in begins(n):
+            if not b <= at_ms < b + span:
+                continue
+            if times is not None:
+                if n - lo > _CLAUSE:
+                    raise Unreckoned(f"a window counted by `times` from {brief(rec['from'])} is not walked so far: "
+                                     f"more than {_CLAUSE} days")
+                if sum(len(begins(d)) for d in range(lo, n)) + [x[1] for x in begins(n)].index(c) + 1 > times:
+                    continue
+            return b, b + span
+    return None
 
 
 def nth(i, times=None):

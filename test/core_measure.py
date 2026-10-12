@@ -196,7 +196,8 @@ FHIR = [{"resourceType": "Observation", "id": "mites-july", "status": "final",
 try:
     # ---- THE RELEASE: v1.0.0, a release of the core made from this tree, and a garden grown from it
     grow.release(REL)
-    r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), G, '--gardener', 'sam', '--gardener-name', 'Sam', cwd=T)
+    r = run(PY, os.path.join(REL, 'seed', 'germinate.py'), G, '--gardener', 'sam', '--gardener-name', 'Sam',
+            '--zone', 'Europe/Berlin', cwd=T)
     check(f"a garden grows from v1.0.0 in the core (core@{VERSION}), the measure tools in it",
           r.returncode == 0 and f'core@{VERSION}' in text('GARDEN.md')
           and all(os.path.isfile(os.path.join(G, 'bin', f"{v}.py")) and not os.path.exists(os.path.join(G, 'bin', f"dm{v}.py"))
@@ -251,6 +252,104 @@ try:
              "in no system's form", 'valency')):
         ok, out = refused(path, old_, new, says, rule)
         check(f"gate: {name} is refused by rule `{rule}`", ok, out)
+
+    # ---- A GRANT'S WINDOW: it holds at a moment in its `at` and in an occurrence of its window, in the garden's zone
+    # (Europe/Berlin: +02:00 until the clocks go back on 2026-10-25, +01:00 after)
+    sp = 'beans/sam.md'
+    write('beans/p-0000aaaa.md', '---\nbean: p-0000aaaa\nkind: person\ntitle: "p-0000aaaa"\nstatements:\n'
+                                 '  - say: { by: sam, at: now }\n  - own: { by: theone, of: self }\n---\np-0000aaaa\n')
+    write(sp, text(sp).replace('\n---\nSam keeps', """
+  - grant:  { id: office-hours, by: self, to: [p-0000aaaa], of: [hive-1], as: read, at: "2026-10-19/2026-10-30", window: { of: time, in: iso-week, each: week, at: ["1T08:30", "2T08:30", "3T08:30", "4T08:30", "5T08:30"], lasts: { of: time, measure: { count: "10", unit: h } } } }
+  - grant:  { id: night-watch, by: self, to: [p-0000aaaa], of: [rack], as: read, at: "2026-10-19/2026-10-23", window: { of: time, in: gregorian-civil, each: day, at: "T22:00", lasts: { of: time, measure: { count: "4", unit: h } } } }
+  - grant:  { id: whole-days, by: self, to: [p-0000aaaa], of: [nas], as: read, at: "2026-10-19/2026-10-30" }
+  - say:    { by: sam, of: [office-hours, night-watch, whole-days], at: now }
+---
+Sam keeps""", 1))
+    r = run(PY, 'bin/save.py', 'sam', 'a person kept by an opaque id, and what the gardener opens to them, and when',
+            '--body', '- action: wrote [[p-0000aaaa]]; [[sam]] grants them the hive in office hours, the rack by night '
+                      'and the file server by the day')
+    check("gate: a grant held in a recurring window — office hours on working days, a night that crosses midnight — "
+          "is saved through the core's gate", r.returncode == 0 and clean(), r.out[-1500:])
+    oh = 'lasts: { of: time, measure: { count: "10", unit: h } }'
+    for name, old_, new, says in (
+            ("a window that says not how long each occurrence lasts", ', ' + oh, '', "says how long"),
+            ("a window whose occurrences last cells of a level, not a length", 'measure: { count: "10", unit: h }',
+             'level: day, count: "1", in: iso-week', "a length of time"),
+            ("a time of day out of its form", '"1T08:30"', '"1T8:30"', "time of day"),
+            ("a window that strides with no start", 'each: week, at: ["1T08:30", "2T08:30", "3T08:30", "4T08:30", '
+             '"5T08:30"]', 'every: { count: "1", unit: d }', "from"),
+            ("a window that strides by neighbours, not by a length of time", 'each: week, at: ["1T08:30", "2T08:30", '
+             '"3T08:30", "4T08:30", "5T08:30"]', 'every: { count: "1" }, from: "2026-W43-1"', "a length of time"),
+            ("a window counted in a calendar whose day begins at sunset", 'in: iso-week, each: week',
+             'in: hebrew-calendar, each: month', "sunset"),
+            ("a window in cells finer than a day", 'in: gregorian-civil, each: day, at: "T22:00"',
+             'in: gregorian-civil, each: hour', "finer than the day")):
+        ok, out = refused(sp, old_, new, says)
+        check(f"gate: {name} is refused by rule `measured`", ok, out)
+
+    def may(bean, at, beans=None):
+        return dmpass.may('p-0000aaaa', 'read', bean, at=at, root=G, beans=beans)
+    for name, bean, inside, outside in (
+            ("on a working day, from its time of day for as long as it lasts — read in the garden's zone, whatever "
+             "offset the moment is written in", 'hive-1',
+             ['2026-10-19 08:30+02:00', '2026-10-19 06:30Z', '2026-10-23 18:29+02:00', '2026-10-20 09:00'],
+             ['2026-10-19 08:29+02:00', '2026-10-19 06:29Z', '2026-10-23 18:30+02:00', '2026-10-20 07:00']),
+            ("not at the weekend", 'hive-1', [], ['2026-10-24 10:00+02:00', '2026-10-25 10:00+01:00']),
+            ("by the zone's rule on each day: after the clocks go back, 08:30 is 07:30Z", 'hive-1',
+             ['2026-10-26 07:30Z', '2026-10-30 08:30+01:00'], ['2026-10-26 06:30Z', '2026-10-26 07:29Z']),
+            ("never outside its `at`, though the window is open then", 'hive-1', [],
+             ['2026-10-16 10:00+02:00', '2026-11-02 10:00+01:00']),
+            ("across midnight: an occurrence from 22:00 for four hours holds on into the next day", 'rack',
+             ['2026-10-20 22:00+02:00', '2026-10-20 23:30+02:00', '2026-10-21 01:59+02:00'],
+             ['2026-10-20 21:59+02:00', '2026-10-21 02:00+02:00', '2026-10-21 12:00+02:00']),
+            ("and its `at` bounds that too: the last day's occurrence holds until its midnight, not past it", 'rack',
+             ['2026-10-23 23:59+02:00'], ['2026-10-24 01:00+02:00', '2026-10-18 23:00+02:00']),
+            ("a grant without a window holds as it did, at any moment of its days", 'nas',
+             ['2026-10-24 03:00+02:00', '2026-10-30'], ['2026-10-31'])):
+        got = {t: may(bean, t) for t in inside + outside}
+        check(f"may: a grant in a window opens {name}" if bean != 'nas' else f"may: {name}",
+              all(got[t].granted for t in inside) and not any(got[t].granted for t in outside),
+              {t: (a.granted, a.why) for t, a in got.items()})
+    a = may('hive-1', '2026-10-20')
+    check("may: a grant in a window is judged at a moment — a day asked opens nothing through it, and says why",
+          not a.granted and 'window' in a.why, a)
+    beans = dmpass.beans_here(G)
+    beans['sam'] = dict(beans['sam'], statements=list(beans['sam']['statements']) + [
+        {'grant': {'id': 'unread-window', 'by': 'self', 'to': ['p-0000aaaa'], 'of': ['landlord'], 'as': 'read',
+                   'window': {'of': 'time', 'in': 'iso-week', 'each': 'week', 'at': '1T08:30'}}}])
+    a = may('landlord', '2026-10-19 09:00+02:00', beans)
+    check("may: a window it cannot read (no `lasts`, which the gate refuses) opens nothing, and the answer says why",
+          not a.granted and 'unread-window' in a.why and 'window' in a.why, a)
+
+    # ---- A RECURRENCE'S TIME OF DAY, read by each reader in the garden, by the law it runs: the day where only the day
+    # matters (bin/stale.py's walk), the clock where it does (a routine's moments, its cron line)
+    probe = r"""import sys, json; sys.path.insert(0, 'bin'); import stale, cal, routines
+def ms(t): return cal.moment(t).ms - cal.UNIX_DAY * cal.DAY_MS
+def shown(b): return cal.write_moment(b + cal.UNIX_DAY * cal.DAY_MS, 'gregory', '+01:00' if b >= ms('2026-10-25 01:00Z') else '+02:00')
+def tried(f):
+    try: return f()
+    except routines.Refused as e: return 'refused: ' + str(e)
+    except Exception as e: return repr(e)
+two = {'of': 'time', 'in': 'iso-week', 'each': 'week', 'at': ['1T08:30', '5T17:45']}
+lasts = {'of': 'time', 'measure': {'count': '30', 'unit': 'min'}}
+print(json.dumps({
+  'days': tried(lambda: [cal.from_day(n, 'gregory') for n, _ in zip(stale.occurrences(stale.day_of('2026-10-19'), two), range(4))]),
+  'six': tried(lambda: len([n for n, _ in zip(stale.occurrences(stale.day_of('2026-10-15'), {'of': 'time', 'in': 'gregorian-civil', 'each': 'month', 'at': '15T09:00', 'times': '6'}), range(12))])),
+  'moments': tried(lambda: [shown(b) for b, _e in stale.moments('2026-10-19 08:30', dict(two, lasts=lasts), ms('2026-10-19 00:00+02:00'), ms('2026-10-31 00:00+01:00'), zone='Europe/Berlin')]),
+  'cron': tried(lambda: routines.clause_to_cron({'due': '2026-10-23 17:45', 'every': {'of': 'time', 'in': 'iso-week', 'each': 'week', 'at': '5T17:45'}})),
+  'two_clocks': tried(lambda: routines.clause_to_cron({'due': '2026-10-19 08:30', 'every': two}))}))
+"""
+    r = run(PY, '-c', probe)
+    got = json.loads(r.out) if r.returncode == 0 and r.out.strip().startswith('{') else {}
+    check("stale: a place with a time of day is read as its day where only the day matters — Mondays and Fridays; the "
+          "15th of each month, six times", got.get('days') == ['2026-10-19', '2026-10-23', '2026-10-26', '2026-10-30']
+          and got.get('six') == 6, got or r.out[-800:])
+    check("moments: a routine's occurrences fall at the time of day each place names, in its zone",
+          got.get('moments') == ['2026-10-19 08:30+02:00', '2026-10-23 17:45+02:00', '2026-10-26 08:30+01:00',
+                                 '2026-10-30 17:45+01:00'], got.get('moments') or r.out[-800:])
+    check("cron: a place with its due's time of day is one line; two times of day are refused, never one of them kept",
+          got.get('cron') == '45 17 * * fri' and str(got.get('two_clocks')).startswith('refused: ')
+          and 'time of day' in str(got.get('two_clocks')), (got.get('cron'), got.get('two_clocks')))
 
     # ---- THE TOOLS
     r = run(PY, 'bin/units.py', '90', 'km/h', 'm/s')

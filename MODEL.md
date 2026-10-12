@@ -264,7 +264,8 @@ A name is a statement: the namespace gives it.
 - **Lines.** What a line held at each position is a series, `record`; a walk is a mapping's `step` statements, a case
   on it a `be` as order, and where it stands is read from its `move`s (`python3 bin/daftar.py seq`). Each line's own
   structure is a value in a form of core/law/lines.yaml, and rule `line` judges it. A region of a line (`extent`) and a
-  repetition along one (`recurrence`) are forms of core/law/measures.yaml; how well a value is known is inside it (`u`,
+  repetition along one (`recurrence`, each of its places `at` with a time of day where it names one, `5T17:45`) are
+  forms of core/law/measures.yaml; how well a value is known is inside it (`u`,
   or `accuracy` with its kind); and what a placement holds there — what it takes of its host, how well its position is
   known, its window — is `be`'s form `placed`. Rule `measured` judges them, and sums what is placed as room in a host
   against what it `hold`s.
@@ -395,9 +396,12 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
 - **Who may do what is closed by default.** The gardener may; anyone else may what a `grant` opens — `as` read, write,
   enact or ratify, `of` the beans or statements it covers — or a reading, every bean it holds, read each time — `to`
   whom (a being, or every member of a reading), the parts of each it opens and whether each use asks a reason its
-  `cover`, `at` the extent it holds over — held by the
-  gardener, by the person a record is of or concerns, or by an agreement over its own bean; a position on the
-  permission square that forbids a grant refuses what it would open. `python3 bin/pass.py` reads them (`may`).
+  `cover`, `at` the extent it holds over, and its `window` where it holds only at some times — a repetition each of
+  whose occurrences lasts, office hours on working days (`window: { of: time, in: iso-week, each: week, at: ["1T08:30",
+  …, "5T08:30"], lasts: { of: time, measure: { count: "10", unit: h } } }`): it then holds at a moment in its `at` and in
+  an occurrence of its window, read in the garden's zone, and one that lasts past midnight holds on into the next day —
+  held by the gardener, by the person a record is of or concerns, or by an agreement over its own bean; a position on
+  the permission square that forbids a grant refuses what it would open. `python3 bin/pass.py` reads them (`may`).
 
 ## Merging
 Two branches of one garden merge bean by bean. A bean's statements are a set: what both sides hold is kept once, and
