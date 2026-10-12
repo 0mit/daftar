@@ -38,8 +38,8 @@ def pin(root, ref=None):
     if ref is None:
         p = os.path.join(root, 'GARDEN.md')
         try:
-            with open(p, encoding='utf-8') as fh:
-                text = fh.read()
+            with open(p, encoding='utf-8', errors='replace') as fh:     # as a commit's text is read, below: a byte
+                text = fh.read()                                         # that is no UTF-8 never hides the pin
         except OSError:
             return ''
     else:
