@@ -139,6 +139,9 @@ jobs:
       - name: "view_held_names: a person kept off git by name shown by it to a reader who may read them, on the host that keeps it — and by their opaque id to every other reader, host and page of one file"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_held_names.py
+      - name: "view_between_names: what went between gardens with every garden called by a name — this garden as the one read in, an untitled garden as another garden — and what went by its title, never an id"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_between_names.py
       - name: "view_pages: a garden's handplace is its pages — several page beans each checked as its own, listed in the order the garden places them, and a table of a reading drawn with no module"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_pages.py
