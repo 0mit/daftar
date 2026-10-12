@@ -364,6 +364,37 @@ try:
     r = run(PY, 'bin/ledger.py', '--between', 'sam', 'ali', '--json')
     check("ledger --between --json: the pair's net, as the prose nets it",
           r.returncode == 0 and '"between": [' in r.out and '"from": "sam"' in r.out and '"count": "30"' in r.out, r.out[-800:])
+    # A PAYMENT A CLAUSE ASKS IS NOT A PAYMENT MADE: the rent the lease asks each month is the `of` of its clause, and
+    # only the deposit moved. The rent is read under its clause, never among what moved.
+    write('beans/room-lease.md', '---\nbean: room-lease\nkind: contract\n'
+          'title: "room-lease — Ali rents a room from Sam"\n'
+          'summary: "Ali rents Sam\'s spare room: a deposit paid once, the rent asked each month."\nstatements:\n'
+          '  - say:    { by: sam, at: now }\n  - own:    { by: theone, of: self }\n'
+          '  - answer: { by: sam, of: self, as: law }\n  - answer: { by: ali, of: self, as: law }\n'
+          '  - agree:  { by: sam, of: "the spare room", through: written, as: landlord }\n'
+          '  - agree:  { by: ali, of: "the spare room", through: written, as: tenant }\n'
+          '  - pay:    { id: rent, by: ali, to: sam, of: { count: "300", unit: EUR } }\n'
+          '  - obligatory: { id: monthly, of: rent, through: self, note: "the rent, on the first of each month", '
+          'clause: { due: "2026-11-01", every: { of: time, in: gregorian-civil, each: month, at: "1" } } }\n'
+          '  - pay:    { id: deposit, by: ali, to: sam, of: { count: "100", unit: EUR }, at: "2026-10-05" }\n'
+          '  - bear:   { by: sam, of: deposit }\n---\nThe lease of the spare room.\n')
+    r = save('the room lease', '- action: added [[room-lease]]')
+    r1 = run(PY, 'bin/ledger.py', 'room-lease')
+    r2 = run(PY, 'bin/ledger.py', 'room-lease', '--json')
+    try:
+        L = json.loads(r2.out)['agreements'][0]
+    except (ValueError, KeyError, IndexError):
+        L = {}
+    block = r1.out.split('transactions (')[-1].split('position (paid less borne)')[0].splitlines()[1:]
+    moved = [ln.split()[0] for ln in block if ln.startswith('     ') and ln.strip()]
+    check("ledger: a payment a clause asks (the rent) is no payment made — among what moved is the deposit alone; the "
+          "rent is read under its clause, its amount from its form; as data too",
+          r.returncode == 0 and r1.returncode == 0 and 'transactions (1):' in r1.out and moved == ['deposit']
+          and 'monthly  obligatory: ali' in r1.out and 'amount 300 EUR' in r1.out
+          and 'sam owes ali 100 EUR' in r1.out
+          and [t['id'] for t in L.get('transactions', [])] == ['deposit']
+          and [c['id'] for c in L.get('clauses', [])] == ['monthly'],
+          r.out[-400:] + r1.out[-1200:] + r2.out[-600:])
 
     # ---- GARDEN, WHERE, STALE, POS, CURSOR
     r = run(PY, 'bin/garden.py')

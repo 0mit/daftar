@@ -635,7 +635,7 @@ def defaults_of(bid, may=None):
     d = L.verbs[w]['default']
     out = {}
     for ag in dmledger.reading([bid])['agreements']:
-        for t in ag['transactions']:
+        for t in ag['transactions'] + ag.get('asked', []):     # a payment made, or one a clause asks
             payers = [x['by'] for x in t.get('paid') or []]
             if t.get('borne_by_payer') and len(payers) == 1:
                 shown = may is None or may('read', payers[0])

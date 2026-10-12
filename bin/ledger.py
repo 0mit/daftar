@@ -12,7 +12,9 @@ first time a transaction was added and the balance was not. So an agreement reco
 paid how much of it, who bears it in what shares — and this tool reads the rest, the same way every time:
 
   POSITION   per agreement and per currency, what each party paid less the share it bears. A single payer that states
-             no amount paid the whole; a transaction with no bearers is borne by whoever paid it.
+             no amount paid the whole; a transaction with no bearers is borne by whoever paid it. A payment a clause
+             asks — the `of` of a position on the permission square: a rent, an instalment — is no payment made: it is
+             read under its clause, and moves no position.
   WHO OWES   each bearer owes each payer its share of what that payer put in, and the two directions between a pair are
              netted: "ali owes sam 300 XTS". With --between, netted again across every agreement the two share.
   CLAUSES    each clause still in force — not met, waived or broken, as the law's `expiry.unless` says — with when it
@@ -38,11 +40,12 @@ every position, debt and net is per currency. A transaction priced in one curren
 rate it implies — charged over amount, exactly — as a reading of the statement, never as a rate to reuse.
 
 THE SAME READING, FOR A PAGE (`--json`, in a garden of the core): what is printed above, as data — each agreement's
-parties, transactions, positions, debts netted within it, its clauses (when each falls due, and next), its notes and
-what it left out; and `net`, every pair of parties netted per currency across the agreements read, as
---between nets one pair (the view's flows draw it; a page never reads this prose). Every amount is a COUNT AS TEXT —
-a decimal where it terminates, `n/d` where it does not, with `uneven` where it does not come out even in its
-currency's places — never a JSON number, which a reader would take as a float.
+parties, transactions, what its clauses ask (`asked`, each read as a payment is, and moving nothing), positions, debts
+netted within it, its clauses (when each falls due, and next), its notes and what it left out; and `net`, every pair of
+parties netted per currency across the agreements read, as --between nets one pair (the view's flows draw it; a page
+never reads this prose). Every amount is a COUNT AS TEXT — a decimal where it terminates, `n/d` where it does not, with
+`uneven` where it does not come out even in its currency's places — never a JSON number, which a reader would take as a
+float.
 
 WHAT IS NOT READ IS SAID (manifesto: never-pathless). A transaction whose figures cannot be read exactly, a bean whose front matter does not parse,
 an entry a merge left as a disagreement for a person (`{conflict: [a, b]}`): each is left out of every total and named
@@ -828,7 +831,7 @@ def core_agreement(b, G, units):
     `can` statements and the figure each stands under, each read as today's clause is (`clause_lines`): when it falls
     due and next falls due, how it repeats, its notice, its window, an allowance, what it occurs for and what brings it
     into force — its form, `clause` (core/measures.py, v1 part 7)."""
-    ag = {'bean': b.id, 'title': b.header.get('title'), 'parties': {}, 'fm': {}, 'notes': [], 'txs': [],
+    ag = {'bean': b.id, 'title': b.header.get('title'), 'parties': {}, 'fm': {}, 'notes': [], 'txs': [], 'asked': [],
           'position': {}, 'owed': {}, 'clauses': [], 'pending': [], 'disputed': [], 'left_out': [], 'maybe': set()}
     for _i, v, r in b.items:
         if v == 'agree' and 'held' not in r:
@@ -839,25 +842,34 @@ def core_agreement(b, G, units):
     for _i, v, r in b.items:
         if v == 'bear' and 'held' not in r and isinstance(r.get('of'), str):
             bears.setdefault(r['of'].split('#')[-1], []).append(r)
+    # A PAYMENT A CLAUSE ASKS IS NOT A PAYMENT MADE: the `of` of a position on the permission square (the rent a lease
+    # asks each month, an instalment) says what is to be paid. It is read as a payment is — its amount, who would pay
+    # and who would bear it — and kept apart (`asked`), under its clause, never among what moved, where it was once
+    # listed as paid: it moves no position, owes nothing, and leaves nothing out of a total.
+    from core import measures
+    asks = {r['of'] for _i, v, r in b.items if v in measures.FIGURE_PERMISSION and 'held' not in r
+            and isinstance(r.get('of'), str) and '#' not in r['of']}
     n = {}
     for i, v, r in b.items:
         if v != 'pay':
             continue
         n[v] = n.get(v, 0) + 1
         key = r.get('id') if isinstance(r.get('id'), str) else f"pay@{n[v]}"
+        asked = r.get('id') in asks
         tx = {'key': key, 'what': r.get('note') or '', 'day': r.get('at'), 'notes': [], 'paid': None, 'borne': None,
               'whole': None, 'unit': None, 'priced': None}
-        ag['txs'].append(tx)
+        (ag['asked'] if asked else ag['txs']).append(tx)
+        left = (lambda why: None) if asked else (lambda why: ag['left_out'].append((f"transaction {esc(key)}", why)))
         if 'held' in r:
             tx['notes'].append("is sealed: what it gave is read where it is held — left out")
-            ag['left_out'].append((f"transaction {esc(key)}", tx['notes'][-1]))
+            left(tx['notes'][-1])
             continue
         q = r.get('of')
         W, why = read_count(q if isinstance(q, dict) else {'count': q, 'unit': '1'})
         if W is None or not isinstance(r.get('by'), str):
             tx['notes'].append(f"what it gave is not a count this can read exactly{why} — left out" if W is None
                                else "who paid it is not named — left out")
-            ag['left_out'].append((f"transaction {esc(key)}", tx['notes'][-1]))
+            left(tx['notes'][-1])
             continue
         tx['whole'], tx['unit'], tx['paid'] = W, str(q.get('unit') if isinstance(q, dict) else '1'), {r['by']: W}
         ch = r.get('charged')                       # PRICED IN ONE CURRENCY, CHARGED IN ANOTHER (v1 part 12b): what moved
@@ -881,10 +893,12 @@ def core_agreement(b, G, units):
         if bad:
             tx['notes'].append(bad)
             tx['paid'] = None
-            ag['left_out'].append((f"transaction {esc(key)}", bad))
+            left(bad)
             continue
         total = sum(shares.values())
         tx['borne'] = {p: Fraction(W * s, total) for p, s in shares.items()} if shares else dict(tx['paid'])
+        if asked:
+            continue
         cur = tx['unit']
         for (d, c), x in owed(tx).items():
             ag['owed'].setdefault(cur, {})[(d, c)] = ag['owed'].setdefault(cur, {}).get((d, c), Fraction(0)) + x
@@ -895,9 +909,8 @@ def core_agreement(b, G, units):
             pos[p] = pos.get(p, Fraction(0)) - x
     figs = {}
     for _i, v, r in b.items:
-        if v in ('obligatory', 'permitted', 'forbidden', 'omissible') and isinstance(r.get('of'), str):
+        if v in measures.FIGURE_PERMISSION and isinstance(r.get('of'), str):
             figs.setdefault(r['of'], []).append(v)
-    from core import measures
     views = measures.clauses_of(b, ROOT)
     for _i, v, r in b.items:
         if v == 'can' and 'held' not in r:
@@ -1035,8 +1048,8 @@ def agreement_json(ag, units, today):
     """One agreement of the core as `core_print` reads it, as data."""
     def party(k):
         return ag['parties'].get(k) or k
-    txs = []
-    for tx in ag['txs']:
+
+    def tx_json(tx):
         t = {'id': str(tx['key']), 'day': _plain(tx.get('day')), 'what': tx.get('what') or None,
              'notes': list(tx.get('notes') or [])}
         if tx.get('whole') is not None:
@@ -1048,7 +1061,8 @@ def agreement_json(ag, units, today):
         if tx.get('priced'):
             c, u = tx['priced']
             t['priced'] = figure(c, u, units)
-        txs.append(t)
+        return t
+    txs = [tx_json(tx) for tx in ag['txs']]
     clauses = []
     for cid, r, figs, e in ag.get('clauses') or []:     # a `can`, or a position on the square, and its form (core_agreement)
         e = dict(e or {}, **{k: r.get(k) for k in ('by', 'to') if r.get(k) is not None and not (e or {}).get(k)})
@@ -1059,6 +1073,7 @@ def agreement_json(ag, units, today):
         'bean': ag['bean'], 'title': ag['title'] if isinstance(ag.get('title'), str) else None,
         'parties': {str(k): b for k, b in sorted(ag['parties'].items())},
         'transactions': txs,
+        'asked': [tx_json(tx) for tx in ag.get('asked') or []],      # what a clause asks: no payment, moving nothing
         'positions': [dict(figure(x, cur, units), party=party(p)) for cur in sorted(ag['position'])
                       for p, x in sorted(ag['position'][cur].items())],
         'debts': [dict(figure(x, cur, units), **{'from': party(d), 'to': party(c)}) for cur in sorted(ag['owed'])
