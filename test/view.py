@@ -187,6 +187,13 @@ details:
       email_to: keeper@example.org
       email_from: yard-monitor@example.org
       smarthost: host.docker.internal:25
+    retention: 90d
+    image_tags:
+      prometheus: v3.13.3
+    mem_limits:
+      prometheus: 6g
+    probe_timeouts:
+      http_2xx: 10s
     snmp:
       env_file: snmp.env
       auths:
@@ -918,6 +925,33 @@ check("bundle: prometheus.yml and the compose file are valid YAML, the node job 
       "the compose project is the page's", isinstance(yaml.safe_load(_comp), dict) and isinstance(_pyd.get("scrape_configs"), list)
       and {"node", "blackbox-icmp", "blackbox-http"} <= {j["job_name"] for j in _pyd["scrape_configs"]} and "honor_labels: true" in _py
       and "name: grain-page" in _comp and 'garden: "garden-grain"' in _py, str(_pyd)[:300])
+_bb = open(os.path.join(BD, "blackbox.yml")).read() if os.path.isfile(os.path.join(BD, "blackbox.yml")) else ""
+_svc = (yaml.safe_load(_comp) or {}).get("services") or {}
+check("bundle: what the monitor's settings say of its deployment is the bundle's — 90 days kept, Prometheus's own image "
+      "tag, its memory and the http probe's deadline, which its jobs' scrapes leave it — and every image is pinned by "
+      "version, the ones it does not name at the adapter's documented defaults, never `latest`",
+      "--storage.tsdb.retention.time=90d" in _comp and _svc.get("prometheus", {}).get("image") == "prom/prometheus:v3.13.3"
+      and _svc.get("prometheus", {}).get("mem_limit") == "6g" and _svc.get("grafana", {}).get("mem_limit") == "4g"
+      and "http_2xx:    {prober: http,  timeout: 10s" in _bb and "insecure_skip_verify: true" in _bb
+      and _svc.get("grafana", {}).get("image") == "grafana/grafana:13.2.3"
+      and {j["job_name"]: j.get("scrape_timeout") for j in _pyd["scrape_configs"] if j["job_name"].startswith("blackbox-")}
+      == {"blackbox-icmp": None, "blackbox-tcp": None, "blackbox-http": "11s", "blackbox-tls": "11s"}
+      and all(re.search(r":v?[0-9]+\.[0-9]+\.[0-9]+$", str(s.get("image", ""))) for s in _svc.values()) and ":latest" not in _comp,
+      ({k: (s.get("image"), s.get("mem_limit")) for k, s in _svc.items()}, _bb[-300:]))
+_ym = get("beans/yard-monitor.md")
+put("beans/yard-monitor.md", _ym.replace("    retention: 90d\n", "    retention: soon\n", 1)
+    .replace("      prometheus: v3.13.3\n", "      prometheus: v3.13.3\n      exporter: v1.0.0\n      grafana: '13.2'\n", 1)
+    .replace("      http_2xx: 10s\n", "      http_2xx: 45s\n", 1)
+    .replace("    snmp:\n      env_file:", "    snmp:\n      image_tag: latest\n      env_file:", 1))
+out, rc = dmview("check")
+put("beans/yard-monitor.md", _ym)
+check("bundle: a deployment setting the adapter cannot write is refused by `view check`, named — a retention that is no "
+      "duration, an image the bundle has none of, an image tag that names a line and not a version (`13.2`, `latest`), "
+      "a probe longer than its scrape leaves it",
+      rc != 0 and "retention 'soon' is no Prometheus duration" in out and "image_tags name 'exporter'" in out
+      and "image_tags of grafana, '13.2', is not in the form the bundle writes (a whole version" in out
+      and "snmp.image_tag, 'latest', is not in the form the bundle writes" in out
+      and "probe_timeouts of http_2xx, '45s', is longer than a scrape leaves a probe" in out, out[-1200:])
 _dash = json.load(open(os.path.join(BD, "grafana", "dashboards", "view-silo.json"))) if os.path.isfile(os.path.join(BD, "grafana", "dashboards", "view-silo.json")) else {}
 check("bundle: one page per drawing, the drawing mounted by the same runtime, its queries built with the page's scope variables",
       _dash.get("uid") == "view-silo" and "viewMount" in json.dumps(_dash) and 'org=~\\"$org\\"' in json.dumps(_dash)

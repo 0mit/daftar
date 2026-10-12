@@ -19,7 +19,15 @@ term of the law carries it:
       alerting: { email_to, email_from, smarthost, repeat },
       snmp: { env_file, auths: { <name>: { community_env, version } }, modules: { <being>: [ { modules: [...], auth, org } ] } },
       filesystems: [ { being, user, path } ],
-      grafana_plugins: [ "<plugin>@<version>" ] }
+      grafana_plugins: [ "<plugin>@<version>" ],
+      retention: "<a Prometheus duration: 30d>",
+      image_tags: { prometheus, node-exporter, blackbox, grafana },
+      mem_limits: { prometheus, node-exporter, blackbox, grafana },
+      probe_timeouts: { icmp, tcp_connect, smtp_banner, http_2xx },
+      tls_verify: true | false }
+
+What the bundle deploys is the monitor's to say, each with its default (DEPLOY, below: today's values, and each image
+pinned by version, so a bundle written today and one written next month run the same software, the one tested).
 
 A secret is only ever an environment variable's NAME here; its value lives in the host's own file, never in the
 bundle, the page or the ledger.
@@ -38,6 +46,90 @@ import view_model as vm
 import view_kit as kit
 
 TECHNOLOGY = "prometheus"
+# THE DEPLOYMENT'S DEFAULTS, each the monitor's settings may say otherwise: what is kept and for how long, each
+# container's image and memory, each probe's deadline, and whether an https probe checks the certificate. An image is
+# pinned by version: read 2026-10-12, each the newest release out two weeks or more, or a newer patch of its own line
+# where that fixes the program's own security (Grafana 13.2.3: CVE-2026-13719, -13720, -81841). A certificate is not
+# checked: a monitor probes hosts whose certificates are its own, and the tls probe reads a certificate's expiry. The
+# http and tls probes share one module, so with tls_verify true the tls probe fails on a certificate it cannot verify,
+# where it read the expiry before.
+DEPLOY = {"retention": "30d",
+          "image_tags": {"prometheus": "v3.15.0", "node-exporter": "v1.12.1", "blackbox": "v0.28.0", "grafana": "13.2.3"},
+          "mem_limits": {"prometheus": "4g", "node-exporter": "512m", "blackbox": "256m", "grafana": "4g"},
+          "probe_timeouts": {"icmp": "5s", "tcp_connect": "5s", "smtp_banner": "5s", "http_2xx": "8s"},
+          "tls_verify": False}
+# Each setting's form. An image's tag names a whole version (v3.15.0, 13.2.3), never `latest` nor a line that moves
+# (`v3`, `13.2`), so the bundle runs the image that was tested
+DEPLOY_FORMS = {"retention": re.compile(r"^[1-9][0-9]*(ms|s|m|h|d|w|y)$"),
+                "image_tags": re.compile(r"^v?[0-9]+\.[0-9]+\.[0-9]+([-+][A-Za-z0-9_.-]+)?$"),
+                "mem_limits": re.compile(r"^[1-9][0-9]*[bkmg]$"),
+                "probe_timeouts": re.compile(r"^[1-9][0-9]*(ms|s)$")}
+
+
+def deploy(st):
+    """The deployment's settings: the monitor's where it states them, each else its default (DEPLOY)."""
+    st = st if isinstance(st, dict) else {}
+    out = {"retention": str(st.get("retention") or DEPLOY["retention"])}
+    for k in ("image_tags", "mem_limits", "probe_timeouts"):
+        given = st.get(k) if isinstance(st.get(k), dict) else {}
+        out[k] = {name: str(given.get(name) or v) for name, v in DEPLOY[k].items()}
+    out["tls_verify"] = str(st.get("tls_verify", DEPLOY["tls_verify"])).lower() == "true"
+    return out
+
+
+def deploy_errors(st):
+    """What of the deployment's settings this adapter cannot write: a key it has no such entry of, or a value not in
+    its form."""
+    st = st if isinstance(st, dict) else {}
+    errs = []
+    if "retention" in st and not DEPLOY_FORMS["retention"].match(str(st["retention"])):
+        errs.append("its retention %r is no Prometheus duration (30d, 12w)" % st["retention"])
+    for k in ("image_tags", "mem_limits", "probe_timeouts"):
+        if k not in st:
+            continue
+        if not isinstance(st[k], dict):
+            errs.append("its %s are not a mapping of %s" % (k, ", ".join(DEPLOY[k])))
+            continue
+        for name, v in st[k].items():
+            if name not in DEPLOY[k]:
+                errs.append("its %s name %r, which is none of %s%s" % (
+                    k, name, ", ".join(DEPLOY[k]), " (alertmanager's and snmp-exporter's tags are their own sections' "
+                                                   "image_tag)" if k == "image_tags" else ""))
+            elif not DEPLOY_FORMS[k].match(str(v)):
+                errs.append("its %s of %s, %r, is not in the form the bundle writes%s" % (
+                    k, name, v, " (a whole version: an image is pinned, so the bundle runs the one tested)"
+                    if k == "image_tags" else ""))
+            elif k == "probe_timeouts" and seconds(v) > PROBE_MOST:
+                errs.append("its probe_timeouts of %s, %r, is longer than a scrape leaves a probe (%ds: a target is "
+                            "scraped every %ds)" % (name, v, PROBE_MOST, SCRAPE_EVERY))
+    for sect in ("snmp", "alerting"):
+        tag = (st.get(sect) or {}).get("image_tag") if isinstance(st.get(sect), dict) else None
+        if tag is not None and not DEPLOY_FORMS["image_tags"].match(str(tag)):
+            errs.append("its %s.image_tag, %r, is not in the form the bundle writes (a whole version: an image is "
+                        "pinned, so the bundle runs the one tested)" % (sect, tag))
+    if "tls_verify" in st and str(st["tls_verify"]).lower() not in ("true", "false"):
+        errs.append("its tls_verify is %r, neither true nor false" % st["tls_verify"])
+    return errs
+
+
+# A PROBE'S DEADLINE IS KEPT ONLY WITHIN ITS SCRAPE'S: the blackbox exporter ends a probe half a second before the
+# scrape that asked for it times out (prometheus.yml's global, SCRAPE_TIMEOUT), so a job whose probe may run longer is given a
+# scrape deadline of its own, a second past the probe's, and no probe may run longer than a scrape leaves it.
+SCRAPE_EVERY, SCRAPE_TIMEOUT, PROBE_MOST = 30, 10, 29
+
+
+def seconds(d):
+    """A probe's deadline (`5s`, `750ms`) in seconds."""
+    d = str(d)
+    return int(d[:-2]) / 1000 if d.endswith("ms") else int(d[:-1])
+
+
+def scrape_timeout(probe):
+    """The line a blackbox job takes for a probe of this deadline: none while the global scrape deadline keeps it."""
+    s = seconds(probe)
+    return "" if s <= SCRAPE_TIMEOUT - 0.5 else "    scrape_timeout: %ds\n" % min(SCRAPE_EVERY, int(s + 0.999) + 1)
+
+
 PROBES = 'job=~"blackbox-.*"'           # every probe the monitor runs against a being
 MODULES = {"icmp": "icmp", "tcp": "tcp_connect", "http": "http_2xx", "smtp": "smtp_banner", "tls": "http_2xx"}
 _KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -250,7 +342,8 @@ def check_monitor(m):
     st = m.get("settings")
     if st is not None and not isinstance(st, dict):
         errs.append("its settings are not a mapping of what %s reads (alerts, alerting, snmp, filesystems, "
-                    "grafana_plugins)" % TECHNOLOGY)
+                    "grafana_plugins, and the deployment's: %s)" % (TECHNOLOGY, ", ".join(DEPLOY)))
+    errs += deploy_errors(st)
     return errs, warns
 
 
@@ -259,8 +352,8 @@ def check_monitor(m):
 # ---------------------------------------------------------------------------------------------------------------------
 PROM_YML = """# WRITTEN by `view bundle` from the garden's ledger — do not edit it here; write it again.
 global:
-  scrape_interval: 30s
-  scrape_timeout: 10s
+  scrape_interval: %(every)ds
+  scrape_timeout: %(stimeout)ds
   external_labels: {garden: %(garden)s, source: daftar}
 
 scrape_configs:
@@ -274,7 +367,7 @@ scrape_configs:
 %(jobs)s%(alerting)s"""
 
 BLACKBOX_JOB = """  - job_name: blackbox-%(mod)s
-    metrics_path: /probe
+%(timeout)s    metrics_path: /probe
     params: {module: [%(bbmod)s]}
     file_sd_configs: [{files: ['/etc/prometheus/targets/%(mod)s.json'], refresh_interval: 60s}]
     relabel_configs:
@@ -285,21 +378,21 @@ BLACKBOX_JOB = """  - job_name: blackbox-%(mod)s
 
 BLACKBOX_YML = """# blackbox_exporter modules
 modules:
-  icmp:        {prober: icmp,  timeout: 5s, icmp: {preferred_ip_protocol: ip4}}
-  tcp_connect: {prober: tcp,   timeout: 5s}
-  smtp_banner: {prober: tcp,   timeout: 5s, tcp: {query_response: [{expect: '^220'}]}}
-  http_2xx:    {prober: http,  timeout: 8s, http: {valid_status_codes: [200,301,302,401,403], fail_if_not_ssl: false, tls_config: {insecure_skip_verify: true}, preferred_ip_protocol: ip4}}
+  icmp:        {prober: icmp,  timeout: %(icmp)s, icmp: {preferred_ip_protocol: ip4}}
+  tcp_connect: {prober: tcp,   timeout: %(tcp_connect)s}
+  smtp_banner: {prober: tcp,   timeout: %(smtp_banner)s, tcp: {query_response: [{expect: '^220'}]}}
+  http_2xx:    {prober: http,  timeout: %(http_2xx)s, http: {valid_status_codes: [200,301,302,401,403], fail_if_not_ssl: false, tls_config: {insecure_skip_verify: %(skip)s}, preferred_ip_protocol: ip4}}
 """
 
 COMPOSE = """# WRITTEN by `view bundle` — deploy: docker compose up -d ; take down: docker compose down
 name: %(project)s
 services:
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:%(img_prometheus)s
     restart: unless-stopped
     command: ['--config.file=/etc/prometheus/prometheus.yml',
               '--storage.tsdb.path=/prometheus',
-              '--storage.tsdb.retention.time=30d',
+              '--storage.tsdb.retention.time=%(retention)s',
               '--web.listen-address=0.0.0.0:9090',
               '--web.enable-lifecycle']
     volumes:
@@ -309,9 +402,9 @@ services:
       - promdata:/prometheus
     ports: ['9090:9090']
     extra_hosts: ['host.docker.internal:host-gateway']
-    mem_limit: 4g
+    mem_limit: %(mem_prometheus)s
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:%(img_node)s
     restart: unless-stopped
     command:
       - '--path.procfs=/host/proc'
@@ -325,17 +418,17 @@ services:
       - '/sys:/host/sys:ro'
       - '/:/host/root:ro'
       - '%(dir)s/textfile-out:/textfile:ro'
-    mem_limit: 512m
+    mem_limit: %(mem_node)s
   blackbox:
-    image: prom/blackbox-exporter:latest
+    image: prom/blackbox-exporter:%(img_blackbox)s
     restart: unless-stopped
     command: ['--config.file=/etc/blackbox.yml']
     volumes: ['./blackbox.yml:/etc/blackbox.yml:ro']
     ports: ['9115:9115']
     cap_add: ['NET_RAW']   # icmp
-    mem_limit: 256m
+    mem_limit: %(mem_blackbox)s
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:%(img_grafana)s
     restart: unless-stopped
     env_file: [.env]
     environment:
@@ -348,7 +441,7 @@ services:
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafanadata:/var/lib/grafana
     ports: ['3000:3000']
-    mem_limit: 4g   # a limit is a backstop, not a budget
+    mem_limit: %(mem_grafana)s   # a limit is a backstop, not a budget
 %(extra)svolumes:
   promdata: {}
   grafanadata: {}
@@ -695,12 +788,15 @@ def bundle(m, views, out):
     default_org = vm.page_view().get("opens_on")
     for sub in ("targets", "rules", "grafana/provisioning/datasources", "grafana/provisioning/dashboards", "grafana/dashboards"):
         os.makedirs(os.path.join(out, sub), exist_ok=True)
+    st = m.get("settings") if isinstance(m.get("settings"), dict) else {}
+    d = deploy(st)
     jobs = []
     for mod in ("icmp", "tcp", "http", "smtp", "tls"):
         p = os.path.join(out, "targets", mod + ".json")
         if groups[mod]:
             json.dump(groups[mod], open(p, "w"), indent=2)
-            jobs.append(BLACKBOX_JOB % {"mod": mod, "bbmod": MODULES[mod]})
+            jobs.append(BLACKBOX_JOB % {"mod": mod, "bbmod": MODULES[mod],
+                                        "timeout": scrape_timeout(d["probe_timeouts"][MODULES[mod]])})
         elif os.path.exists(p):
             os.remove(p)
     snmp_jobs, snmp_entry, snmp_svc = snmp_parts(m)
@@ -717,11 +813,15 @@ def bundle(m, views, out):
         p = os.path.join(out, "textfile", "remote_fs.sh"); open(p, "w").write(fs); os.chmod(p, 0o755)
     open(os.path.join(out, "prometheus.yml"), "w").write(PROM_YML % {
         "garden": json.dumps(vm.garden_name()), "host": _flow_labels(labels(host)) if host else "{}",
-        "jobs": "".join(jobs) + snmp_jobs, "alerting": al_block})
-    open(os.path.join(out, "blackbox.yml"), "w").write(BLACKBOX_YML)
-    st = m.get("settings") if isinstance(m.get("settings"), dict) else {}
+        "jobs": "".join(jobs) + snmp_jobs, "alerting": al_block, "every": SCRAPE_EVERY, "stimeout": SCRAPE_TIMEOUT})
+    open(os.path.join(out, "blackbox.yml"), "w").write(BLACKBOX_YML % dict(d["probe_timeouts"],
+                                                                          skip="false" if d["tls_verify"] else "true"))
+    it, ml = d["image_tags"], d["mem_limits"]
     compose = COMPOSE % {"project": vm.PAGE, "dir": dirpath, "plugins": ",".join(st.get("grafana_plugins") or []),
-                         "extra": snmp_svc + am_svc}
+                         "extra": snmp_svc + am_svc, "retention": d["retention"],
+                         "img_prometheus": it["prometheus"], "img_node": it["node-exporter"], "img_blackbox": it["blackbox"],
+                         "img_grafana": it["grafana"], "mem_prometheus": ml["prometheus"], "mem_node": ml["node-exporter"],
+                         "mem_blackbox": ml["blackbox"], "mem_grafana": ml["grafana"]}
     if am_svc:
         compose = compose.replace("\nvolumes:\n  promdata: {}", "\nvolumes:\n  promdata: {}\n  amdata: {}")
     open(os.path.join(out, "docker-compose.yml"), "w").write(compose)
