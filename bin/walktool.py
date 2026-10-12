@@ -194,6 +194,15 @@ def _taken_acts(b, remove):
     return out
 
 
+def _known(e):
+    """How the statements a plan adds to a bean are known: `say` (the default), or `read` from a being of the garden, the
+    source named by its id — never words that would write more than the act."""
+    k = e.get('known') or {'act': 'say'}
+    if k.get('act') not in ('say', 'read') or (k.get('act') == 'read' and not _ID.match(str(k.get('from') or ''))):
+        raise Refused(f"what is added to {e.get('bean')} is known by `say`, or by `read` from a being named by its id")
+    return k
+
+
 def plan_writes(write):
     """Print the write — in words, then PLAN_MARK and the write as one line of JSON — and return that text: what the
     person is shown and ratifies. Refused where the garden is not as the write would have it."""
@@ -225,6 +234,7 @@ def plan_writes(write):
             if b is not None and roles['id'] in b.ids and roles['id'] not in remove:
                 raise Refused(f"{bid} holds a statement {roles['id']!r} already")
             words.append(f"  + {bid}: {line}")
+        _known(e)
     text = '\n'.join(words) + '\n' + PLAN_MARK + '\n' + json.dumps(write, ensure_ascii=False, sort_keys=True) + '\n'
     print(text, end='')
     return text
@@ -370,7 +380,7 @@ def apply_writes(bean, course):
                             + (f", and the {' and '.join(verbs)} that knew only them" if verbs else ''))
             ids = [_statement(line)[1]['id'] for line in e.get('add') or []]
             if ids:
-                known = e.get('known') or {'act': 'say'}
+                known = _known(e)
                 if known.get('act') == 'read':
                     act = (f"- read: {{ by: {who}, of: [{', '.join(ids)}], from: {known['from']}, "
                            f"through: {json.dumps(str(known.get('through') or ''), ensure_ascii=False)}, at: now }}\n")

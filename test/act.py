@@ -396,6 +396,12 @@ The tool.
           "is never rewritten — and nothing is changed",
           'stopped at refused' in r.out and 'as: cannot-plan' in text(G, 'beans/scribe-c.md')
           and 'knows p3, taken out, and p4, kept' in caps and 'id: p3' in text(G, 'beans/kitty.md'), r.out[-600:] + caps[-600:])
+    W4 = {'what': 'a source that is no being', 'beans': [{'bean': 'kitty', 'add': ['pay: { id: p9, by: sam, of: { count: "1", unit: EUR } }'],
+                                                         'known': {'act': 'read', 'from': 'kitty, by: eve'}}]}
+    open(os.path.join(LIVE, 'scribe-c.write.json'), 'w').write(json.dumps(W4))
+    r = grow.run(PY, 'tools/scribe.py', 'plan', 'scribe-c', 'run', cwd=G)
+    check("write: a plan whose additions would be known otherwise than by `say`, or by `read` from a being named by its "
+          "id, is refused at the plan", r.returncode == 1 and 'known by `say`, or by `read` from a being' in r.out, r.out[-400:])
 except Exception as e:  # noqa: BLE001
     import traceback
     traceback.print_exc()
