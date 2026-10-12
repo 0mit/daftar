@@ -152,16 +152,22 @@ def roots_of(host_fm):
 
 
 # ---- a position on a host: an offset from a datum the host defines (`datum: host`; 24.0) ----------------------------
+_HOST_BOUND = {}
+
+
 def host_bound(root=ROOT):
     """The systems whose positions are offsets from a datum a host defines — every row that says `datum: host`.
     Read from the law: the list this replaced named three systems by heart, and a garden's own filesystem system
-    would have been read as a coordinate."""
-    return {n for n, r in Law(root).systems.items() if r.get('datum') == 'host'}
+    would have been read as a coordinate. Read once a garden, as the law does not change under a running tool."""
+    if root not in _HOST_BOUND:
+        _HOST_BOUND[root] = {n for n, r in Law(root).systems.items() if r.get('datum') == 'host'}
+    return _HOST_BOUND[root]
 
 
 ROOT_FORM = re.compile(r'^root:([a-z0-9][a-z0-9-]*)(?:/(.*))?$')
 OBJECT_FORM = re.compile(r'^([a-z0-9][a-z0-9._-]*)@([0-9a-f]{7,40})$')
 HOST_FORM = re.compile(r'^([a-z0-9][a-z0-9.-]*):(/.*|[A-Za-z]:\\.*)$')
+SYSTEM_FORM = re.compile(r'^([a-z][a-z0-9-]*):(.+)$')
 
 
 def on_host(position, roots, names=()):
@@ -171,10 +177,17 @@ def on_host(position, roots, names=()):
       <root>@<object>       an object reachable from that root (the path is the root's; the object is returned)
       <host>:<path>         an offset from the host itself, named in the position: here only when it is this one
 
+    Each may be written with its system first (`unix-filesystem:root:src/app`), as a statement holds it where two
+    systems read one spelling: a system whose datum is the host (host_bound) is read past, and the rest resolved.
+
     A position the host does not hold gives (None, None, why): an answer, not a failure. A position in none of
     these forms raises ValueError — it is no offset from a host, and the caller reads it as what it is."""
     if not isinstance(position, str):
         raise ValueError(f"{position!r} is not a position")
+    m = SYSTEM_FORM.match(position)
+    if m and not HOST_FORM.match(position) and (ROOT_FORM.match(m.group(2)) or OBJECT_FORM.match(m.group(2))
+                                                or HOST_FORM.match(m.group(2))) and m.group(1) in host_bound():
+        position = m.group(2)
     m = ROOT_FORM.match(position) or OBJECT_FORM.match(position)
     if m:
         name, rest = m.group(1), m.group(2)

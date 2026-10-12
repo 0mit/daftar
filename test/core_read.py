@@ -372,6 +372,13 @@ try:
     r = run(PY, 'bin/where.py', 'app')
     check("where: a `root:` location of the core resolved through this host's roots (kept in `details`): HERE",
           r.returncode == 0 and 'HERE' in r.out and os.path.join(T, 'src', 'app') in r.out, r.out)
+    r = run(PY, '-c', 'import sys; sys.path.insert(0, "bin"); import where; _h, fm, names = where.here(); '
+            'print(where.on_host("unix-filesystem:root:src/app", where.roots_of(fm), names)[0], '
+            'where.on_host("unix-filesystem:elsewhere:/x", {}, names)[0])')
+    check("where: a position written with its system (`unix-filesystem:root:src/app`, as the gate asks where two systems "
+          "read one spelling) resolves on this host as the bare position does (on_host, which act.py, routines.py and a "
+          "walk's tool ask), and one on another host is not here",
+          r.returncode == 0 and r.out.split() == [os.path.join(T, 'src', 'app'), 'None'], r.out[-600:])
     r = run(PY, 'bin/stale.py')
     check("stale: a cache `details` keeps is given its verdict (a key no machine can check: unknown)",
           'app.analysis_cache[structure]' in r.out and '1 unknown' in r.out, r.out)
