@@ -344,6 +344,7 @@ for _name in ("MODEL.md", "CHECKLIST.md", "MERGE.md"):
 # ---------------------------------------------------------------- 18.0: a GARDEN's overlay has its reasoning too
 import subprocess, tempfile, shutil
 _T = tempfile.mkdtemp(prefix="why-"); _G = os.path.join(_T, "g")
+import atexit; atexit.register(shutil.rmtree, _T, True)      # the garden grown here goes when the suite ends
 sys.path.insert(0, os.path.join(ROOT, "test"))
 import grow  # noqa: E402
 _rg = grow.garden(grow.release(os.path.join(_T, "release")), _G, "keeper")

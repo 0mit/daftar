@@ -170,7 +170,7 @@ try:
                          'static': static, 'js': js})
     r = subprocess.run([browser, '--headless=new', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=5000',
                         '--dump-dom', 'file://' + path], capture_output=True, text=True, encoding='utf-8', errors='replace',
-                       timeout=180)
+                       timeout=180, env=dict(os.environ, TMPDIR=T))     # what the browser leaves goes with T
     m = re.search(r'<pre id="__out">(.*?)</pre>', r.stdout, re.S)
     out = json.loads(html.unescape(m.group(1))) if m else {'errs': ['no result: ' + r.stderr[-600:]], 'static': {}, 'cases': {}}
     S, C = out.get('static') or {}, out.get('cases') or {}
