@@ -5167,6 +5167,22 @@ company. A record's number is the first 31 bits of the SHA-256 of its model and 
 beans that meet are refused by name.
 
 
+## core/law/crosswalks.yaml: forms.crosswalk.vacant
+
+A GARDEN'S OWN CROSSWALKS (2026-10-12; the operator ratified the draft that proposed them). A crosswalk was the
+standard's alone, though every other kind of row the law keeps a garden can start in its VOCAB.md: a kind, a verb, a
+system of positions. So a mapping one garden needs before any other has it — its accounts in a system it runs, its
+organisations as that system's partners — could live nowhere but in each tool that writes or reads the system, each
+learning it again. CONTRIBUTING says a fact's row starts in a garden and is promoted once it has held real cases; for a
+crosswalk that start could not happen. Now a garden's VOCAB.md takes `crosswalks`, each row in this form, held to it as
+the standard's rows are, and core/crosswalk.py, the one reader, reads them beside the standard's: no second reader, so
+two can still never disagree. One name, one row: never a name the standard has. One model, one row, of a system and
+series: the reader keys a series' rows by their model, so a garden's row of a model the standard crosses would stand in
+for the standard's without a word. And whole: a garden's row is used where a bean of its kind is, a record to read, or
+it says why it is vacant, which is what `vacant` is for. The standard's own rows do not need it. Considered and set
+aside: the rows as data a tool reads for itself (a second reader of crosswalks); the standard's rows bound per
+instance at once (a row for a kind of fact before any garden has used it, which usually generalises wrongly).
+
 ## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.employee]
 
 AN EMPLOYEE IS AN EMPLOYMENT, NOT A PERSON (2026-10-11, the unified-tools design's P5.4; DECISIONS-NEXT §4, C4). Odoo's

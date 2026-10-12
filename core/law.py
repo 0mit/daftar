@@ -47,7 +47,7 @@ FLOW_LAW = ('methods', 'metadata', 'dropped')              # what core/law/flows
 GRANTS = ('granted', 'refused', 'ratified')
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
             'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit', 'exclusive': 'verb',
-            'systems': 'system', 'schemes': 'scheme', 'files': 'registry'}
+            'systems': 'system', 'schemes': 'scheme', 'files': 'registry', 'crosswalks': 'crosswalk'}
 ROW_FIELDS = {
     'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning', 'vacant'},
     'levels': {'level', 'line', 'stands', 'meaning', 'frame_of', 'vacant'},
@@ -170,6 +170,7 @@ class Law:
         self.garden_flows = []                              # the rows of `flows` a garden added (VOCAB.md)
         self.methods, self.pass_metadata, self.flows_dropped = {}, {}, {}   # core/law/flows.yaml beside its rows
         self.garden_rows = []                               # (key, name, row) of each row a garden added (rule vacancy)
+        self.garden_crosswalks = []                         # (where, row) of each crosswalk a garden's VOCAB.md adds
         self.families, self.tools = {}, {}                  # core/law/tools.yaml (v1 part 9)
         self.vacancy_reasons, self.vacancies, self.vacancies_dropped = [], [], []   # core/law/vacancies.yaml
         self.own = {}                                       # a garden's own systems, schemes and files (part 7)
@@ -232,9 +233,33 @@ class Law:
         law.crosswalk_forms = cw_law.get('forms') or {}
         law.crosswalks = {str(r['crosswalk']): r for r in listed(cw_law.get('crosswalks'))
                           if isinstance(r, dict) and 'crosswalk' in r}
+        law.own_crosswalks()
         for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies), (PROFILES, law._profiles)):
             put(read.data(os.path.join(d, name) if os.path.isfile(os.path.join(d, name)) else os.path.join(LAW_DIR, name)))
         return law
+
+    def own_crosswalks(self):
+        """A GARDEN'S OWN CROSSWALKS (its VOCAB.md `crosswalks`) beside the standard's, read by the one reader
+        (core/crosswalk.py) as the standard's are, and held to their form (crosswalk_problems). One name, one row: never
+        a name the standard has, nor one of its own twice. One model, one row, a system and series: the reader keys a
+        series' rows by their model, so a second row of one model would stand in for the first unseen."""
+        std = set(self.crosswalks)
+        for at, row in self.garden_crosswalks:
+            name = str(row['crosswalk'])
+            if name in self.crosswalks:
+                self.found.append(('law', at, f"`{name}` is a crosswalk of the standard already: a garden's own takes "
+                                              f"a name of its own" if name in std else
+                                              f"`{name}` is given twice: one name, one row"))
+                continue
+            key = tuple(str(row.get(k)) for k in ('system', 'series', 'model'))
+            by = next((n for n, r in self.crosswalks.items()
+                       if tuple(str(r.get(k)) for k in ('system', 'series', 'model')) == key), None)
+            if by is not None:
+                self.found.append(('law', at, f"`{name}` crosses {key[2]} of {key[0]} {key[1]}, which {by} crosses "
+                                              f"already: one model, one row, a system and series"))
+                continue
+            self.crosswalks[name] = row
+            self.garden_rows.append(('crosswalks', name, row))
 
     def _tools(self, data):
         self.families = {str(f['family']): f for f in listed(data.get('families')) if isinstance(f, dict)}
@@ -393,6 +418,12 @@ class Law:
                 at = f"{where} {key}[{i}]"
                 if not isinstance(row, dict):
                     self.found.append(('law', at, f"a row of `{key}` is a mapping, not {row!r}"))
+                    continue
+                if key == 'crosswalks':                   # held to the core's form with the standard's rows, and set
+                    if not row.get('crosswalk'):          # beside them once they are read (load, own_crosswalks)
+                        self.found.append(('law', at, "a row of `crosswalks` names itself in `crosswalk`"))
+                    else:
+                        self.garden_crosswalks.append((at, row))
                     continue
                 extra = set(row) - ROW_FIELDS[key]
                 if extra:

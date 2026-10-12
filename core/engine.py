@@ -1159,6 +1159,12 @@ class Judge:
         for key, name, row in self.L.garden_rows:
             if row.get('vacant'):
                 continue
+            if key == 'crosswalks':                   # a crosswalk is used where a bean of its kind is: a record to read
+                if row.get('kind') not in kinds:
+                    self.err('vacancy', f"VOCAB.md {key}", f"`{name}` is a crosswalk this garden added, and no bean is "
+                                                           f"of its kind ({row.get('kind')}): add it with the first, or "
+                                                           f"say why it is vacant (`vacant: <why>`)")
+                continue
             hit = name.split(':', 1)[1] in leaves if key == 'tables' else name in used[key] or \
                 (key == 'units' and (row.get('name') in leaves or name in leaves))     # a unit, by its code or its name
             if not hit:

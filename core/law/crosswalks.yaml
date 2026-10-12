@@ -28,8 +28,11 @@
 #                                      model, from the farthest down to this one, joined
 # What the garden does not say, no record has: the field is empty (false, or no records).
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
+# A GARDEN'S OWN ROWS stand in its VOCAB.md (`crosswalks`), in this form, read by the one reader beside these: never a
+# name of these, nor a model one of these crosses in its system and series. A row of the garden's is used where a bean
+# of its kind is, or says why it is vacant (`vacant: <why>`). A row that proves general is proposed here.
 forms:
-  crosswalk: { crosswalk: required, system: required, series: required, model: required, kind: required, select: optional, fields: required, meaning: required }
+  crosswalk: { crosswalk: required, system: required, series: required, model: required, kind: required, select: optional, fields: required, meaning: required, vacant: optional }
   field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional, held: optional, many: optional, position: optional, stands: optional }
 crosswalks:
   - crosswalk: odoo-17.0-res.company

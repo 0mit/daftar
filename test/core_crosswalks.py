@@ -234,6 +234,65 @@ try:
           and any('`many` is true, with the `model`' in m for m in probs) and any('`position` is one of' in m for m in probs)
           and any('`stands` names' in m for m in probs), probs)
     check("...and the law as it stands passes", not L.crosswalk_problems(), L.crosswalk_problems())
+
+    # ---- A GARDEN'S OWN CROSSWALK: a row of its VOCAB.md in the core's form, read by the one reader beside the
+    #      standard's; never a name nor a model the standard crosses; used by a bean of its kind, or vacant with its why
+    PARTNER = ('crosswalks:\n'
+               '  - crosswalk: odoo-17.0-res.partner\n    system: odoo\n    series: "17.0"\n    model: res.partner\n'
+               '    kind: org\n    fields:\n      name: { from: title }\n      website: { from: "name[by=dns].as" }\n'
+               '      is_company: { value: true }\n      parent_id: { from: part.of, model: res.partner }\n'
+               '      company_ids: { from: part.of, model: res.company, many: true }\n'
+               '    meaning: "an organisation as Odoo\'s partner: every organisation the garden keeps"\n')
+    PRODUCT = ('  - crosswalk: odoo-17.0-product.template\n    system: odoo\n    series: "17.0"\n'
+               '    model: product.template\n    kind: product\n    fields:\n      name: { from: title }\n'
+               '    meaning: "a product the garden keeps, as Odoo\'s product"\n')
+    with open(os.path.join(G, 'VOCAB.md'), encoding='utf-8') as fh:
+        VOCAB = fh.read()
+    write(G, 'VOCAB.md', VOCAB.replace('---\n', '---\n' + PARTNER, 1))
+    r = grow.run(PY, 'bin/save.py', 'sam', "RULE-CHANGE: the garden's own crosswalk of Odoo's partners", '--body',
+                 '- action: RULE-CHANGE — VOCAB.md adds the crosswalk odoo-17.0-res.partner\n- ratified_by: sam', cwd=G)
+    check("a garden's VOCAB.md takes a crosswalk of its own, in the core's form, and the gate saves it",
+          r.returncode == 0, r.out[-900:])
+    orgs = sorted(b[:-3] for b in os.listdir(os.path.join(G, 'beans'))
+                  if 'kind: org\n' in open(os.path.join(G, 'beans', b), encoding='utf-8').read())
+    R = crosswalk.Reader(G, 'odoo', '17.0')
+    try:
+        pa = {p_['name']: p_ for p_ in R.records('res.partner')}
+    except crosswalk.Refused as e:
+        pa = {'refused': str(e)}
+    acme_n = crosswalk.number('res.partner', 'acme')
+    check("...read by the one reader beside the standard's: every organisation a partner, with what the garden says of "
+          "it, pointing at a record of its own model and at one of the standard's",
+          len(pa) == len(orgs) >= 5 and pa.get('Acme', {}).get('website') == 'acme.example'
+          and pa.get('Acme', {}).get('is_company') is True and pa.get('Engineering', {}).get('parent_id') == [acme_n, 'Acme']
+          and pa.get('Engineering', {}).get('company_ids') == [crosswalk.number('res.company', 'acme')]
+          and sorted(c['name'] for c in R.records('res.company')) == ['Acme', 'Betamax'], (orgs, pa))
+    std = Law.load()
+    dept = dict(std.crosswalks['odoo-17.0-hr.department'])
+    own = lambda *rows: Law.load(('VOCAB.md', {'crosswalks': list(rows)}))
+    said = lambda L_: [m for _r, _w, m in L_.found] + [m for _w, m in L_.crosswalk_problems()]
+    named, crossed = said(own(dept)), said(own(dict(dept, crosswalk='own-departments')))
+    twice = said(own(dict(dept, crosswalk='a', model='x.one'), dict(dept, crosswalk='a', model='x.two'),
+                     dict(dept, crosswalk='b', model='x.one')))
+    out_of_form = said(own(dict(dept, crosswalk='c', model='x.three', kind='no-such-kind', colour='blue')))
+    check("...and never a name the standard has, nor a model a row of its system and series crosses already, nor one "
+          "of its own twice; and held to the core's form as the standard's rows are",
+          any("`odoo-17.0-hr.department` is a crosswalk of the standard already" in m for m in named)
+          and any("crosses hr.department of odoo 17.0, which odoo-17.0-hr.department crosses already" in m for m in crossed)
+          and any("`a` is given twice" in m for m in twice) and any("crosses x.one of odoo 17.0, which a crosses" in m for m in twice)
+          and any("its kind 'no-such-kind' is no kind of the law" in m for m in out_of_form)
+          and any("`colour` is no key of a crosswalk" in m for m in out_of_form)
+          and not said(own(dict(dept, crosswalk='d', model='x.four'))), (named, crossed, twice, out_of_form))
+    products = [b for b in os.listdir(os.path.join(G, 'beans'))
+                if 'kind: product\n' in open(os.path.join(G, 'beans', b), encoding='utf-8').read()]
+    write(G, 'VOCAB.md', VOCAB.replace('---\n', '---\n' + PARTNER + PRODUCT, 1))
+    g = grow.run(PY, 'core/check.py', cwd=G)
+    write(G, 'VOCAB.md', VOCAB.replace('---\n', '---\n' + PARTNER + PRODUCT + '    vacant: "no product is kept here yet"\n', 1))
+    g2 = grow.run(PY, 'core/check.py', cwd=G)
+    write(G, 'VOCAB.md', VOCAB.replace('---\n', '---\n' + PARTNER, 1))
+    check("...and used, by a bean of its kind, or vacant with its why: a crosswalk of products in a garden that keeps "
+          "none is refused (vacancy) until it says why", not products and 'vacancy' in g.out
+          and 'odoo-17.0-product.template' in g.out and g2.returncode == 0, (products, g.out[-700:], g2.out[-500:]))
 finally:
     shutil.rmtree(T, ignore_errors=True)
 
