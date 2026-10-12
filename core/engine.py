@@ -1039,9 +1039,20 @@ class Judge:
                 self.err('harm', f"{b.id} details", "holds a code of a scheme marked special-category, unsealed: what "
                                                     "fits no verb yet is sealed as a statement is")
 
+    def at_point(self, p):
+        """Whether a position covers a point, by its system's `covers` — one spot, where two bodies are in one room — or
+        an area — a region, a cell, a line, which holds many. A system that says nothing is read as it was before it
+        could say: a point."""
+        c = (self.systems.get(p.system) or {}).get('covers')
+        if isinstance(c, dict):
+            value = p.text[len(p.system) + 1:] if p.text.startswith(p.system + ':') else p.text
+            return not (isinstance(c.get('area'), str) and re.search(c['area'], value)
+                        and not (isinstance(c.get('point'), str) and re.search(c['point'], value)))
+        return c != 'area'
+
     def room(self):
-        """Two bodies in one room — a sayable takes no room — two listeners at one port, one being in two places in one
-        hour; and what a garden declares exclusive."""
+        """Two bodies in one room — at one position that names a point, a sayable taking no room — two listeners at one
+        port, one being in two places in one hour; and what a garden declares exclusive."""
         declined = self._declined()
 
         def once(seen, key, w, where, says):
@@ -1065,7 +1076,7 @@ class Judge:
                 places = [p for p in at if p.day is None and p.moment is None]
                 for w in self._beans_in(r.get('by'), b):
                     if verb == 'be' and r.get('as') == 'location' and self.nature(self.G.beans[w].kind) == 'body':
-                        for p in places:
+                        for p in (p for p in places if self.at_point(p)):   # an area holds many
                             once(rooms, (p.system, p.text), w, where,
                                  lambda o, p=p, w=w: f"{w} is at {p.text}, where {o[0]} is ({o[1]}): two beings are not "
                                                      f"in one room at once — one of them has moved, or one is part of, "
