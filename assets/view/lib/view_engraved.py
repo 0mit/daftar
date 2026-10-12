@@ -666,6 +666,27 @@ def axes_of(v):
     return a or dict((vm.archetypes().get(v.get('archetype')) or {}).get('axes') or {})
 
 
+# WHERE A PERSON MAY ACT ON A DRAWING ENGRAVED FROM A READING (the law's `actions`, its `element` "by the id its drawing
+# gives it"): a table gives each line (`line`, the line's being) and a sheet its being (`sheet`). An action there asks the
+# host for its `tool`, which the host maps to a walk of the garden, started by bin/act.py `--start` with the inputs the
+# action declares: its plan shown, a person's ratification, then applied (view_serve `Host.start`, `Host.decide`).
+ACTION_ELEMENTS = {'table': 'line', 'sheet': 'sheet'}
+
+
+def actions_of(key, v):
+    """(the actions the drawing declares, as vm.actions reads them, [problems]): each on the element its archetype gives."""
+    el = ACTION_ELEMENTS.get(v.get('archetype'))
+    got, probs = vm.actions(key, v, [{'id': el, 'pattern': 'action', 'bean': None, 'label': el}] if el else [])
+    notes = {(a.get('element'), a.get('tool')): a.get('note') for a in v.get('actions') or [] if isinstance(a, dict)}
+    for a in got:                               # its words: the action's own note, the button a person presses
+        if isinstance(notes.get((a['el'], a['tool'])), str):
+            a['note'] = notes[(a['el'], a['tool'])]
+        if not any(isinstance(x, dict) and x.get('element') == a['el'] and x.get('tool') == a['tool'] and x.get('confirm')
+                   for x in v.get('actions') or []):
+            a['confirm'] = ''                   # no question of its own: the page asks none in English
+    return got, probs
+
+
 def entry(key, v, levels, sheet_block):
     """A drawing engraved from a reading, as the runtime mounts it beside the drawn ones: its story, its questions, its
     title block — and, under `engraved`, its archetype, the axes it runs on, its layouts, its forms of a verb (each with
@@ -679,7 +700,8 @@ def entry(key, v, levels, sheet_block):
             "claim": "", "caption": "", "rel": "engraved from a reading · %s" % vm.kit.esc(a), "svg": "",
             "uid": "view-%s" % key, "source": vm.draws_label(v), "draws_bean": target if kk == "bean" else None,
             "elements": [], "binds": [], "facts": {}, "steps": [], "legend": [], "patterns": [], "live_patterns": [],
-            "actions": [], "writes": vm.writes(v), "levels": levels, "story": vm.resolve_story(v), "tiles": [], "parts": [],
+            "actions": actions_of(key, v)[0], "writes": vm.writes(v), "levels": levels, "story": vm.resolve_story(v),
+            "tiles": [], "parts": [],
             "questions": {q.get("lens"): q.get("ask") for q in (v.get("questions") or []) if isinstance(q, dict)},
             "operate": {"archetype": a, "notes": [n.get("note") for n in (v.get("notes") or []) if isinstance(n, dict)],
                         "blind": ["%s%s" % (b.get("what"), (" — " + b["why"]) if b.get("why") else "")
@@ -702,6 +724,7 @@ def problems(key, v):
                     "walked within it" % key)
     if v.get('archetype') == 'sheet' and kk != 'bean':
         errs.append("%s: a sheet draws one being, a bean of the garden; it draws %s" % (key, vm.draws_label(v)))
+    errs += actions_of(key, v)[1]
     return errs, warns
 
 
@@ -911,7 +934,7 @@ def page(may, reader, held=None, keep=None, contact=None):
     reader is sent), the sheet of every being one of them shows, an empty sheet of each kind a drawing makes, the beings
     a role may name, and the widgets' settings."""
     out = {'drawings': {}, 'sheets': {}, 'blank': {}, 'settings': settings(), 'reader': reader}
-    show = set()
+    show, acting = set(), {}                    # acting: {being: [the actions of a drawing that shows it]}
     for k, v in vm.views_raw():
         if not engraved(v) or (keep is not None and k not in keep):
             continue
@@ -928,6 +951,13 @@ def page(may, reader, held=None, keep=None, contact=None):
             show |= {r['bean'] for r in d['rows']}
         elif d.get('bean'):
             show.add(d['bean'])
+        acts = actions_of(k, v)[0]
+        if acts:
+            shown = [r['bean'] for r in d.get('rows') or []] if v.get('archetype') == 'table' else [d.get('bean')]
+            for bid in shown:
+                for a in acts:
+                    if bid and may('act:' + a['tool'], a.get('bean') or bid):
+                        acting.setdefault(bid, []).append(dict(a, drawing=k, bean=a.get('bean') or bid))
         for kind in _listed(v.get('new')):
             if isinstance(kind, str) and kind in vm.CORE.L.kinds:
                 out['blank'][kind] = blank(kind, may)
@@ -945,6 +975,8 @@ def page(may, reader, held=None, keep=None, contact=None):
     for bid in sorted(show | set(named)):
         s = sheet(bid, may, held)
         if s is not None:
+            s['actions'] = [{x: a[x] for x in ('drawing', 'el', 'tool', 'bean', 'confirm', 'note', 'inputs', 'reason')
+                             if x in a} for a in acting.get(bid, [])]
             if bid in named:
                 s['contact'] = {k: str(x) for k, x in named[bid].items() if isinstance(x, (str, int))}
                 s['title'] = str(named[bid]['name'])
@@ -976,6 +1008,8 @@ def scoped(host, user, keep=None):
         return kept[key]
 
     def may(act, bean, positions=None):
+        if str(act).startswith('act:'):          # an action's tool, on the being it acts on
+            return host.may(user, bean, act=True, tool=str(act)[4:])[0]
         return host.may(user, bean, positions=positions, write=(act == 'write'))[0]
 
     def held(bean, sid, r):

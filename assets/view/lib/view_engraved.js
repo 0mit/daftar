@@ -6,7 +6,8 @@
                                              entry (view.engraved: its archetype, axes, layouts, forms, kinds it makes),
                                              state.engraved the page's reading for its reader (drawings, sheets, empty
                                              sheets, settings), state.write(body) a served page's write (a Promise of
-                                             {status, answer}), absent offline; state.places a host's place lookup
+                                             {status, answer}), absent offline; state.act(body) its start of a run
+                                             from an action, or a decision on its plan (likewise); state.places a host's place lookup
                                              ({here(q, {near}), far(q, {near})}, each a Promise of {places, sources}),
                                              absent offline, when a place is looked up among the garden's own alone
      daftarEngraved.open(bean | {kind}, state)  the sheet of a being, or an empty sheet of a kind, in a dialog
@@ -30,6 +31,7 @@
       lang: lang, dir: w.locale.dirOf(lang),
       say: function (key, vars) { return w.locale.say(key, {}, vars || {}); },
       write: state && typeof state.write === 'function' ? state.write : null,
+      act: state && typeof state.act === 'function' ? state.act : null,
       places: state && state.places && typeof state.places === 'object' ? state.places : null,
       // a being by how the page calls it; a person kept under an opaque id whose name this host does not hold, by what
       // they are — never by the id

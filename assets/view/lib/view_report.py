@@ -247,11 +247,15 @@ function renderRef(){
   ['#f-org','#f-genos'].forEach(s => $(s).onchange = apply); $('#f-q').oninput = apply; apply();
 }
 function state(){ return {level, live: !!LIVE, values: VALS[tab] || {}, history: HIST[tab] || {}, onAction: LIVE ? doAction : null, historyUrl: LIVE && LIVE.history,
-  onOpen: k => { if ((P.order || []).includes(k)) { tab = k; render(); } }, engraved: P.engraved || null, write: LIVE ? engravedWrite : null}; }
+  onOpen: k => { if ((P.order || []).includes(k)) { tab = k; render(); } }, engraved: P.engraved || null, write: LIVE ? engravedWrite : null, act: LIVE ? engravedAct : null}; }
 // A SHEET'S SAVE, OR A DRAWING'S FORM OF A VERB: the statements it adds, changes and takes out, written by the host as one
 // commit the gate judges (view_engraved.serve_write); the answer is the page's to show at each fact it names
 function engravedWrite(body){ return fetch('/api/write', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-View-CSRF': LIVE.csrf}, body: JSON.stringify(body)})
   .then(r => r.json().then(j => ({status: r.status, answer: j}))).catch(e => ({status: 0, answer: {ok: false, refusals: [{op: null, fact: null, message: String(e)}]}})); }
+// A RUN STARTED FROM THE PAGE, or a person's ratification of its plan: the host starts the walk its tool names, or
+// decides the run (view_serve `Host.start`, `Host.decide`); the answer is the page's to show
+function engravedAct(body){ return fetch('/api/action', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-View-CSRF': LIVE.csrf}, body: JSON.stringify(body)})
+  .then(r => r.json().then(j => ({status: r.status, answer: j}))).catch(e => ({status: 0, answer: {error: String(e)}})); }
 // THE READER'S LANGUAGE, where the host or the report names it: the page's own `lang`, and its direction from CLDR's
 // layout of the language's script (widgets/locale.js), which every order on the page follows (widgets/direction.js)
 (function(){ const st = (P.engraved || {}).settings || {}, g = st.garden || {}, lang = (st.reader || {}).locale || g.lang;

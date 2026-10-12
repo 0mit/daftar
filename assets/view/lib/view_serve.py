@@ -271,6 +271,13 @@ class Verdict(tuple):
         return t
 
 
+def given_by_person(i):
+    """Whether an action's input is a value the person pressing gives: any `origin` but the clock's, `{act: read, nature:
+    soma, by: reader}` (core/law/profiles.yaml `actions.inputs.origin`), which the host reads itself."""
+    o = i.get("origin") if isinstance(i.get("origin"), dict) else {}
+    return not (o.get("act") == "read" and o.get("by") == "reader")
+
+
 class Host:
     def __init__(self, config, argv=None):
         self.config_path = config
@@ -633,7 +640,7 @@ class Host:
         declared = {i.get("name"): i for i in a.get("inputs") or []}
         given = {k: str(x) for k, x in (inputs or {}).items() if k in declared}
         undeclared = sorted(set(inputs or {}) - set(declared))
-        missing = sorted(n for n, i in declared.items() if n not in given and (i.get("origin") or {}).get("act", "said") == "said")
+        missing = sorted(n for n, i in declared.items() if n not in given and given_by_person(i))
         base["inputs"] = given
         if undeclared or missing:
             self.audit(dict(base, mode="refused", why="inputs"))
@@ -667,6 +674,84 @@ class Host:
             rc, out = -2, str(e)
         self.audit(dict(base, mode="run", argv=argv, rc=rc, seconds=round(time.time() - t0, 1), output_tail=out[-1500:]))
         return 200, {"mode": "run", "tool": a["tool"], "rc": rc, "output": out}
+
+    # --- A RUN STARTED FROM A PAGE: a walk of the garden, with the inputs its action declares -------------------------
+    # An action on a drawing engraved from a reading (a table's line, a sheet: view_engraved `ACTION_ELEMENTS`) names a
+    # `tool` the host maps to a WALK of the garden (`tools: { <name>: { walk: <walk> } }`): what a page may start is the
+    # host's to say. Started by bin/act.py `--start`, as the viewer's being, with the inputs given: the engine runs the
+    # walk's tool to its plan and stops where a person ratifies; `decide` is that person's ratification, or refusal.
+    def _act_py(self, *args):
+        r = subprocess.run([sys.executable, os.path.join(vm.ROOT, "bin", "act.py")] + [str(a) for a in args], cwd=vm.ROOT,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=3600)
+        return r.returncode, (r.stdout + r.stderr).strip()
+
+    def _plan_of(self, bean, course):
+        d = os.path.join(vm.ROOT, "captures", "actions")
+        caps = sorted((f for f in os.listdir(d) if f.startswith("%s.%s.plan." % (bean, course))),
+                      key=lambda f: int(f.rsplit(".", 2)[-2]) if f.rsplit(".", 2)[-2].isdigit() else 0) if os.path.isdir(d) else []
+        return open(os.path.join(d, caps[-1]), encoding="utf-8", errors="replace").read() if caps else ""
+
+    def start(self, user, key, el, tool, bean, inputs=None, reason=None):
+        """Start the walk the host maps `tool` to, on `bean`, for `user`: the action declared on `el` of drawing `key`,
+        its inputs as it declares them, asked of the law as `act:<tool>` for the viewer's being. (status, answer): the
+        run's course, where it stopped, and the plan it would apply, for a person to ratify."""
+        v = self._bound(user, key)
+        a = next((x for x in (v or {}).get("actions", []) if x["el"] == el and x["tool"] == tool), None)
+        actor = ((self.cfg.get("users") or {}).get(user) or {}).get("bean")
+        base = {"user": user, "actor": actor, "view": key, "element": el, "tool": tool, "act": "act:" + str(tool),
+                "bean": bean, "head": (self.head or "")[:12], "reason": reason or None}
+        bean = (a or {}).get("bean") or bean          # an action fixed on one being (`acts_on`) acts on that one
+        base["bean"] = bean
+        if not a or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,120}", str(bean or "")):
+            return 404, {"error": "no action is declared on that element in the ledger"}
+        declared = {i.get("name"): i for i in a.get("inputs") or []}
+        given = {k: str(x) for k, x in (inputs or {}).items() if k in declared}
+        undeclared = sorted(set(inputs or {}) - set(declared))
+        missing = sorted(n for n, i in declared.items() if not given.get(n, "").strip() and given_by_person(i))
+        base["inputs"] = given
+        if undeclared or missing:
+            self.audit(dict(base, mode="refused", why="inputs"))
+            return 400, {"error": "refused: " + "; ".join(
+                (["the action declares no input %s" % ", ".join(undeclared)] if undeclared else []) +
+                (["the action asks for %s" % ", ".join(missing)] if missing else []))}
+        if a.get("reason") and not reason:
+            return 400, {"error": "refused: the action asks a reason", "reason_asked": True}
+        ans = self.may(user, bean, act=True, tool=tool, reason=reason)
+        base["answer"] = {"granted": ans[0], "why": ans[1], "grants": [list(g) for g in ans.grants]}
+        if not ans[0]:
+            self.audit(dict(base, mode="refused", why=ans[1]))
+            return 403, {"error": "refused: %s" % ans[1], "reason_asked": ans.reason_asked}
+        walk = ((self.cfg.get("tools") or {}).get(tool) or {}).get("walk")
+        if not walk:
+            self.audit(dict(base, mode="refused", why="the host maps the tool to no walk"))
+            return 403, {"error": "the host starts no walk for tool %r — nothing ran" % tool}
+        args = [bean, "--start", walk, "--by", actor] + [x for k, w in sorted(given.items()) for x in ("--input", "%s=%s" % (k, w))]
+        with self.wlock:
+            rc, out = self._act_py(*args)
+        m = re.search(r"^act: \S+ (run-\d+): (.*)$", out, re.M)
+        course = m.group(1) if m else None
+        self.audit(dict(base, mode="started" if rc == 0 else "refused", walk=walk, course=course, rc=rc, output_tail=out[-1500:]))
+        if rc != 0:
+            return 422, {"error": out.splitlines()[-1][:600] if out else "the run did not start"}
+        self.refresh(force=True, reexec=False)
+        return 200, {"mode": "started", "bean": bean, "course": course, "stands": m.group(2) if m else out[-300:],
+                     "plan": self._plan_of(bean, course) if course else ""}
+
+    def decide(self, user, bean, course, do):
+        """A person's ratification of a run's plan, or their refusal of it (bin/act.py `--ratify`, `--decline`): who may
+        is the walk's and the law's to say, and bin/act.py asks it. (status, answer)."""
+        actor = ((self.cfg.get("users") or {}).get(user) or {}).get("bean")
+        base = {"user": user, "actor": actor, "act": do, "bean": bean, "course": course, "head": (self.head or "")[:12]}
+        if do not in ("ratify", "decline") or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,120}", str(bean or "")) \
+                or not re.fullmatch(r"run-\d+", str(course or "")) or not actor:
+            return 400, {"error": "a decision names the run (its bean and course) and ratify or decline"}
+        with self.wlock:
+            rc, out = self._act_py(bean, course, "--" + do, actor)
+        self.audit(dict(base, mode="decided" if rc == 0 else "refused", rc=rc, output_tail=out[-1500:]))
+        if rc != 0:
+            return 422, {"error": out.splitlines()[-1][:600] if out else "nothing was decided"}
+        self.refresh(force=True, reexec=False)
+        return 200, {"mode": do, "bean": bean, "course": course, "said": out[-600:]}
 
     # --- AN ENTRY FORM (24.0, N37) ----------------------------------------------------------------------------------
     def _git(self, *args):
@@ -1138,8 +1223,13 @@ def make_handler(F):
                     return self._json(400, {"error": "bad json"})
                 F.refresh()
                 ins = body.get("inputs") if isinstance(body.get("inputs"), dict) else {}
-                code, obj = F.act(user, str(body.get("m", "")), str(body.get("el", "")), inputs=ins,
-                                  reason=str(body["reason"]) if body.get("reason") else None)
+                why = str(body["reason"]) if body.get("reason") else None
+                if body.get("do") in ("ratify", "decline"):          # a run's plan ratified, or refused
+                    return self._json(*F.decide(user, str(body.get("bean", "")), str(body.get("course", "")), body["do"]))
+                if body.get("tool"):                                  # a walk started from a page, with its inputs
+                    return self._json(*F.start(user, str(body.get("m", "")), str(body.get("el", "")), str(body["tool"]),
+                                               str(body.get("bean", "")), inputs=ins, reason=why))
+                code, obj = F.act(user, str(body.get("m", "")), str(body.get("el", "")), inputs=ins, reason=why)
                 return self._json(code, obj)
             if u.path == "/api/prefs":                # the viewer's own way of reading: kept with their account, never in git
                 try:
