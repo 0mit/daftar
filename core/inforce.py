@@ -1,7 +1,7 @@
 """inforce — WHAT IS IN FORCE in a garden, read once: a statement while it holds, a decision once its course stands at its
 walk's final step, less what a statement of an ending verb ends, and, where asked, while its standing on the square
-allows it. core/crosswalk.py reads through it, and so do a walk's tools and bin/routines.py, so no two readers can
-disagree about what holds.
+allows it. core/crosswalk.py reads through it, and so does a walk's tool, so no two of them can disagree about what
+holds. (bin/routines.py still reads a need's `while` by itself: seed/RATIONALE.md says so.)
 
     from core.inforce import InForce
     F = InForce(root)                          # the garden at root, read once
@@ -17,8 +17,8 @@ disagree about what holds.
 A STATEMENT HOLDS (core/law/core.yaml `while`) with no `while`, or while what its `while` names holds: another statement,
 which holds while it is there and its own `while` holds, or a reading (`reckon`), read by bin/reckon.py, the one reader of
 readings. A `while` naming a condition of the law (`ensemble`) says what the statement holds of, not when: it holds. A
-reading that cannot be read is not known (None), never guessed, and the caller says what not known is to it: a need
-stays needed (bin/routines.py), an account is not made (a walk's tool), a record does not show it (core/crosswalk.py).
+reading that cannot be read is not known (None), never guessed, and the caller says what not known is to it: an account
+is not made (a walk's tool), a record does not show it (core/crosswalk.py).
 
 A DECISION is a bean placed on a walk (`be … as: order`). It is IN FORCE once its course stands at a step its walk marks
 final (`walk: { final: true }`), never by a step's name, and decisions come into force in the order of their courses'

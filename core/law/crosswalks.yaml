@@ -26,7 +26,7 @@
 #     chain: true                      the first record of that model reached by following the path again and again
 #   along: <path>, join: "<sep>"       the titles reached by following the path while each is a record of this row's
 #                                      model, from the farthest down to this one, joined
-#   map: { <value>: <value> }        ...the value read, written as the system writes it (one it does not map: false)
+#   map: { <value>: <value> }         ...the value read, written as the system writes it (one it does not map: false)
 # WHAT IS IN FORCE, read by core/inforce.py, the one reader of it: every path reads only statements that hold (their
 # `while`). A `statements` form names statements in force, wherever they are written:
 #   statements: { verb: <verb>, with: "<role>=<value>,…", naming: <role>, in_force_on: <walk>, ended_by: <verb>,
