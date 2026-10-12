@@ -72,6 +72,8 @@
     if (shapes.indexOf('being') >= 0 && (t.titleOf(s) || (t.E.beings || []).some(function (b) { return b.id === s; }))) {
       return w.being.show(s, t.titleOf(s) || s, {action: 'open'});
     }
+    var code = (t.E.codes || {})[s];          // a code of a scheme by its name in the scheme's table, its code beside
+    if (code) return h`<span class="eg-code" title="${s}${code.by ? ' · ' + code.by : ''}">${w.text.show(code.name)}</span>`;
     if (shapes.indexOf('position') >= 0 && w.moment.parse(s)) return w.moment.show(s, {style: 'long'});
     if (shapes.indexOf('row') >= 0 && spec.rows) return w.choice.show(s, spec.rows);
     if (shapes.indexOf('text') >= 0 && shapes.length === 1) return w.text.show(s);

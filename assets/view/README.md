@@ -236,6 +236,12 @@ host keeps of them off git. And only while the word they were kept on stands (`H
 neither. Every other reader, every other host and the page of one file have their opaque id, as the ledger does; once
 they are erased from the store, so does the host that kept them.
 
+**A code by its name.** A value a page holds as `<scheme>:<code>`, of a scheme the garden knows (the law's, or its own
+`schemes`) — an account a payment is booked to, a code a being is classified by — is drawn by its name in the scheme's
+own table, read by the one reader (`bin/knowledge.py`): its label in the reader's language where the table carries one
+(a `labels` registry, a `name_<lang>` column), else its name; the code itself stays beside it, in its title
+(`view_engraved.codes_of`, the page's `codes`).
+
 **Where they are drawn.** The renderers — `lib/view_engraved.js`, `view_queue.js`, `view_timeline.js`,
 `view_flows.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`
 (`h```, `mount`; a position a page computes is a data attribute `mount` sets, never a style attribute) with every value
