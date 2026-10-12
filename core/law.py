@@ -772,18 +772,23 @@ class Law:
                 out.append((where, f"its kind {r.get('kind')!r} is no kind of the law"))
             same = {str(o.get('model')) for o in rows.values()
                     if str(o.get('system')) == str(r.get('system')) and str(o.get('series')) == str(r.get('series'))}
+            records_statements = {str(o.get('model')) for o in rows.values() if o.get('statements') is not None
+                                  and str(o.get('model')) in same}
             sel = r.get('select') or {}
             for k, v in sel.items():
                 if k in ('with', 'without'):
                     path_ok(where, v)
-                elif k == 'within' and isinstance(v, dict):
+                elif k in ('within', 'reached') and isinstance(v, dict):
                     path_ok(where, v.get('along'))
                     if str(v.get('model')) not in same:
-                        out.append((where, f"select.within names {v.get('model')!r}, which no crosswalk of its series crosses"))
+                        out.append((where, f"select.{k} names {v.get('model')!r}, which no crosswalk of its series crosses"))
+                    elif str(v.get('model')) in records_statements:
+                        out.append((where, f"select.{k} names {v.get('model')!r}, whose records are statements, and a path "
+                                           f"reads beans: the beans a statement in force names are selected by `named_in`"))
                 elif k == 'named_in':
                     statements_ok(f"{where} select.named_in", v, naming=True)
                 else:
-                    out.append((where, f"select.{k} is none of with, without, within, named_in"))
+                    out.append((where, f"select.{k} is none of with, without, within, reached, named_in"))
             for fname, spec in (r.get('fields') or {}).items():
                 fw = f"{where} field {fname}"
                 if not isinstance(spec, dict):

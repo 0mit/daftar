@@ -113,6 +113,23 @@ crosswalks:
       groups_id: { statements: { verb: use, naming: by, standing: true }, from: of, model: res.groups, many: true }
       active: { statements: { verb: agree, with: "as=employee", naming: by, ended_by: withdraw }, exists: true }
     meaning: "a person's ERP user while their sign-in name holds: their groups, the uses in force; active while employed"
+  - crosswalk: odoo-17.0-smb.member
+    system: odoo
+    series: "17.0"
+    model: smb.member
+    kind: person
+    fields:
+      name: { from: title }
+    meaning: "a person of the workshop"
+  - crosswalk: odoo-17.0-smb.used
+    system: odoo
+    series: "17.0"
+    model: smb.used
+    kind: service
+    select: { reached: { along: use.of, model: smb.member } }
+    fields:
+      name: { from: title }
+    meaning: "a share a person's own use reaches, while the use holds"
 ---
 # the workshop's own rows
 '''
@@ -163,7 +180,8 @@ try:
     write(G, 'beans/ada.md', person('ada', arrived('ada-work'),
                                     'name: { id: erp, by: erp-login, of: self, as: ada.l, while: arrived }'))
     write(G, 'beans/ben.md', person('ben', 'name: { id: erp, by: erp-login, of: self, as: ben.k }'))
-    write(G, 'beans/cy.md', person('cy', 'name: { id: erp, by: erp-login, of: self, as: cy.m }'))
+    write(G, 'beans/cy.md', person('cy', 'name: { id: erp, by: erp-login, of: self, as: cy.m }',
+                                   'use: { id: desk, by: cy, of: plans }'))
     write(G, 'beans/dee-offer.md', bean('dee-offer', 'contract', 'Dee is offered work at the workshop', 'own: { by: sam, of: self }',
                                         'agree: { by: workshop, of: self, through: written, as: employer, at: 2026-03-20 }',
                                         'agree: { by: dee, of: self, through: written, as: candidate, at: 2026-03-20 }',
@@ -276,6 +294,12 @@ try:
     check("...active while employed: an employment withdrawn from a day that has come is not; one whose day is still to "
           "come is", (us.get('ada.l', {}).get('active'), us.get('ben.k', {}).get('active'), us.get('cy.m', {}).get('active'))
           == (True, False, True), {k: v.get('active') for k, v in us.items()})
+    try:
+        used = sorted(s_['name'] for s_ in R.records('smb.used'))
+    except crosswalk.Refused as e:
+        used = str(e)
+    check("a row selecting what reaches it (`reached`) reads only statements that hold: the share Cy's desk uses, never "
+          "the one Dee's uses while she is signed in, a reading nobody can read", used == ['Plans'], used)
 
     # ---- the law refuses `statements` forms out of form
     from core.law import Law
@@ -294,6 +318,14 @@ try:
           and any("`nobody` is no role of grant" in m for m in bad) and any('`colour` is no key of `statements`' in m for m in bad)
           and any("`zz` is no role of grant" in m for m in bad) and any('`exists` is true' in m for m in bad)
           and any('`map` maps' in m for m in bad), bad)
+    bad = probs(dict(row, crosswalk='y', model='x.two', kind=None, select=None, statements={'verb': 'grant'},
+                     fields={'a': {'from': 'to'}}),
+                dict(row, crosswalk='z', model='x.three', select={'reached': {'along': 'grant.to', 'model': 'x.two'},
+                                                                  'within': {'along': 'part.of', 'model': 'x.two'}}))
+    check("...and a row selecting beans by a path (`within`, `reached`) never names a row whose records are statements: a "
+          "path reads beans, and the beans a statement in force names are selected by `named_in`",
+          any("select.reached names 'x.two', whose records are statements" in m for m in bad)
+          and any("select.within names 'x.two', whose records are statements" in m for m in bad), bad)
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

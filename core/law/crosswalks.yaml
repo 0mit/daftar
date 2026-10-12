@@ -7,11 +7,16 @@
 #   without: <path>     ...or holds none
 #   within: { along: <path>, model: <model> }   following the path from the bean, one step or many, reaches a bean the
 #                       row of that model selects (a department, through `part … of`, reaches its company)
+#   reached: { along: <path>, model: <model> }   a bean the row of that model selects reaches it by the path, through
+#                       any of its statements the last step reads (an employment's allowances, `hold … of`, reach each
+#                       kind of time off it holds)
 # A FIELD is read from the bean:
 #   from: title | summary | bean       the bean's own title, summary or id
 #   from: <verb>[<role>=<value>,…].<role>   the role of the bean's first own statement of that verb (and those roles;
 #                                      a value may name alternatives, `<role>=<a>|<b>`)
-#   from: <path>/<path>                the second read from the bean the first reaches: a path runs through beans
+#   from: <path>/<path>                the second read from the bean the first reaches: a path runs through beans.
+#                                      Where the first names a statement (`<bean>#<id>`), a second of that statement's
+#                                      verb reads it alone, and one of another verb the bean it is in
 #     position: from | to | days | moment-from | moment-to   ...a position, as Odoo writes it: an extent's first or last
 #                                      day, the days it spans, or the first or last moment of its days in the garden's
 #                                      zone, in UTC
@@ -36,7 +41,8 @@
 #     while a permitted of it holds and no forbidden of it does.
 #   A ROW whose records are statements says `statements` in place of `kind` and `select`: one record each, numbered by
 #     `<bean>#<id>`, its fields reading the statement's own roles (`from: <role>`).
-#   A SELECT `named_in: <statements form>` keeps the beans such a statement names.
+#   A SELECT `named_in: <statements form>` keeps the beans such a statement names. (A path reads beans, so no `within`
+#     or `reached` names a row whose records are statements.)
 #   A FIELD `statements: <form>` reads the role `from` of each that names the bean (with `model`, their records, `many`
 #     unless it says otherwise), or `exists: true`, whether any is in force.
 # What the garden does not say, no record has: the field is empty (false, or no records).
@@ -98,6 +104,18 @@ crosswalks:
       private_email: { from: "agree[as=employee].by/name[by=mail].as", held: true }
       private_phone: { from: "agree[as=employee].by/name[by=e164].as", held: true }
     meaning: "a company's employees: each employment, an agreement a person agrees to as employee and one of the garden's companies as employer — the record is the agreement, so one person employed twice is two records, as in Odoo; the name, work mail and work phone are the person's own, from their bean; the job title what they act for the employer as (`represent … as`); the department the one the employment is part of; the identity number, private mail and private phone are held only, read from sealed statements as the host that keeps them resolves them, never from git"
+  - crosswalk: odoo-17.0-hr.leave.type
+    system: odoo
+    series: "17.0"
+    model: hr.leave.type
+    kind: document
+    select: { reached: { along: hold.of, model: hr.employee } }
+    fields:
+      name: { from: title }
+      display_name: { from: title }
+      company_id: { from: own.by, model: res.company }
+      active: { value: true }
+    meaning: "the kinds of time off a company grants: each the terms of one kind of absence, a document that an allowance of one of the garden's employments holds (`hold … of`, a statement of the employment) — an absence names it through the allowance it uses; its company the one of the garden's that owns those terms, or none where none of them does, as a kind every company grants is in Odoo"
   - crosswalk: odoo-17.0-hr.leave
     system: odoo
     series: "17.0"
@@ -111,6 +129,7 @@ crosswalks:
       employee_ids: { from: use.of, model: hr.employee, many: true }
       all_employee_ids: { from: use.of, model: hr.employee, many: true }
       department_id: { from: "use.of/part.of", model: hr.department }
+      holiday_status_id: { from: "use.of/hold.of", model: hr.leave.type }
       request_date_from: { from: "be[as=presence].at", position: from }
       request_date_to: { from: "be[as=presence].at", position: to }
       date_from: { from: "be[as=presence].at", position: moment-from }
@@ -121,4 +140,4 @@ crosswalks:
       holiday_type: { value: employee }
       active: { value: true }
       active_employee: { value: true }
-    meaning: "an employee's absences: each happening placed over an extent of days (`be … as: presence`) that uses an allowance of an employment (`use … of`, the employment's statement) — its days read from that extent, in the garden's zone; its employee the employment; its state where its course stands on its walk, by the walk's own form: before its first move to submit, at a step to approve, at a final step approved, at an exit refused"
+    meaning: "an employee's absences: each happening placed over an extent of days (`be … as: presence`) that uses an allowance of an employment (`use … of`, the employment's statement) — its days read from that extent, in the garden's zone; its employee the employment; its type the kind of time off that allowance holds (`hold … of`); its state where its course stands on its walk, by the walk's own form: before its first move to submit, at a step to approve, at a final step approved, at an exit refused"
