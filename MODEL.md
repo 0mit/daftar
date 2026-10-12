@@ -294,8 +294,10 @@ A name is a statement: the namespace gives it.
   tables in `seed/knowledge/`, and every file a release keeps (`seed/LANGUAGE`). A change to any of them is a
   RULE-CHANGE, which a person ratifies.
 - **`VOCAB.md`** is the garden's own rows, under these keys only: `kinds`, `levels`, `namespaces`, `flows`,
-  `flow_sources`, `standing`, `verbs`, `units`, `tables` (rows added to a table the verbs name), `exclusive`, and a
-  system of positions, a scheme of codes and the files they name of its own (`systems`, `schemes`, `files`) — and the
+  `flow_sources`, `standing`, `verbs`, `units`, `tables` (rows added to a table the verbs name), `exclusive`, a
+  system of positions, a scheme of codes and the files they name of its own (`systems`, `schemes`, `files`), and a
+  foreign system's records read from its statements (`crosswalks`, in `core/law/crosswalks.yaml`'s form, never a model
+  a row of the standard crosses in its system and series; used where a bean of its kind is) — and the
   profiles it takes, by their names (`profiles`). A row
   never takes a name the law has: one name, one row. **Every row the garden adds is used** by a statement or a bean, or
   says why it is vacant (`vacant: <why>`), the manifesto's `whole`: a row is added with the first bean that uses it.

@@ -1,4 +1,5 @@
-"""crosswalk — a foreign system's records read from a garden's statements, as core/law/crosswalks.yaml says (P5.3).
+"""crosswalk — a foreign system's records read from a garden's statements, as core/law/crosswalks.yaml says (P5.3),
+and as the garden's own rows beside them say (its VOCAB.md `crosswalks`, in their form: core/law.py `own_crosswalks`).
 
     from core import crosswalk
     crosswalk.records(root, 'odoo', '17.0', 'hr.department')   # [{id, name, parent_id: [id, name] | False, …}]
