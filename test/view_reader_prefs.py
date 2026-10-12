@@ -175,7 +175,13 @@ A page.
     check("a bad tag is refused by the host with a sentence, and nothing is kept", code == 400 and 'co' in ans.get('error', '')
           and reader_of(page_of(SAM)[1]) == {}, (code, ans))
     WANT = {'locale': 'en-u-ca-persian-hc-h12-nu-latn-tz-usnyc', 'zone': 'America/New_York', 'date': 'full', 'currency': 'name'}
+    os.chmod(CFG, 0o640)                  # its keeper lets a group read the host's file: the write keeps it so
     code, ans = post(SAM, '/api/prefs', {'locale': 'en-u-nu-latn-ca-persian-hc-h12-tz-usnyc', 'date': 'full', 'currency': 'name'}, csrf)
+    mode, beside = os.stat(CFG).st_mode & 0o777, [f for f in os.listdir(os.path.dirname(CFG)) if f.endswith('.tmp')]
+    os.chmod(CFG, 0o600)
+    check("a choice is written to the host's file whole and in its place (bin/safe.py write_atomic): the file keeps the "
+          "mode its keeper gave it, and nothing is left beside it", code == 200 and mode == 0o640 and not beside,
+          (code, oct(mode), beside))
     st, PS = page_of(SAM)
     st2, PR = page_of(RDR)
     check("Sam's choice is kept and their page carries it — their tag in its canonical order, the zone its `tz` stands for — "

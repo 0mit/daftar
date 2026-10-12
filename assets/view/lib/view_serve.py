@@ -434,9 +434,8 @@ class Host:
                     rec[k] = prefs[k]
                 else:
                     rec.pop(k, None)
-            tmp = self.config_path + ".tmp"
-            _write_private(tmp, json.dumps(cfg, indent=1))
-            os.replace(tmp, self.config_path)
+            import safe as dmsafe           # whole, flushed and swapped in: the file keeps the mode its keeper gave it
+            dmsafe.write_atomic(self.config_path, json.dumps(cfg, indent=1), mode=0o600)
             self.cfg["users"][user] = rec
             self._engraved = None
 
