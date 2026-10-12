@@ -4,6 +4,8 @@
 # `<word> <path> ...` makes the word public IN THOSE FILES only (paths as git spells them): a consent given for
 # one page is not a consent for every file, commit message and pull request.
 daftar      # the project itself
+daftard     # the language's own program (daftar-hub's daemon): a garden that names a being by it took the name from the
+            # program — the operator's word, 2026-10-12, as the guard asks ("PUBLIC-ALLOW `daftard`")
 0mit        # the account this repository is published under
 daftar-sessions  # this tool's OWN directory name (bin/session.py); a garden that records a root of
                  # that name took the name FROM the tool, so refusing it here would be the tail wagging
