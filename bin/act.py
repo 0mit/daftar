@@ -25,7 +25,9 @@ A step whose `by` is `engine` is the engine's, and on arriving at it the engine 
 (all but `show`, which is the plan, captured); any other is a person's, and the run stops there: a lead to them
 (bin/leads.py). THE TOOL is what the walk `use`s: a bean of kind `program`, `be`ing at a position on a host (`<host>:
 <path>` or `root:<name>/…`) — run only on that host, as `<tool> <step> <bean> <course>` in the garden, `apply` with
-the captured plan's path in DAFTAR_ACTION_PLAN. Each step's output is kept in captures/actions/ (history), and the moves
+the captured plan's path in DAFTAR_ACTION_PLAN (bin/walktool.py is that side of it, once: a tool written on it reads
+its walk, this host, a position here and the plan it was shown as the engine reads them, and says a refusal as its
+own). Each step's output is kept in captures/actions/ (history), and the moves
 of one run are saved in one commit with their entry; the engine's moves are this machine's (its host bean's), a
 ratification is the person's.
 

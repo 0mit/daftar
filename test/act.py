@@ -40,6 +40,26 @@ def text(g, rel):
         return fh.read()
 
 
+WALK = '''---
+bean: %s
+kind: procedure
+title: "%s — %s, with its proof"
+statements:
+  - say:  { by: sam, at: now }
+  - use:  { by: self, of: %s }
+  - step: { id: plan, as: "what would change, changing nothing", by: engine, to: [show] }
+  - step: { id: show, as: "the plan, line by line", by: engine, to: [check] }
+  - step: { id: check, as: "the tool's own checks", by: engine, to: [ratify] }
+  - step: { id: ratify, as: "a person ratifies what they were shown", by: ratifier, to: [apply, show] }
+  - step: { id: apply, as: "the plan and nothing else", by: engine, to: [verify] }
+  - step: { id: verify, as: "read back from the live thing", by: engine, to: [done] }
+  - step: { id: done, as: "deployed and read back", walk: { final: "true" } }
+  - step: { id: refused, as: "nothing was changed", walk: { exit: "true", reasons: [cannot-plan, check-failed, declined] } }
+  - step: { id: rolled-back, as: "restored and read back", walk: { exit: "true", reasons: [apply-failed, verify-mismatch] } }
+---
+The walk every one of them takes.
+'''
+
 TOOL = r'''import os, sys
 step, bean, course = sys.argv[1:4]
 live = os.environ.get('LIVE_DIR', '/nonexistent')
@@ -63,6 +83,42 @@ elif step == 'restore':
         open(target, 'w').write(open(target + '.bak').read())
     elif os.path.exists(target):
         os.remove(target)
+'''
+
+STAMP = r'''import os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))      # the garden's own bin/: the release's library
+import walktool as W
+live = os.environ['LIVE_DIR']
+
+
+def plan(bean, course):
+    walk, steps = W.course(bean, course)
+    print(f"walk {walk}: steps {','.join(sorted(steps))}; host {W.this_host()}; instances "
+          f"{','.join(W.instances('technology:samba'))}; here {W.here(W.this_host() + ':' + live)} and {W.here('far:/x')}")
+    print('+ stamp ' + bean)
+
+
+def check(bean, course):
+    if os.path.exists(os.path.join(live, bean + '.refuse')):
+        raise W.Refused('a refusal flag is set for ' + course)
+
+
+def apply(bean, course):
+    open(W.shown()).read()
+    open(os.path.join(live, bean + '.stamp'), 'w').write('stamped')
+
+
+def verify(bean, course):
+    if not os.path.exists(os.path.join(live, bean + '.stamp')):
+        raise W.Refused('no stamp read back')
+
+
+def restore(bean, course):
+    if os.path.exists(os.path.join(live, bean + '.stamp')):
+        os.remove(os.path.join(live, bean + '.stamp'))
+
+
+sys.exit(W.main('stamp', {'plan': plan, 'check': check, 'apply': apply, 'verify': verify, 'restore': restore}))
 '''
 
 T = tempfile.mkdtemp(prefix='core-act-')
@@ -100,25 +156,7 @@ statements:
 ---
 The tool.
 ''')
-    write(G, 'mappings/action-cert-deploy.md', '''---
-bean: action-cert-deploy
-kind: procedure
-title: "action-cert-deploy — a certificate deployed, with its proof"
-statements:
-  - say:  { by: sam, at: now }
-  - use:  { by: self, of: cert-tool }
-  - step: { id: plan, as: "what would change, changing nothing", by: engine, to: [show] }
-  - step: { id: show, as: "the plan, line by line", by: engine, to: [check] }
-  - step: { id: check, as: "the tool's own checks", by: engine, to: [ratify] }
-  - step: { id: ratify, as: "a person ratifies what they were shown", by: ratifier, to: [apply, show] }
-  - step: { id: apply, as: "the plan and nothing else", by: engine, to: [verify] }
-  - step: { id: verify, as: "read back from the live thing", by: engine, to: [done] }
-  - step: { id: done, as: "deployed and read back", walk: { final: "true" } }
-  - step: { id: refused, as: "nothing was changed", walk: { exit: "true", reasons: [cannot-plan, check-failed, declined] } }
-  - step: { id: rolled-back, as: "restored and read back", walk: { exit: "true", reasons: [apply-failed, verify-mismatch] } }
----
-The walk every certificate's deployment takes.
-''')
+    write(G, 'mappings/action-cert-deploy.md', WALK % ('action-cert-deploy', 'action-cert-deploy', 'a certificate deployed', 'cert-tool'))
     courses = ('deploy-a', 'deploy-b', 'deploy-c', 'deploy-d', 'deploy-e')
     for c in courses:               # a bean each: a save of a bean waits for the minute its last save is not
         write(G, f'beans/cert-{c}.md', f'---\nbean: cert-{c}\nkind: document\ntitle: "cert-{c} — a certificate"\n'
@@ -190,6 +228,45 @@ The walk every certificate's deployment takes.
           and "at 'refused'" in stands['deploy-d'] and "at 'ratify'" in stands['deploy-e'], stands)
     g = grow.run(PY, 'bin/check.py', cwd=G)
     check("the garden passes its gate after every run", g.returncode == 0 and '0 error(s)' in g.out, g.out[-600:])
+
+    # ---- THE TOOL SIDE, ONCE (bin/walktool.py): a tool written on it names nothing of the garden, and reads its walk,
+    #      this host, a position here and the instances on this host as the engine reads them
+    write(G, 'tools/stamp.py', STAMP)
+    for bid, kind, extra in (('far', 'host', ''), ('samba-box', 'instance', '  - be:   { by: self, at: box, as: habitat }\n'
+                                                                            '  - use:  { by: self, of: "technology:samba" }\n'),
+                             ('samba-far', 'instance', '  - be:   { by: self, at: far, as: habitat }\n'
+                                                       '  - use:  { by: self, of: "technology:samba" }\n'),
+                             ('stamp-tool', 'program', f'  - be:   {{ by: self, at: "{HOST}:{G}/tools/stamp.py", as: location }}\n')):
+        write(G, f'beans/{bid}.md', f'---\nbean: {bid}\nkind: {kind}\ntitle: "{bid}"\nstatements:\n  - make: {{ by: sam, at: now }}\n'
+              f'  - own:  {{ by: sam, of: self }}\n{extra}---\n{bid}.\n')
+    write(G, 'mappings/action-stamp.md', WALK % ('action-stamp', 'action-stamp', 'a stamp put', 'stamp-tool'))
+    for c in ('stamp-a', 'stamp-b'):
+        write(G, f'beans/{c}.md', f'---\nbean: {c}\nkind: document\ntitle: "{c}"\nstatements:\n  - say: {{ by: sam, at: now }}\n'
+              f'  - be: {{ id: run, by: self, at: action-stamp, as: order }}\n---\nA stamp.\n')
+    r = grow.run(PY, 'bin/save.py', 'sam', 'a walk whose tool stands on bin/walktool.py', '--body', '- action: wrote [[far]], '
+                 '[[samba-box]], [[samba-far]], [[stamp-tool]], [[action-stamp]], [[stamp-a]] and [[stamp-b]]', cwd=G)
+    check("walktool: a second walk, its tool written on bin/walktool.py, two instances of one technology on two hosts",
+          r.returncode == 0, r.out[-800:])
+    grow.run(PY, 'bin/act.py', 'stamp-a', 'run', cwd=G)
+    r = grow.run(PY, 'bin/act.py', 'stamp-a', 'run', '--ratify', 'sam', cwd=G)
+    plan = next((text(G, os.path.join('captures', 'actions', c)) for c in sorted(os.listdir(os.path.join(G, 'captures', 'actions')))
+                 if c.startswith('stamp-a.run.plan.')), '')
+    check("walktool: the tool's course runs to done through bin/act.py; it read its walk and steps (course), this machine's "
+          "host bean (this_host), the instances using samba on this host and not the other's (instances), a position here "
+          "and one elsewhere (here), and applied only the plan it was shown (shown)",
+          'stopped at done' in r.out and 'walk action-stamp: steps apply,check,done,plan,ratify,refused,rolled-back,show,verify'
+          in plan and 'host box' in plan and 'instances samba-box;' in plan and 'here ' + LIVE + ' and None' in plan
+          and open(os.path.join(LIVE, 'stamp-a.stamp')).read() == 'stamped', r.out[-800:] + plan)
+    open(os.path.join(LIVE, 'stamp-b.refuse'), 'w').close()
+    r = grow.run(PY, 'bin/act.py', 'stamp-b', 'run', cwd=G)
+    said = ''.join(text(G, os.path.join('captures', 'actions', c)) for c in os.listdir(os.path.join(G, 'captures', 'actions'))
+                   if c.startswith('stamp-b.run.check.'))
+    check("walktool: a step that raises Refused is the tool's refusal — said as its own word, exit 1, and the engine "
+          "refuses the run with it", 'stopped at refused' in r.out and 'stamp: a refusal flag is set for run' in said
+          and 'as: check-failed' in text(G, 'beans/stamp-b.md'), r.out[-800:] + said)
+    r = grow.run(PY, 'tools/stamp.py', 'nonsense', cwd=G)
+    check("walktool: anything else is the usage, exit 2", r.returncode == 2 and 'usage: stamp {plan|check|apply|verify|restore} '
+          '<bean> <course>' in r.out, r.out[-300:])
 except Exception as e:  # noqa: BLE001
     import traceback
     traceback.print_exc()
