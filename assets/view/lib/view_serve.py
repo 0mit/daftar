@@ -314,11 +314,14 @@ class Host:
             return Verdict(True, "this viewer may act, where a grant opens the tool")
         what = ("act:" + tool) if act else "write" if write else "read"
         target = bean if bean is not None else vm.PAGE
-        # AN ANSWER HOLDS FOR THE DAY IT WAS ASKED ON. A grant's `during` is read by the day (pass `_during`), and an
-        # answer kept until the next commit went on granting past a grant's last day: the cache is the day's.
-        day = int(time.time() // 86400)
-        if getattr(self, "answers_day", None) != day:
-            self.answers, self.answers_day = {}, day
+        # AN ANSWER HOLDS FOR THE MINUTE IT WAS ASKED IN. A grant's `at` is read by the day (pass `_during`), and an
+        # answer kept until the next commit went on granting past a grant's last day; a grant's `window` opens and
+        # closes at a time of day (`5T08:30`), so an answer kept for the day went on granting after hours: the cache is
+        # the minute's — a window that lasts a length of whole minutes opens and closes on a minute, and one that does
+        # not is seen at the next.
+        minute = int(time.time() // 60)
+        if getattr(self, "answers_minute", None) != minute:
+            self.answers, self.answers_minute = {}, minute
         k = (actor, what, target, tuple(positions) if positions else None, bool(reason))
         a = self.answers.get(k)
         if a is None:

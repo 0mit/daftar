@@ -102,7 +102,9 @@ export function text(v, o = {}) {
   if (v.each) {
     let s = say('rec-each', o, {level: levelWord(v.each, o)});
     if (at.length && v.each === 'week' && (sys(v.in) || {}).week) {
-      const names = weekdays(o).filter(d => at.includes(d.value)).map(d => d.label);
+      // each day by its name, and the time of day a place names after it, ISO 8601's way (`5T17:45`)
+      const names = weekdays(o).flatMap(d => at.filter(a => a.split('T')[0] === d.value)
+        .map(a => a.includes('T') ? `${d.label} ${inDigits(a.split('T')[1], ns)}` : d.label));
       s += ' ' + say('rec-on', o, {places: names.join(say('rec-and', o))});
     } else if (at.length) s += ' ' + say('rec-at', o, {places: at.map(a => inDigits(a, ns)).join(say('rec-and', o))});
     parts.push(s);
@@ -125,13 +127,14 @@ export function show(v, o = {}) {
 }
 
 // EDITING: the level, the places in it, the first day (in the reader's calendar), the last day or how many times, and
-// how long each lasts. What the form does not offer — `every`, `closures`, a place it cannot draw — is kept as written.
+// how long each lasts. What the form does not offer — `every`, `closures`, a place it cannot draw — is kept as written:
+// a day of the week with its time of day (`5T17:45`) is no box to tick, so the places are a field that holds them.
 export function edit(name, value, o = {}) {
   const v = value && typeof value === 'object' ? value : {};
   const levels = [...new Set(systems().flatMap(s => (s.levels || []).filter(l => ['day', 'week', 'month', 'year'].includes(l))))];
   const each = v.each || '', at = v.at === undefined ? [] : [].concat(v.at).map(String);
   const s = v.in ? sys(v.in) : systemFor(each || 'week', o);
-  const week = (each || 'week') === 'week' && s && s.week;
+  const week = (each || 'week') === 'week' && s && s.week && !at.some(a => a.includes('T'));
   const places = week
     ? h`<span class="w-rec-days">${weekdays(o).map(d => h`<label class="w-rec-day"><input type="checkbox" name="${name}.at" value="${d.value}"${at.includes(d.value) ? h` checked` : ''}> ${d.label}</label>`)}</span>`
     : h`<input class="w-input w-name-input" name="${name}.at" dir="ltr" value="${at.join(', ')}">`;
@@ -160,12 +163,14 @@ export function take(fields, o = {}) {
   if (s) v.in = s.system;
   if (each) v.each = each; else v.every = keep.every;
   const at = (Array.isArray(f.at) ? f.at : String(f.at || '').split(',')).map(x => toAscii(String(x)).trim()).filter(Boolean);
-  if (at.some(a => !/^[A-Za-z0-9-]+$/.test(a))) {
+  if (at.some(a => !/^[A-Za-z0-9-]*(T([01]\d|2[0-3]):[0-5]\d)?$/.test(a))) {   // a place, and its time of day `hh:mm`
     const ns = digitsOf(o);
     return {error: say('rec-place-form', o, {ex: inDigits('15', ns), lo: inDigits('1', ns), hi: inDigits('7', ns)})};
   }
   // the places in the system's own order (a week's days 1 to 7), never in the order a reader's week shows them
-  if (at.every(a => /^\d+$/.test(a))) at.sort((a, b) => Number(a) - Number(b));
+  if (at.every(a => /^\d+(T\d\d:\d\d)?$/.test(a))) {
+    at.sort((a, b) => Number(a.split('T')[0]) - Number(b.split('T')[0]) || (a < b ? -1 : a > b ? 1 : 0));
+  }
   if (at.length) v.at = at.length === 1 ? at[0] : at;
   for (const side of ['from', 'to']) {
     const d = moment.take(f[side], o);

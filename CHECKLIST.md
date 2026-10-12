@@ -116,7 +116,11 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       in its own; what it `settles` names a clause of the garden and an occurrence of it, once each. A weighing judges
       every pair of its criteria once, its consistency ratio at most 0.10 or `why_inconsistent` saying why it stands. A
       `mark` fixes the base of a cell its system's table lists as marked, in this being where the table names one, and a
-      table that names a being of the garden is marked by it. A clause's `by_role` is a role some party agreed `as`.
+      table that names a being of the garden is marked by it. A clause's `by_role` is a role some party agreed `as`. A
+      grant's `window` is a repetition each of whose occurrences lasts a length of time (`lasts: { measure }`), in cells
+      of a day or more of a calendar reckoned by rule whose day begins at midnight, each place `at` names written as a
+      place of its cell, with its time of day `hh:mm` where it names one (`5T08:30`; in a day, `T22:00`), and counted from
+      its `from` where it strides (`every`, by a length of time) or counts its `times`.
 - [ ] **profile** — What a profile gives (core/law/profiles.yaml) is used only where the garden takes the profile, by
       its name in `VOCAB.md`'s `profiles`: a verb whose `home` it is (`serve`, `classify`, `draw`…), and an attribute it
       adds to a form of the core (the code profile's `role` and `scan_policy` on a placement). A page (the `view`
