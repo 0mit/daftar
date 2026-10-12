@@ -32,7 +32,8 @@
   `_` read as `-`, its origin `by` the tool), so "no file open for writing" is a reading of a number, never a word. A
   reading's `detail`, where its tool gives one, is what it saw in words (which services are down, which differences it
   counted): never part of what is judged, kept in the note of the `measure` a crossing writes, so a lead says what
-  crossed and not only how much.
+  crossed and not only how much. It reaches git with that note: a tool puts in it nothing the garden may not hold (no
+  secret, no person's name, address or other value — ids and kinds, never values).
   Needs sharing an `as` are alternatives. A need no reading meets is not read here, and is said so.
 - ITS PROOF is the acted being's own needs, read the same way after the walk's verify: the being's health, which `cross`
   reads at any time as well.
