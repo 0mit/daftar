@@ -395,6 +395,20 @@ try:
     check("...and so it is where GARDEN.md writes its pin quoted, which the gate saves as the same pin",
           g.returncode == 0 and 'extends: "core@' in text('GARDEN.md') and r.returncode == 0 and 'nothing to do' in r.out
           and clean(), (g.out[-400:], r.out[-600:]))
+    # ...and a manifest a byte of which is no UTF-8 is still read for its pin, as the readers before the one reader
+    # read it, never a traceback (a stray byte in a comment, a file saved in another encoding)
+    _gm = os.path.join(G, 'GARDEN.md')
+    with open(_gm, 'rb') as fh:
+        _raw = fh.read()
+    with open(_gm, 'wb') as fh:
+        fh.write(_raw.replace(b'\n---\n', b'\n# caf\xe9\n---\n', 1))
+    r = run(PY, '-c', 'import importlib, sys; sys.path.insert(0, sys.argv[1]); import check; '
+            'print(check.pin(sys.argv[2]), importlib.import_module("pass").runs_core(sys.argv[2]))',
+            os.path.join(ROOT, 'bin'), G)
+    with open(_gm, 'wb') as fh:
+        fh.write(_raw)
+    check("...and a GARDEN.md holding a byte that is no UTF-8 is read for its pin, and the garden runs the core: no "
+          "traceback", r.returncode == 0 and r.out.strip().startswith('core@') and r.out.strip().endswith('True'), r.out[-600:])
 except Exception as e:
     import traceback
     traceback.print_exc()
