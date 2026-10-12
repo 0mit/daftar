@@ -212,13 +212,13 @@ try:
           'schemes:\n' + at_authority('spdx', 'the licences a work is under, by their SPDX identifiers',
                                       'the SPDX project', 'https://spdx.org/licenses/', '^[A-Za-z0-9][A-Za-z0-9.+-]*$',
                                       sensitive=False) + "---\n# the maker's own rows\n")
-    write(C, 'beans/uno.md', bean('uno', 'host', 'uno — the board the blinker runs on', [
+    write(C, 'beans/blinker-board.md', bean('blinker-board', 'host', 'blinker-board — the board the blinker runs on', [
         'read: { by: sam, at: now }', 'own: { by: sam, of: self }', 'run: { by: self, of: blink }']))
     write(C, 'beans/led.md', bean('led', 'component', 'led — the light-emitting diode that blinks', [
-        'read: { by: sam, at: now }', 'part: { by: self, of: uno }',
+        'read: { by: sam, at: now }', 'part: { by: self, of: blinker-board }',
         'measure: { id: blink-rate, by: sam, of: self, as: frequency, value: { count: "0.5", unit: Hz }, at: "2026-10-09 18:00+03:00" }']))
     write(C, 'beans/resistor.md', bean('resistor', 'component', "resistor — the LED's current-limiting resistor", [
-        'read: { by: sam, at: now }', 'part: { by: self, of: uno }',
+        'read: { by: sam, at: now }', 'part: { by: self, of: blinker-board }',
         'measure: { id: resistance, by: sam, of: self, as: resistance, value: { count: "220", unit: Ohm }, '
         'at: "2026-10-09 18:00+03:00", note: "its bands red, red, brown" }']))
     BLINK = bean('blink', 'program', 'blink — the sketch that blinks the LED', [
@@ -232,7 +232,8 @@ try:
           g.out[-700:])
     write(C, 'beans/blink.md', BLINK)
     r2 = save(C, 'sam', 'RULE-CHANGE: the blinker', '- action: RULE-CHANGE — VOCAB.md takes the knowledge profile, the '
-              'kind component and SPDX held at its authority; wrote [[uno]], [[led]], [[resistor]] and [[blink]]',
+              'kind component and SPDX held at its authority; wrote [[blinker-board]], [[led]], [[resistor]] and '
+              '[[blink]]',
               '- ratified_by: sam')
     check("blinker: a board runs a sketch named by its content's SHA-256 and classed by its SPDX licence, its LED's rate "
           "in hertz and its resistor's 220 ohms a resistance — saved through the gate",
