@@ -85,7 +85,7 @@ elif step == 'restore':
         os.remove(target)
 '''
 
-STAMP = r'''import os, sys
+STAMP = r'''import os, socket, sys
 sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))      # the garden's own bin/: the release's library
 import walktool as W
 live = os.environ['LIVE_DIR']
@@ -94,7 +94,8 @@ live = os.environ['LIVE_DIR']
 def plan(bean, course):
     walk, steps = W.course(bean, course)
     print(f"walk {walk}: steps {','.join(sorted(steps))}; host {W.this_host()}; instances "
-          f"{','.join(W.instances('technology:samba'))}; here {W.here(W.this_host() + ':' + live)} and {W.here('far:/x')}")
+          f"{','.join(W.instances('technology:samba'))}; here {W.here(W.this_host() + ':' + live)} and {W.here('far:/x')}; "
+          f"by this machine's name {W.here(socket.gethostname() + ':' + live)}")
     print('+ stamp ' + bean)
 
 
@@ -118,7 +119,17 @@ def restore(bean, course):
         os.remove(os.path.join(live, bean + '.stamp'))
 
 
-sys.exit(W.main('stamp', {'plan': plan, 'check': check, 'apply': apply, 'verify': verify, 'restore': restore}))
+def note(argv):             # a command of the tool's own: a line added to a bean, saved as the engine saves
+    open(os.path.join('beans', argv[0] + '.md'), 'a').write('A note.\n')
+    print('saved: ' + W.save('sam', 'a note on ' + argv[0], ['- action: noted [[' + argv[0] + ']]']).strip()[-200:])
+
+
+def cannot(argv):
+    raise W.Refused('nothing here to run with', 2)
+
+
+sys.exit(W.main('stamp', {'plan': plan, 'check': check, 'apply': apply, 'verify': verify, 'restore': restore},
+                more={'note': note, 'cannot': cannot}))
 '''
 
 T = tempfile.mkdtemp(prefix='core-act-')
@@ -256,6 +267,7 @@ The tool.
           "and one elsewhere (here), and applied only the plan it was shown (shown)",
           'stopped at done' in r.out and 'walk action-stamp: steps apply,check,done,plan,ratify,refused,rolled-back,show,verify'
           in plan and 'host box' in plan and 'instances samba-box;' in plan and 'here ' + LIVE + ' and None' in plan
+          and "by this machine's name " + LIVE in plan
           and open(os.path.join(LIVE, 'stamp-a.stamp')).read() == 'stamped', r.out[-800:] + plan)
     open(os.path.join(LIVE, 'stamp-b.refuse'), 'w').close()
     r = grow.run(PY, 'bin/act.py', 'stamp-b', 'run', cwd=G)
@@ -266,7 +278,28 @@ The tool.
           and 'as: check-failed' in text(G, 'beans/stamp-b.md'), r.out[-800:] + said)
     r = grow.run(PY, 'tools/stamp.py', 'nonsense', cwd=G)
     check("walktool: anything else is the usage, exit 2", r.returncode == 2 and 'usage: stamp {plan|check|apply|verify|restore} '
-          '<bean> <course>' in r.out, r.out[-300:])
+          '<bean> <course> | note … | cannot …' in r.out, r.out[-300:])
+    r = grow.run(PY, 'tools/stamp.py', 'apply', 'stamp-b', 'run', cwd=G, env=dict(grow.ENV, DAFTAR_ACTION_PLAN=''))
+    check("walktool: apply given no plan to run is refused (shown), exit 1, and changes nothing",
+          r.returncode == 1 and 'stamp: apply runs the plan it was shown' in r.out
+          and not os.path.exists(os.path.join(LIVE, 'stamp-b.stamp')), r.out[-300:])
+    head = grow.run('git', 'rev-parse', 'HEAD', cwd=G).out.strip()
+    r = grow.run(PY, 'tools/stamp.py', 'note', 'stamp-a', cwd=G)
+    log = grow.run('git', 'log', '-1', '--format=%s', cwd=G).out.strip()
+    check("walktool: a command of the tool's own (more) saves as the engine saves (save): one commit, the gate passed, "
+          "what save said given back", r.returncode == 0 and 'saved: ' in r.out and log == 'a note on stamp-a'
+          and grow.run('git', 'rev-parse', 'HEAD~1', cwd=G).out.strip() == head, r.out[-400:] + log)
+    head = grow.run('git', 'rev-parse', 'HEAD', cwd=G).out.strip()
+    _sa = text(G, 'beans/stamp-a.md')
+    write(G, 'beans/stamp-a.md', _sa.replace('kind: document', 'kind: no-such-kind', 1))
+    r = grow.run(PY, 'tools/stamp.py', 'note', 'stamp-a', cwd=G)
+    check("walktool: a save the gate refuses is the tool's refusal, said with what the gate said, exit 1, nothing committed",
+          r.returncode == 1 and 'stamp: the save was refused:' in r.out
+          and grow.run('git', 'rev-parse', 'HEAD', cwd=G).out.strip() == head, r.out[-400:])
+    grow.run('git', 'checkout', '-q', '--', 'beans/stamp-a.md', cwd=G)
+    r = grow.run(PY, 'tools/stamp.py', 'cannot', cwd=G)
+    check("walktool: a tool that could not run says so, exit 2 (Refused(why, 2))",
+          r.returncode == 2 and 'stamp: nothing here to run with' in r.out, r.out[-300:])
 except Exception as e:  # noqa: BLE001
     import traceback
     traceback.print_exc()

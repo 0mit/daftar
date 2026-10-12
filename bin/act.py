@@ -135,11 +135,14 @@ def moves_so_far(bean, course):
 
 
 def save(who, what, lines):
-    body = '\n'.join(lines)
+    """bin/save.py `who` `what` --body (the lines, or one string): what it said, or a refusal with what the gate said.
+    A walk's tool saves through it too (bin/walktool.py)."""
+    body = lines if isinstance(lines, str) else '\n'.join(lines)
     r = subprocess.run([sys.executable, os.path.join(HERE, 'save.py'), who, what, '--body', body], cwd=ROOT,
                        capture_output=True, text=True, encoding='utf-8', errors='replace')
     if r.returncode != 0:
         raise Refused(f"the save was refused: {(r.stdout + r.stderr).strip()[-800:]}")
+    return r.stdout
 
 
 def add_moves(bean, wid, course, moves, knower, act):

@@ -11,16 +11,18 @@ restore, its service's model — and names nothing of a garden in its code.
     W.instances(of, host)    -> [instance id]   the instances `use`ing `of` (a technology's code, or a program), each one
                                                 `be`ing at `host` (this host where none is said), as their beans say
     W.shown()                -> path            the plan this apply was given to run (DAFTAR_ACTION_PLAN), or a refusal
-    W.save(who, what, body)                     bin/save.py: the change journalled and committed, or the tool stopped
+    W.save(who, what, body)  -> what it said    bin/act.py's save (bin/save.py): the change journalled and committed,
+                                                or the tool stopped
     W.seal(bean, ids)        -> [journal line]  bin/held.py: each statement sealed in this host's store
     W.main(name, steps, more)                   `<step> <bean> <course>` to `steps[step](bean, course)`, `<command> …`
                                                 to `more[command](argv)`, anything else the usage; a refusal (Refused)
                                                 said as the tool's own, exit 1
-A refusal is `raise W.Refused(why)` anywhere in a step: main says it as `<tool>: <why>` and exits 1 (the engine moves
-the course to its exit, the reason the tool said), or `W.Refused(why, 2)` where the tool could not run.
+A refusal is `raise W.Refused(why)` anywhere in a step: main says it as `<tool>: <why>` and exits 1, or 2 with
+`W.Refused(why, 2)` where the tool could not run. The engine moves the course to the step's exit (`check-failed`, …)
+alike for either, and keeps what the tool said in the step's capture. A step not finished yet (a copy of hours, in
+slices) returns `W.IN_PROGRESS`: the walk pauses where its walk says, and the next tick runs the step again.
 """
 import os
-import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -28,6 +30,9 @@ ROOT = os.path.dirname(HERE)
 for _p in (HERE, ROOT):
     if _p not in sys.path:
         sys.path.insert(0, _p)
+import act as dmact  # noqa: E402 — the engine's side of the protocol: walktool reads through it, never beside it
+
+IN_PROGRESS = dmact.IN_PROGRESS     # a step's exit while it is not finished: the engine's own
 
 
 class Refused(Exception):
@@ -45,7 +50,6 @@ def _garden():
 
 def course(bean, course_id):
     """(the walk's bean id, its steps by id) of the course `course_id` placed in `bean` — read as bin/act.py reads it."""
-    import act as dmact
     try:
         walk, steps, _path, _host = dmact.walk_of(bean, course_id)
     except dmact.Refused as e:
@@ -101,14 +105,13 @@ def shown():
 
 
 def save(who, what, body):
-    """bin/save.py `who` `what` --body `body` (a string, or lines): the change journalled and committed through the
-    garden's gate; a refusal, with what the gate said, where it is not."""
-    body = body if isinstance(body, str) else '\n'.join(body)
-    r = subprocess.run([sys.executable, os.path.join(HERE, 'save.py'), who, what, '--body', body], cwd=ROOT,
-                       capture_output=True, text=True, encoding='utf-8', errors='replace')
-    if r.returncode:
-        raise Refused(f"the save was refused: {(r.stdout + r.stderr).strip()[-800:]}")
-    return r.stdout
+    """bin/save.py `who` `what` --body `body` (a string, or lines), as the engine saves (bin/act.py `save`): the change
+    journalled and committed through the garden's gate, and what save said; a refusal, with what the gate said, where
+    it is not."""
+    try:
+        return dmact.save(who, what, body)
+    except dmact.Refused as e:
+        raise Refused(str(e))
 
 
 def seal(bean, ids):
