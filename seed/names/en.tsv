@@ -156,6 +156,7 @@ verbs:route	route	rupta (a broken way, a road cut through)	proposed	agent (claud
 verbs:translate	translate	translatus (carried across)	proposed	agent (claude opus-5.5), by hand
 verbs:filter	filter	filtrum (felt, through which liquid was strained)	proposed	agent (claude opus-5.5), by hand
 verbs:book	book	bōc (Old English: a written document)	proposed	agent (claude opus-5.5), by hand
+verbs:match	match	gemæcca (Old English: a mate, one of a pair): records of one movement, counted once	proposed	agent (claude opus-5.5), by hand
 verbs:renew	renew	re + new	proposed	agent (claude opus-5.5), by hand
 verbs:mark	mark	mearc (Old English: a boundary)	proposed	agent (claude opus-5.5), by hand
 verbs:produce	produce	producere (to lead forth)	proposed	agent (claude opus-5.5), by hand
@@ -172,6 +173,7 @@ qualifiers:placed	placed	platea (a broad street): what a placement holds there	p
 qualifiers:presence	presence	praesentia (being before)	proposed	agent (claude opus-5.5), by hand
 qualifiers:reading	reading	rǣdan (to interpret): what a reckoning selects and computes	proposed	agent (claude opus-5.5), by hand
 qualifiers:result	result	resultare (to spring back)	proposed	agent (claude opus-5.5), by hand
+qualifiers:sense	sense	sensus (a perceiving; in geometry the way a direction runs): along a move's direction, or against it	proposed	agent (claude opus-5.5), by hand
 qualifiers:series	series	series (a row, from serere, to join)	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	settles	setl (Old English: a seat): which occurrences of which clauses it pays, and how much	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	share	scearu (Old English: a cutting, a division)	proposed	agent (claude opus-5.5), by hand

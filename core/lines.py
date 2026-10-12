@@ -187,11 +187,13 @@ def view(b, G):
     v['bean'] = b.id
     for _i, verb, r in b.items:
         v.setdefault(verb, []).append(r)
-    # A PAYMENT'S BOOKINGS, read beside it (v1 part 12b): each `book` of a `pay`, as an account and its share or amount,
-    # so a reading apportions what was paid over the accounts it was booked to — derived here, never written
+    # A PAYMENT'S BOOKINGS, read beside it (v1 part 12b): each `book` of a `pay` that says where it goes, as an account
+    # and its share or amount, so a reading apportions what was paid over the accounts it was booked to — derived here,
+    # never written. A booking that names only where it comes from, or books a move in the reverse sense, places no
+    # part along a plan
     books = {}
     for _i, r in _live(b, 'book'):
-        if isinstance(r.get('of'), str):
+        if isinstance(r.get('of'), str) and r.get('to') is not None:
             books.setdefault(r['of'].split('#')[-1], []).append(r)
     if books and v.get('pay'):
         def booked(x, unit):

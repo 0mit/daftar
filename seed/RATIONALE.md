@@ -5582,3 +5582,77 @@ gigabytes; its provider serves it by country, and a garden uses the countries it
 part's name takes, and `{part}` in `from` where it goes; each part is kept as its own copy under its own checksum, a
 later copy of a part replaces that part alone, and the newest copy of each is read as one table — so no country is
 privileged by being the one a release happened to fetch, and none is fetched that a garden does not need.
+
+## core/law/verbs.yaml: verbs[book]
+
+A BOOKING IS A MOVE (2026-10-13, the books' design; the operator: "generalize the most complex but meaningful
+accounting", then "the daftar's goal is to implement the accounting with the primitive cocepts like charge and
+orderedness as direction of moves"). The verb booked a payment to an analytic code, in a share: where a cost belongs,
+and nothing more. Double entry is the same act read whole. Value is a charge that moves: it leaves one position and
+arrives at another, so a booking names where it comes from (`from`) and where it goes (`to`), the roles a `pass` and a
+flow already give a movement; what a position holds is its net charge, what arrived less what left, and is read each
+time from the moves the garden holds, never stored — as bin/ledger.py has always read who owes whom. Debit and credit
+are the field's words for the two polarities, arriving and leaving, never columns of the law; conservation is double
+entry, since each move leaves one position by what it brings to another.
+
+ONE SIDE SAID, THE OTHER READ. A payment already says who paid, through what, who bears what share and what it settles.
+A booking that names one side takes the other from the payment: the account that stands for its means, each other
+bearer's current account. So a payment's facts stay in the payment, said once, and the books add only the entity's
+judgment of where its part belongs. A booking of what is no payment — the books' opening, a measure counted, another
+booking — names both sides and an amount, since nothing else says them.
+
+THE REVERSE OF A MOVE IS ITS REVERSE SENSE, NOT A NEW WORD. A correction in books is never an erasure: the move is
+booked again with its ends exchanged, from the day of the correction. That is the move read against its direction —
+the sense an orientation of the view already carries as `1` or `-1` — so the law says `sense: "-1"` on a booking of the
+move, naming no side, and keeps no verb `reverse`. A booking that names a side moves along it; one in the reverse sense
+names the day it is read from, since the move it reverses stays where it was.
+
+THE ENTITY'S PART. Bookings stated in amounts under one analytic plan still add up to a whole, as before — now the
+entity's part of the payment, its share of what the payment's bearers bear, and the whole where none bears it. One side
+of a chart may be booked in part: what no booking places waits in the account whose role is `awaiting`, a line not yet
+judged, rather than being refused.
+
+## core/law/verbs.yaml: tables.senses
+
+The two senses of a move, as the orientations of the view write them: `1` along its direction, `-1` against it.
+
+## core/law/verbs.yaml: verbs[match]
+
+ONE MOVEMENT, COUNTED ONCE (2026-10-13, the books' design; the operator kept it the one new word). A bank's file read
+into the garden and the payment said where it belongs are two records of one movement of money, and books that read
+both would count it twice. `match` says they are one: the record said carries the bookings, the line read is its
+evidence, and their amounts agree in each currency. No other word of the law says it: `respond` confirms another's
+statement and `same_ground_as` crosses schemes, and neither makes two statements one movement. A payment is matched
+once in an entity's books, wherever the match is written, so the gate reads the garden whole for it.
+
+## core/law/profiles.yaml: elements
+
+WHAT AN ACCOUNT IS, IN A PUBLISHED LIST NO CHART OWNS (2026-10-13, the books' design). Every chart of accounts — a
+country's, an ERP's, a household's — sorts its accounts under five elements, and the IFRS Conceptual Framework names
+them (§4.2): asset, liability, equity, income, expense. Taking them as rows of the profile, and leaving every chart a
+scheme a garden keeps, makes no jurisdiction's chart the law's. Each element is read in a sense, as each order of the
+view is: an asset or an expense holds what arrived at it, and a liability, equity or income what left it, so a balance
+is shown as a magnitude in its own sense and no sign is stored.
+
+## core/law/profiles.yaml: account_roles
+
+The parts an account plays in the books' own readings, one account of a chart each: where an unplaced part waits
+(`awaiting`), where a payment whose means nobody said is held (`unsaid`), where a period's result is kept (`earnings`),
+where a tax is held (`tax`, vacant until a tool computes tax lines). A reading finds the account by its role, never by
+a code, so it reads any chart.
+
+## core/law/profiles.yaml: forms.chart
+
+A CHART IS A SCHEME THAT SAYS WHAT EACH ACCOUNT IS (2026-10-13, the books' design). Codes in a tree with levels are
+already the core's: a garden keeps its analytic plans as a scheme. A chart of accounts is the same tree with five more
+columns — its element, the being an account stands for, the kinds of party whose accounts it holds, its role, the day it
+closed — so it is a scheme naming the profile's form, and its rows are held to it by the gate: a column neither the
+scheme's nor the form's is refused, and so is a postable account that does not say what it is. An account stands for
+a being — a bank account, a card, a cash box — so a booking may name the being, and a payment's means is read as that
+account. An account a booking used is closed on a day, never moved or deleted, since the bookings that name it stay.
+
+## core/law/registries.yaml: knowledge_scheme_form.form
+
+A scheme may name a form of a profile the garden takes, whose attributes its rows hold beside its own code, level,
+parent and name: the accounting profile's `chart` makes a scheme a chart of accounts. One key, so the next profile with
+a tree of its own codes takes the same mechanism rather than a scheme form of its own.
