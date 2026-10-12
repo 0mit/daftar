@@ -607,10 +607,13 @@ def block_lines(node):
     """The lines (0-based in the text it was composed from) that lie inside a block scalar (`|`, `>`) of a composed YAML
     node, at any depth: a value's text, whatever it looks like there — a `#`, a blank, a key — and never the document's
     own comment or line. The one walk every reader of a front matter's lines takes (comments here, core/merge.py,
-    core/translate.py)."""
-    out, todo = set(), [node] if node is not None else []
+    core/translate.py). A node an alias reaches again is walked once: an anchor may hold itself (`a: &x [*x]`)."""
+    out, seen, todo = set(), set(), [node] if node is not None else []
     while todo:
         n = todo.pop()
+        if id(n) in seen:
+            continue
+        seen.add(id(n))
         if isinstance(n, _yaml.ScalarNode) and n.style in ('|', '>'):
             out.update(range(n.start_mark.line + 1, n.end_mark.line + (1 if n.end_mark.column else 0)))
         elif isinstance(n, _yaml.MappingNode):
