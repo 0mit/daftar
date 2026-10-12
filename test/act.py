@@ -11,7 +11,7 @@ the gate's rule `line` at its commit, and where each run stands is read by bin/s
 
 Run: python3 test/act.py   (0 = green)
 """
-import json, os, shutil, socket, sys, tempfile
+import json, os, re, shutil, socket, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'test'))
@@ -130,6 +130,20 @@ def cannot(argv):
 
 sys.exit(W.main('stamp', {'plan': plan, 'check': check, 'apply': apply, 'verify': verify, 'restore': restore},
                 more={'note': note, 'cannot': cannot}))
+'''
+
+SCRIBE = r'''import json, os, sys
+sys.path.insert(0, os.path.join(os.getcwd(), 'bin'))      # the garden's own bin/: the release's library
+import walktool as W
+
+
+def plan(bean, course):           # what the run writes: given by the test, as a page's inputs would be
+    with open(os.path.join(os.environ['LIVE_DIR'], bean + '.write.json')) as fh:
+        W.plan_writes(json.load(fh))
+
+
+sys.exit(W.main('scribe', {'plan': plan, 'check': lambda b, c: None, 'apply': W.apply_writes,
+                           'verify': W.verify_writes, 'restore': W.restore_writes}))
 '''
 
 T = tempfile.mkdtemp(prefix='core-act-')
@@ -296,10 +310,92 @@ The tool.
     check("walktool: a save the gate refuses is the tool's refusal, said with what the gate said, exit 1, nothing committed",
           r.returncode == 1 and 'stamp: the save was refused:' in r.out
           and grow.run('git', 'rev-parse', 'HEAD', cwd=G).out.strip() == head, r.out[-400:])
-    grow.run('git', 'checkout', '-q', '--', 'beans/stamp-a.md', cwd=G)
+    grow.run('git', 'reset', '-q', '--hard', 'HEAD', cwd=G)     # a refused save leaves its entry and files staged
     r = grow.run(PY, 'tools/stamp.py', 'cannot', cwd=G)
     check("walktool: a tool that could not run says so, exit 2 (Refused(why, 2))",
           r.returncode == 2 and 'stamp: nothing here to run with' in r.out, r.out[-300:])
+
+    # ---- A PLAN THAT IS A WRITE (walktool's plan_writes, apply_writes, verify_writes, restore_writes): the tool says
+    #      what it would write, and the rest is the release's — written as shown, known by who ratified it, one save
+    write(G, 'tools/scribe.py', SCRIBE)
+    write(G, 'beans/scribe-tool.md', f'---\nbean: scribe-tool\nkind: program\ntitle: "scribe-tool"\nstatements:\n'
+          f'  - make: {{ by: sam, at: now }}\n  - be:   {{ by: self, at: "{HOST}:{G}/tools/scribe.py", as: location }}\n'
+          '---\nWhat writes a plan.\n')
+    write(G, 'mappings/action-scribe.md', WALK % ('action-scribe', 'action-scribe', 'a write made', 'scribe-tool'))
+    write(G, 'beans/kitty.md', '---\nbean: kitty\nkind: contract\ntitle: "kitty — what Sam keeps for the house"\n'
+          'statements:\n  - say:   { by: sam, at: now }\n  - own:   { by: sam, of: self }\n'
+          '  - pay:   { id: p0, by: sam, of: { count: "3", unit: EUR }, note: "a mistake" }\n'
+          '  - say:   { by: sam, of: [p0], at: now }\n'
+          '  - pay:   { id: p3, by: sam, of: { count: "4", unit: EUR } }\n'
+          '  - pay:   { id: p4, by: sam, of: { count: "6", unit: EUR } }\n'
+          '  - say:   { by: sam, of: [p3, p4], at: now }\n---\nThe kitty.\n')
+    for c in ('scribe-a', 'scribe-b', 'scribe-c'):
+        write(G, f'beans/{c}.md', f'---\nbean: {c}\nkind: document\ntitle: "{c}"\nstatements:\n  - say: {{ by: sam, at: now }}\n'
+              f'  - be: {{ id: run, by: self, at: action-scribe, as: order }}\n---\nA run.\n')
+    r = grow.run(PY, 'bin/save.py', 'sam', 'a walk whose plan is a write', '--body', '- action: wrote [[scribe-tool]], '
+                 '[[action-scribe]], [[kitty]], [[scribe-a]], [[scribe-b]] and [[scribe-c]]', cwd=G)
+    check("write: a third walk, whose tool says only what it would write", r.returncode == 0, r.out[-800:])
+    W1 = {'what': 'the kitty, put right', 'body': ['- action: the kitty put right'], 'beans': [
+        {'bean': 'kitty', 'remove': ['p0'], 'add': ['pay: { id: p1, by: sam, of: { count: "5", unit: EUR }, note: "the bread" }']},
+        {'bean': 'receipt-1', 'new': {'head': 'bean: receipt-1\nkind: document\ntitle: "receipt-1 — the bread\'s receipt"',
+                                     'body': 'The receipt.'}, 'add': ['own: { id: o1, by: sam, of: self }'],
+         'known': {'act': 'read', 'from': 'kitty', 'through': 'the paper slip'}}]}
+    open(os.path.join(LIVE, 'scribe-a.write.json'), 'w').write(json.dumps(W1))
+    grow.run(PY, 'bin/act.py', 'scribe-a', 'run', cwd=G)
+    shown_plan = next((text(G, os.path.join('captures', 'actions', c)) for c in
+                       sorted(os.listdir(os.path.join(G, 'captures', 'actions'))) if c.startswith('scribe-a.run.plan.')), '')
+    before = grow.run('git', 'rev-parse', 'HEAD', cwd=G).out.strip()
+    r = grow.run(PY, 'bin/act.py', 'scribe-a', 'run', '--ratify', 'sam', cwd=G)
+    kitty = text(G, 'beans/kitty.md')
+    log = grow.run('git', 'log', '--format=%s', f'{before}..HEAD', cwd=G).out.split('\n')
+    entry = grow.run('git', 'show', 'HEAD~1', '--', 'log/journal.md', cwd=G).out
+    check("write: the plan shown is the write, in words and as data, byte for byte what the person ratifies",
+          '  - kitty: pay#p0' in shown_plan and '  + kitty: pay: { id: p1,' in shown_plan
+          and '  + the bean receipt-1, made' in shown_plan and '-- the write, as data --' in shown_plan, shown_plan)
+    check("write: ratified, the release writes exactly the plan shown — one save of the write, known by who ratified it "
+          "(a `read` from its source where the plan says so), its entry naming each bean and what it took out — and the "
+          "engine's own save of the run after it",
+          'stopped at done' in r.out and 'id: p1' in kitty and 'id: p0' not in kitty and 'a mistake' not in kitty
+          and re.search(r'- say: \{ by: sam, of: \[p1\], at: "?\d{4}-', kitty) is not None
+          and re.search(r'- read: \{ by: sam, of: \[o1\], from: kitty, through: "the paper slip", at:', text(G, 'beans/receipt-1.md'))
+          is not None and log[1:2] == ['the kitty, put right'] and 'scribe-a run: ratified' in log[0]
+          and '[[kitty]] p0, and the say that knew only them' in entry and '[[receipt-1]]' in entry,
+          r.out[-800:] + str(log) + entry[-1200:])
+    check("...and the run's ratification is the engine's to save: the write's commit leaves the course's bean as it was",
+          grow.run('git', 'diff', '--name-only', 'HEAD~2', 'HEAD~1', cwd=G).out.split() == ['beans/kitty.md', 'beans/receipt-1.md',
+                                                                                             'log/journal.md']
+          or 'beans/scribe-a.md' not in grow.run('git', 'diff', '--name-only', 'HEAD~2', 'HEAD~1', cwd=G).out,
+          grow.run('git', 'diff', '--name-only', 'HEAD~2', 'HEAD~1', cwd=G).out)
+    plan_a = sorted(c for c in os.listdir(os.path.join(G, 'captures', 'actions')) if c.startswith('scribe-a.run.plan.'))[-1]
+    r = grow.run(PY, 'tools/scribe.py', 'restore', 'scribe-a', 'run', cwd=G,
+                 env=dict(grow.ENV, DAFTAR_ACTION_PLAN=os.path.join(G, 'captures', 'actions', plan_a)))
+    check("write: restore takes out what the plan added, in a save of its own — and says that what it took out is in git, "
+          "for a person to restate (exit 1)",
+          r.returncode == 1 and 'restored in part' in r.out and 'id: p1' not in text(G, 'beans/kitty.md')
+          and not os.path.exists(os.path.join(G, 'beans', 'receipt-1.md')) and 'id: p0' not in text(G, 'beans/kitty.md')
+          and grow.run(PY, 'bin/check.py', cwd=G).returncode == 0, r.out[-800:])
+    W2 = {'what': 'a write the gate refuses', 'beans': [{'bean': 'kitty', 'add': ['frobnicate: { id: f1, of: self }']}]}
+    open(os.path.join(LIVE, 'scribe-b.write.json'), 'w').write(json.dumps(W2))
+    grow.run(PY, 'bin/act.py', 'scribe-b', 'run', cwd=G)
+    k_before = text(G, 'beans/kitty.md')
+    r = grow.run(PY, 'bin/act.py', 'scribe-b', 'run', '--ratify', 'sam', cwd=G)
+    caps = ''.join(text(G, os.path.join('captures', 'actions', c)) for c in os.listdir(os.path.join(G, 'captures', 'actions'))
+                   if c.startswith('scribe-b.run.apply.'))
+    check("write: a write the gate refuses puts back every file it touched and unstages all: the run rolls back "
+          "(apply-failed), what the gate said in the apply's capture, nothing of it kept",
+          'stopped at rolled-back' in r.out and 'as: apply-failed' in text(G, 'beans/scribe-b.md')
+          and text(G, 'beans/kitty.md') == k_before and 'frobnicate' not in text(G, 'beans/kitty.md')
+          and 'nothing written' in caps and grow.run('git', 'status', '--porcelain', cwd=G).out.strip() == ''
+          and grow.run(PY, 'bin/check.py', cwd=G).returncode == 0, r.out[-800:] + caps[-800:])
+    W3 = {'what': 'half of what one act knows', 'beans': [{'bean': 'kitty', 'remove': ['p3']}]}
+    open(os.path.join(LIVE, 'scribe-c.write.json'), 'w').write(json.dumps(W3))
+    r = grow.run(PY, 'bin/act.py', 'scribe-c', 'run', cwd=G)
+    caps = ''.join(text(G, os.path.join('captures', 'actions', c)) for c in os.listdir(os.path.join(G, 'captures', 'actions'))
+                   if c.startswith('scribe-c.run.plan.'))
+    check("write: a plan that would take out part of what one knowing act knows is refused at the plan — a knowing act "
+          "is never rewritten — and nothing is changed",
+          'stopped at refused' in r.out and 'as: cannot-plan' in text(G, 'beans/scribe-c.md')
+          and 'knows p3, taken out, and p4, kept' in caps and 'id: p3' in text(G, 'beans/kitty.md'), r.out[-600:] + caps[-600:])
 except Exception as e:  # noqa: BLE001
     import traceback
     traceback.print_exc()
