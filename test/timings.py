@@ -8,7 +8,9 @@ test/weighing.yaml to order the working loop (D41).
 Every suite but test/site.py builds its own temporary gardens and writes nothing in the checkout, so they run N at a
 time (default 6); test/site.py rebuilds the pages inside the checkout, so it runs first, alone. The slowest measured
 start first, so the longest does not start last. A suite passes when it exits 0 and its last line says `0 failed` or
-`N/N checks passed`; `passed` and `failed` count its PASS and FAIL lines (or the last line's own counts).
+`N/N checks passed`; `passed` and `failed` count its PASS and FAIL lines (or the last line's own counts). Each runs
+with a temporary folder of its own as TMPDIR, and fails, naming what it left, where anything is left there when it
+ends: a suite removes the gardens it grew.
 
 `--status FILE` keeps FILE, as each suite ends, one JSON document of the run in progress — `total`, `done`, `passed`,
 `failed` (suites), `elapsed` and `left` (seconds; `left` estimated from the last measured line of each suite still to
@@ -16,7 +18,7 @@ run), `suites` ({suite: seconds}) and `verdicts` ({suite: passed|failed}) — wh
 `http` adapter as a `race` (test/viewcap.py draws one). This file is the maintainer's measurement, in the gate layer: it
 names no garden and no person.
 """
-import concurrent.futures, datetime, json, os, re, subprocess, sys, threading, time
+import concurrent.futures, datetime, json, os, re, shutil, subprocess, sys, tempfile, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TSV = os.path.join(ROOT, "test", "timings.tsv")
@@ -57,10 +59,20 @@ def counts(out, rc):
 
 
 def one(t):
-    t0 = time.time()
-    r = subprocess.run([sys.executable, t], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    """A suite run in a temporary folder of its own (TMPDIR): what it leaves there when it ends is a failure, named,
+    since a suite removes what it made (a garden grown in /tmp, run after run, fills the disk); then the folder goes."""
+    t0, tmp = time.time(), tempfile.mkdtemp(prefix="run-")   # short: a browser's socket path must fit 107 bytes
+    try:
+        r = subprocess.run([sys.executable, t], cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", env=dict(os.environ, TMPDIR=tmp))
+        left = sorted(os.listdir(tmp))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
     ok, p, f, last = counts(r.stdout, r.returncode)
-    return t, ok, time.time() - t0, p, f, last or (r.stderr.strip().splitlines() or ["(no output)"])[-1]
+    last = last or (r.stderr.strip().splitlines() or ["(no output)"])[-1]
+    if left:
+        ok, last = False, "%s; and it left in its TMPDIR: %s" % (last, ", ".join(left[:4]) + (" …" if len(left) > 4 else ""))
+    return t, ok, time.time() - t0, p, f, last
 
 
 def main(argv):
