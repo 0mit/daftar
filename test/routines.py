@@ -163,8 +163,8 @@ title: "{bid} — a server box restarts"
 statements:
   - read:   {{ by: sam, at: now }}
   - own:    {{ by: sam, of: self }}
-  - run:    {{ id: weekly-restart, by: box, of: routine-restart }}
-  - obligatory: {{ id: weekly-restart-due, of: weekly-restart, through: sam, clause: {{ due: "{due}", every: {{ of: time, in: iso-week, each: week, at: "{day}", lasts: {{ of: time, measure: {{ count: "30", unit: min }} }} }} }} }}
+  - run:    {{ id: restart-each-week, by: box, of: routine-restart }}
+  - obligatory: {{ id: restart-each-week-due, of: restart-each-week, through: sam, clause: {{ due: "{due}", every: {{ of: time, in: iso-week, each: week, at: "{day}", lasts: {{ of: time, measure: {{ count: "30", unit: min }} }} }} }} }}
   - need:   {{ id: services-up, by: self, of: "every service of the server runs" }}
   - meet:   {{ by: none-down, of: services-up }}
   - reckon: {{ id: none-down, reading: {{ what: "no service of the server is down (counted)", inputs: [ {{ name: server-services-down, origin: {{ act: read, nature: soma, by: restart-tool }}, quantity: number }} ], steps: [ {{ id: zero, op: constant, value: {{ count: "0", unit: "{{item}}" }} }}, {{ id: ok, op: compare, of: server-services-down, with: zero, is: at-most }} ] }} }}
@@ -317,7 +317,7 @@ A job cron runs.
     # ---- the reading
     r = rt('list', '--at', '2026-10-11 12:00+03:00', '--json')
     rows = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip().startswith('[') else []
-    a = next((x for x in rows if x['routine'] == 'server-a#weekly-restart'), {})
+    a = next((x for x in rows if x['routine'] == 'server-a#restart-each-week'), {})
     check("list: a routine is read — its machine, walk, schedule, next occurrence at its clock time in the garden's zone, "
           "its window", a.get('machine') == 'box' and a.get('walk') == 'routine-restart'
           and a.get('next') == '2026-10-18 05:45+03:00' and a.get('window') == '30 min' and a.get('zone') == 'Europe/Istanbul',
@@ -325,7 +325,7 @@ A job cron runs.
     check("list: who runs it is read from the garden — this machine's engine, by the grant; cron's job, by its presence; "
           "a walk nobody granted, nobody", a.get('runner') == "this machine's engine"
           and next((x['runner'] for x in rows if x['routine'] == 'box#cron-backup'), '').startswith('its register: ')
-          and next((x['runner'] for x in rows if x['routine'] == 'server-u#weekly-restart'), '') == 'nobody', rows)
+          and next((x['runner'] for x in rows if x['routine'] == 'server-u#restart-each-week'), '') == 'nobody', rows)
     check("list: its interlocks are the walk's needs a reading meets, its proof the server's own",
           [i['need'] for i in a.get('interlocks', [])] == ['no-sessions', 'no-open-files']
           and [p['need'] for p in a.get('proof', [])] == ['services-up'], a)
@@ -352,34 +352,34 @@ print(json.dumps({'five': [loc(b, 3) for b, e in five], 'hourly': [loc(b, 3) for
     r = rt('due', '--at', '2026-10-18 05:50+03:00', '--readings', rf, '--json')
     d = {x['routine']: x for x in json.loads(r.stdout)} if r.returncode == 0 else {}
     check("due: inside its window with someone signed in, it waits — which interlock, and the value read",
-          d.get('server-a#weekly-restart', {}).get('state') == 'waits'
-          and 'server-sessions = 2' in d.get('server-a#weekly-restart', {}).get('why', ''), r.out[-1200:])
+          d.get('server-a#restart-each-week', {}).get('state') == 'waits'
+          and 'server-sessions = 2' in d.get('server-a#restart-each-week', {}).get('why', ''), r.out[-1200:])
     rf0 = readings(os.path.join(T, 'r-quiet.json'))
     r = rt('due', '--at', '2026-10-18 05:50+03:00', '--readings', rf0, '--json')
     d = {x['routine']: x for x in json.loads(r.stdout)} if r.returncode == 0 else {}
     check("due: with nobody signed in and nothing open it is due; a routine of cron's is not this engine's",
-          d.get('server-a#weekly-restart', {}).get('state') == 'due'
+          d.get('server-a#restart-each-week', {}).get('state') == 'due'
           and d.get('box#cron-backup', {}).get('state') == "not this engine's", r.out[-1200:])
     r = rt('due', '--at', '2026-10-18 06:20+03:00', '--readings', rf0, '--json')
     d = {x['routine']: x for x in json.loads(r.stdout)} if r.returncode == 0 else {}
     check("due: after its window closes it is not due, and its next occurrence is said",
-          d.get('server-a#weekly-restart', {}).get('state') == 'not due'
-          and d.get('server-a#weekly-restart', {}).get('next') == '2026-10-25 05:45+03:00', r.out[-1200:])
+          d.get('server-a#restart-each-week', {}).get('state') == 'not due'
+          and d.get('server-a#restart-each-week', {}).get('next') == '2026-10-25 05:45+03:00', r.out[-1200:])
 
     # ---- the advance notice: the clause's `notice`, 36 hours before
     r = rt('tick', '--at', '2026-10-16 17:45+03:00', '--json')
     sa = text(G, 'beans/server-a.md')
     check("tick: 36 hours before its run (the clause's `notice`), the walk's tool tells the server's people, naming the "
           "run's own day — recorded as the machine's `produce` of its words; nothing else is done",
-          lv('notice') == 'server-a weekly-restart-20261018-0545' and '- produce: { id: weekly-restart-20261018-0545-notice' in sa
-          and 'falls on 20261018' in sa and 'id: weekly-restart-20261018-0545,' not in sa, r.out[-1200:] + sa[-800:])
+          lv('notice') == 'server-a restart-each-week-20261018-0545' and '- produce: { id: restart-each-week-20261018-0545-notice' in sa
+          and 'falls on 20261018' in sa and 'id: restart-each-week-20261018-0545,' not in sa, r.out[-1200:] + sa[-800:])
     r = rt('tick', '--at', '2026-10-16 17:45+03:00', '--json')
     check("tick: told once — the same minute again tells nobody twice", '"noticed"' not in r.out, r.out[-600:])
 
     # ---- the engine: waits, then runs
     live(sessions=2, open_files=0, services_down=0, after_down=0)
     r = rt('tick', '--at', '2026-10-18 05:46+03:00', '--json')
-    course = 'weekly-restart-20261018-0545'
+    course = 'restart-each-week-20261018-0545'
     sa = text(G, 'beans/server-a.md')
     check("tick: at its occurrence, someone signed in — the run is placed and waits at the walk's pause, citing "
           "interlock-held; nothing applied", r.returncode == 0 and f'id: {course}' in sa and 'as: interlock-held' in sa
@@ -402,8 +402,8 @@ print(json.dumps({'five': [loc(b, 3) for b, e in five], 'hourly': [loc(b, 3) for
     r = rt('tick', '--at', '2026-10-23 20:00+03:00', '--json')
     sa = text(G, 'beans/server-a.md')
     check("tick: a notice whose moment passed with no tick (the machine down) is given at the next tick before its run, "
-          "naming the run's own day, and said to be late", lv('notice') == 'server-a weekly-restart-20261025-0545'
-          and '- produce: { id: weekly-restart-20261025-0545-notice' in sa and '05:45+03:00 (late)' in sa, r.out[-1200:] + sa[-800:])
+          "naming the run's own day, and said to be late", lv('notice') == 'server-a restart-each-week-20261025-0545'
+          and '- produce: { id: restart-each-week-20261025-0545-notice' in sa and '05:45+03:00 (late)' in sa, r.out[-1200:] + sa[-800:])
 
     # ---- skipped when its window closes while waiting
     live(sessions=1)
@@ -561,7 +561,7 @@ print(json.dumps({'kept': kept == live, 'gone': gone, 'new': new}))"""
     check("leads: a routine's clause is no obligation lead — the machine keeps it, and a person is told on a crossing",
           not any(x['kind'] == 'obligation' for x in leads), [x for x in leads if x['kind'] == 'obligation'])
     s = grow.run(PY, 'bin/stale.py', cwd=G)
-    check("stale: a routine's clause is not warned of as expiring", 'weekly-restart-due' not in s.out
+    check("stale: a routine's clause is not warned of as expiring", 'restart-each-week-due' not in s.out
           and 'cron-backup-due' not in s.out, s.out[-800:])
     g = grow.run(PY, 'bin/check.py', cwd=G)
     check("the garden passes its gate after every run", g.returncode == 0 and '0 error(s)' in g.out, g.out[-800:])

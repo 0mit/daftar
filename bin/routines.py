@@ -16,9 +16,10 @@
 (`python` on Windows.) A ROUTINE IS NO NEW THING: it is what the law already says of a walk, a clause and a need
 (core/law/; MODEL.md: "Lines", "Agreements and money"). In the bean of the being it acts on:
 
-    - run:        { id: weekly-restart, by: <the machine that runs it>, of: <the walk> }
-    - obligatory: { id: weekly-restart-due, of: weekly-restart, through: <who asks it>, clause: { due: "2026-10-18 05:45",
-                    every: { of: time, in: iso-week, each: week, at: "7", lasts: { of: time, measure: { count: "30", unit: min } } } } }
+    - run:        { id: restart-each-week, by: <the machine that runs it>, of: <the walk> }
+    - obligatory: { id: restart-each-week-due, of: restart-each-week, through: <who asks it>,
+                    clause: { due: "2026-10-18 05:45", every: { of: time, in: iso-week, each: week, at: "7",
+                                                                lasts: { of: time, measure: { count: "30", unit: min } } } } }
 
 - WHAT runs is the walk (a mapping whose `step`s are its steps; bin/act.py runs it): its tool is what it `use`s.
 - WHEN: the clause's `due` is the first occurrence, a moment; `every` its recurrence (core/law/measures.yaml
