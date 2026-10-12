@@ -194,10 +194,14 @@ button per field.
 A value in one of the law's forms — what a clause holds beside its words, what a payment settles — is drawn and edited
 by its entries (`widgets/form.js`): its day in the reader's calendar, its repetition in their words, a choice of the
 bean's own clauses, never a text of JSON to type; what the form holds that no widget draws is written back as it was.
-Where a being is (`be`'s `at`) is a place (`widgets/place.js`), looked up as it is typed; on the sheet of a happening,
+Where a being is (`be`'s `at`) is a place (`widgets/place.js`), looked up as it is typed — one already said too, which
+is no history: another is picked in its stead; on the sheet of a happening,
 or of a being that holds an `attend`, and for a place held off git, the lookup is the machine's alone: where a person
 will be is never asked of a place service (design §12). A place picked from a source is saved with that source, and
-the write path knows it by a `read` (below).
+the write path knows it by a `read` (below). An area picked — a country, a city, a street, as its source names what it
+is, or a way or a relation of the map, or a gazetteer's feature, as the law's systems cover them — where the `be` says
+nothing of how it places, is placed `as: place`: an area holds many, and two bodies are not in one room only at a
+point (`core/law/core.yaml: rules[room]`).
 A page a `new` names opens an empty sheet of a kind, whose first Save mints the bean (`p-<8 hex>` for a person, titled
 by the id; `<kind>-<8 hex>` for another) and writes it whole — the gardener's alone, since no grant names a being not
 yet made.
@@ -409,7 +413,7 @@ copy of the release the garden runs, so a value is shown by the law the garden k
 | `lib/widgets/being.js` | being | a bean by its title, reached by its id |
 | `lib/widgets/exact.js` | number | sums of written amounts as fractions of two integers |
 | `lib/widgets/recurrence.js` | recurrence | a repetition said in the reader's words, calendar and digits — each week on Tuesday and Thursday, ninety minutes each time — and edited by its parts: the cell it repeats in, the places in it (a week's days as the reader's region begins a week), where it starts, how many times, how long each lasts; the time systems and the units of a length of time are the law's, sent by the host |
-| `lib/widgets/place.js` | place | where something is, taken in through a place lookup: suggestions as typed, each its own words and where it is — the garden's own places first (carried with a served page, `places`, only those its reader may read), then the host's (`state.places.here`), then a place service beyond the machine (`state.places.far`), never for a field the host seals; the reader's position only when they press its button. A pick lands as the being it is, or as `EPSG:4326;<lat>,<lon>` with its element (`osm:way/42`, `geonames:112931`) and the source it was read from; a coordinate is shown in the reader's digits with the accuracy the law states for its system (WGS 84, ±2 m) |
+| `lib/widgets/place.js` | place | where something is, taken in through a place lookup: suggestions as typed, each its own words and where it is — the garden's own places first (carried with a served page, `places`, only those its reader may read), then the host's (`state.places.here`), then a place service beyond the machine (`state.places.far`), never for a field the host seals; the reader's position only when they press its button. A pick lands as the being it is, or as `EPSG:4326;<lat>,<lon>` with its element (`osm:way/42`, `geonames:112931`) and the source it was read from, and whether it is an area; a coordinate is shown in the reader's digits with the accuracy the law states for its system (WGS 84, ±2 m) |
 | `lib/widgets/form.js` | a form's value | what a clause holds beside its words (`clause`), what a payment settles (`settlement`): drawn by its entries, each attribute by the widget that implements its value, as the host resolves it from the law (`view_engraved.form_def`); what it cannot draw is kept as written |
 | `lib/widgets/safe.js` | — | `h```: the one way HTML is built; `mount`: the one door into a page |
 | `lib/widgets/locale.js` | — | the reader's digits, separators, calendar, direction and words, all CLDR's through `Intl` |

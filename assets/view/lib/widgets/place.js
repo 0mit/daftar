@@ -10,7 +10,9 @@
 // (`EPSG:4326;<lat>,<lon>`, the ensemble the law states accurate to 2 m), with the identifier it was read from beside
 // it (`osm:way/42`, `geonames:112931`) and the source it was read from, for the save's `read` — never as a `name`:
 // a map's element says which object was meant, never which being. A position typed with its system is taken as
-// written; a bare coordinate is refused, since a coordinate is never bare.
+// written; a bare coordinate is refused, since a coordinate is never bare. AN AREA picked — a country, a city, a street
+// — on a `be` that says nothing of how it places is placed `as: place`: an area holds many, and two bodies are not in
+// one room only at a point (the room rule; each system's `covers`).
 //
 // NOTHING ABOUT WHERE A PERSON WILL BE IS SENT: a field the host marks `sealed` (a happening's place, a place held
 // off git) is looked up on the machine alone, and the place service beyond it is never asked.
@@ -27,6 +29,12 @@ const COORD = /^([A-Z][A-Z0-9_]*:[0-9]+(?:\+[0-9]+)?);(-?\d+(?:\.\d+)?),(-?\d+(?
 const OSM = /^osm:(node|way|relation)\/([1-9][0-9]*)$/;
 const GEONAMES = /^geonames:([1-9][0-9]{0,9})$/;
 const TAGGED = /^[A-Za-z][A-Za-z0-9_-]*:\S/;
+// AN AREA, which holds many, and no point: what its source says it is — Photon's types and a place bundle's kinds — or
+// its identifier, as the law's systems cover: a way or a relation of the map, a gazetteer's feature (`osm`, `geonames`).
+// A house, a shop, a node: a point, or not known.
+const AREAS = new Set(['country', 'state', 'province', 'region', 'county', 'municipality', 'city', 'town', 'village',
+  'district', 'borough', 'suburb', 'locality', 'neighbourhood', 'quarter', 'street']);
+const AREA_ELEMENT = /^(osm:(way|relation)\/|geonames:)/;
 const BARE = /^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/;
 
 // what one position says, for showing it
@@ -69,6 +77,7 @@ export function own(query, places, limit = 8) {
 //   source   own (the garden's), here (this machine's), far (a place service beyond it)
 //   at       the positions that land; read: {from, through}, the source the place was read from (none for the
 //            garden's own: it is the being itself)
+//   area     it is an area (AREAS); never said of the garden's own, a being, whose position no room rule reads
 function fromOwn(p) {
   return {source: 'own', key: 'own:' + p.id, label: p.title || p.id, detail: p.detail || '', what: p.kind || '',
           point: p.point || null, osm: p.osm || '', at: [p.id], read: null};
@@ -90,6 +99,7 @@ function fromAnswer(a, source, credit) {
   const named = a.osm ? 'OpenStreetMap ' + a.osm : a.geonames ? 'GeoNames ' + a.geonames : (credit.name || 'a place search');
   return {source, key: a.osm ? 'osm:' + a.osm : a.geonames ? 'geonames:' + a.geonames : source + ':' + (a.code || a.label),
           label: a.label || '', detail: a.detail || '', what: a.kind || '', point, osm: a.osm || '', at,
+          area: AREAS.has(a.kind || '') || at.some(p => AREA_ELEMENT.test(p)),
           read: point ? {from: credit.url ? {someone: 'org', at: 'uri:' + credit.url} : {someone: 'org'},
                          through: named + ', ' + (source === 'here' ? 'as this machine\u2019s place search holds it'
                            : 'as a place service beyond this machine found it') + (credit.attribution ? ' (' + credit.attribution
@@ -142,12 +152,13 @@ export function show(v, o = {}) {
 }
 export const text = v => '\u2068' + (Array.isArray(v) ? v : [v]).join(' \u00B7 ') + '\u2069';
 
-// What a field holds when it is saved: a suggestion picked (its positions, and the source it was read from), or what
-// was typed — a position with its system, as written; a bare coordinate, never. options: required; free (a position
-// of any system may be typed, and the gate judges it: a `be` that is a time, not a place)
+// What a field holds when it is saved: a suggestion picked (its positions, the source it was read from, and whether it
+// is an area), or what was typed — a position with its system, as written; a bare coordinate, never. options: required;
+// free (a position of any system may be typed, and the gate judges it: a `be` that is a time, not a place)
 export function take(input, o = {}) {
   if (input && typeof input === 'object' && Array.isArray(input.at)) {
-    return input.at.length ? {value: input.at.slice(), read: input.read || null} : {error: say('place-nowhere', o)};
+    return input.at.length ? Object.assign({value: input.at.slice(), read: input.read || null}, input.area ? {area: true} : {})
+      : {error: say('place-nowhere', o)};
   }
   const s = toAscii(String(input ?? '').trim());
   if (!s) return o.required ? {error: say('required', o)} : {value: []};
@@ -216,7 +227,7 @@ export function wire(root, sources = {}, o = {}) {
   function pick(i) {
     const s = found[i];
     if (!s) return null;
-    kept.value = JSON.stringify({at: s.at, read: s.read});
+    kept.value = JSON.stringify(Object.assign({at: s.at, read: s.read}, s.area ? {area: true} : {}));
     input.value = s.label;
     list.hidden = true; input.setAttribute('aria-expanded', 'false');
     return s;

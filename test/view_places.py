@@ -16,7 +16,11 @@ which Sam attends, says when; a page draws a sheet of the café and of the meeti
                 on the café's sheet, a `be` added and «فلسطین» typed, the machine's street offered with its main and
                 secondary line, picked; Save sends the place as a coordinate, latitude first, with its element and the
                 source it was read from; the coordinate shown in the reader's digits, left to right in its isolate; on the
-                meeting's sheet, its place looked up here alone — the place service beyond the machine never asked
+                meeting's sheet, its place looked up here alone — the place service beyond the machine never asked; on
+                the other café's sheet, the place it already says is edited by the same lookup, and another picked in
+                its stead is sent as a change of that statement; on
+                the café's sheet again, a `be` that says nothing of how it places: the street picked, an area, is sent
+                `as: place`, and a house at a node of the map, a point, as the person left it
   the write     that add, through the view's one write path (view_write), lands as the law writes a place: the
                 coordinate and the element in one `be`, known by Sam's `read` from the map, through its words; the gate
                 passes it
@@ -128,7 +132,7 @@ A page.
           "one element both standing", rc == 0 and '0 error(s)' in out, out[-1500:])
 
     # ------------------------------------------------------------------ the reading
-    R = py("{'cafe': ve.sheet('cafe-a', may), 'meeting': ve.sheet('meeting', may), 'settings': ve.settings(), "
+    R = py("{'cafe': ve.sheet('cafe-a', may), 'cafeb': ve.sheet('cafe-b', may), 'meeting': ve.sheet('meeting', may), 'settings': ve.settings(), "
            "'places': ve.places(may), 'closed': ve.places(lambda act, bean, positions=None: bean == 'cafe-b')}")
     own = {p.get('id'): p for p in R.get('places') or []}
     check("the page carries the garden's own places, each by its title with its coordinate and its element; a being that "
@@ -146,7 +150,7 @@ A page.
 
     # ------------------------------------------------------------------ a browser
     browser = next((b for b in ('chromium', 'chromium-browser', 'google-chrome', 'google-chrome-stable') if shutil.which(b)), None)
-    body = None
+    body, B = None, {}
     if not browser:
         print("NOTE  the sheets were not drawn in a browser: none on this machine")
     else:
@@ -159,9 +163,12 @@ A page.
                             'point': [35.6976, 51.4023], 'osm': 'way/42'}],
                 'sources': [{'name': 'OpenStreetMap', 'licence': 'ODbL-1.0', 'attribution': '© OpenStreetMap contributors',
                              'url': 'https://www.openstreetmap.org/copyright'}]}
+        house = dict(here, places=[{'code': 'zz-tehran-palestine-12', 'label': 'پلاک ۱۲', 'detail': 'فلسطین، تهران',
+                                    'kind': 'house', 'point': [35.6977, 51.4024], 'osm': 'node/77'}])
         page = """<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>%(css)s
 body{font:18px system-ui,'Noto Sans Arabic',sans-serif}</style></head><body><div id="cafe" class="vw" dir="rtl"></div>
-<div id="meeting" class="vw" dir="rtl"></div><div id="shown" dir="rtl"></div><script>%(js)s</script><script>
+<div id="meeting" class="vw" dir="rtl"></div><div id="shown" dir="rtl"></div>
+<div id="cafeb" class="vw" dir="rtl"></div><div id="cafe2" class="vw" dir="rtl"></div><div id="cafe3" class="vw" dir="rtl"></div><script>%(js)s</script><script>
 const SKIP = /[\\u200e\\u200f\\u061c\\u2066-\\u2069\\u202a-\\u202e]/;
 function visual(el) {
   const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), glyphs = [];
@@ -176,7 +183,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const out = {errs: [], asked: {here: [], far: []}};
 const E = {settings: Object.assign({}, %(settings)s, {garden: {lang: 'fa'}}), names: {}, places: %(places)s,
            beings: [{id: 'self', title: 'self'}]};
-const places = {here: (q, o) => { out.asked.here.push([q, o]); return Promise.resolve(%(here)s); },
+const places = {here: (q, o) => { out.asked.here.push([q, o]); return Promise.resolve(q.includes('پلاک') ? %(house)s : %(here)s); },
                 far: (q, o) => { out.asked.far.push([q, o]); return Promise.resolve({places: [], sources: [], sent: true}); }};
 window.addEventListener('error', e => out.errs.push(String(e.message)));
 (async () => {
@@ -214,6 +221,33 @@ window.addEventListener('error', e => out.errs.push(String(e.message)));
     if (mi) { mi.value = 'فلسطین'; mi.dispatchEvent(new Event('input')); }
     await sleep(400);
     out.farAfter = out.asked.far.length;
+    // A PLACE ALREADY SAID is a place to change, by the lookup: café B's street, and the house picked in its stead
+    { const eb = document.getElementById('cafeb');
+      A.sheet(eb, %(cafeb)s, t({write: body => { out.changed = body; return new Promise(() => {}); }}), null);
+      eb.querySelector('[data-do="edit"]').click();
+      const st = eb.querySelector('[data-fact="be#where"]'), field = st && st.querySelector('.w-place-input');
+      out.existingField = !!field;
+      if (field) {
+        field.value = 'پلاک'; field.dispatchEvent(new Event('input'));
+        await sleep(400);
+        st.querySelector('.w-place-list [role="option"]').click();
+        eb.querySelector('[data-do="save"]').click();
+      } }
+    // A `be` THAT SAYS NOTHING OF HOW IT PLACES: an area picked is placed as a place; a point as the person left it
+    for (const [id, q, key] of [['cafe2', 'فلسطین', 'area'], ['cafe3', 'پلاک', 'point']]) {
+      const el = document.getElementById(id);
+      A.sheet(el, %(cafe)s, t({write: body => { out[key] = body; return new Promise(() => {}); }}), null);
+      el.querySelector('[data-do="edit"]').click();
+      el.querySelector('[data-add="be"]').click();
+      const row = el.querySelector('li.eg-added[data-verb="be"]');
+      row.querySelector('select[name$=".by"]').value = 'self';
+      const how = row.querySelector('select[name$=".as"]'); out[key + 'As'] = how ? how.value : null;
+      const field = row.querySelector('.w-place-input');
+      field.value = q; field.dispatchEvent(new Event('input'));
+      await sleep(400);
+      row.querySelector('.w-place-list [role="option"]').click();
+      el.querySelector('[data-do="save"]').click();
+    }
   } catch (e) { out.errs.push('driver: ' + e.message + ' ' + (e.stack || '').split('\\n')[1]); }
   const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = JSON.stringify(out); document.body.appendChild(pre);
 })();
@@ -223,8 +257,9 @@ window.addEventListener('error', e => out.errs.push(String(e.message)));
             fh.write(page % {'css': view_widgets.css() + open(os.path.join(LIB, 'view_engraved.css'), encoding='utf-8').read(),
                              'js': js, 'settings': json.dumps(R.get('settings') or {}, ensure_ascii=False),
                              'places': json.dumps(R.get('places') or [], ensure_ascii=False),
-                             'here': json.dumps(here, ensure_ascii=False),
+                             'here': json.dumps(here, ensure_ascii=False), 'house': json.dumps(house, ensure_ascii=False),
                              'cafe': json.dumps(R.get('cafe') or {}, ensure_ascii=False),
+                             'cafeb': json.dumps(R.get('cafeb') or {}, ensure_ascii=False),
                              'meeting': json.dumps(R.get('meeting') or {}, ensure_ascii=False)})
         r = subprocess.run([browser, '--headless=new', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=10000',
                             '--dump-dom', 'file://' + path], capture_output=True, text=True, encoding='utf-8', errors='replace',
@@ -258,6 +293,25 @@ window.addEventListener('error', e => out.errs.push(String(e.message)));
         check("on the meeting's sheet — a happening, attended — its time stays a time, and a place added to it is looked "
               "up on the machine alone: the field is sealed, and the place service beyond it is never asked",
               B.get('whenIsNoPlace') is True and B.get('sealedField') is True and B.get('farBefore') == B.get('farAfter') == 1, B)
+        ch = (B.get('changed') or {}).get('ops') or []
+        check("A PLACE ALREADY SAID is a place to change: café B's `be` is edited by the place lookup, not shown as the law "
+              "writes it, and the house picked replaces the street — sent as a change of that statement, as a location "
+              "still, with the source it was read from",
+              B.get('existingField') is True and len(ch) == 1 and ch[0].get('op') == 'change' and ch[0].get('key') == 'be#where'
+              and (ch[0].get('roles') or {}).get('at') == ['EPSG:4326;35.6977,51.4024', 'osm:node/77']
+              and (ch[0].get('roles') or {}).get('as') == 'location' and bool(ch[0].get('read')),
+              (B.get('existingField'), B.get('changed')))
+        aops, pops = (B.get('area') or {}).get('ops') or [], (B.get('point') or {}).get('ops') or []
+        check("AN AREA PICKED on a `be` that says nothing of how it places — a street, a way of the map — is sent placed as "
+              "a place, which takes no room: an area holds many",
+              B.get('areaAs') == '' and len(aops) == 1 and (aops[0].get('roles') or {}).get('as') == 'place'
+              and (aops[0].get('roles') or {}).get('at') == ['EPSG:4326;35.6976,51.4023', 'osm:way/42'],
+              (B.get('areaAs'), B.get('area')))
+        check("...a point picked — a house at a node of the map — is sent as the person left it, saying nothing of how; and "
+              "where the person said `as: location`, the street picked stays a location",
+              B.get('pointAs') == '' and len(pops) == 1 and 'as' not in (pops[0].get('roles') or {})
+              and (pops[0].get('roles') or {}).get('at') == ['EPSG:4326;35.6977,51.4024', 'osm:node/77']
+              and bool(ops) and (ops[0].get('roles') or {}).get('as') == 'location', (B.get('pointAs'), B.get('point'), ops))
         if ops and (ops[0].get("roles") or {}).get("as") != "location":
             ops[0].setdefault('roles', {})['as'] = 'location'
 
