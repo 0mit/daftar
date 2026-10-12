@@ -1665,18 +1665,9 @@ def comments(head):
     an item whose first value ends in a full stop or holds a lone bracket; the top-level key is enough here, where the
     comment is kept in `details.comments` and counted."""
     root = yaml.compose(head, Loader=yaml.BaseLoader)
-    spans, block = [], set()
+    spans, block = [], dmparse.block_lines(root)
     for k, v in (root.value if isinstance(root, yaml.MappingNode) else []):
         spans.append((k.start_mark.line, v.end_mark.line, k.value))
-        todo = [v]
-        while todo:
-            n = todo.pop()
-            if isinstance(n, yaml.ScalarNode) and n.style in ('|', '>'):
-                block.update(range(n.start_mark.line + 1, n.end_mark.line + (1 if n.end_mark.column else 0)))
-            elif isinstance(n, yaml.MappingNode):
-                todo += [x for kv in n.value for x in kv]
-            elif isinstance(n, yaml.SequenceNode):
-                todo += n.value
     lines = head.split('\n')
 
     def key_at(i):

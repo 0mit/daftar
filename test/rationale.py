@@ -374,6 +374,13 @@ except subprocess.TimeoutExpired:
 check("a comment beside an item named by a sentence, or holding a lone bracket, is read, and the reading ends",
       _got[0] == 0 and _got[1] == str([['steps[mount the copy.]', 'steps'], ['steps[a [bracket]', 'steps'],
                                         ['risks[it fails.]]', 'risks'], ['key.sub', 'key']]), _got)
+_fm = ('title: a\ndetails:\n  lit: |\n    # not a comment\n    two\n\n    three\n  fold: >-\n    a # still text\n    b\n'
+       'steps:\n  - |\n    # step text\n  - plain   # a comment\nkeep: |+\n  k\n\nnote: x   # another\n')
+_bl = sorted(dmparse.block_lines(dmparse._yaml.compose(_fm, Loader=dmparse._yaml.BaseLoader)))
+check("the lines inside a block scalar, at any depth, are the value's text — read once, by bin/parse.py block_lines, for "
+      "the comments here, a merge's loose lines and a translation's comments — and only the lines outside hold a comment",
+      _bl == [3, 4, 5, 6, 8, 9, 12, 15, 16]
+      and [(c[0], c[2]) for c in dmparse.comments(_fm)] == [(13, 'a comment'), (17, 'another')], (_bl, dmparse.comments(_fm)))
 
 print("\nrationale: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)
