@@ -251,6 +251,50 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.5** (2026-10-12, daftar v2.5.0, human-ratified rule-changes: the law's words in Persian, confirmed by the
+  operator, #141; a handplace's pages, under the view-handplace design ratified 2026-10-11, #152; the sheet in its
+  reader's words, each reader's way of reading and the places fetched from GeoNames and OpenStreetMap, ratified
+  2026-10-12, #155, #158, #157; the room rule, "Law change now", #165; the walk tool, "Ratify #168"; a garden's own
+  crosswalks, "Ratify D1b", #177; the time-off type and a grant's window, as recommended on the shadow's decisions,
+  #179, #181; one reader of what is in force, approved, #180) — **the handplace is its pages, read in each reader's
+  words; places are fetched and a room is told from an area; and what is in force is read once.** MINOR: nothing a
+  garden could write under core 2.4 is refused.
+  - The view (the handplace):
+    - A garden's handplace is its page beans, several in its order, and a table of a reading needs no module (#152).
+    - The law's words a page shows are named in nine languages; Persian is confirmed and the other eight are proposed
+      (#141). A sheet shows each fact by its page's word, with no id, in the reader's calendar and digits (#155).
+    - Each reader keeps their own way of reading, one BCP 47 tag kept with their account on the host and never in the
+      garden (#158), written atomically (#172).
+    - On a sheet (not rule-changes): a form's value drawn by its entries, such as a clause's day and repetition or a
+      payment's settlement (#145); a being's details, kept whole (#147); its tags as a set of words (#148); a queue's
+      leads and a timeline's sessions in the reader's language and calendar (#144); a held person's name and contact
+      opened only to whom they are opened by name, by the host that keeps them, while their consent stands (#149). The
+      runtime escapes as `widgets/safe.js` does (#160).
+  - Places:
+    - GeoNames' and OpenStreetMap's places are fetched a country at a time, and a GeoNames feature is a position beside
+      a map's element (#157). The place widget suggests as typed, the garden's own places first, and never sends a
+      whereabouts (#159); an area picked where a `be` says nothing of how it places is placed `as: place` (#166).
+    - Two bodies are not in one room at a point, but an area holds many, and each place system says which it names
+      (#165): two people placed in one city are no longer refused.
+  - Walks and their tools: the tool side of a walk is in the release once, and a tool keeps only its own steps (#168).
+  - Crosswalks and what is in force:
+    - A garden's own crosswalk rows in VOCAB.md, in the core's form, read by the one reader beside the standard's
+      (#177).
+    - Odoo's time-off type (`hr.leave.type`) is a crosswalk row: an absence says which allowance it uses, and a row may
+      select what reaches it (`reached`) (#179).
+    - What is in force is read once, in `core/inforce.py`: a path reads only statements that hold, and a crosswalk row
+      may name statements in force as its records (`statements`, `named_in`) (#180).
+  - Grants: a grant may hold only in a recurring window (`window`), read at a moment in the garden's zone, and a
+    recurrence's place may carry a time of day (`5T17:45`) (#181).
+  - Tools, tests and guards (not rule-changes): a notice is read in the law's units (#154); one terminal escaper (#153);
+    a crossing keeps what its reading saw, in words (#156); one reader of a garden's pin, which also reads a GARDEN.md
+    holding a byte that is not UTF-8 (#161, #171); one atomic write (#163); `bin/dmupgrade` ends adoption and a move to
+    a release one way (#164); one walk for the lines inside a block scalar (#167); suites leave nothing in /tmp (#169);
+    `bin/where` resolves a position written with its system (#173); the bean splitter's vectors, a byte-order mark
+    included (#162, #174); the view bundle deploys what the monitor's settings say (#170); a reading's detail reaches git
+    with the crossing's note (#175); `daftard` and `ups` are public words, and the examples take names no garden gives
+    (#176, #178).
+
 - **core 2.4** (2026-10-11, daftar v2.4.0, human-ratified rule-changes: the units ladder, "yes all recommended", and
   each PR read by the operator, "yes merge all four as CI passes", #138, #140, #142 and #143; the seventh role's word,
   "yes make it ὡς", #146) — **four more standards' codes read as the law's units, and the role `as` named for
