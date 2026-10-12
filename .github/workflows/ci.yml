@@ -111,6 +111,8 @@ jobs:
         run: python3 test/leads.py
       - name: "core_crosswalks: Odoo's company and department records read from a garden's statements, the one reader, and crosswalks out of form refused"
         run: python3 test/core_crosswalks.py
+      - name: "core_inforce: what is in force, read once — a statement while it holds, the decisions in force on a walk, what ends what, a use's standing — and the crosswalks that read through it"
+        run: python3 test/core_inforce.py
       - name: "act: an action run on the law's own walk — plan, show, check, a person's ratification, apply, verify; refused and rolled back with their reasons"
         if: github.event_name == 'workflow_dispatch'   # the whole list: its commits wait for the minute to turn
         run: python3 test/act.py

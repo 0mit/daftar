@@ -31,14 +31,29 @@
 #     chain: true                      the first record of that model reached by following the path again and again
 #   along: <path>, join: "<sep>"       the titles reached by following the path while each is a record of this row's
 #                                      model, from the farthest down to this one, joined
+#   map: { <value>: <value> }         ...the value read, written as the system writes it (one it does not map: false)
+# WHAT IS IN FORCE, read by core/inforce.py, the one reader of it: every path reads only statements that hold (their
+# `while`). A `statements` form names statements in force, wherever they are written:
+#   statements: { verb: <verb>, with: "<role>=<value>,…", naming: <role>, in_force_on: <walk>, ended_by: <verb>,
+#                 standing: true }
+#     of that verb, the filters allowing, naming the bean read for in `naming`; among the decisions in force on the walk
+#     (where `in_force_on` says one); not ended by a statement of `ended_by` that holds (its day come); and (`standing`)
+#     while a permitted of it holds and no forbidden of it does.
+#   A ROW whose records are statements says `statements` in place of `kind` and `select`: one record each, numbered by
+#     `<bean>#<id>`, its fields reading the statement's own roles (`from: <role>`).
+#   A SELECT `named_in: <statements form>` keeps the beans such a statement names. (A path reads beans, so no `within`
+#     or `reached` names a row whose records are statements.)
+#   A FIELD `statements: <form>` reads the role `from` of each that names the bean (with `model`, their records, `many`
+#     unless it says otherwise), or `exists: true`, whether any is in force.
 # What the garden does not say, no record has: the field is empty (false, or no records).
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 # A GARDEN'S OWN ROWS stand in its VOCAB.md (`crosswalks`), in this form, read by the one reader beside these: never a
 # name of these, nor a model one of these crosses in its system and series. A row of the garden's is used where a bean
 # of its kind is, or says why it is vacant (`vacant: <why>`). A row that proves general is proposed here.
 forms:
-  crosswalk: { crosswalk: required, system: required, series: required, model: required, kind: required, select: optional, fields: required, meaning: required, vacant: optional }
-  field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional, held: optional, many: optional, position: optional, stands: optional }
+  crosswalk: { crosswalk: required, system: required, series: required, model: required, kind: optional, statements: optional, select: optional, fields: required, meaning: required, vacant: optional }
+  field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional, held: optional, many: optional, position: optional, stands: optional, map: optional, statements: optional, exists: optional }
+  statements: { verb: required, with: optional, naming: optional, in_force_on: optional, ended_by: optional, standing: optional }
 crosswalks:
   - crosswalk: odoo-17.0-res.company
     system: odoo

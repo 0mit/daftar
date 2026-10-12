@@ -13,6 +13,10 @@ moment-to`: an extent's first or last day, the days it spans, or the first or la
 zone, given in UTC), the records of a model a path reaches (`many`), or where the bean's course stands on its walk, by
 the walk's own form (`stands`: no move yet, a step, a final step, an exit).
 
+WHAT IS IN FORCE is read by core/inforce.py, the one reader of it: a path reads only statements that hold (their
+`while`), and a `statements` form names the statements in force wherever they are written — one record each, the beans
+they name, or (a field) what they say of the bean read. core/law/crosswalks.yaml says the forms.
+
 A PATH MAY RUN THROUGH BEANS: `agree[as=employee].by/title` is the title of the bean the first step reaches. A filter
 may name alternatives, `[by=tr-tckn|ir-national-code]`, so no one country's numbers stand above another's. A step that
 names a statement (`<bean>#<id>`) reaches that statement: the next step, where it is of that statement's verb, reads it
@@ -37,6 +41,7 @@ import re
 
 from core import engine
 from core.check import garden_law
+from core.inforce import InForce
 
 PATH = re.compile(r'^(?P<verb>[a-z][a-z-]*)(\[(?P<filters>[a-z-]+=[^,\]]+(,[a-z-]+=[^,\]]+)*)\])?\.(?P<role>[a-z]+)$')
 OWN = ('title', 'summary', 'bean')
@@ -71,26 +76,28 @@ def steps(path):
     return out + [cur]
 
 
-def follow(bean, path, garden=None, unseal=None, held=False, every=False):
+def follow(bean, path, garden=None, unseal=None, held=False, every=False, holds=None):
     """What the path reads, from the bean: its title, summary or id, or the role of its first own statement of the verb
     that the filters allow; through each step but the last, what that step reaches (in `garden`, a {id: bean}) — a bean,
     or a statement in one (`<bean>#<id>`), and then the next step, where it is of that statement's verb, reads that
     statement alone (of another verb, the bean it is in) — None where any step reaches none. `held`: the last step reads
-    sealed statements only, through `unseal`. `every`: the last step's role in each statement it reads, a list."""
+    sealed statements only, through `unseal`. `every`: the last step's role in each statement it reads, a list. `holds`
+    (bean id, roles) -> bool: a statement it says no of is passed over at every step, as if it were not written
+    (core/inforce.py)."""
     *through, last = steps(path)
     named = None                                        # the statement the step before reached, where it named one
     for step in through:
-        nxt = read_step(bean, step, named)
+        nxt = read_step(bean, step, named, holds=holds)
         bid, _, named = nxt.partition('#') if isinstance(nxt, str) else (None, '', '')
         bean = (garden or {}).get(bid) if bid else None
         if bean is None:
             return [] if every else None
-    return read_step(bean, last, named or None, unseal, held, every)
+    return read_step(bean, last, named or None, unseal, held, every, holds)
 
 
-def read_step(bean, step, named=None, unseal=None, held=False, every=False):
+def read_step(bean, step, named=None, unseal=None, held=False, every=False, holds=None):
     """What one step of a path reads from the bean (`follow`): where the step before named a statement of the bean
-    (`named`, its id) of this step's verb, that statement alone."""
+    (`named`, its id) of this step's verb, that statement alone; a statement `holds` says no of, never."""
     p = parse_path(step)
     if p is None:
         v = None if held else (bean.id if step == 'bean' else bean.header.get(step))
@@ -100,6 +107,8 @@ def read_step(bean, step, named=None, unseal=None, held=False, every=False):
     out = []
     for _i, v, r in ([hit] if hit is not None and hit[1] == verb else bean.items):
         if v != verb or ('held' in r) != bool(held):
+            continue
+        if holds is not None and not holds(bean.id, r):
             continue
         if held:
             r = unseal(bean.id, v, r) if unseal else None
@@ -179,7 +188,8 @@ class Reader:
     def __init__(self, root, system, series, law=None, garden=None, unseal=None):
         self.law = law or garden_law(root)
         self.G = garden or engine.Garden.read(root)
-        self.unseal = unseal
+        self.F = InForce(root, self.G, self.law)        # what is in force: every statement it reads holds, and those
+        self.unseal = unseal                            # a `statements` form names are read through it
         self.zone = self.G.zone or zone_of(root)
         rows = [r for r in getattr(self.law, 'crosswalks', {}).values()
                 if str(r.get('system')) == system and str(r.get('series')) == series]
@@ -201,6 +211,11 @@ class Reader:
         r = self.row(model)
         sel = r.get('select') or {}
         out = {}
+        if isinstance(r.get('statements'), dict):      # A RECORD A STATEMENT: each in force, keyed `<bean>#<id>`
+            for bid, roles in self.F.matching(r['statements']):
+                if roles.get('id'):
+                    out[f"{bid}#{roles['id']}"] = (self.G.beans[bid], roles)
+            return self._number(model, out)
         for bid in sorted(self.G.beans):
             b = self.G.beans[bid]
             if b.kind != r.get('kind') or getattr(b, 'unread', False):
@@ -213,13 +228,18 @@ class Reader:
                 continue
             if 'reached' in sel and bid not in self.reached(sel['reached']['along'], sel['reached']['model']):
                 continue
+            if 'named_in' in sel and not self.F.matching(sel['named_in'], naming=bid):
+                continue
             out[bid] = b
+        return self._number(model, out)
+
+    def _number(self, model, out):
         ids = {}
-        for bid in out:
-            n = number(model, bid)
+        for key in out:
+            n = number(model, key)
             if n in ids:
-                raise Refused(f"{model}: {ids[n]} and {bid} meet at one record number; rename one of them")
-            ids[n] = bid
+                raise Refused(f"{model}: {ids[n]} and {key} meet at one record number; rename one of them")
+            ids[n] = key
         self._selected[model] = out
         return out
 
@@ -238,30 +258,56 @@ class Reader:
 
     def reached(self, path, model):
         """{bean id}: the beans the records of the model reach by the path, through any of their statements its last
-        step reads — an employment holds several allowances, and reaches each one's kind of time off."""
+        step reads (each holding, as every path reads) — an employment holds several allowances, and reaches each one's
+        kind of time off."""
         if (path, model) not in self._reached:
             self._reached[(path, model)] = {v.split('#', 1)[0] for o in self.selected(model).values()
                                             for v in self.follow(o, path, every=True) if isinstance(v, str)}
         return self._reached[(path, model)]
 
     def follow(self, bean, path, held=False, every=False):
-        """What a path reads from a bean of this garden (`follow`), through the beans it holds."""
-        return follow(bean, path, self.G.beans, self.unseal, held, every)
+        """What a path reads from a bean of this garden (`follow`), through the beans it holds: statements that hold."""
+        return follow(bean, path, self.G.beans, self.unseal, held, every, lambda bid, r: self.F.holds(bid, r) is True)
 
     def display(self, model, bid):
         rec = self.record(model, bid, fields=('display_name', 'name'))
         return rec.get('display_name') or rec.get('name') or bid
 
     def record(self, model, bid, fields=None):
-        r, b = self.row(model), self.G.beans[bid]
+        r = self.row(model)
+        b, roles = self.selected(model)[bid] if isinstance(r.get('statements'), dict) else (self.G.beans[bid], None)
         out = {'id': number(model, bid)}
         for name, spec in (r.get('fields') or {}).items():
             if fields is not None and name not in fields:
                 continue
-            out[name] = self.field(model, b, spec)
+            v = self.field(model, b, spec, roles)
+            out[name] = (spec['map'].get(str(v), False) if isinstance(spec.get('map'), dict) and not isinstance(v, (list, bool))
+                         else v)
         return out
 
-    def field(self, model, b, spec):
+    def related(self, b, values, spec):
+        """The records of the field's `model` that these values (each written in a statement of `b`) name: one, or
+        (`many`) each; a value with no `model` is the value itself."""
+        target = spec.get('model')
+        if target is None:
+            vals = [v for v in values if v is not None]
+            return vals if spec.get('many') in (True, 'true') else (vals[0] if vals else False)
+        hits = [self.F.names(b.id, v)[1] for v in values if v is not None]
+        hits = [h for h in hits if h in self.selected(target)]
+        if spec.get('many') in (True, 'true'):
+            return [number(target, h) for h in hits]
+        return [number(target, hits[0]), self.display(target, hits[0])] if hits else False
+
+    def field(self, model, b, spec, roles=None):
+        if isinstance(spec.get('statements'), dict):   # the statements in force, anywhere, that name this bean
+            hits = self.F.matching(spec['statements'], naming=b.id)
+            if spec.get('exists') in (True, 'true'):
+                return bool(hits)
+            return self.related(b, [r.get(spec.get('from')) for _b, r in hits], dict(spec, many=spec.get('many', True)))
+        if roles is not None and str(spec.get('from', 'title')) not in OWN and not PATH.match(str(spec.get('from'))):
+            v = roles.get(spec.get('from'))             # a role of the record's own statement
+            return self.related(b, v if isinstance(v, list) else [v], spec) if 'model' in spec else \
+                (False if v is None else v)
         if 'value' in spec:
             v = spec['value']
             return {'true': True, 'false': False}.get(v, v) if isinstance(v, str) else v
