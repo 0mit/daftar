@@ -5183,6 +5183,34 @@ it says why it is vacant, which is what `vacant` is for. The standard's own rows
 aside: the rows as data a tool reads for itself (a second reader of crosswalks); the standard's rows bound per
 instance at once (a row for a kind of fact before any garden has used it, which usually generalises wrongly).
 
+## core/law/crosswalks.yaml: forms.statements
+
+WHAT IS IN FORCE, READ ONCE (2026-10-12; the operator approved moving it into the release). Two walk tools of one
+garden each read for themselves what holds now. One reads the decisions in force on its walk (their courses at the
+walk's last step) less what a decision in force revokes. The other reads each statement's `while`, a use's standing
+(permitted through an employment, not forbidden through a decision) and an employment's end (the day of its
+withdrawal). Two readings of one question can disagree, and a third tool would learn it again. core/inforce.py reads
+it once.
+- A statement holds by its `while`: a reading, read by bin/reckon.py, or another statement. A reading nobody can read
+  is not known, said as such, and each caller says what that means for it.
+- A decision is in force at a step its walk marks final, never at a step of a given name.
+- What ends a statement is a statement of a verb the caller or the row names (`ended_by`). The law's own verbs end
+  nothing of themselves, and an ending verb (`revoke`, `withdraw`) is a garden's own row until the standard carries
+  one, so the release names none.
+- A standing is the core's own square: a holding `permitted` or `obligatory` of it, and no `forbidden`.
+
+The crosswalks read through it. Every path reads only statements that hold, so a sign-in name held while its course
+has not arrived is no account yet. And the `statements` form lets a row read what is said elsewhere about a bean:
+- a share's access, one record per grant in force;
+- a person's groups, the uses in force in their employment;
+- whether they are employed, an agreement not yet ended.
+
+Considered and set aside:
+- each tool keeping its own reading (two answers to one question);
+- the release naming the ending verbs (a garden's verbs in the language's code);
+- records kept in a store of their own (read twice, kept twice).
+Still to move onto it: bin/routines.py reads a need's `while` by itself, and keeps a need whose reading cannot be read.
+
 ## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.employee]
 
 AN EMPLOYEE IS AN EMPLOYMENT, NOT A PERSON (2026-10-11, the unified-tools design's P5.4; DECISIONS-NEXT §4, C4). Odoo's

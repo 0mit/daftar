@@ -77,6 +77,7 @@ parts, changes).
    python3 test/cases.py
    python3 test/leads.py
    python3 test/core_crosswalks.py
+   python3 test/core_inforce.py
    python3 test/mailbox.py
    python3 test/layers.py
    python3 test/act.py

@@ -686,6 +686,41 @@ class Law:
         out, rows = [], getattr(self, 'crosswalks', {}) or {}
         forms = getattr(self, 'crosswalk_forms', {}) or {}
         row_keys, field_keys = set(forms.get('crosswalk') or {}), set(forms.get('field') or {})
+        st_keys = set(forms.get('statements') or {})
+
+        def verb_roles(verb):
+            v = self.verbs.get(verb) or {}
+            return set(v.get('roles') or {}) | set(v.get('qualifiers') or {})
+
+        def statements_ok(where, spec, naming):
+            """A `statements` form (core/inforce.py `matching`): its keys, a verb of the law, filters and the role that
+            names the bean of that verb, an ending verb of the law. `naming` where the form must say which role names
+            the bean it is read for (a select's, a field's), and never where its statements are the records."""
+            if not isinstance(spec, dict):
+                out.append((where, "`statements` is a mapping: { verb, with, naming, in_force_on, ended_by, standing }"))
+                return None
+            for k in spec:
+                if st_keys and k not in st_keys:
+                    out.append((where, f"`{k}` is no key of `statements` ({', '.join(sorted(st_keys))})"))
+            verb = spec.get('verb')
+            if verb not in self.verbs:
+                out.append((where, f"`statements` reads statements of a verb: {verb!r} is no verb of the law"))
+                return None
+            mine = verb_roles(verb) | roles
+            for k in (f.split('=', 1)[0].strip() for f in str(spec.get('with') or '').split(',') if '=' in f):
+                if k not in mine:
+                    out.append((where, f"`with` filters on `{k}`, which is no role of {verb}"))
+            if naming and not spec.get('naming'):
+                out.append((where, "`statements` here names the role that names the bean it is read for: `naming`"))
+            elif not naming and spec.get('naming'):
+                out.append((where, "statements that are the records name no bean: no `naming`"))
+            if spec.get('naming') and spec['naming'] not in mine:
+                out.append((where, f"`{spec['naming']}` is no role of {verb}"))
+            if spec.get('ended_by') is not None and spec['ended_by'] not in self.verbs:
+                out.append((where, f"`ended_by`: {spec['ended_by']!r} is no verb of the law"))
+            if spec.get('standing') is not None and str(spec['standing']).lower() not in ('true', 'false'):
+                out.append((where, "`standing` is true or false"))
+            return verb
         path = re.compile(r'^([a-z][a-z-]*)(\[([a-z-]+=[^,\]]+(,[a-z-]+=[^,\]]+)*)\])?\.([a-z]+)$')
         roles = set(self.roles)
 
@@ -725,7 +760,15 @@ class Law:
             for k, need in (forms.get('crosswalk') or {}).items():
                 if need == 'required' and k not in r:
                     out.append((where, f"has no `{k}`"))
-            if r.get('kind') not in self.kinds:
+            record_verb = None
+            if (r.get('kind') is None) == (r.get('statements') is None):
+                out.append((where, "a crosswalk's records are the beans of a `kind`, or the `statements` of a verb: one of "
+                                   "`kind` and `statements`"))
+            if r.get('statements') is not None:
+                record_verb = statements_ok(where, r['statements'], naming=False)
+                if r.get('select'):
+                    out.append((where, "statements that are the records are chosen by their `statements` form: no `select`"))
+            elif r.get('kind') not in self.kinds:
                 out.append((where, f"its kind {r.get('kind')!r} is no kind of the law"))
             same = {str(o.get('model')) for o in rows.values()
                     if str(o.get('system')) == str(r.get('system')) and str(o.get('series')) == str(r.get('series'))}
@@ -737,8 +780,10 @@ class Law:
                     path_ok(where, v.get('along'))
                     if str(v.get('model')) not in same:
                         out.append((where, f"select.within names {v.get('model')!r}, which no crosswalk of its series crosses"))
+                elif k == 'named_in':
+                    statements_ok(f"{where} select.named_in", v, naming=True)
                 else:
-                    out.append((where, f"select.{k} is none of with, without, within"))
+                    out.append((where, f"select.{k} is none of with, without, within, named_in"))
             for fname, spec in (r.get('fields') or {}).items():
                 fw = f"{where} field {fname}"
                 if not isinstance(spec, dict):
@@ -747,7 +792,20 @@ class Law:
                 for k in spec:
                     if field_keys and k not in field_keys:
                         out.append((fw, f"`{k}` is no key of a field ({', '.join(sorted(field_keys))})"))
-                if 'from' in spec:
+                if 'map' in spec and not (isinstance(spec['map'], dict) and spec['map']):
+                    out.append((fw, "`map` maps each value read to the one the system writes: a mapping, not empty"))
+                if 'exists' in spec and (spec['exists'] not in (True, 'true') or 'statements' not in spec
+                                         or {'from', 'model'} & set(spec)):
+                    out.append((fw, "`exists` is true, with `statements`, and reads nothing else: whether one is in force"))
+                bare = 'from' in spec and str(spec['from']) not in ('title', 'summary', 'bean') and '.' not in str(spec['from'])
+                if 'statements' in spec:
+                    fverb = statements_ok(fw, spec['statements'], naming=True)
+                    if fverb and 'from' in spec and str(spec['from']) not in verb_roles(fverb) | roles:
+                        out.append((fw, f"`{spec['from']}` is no role of {fverb}"))
+                elif record_verb is not None and bare:
+                    if str(spec['from']) not in verb_roles(record_verb) | roles:
+                        out.append((fw, f"`{spec['from']}` is no role of {record_verb}"))
+                elif 'from' in spec:
                     path_ok(fw, spec['from'])
                 if 'model' in spec and str(spec['model']) not in same:
                     out.append((fw, f"names {spec['model']!r}, which no crosswalk of its series crosses"))
