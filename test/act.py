@@ -139,7 +139,7 @@ import walktool as W
 
 def plan(bean, course):           # what the run writes: given by the test, as a page's inputs would be
     with open(os.path.join(os.environ['LIVE_DIR'], bean + '.write.json')) as fh:
-        W.plan_writes(json.load(fh))
+        return W.plan_writes(json.load(fh))         # its text, which is no exit code
 
 
 sys.exit(W.main('scribe', {'plan': plan, 'check': lambda b, c: None, 'apply': W.apply_writes,

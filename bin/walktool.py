@@ -464,11 +464,12 @@ def main(name, steps, more=None, argv=None):
     """The tool's command line, as the engine and a person call it. Returns the exit code."""
     a = list(sys.argv[1:] if argv is None else argv)
     more = more or {}
+    exit_of = lambda r: int(r) if isinstance(r, int) else 0      # a step's text is no exit code
     try:
         if len(a) == 3 and a[0] in steps:
-            return steps[a[0]](a[1], a[2]) or 0
+            return exit_of(steps[a[0]](a[1], a[2]))
         if a[:1] and a[0] in more:
-            return more[a[0]](a[1:]) or 0
+            return exit_of(more[a[0]](a[1:]))
     except Refused as e:
         print(f"{name}: {e}", file=sys.stderr)
         return e.code
