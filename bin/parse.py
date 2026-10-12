@@ -603,6 +603,26 @@ def comment_start(line):
     return -1
 
 
+def block_lines(node):
+    """The lines (0-based in the text it was composed from) that lie inside a block scalar (`|`, `>`) of a composed YAML
+    node, at any depth: a value's text, whatever it looks like there — a `#`, a blank, a key — and never the document's
+    own comment or line. The one walk every reader of a front matter's lines takes (comments here, core/merge.py,
+    core/translate.py). A node an alias reaches again is walked once: an anchor may hold itself (`a: &x [*x]`)."""
+    out, seen, todo = set(), set(), [node] if node is not None else []
+    while todo:
+        n = todo.pop()
+        if id(n) in seen:
+            continue
+        seen.add(id(n))
+        if isinstance(n, _yaml.ScalarNode) and n.style in ('|', '>'):
+            out.update(range(n.start_mark.line + 1, n.end_mark.line + (1 if n.end_mark.column else 0)))
+        elif isinstance(n, _yaml.MappingNode):
+            todo += [x for kv in n.value for x in kv]
+        elif isinstance(n, _yaml.SequenceNode):
+            todo += n.value
+    return out
+
+
 def comments(head):
     """[(line, column, text, [paths])] of every comment in a front matter's text, section titles (`# == x ==`) left out;
     `paths` runs from the finest item the comment sits on to its top-level key. [] where the text does not parse."""
@@ -616,13 +636,9 @@ def comments(head):
     # value, and a value may end in `.` or hold a bracket — `x[a sentence.]` — so a path cut at its last `.` or `[`
     # came back unchanged, and the climb from the finest item to its top-level key never ended (found 2026-10-01 on a
     # bean whose list item was a sentence)
-    spans, block, parent = [], set(), {}
+    spans, block, parent = [], block_lines(root), {}
 
     def walk(node, path):
-        if isinstance(node, _yaml.ScalarNode):
-            if node.style in ('|', '>'):
-                block.update(range(node.start_mark.line + 1, node.end_mark.line + (1 if node.end_mark.column else 0)))
-            return
         if isinstance(node, _yaml.MappingNode):
             for k, v in node.value:
                 p = f"{path}.{k.value}" if path else str(k.value)

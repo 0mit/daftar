@@ -386,6 +386,23 @@ except subprocess.TimeoutExpired:
 check("a comment beside an item named by a sentence, or holding a lone bracket, is read, and the reading ends",
       _got[0] == 0 and _got[1] == str([['steps[mount the copy.]', 'steps'], ['steps[a [bracket]', 'steps'],
                                         ['risks[it fails.]]', 'risks'], ['key.sub', 'key']]), _got)
+_fm = ('title: a\ndetails:\n  lit: |\n    # not a comment\n    two\n\n    three\n  fold: >-\n    a # still text\n    b\n'
+       'steps:\n  - |\n    # step text\n  - plain   # a comment\nkeep: |+\n  k\n\nnote: x   # another\n')
+_bl = sorted(dmparse.block_lines(dmparse._yaml.compose(_fm, Loader=dmparse._yaml.BaseLoader)))
+check("the lines inside a block scalar, at any depth, are the value's text — read once, by bin/parse.py block_lines, for "
+      "the comments here, a merge's loose lines and a translation's comments — and only the lines outside hold a comment",
+      _bl == [3, 4, 5, 6, 8, 9, 12, 15, 16]
+      and [(c[0], c[2]) for c in dmparse.comments(_fm)] == [(13, 'a comment'), (17, 'another')], (_bl, dmparse.comments(_fm)))
+_fm = 'a: &x\n  - *x\n  - |\n    t\nb: &y [*x, *x]\nc: &z [*y, *y, *y]\nd: [*z, *z, *z, *z]\n'
+try:
+    _r = subprocess.run([sys.executable, '-c', 'import sys; sys.path.insert(0, sys.argv[1]); import parse; '
+                         'print(sorted(parse.block_lines(parse._yaml.compose(sys.stdin.read(), Loader=parse.LOADER))))',
+                         os.path.join(ROOT, 'bin')], input=_fm, capture_output=True, text=True, encoding='utf-8', timeout=20)
+    _got = (_r.returncode, _r.stdout.strip(), _r.stderr[-300:])
+except subprocess.TimeoutExpired:
+    _got = (None, '', 'block_lines did not end within 20 s')
+check("an anchor that holds itself, or aliases nested many deep, are walked once each: block_lines ends, and finds the "
+      "block's line", _got[:2] == (0, '[3]'), _got)
 
 print("\nrationale: %d failed" % len(FAILS))
 sys.exit(1 if FAILS else 0)

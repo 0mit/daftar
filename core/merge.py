@@ -141,15 +141,7 @@ class Side:
         pairs = root.value if isinstance(root, yaml.MappingNode) else []
         # A LINE OF ITS OWN THAT IS A COMMENT, OR BLANK, belongs to what follows it: it is moved with the key or the
         # statement below it. A line inside a block scalar (`|`, `>`) is the value's text, whatever it looks like.
-        block, todo = set(), [root] if root is not None else []
-        while todo:
-            n = todo.pop()
-            if isinstance(n, yaml.ScalarNode) and n.style in ('|', '>'):
-                block.update(range(n.start_mark.line + 1, n.end_mark.line + (1 if n.end_mark.column else 0)))
-            elif isinstance(n, yaml.MappingNode):
-                todo += [x for kv in n.value for x in kv]
-            elif isinstance(n, yaml.SequenceNode):
-                todo += n.value
+        block = dmparse.block_lines(root)
         self._loose = lambda i: i not in block and (not lines[i].strip() or lines[i].lstrip().startswith('#'))
         starts, prev = [], 1
         for k, _v in pairs:
