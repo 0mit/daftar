@@ -1,7 +1,7 @@
 # The forms of a measure (v1 part 7): the lines a region or a repetition lies on, how a region is bounded, how a
 # repetition strides, how well a value is known, when two values agree within their uncertainty, and the forms a
 # statement holds them in — `extent` and `recurrence`, what a clause of an agreement holds beside its words (`can`'s
-# `clause`) and what a placement holds beside its position (`be`'s `placed`).
+# `clause`), what a placement holds beside its position (`be`'s `placed`) and when a grant holds (`grant`'s `window`).
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 lines:
   - line: necessity
@@ -91,7 +91,7 @@ recurrence_form:
   in: "optional: the positioning SYSTEM it is counted in. Required by `each`, because a level belongs to its system."
   every: "{ count } — every Nth NEIGHBOUR: needs only that positions have a next one. Or { count, unit } — every N UNITS: needs the aspect, or the system named, to be metered in that unit's dimension."
   each: "<level> — the same place in EACH CELL of that level of the system named: each month, each week, each era."
-  at: "optional: where in the cell, as the system writes it — `15`, `W-5` — or a LIST of such places, each an occurrence (`[1, 4]`: the first and fourth day of each week of `iso-week`). Prose to the gate"
+  at: "optional: where in the cell, as the system writes it — `15`, `W-5` — or a LIST of such places, each an occurrence (`[1, 4]`: the first and fourth day of each week of `iso-week`). A place may carry a time of day after it, ISO 8601's way, `<place>T<hh:mm>` — `5T17:45`, Friday at 17:45 in `iso-week`; in a cell of one day, the time alone, `T22:00`: a reader of days reads its day, and only a reader of moments its time. Prose to the gate, but in a grant's window"
   lasts: "optional: an extent — each occurrence is a REGION that begins at its position and lasts this long (RFC 5545's DTSTART with DURATION)"
   closures: "optional: a list of positions or extents on which no occurrence falls — dated closures, holidays — each in the form of the system named"
   from: "optional: the position it starts at, in the form of the system named (with no `in:`, of a system the aspect holds), and a day its calendar has"
@@ -159,7 +159,7 @@ forms:
       each:
         meaning: "<level> — the same place in EACH CELL of that level of the system named: each month, each week, each era."
       at:
-        meaning: "optional: where in the cell, as the system writes it — `15`, `W-5` — or a LIST of such places, each an occurrence (`[1, 4]`: the first and fourth day of each week of `iso-week`). Prose to the gate"
+        meaning: "optional: where in the cell, as the system writes it — `15`, `W-5` — or a LIST of such places, each an occurrence (`[1, 4]`: the first and fourth day of each week of `iso-week`). A place may carry a time of day after it, ISO 8601's way, `<place>T<hh:mm>` — `5T17:45`, Friday at 17:45 in `iso-week`; in a cell of one day, the time alone, `T22:00`: a reader of days reads its day, and only a reader of moments its time. Prose to the gate, but in a grant's window"
       lasts:
         meaning: "optional: an extent — each occurrence is a REGION that begins at its position and lasts this long (RFC 5545's DTSTART with DURATION)"
       closures:

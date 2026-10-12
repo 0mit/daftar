@@ -212,7 +212,9 @@ POOL = {'by': ['box', 'firm', 'pat'], 'of': ['firm', 'box', 'pat'], 'through': [
 STANDARD = {'protocols': 'smb', 'knowledge': 'isco-08:2511', 'properties': 'length', 'units': 'kg'}
 OVERRIDE = {('pass', 'from'): 'world', ('pass', 'to'): 'history', ('pass', 'through'): 'capture',
             ('pay', 'charged'): {'count': '1', 'unit': 'XXX'}, ('decline', 'by'): 'firm',
-            ('pay', 'settles'): [{'clause': 'firm#c1', 'occurrence': 'box'}], ('grant', 'cover'): {'parts': ['title']}, ('mark', 'of'): 'ics:Meghalayan',
+            ('pay', 'settles'): [{'clause': 'firm#c1', 'occurrence': 'box'}], ('grant', 'cover'): {'parts': ['title']},
+            ('grant', 'window'): {'of': 'time', 'in': 'iso-week', 'each': 'week', 'at': ['1T08:30', '5T08:30'],
+                                  'lasts': {'of': 'time', 'measure': {'count': '10', 'unit': 'h'}}}, ('mark', 'of'): 'ics:Meghalayan',
             ('weigh', 'weighing'): {'criteria': [{'name': 'a', 'what': 'x'}, {'name': 'b', 'what': 'y'}],
                                     'pairwise': [{'a': 'a', 'b': 'b', 'judged': '3'}]}}   # forms whole (v1 part 12b)
 CONTEXT = [bean('pat', 'person', [{'say': {'by': 'pat', 'at': 'now'}}]),

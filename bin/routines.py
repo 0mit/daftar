@@ -922,13 +922,25 @@ def clause_to_cron(cl):
             return f"{mm} * * * *" if n == '1' else f"{mm} */{n} * * *"
         raise Refused(f"a stride of {n} {unit} from {due} is not one cron writes")
     each, at = every.get('each'), every.get('at')
-    if each == 'day' and every.get('in') == 'gregorian-civil' and at is None:
+    places = []                     # each place's day; a time of day it names is the due's, the one a cron line keeps
+    for a in listed(at):
+        try:
+            place, clock = dmcal.place_clock(a)
+        except ValueError as e:
+            raise Refused(str(e)) from None
+        if clock is not None and clock != (hh, mm):
+            raise Refused(f"`at: {a}` names a time of day of its own, and a cron line keeps one, its due's "
+                          f"({hh:02d}:{mm:02d}): one line each, or the same time of day")
+        places.append(place)
+    if not all(p.isdigit() and p.isascii() for p in places) and not (each == 'day' and not any(places)):
+        raise Refused(f"`at: {', '.join(map(str, listed(at)))}` is no day cron writes")
+    if each == 'day' and every.get('in') == 'gregorian-civil' and not any(places):
         return f"{mm} {hh} * * *"
     if each == 'week' and every.get('in') == 'iso-week':
-        days = [int(x) for x in listed(at)] or [datetime.date.fromisoformat(m.group(1)).isoweekday()]
+        days = [int(x) for x in places] or [datetime.date.fromisoformat(m.group(1)).isoweekday()]
         return f"{mm} {hh} * * " + ','.join(DOW[d % 7] for d in days)
-    if each == 'month' and every.get('in') == 'gregorian-civil' and at is not None:
-        return f"{mm} {hh} {int(at)} * *"
+    if each == 'month' and every.get('in') == 'gregorian-civil' and len(places) == 1:
+        return f"{mm} {hh} {int(places[0])} * *"
     raise Refused(f"{dmstale.describe(every)} is not a schedule cron writes")
 
 

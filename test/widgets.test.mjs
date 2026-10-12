@@ -180,6 +180,17 @@ ok('recurrence: taken back as the law writes it — untouched fields give the be
   assert.ok(recurrence.take({each: 'week', 'lasts.count': '150'}, {lang: 'en'}).error, 'a length needs its unit');
   assert.deepEqual(recurrence.take({}, {lang: 'en'}), {value: ''});
 });
+ok('recurrence: a place with a time of day is shown with it, kept in its field as written, and taken back whole', () => {
+  const office = {of: 'time', in: 'iso-week', each: 'week', at: ['1T08:30', '5T17:45']};
+  const en = recurrence.text(office, {lang: 'en'});
+  assert.ok(/Monday 08:30/.test(en) && /Friday 17:45/.test(en), en);
+  const html = String(recurrence.edit('w', office, {lang: 'en'}));
+  assert.ok(html.includes('value="1T08:30, 5T17:45"') && !html.includes('type="checkbox"'),
+    'a day of the week with its time is no box to tick: the field holds it as written, so a save keeps it');
+  assert.deepEqual(recurrence.take({each: 'week', at: '5T17:45, 1T08:30', in: 'iso-week', keep: JSON.stringify({of: 'time'})},
+    {lang: 'en'}), {value: office});
+  assert.ok(recurrence.take({each: 'week', at: '1T8:30', in: 'iso-week'}, {lang: 'en'}).error, 'a time of day is hh:mm');
+});
 ok('recurrence: offers only the units of a length of time a language names (CLDR\'s), never a deep-time unit', () => {
   assert.deepEqual(recurrence.durations({lang: 'fa'}).map(d => d.unit), ['min', 'h']);
 });

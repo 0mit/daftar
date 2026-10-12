@@ -27,6 +27,11 @@ arithmetic alone would read it as the day after the 29th — a day nobody named.
 back unchanged from its own day (`from_day(to_day(p)) == p`), and `to_day` raises ValueError for one that does not; so
 it does for a year outside the days reckoned here (FIRST_DAY .. LAST_DAY, below), and `from_day` for a day outside them.
 
+A PLACE IN A CELL MAY CARRY A TIME OF DAY, ISO 8601's way: `5T17:45` is the fifth day of a week at 17:45, `15T09:00`
+the fifteenth of a month at nine, `T22:00` each day at ten at night (a recurrence's `at`). `place_clock` splits one into
+its place and its clock, and refuses a clock that is no reading of one; the day is the place's, read by whoever walks
+the cells, and the clock is read only where a moment is asked.
+
 A CIVIL OFFSET IS READ, NEVER STORED (24.0, N8). `offset(zone, moment)` asks the platform's copy of the IANA time zone
 database, through the standard library's `zoneinfo`, what offset a zone kept at that moment; where the machine has no
 copy it raises NoZoneData naming the fix, and guesses none.
@@ -572,6 +577,23 @@ def write_moment(ms, calendar, offset, resolution='minute'):
     clock = '%02d:%02d' % (h, mi) + (':%02d' % sec if resolution != 'minute' else '') \
         + ('.%03d' % milli if resolution == 'millisecond' else '')
     return f"{from_day(day, calendar)} {clock}{offset}"
+
+
+_CLOCK_OF_DAY = re.compile(r'^([01][0-9]|2[0-3]):([0-5][0-9])$', re.ASCII)
+
+
+def place_clock(at):
+    """(the place, (hours, minutes) or None) of one place of a recurrence's `at`: `5T17:45` -> ('5', (17, 45)), `15` ->
+    ('15', None), `T22:00` -> ('', (22, 0)) — the time of day after the first `T`, as ISO 8601 writes one. ValueError
+    for a time of day that is no clock reading: `hh:mm`, hours 00-23 and minutes 00-59."""
+    place, sep, clock = str(at).partition('T')
+    if not sep:
+        return place, None
+    m = _CLOCK_OF_DAY.match(clock)
+    if not m:
+        raise ValueError(f"'{str(at)[:40]}' holds a time of day out of its form: after the `T`, `hh:mm` — hours 00-23, "
+                         f"minutes 00-59 (`5T17:45`)")
+    return place, (int(m.group(1)), int(m.group(2)))
 
 
 class NoZoneData(Exception):
