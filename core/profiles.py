@@ -248,7 +248,10 @@ CLOCK = {'act': 'read', 'nature': 'soma', 'by': 'reader'}
 def _action_inputs(J, b, where, drawing, readings):
     """AN ACTION'S INPUTS, ASKED AS A PAGE ASKS THEM (ratified 2026-10-13): a value chosen `of` a reading this page
     declares or a scheme the garden knows (`scheme:<name>`); one filled `from` the element, only where a person would
-    give it (never the clock's), and never both filled and chosen."""
+    give it (never the clock's), and never both filled and chosen. One a person may leave empty (`optional`, ratified
+    the same day: "meaningful optional inputs") is never one the tool cannot run without — filled `from` the element,
+    or the clock's; what else its tool needs is the tool's to refuse when it plans, as the host maps the tool, not the
+    ledger."""
     out = []
     for n, a in enumerate(_listed(drawing.get('actions'))):
         if not isinstance(a, dict):
@@ -274,6 +277,12 @@ def _action_inputs(J, b, where, drawing, readings):
                     out.append((f"{w}.from", "the clock's input is read by the reader, never filled from the element"))
                 if of is not None:
                     out.append((f"{w}.from", "an input filled from the element is not chosen too: `from` or `of`"))
+            if i.get('optional') in ('true', True):
+                if i.get('from') is not None:
+                    out.append((f"{w}.optional", "an input filled from the element is the host's to fill, never left "
+                                                 "empty: the tool acts on it"))
+                if i.get('origin') == CLOCK:
+                    out.append((f"{w}.optional", "the clock's input is read by the reader, never left empty"))
     return out
 
 

@@ -4,7 +4,8 @@
     python3 bin/act.py <bean> <course>                  # the engine's steps, until a person's step, an end or an exit
     python3 bin/act.py <bean> <course> --ratify <who>   # a person ratifies the plan they were shown
     python3 bin/act.py <bean> <course> --decline <who>  # ...or declines it: the run is refused, nothing changed
-    python3 bin/act.py <bean> --start <walk> --by <who> [--input <name>=<value>]...   (a name given twice: a list)
+    python3 bin/act.py <bean> --start <walk> --by <who> [--input <name>=<value>]... [--list <name>]...
+                                                        # (a name given twice, or named by `--list`: a list, of one too)
                                                         # a run started, with what a person gave it: its course placed
                                                         # in the bean, its inputs kept, the engine run to its plan
 
@@ -485,6 +486,10 @@ def main(argv):
                         given[k] = (given[k] if isinstance(given[k], list) else [given[k]]) + [v]
                     else:
                         given[k] = v
+            for i, a in enumerate(argv):            # ...and one `--list` names is a list however many it holds (`many`)
+                k = argv[i + 1] if a == '--list' and i + 1 < len(argv) else None
+                if k in given and not isinstance(given[k], list):
+                    given[k] = [given[k]]
             at, why, course = start(argv[0], argv[2], argv[argv.index('--by') + 1], given)
         except Refused as e:
             print(f"act: NOT STARTED: {e}", file=sys.stderr)
