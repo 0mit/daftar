@@ -302,7 +302,7 @@ archetypes:
   - archetype: table
     reads: [record]
     axes: { inline: taxis, block: ordinal }
-    meaning: "the members of a reading, or the rows of a series, one line each with a column per path: the report, and an offline file of it"
+    meaning: "the members of a reading, or the rows of a series, one line each with a column per path: the report, and an offline file of it. Or the codes of a chart (the drawing's `chart`), in the chart's order: the books of the being it draws, an account a line, each column a figure the accounting profile's asset reads of it — per currency, with the totals and whether they balance, an account that posts opening its ledger"
     when: "the question is which ones, and what each holds"
   - archetype: queue
     axes: { block: ordinal }
@@ -536,7 +536,10 @@ forms:
               meaning: "the order a map is laid out in: north up and east right, whatever the reader's script"
       span:
         in: extent
-        meaning: "timeline: how far it reaches on each side of the day it is read on, a length on `time` (`measure`); a repetition is walked within it and never beyond. Absent, six weeks on each side: a month's grid and the weeks around it"
+        meaning: "timeline: how far it reaches on each side of the day it is read on, a length on `time` (`measure`); a repetition is walked within it and never beyond. Absent, six weeks on each side: a month's grid and the weeks around it. table of a chart: how far back from the day it is read on the period reaches, what came before it each account's opening; absent, the books from their first day"
+      chart:
+        in: { registry: knowledge_schemes, take: scheme }
+        meaning: "table: or the codes of a chart — a scheme naming the accounting profile's form `chart` — in the chart's order, one line each: an account of the books of the being the drawing draws, as the profile's asset reads them"
       layouts:
         in: [week, month, list]
         meaning: "timeline: the readings of its one line a reader switches between — week (a grid of days), month (a grid of weeks), list (a line for each day that holds something) — the first listed shown first; absent, all three, week first"
@@ -660,7 +663,7 @@ forms:
             path:
               required: "true"
               in: { type: field_path }
-              meaning: "a path in each member, or a channel of the series"
+              meaning: "a path in each member, or a channel of the series, or a figure of an account of the chart: `code`, `name`, `element`, `opening`, `debit`, `credit`, `balance`"
         meaning: "table: a column per path"
       writes:
         in:
