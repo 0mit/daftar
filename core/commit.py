@@ -316,7 +316,12 @@ def guarded(root, law, changes, entry, added, moments, garden=None, adopting=Fal
             when = frame.read(frame.one_form(m), law.std.systems, None).moment
         except frame.Refused:
             pass
+    closes = _closes(garden) if garden is not None and not adopting else []
     for status, path in changes:
+        if closes and status in ('M', 'D') and path.endswith('.md') \
+                and path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)):    # KEPT: what closed books read stays
+            out += _closed(root, garden, closes, path, statements_of(root, 'HEAD', path),
+                           [] if status == 'D' else statements_of(root, '', path))
         if status == 'D' or not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):
             continue
         bid = os.path.basename(path)[:-3]
@@ -369,6 +374,110 @@ def guarded(root, law, changes, entry, added, moments, garden=None, adopting=Fal
                                          f"future whereabouts of a person who is not the gardener is held off git "
                                          f"whatever they agreed to — seal its location (bin/held.py put)"))
     return out
+
+
+def _closes(garden):
+    """[(day, commit, entity, chart)]: each period whose books are closed — a `pin` of a reading whose step is `books`
+    (the accounting profile's), through its `to`, at a commit: the entity is the step's, else the gardener; the chart the
+    step's, else None (the garden's one)."""
+    from core.lines import GRAPH
+    import stale as dmstale
+    readings, out = {}, []
+    for b in garden.beans.values():
+        for _i, v, r in b.items:
+            if v == 'reckon' and isinstance(r.get('id'), str) and isinstance(r.get('reading'), dict) and 'held' not in r:
+                for st in listed(r['reading'].get('steps')):
+                    if isinstance(st, dict) and st.get('op') == 'books' and st.get('to') is not None:
+                        try:
+                            readings[f"{b.id}#{r['id']}"] = (dmstale.day_of(st['to']), str(st.get('entity') or
+                                                                                           garden.gardener or ''),
+                                                             st.get('chart'))
+                        except ValueError:
+                            pass
+    for b in garden.beans.values():
+        for _i, v, r in b.items:
+            if v != 'pin' or 'held' in r:
+                continue
+            refs = [x if '#' in str(x) else f"{b.id}#{x}" for x in listed(r.get('of')) + listed(r.get('from'))]
+            hit = next((readings[x] for x in refs if x in readings), None)
+            sha = next((m.group(2) for a in listed(r.get('at')) for m in [GRAPH.match(str(a))] if m), None)
+            if hit is not None and sha:
+                out.append((hit[0], sha, hit[1], hit[2]))
+    return sorted(out)
+
+
+def _closed(root, garden, closes, path, st_was, st_now):
+    """KEPT, the books' half (the accounting profile): a period closed is the books' reading pinned at a commit. What the
+    closed books read — a payment the entity paid, received, bears a share of or booked; a booking or a match of the
+    entity's — that was in its bean at that commit, on a day on or before the closed one (a booking's own, else the day
+    of what it books), is never taken out or changed: a correction is the move's reverse and a booking after that day.
+    Exact by the commit: nothing is compared by moments, and nothing of the books is kept at closing — the commit is."""
+    import stale as dmstale
+    bid = os.path.basename(path)[:-3]
+    now = {r.get('id'): canon(v, r) for _i, v, r in st_now if isinstance(r.get('id'), str)}
+    gone = [(v, r) for _i, v, r in st_was if v in ('pay', 'book', 'match') and isinstance(r.get('id'), str)
+            and now.get(r['id']) != canon(v, r)]
+    if not gone:
+        return []
+    g = garden.gardener or ''
+    by = lambda r: str(r.get('by') or g)
+    here = lambda x: x if '#' in str(x) else f"{bid}#{x}"
+    booked = {}                                        # the payments each entity booked, wherever the booking is
+    for b in garden.beans.values():
+        for _i, v, r in b.items:
+            if v == 'book' and isinstance(r.get('of'), str):
+                booked.setdefault(by(r), set()).add(r['of'] if '#' in r['of'] else f"{b.id}#{r['of']}")
+    bears = {}
+    for _i, v, r in st_was:
+        if v == 'bear' and isinstance(r.get('of'), str):
+            bears.setdefault(here(r['of']), set()).add(str(r.get('by')))
+
+    def read_by(v, r, entity, chart):
+        if v == 'pay':
+            ref = f"{bid}#{r['id']}"
+            return entity in (str(r.get('by')), str(r.get('to'))) or entity in bears.get(ref, ()) \
+                or ref in booked.get(entity, ())
+        if by(r) != entity:
+            return False
+        codes = [str(x) for x in (r.get('from'), r.get('to')) if isinstance(x, str) and ':' in x]
+        return v == 'match' or chart is None or not codes or any(c.split(':', 1)[0] == chart for c in codes)
+
+    def day_of(v, r):
+        at = listed(r.get('at'))
+        if not at and v == 'book' and isinstance(r.get('of'), str):          # booked on the day of what it books
+            ob, _h, oid = here(r['of']).rpartition('#')
+            o = garden.beans.get(ob)
+            hit = o.ids.get(oid) if o is not None else None
+            if hit is None and ob == bid:
+                hit = next(((i, x, y) for i, x, y in st_was if y.get('id') == oid), None)
+            at = listed(hit[2].get('at')) if hit else []
+        try:
+            return dmstale.day_of(at[0]) if at else None
+        except ValueError:
+            return None
+
+    out, said = [], set()
+    for d, sha, entity, chart in closes:
+        then = None
+        for v, r in gone:
+            if r['id'] in said or not read_by(v, r, entity, chart):
+                continue
+            day = day_of(v, r)
+            if day is None or day > d:
+                continue
+            if then is None:
+                then = {canon(x, y) for _i, x, y in statements_of(root, sha, path)}
+            if canon(v, r) in then:
+                said.add(r['id'])
+                out.append(('kept', path, f"`{r['id']}` is read by the books of {entity} closed through "
+                                          f"{_day_text(d)} (pinned at {sha[:12]}): it is not taken out or changed — "
+                                          f"book its reverse, and anew, after that day"))
+    return out
+
+
+def _day_text(n):
+    import datetime
+    return datetime.date.fromordinal(n).isoformat()
 
 
 # ------------------------------------------------------------------------------------------ a session's pass log (v1 10)

@@ -19,10 +19,12 @@ garden of the core grown from a release made of this tree (test/grow.py).
 
 Run: python3 test/books.py   (0 = green; about half a minute)
 """
+import json
 import os
 import shutil
 import sys
 import tempfile
+from fractions import Fraction
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'test'))
@@ -275,6 +277,146 @@ try:
     check("apportion reads the parts booked `to` a code, each plan its whole — a booking that names only where the "
           "amount came from places nothing", r.returncode == 0 and got.get('kitchen') == '300 XTS'
           and got.get('62') == '300 XTS' and set(got) == {'kitchen', '62'} and 'None' not in r.out, r.out[-900:])
+    os.remove(os.path.join(G, 'beans', 'studio.md'))
+    os.remove(os.path.join(G, 'reading.yaml'))
+    run('git', 'checkout', '--', 'beans/books-sam.md')      # as saved: the save wrote its knowing act's moment
+
+    # ---- THE READINGS (the profile's asset): every figure read from the moves, exact, never stored
+    def reading(*a):
+        r = run(PY, 'assets/accounting/bin/books.py', *a, '--chart', 'books', '--today', '2026-10-12', '--json')
+        try:
+            return json.loads(r.stdout)
+        except ValueError:
+            return {'error': r.out[-1500:]}
+
+    F = lambda x: Fraction(str(x))
+    lines_of = lambda v: sorted((ln['account'], F(ln['dr']), F(ln['cr']), ln['party']) for ln in v.get('lines', []))
+    vs = reading('vouchers')
+    by = {v['ref']: v for v in vs} if isinstance(vs, list) else {}
+    check("the asset is the garden's while it takes the profile, and every voucher it reads balances",
+          os.path.isfile(os.path.join(G, 'assets', 'accounting', 'lib', 'books_read.py')) and by
+          and all(v['balanced'] for v in vs), vs)
+    check("the dinner, paid by card and borne two to one: Cr the card 90, Dr food 60 (Sam's part), Dr Ali's account 30",
+          lines_of(by.get('dinner#meal', {})) == [('13', 30, 0, 'ali'), ('21', 0, 90, None), ('61', 60, 0, None)],
+          by.get('dinner#meal'))
+    check("the salary received into the bank, booked from salary: Dr the bank 1000, Cr salary 1000",
+          lines_of(by.get('salary#oct', {})) == [('11', 1000, 0, None), ('41', 0, 1000, None)], by.get('salary#oct'))
+    check("lunch, its means named by the card's being, 15 of it to food: Cr the card 20, Dr food 15, the 5 no booking "
+          "places awaiting an account", lines_of(by.get('salary#lunch', {})) ==
+          [('19', 5, 0, None), ('21', 0, 20, None), ('61', 15, 0, None)], by.get('salary#lunch'))
+    check("the bank's line matched with the rent Sam said: counted once, the line its evidence and its means (the bank)",
+          'stmt-10#l2' not in by and lines_of(by.get('oct-rent#paid', {})) == [('11', 0, 300, None),
+                                                                             ('19', 300, 0, None)], by.get('oct-rent#paid'))
+    check("a move in the reverse sense, no word of its own: the baker's line and an opening's line, ends exchanged on the "
+          "reversal's day", lines_of(by.get('books-sam#r1', {})) == [('21', F('12.50'), 0, None), ('61', 0, F('12.50'), None)]
+          and lines_of(by.get('books-sam#r2', {})) == [('13', 0, 5, None), ('31', 5, 0, None)]
+          and by['books-sam#r1']['day'] == '2026-10-07', [by.get('books-sam#r1'), by.get('books-sam#r2')])
+    t = reading('trial', '--unit', 'XTS')
+    closing = {r['code']: F(r['closing']) for r in t.get('rows', [])}
+    bal = {r['code']: F(r['balance']) for r in t.get('rows', [])}
+    check("the trial balance balances, each account's closing what arrived less what left: the bank 500 + 1000 - 300",
+          t.get('balanced') and closing.get('11') == 1200 and closing.get('13') == 30 and closing.get('19') == 305, t)
+    check("...each balance read in its element's sense: the card a liability of 110, the salary an income of 1000, "
+          "equity 500, food an expense of 75, the group of assets 1535", (bal.get('21'), bal.get('41'), bal.get('31'),
+                                                                            bal.get('61'), bal.get('1')) ==
+          (110, 1000, 500, 75, 1535), bal)
+    pl = reading('pl', '--unit', 'XTS')
+    b_ = reading('balance', '--unit', 'XTS', '--at', '2026-10-31')
+    check("profit and loss: income 1000 less expense 75 = 925; the balance: what the assets hold, the liabilities, "
+          "equity and the result", F(pl.get('result', 0)) == 925 and F(b_.get('result', 0)) == 925
+          and [r['code'] for r in b_.get('assets', [])][:1] == ['1'], (pl, b_))
+    L = reading('ledger', '11', '--unit', 'XTS')
+    A = reading('ledger', '13', '--unit', 'XTS', '--party', 'ali')
+    check("an account's ledger, its running balance: the bank's three lines ending at 1200; Ali's account 30",
+          len(L.get('rows', [])) == 3 and F(L.get('closing', 0)) == 1200 and F(A.get('closing', 0)) == 30, (L, A))
+    o = reading('open')
+    check("open items: each line awaiting an account — lunch's 5 and the rent's 300", isinstance(o, list)
+          and sorted((x['ref'], F(x['dr'])) for x in o) == [('oct-rent#paid', 300), ('salary#lunch', 5)], o)
+    r = run(PY, 'assets/accounting/bin/books.py', 'trial', '--unit', 'XTS', '--chart', 'books', '--today', '2026-10-12')
+    check("...and the trial balance printed for a person reads `balanced`", r.returncode == 0 and 'balanced' in r.out
+          and '1200' in r.out, r.out[-900:])
+    r = run(PY, 'assets/accounting/bin/books.py', 'trial', '--chart', 'books')
+    check("...a reading in no currency is refused, saying why: two currencies are never added", r.returncode == 2
+          and 'never added' in r.out, r.out)
+    r = run(PY, 'assets/accounting/bin/books.py', 'vouchers')
+    check("...and books read in no chart, where the garden keeps two, are refused, naming them", r.returncode == 2
+          and 'this garden keeps 2 (books, other)' in r.out, r.out)
+
+    # ---- A CLOSE: the books' reading through a day, pinned at a commit — no word of its own
+    bean('old-receipt', 'document', 'a receipt from September, not yet booked', 'say: { by: sam, at: now }',
+         'own: { by: sam, of: self }', 'pay: { id: old, by: sam, of: { count: "10.00", unit: XTS }, through: bank-a, '
+                                       'at: "2026-09-15", note: "a September receipt" }')
+    bean('gift', 'contract', "Ali's gift to the landlord, Sam's books none of it", 'say: { by: sam, at: now }',
+         'own: { by: theone, of: self }', 'pay: { id: given, by: ali, to: landlord, of: { count: "7.00", unit: XTS }, '
+                                          'at: "2026-09-20" }')
+    r = run(PY, 'bin/save.py', 'sam', 'a September receipt, a gift', '--body', '- action: wrote [[old-receipt]] and '
+                                                                              '[[gift]]')
+    check("a receipt of September, and a gift between two others, are saved", r.returncode == 0, r.out[-900:])
+    sha = run('git', 'rev-parse', 'HEAD').stdout.strip()
+    bean('closing-09', 'document', 'September closed', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'reckon: { id: books-2026-09, reading: { what: "the books through September", steps: [ { id: through, op: '
+         'books, to: "2026-09-30", chart: books } ] } }', f'pin: {{ id: closed-09, of: [books-2026-09], at: [now, "garden@{sha}"] }}')
+    r = run(PY, 'bin/save.py', 'sam', 'September closed', '--body', '- action: wrote [[closing-09]]')
+    check("a close — the books' reading through a day, pinned at the commit before it — is saved through the gate",
+          r.returncode == 0, r.out[-900:])
+    r = run(PY, 'bin/reckon.py', 'closing-09#books-2026-09')
+    check("the reading `books` gives each account's net charge through the day: the bank 500 opened, 10 paid out",
+          r.returncode == 0 and '11 XTS: 490' in r.out, r.out[-900:])
+    c = reading('closes')
+    check("...and the books know the close: its day, its commit", c == [{'day': '2026-09-30', 'commit': sha,
+                                                                         'pin': 'closing-09#closed-09'}], c)
+    keep = text('beans/old-receipt.md')
+    write('beans/old-receipt.md', keep.replace('count: "10.00"', 'count: "11.00"'))
+    r = run(PY, 'bin/save.py', 'sam', 'the receipt, changed', '--body', '- action: changed [[old-receipt]] old')
+    check("a payment the closed books read is not changed: rule kept refuses it, by the commit",
+          r.returncode != 0 and 'read by the books of sam closed through 2026-09-30' in r.out, r.out[-900:])
+    run('git', 'reset', '-q', '--hard', 'HEAD')
+    os.remove(os.path.join(G, 'beans', 'old-receipt.md'))
+    r = run(PY, 'bin/save.py', 'sam', 'the receipt, taken out', '--body', '- action: took out [[old-receipt]] old')
+    check("...nor taken out with its bean", r.returncode != 0 and 'read by the books of sam closed' in r.out, r.out[-900:])
+    run('git', 'reset', '-q', '--hard', 'HEAD')
+    keep = text('beans/gift.md')
+    write('beans/gift.md', keep.replace('count: "7.00"', 'count: "8.00"').replace(
+        '  - own: { by: theone, of: self }\n', '  - own: { by: theone, of: self }\n  - say: { by: sam, at: now, of: [given] }\n'))
+    r = run(PY, 'bin/save.py', 'sam', 'the gift, corrected', '--body', '- action: changed [[gift]] given')
+    check("...and a payment Sam's books do not read (Ali's, to the landlord) is changed as before", r.returncode == 0,
+          r.out[-900:])
+    bean('stmt-late', 'document', 'a bank line found after September closed', 'read: { by: sam, at: now }',
+         'own: { by: { someone: org }, of: self }', 'pay: { id: fee, by: sam, of: { count: "2.00", unit: XTS }, '
+                                                    'through: bank-a, at: "2026-09-29", note: "a bank fee" }')
+    bean('books-late', 'document', "September's receipt booked after the close", 'say: { by: sam, at: now }',
+         'own: { by: sam, of: self }', 'book: { id: b9, of: "old-receipt#old", to: "books:61" }')
+    r = run(PY, 'bin/save.py', 'sam', 'a late line, a late booking', '--body', '- action: wrote [[stmt-late]] and '
+                                                                              '[[books-late]]')
+    vs = reading('vouchers')
+    by = {v['ref']: v for v in vs} if isinstance(vs, list) else {}
+    after = next((v for v in vs if v['as'] == 'after-close'), {}) if isinstance(vs, list) else {}
+    check("the closed books keep September as the pinned commit read it — the receipt still awaiting an account — and "
+          "what came after it with a September day, a bank fee and a booking, is read on 1 October, the difference",
+          r.returncode == 0 and lines_of(by.get('old-receipt#old', {})) == [('11', 0, 10, None), ('19', 10, 0, None)]
+          and after.get('day') == '2026-10-01' and 'stmt-late#fee' not in by
+          and lines_of(after) == [('11', 0, 2, None), ('19', 0, 8, None), ('61', 10, 0, None)], (r.out[-600:], after))
+    sha = run('git', 'rev-parse', 'HEAD').stdout.strip()
+    bean('closing-10', 'document', 'October closed', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'reckon: { id: books-2026-10, reading: { what: "the books through October", steps: [ { id: through, op: '
+         'books, to: "2026-10-31", chart: books } ] } }', f'pin: {{ id: closed-10, of: [books-2026-10], at: [now, "garden@{sha}"] }}')
+    r = run(PY, 'bin/save.py', 'sam', 'October closed', '--body', '- action: wrote [[closing-10]]')
+    t10 = reading('trial', '--unit', 'XTS', '--to', '2026-10-31')
+    bean('stmt-later', 'document', 'another September line, found after October closed', 'read: { by: sam, at: now }',
+         'own: { by: { someone: org }, of: self }', 'pay: { id: fee, by: sam, of: { count: "1.00", unit: XTS }, '
+                                                    'through: bank-a, at: "2026-09-28", note: "another bank fee" }')
+    r2 = run(PY, 'bin/save.py', 'sam', 'a later line', '--body', '- action: wrote [[stmt-later]]')
+    vs = reading('vouchers')
+    afters = sorted((v['ref'], v['day'], tuple(lines_of(v))) for v in vs if v['as'] == 'after-close') \
+        if isinstance(vs, list) else []
+    t10b = reading('trial', '--unit', 'XTS', '--to', '2026-10-31')
+    check("two periods closed: each reads as its own pin — September's late fee and booking stay on 1 October, inside "
+          "October's close — and a September line found after October closed is read on 1 November, the first open "
+          "day; the books through October read the same before it and after",
+          r.returncode == 0 and r2.returncode == 0 and afters == [
+              ('closing-09#closed-09@after', '2026-10-01', (('11', 0, 2, None), ('19', 0, 8, None), ('61', 10, 0, None))),
+              ('closing-10#closed-10@after', '2026-11-01', (('11', 0, 1, None), ('19', 1, 0, None)))]
+          and t10.get('rows') and t10.get('rows') == t10b.get('rows'), (r.out[-300:], r2.out[-300:], afters))
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

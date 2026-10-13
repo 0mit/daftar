@@ -91,7 +91,10 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
 - [ ] **kept** — The journal is appended to, never rewritten, and a line a commit adds to it holds no character a reader
       takes for a line break and no template's `(fill in`. A part under `series/`, once written, stays as it is. A
       commit that takes a header key or a statement out of a bean names it in its entry — the key, the statement's
-      id, or its verb — empties none it keeps, and leaves every bean it writes a body: a bean reads on paper.
+      id, or its verb — empties none it keeps, and leaves every bean it writes a body: a bean reads on paper. What an
+      entity's closed books read — a `pin` of a reading whose step is `books`, at a commit: a payment it paid, received,
+      bears or booked, a booking or a match of its own, in its bean at that commit and on a day on or before the closed
+      one — is not taken out or changed: a correction is the move's reverse, after the day.
 - [ ] **line** — What holds a line holds its form (core/law/lines.yaml). A series (`record`, named by its `id`) is read
       by its channels: each row one cell a channel, each cell in its channel's form, nothing in it the form does not
       hold. A walk's steps (`step`, each named) lead on (`to`) only to steps of the walk, and none leads on from a final
