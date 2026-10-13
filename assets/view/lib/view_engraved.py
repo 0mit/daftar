@@ -275,13 +275,19 @@ def flows(v, may):
 
 def crossings(may):
     """Gardens as nodes: this garden, and each garden a `take` here came from, a `propose` here went to, or a `pass`
-    names as its `by`; an arrow for each way, with the beans that went."""
+    names as its `by`; an arrow for each way, with the beans that went. A garden is called by its title — never its id:
+    this garden is the one the page is read in (`here`, no title), and one whose bean says no more of it than its id is
+    `unnamed`, the page calling it another garden (`n`, its place among them where there are several)."""
     here = vm.garden_name()
-    nodes, arrows = {here: {'id': here, 'title': here, 'here': True}}, {}
+    nodes, arrows, unnamed = {here: {'id': here, 'title': None, 'here': True}}, {}, []
 
     def node(g):
         if g not in nodes:
-            nodes[g] = {'id': g, 'title': title_of(g) if may('read', g) else None}
+            t = title_of(g) if may('read', g) else None
+            nodes[g] = {'id': g, 'title': t}
+            if t == g:
+                nodes[g].update(title=None, unnamed=True)
+                unnamed.append(g)
         return g
     for bid, b in sorted(vm.CORE.G.beans.items()):
         if not may('read', bid):
@@ -298,6 +304,9 @@ def crossings(may):
             elif verb == 'pass' and 'other-garden' in (r.get('from'), r.get('to')) and isinstance(r.get('by'), str):
                 k = (node(r['by']), here) if r.get('from') == 'other-garden' else (here, node(r['by']))
                 arrows.setdefault(k, set()).update(x for x in _listed(r.get('of')) if isinstance(x, str))
+    if len(unnamed) > 1:
+        for i, g in enumerate(unnamed, 1):
+            nodes[g]['n'] = i
     return {'nodes_are': 'gardens', 'nodes': list(nodes.values()),
             'arrows': [{'from': a, 'to': b, 'what': sorted(w)} for (a, b), w in sorted(arrows.items())],
             'partial': False}
@@ -635,7 +644,7 @@ def defaults_of(bid, may=None):
     d = L.verbs[w]['default']
     out = {}
     for ag in dmledger.reading([bid])['agreements']:
-        for t in ag['transactions']:
+        for t in ag['transactions'] + ag.get('asked', []):     # a payment made, or one a clause asks
             payers = [x['by'] for x in t.get('paid') or []]
             if t.get('borne_by_payer') and len(payers) == 1:
                 shown = may is None or may('read', payers[0])
@@ -785,11 +794,51 @@ def names(lang):
 
 
 def localize(p, lang):
-    """A page's readings for a reader of `lang`: the widgets' language, and the law's words in it (`names`)."""
+    """A page's readings for a reader of `lang`: the widgets' language, the law's words in it (`names`), and each code
+    of a scheme the page holds by its label in it (`codes`)."""
     if isinstance(lang, str) and lang:
         p['settings']['garden']['lang'] = lang
         p['names'] = names(lang)
+        p['codes'] = codes_of(p, lang.split('-')[0])
     return p
+
+
+_CODE = re.compile(r'^([a-z][a-z0-9-]*):([^\s:]+)$')
+
+
+def codes_of(p, lang=None):
+    """{`<scheme>:<code>`: {name, by?}} — each code of a scheme the garden knows (the law's, or its own `schemes`) that
+    the page's readings hold, by its name in the scheme's own table, read by the one reader (bin/knowledge.py): its
+    label in `lang` where the table carries one (`by`, the words its publisher asks printed beside it), else its name.
+    A code no table names here is left as it is written."""
+    import knowledge as dmknowledge
+    try:
+        K = dmknowledge.Knowledge(vm.ROOT)
+    except Exception:                           # no law to read schemes from here: nothing named, nothing guessed
+        return {}
+    out, seen = {}, set()
+
+    def walk(x):
+        if isinstance(x, dict):
+            for y in x.values():
+                walk(y)
+        elif isinstance(x, list):
+            for y in x:
+                walk(y)
+        elif isinstance(x, str) and x not in seen:
+            seen.add(x)
+            m = _CODE.match(x)
+            if not m or m.group(1) not in K.schemes:
+                return
+            try:
+                name, by = K.label(m.group(1), m.group(2), lang) if lang else (K.name(K.row(m.group(1), m.group(2))), None)
+            except (KeyError, OSError, ValueError):
+                return
+            if name:
+                out[x] = dict({'name': str(name)}, **({'by': str(by)} if by else {}))
+    walk(p.get('drawings'))
+    walk(p.get('sheets'))
+    return out
 
 
 def settings():
@@ -904,22 +953,6 @@ def contact_of(bid):
     return None, None, None
 
 
-def names_part(grants, bean, part):
-    """Whether one of `grants` — (holder, id) of each grant a law's answer read (bin/pass.py `may`; one with no id is
-    `grant@<its place>`) — opens `part` of `bean` by NAMING it: its `cover` names the part. What a host keeps off git of a
-    being is opened so, by name; a grant of the whole bean opens what the bean holds, never by itself what is held of it
-    elsewhere."""
-    for holder, gid in grants or ():
-        hb = _bean(holder)
-        for i, verb, r in (hb.items if hb is not None else ()):
-            if verb != 'grant' or (r.get('id') if isinstance(r.get('id'), str) else f'grant@{i}') != gid:
-                continue
-            cv = r.get('cover') if isinstance(r.get('cover'), dict) else {}
-            if part in [str(x) for x in _listed(cv.get('parts'))]:   # the answer read it as covering `bean`
-                return True
-    return False
-
-
 def stands(ref, bid):
     """Whether the word `ref` names still stands in the ledger: a statement (`<bean>#<id>`, or an id of `bid`'s own
     bean), or a bean of the garden — as a held statement's `while` is read."""
@@ -933,7 +966,7 @@ def page(may, reader, held=None, keep=None, contact=None):
     """For one reader: each engraved drawing's reading (of those `keep` names, where it names some: the drawings the
     reader is sent), the sheet of every being one of them shows, an empty sheet of each kind a drawing makes, the beings
     a role may name, and the widgets' settings."""
-    out = {'drawings': {}, 'sheets': {}, 'blank': {}, 'settings': settings(), 'reader': reader}
+    out = {'drawings': {}, 'sheets': {}, 'blank': {}, 'settings': settings(), 'reader': reader, 'codes': {}}
     show, acting = set(), {}                    # acting: {being: [the actions of a drawing that shows it]}
     for k, v in vm.views_raw():
         if not engraved(v) or (keep is not None and k not in keep):
@@ -989,6 +1022,7 @@ def page(may, reader, held=None, keep=None, contact=None):
                           **({'opaque': True} if b.kind == 'person' and bid not in named and title_of(bid) == bid else {}))
                      for bid, b in sorted(vm.CORE.G.beans.items())
                      if not b.unread and os.path.basename(os.path.dirname(b.path or '')) == 'beans' and may('read', bid)]
+    out['codes'] = codes_of(out)                   # each code of a scheme by its name: the reader's language, localize
     return out
 
 
@@ -996,8 +1030,9 @@ def page(may, reader, held=None, keep=None, contact=None):
 def scoped(host, user, keep=None):
     """`page` for a viewer of a host (view_serve.Host): read and write asked of the host's one function, `may`, which
     holds the host's ceiling under the law's grants; a held value sent only by the host whose store holds it, to a
-    viewer who may read that statement, while the word it is held on stands. Read once for each viewer at each ledger
-    head and each day — a grant, a seal or a write moves the head — and kept on the host until either moves."""
+    viewer a grant NAMES it to (bin/pass.py `may_core`, `held`: the gardener aside, never by a grant of the whole bean),
+    while the word it is held on stands. Read once for each viewer at each ledger head and each day — a grant, a seal or
+    a write moves the head — and kept on the host until either moves."""
     u = (host.cfg.get('users') or {}).get(user) or {}
     key = (user, today().isoformat(), tuple(sorted(keep or ())))
     kept = getattr(host, '_engraved', None)
@@ -1007,14 +1042,14 @@ def scoped(host, user, keep=None):
     if key in kept:
         return kept[key]
 
-    def may(act, bean, positions=None):
+    def may(act, bean, positions=None, held=False):
         if str(act).startswith('act:'):          # an action's tool, on the being it acts on
             return host.may(user, bean, act=True, tool=str(act)[4:])[0]
-        return host.may(user, bean, positions=positions, write=(act == 'write'))[0]
+        return host.may(user, bean, positions=positions, write=(act == 'write'), **({'held': True} if held else {}))[0]
 
     def held(bean, sid, r):
         import held as dmheld
-        if not may('read', bean, [sid]):
+        if not may('read', bean, [sid], held=True):        # a grant naming the statement, its verb, or its `as`
             return None
         b = _bean(bean)
         w = r.get('while')
@@ -1029,22 +1064,19 @@ def scoped(host, user, keep=None):
         e = rec.get('entry') if isinstance(rec, dict) and rec.get('key') == sid else None
         return {k: x for k, x in e.items() if k != 'while'} if isinstance(e, dict) else None
     def contact(bid):
-        """A held person's name and ways to reach them, held to the bar of a held statement and more: sent to the
-        gardener, or to a reader a grant opens by name the part of the person's bean that says where they are held
-        (`cover: { parts: [body] }`) — a grant of the whole bean opens the bean, never by itself what this host keeps of
-        them — and only while the word they were kept on (`Held: … on <basis>`, bin/held.py --basis) stands, where one
-        is written: once their consent is taken out, nobody has their name or contact, the gardener neither."""
+        """A held person's name and ways to reach them, to the bar of every held value: sent to the gardener, or to a
+        reader a grant names the part of the person's bean that says where they are held (`cover: { parts: [body] }`) —
+        a grant of the whole bean opens the bean, never by itself what this host keeps of them — and only while the word
+        they were kept on (`Held: … on <basis>`, bin/held.py --basis) stands, where one is written: once their consent is
+        taken out, nobody has their name or contact, the gardener neither."""
         _pointer, rec, basis = contact_of(bid)
         if not (isinstance(rec, dict) and isinstance(rec.get('entry'), dict)):
             return None
-        if not (gardener and u.get('bean') == gardener):    # nobody unnamed is the gardener
-            v = host.may(user, bid, positions=['body'])
-            if not v[0] or not names_part(getattr(v, 'grants', ()), bid, 'body'):
-                return None
+        if not may('read', bid, ['body'], held=True):
+            return None
         if basis and not stands(basis, bid):
             return None
         return rec['entry']
-    gardener = getattr(host, 'gardener', None) or str(vm.fm_path(os.path.join(vm.ROOT, 'GARDEN.md')).get('gardener') or '')
     p = page(may, u.get('bean'), held, keep, contact)
     p['places'] = places(may)                                     # what a place lookup offers first: the reader's own
     g = p['settings']['garden']
@@ -1089,8 +1121,8 @@ def serve_write(host, user, body):
                                                     "it fixes them" % (form['verb'], json_words(form.get('preset')))}
                                                    for n in (bad or [None])]}
 
-    def may(act, b, positions=None):
-        return host.may(user, b, positions=positions, write=(act == 'write'))[0]
+    def may(act, b, positions=None, held=False):
+        return host.may(user, b, positions=positions, write=(act == 'write'), **({'held': True} if held else {}))[0]
     with host.wlock:
         r = view_write.write(vm.ROOT, actor, None if kind else bean, ops, kind=kind, may=may)
     host.audit(dict(base, bean=r.get('bean'), mode="saved" if r['ok'] else "refused", commit=r.get('commit'),

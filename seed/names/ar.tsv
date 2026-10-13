@@ -155,7 +155,8 @@ verbs:carry	حَمْل	ح-م-ل (to carry): a link carries a tunnel, a disk a vo
 verbs:route	تَوْجِيه	و-ج-ه (a face: to turn towards): traffic sent on to its next hop — Arabic networking's word for routing	proposed	agent (claude opus-5.5), by hand
 verbs:translate	ترجمة عناوين الشبكة	ت-ر-ج-م (to render) + عنوان (ʿunwān: an address — and a title, which the plural and the network keep apart): network address translation, an address rewritten as traffic crosses	proposed	agent (claude opus-5.5), by hand
 verbs:filter	تَصْفِية	ص-ف-و (to be clear, pure): letting traffic cross or stopping it — تصفية الحزم (packet filtering); جدار ناري (a firewall)	proposed	agent (claude opus-5.5), by hand
-verbs:book	قَيْد	ق-ي-د (to fetter: what is bound down in the books): القيد المحاسبي, an amount booked to an account of the analytic scheme, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:book	قَيْد	ق-ي-د (to fetter: what is bound down in the books): القيد المحاسبي, an amount moved from one account to another, or booked to an analytic account in a share	proposed	agent (claude opus-5.5), by hand
+verbs:match	مُطابَقة	ط-ب-ق (to fit one upon another): المطابقة البنكية — a bank's line and the payment said, one movement counted once	proposed	agent (claude opus-5.5), by hand
 verbs:renew	تَجْدِيد	ج-د-د (to be new): a registration renewed	proposed	agent (claude opus-5.5), by hand
 verbs:mark	تَحْدِيد	ح-د-د (to set a limit: حدّ, a boundary): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
 verbs:produce	إنشاء	ن-ش-أ (to arise, to grow): bringing into being an artifact — a file, a build, a report; and the art of composing words (الإنشاء)	proposed	agent (claude opus-5.5), by hand
@@ -172,6 +173,7 @@ qualifiers:placed	مَوْضِع	و-ض-ع (to lay, to put): where a thing is put
 qualifiers:presence	وُجود	و-ج-د (to find): found, or looked for and not found — being is what is found; حضور is kept for `attend`	proposed	agent (claude opus-5.5), by hand
 qualifiers:reading	اسْتِعْلام	ع-ل-م (to know): seeking to know — a query, what a reckoning selects and computes, read each time; قراءة is `read`'s	proposed	agent (claude opus-5.5), by hand
 qualifiers:result	نَتِيجة	ن-ت-ج (to bring forth young): what came of a measuring — a code	proposed	agent (claude opus-5.5), by hand
+qualifiers:sense	اِتِّجاه	و-ج-ه (to face): along a move's direction, or against it	proposed	agent (claude opus-5.5), by hand
 qualifiers:series	سِلْسِلة	س-ل-س-ل (a chain): a series — what a line held at each position, its rows	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	تَسْوِية	س-و-ي (to make level): which occurrences of which clauses a payment settles, and how much of each	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	حِصّة	ح-ص-ص (to fall to one's lot): one's portion of a cost	proposed	agent (claude opus-5.5), by hand

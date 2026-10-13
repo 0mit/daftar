@@ -78,6 +78,7 @@ parts, changes).
    python3 test/leads.py
    python3 test/core_crosswalks.py
    python3 test/core_inforce.py
+   python3 test/books.py
    python3 test/mailbox.py
    python3 test/layers.py
    python3 test/act.py
@@ -87,6 +88,9 @@ parts, changes).
    python3 test/view_handplace.py
    python3 test/bidi.py
    python3 test/view_held_names.py
+   python3 test/view_held_named.py
+   python3 test/view_code_names.py
+   python3 test/view_between_names.py
    python3 test/view_actions.py
    python3 test/view_pages.py
    python3 test/view_forms.py

@@ -71,7 +71,7 @@ except frame.Refused as e:
 
 # ------------------------------------------------------------------------------------------------ the law
 check("the law is whole: the face's 21 verbs, the 42 rows and the 20 levels of bodies, 0 problems",
-      not LAW0.problems() and len(LAW0.verbs) == 63 and len(LAW0.levels) == 26, LAW0.problems())
+      not LAW0.problems() and len(LAW0.verbs) == 64 and len(LAW0.levels) == 26, LAW0.problems())
 CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "

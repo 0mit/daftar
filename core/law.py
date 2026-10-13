@@ -63,7 +63,7 @@ ROW_FIELDS = {
                 'overlay', 'meaning', 'why', 'vacant'},
     'schemes': {'scheme', 'classifies', 'publisher', 'url', 'levels', 'neighbours', 'sources', 'holding', 'licence',
                 'release', 'sensitive', 'code_pattern', 'relations', 'labels', 'crosswalk', 'same_ground_as', 'within',
-                'file', 'key', 'format', 'meaning', 'units', 'vacant'},
+                'file', 'key', 'format', 'meaning', 'units', 'form', 'vacant'},
     'files': {'registry', 'file', 'key', 'format'},
     'exclusive': {'verb', 'why'},
 }
@@ -275,7 +275,8 @@ class Law:
         forms it brings; the attributes it adds to a form of the core, which the form holds for every garden and rule
         `profile` grants only where the garden takes the profile; its vacancies beside the law's own."""
         self.profiles = {str(p['profile']): p for p in listed(data.get('profiles')) if isinstance(p, dict)}
-        keys = {'lenses': 'lens', 'archetypes': 'archetype', 'planes': 'plane', 'orientations': 'order'}
+        keys = {'lenses': 'lens', 'archetypes': 'archetype', 'planes': 'plane', 'orientations': 'order',
+                'elements': 'element', 'account_roles': 'role'}
         for t, key in keys.items():
             rows = [r for r in listed(data.get(t)) if isinstance(r, dict)]
             self.profile_tables[t] = rows
@@ -842,6 +843,77 @@ class Law:
                                         "no `model`, `value` or `join`"))
         return out
 
+    def chart_problems(self):
+        """[(where, message)]: each scheme that names a form of a profile (`form`, registries.yaml) — a chart of accounts
+        names the accounting profile's `chart` — its rows held to it: the form a profile's, and one the garden takes;
+        its columns the scheme's own (code, level, parent, name) and the form's; an element, a role, a kind of the law;
+        a postable account (a code no other code has for its parent) saying what it is, itself or by an ancestor; one
+        account of a chart standing for a being, and one taking each role. That the being is one the garden holds is
+        the garden's to say (core/profiles.py `charts`)."""
+        out = []
+        if not self.std:
+            return out
+        K = self.std.knowledge
+        brought = sorted(f for p in self.profiles.values() for f in listed(p.get('forms')))
+        for scheme, srow in sorted(K.schemes.items()):
+            form = srow.get('form') if isinstance(srow, dict) else None
+            if form is None:
+                continue
+            where = f"scheme {scheme} form {form}"
+            owner = next((n for n, p in self.profiles.items() if form in listed(p.get('forms'))), None)
+            spec = self.forms.get(str(form)) if owner else None
+            if not owner or not isinstance(spec, dict):
+                out.append((where, f"`{form}` is no form a profile brings: one of {', '.join(brought)}"))
+                continue
+            if self.taken_where is not None and owner not in self.taken:
+                out.append((where, f"`{form}` is the {owner} profile's, which this garden does not take"))
+                continue
+            try:
+                rows = [dict(r) for r in K.rows(str(scheme))]
+            except (KeyError, OSError, ValueError) as e:
+                out.append((where, f"its rows cannot be read: {e}"))
+                continue
+            attrs = spec.get('attrs') or {}
+            cols = {'code', 'level', 'parent', 'name'} | set(attrs)
+            by = {str(r.get('code') or ''): r for r in rows}
+            parents = {str(r.get('parent') or '') for r in rows}
+            stands, roles = {}, {}
+            for r in rows:
+                code = str(r.get('code') or '')
+                at = f"scheme {scheme} {code or '(no code)'}"
+                odd = sorted(k for k, v in r.items() if k not in cols and v not in (None, ''))
+                if odd:
+                    out.append((at, f"{', '.join(odd)}: no column of a {form} ({', '.join(sorted(cols))})"))
+                el = str(r.get('element') or '')
+                if el and self.has('elements', el):
+                    out.append((at, f"element: {self.has('elements', el)}"))
+                ro = str(r.get('role') or '')
+                if ro and self.has('account_roles', ro):
+                    out.append((at, f"role: {self.has('account_roles', ro)}"))
+                elif ro and ro in roles:
+                    out.append((at, f"takes the role {ro}, which {roles[ro]} takes: one account a role"))
+                elif ro:
+                    roles[ro] = code
+                for k in str(r.get('parties') or '').split():
+                    if k not in self.kinds:
+                        out.append((at, f"parties: {k!r} is no kind of the law"))
+                sf = str(r.get('stands_for') or '')
+                if sf and sf in stands:
+                    out.append((at, f"stands for {sf}, as {stands[sf]} does: one account of a chart a being"))
+                elif sf:
+                    stands[sf] = code
+                cl = str(r.get('closed') or '')
+                if cl and not re.match(r'^\d{4}-\d{2}-\d{2}$', cl):
+                    out.append((at, f"closed: {cl!r} is no day, `YYYY-MM-DD`"))
+                if code and code not in parents:
+                    c, seen = code, set()
+                    while c in by and c not in seen and not by[c].get('element'):
+                        seen.add(c)
+                        c = str(by[c].get('parent') or '')
+                    if not (c in by and by[c].get('element')):
+                        out.append((at, "a postable account says what it is: its element, or an ancestor's"))
+        return out
+
     def units_crosswalk_problems(self):
         """[(where, message)]: each scheme's crossing into the law's units and kinds (`units`), held to
         registries.yaml's `units_crosswalk_form`: its registry declared and read, its columns the form's, and each row at
@@ -1164,6 +1236,8 @@ class Law:
         for where, msg in self.crosswalk_problems():
             bad(where, msg)
         for where, msg in self.units_crosswalk_problems():
+            bad(where, msg)
+        for where, msg in self.chart_problems():
             bad(where, msg)
         names = {}
         for u, row in self.units.items():

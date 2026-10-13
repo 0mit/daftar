@@ -129,8 +129,12 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       (`values`), each named once on its page; what a drawing names is there — a value of its own, a drawing of its page,
       a reading of its bean — and each attribute is in its domain: a unit of the law, a technology of the catalogue, a
       signal it publishes, a threshold's quantity, a deadline and a repetition in their forms, a frame that is a line.
-      A listening surface's or a link's `channel` (the network profile's) holds its form; a payment's `book`ings (the
-      accounting profile's) name accounts of a scheme, and under one plan are shares all, or amounts all that add up.
+      A listening surface's or a link's `channel` (the network profile's) holds its form. A chart of accounts (the
+      accounting profile's: a scheme naming `form: chart`) holds its rows to the form — each postable account says
+      its element, one account a being, one a role, each being one the garden holds; a `book`ing moves an amount from
+      a postable account to another of one chart, open on its day, or names one side of a payment, the other read from
+      it, or books a move in the reverse sense (`sense: "-1"`) from a day it says; under one plan its amounts add up
+      to the entity's part, and to one side of a chart to no more; a `match` names payments that agree, each once.
 
 **The commit's own rules**, which only a commit can show:
 - [ ] Every bean the commit changes is named in the journal entry it adds (`[[<bean>]]`), and that entry's heading is

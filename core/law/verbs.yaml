@@ -12,6 +12,7 @@ tables:                                   # the small tables these rows name; a 
   jobs:          [router, mail-primary, mail-backup, file-server, dns-resolver, dns-authoritative, monitoring, web, app-host, vpn-gateway, ledger-hub, workstation]
   verdicts:      [confirms, disputes, abstains]        # what a response to another's statement says of it (v1 part 12b)
   treatments:    [route, mangle, queue]                # how a forwarding device steers traffic: by a route, a mark, a queue
+  senses:        ["1", "-1"]                          # a move along its direction, or against it: its reverse
 standard_tables: [protocols, knowledge, properties, units]   # read from their standards (IANA, our knowledge tree, ISO 19156, SI and UCUM)
 
 verbs:
@@ -59,7 +60,7 @@ verbs:
     replaces: [borne_by]
     home: core
   - verb: grant
-    meaning: "to open to someone an act on what a garden holds: closed by default, so nobody but the gardener may do what no grant opens. It covers what its `of` names — a bean, a statement, or a reading (a `reckon` statement), whose members it covers, read each time it is asked — and opens it to whom its `to` names: a being, or every member of a reading. Which parts of each it opens, and whether each use states a reason, is its `cover` (v1 part 12b): absent, the whole of each. It holds over its `at`; with a `window` — a recurrence each of whose occurrences lasts a length of time, office hours on working days — only at a moment that lies in its `at` and in an occurrence of its window, read in the garden's zone (GARDEN.md `zone`): an occurrence that lasts past midnight holds on into the next day"
+    meaning: "to open to someone an act on what a garden holds: closed by default, so nobody but the gardener may do what no grant opens. It covers what its `of` names — a bean, a statement, or a reading (a `reckon` statement), whose members it covers, read each time it is asked — and opens it to whom its `to` names: a being, or every member of a reading. Which parts of each it opens, and whether each use states a reason, is its `cover` (v1 part 12b): absent, the whole of each, but never what is held of it off git, which only a grant naming it opens. It holds over its `at`; with a `window` — a recurrence each of whose occurrences lasts a length of time, office hours on working days — only at a moment that lies in its `at` and in an occurrence of its window, read in the garden's zone (GARDEN.md `zone`): an occurrence that lasts past midnight holds on into the next day"
     roles:
       by:      { shape: being }
       to:      { shape: [being, statement], many: true }
@@ -323,11 +324,17 @@ verbs:
 
   # ---------------------------------------------------------------- the other profiles
   - verb: book
-    meaning: "to book an amount to an account of the garden's analytic scheme, in a share"
-    roles: { by: { shape: being }, of: { shape: statement }, to: { shape: [being, text] } }
-    qualifiers: { share: { shape: quantity } }
-    required: [of, to]
+    meaning: "to book an amount in the books of an entity (`by`; absent, the gardener's): what a statement moved, asks or measured (`of`: a payment, made or asked by a clause; a `measure`; the books' `open`; another booking), leaving one account (`from`) and arriving at another (`to`), in a share or an amount (`share`), on a day (`at`; absent, the day of what it books). An account is a code of a chart (the profile's form `chart`), a being an account of the chart stands for, or a party it holds. Where it books a payment and names one side, the other is read from the payment: its means (the account that stands for its `through`), its shares (each other bearer's current account), what it settles; where it names both, it is written whole. Naming only `to`, a code of a scheme that is no chart, it says where the entity's part of what it books belongs along a plan (analytic distribution). Value moves as a charge, and what a position holds is what arrived less what left, read, never stored. With `sense: \"-1\"` and no side, it books the move of what it books in the reverse sense, from its day on — a booking's, or every booking of a payment's: its ends exchanged, read and never written"
+    roles: { by: { shape: being }, of: { shape: statement }, from: { shape: [being, text] }, to: { shape: [being, text] }, at: { shape: position } }
+    qualifiers: { share: { shape: quantity }, sense: { shape: row, table: senses } }
+    required: [of]
     replaces: [analytic_distribution]
+    home: accounting
+  - verb: match
+    meaning: "to say that statements are records of one movement of money — a line read from a bank's file, and the payment said where it belongs — in the books of an entity (`by`; absent, the gardener's): the movement is counted once, the records agreeing in amount per currency; the record said carries the bookings, and the line read is its evidence"
+    roles: { by: { shape: being }, of: { shape: statement, many: true }, at: { shape: position } }
+    required: [of]
+    replaces: []
     home: accounting
   - verb: renew
     meaning: "to renew a registration: on the permission square, whether the registrar renews unasked"
