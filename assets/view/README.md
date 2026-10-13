@@ -258,14 +258,20 @@ a button on its row, the statement (`<bean>#<id>`) what the action acts on. An i
   scheme the garden knows (`scheme:<name>`), each `<scheme>:<code>` named in the reader's language as every code a page
   holds is (`codes`) — a row others sit beneath a heading, shown and never chosen;
 - **several** (`many: "true"`): a list — a check box each, for a choice;
-- **filled from the element** (`from: self`, or a path into it): never asked; the host fills it, whatever the page sent;
+- **filled from the element** (`from: self`, or a path into it): never asked; the host fills it, whatever the page sent,
+  and starts nothing where the element gives none;
+- **left empty** (`optional: "true"`): where empty has a meaning the walk states (no note, no cost centre, today's day),
+  a person may leave it so, and the walk is then given no value of that name — absent, never an empty one. Any other
+  input a person gives is marked required on the sheet and asked for; never optional is one filled from the element,
+  or the clock's;
 - **a day** (`type: position`), read in the reader's calendar and digits; **a file** (`type: file`), chosen on the
   reader's machine and carried to the host, which keeps it off git under its SHA-256 (`<git dir>/daftar-inputs/`,
   readable by its owner alone, at most `file_bound` bytes, 16 MiB unless the host sets it) and gives the run that
   SHA-256; the walk's tool reads the file by it (bin/walktool.py `file`).
 The host holds each value to what the page offered this viewer: a choice not offered, a heading, a row of another verb
 or one the bean has not, a file over its bound, each refused before anything starts. An input given several times is
-a list at the terminal too (bin/act.py `--input name=a --input name=b`), and `W.inputs()` gives it as one.
+a list at the terminal too (bin/act.py `--input name=a --input name=b`, or `--list name` for a list of one, as the host
+passes every `many`), and `W.inputs()` gives it as one.
 
 **A code by its name.** A value a page holds as `<scheme>:<code>`, of a scheme the garden knows (the law's, or its own
 `schemes`) — an account a payment is booked to, a code a being is classified by — is drawn by its name in the scheme's

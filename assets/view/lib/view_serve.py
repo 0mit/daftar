@@ -278,6 +278,14 @@ def given_by_person(i):
     return not (o.get("act") == "read" and o.get("by") == "reader")
 
 
+def optional(i):
+    """Whether a person may leave an action's input empty (core/law/profiles.yaml `actions.inputs.optional`, ratified
+    2026-10-13): left empty, the tool is given no value of that name — absent, never an empty one, its meaning the
+    tool's own (no note, no cost centre, today's day). Any other input a person gives is asked, and nothing starts
+    without it."""
+    return i.get("optional") in ("true", True)
+
+
 class Host:
     def __init__(self, config, argv=None):
         self.config_path = config
@@ -639,9 +647,10 @@ class Host:
             return 404, {"error": "no action is declared on that element in the ledger"}
         base.update(tool=a["tool"], act="act:" + a["tool"], bean=a.get("bean"), reason=reason or None)
         declared = {i.get("name"): i for i in a.get("inputs") or []}
-        given = {k: str(x) for k, x in (inputs or {}).items() if k in declared}
+        given = {k: str(x) for k, x in (inputs or {}).items()       # a value left empty is no value: absent, or asked
+                 if k in declared and x is not None and str(x).strip()}
         undeclared = sorted(set(inputs or {}) - set(declared))
-        missing = sorted(n for n, i in declared.items() if n not in given and given_by_person(i))
+        missing = sorted(n for n, i in declared.items() if n not in given and given_by_person(i) and not optional(i))
         base["inputs"] = given
         if undeclared or missing:
             self.audit(dict(base, mode="refused", why="inputs"))
@@ -700,7 +709,9 @@ class Host:
         AN ACTION'S INPUTS (ratified 2026-10-13): on a row of a sheet (`el` a verb), `bean` names the row's statement,
         `<bean>#<id>`, which must be one of that verb in that bean; an input filled `from` the element is the host's to
         fill, whatever the page sent; one chosen `of` a reading or a scheme must be one of the choices this viewer is
-        offered (a heading never); `many` takes a list; a `file` is kept off git under its SHA-256, the run given that."""
+        offered (a heading never); `many` takes a list; a `file` is kept off git under its SHA-256, the run given that.
+        One a person may leave empty (`optional`) and left so is not given at all: the walk reads it absent, its meaning
+        the walk's own; any other left empty, or filled from an element that gives none, starts nothing."""
         v = self._bound(user, key)
         a = next((x for x in (v or {}).get("actions", []) if x["el"] == el and x["tool"] == tool), None)
         actor = ((self.cfg.get("users") or {}).get(user) or {}).get("bean")
@@ -728,8 +739,12 @@ class Host:
         given, why = {}, []
         mine = lambda act, b, *x, **k: self.may(user, b)[0]
         for name, i in declared.items():
-            if i.get("from"):                          # the host's to fill, never the page's
-                given[name] = self._filled(bean, stmt, row, i["from"])
+            if i.get("from"):                          # the host's to fill, never the page's, and never empty
+                got = self._filled(bean, stmt, row, i["from"])
+                if got:
+                    given[name] = got
+                else:
+                    why.append("%s: the element gives none (%s)" % (name, i["from"]))
                 continue
             got = (inputs or {}).get(name)
             if str(i.get("type") or "") == "file":
@@ -755,7 +770,7 @@ class Host:
             if vals:
                 given[name] = vals if i.get("many") in ("true", True) else vals[0]
         missing = sorted(n for n, i in declared.items() if n not in given and given_by_person(i) and not i.get("from")
-                         and not any(n in w.split(":")[0] for w in why))
+                         and not optional(i) and not any(n in w.split(":")[0] for w in why))
         base["inputs"] = given
         if undeclared or missing or why:
             self.audit(dict(base, mode="refused", why="inputs"))
@@ -774,9 +789,11 @@ class Host:
             self.audit(dict(base, mode="refused", why="the host maps the tool to no walk"))
             return 403, {"error": "the host starts no walk for tool %r — nothing ran" % tool}
         args = [bean, "--start", walk, "--by", actor]
-        for k, w in sorted(given.items()):             # a list given as its values, each an `--input` of the name
-            for x in (w if isinstance(w, list) else [w]):
+        for k, w in sorted(given.items()):             # a list given as its values, each an `--input` of the name,
+            for x in (w if isinstance(w, list) else [w]):  # and named a list, so a list of one stays one
                 args += ["--input", "%s=%s" % (k, x)]
+            if isinstance(w, list):
+                args += ["--list", k]
         with self.wlock:
             rc, out = self._act_py(*args)
         m = re.search(r"^act: \S+ (run-\d+): (.*)$", out, re.M)

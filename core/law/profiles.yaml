@@ -513,6 +513,9 @@ forms:
                   many:
                     in: ["true"]
                     meaning: "several values of it, a list: each one as the input asks"
+                  optional:
+                    in: ["true"]
+                    meaning: "a value the person pressing may leave empty, where empty has a meaning the tool states (no note, no cost centre, today's day): left empty, the tool is given no value of that name, never an empty one. Never an input filled `from` the element, nor the clock's: a tool cannot run without them. Absent, the input is asked, and a run is not started without it"
                   from:
                     in: { type: field_path }
                     meaning: "filled by the host from the element the button sits on, never asked of the person: `self`, the element's own (the being of a table's line or a sheet; `<bean>#<id>`, the statement of a sheet's row), or a path into it (`of.unit`)"

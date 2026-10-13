@@ -261,10 +261,14 @@
       if (i.quantity || /count|number|decimal/.test(ty)) return w.number.edit(nm, '');
       return w.text.edit(nm, '', many ? {lines: true} : {});
     }
+    // an input a person may leave empty (the law's `optional`): left so, the host gives the tool nothing of that name;
+    // any other is marked as the entry form marks a required role, and asked before anything is sent
+    function optional(i) { return i.optional === 'true' || i.optional === true; }
     function actForm(a) {
       var said = (a.inputs || []).filter(function (i) { var o = i.origin || {}; return !(o.act === 'read' && o.by === 'reader') && !i.from; });
       return h`${a.confirm ? h`<p class="eg-known">${w.text.show(a.confirm)}</p>` : ''}${said.map(function (i) {
-        return h`<label class="eg-field" data-role="${i.name}"><span class="eg-role-name">${w.text.show(i.note || i.name)}</span> ${actInput(i)}<span class="eg-err" data-err="${'act.' + i.name}"></span></label>`;
+        var req = !optional(i);
+        return h`<label class="eg-field${req ? ' eg-req' : ''}" data-role="${i.name}"><span class="eg-role-name">${w.text.show(i.note || i.name)}${req ? h` <span class="eg-req-word">(${t.say('sheet-required')})</span>` : ''}</span> ${actInput(i)}<span class="eg-err" data-err="${'act.' + i.name}"></span></label>`;
       })}${a.reason ? h`<label class="eg-field" data-role="reason"><span class="eg-role-name">${t.say('act-reason')}</span> ${w.text.edit('act.reason', '', {lines: true})}</label>` : ''}<div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-act-start="">${t.say('act-start')}</button> <span class="eg-err" data-err-act=""></span></div>`;
     }
     function wireActions() {
@@ -295,21 +299,27 @@
     function startAct(a, box, row) {
       var inputs = {}, bad = false, files = [], say = function (x) { var e = box.querySelector('[data-err-act]'); if (e) e.textContent = x; };
       var err = function (name, x) { var e = box.querySelector('[data-err="act.' + name + '"]'); if (e) e.textContent = x; bad = true; };
+      box.querySelectorAll('[data-err^="act."]').forEach(function (e) { e.textContent = ''; });
       (a.inputs || []).forEach(function (i) {
         var o = i.origin || {}, name = i.name, many = i.many === 'true' || i.many === true;
         if (i.from || (o.act === 'read' && o.by === 'reader')) return;      // the host's to fill, or the clock's
         var fs = [].slice.call(box.querySelectorAll('[name="act.' + name + '"]'));
         if (!fs.length) return;
+        // left empty: nothing sent of it — the tool's own meaning where it is optional, else asked for here
+        var none = function () { if (!optional(i)) err(name, t.say('required')); };
         if (String(i.type || '') === 'file') {
           if (fs[0].files && fs[0].files[0]) files.push(fileOf(fs[0].files[0]).then(function (x) { inputs[name] = x; }));
+          else none();
           return;
         }
         if (i.choices && many) {
-          inputs[name] = fs.filter(function (f) { return f.checked; }).map(function (f) { return f.value; });
+          var got = fs.filter(function (f) { return f.checked; }).map(function (f) { return f.value; });
+          if (got.length) inputs[name] = got;
+          else none();
           return;
         }
         var v = String(fs[0].value || '').trim();
-        if (!v) return;
+        if (!v) return none();
         if (i.choices) {
           var c = w.choice.take(v, choicesOf(i));
           if (c.error) return err(name, c.error);

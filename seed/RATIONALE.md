@@ -5496,6 +5496,20 @@ a host must refuse. A journal entry's lines and a payment's shares are not input
 statements written on a draft's sheet by the one write path, and the walk posts the draft — one way to write a fact,
 never two.
 
+AN INPUT A PERSON MAY LEAVE EMPTY (2026-10-13, ratified by the operator: "meaningful optional inputs"). A payment booked
+to an account need not name a cost centre or carry a note, and a move reversed is reversed today where no day is said:
+the walk states what each of them means left empty. Asking them of every person on every press, as an input that may not
+be left empty must be asked, makes a page ask what its walk does not need. So an input may say `optional: "true"`, and
+left empty, the walk is given no value of that name at all: absent, never an empty one, so no walk has to guess whether
+nothing was said or an empty thing was. The word is `optional`, not `required: "false"`: it is the operator's, in the
+shape `many` has, and `required` is already the law's own word one level up, the one its forms say of their attributes,
+which an input saying it of itself would read as. Absent, an input is asked, as before, so every page written before
+asks what it asked. Never optional is an input filled from the element, nor the clock's: a tool cannot run without the
+row it acts on or the moment, and the host starts nothing where the element gives none. What else a walk needs, the law
+cannot see: the host maps a tool to a walk in its own configuration, not in the ledger, and a walk declares no inputs. So
+a walk refuses for itself when it plans, before anything is written, what it cannot run without (a reversal without its
+reason); a page that declares that input optional starts a run the walk then refuses, nothing changed.
+
 ## core/law/profiles.yaml: forms.drawing.attrs.axes
 
 AN AXIS NAMES AN ORDER, NEVER A SIDE. A drawing says which order runs along each of its axes — `{ inline: time }` —
