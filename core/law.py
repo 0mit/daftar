@@ -106,12 +106,67 @@ COLUMNED = (('systems.yaml', 'forms'), ('places.yaml', 'forms'), ('protocols.yam
             (VALUES, 'columns'), (PROFILES, 'forms'))     # the profiles' tables (lenses, archetypes, orientations…) too
 
 
+def _columned(law_dir, std_dir):
+    """[(name, key, path)] of each file whose tables have forms, where it is read from: the standards' from `std_dir`."""
+    return [(name, key, os.path.join(std_dir if std_dir and key == 'forms' and name != PROFILES else law_dir, name))
+            for name, key in COLUMNED]          # a profile is the law's own
+
+
 def columns_problems(law_dir, std_dir=None):
-    """[(where, message)]: each table of rows in the files whose tables have forms, held to its form."""
+    """[(where, message)]: each table of rows in the files whose tables have forms, held to its form — ONCE PER LAW
+    VERSION (2026-10-14): what it found is kept in the clone's git directory under the SHA-256 of those files and of the
+    code that judges them, and read back while both are unchanged. It re-read ten of the law's files at every gate, a
+    tenth of a small garden's gate; a law that changes, or a judge that does, is judged again."""
+    import hashlib
+    import json
+    files = _columned(law_dir, std_dir)
+    h = hashlib.sha256()
+    for code in (__file__, read.__file__):
+        with open(code, 'rb') as fh:
+            h.update(fh.read())
+    for name, key, path in files:
+        h.update(f"\0{name}\0{key}\0".encode('utf-8'))
+        if os.path.isfile(path):
+            with open(path, 'rb') as fh:
+                h.update(fh.read())
+    keep = _law_kept(h.hexdigest())
+    if keep is not None and os.path.isfile(keep):
+        try:
+            with open(keep, encoding='utf-8') as fh:
+                return [tuple(x) for x in json.load(fh)]
+        except (OSError, ValueError):
+            pass
+    out = _columns_problems(files)
+    if keep is not None:
+        try:
+            os.makedirs(os.path.dirname(keep), exist_ok=True)
+            tmp = f"{keep}.{os.getpid()}"
+            with open(tmp, 'w', encoding='utf-8') as fh:
+                json.dump(out, fh, ensure_ascii=False)
+            os.replace(tmp, keep)
+        except OSError:
+            pass
+    return out
+
+
+def _law_kept(digest):
+    """Where the self-check of the law of that digest is kept: `<git dir>/daftar/law-checked/<digest>.json` of the
+    garden's clone the gate runs in (where every worktree of it reads it), or None outside a garden's clone — a release's
+    own tree, a copy with no history: there nothing is kept, and the law is judged each time."""
+    import subprocess
+    try:
+        r = subprocess.run(['git', 'rev-parse', '--show-toplevel', '--git-common-dir'], capture_output=True, text=True)
+    except OSError:
+        return None
+    lines = r.stdout.strip().split('\n')
+    if r.returncode != 0 or len(lines) != 2 or not os.path.isfile(os.path.join(lines[0], 'GARDEN.md')):
+        return None
+    return os.path.join(os.path.abspath(lines[1]), 'daftar', 'law-checked', f"{digest}.json")
+
+
+def _columns_problems(files):
     out = []
-    for name, key in COLUMNED:
-        d = std_dir if std_dir and key == 'forms' and name != PROFILES else law_dir     # a profile is the law's own
-        path = os.path.join(d, name)
+    for name, key, path in files:
         if not os.path.isfile(path):
             continue
         data = read.data(path)

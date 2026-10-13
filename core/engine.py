@@ -131,6 +131,7 @@ class Judge:
         self.L, self.G = law, garden
         self.out = []
         self.systems = law.systems               # the standards', and the garden's own (part 7)
+        self._up = None                          # the part/at graph, read once (`_part_at`)
 
     def err(self, rule, where, msg):
         self.out.append((rule, where, msg))
@@ -758,13 +759,22 @@ class Judge:
 
     def _related(self, a, c):
         """Whether one being is part of, or at, the other, through any number of steps."""
-        up = {}
-        for b in self.G.beans.values():
-            for _i, verb, r in b.items:
-                if (verb == 'part' and 'of' in r) or (verb == 'be' and 'at' in r):
-                    for x in self._beans_in(r.get('by'), b):
-                        up.setdefault(x, set()).update(self._beans_in(r.get('of') if verb == 'part' else r.get('at'), b))
+        up = self._part_at()
         return self._reaches(up, a, c) or self._reaches(up, c, a)
+
+    def _part_at(self):
+        """{being: the beings it is part of, or at}: one step of each `part` and `be … at`, read once per judge — the
+        garden does not change while it is judged, and the room rule asks it of every pair it compares (it was built
+        again for each pair, the whole garden walked each time)."""
+        if self._up is None:
+            up = {}
+            for b in self.G.beans.values():
+                for _i, verb, r in b.items:
+                    if (verb == 'part' and 'of' in r) or (verb == 'be' and 'at' in r):
+                        for x in self._beans_in(r.get('by'), b):
+                            up.setdefault(x, set()).update(self._beans_in(r.get('of') if verb == 'part' else r.get('at'), b))
+            self._up = up
+        return self._up
 
     def _span(self, x, to_the_moment=False):
         """(lo, hi) in ms of a time position or an extent — a day is the whole day — or None. With `to_the_moment`, only

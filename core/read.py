@@ -4,7 +4,14 @@ YAML 1.1 reads the key `on:` as the boolean true and `2026-10-01` as a date obje
 makes a value the writer did not write. So the core reads with PyYAML's BaseLoader: every scalar is a str, every
 mapping a dict and every sequence a list, and what a value means is the engine's to say by the role it fills. No new
 dependency. The fences are parse's (line-anchored, the one splitter), and a key written twice is refused before the
-parse can drop the first (parse.duplicate_keys)."""
+parse can drop the first (parse.duplicate_keys).
+
+THE LOADER IS LIBYAML'S WHERE PYYAML HAS IT (2026-10-14): `CBaseLoader` is the same loader in C. Measured on two
+gardens' beans and the law, 570 documents: identical objects, at twelve times the speed, and the gate's output byte for
+byte the same — the pure loader was three quarters of a gate's time. Where PyYAML was built without libyaml (a wheel
+some platforms lack) the pure `BaseLoader` reads the same objects, slower: a difference of speed, never of law, as
+bin/parse.py says of its own loader. A document that does not parse is refused in libyaml's words either way:
+parse.duplicate_keys composes it with libyaml first."""
 import os
 import sys
 
@@ -14,6 +21,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 import parse as dmparse  # noqa: E402 — the one splitter of a front matter, and the one finder of a key written twice
+
+LOADER = getattr(yaml, 'CBaseLoader', None) or yaml.BaseLoader     # every scalar a str: in C where PyYAML has libyaml
 
 
 class Unread(ValueError):
@@ -30,7 +39,7 @@ def loads(text, what='the document'):
         path, first, again = dups[0]
         raise Unread(f"{what}: `{path}` is written twice (lines {first} and {again}), and YAML would keep only the last")
     try:
-        return yaml.load(text, Loader=yaml.BaseLoader)
+        return yaml.load(text, Loader=LOADER)
     except yaml.YAMLError as e:
         raise Unread(f"{what} does not parse as YAML: {_said(e)}") from None
 
