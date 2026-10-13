@@ -605,6 +605,57 @@ flows:
         run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
         run('git', 'fetch', '-q', 'hub')
         run('git', 'merge', '-q', '--ff-only', 'hub/master')      # the gardener's clone in step with the hub again
+        # A MERGE ANSWERS FOR WHAT IT DECIDED ITSELF, NEVER FOR WHAT A PARENT BROUGHT: the gardener names the notes once
+        # (an identity, class F) and points them at a drawing module (code), while the view host adds a statement to
+        # them; the view host's clean merge of the two decides neither, so it needs neither `ratify:F` nor `ratify:G`
+        # (each was judged when the gardener committed it), though the merge's first parent is the view host's own side
+        uid = '0b6c4e9a-3f1d-4c2b-9a7e-5d8f1e2a3b4c'
+        dmsafe.add_statements(os.path.join(G, 'beans', 'notes.md'),
+                              f'- name: {{ id: notes-id, by: uuid, of: self, as: "{uid}" }}\n'
+                              '- say: { by: sam, of: [notes-id], at: now }\n')
+        notes = open(os.path.join(G, 'beans', 'notes.md'), encoding='utf-8').read()
+        write('beans/notes.md', notes.replace('statements:\n', 'details:\n  view: { drawings: "file:notes/draw.py" }\n'
+                                              'statements:\n', 1))
+        write('notes/draw.py', "# the notes' drawings\n")
+        r0 = save("the notes' uuid and their drawings, the gardener's", "- action: [[notes]] named once, and drawn")
+        r1 = push(G)
+        run('git', 'fetch', '-q', 'origin', cwd=W)
+        r2 = writer_edit('beside the name', '- use: { id: beside-name, by: self, of: ledger }\n'
+                                            '- say: { by: sam, of: [beside-name], at: now, note: "entered on the view host" }\n')
+        r = run(PY, 'bin/sync.py', '--by', 'viewhost', 'origin', cwd=W)
+        merge = run('git', 'cat-file', 'commit', 'HEAD', cwd=W).out
+        first = run('git', 'rev-parse', 'HEAD^1', cwd=W).out.strip()
+        r3 = push(W)
+        check("hub: a clean merge whose second parent brought an identity anchor and a drawing module, the gardener's, is "
+              "taken from a writer granted `write` alone — the merge decided neither, whatever its first parent",
+              r0.returncode == 0 and r1.returncode == 0 and r2.returncode == 0 and r.returncode == 0
+              and merge.count('\nparent ') == 2 and uid not in run('git', 'show', f'{first}:beans/notes.md', cwd=W).out
+              and r3.returncode == 0, r0.out[-300:] + r1.out + r2.out[-300:] + r.out[-600:] + r3.out[-800:])
+        # ...and a merge that keeps what one side took out decides that itself: the gardener ends the notes' name, the view
+        # host merges and keeps the name all the same — refused, `ratify:F`, as an anchor it wrote itself would be
+        run('git', 'fetch', '-q', 'hub')
+        run('git', 'merge', '-q', '--ff-only', 'hub/master')
+        notes = open(os.path.join(G, 'beans', 'notes.md'), encoding='utf-8').read()
+        ended = re.sub(r'(?m)^  - (name: \{ id: notes-id|say: \{ by: sam, of: \[notes-id\]).*\n', '', notes)
+        write('beans/notes.md', ended)
+        r0 = save("the notes' uuid ended, the gardener's", "- action: [[notes]]: its name `notes-id` taken out, and the "
+                  "`say` that knew it")
+        r1 = push(G)
+        run('git', 'fetch', '-q', 'origin', cwd=W)
+        run('git', 'reset', '-q', '--hard', 'origin/master~1', cwd=W)   # the view host's side holds the name still
+        writer_edit('beside the end', '- use: { id: beside-end, by: self, of: ledger }\n'
+                                      '- say: { by: sam, of: [beside-end], at: now, note: "entered on the view host" }\n')
+        m = run('git', 'merge', '--no-commit', '--no-ff', 'origin/master', cwd=W)
+        kept = open(os.path.join(W, 'beans', 'notes.md'), encoding='utf-8').read()
+        write('beans/notes.md', kept.replace('statements:\n', 'statements:\n' + ''.join(
+            ln + '\n' for ln in notes.splitlines() if 'notes-id' in ln), 1), root=W)
+        c = run('git', 'commit', '-q', '--no-verify', '-a', '-m', 'merged, keeping the name', cwd=W)
+        r3 = push(W)
+        check("hub: a merge that keeps an anchor one side took out decided it itself — refused, `ratify:F`",
+              ended != notes and r0.returncode == 0 and r1.returncode == 0 and m.returncode == 0 and c.returncode == 0
+              and uid in run('git', 'show', 'HEAD:beans/notes.md', cwd=W).out
+              and r3.returncode != 0 and 'ratify:F' in r3.out, r0.out[-300:] + r1.out + m.out + c.out + r3.out[-800:])
+        run('git', 'reset', '-q', '--hard', 'origin/master', cwd=W)
         # OPENPGP, where ssh-keygen cannot check: the hub reads the signature with gpg (v1 part 12b)
         if not shutil.which('gpg'):
             print("SKIP  hub: OpenPGP — no gpg on this machine")
