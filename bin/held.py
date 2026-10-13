@@ -146,6 +146,50 @@ def unsealed(fm, *, root=ROOT, beans=None):
     return out or fm
 
 
+BODY_HELD = re.compile(r'`(root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32})`(?: on ([A-Za-z0-9][A-Za-z0-9_.-]*(?:#[A-Za-z0-9_.-]+)?))?')
+
+
+def records(path, *, root=ROOT, host=None, beans=None):
+    """[{part, pointer, basis, record, here}] — each RECORD held off git a bean points to: one its body names
+    (`Held: `<pointer>` on <basis>.`, what `person` writes; part `body`), and one a `details` entry holds
+    (`details.<label>: { held: <pointer>, basis? }`; part `details.<label>`). `record` is what this host's store holds
+    for it — None where another host keeps it, or it was erased (`here` says which: True, False, or 'erased'). A sealed
+    statement is no record of this kind: its value is the statement's (`unsealed`)."""
+    with open(path, encoding='utf-8') as fh:
+        text = fh.read()
+    head, body = dmparse.split_front_matter(text)       # the one reader of a front matter
+    fm = (dmparse.loads(head) or {}) if head is not None else {}
+    found = [('body', p, (b or '').rstrip('.') or None) for p, b in dict.fromkeys(BODY_HELD.findall(body or ''))]
+    details = fm.get('details') if isinstance(fm, dict) else None
+    for label, e in (details.items() if isinstance(details, dict) else ()):
+        if isinstance(e, dict) and isinstance(e.get('held'), str):
+            basis = e.get('basis')
+            basis = basis.get('bean') if isinstance(basis, dict) else basis
+            found.append((f"details.{label}", e['held'], basis if isinstance(basis, str) else None))
+    out = []
+    for part, pointer, basis in found:
+        try:
+            rec, here = resolve(pointer, root=root, host=host, beans=beans), True
+        except Erased:
+            rec, here = None, 'erased'
+        except (NotHere, ValueError, OSError):
+            rec, here = None, False
+        out.append({'part': part, 'pointer': pointer, 'basis': basis, 'here': here,
+                    'record': rec if isinstance(rec, dict) else None})
+    return out
+
+
+def write_record(record, *, root=ROOT, host=None, store=None, level=None):
+    """A record written whole in a store of this host — `store` named (the one a record it replaces is in), else the
+    first that keeps at least `level` (by default the least level held, the first after `none` in pass.py's LEVELS) —
+    under a key of its own: its pointer. Nothing in git is touched: the caller writes the pointer where the bean points
+    to it, and `unwrite`s the record it replaces once that is saved."""
+    name, path = _pick(level if level not in (None, 'none') else dmpass.LEVELS[1], root, host, store)
+    hexkey = secrets.token_hex(16)
+    _write(path, hexkey, record)
+    return f"root:{name}/{hexkey}"
+
+
 def _write(path, key, record):
     """One record of a store, written whole and swapped in (bin/safe.py `write_atomic`), its owner's alone to read."""
     import safe as dmsafe

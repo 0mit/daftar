@@ -219,6 +219,12 @@ export const SAID = {
   'act-decline': {en: 'Decline', fa: 'رد'},
   'act-waits': {en: 'It waits at: {at}', fa: 'منتظر می‌ماند در: {at}'},
   'act-refused': {en: 'Refused — nothing was changed.', fa: 'پذیرفته نشد — چیزی تغییر نکرد.'},
+  // the fields of a contact as bin/held.py `person` keeps them, and a record held off git made from a sheet
+  'held-name': {en: 'Name', fa: 'نام'},
+  'held-phone': {en: 'Phone', fa: 'تلفن'},
+  'held-email': {en: 'E-mail', fa: 'ایمیل'},
+  'sheet-held-new': {en: 'none yet: what is written here is held off git, on this machine only',
+                     fa: 'هنوز چیزی نیست: آنچه اینجا نوشته شود بیرون از گیت و فقط روی همین دستگاه نگه داشته می‌شود'},
   'sheet-details': {en: 'Kept whole', fa: 'نگه‌داشته‌شده به همان شکل'},
   'sheet-details-kept': {en: 'What fits no verb yet, kept as it was written until a verb says it: read here, changed where it was written.',
                          fa: 'آنچه هنوز در هیچ فعلی نمی‌گنجد، همان‌طور که نوشته شده نگه داشته می‌شود تا فعلی آن را بگوید: اینجا خوانده می‌شود و همان‌جا که نوشته شده تغییر می‌کند.'},

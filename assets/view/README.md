@@ -257,6 +257,16 @@ own table, read by the one reader (`bin/knowledge.py`): its label in the reader'
 (a `labels` registry, a `name_<lang>` column), else its name; the code itself stays beside it, in its title
 (`view_engraved.codes_of`, the page's `codes`).
 
+**A record held off git, written from a page.** What a being points to off git — a person's contact from its body, a
+record of `details` (`details.<label>: { held }`) — is read by `bin/held.py records`, and a page names a record's fields
+as a path into a key `details` keeps, read under the record's own key where it is kept (`intake.level`, as
+`held.py unsealed` reads one for a reading). The sheet sends each to whom the held bar opens it, and offers in Edit
+each the reader may write, with one the page names that the being has none of, and a person's contact where they have
+none. A Save sends `{op: held, key, entry}`: the one write path writes a new record in the store of the host that keeps
+it, swaps the bean's pointer for it (a new contact a line of the body, a new record a label of `details`), journals
+`- held: <bean> <key|details.<label>> added`, and takes the old record out once it is saved. A field given empty is
+taken out; a record is never emptied (it is erased for its subject); one another host keeps is written there.
+
 **Where they are drawn.** The renderers — `lib/view_engraved.js`, `view_queue.js`, `view_timeline.js`,
 `view_flows.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`
 (`h```, `mount`; a position a page computes is a data attribute `mount` sets, never a style attribute) with every value

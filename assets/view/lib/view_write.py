@@ -11,6 +11,11 @@ garden's pages (a worker that imports this file from the release the garden runs
     {op: remove, key}                                      the statement `key` names, taken out
     {op: change, header: title | summary, value}           a header fact, rewritten (an empty summary is taken out)
     {op: change, header: tags, value: [words]}             the bean's tags, as a set (none: the key taken out)
+    {op: held, key, entry}                                 a RECORD held off git the bean points to, on this host's store
+                                                           (bin/held.py `records`): its fields by name, each one line,
+                                                           a field given empty taken out; made where the bean has none
+                                                           (`contact`, a person's, pointed to from the body; any other
+                                                           from `details`) — opened by the held bar, its consent standing
 `key` names a statement as bin/safe.py names it: `<verb>#<id>`, or `<verb>@<n>` for one with no id — changed or removed
 only where it is the one statement of its verb. With `bean` None and `kind`, the ops make a NEW being of that kind:
 its id minted opaque (`p-<8 hex>` for a person, its title the id; `<kind>-<8 hex>` for any other), its file written
@@ -165,8 +170,11 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         counts[v] = counts.get(v, 0) + 1
 
     # ---- 1. EACH OP AGAINST ITS VERB'S ROW, AND THE BEAN
-    plan, touched = [], set()
+    plan, touched, asked = [], set(), []
     for n, op in enumerate(ops):
+        if isinstance(op, dict) and op.get('op') == 'held':        # a record held off git: read below, by `_records`
+            asked.append((n, op))
+            continue
         if not isinstance(op, dict) or op.get('op') not in OPS:
             refuse(n, None, "an op is one of add, change, remove")
             continue
@@ -279,9 +287,10 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
                 continue
         plan.append((n, op['op'], key, verb, {'id': sid, 'roles': dict(roles), 'held': bool(op.get('held') or sealed),
                                               'while': wh, 'old': old, 'read': rd}))
+    rplan = _records(root, bean, b, asked, refuse, G, L) if asked else []
     if refusals:
         return result(False)
-    if not plan:
+    if not plan and not rplan:
         refuse(None, None, "nothing to write: each op says what the bean says already")
         return result(False)
 
@@ -299,6 +308,10 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
             refuse(n, key if act != 'add' else f"{verb}#{x['id']}",
                    f"what {key if act != 'add' else 'a `' + verb + '`'} holds is kept off git: only the gardener, or a grant "
                    f"that names it to {who}, opens it to write")
+    for r_ in rplan:                             # a record held off git: by the part it is pointed to from
+        if not _may_held(may, root, who, bean, r_['part']):
+            refuse(r_['n'], f"held:{r_['key']}", f"what {bean} holds off git ({r_['key']}) is opened to write only to the "
+                                               f"gardener, or to whom a grant names `{r_['part'].split('.')[0]}` of it")
     if refusals:
         return result(False)
     if not whole:
@@ -406,6 +419,12 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
                 except (ValueError, KeyError, dmheld.NotHere) as e:
                     refuse(n, key, f"it cannot be held here, nothing written: {e}")
                     raise
+            for r_ in rplan:
+                try:
+                    done.append(_write_record(root, path, bean, b, r_, made, unseal_after, entry))
+                except (safe.UnsafeEdit, ValueError, dmheld.NotHere) as e:
+                    refuse(r_['n'], f"held:{r_['key']}", f"it cannot be held here, nothing written: {e}")
+                    raise
             read_ids = {x['id'] for _n, act, _k, _v, x in plan if act in ('add', 'change') and x.get('read')}
             said = [i for i in said if i not in read_ids]
             if said:
@@ -426,6 +445,11 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         refuse(None, None, f"{bean} does not read back: {getattr(b2, 'unread', 'not there')}")
         _undo(root, made)
         return result(False)
+    back = dmheld.records(os.path.join(root, 'beans', bean + '.md'), root=root) if rplan else []
+    for r_ in rplan:                             # each record written reads back from where the bean points to it
+        hit = next((x for x in back if x['pointer'] == r_['new']), None)
+        if hit is None or (hit['record'] or {}).get('entry') != r_['record']['entry']:
+            refuse(r_['n'], f"held:{r_['key']}", f"what {bean} holds off git ({r_['key']}) does not read back as written")
     J = engine.Judge(L, G2)
     at = {r.get('id'): (i, v, r) for i, v, r in b2.items if isinstance(r, dict) and isinstance(r.get('id'), str)}
     for n, act, key, verb, x in plan:
@@ -463,6 +487,148 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         except (dmheld.NotHere, ValueError, OSError):
             pass
     return result(True, out, _git(root, 'rev-parse', 'HEAD').stdout.strip())
+
+
+_RKEY = re.compile(r'^[a-z][a-z0-9-]*$')
+_FIELD = re.compile(r'^[a-z][a-z0-9_-]*$')
+
+
+def _record_why(x, where, depth=0):
+    """Why fields a person gave are not what a held record keeps — each field named by one word, each value one line of
+    text, or a map of such one level down — or ''."""
+    if not isinstance(x, dict):
+        return f"`{where}` is its fields by name"
+    for k, v in x.items():
+        if not (isinstance(k, str) and _FIELD.match(k)):
+            return f"{k!r} in `{where}` is no field's name: one word, lowercase"
+        if isinstance(v, dict) and depth == 0:
+            why = _record_why(v, f"{where}.{k}", 1)
+        else:
+            why = _text_only(v, f"{where}.{k}")
+        if why:
+            return why
+    return ''
+
+
+def _records(root, bean, b, asked, refuse, G, L):
+    """The records a write's `held` ops change or make, read against what the bean points to on this host's store:
+    [{n, key, part, old (pointer), record, store, basis}]. A record the bean points to that another host keeps, or that
+    was erased, is written there or never again — never made a second time here. Where its consent is recorded (a
+    body's `on <basis>`, a details entry's `basis`) it must still stand."""
+    import held as dmheld
+    from core import engine
+    if b is None:
+        for n, _op in asked:
+            refuse(n, None, "what is held of a being is written once the being is made: save it first")
+        return []
+    recs = dmheld.records(os.path.join(root, 'beans', bean + '.md'), root=root)
+    judge = engine.Judge(L, G)
+    out = []
+    for n, op in asked:
+        key, given = op.get('key'), op.get('entry')
+        if not (isinstance(key, str) and _RKEY.match(key)):
+            refuse(n, None, "a held record is named by its key: one word, lowercase (`contact`)")
+            continue
+        fact = f"held:{key}"
+        why = _record_why(given, key) or ('' if given else f"`{key}` is given no field")
+        if why:
+            refuse(n, fact, why)
+            continue
+        here = [r for r in recs if (r['record'] or {}).get('key') == key]
+        if len(here) > 1:
+            refuse(n, fact, f"{bean} points to `{key}` twice: which one is meant is the gardener's to say")
+            continue
+        if here:
+            r = here[0]
+            was = dict(r['record'].get('entry') or {})
+            merged = dict(was)
+            for k, v in given.items():
+                if isinstance(v, dict):                  # a map one level down: a field in it given empty taken out
+                    v = {a: y for a, y in v.items() if y not in ('', None)}
+                if v in ('', None) or v == {}:
+                    merged.pop(k, None)
+                else:
+                    merged[k] = v
+            if merged == was:
+                continue                         # it says what the record says already: nothing to write for it
+            if not merged:
+                refuse(n, fact, f"a held record keeps something: `{key}` is taken away by erasing it for its subject "
+                                f"(bin/held.py erase), never emptied")
+                continue
+            if r['basis'] and r['basis'] not in G.beans and judge.statement(r['basis'], G.beans.get(bean)) is None:
+                refuse(n, fact, f"the word `{key}` was kept on ({r['basis']}) no longer stands: nothing is written to it")
+                continue
+            out.append({'n': n, 'key': key, 'part': r['part'], 'old': r['pointer'], 'store': r['pointer'][5:].split('/')[0],
+                        'basis': r['basis'], 'record': dict(r['record'], entry=merged)})
+            continue
+        body = key == 'contact'
+        if any(r['here'] is not True and (r['part'] == 'body') == body for r in recs):
+            refuse(n, fact, f"what {bean} holds off git is kept on another machine, or was erased: it is written there, "
+                            f"and never made again here")
+            continue
+        if body and b.kind != 'person':
+            refuse(n, fact, "a contact is a person's: their name and the ways to reach them")
+            continue
+        fields = {k: ({a: y for a, y in v.items() if y not in ('', None)} if isinstance(v, dict) else v)
+                  for k, v in given.items()}
+        fields = {k: v for k, v in fields.items() if not (v in ('', None) or v == {})}
+        if not fields:
+            refuse(n, fact, f"`{key}` is given no field")
+            continue
+        about = sorted(({bean} if b.kind == 'person' else set())
+                       | {x for _i, v, r in b.items if v == 'concern' for x in _listed(r.get('of')) if isinstance(x, str)})
+        out.append({'n': n, 'key': key, 'part': 'body' if body else 'details', 'old': None, 'store': None, 'basis': None,
+                    'record': {'bean': bean, 'term': 'person' if body else 'details', 'key': key, 'entry': fields,
+                               'about': about}})
+    return out
+
+
+def _write_record(root, path, bean, b, r, made, unseal_after, entry):
+    """One record written: a new one in the store (the one the record it replaces is in), its pointer put where the bean
+    points to it — the old pointer swapped for it, once and only once; a new contact a line of the body; a new record a
+    label of `details` — and the record it replaces taken out once the write is saved. Says what it did."""
+    import held as dmheld, safe
+    import importlib
+    dmpass = importlib.import_module('pass')
+    level = dmpass.sensitivity(dict(b.header), None, dmpass.gardener_of(root))[0]
+    # a being of no sensitivity is held at bin/held.py's own least level, its default
+    p = dmheld.write_record(r['record'], root=root, store=r['store'], **({'level': level} if level != 'none' else {}))
+    made.append(p)
+    r['new'] = p
+    if r['old']:
+        def swap(text):
+            if text.count(r['old']) != 1:
+                raise safe.UnsafeEdit(f"{bean} names {r['old']} {text.count(r['old'])} times, not once")
+            return text.replace(r['old'], p)
+        safe.edit(path, swap)
+        unseal_after.append(r['old'])
+    elif r['part'] == 'body':
+        safe.edit(path, lambda t: t.rstrip('\n') + f"\n\nHeld: `{p}`.\n")
+    else:
+        label = 'h-' + p.rsplit('/', 1)[1][:8]
+        safe.edit(path, lambda t: _details_add(t, label, p))
+        r['part'] = f"details.{label}"
+    entry.append(f"- held: {bean} {r['key'] if r['part'] == 'body' else r['part']} added")
+    return f"wrote `{r['key']}`, held off git ({len(r['record']['entry'])} field(s))"
+
+
+def _details_add(text, label, pointer):
+    """The bean's text with `details.<label>: { held: <pointer> }` added: under a `details:` block, or as one."""
+    import safe
+    lines = text.split('\n')
+    close = next((i for i in range(1, len(lines)) if lines[i] == '---'), None)
+    if close is None:
+        raise safe.UnsafeEdit("no front matter to add it to")
+    at = next((i for i in range(1, close) if lines[i].startswith('details:')), None)
+    if at is None:
+        lines[close:close] = ['details:', f'  {label}: {{ held: "{pointer}" }}']
+    elif lines[at].strip() == 'details:':
+        child = next((ln for ln in lines[at + 1:close] if ln.strip()), '')
+        indent = len(child) - len(child.lstrip(' ')) or 2
+        lines.insert(at + 1, ' ' * indent + f'{label}: {{ held: "{pointer}" }}')
+    else:
+        raise safe.UnsafeEdit("`details` is written in flow: a held record is added to it by hand")
+    return '\n'.join(lines)
 
 
 def reads(who, plan):

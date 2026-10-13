@@ -5502,6 +5502,16 @@ whose name this host does not hold as a person, never an id; a move made is hist
 its walk's words. The alternative — a names layer of a garden's own for its keys — would put a page's words outside the
 page that shows them; a label sits on the page and changes with it.
 
+A HELD RECORD'S FIELDS IN THE PAGE'S WORDS (2026-10-12, ratified by the operator: "Ratify it"). What a being points to
+off git — a person's contact, a record of `details` — is written from its sheet by the host that keeps it, and its
+fields need the page's words as much as its statements do: a phone, a level, named in the reader's language, never
+their keys. A page names one by the record's key and the field (`contact.phone`, `intake.level`), as it names a path
+into `details`, and the record itself by its key alone (`intake`), for the words its fields are gathered under; on
+the host that keeps the record it is read under that key, as a reading reads one (`bin/held.py unsealed`), and nowhere
+else. It is opened only as every held value is: to the gardener, or to whom a
+grant names its part (`core/law/core.yaml: rules[harm]`). A page that names a record's fields may also make one for a
+being that has none, its fields the ones the page names.
+
 ## core/law/profiles.yaml: forms.page.attrs.drawings
 
 A PAGE OF READINGS NAMES NO CODE. A drawing module is the garden's code, which the host runs. The four archetypes
