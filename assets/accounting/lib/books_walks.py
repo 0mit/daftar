@@ -7,8 +7,9 @@ Each operation reads its inputs by name (bin/walktool.py `inputs`: a page's acti
 terminal), and writes in the entity's books bean — the bean that holds its books' `open`, else the one holding most of
 its bookings, else `books-<entity>`, made by the first write:
 
-  book     `of` (a payment, `<bean>#<id>`), `account` (a postable account, by its code or its name), `analytic` (a code
-           of a plan, optional), `means` (the account it was paid through, where the payment does not say it), `note`.
+  book     `of` (a payment, `<bean>#<id>`; given several times, several, each booked alike in one plan), `account` (a
+           postable account, by its code or its name), `analytic` (a code of a plan, optional), `means` (the account it
+           was paid through, where the payment does not say it), `note`.
            The entity's part goes to the account; a booking of the same side made before is taken out where the
            payment's day is after the books' last close, and moved by a booking of it from the old account to the new
            one, on today, where it is not — a closed period is never rewritten.
@@ -189,28 +190,60 @@ def kept_known(B, bid, removing):
 
 # ------------------------------------------------------------------------------------------------ book
 def book(B, I, today, run=(None, None)):
-    ref = I.get('of')
-    bid, verb, p = statement(B, ref)
-    if verb != 'pay':
-        refuse(f"{ref} is a `{verb}`: the walk books a payment (`entry` books what no payment says)")
+    """A payment booked where it belongs (`of`, `<bean>#<id>`) — or several, each the same way, to the one account in
+    one plan, where `of` is given several times (a page's input of `many`: the lines a person ticks on a statement's
+    page). Each is refused as it would be alone, the plan with it, naming it."""
+    refs = I.get('of') if isinstance(I.get('of'), list) else [I.get('of')]
+    if len(set(map(str, refs))) != len(refs):
+        refuse(f"of: {', '.join(sorted({str(x) for x in refs if refs.count(x) > 1}))} named twice")
     E, C = B.entity, B.chart
-    by, to = str(p.get('by')), str(p.get('to') or '')
-    bears = [r for _i, v, r in B.G.beans[bid].items if v == 'bear' and r.get('of') in (p.get('id'), ref)]
-    if E not in (by, to) and E not in {str(r.get('by')) for r in bears}:
-        refuse(f"{ref} is no payment of {E}'s: {E} paid, received and bears none of it")
-    matched = [r for b in B.G.beans.values() for _i, v, r in b.items if v == 'match'
-               and ref in [x if '#' in str(x) else f"{b.id}#{x}" for x in br._listed(r.get('of'))]]
-    if matched and known_as(B, bid, p.get('id')) == 'read':
-        refuse(f"{ref} is a line matched with what was said of it: book the payment said, which carries the bookings")
-    side = 'from' if (to == E and by != E) else 'to'
-    other = 'to' if side == 'from' else 'from'
+    each = []
+    for ref in refs:
+        bid, verb, p = statement(B, ref)
+        if verb != 'pay':
+            refuse(f"{ref} is a `{verb}`: the walk books a payment (`entry` books what no payment says)")
+        by, to = str(p.get('by')), str(p.get('to') or '')
+        bears = [r for _i, v, r in B.G.beans[bid].items if v == 'bear' and r.get('of') in (p.get('id'), ref)]
+        if E not in (by, to) and E not in {str(r.get('by')) for r in bears}:
+            refuse(f"{ref} is no payment of {E}'s: {E} paid, received and bears none of it")
+        matched = [r for b in B.G.beans.values() for _i, v, r in b.items if v == 'match'
+                   and ref in [x if '#' in str(x) else f"{b.id}#{x}" for x in br._listed(r.get('of'))]]
+        if matched and known_as(B, bid, p.get('id')) == 'read':
+            refuse(f"{ref} is a line matched with what was said of it: book the payment said, which carries the "
+                   f"bookings")
+        each.append((ref, bid, p, 'from' if (to == E and by != E) else 'to'))
     code = account(B, I.get('account'), 'account')
     closed = (C.rows.get(code) or {}).get('closed')
     if closed and today > day_of(closed, 'closed'):
         refuse(f"account: {C.scheme}:{code} closed on {closed}")
     books, made = books_bean(B)
-    pday = br._day(p.get('at'))
     shut = last_close(B)
+    taken, adds, removes, said = set(), [], {}, []
+    for ref, bid, p, side in each:
+        _book_one(B, I, ref, bid, p, side, code, books, shut, today, taken, adds, removes, said)
+    entries, again_books = [], []
+    for b_, ids in sorted(removes.items()):
+        more, again = kept_known(B, b_, ids)
+        removes[b_] = sorted(set(ids) | set(more))
+        if b_ != books:
+            entries.append({'bean': b_, 'add': again, 'remove': removes[b_]})
+        else:
+            again_books = again
+    own = {'bean': books, 'add': again_books + adds, 'remove': sorted(set(removes.get(books, [])))}
+    if made:
+        own['new'] = new_bean(B, books)
+    entries.insert(0, own)
+    what = f"{refs[0]} booked" if len(refs) == 1 else f"{len(refs)} payments booked"
+    return {'what': f"{what} to {C.scheme}:{code}", 'beans': entries,
+            'body': [f"- action: {s}" for s in said] + [f"- action: wrote [[{e['bean']}]]" for e in entries]}
+
+
+def _book_one(B, I, ref, bid, p, side, code, books, shut, today, taken, adds, removes, said):
+    """One payment of `book`, its bookings added to `adds` and those it replaces to `removes` (by bean), what it does
+    said in `said`; the ids it takes kept in `taken`, so several in one plan never share one."""
+    E, C = B.entity, B.chart
+    other = 'to' if side == 'from' else 'from'
+    pday = br._day(p.get('at'))
     in_closed = shut is not None and pday is not None and pday <= shut
     mine = [(b.id, r) for b in B.G.beans.values() for _i, v, r in b.items if v == 'book' and isinstance(r.get('id'), str)
             and str(r.get('by') or B.G.gardener) == E and r.get('of') in (ref, p.get('id') if b.id == bid else None)
@@ -218,8 +251,7 @@ def book(B, I, today, run=(None, None)):
     before = [(b_, r) for b_, r in mine if str(r.get(side) or '').startswith(C.scheme + ':') and r.get(other) is None]
     ana_before = [(b_, r) for b_, r in mine if r.get('from') is None and isinstance(r.get('to'), str)
                   and r['to'].split(':', 1)[0] in B.analytic]
-    taken, adds, removes, said = set(), [], {}, []
-    base = fresh_id(B, books, f"bk-{ref.replace('#', '-')}")
+    base = fresh_id(B, books, f"bk-{ref.replace('#', '-')}", taken)
     taken.add(base)
     note = f", note: {json.dumps(I['note'], ensure_ascii=False)}" if I.get('note') else ''
     if in_closed and before:
@@ -269,22 +301,9 @@ def book(B, I, today, run=(None, None)):
                 if str(r.get(other) or '').startswith(C.scheme + ':') and r.get(side) is None:
                     removes.setdefault(b_, []).append(r['id'])
             mid = fresh_id(B, books, f"{base}-m", taken)
+            taken.add(mid)
             adds.append(f'book: {{ id: {mid}, of: "{ref}", {other}: "{C.scheme}:{mcode}" }}')
             said.append(f"{ref}: {'paid through' if other == 'from' else 'received into'} {C.scheme}:{mcode}")
-    entries, again_books = [], []
-    for b_, ids in sorted(removes.items()):
-        more, again = kept_known(B, b_, ids)
-        removes[b_] = sorted(set(ids) | set(more))
-        if b_ != books:
-            entries.append({'bean': b_, 'add': again, 'remove': removes[b_]})
-        else:
-            again_books = again
-    own = {'bean': books, 'add': again_books + adds, 'remove': sorted(set(removes.get(books, [])))}
-    if made:
-        own['new'] = new_bean(B, books)
-    entries.insert(0, own)
-    return {'what': f"{ref} booked to {C.scheme}:{code}", 'beans': entries,
-            'body': [f"- action: {s}" for s in said] + [f"- action: wrote [[{e['bean']}]]" for e in entries]}
 
 
 def analytic(B, words):
