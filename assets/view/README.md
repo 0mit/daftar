@@ -283,6 +283,17 @@ it, swaps the bean's pointer for it (a new contact a line of the body, a new rec
 `- held: <bean> <key|details.<label>> added`, and takes the old record out once it is saved. A field given empty is
 taken out; a record is never emptied (it is erased for its subject); one another host keeps is written there.
 
+**A table of a chart's codes.** A `table` drawing that names a `chart` (a scheme naming the accounting profile's form
+`chart`) lists that chart's codes in its order, an account a line, for the books of the being it draws (`of:
+[<entity>]`), as the profile's asset reads them (`view_engraved.chart_table`, the asset's `lib/books_read.py`). Each
+column reads a figure of the account — `code`, `name`, `element`, `opening` (before the drawing's `span`), `debit`,
+`credit`, `balance` (in its element's sense) — per currency, with the totals beneath, and an account that posts opens its
+ledger below the table, each line with its running balance. Its columns run along the reader's line as the page lists
+them, so a page listing debit before credit has a right-to-left reader read the debit at the right; each account is drawn
+by its name in the reader's language (the chart's `name_<lang>`, or its `labels`), its code beside it. Only a reader who
+may read the being is drawn its books, and a ledger's line names the bean it rests on only where that reader may read it.
+A table lists a reading's members, a series' positions or a chart's codes: one of them.
+
 **Where they are drawn.** The renderers — `lib/view_engraved.js`, `view_queue.js`, `view_timeline.js`,
 `view_flows.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`
 (`h```, `mount`; a position a page computes is a data attribute `mount` sets, never a style attribute) with every value

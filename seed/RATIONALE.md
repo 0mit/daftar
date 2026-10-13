@@ -5747,7 +5747,9 @@ columns — its element, the being an account stands for, the kinds of party who
 closed — so it is a scheme naming the profile's form, and its rows are held to it by the gate: a column neither the
 scheme's nor the form's is refused, and so is a postable account that does not say what it is. An account stands for
 a being — a bank account, a card, a cash box — so a booking may name the being, and a payment's means is read as that
-account. An account a booking used is closed on a day, never moved or deleted, since the bookings that name it stay.
+account. An account a booking used is closed on a day, never moved or deleted, since the bookings that name it stay. A
+chart's row may carry an account's name in a language (`name_<lang>`), as any scheme's may: a book is read in its
+reader's language.
 
 ## core/law/registries.yaml: knowledge_scheme_form.form
 
@@ -5768,3 +5770,17 @@ The books are read by one reader, the profile's asset (`assets/accounting/lib/bo
 profile receives it, and every reading — the vouchers, a trial balance, a ledger, profit and loss, the balance, what
 awaits an account, the reading `books` a close pins — goes through it, so two tools never read one garden's books two
 ways.
+
+## core/law/profiles.yaml: forms.drawing.attrs.chart
+
+A TABLE OVER A CHART'S CODES (2026-10-13, the operator's choice: "A table over chart codes", alternative 2 of the books'
+archetype). A trial balance and a ledger are what a bookkeeper reads, and their rows are the accounts of a chart in its
+order, each figure read from the moves, never stored. Asked whether that wanted an archetype of its own, the operator
+chose a second kind of row for `table` instead: a table lists a reading's members, a series' positions, or a chart's
+codes — one of them — and its columns read, for a chart, a figure of each account as the accounting profile's asset reads
+it (`code`, `name`, `element`, `opening`, `debit`, `credit`, `balance`), per currency, with the totals. One archetype
+answers "which ones, and what each holds" for beings and for accounts alike. Its columns follow the taxis in the order the
+page lists them, so a book written right to left reads the debit at the right; each account is drawn by its name in the
+reader's language; a reader sees the books of a being only where they may read that being, and a ledger's line names its
+bean only where they may read it.
+

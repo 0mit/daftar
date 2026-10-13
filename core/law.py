@@ -48,6 +48,7 @@ GRANTS = ('granted', 'refused', 'ratified')
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
             'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit', 'exclusive': 'verb',
             'systems': 'system', 'schemes': 'scheme', 'files': 'registry', 'crosswalks': 'crosswalk'}
+NAME_IN = re.compile(r'^name_[a-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$')    # a code's name in a language: `name_fa`, `name_pt-BR`
 ROW_FIELDS = {
     'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning', 'vacant'},
     'levels': {'level', 'line', 'stands', 'meaning', 'frame_of', 'vacant'},
@@ -846,7 +847,7 @@ class Law:
     def chart_problems(self):
         """[(where, message)]: each scheme that names a form of a profile (`form`, registries.yaml) — a chart of accounts
         names the accounting profile's `chart` — its rows held to it: the form a profile's, and one the garden takes;
-        its columns the scheme's own (code, level, parent, name) and the form's; an element, a role, a kind of the law;
+        its columns the scheme's own (code, level, parent, name, a name in a language `name_<lang>`) and the form's; an element, a role, a kind of the law;
         a postable account (a code no other code has for its parent) saying what it is, itself or by an ancestor; one
         account of a chart standing for a being, and one taking each role. That the being is one the garden holds is
         the garden's to say (core/profiles.py `charts`)."""
@@ -881,7 +882,8 @@ class Law:
             for r in rows:
                 code = str(r.get('code') or '')
                 at = f"scheme {scheme} {code or '(no code)'}"
-                odd = sorted(k for k, v in r.items() if k not in cols and v not in (None, ''))
+                odd = sorted(k for k, v in r.items() if k not in cols and v not in (None, '')
+                             and not NAME_IN.match(str(k)))          # its name in a language (bin/knowledge.py `label`)
                 if odd:
                     out.append((at, f"{', '.join(odd)}: no column of a {form} ({', '.join(sorted(cols))})"))
                 el = str(r.get('element') or '')
