@@ -1706,6 +1706,16 @@ it is counted once. Their amounts agree in each currency, and a payment is match
   - match: { of: ["statement-10#line-4", "rent-october#paid"], at: "2026-10-06" }
 ```
 
+The books are read, never written: `python3 assets/accounting/bin/books.py trial --unit TRY` is the trial balance, and
+`vouchers`, `ledger <code>`, `pl`, `balance` and `open` the rest (the profile's asset, `assets/accounting/README.md`).
+A period is closed by pinning the books' reading through its last day at a commit — after that, a payment, booking or
+match those books read on a day in the period is not changed: a correction is the move's reverse, after the day.
+
+```yaml
+  - reckon: { id: books-2026-09, reading: { what: "the books through September", steps: [ { id: through, op: books, to: "2026-09-30" } ] } }
+  - pin: { id: closed-09, of: [books-2026-09], at: [now, "garden@<the commit before the close>"] }
+```
+
 | an ERP's general ledger | daftar |
 |---|---|
 | `account.account` (`code`, `name`) | a row of the garden's chart, the scheme naming `form: chart` |
@@ -1716,6 +1726,7 @@ it is counted once. Their amounts agree in each currency, and a payment is match
 | a move's reversal | `book` of it, `sense: "-1"`, from a day |
 | a bank statement line reconciled with a payment | `match` of the two |
 | `account.analytic.line` | not stored: `book` to an analytic code, read by `apportion` |
+| a lock date (`fiscalyear_lock_date`) | a `pin` of the books' reading through the day, at a commit |
 
 ## Where a thing is, and what it takes there
 

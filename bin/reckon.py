@@ -1401,6 +1401,32 @@ class Reckoner:
             c = str(rows[c].get('parent') or '')
         return None
 
+    def op_books(self, s):
+        """EACH ACCOUNT'S NET CHARGE THROUGH A DAY (the accounting profile's): what arrived less what left, per account
+        of the chart and per currency, read by the profile's asset (assets/accounting/lib/books_read.py) as the books
+        read now — a reading of it pinned (`pin`) is the books closed through that day. Refused in a garden that does not
+        hold the asset: the books are read by it."""
+        lib = os.path.join(ROOT, 'assets', 'accounting', 'lib')
+        if not os.path.isfile(os.path.join(lib, 'books_read.py')):
+            raise Refused(f"step {s['id']}: the books are read by the accounting profile's asset, which this garden "
+                          f"does not hold (VOCAB.md `profiles: [accounting]`)")
+        if lib not in sys.path:
+            sys.path.insert(0, lib)
+        import books_read
+        import stale as dmstale
+        try:
+            to = dmstale.day_of(s['to'])
+            B = books_read.read(ROOT, entity=s.get('entity'), chart=s.get('chart'), today=to, pinned=False)
+        except ValueError as e:
+            raise Refused(f"step {s['id']}: {e}")
+        out = {}
+        for unit in sorted({v['unit'] for v in B.vouchers if v['unit']}):
+            for r in books_read.trial(B, unit, None, to)['rows']:
+                if r['posts']:
+                    out[f"{r['code']} {unit}"] = V(r['closing'], unit)
+        self.lines.append(f"  the books of {B.entity} in {B.chart.scheme} through {s['to']}: {len(out)} account(s)")
+        return out
+
     def op_apportion(self, s):
         """EACH CODE'S PART OF THE AMOUNTS (28.1): a member's amount shared over its entries at `over` — by an entry's share of
         its group's shares, a group being the codes under one ancestor at `per` (the scheme's first level: a plan), or by an

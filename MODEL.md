@@ -307,7 +307,8 @@ A name is a statement: the namespace gives it.
   what one adds to a form of the core (the code profile's attributes of a placement) is named. A garden **takes** a
   profile by its name in `VOCAB.md`'s `profiles`, a RULE-CHANGE, and uses none of a profile it does not take (rule
   `profile`). A profile may bring an **asset**, `assets/<profile>/`, which a garden receives while it takes the profile
-  and which opens no concept of its own: the `view` profile's draws a page whose drawings are its `draw` statements.
+  and which opens no concept of its own: the `view` profile's draws a page whose drawings are its `draw` statements,
+  and the `accounting` profile's reads an entity's books from its `book` and `match` statements, never storing them.
 - A garden's row that proves general is **promoted** to the standard by a pull request to the daftar repository
   (manifesto: learn-once). A mechanism that is universal may come complete before anything occupies it (manifesto: whole).
 

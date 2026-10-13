@@ -192,6 +192,15 @@ operations:
       extent: { in: extent }
       place: { in: any }
     meaning: "the members whose position or moment at the path lies within the extent, or the place"
+  - op: books
+    gives: groups
+    exact: "true"
+    u_rule: none
+    takes:
+      to: { required: "true", in: { type: position }, meaning: "the day the books are read through" }
+      chart: { in: { registry: knowledge_schemes, take: scheme }, meaning: "the chart; absent, the garden's one chart" }
+      entity: { in: { type: kebab }, meaning: "whose books; absent, the gardener's" }
+    meaning: "each account's net charge through a day, in an entity's books in a chart — what arrived there less what left, per currency — read from the moves the garden holds by the accounting profile's reader (its asset). A `pin` of a reading whose step is this closes the books through that day: read at the pinned commit, they are fixed, and a move that comes after it with an earlier day is read on the first day after it"
   - op: apportion
     gives: groups
     exact: "true"

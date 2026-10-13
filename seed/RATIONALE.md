@@ -759,6 +759,16 @@ once written, stays as it is: its rows are the garden's own facts, too many for 
 standing[estate]`). What a commit takes out of a bean is named in its entry, nothing it keeps is emptied, and every bean
 keeps a body.
 
+CLOSED BOOKS ARE KEPT, BY THE COMMIT (2026-10-13, the books' design; the operator: "Yes yes", to a close as a `pin`).
+Closing a period in books fixes what was read through its last day, so a report given on it stays true. A rule that
+compared each change with a moment of closing could not order two saves within one minute, and the journal's headings
+are by the minute; a commit orders them exactly. So a close is the books' reading through a day, pinned at a commit, as
+any reading rests on one (`core/law/verbs.yaml: verbs[pin]`), and the rule asks of each commit only this: whether a
+payment, a booking or a match the closed books read — the entity's, in that chart — on a day on or before the closed
+one, and in its bean at the pinned commit, is taken out or changed. A correction is the move's reverse and a booking
+after the day; what comes after the close with an earlier day is read on the first day after it, as the difference.
+Nothing of the books is stored at closing: the commit is.
+
 ## core/law/core.yaml: rules[line]
 
 WHAT HOLDS A LINE HOLDS ITS FORM (the core spec §16 item 12, v1 part 6, merged by the operator as daftar #96,
@@ -5673,3 +5683,17 @@ account. An account a booking used is closed on a day, never moved or deleted, s
 A scheme may name a form of a profile the garden takes, whose attributes its rows hold beside its own code, level,
 parent and name: the accounting profile's `chart` makes a scheme a chart of accounts. One key, so the next profile with
 a tree of its own codes takes the same mechanism rather than a scheme form of its own.
+
+## core/law/lines.yaml: operations[books]
+
+THE BOOKS ARE A READING (2026-10-13, the books' design). Each account's net charge through a day — what arrived less
+what left, per currency — is read from the moves the garden holds by the accounting profile's asset, never stored, as
+`apportion` reads where amounts belong. A reading is what a `pin` rests on, so a period's close is this reading pinned at
+a commit, and needs no word of its own.
+
+## core/law/profiles.yaml: profiles[accounting].asset
+
+The books are read by one reader, the profile's asset (`assets/accounting/lib/books_read.py`): a garden that takes the
+profile receives it, and every reading — the vouchers, a trial balance, a ledger, profit and loss, the balance, what
+awaits an account, the reading `books` a close pins — goes through it, so two tools never read one garden's books two
+ways.
