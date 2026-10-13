@@ -155,6 +155,12 @@ OPS = {'book': ('a payment booked where it belongs', 'booked',
                  "The books' reading through a day, pinned at a commit: `day`."),
        'entry': ('a journal entry, written whole', 'written',
                  'What no payment says, balanced: `day`, `memo`, `unit`, `lines` (`<account> dr|cr <amount>; …`), `of`.'),
+       'remove': ('a document, or a payment recorded by mistake, taken out', 'taken out',
+                  'A document recorded by mistake taken out whole, or a payment out of its bean, with what of the books '
+                  'names it: `of`, `reason`.'),
+       'chart': ('an account of the chart, added or changed', 'written',
+                 "An account of the chart added beneath its parent, or changed — a row of the garden's own table: `code`, "
+                 '`name`, `parent`, `level`, `element`, `stands-for`, `parties`, `role`, `closed`, `name-<lang>`.'),
        'import': ("a bank's statement read into the garden", 'imported',
                   "A statement file read into a bean of its lines: `file`, `format`, `means`, `mapping`, `statement`.")}
 

@@ -23,8 +23,8 @@ by its argv, its words asked and a note optional. Then:
                optional, a value given is still held to the choices); a row whose payee the element does not give
                given, each reaches the tool as it was given — the helpers a list, of one too
   bin/act.py   an input `--list` names is a list, of one too (the host names each `many` so)
-  the walk     a page that declares optional what the walk needs: the run starts, and the walk refuses when it plans,
-               nothing written
+  the walk     a page that declares optional what the walk needs: the run starts, the walk refuses when it plans, and
+               the host answers it refused in the walk's own words — never a plan to ratify; nothing written
   a tool's argv  the note left empty is no key of what the tool reads; its words left empty, or blanks, refused
   a browser    the sheet in Persian: the reason marked required, the five not; started with the reason empty, the
                field says so and nothing is sent; with the reason only, the host is asked with it and nothing else
@@ -354,11 +354,11 @@ A page.
     st = host('start', ['sam', 'ledger', 'pay', 'note-loose', 'receipt-1#paid', {'reason': ''}])
     ans = st[1] if isinstance(st, list) and len(st) > 1 else {}
     given = inputs_of(ans.get('course') or 'run-3')
-    loose = ' '.join(str(x) for x in (st if isinstance(st, list) else [st]))
-    check("a page that declares optional what the walk needs: the run starts without it, and the walk refuses when it "
-          "plans — nothing written", given == {'of': 'receipt-1#paid', 'payee': 'shop'}
-          and 'reason: say why it is noted' in loose and get('beans/receipt-1.md').count('Noted ') == before,
-          (st, given))
+    check("a page that declares optional what the walk needs: the run starts without it, the walk refuses when it plans, "
+          "and the host answers it refused in the walk's own words — never a plan to ratify; nothing written",
+          isinstance(st, list) and st[0] == 422 and 'reason: say why it is noted' in (ans.get('error') or '')
+          and 'plan' not in ans and given == {'of': 'receipt-1#paid', 'payee': 'shop'}
+          and get('beans/receipt-1.md').count('Noted ') == before, (st, given))
 
     # ------------------------------------------------------------------ a tool's argv
     got = host('act', ['sam', 'ledger', 'line', {'words': 'stamped', 'note': ''}])

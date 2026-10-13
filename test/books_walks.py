@@ -15,10 +15,20 @@ read back by the books — in a garden of the core grown from a release made of 
   import   a bank's camt.053 file read into a statement bean of payments read through the bank account, opening + lines
            = closing; a file with a pending line refused whole, a file imported once; a bank's CSV by a mapping
   match    a line of it and the payment said, one movement; refused where their amounts differ
+  chart    an account added beneath its parent, among its siblings, and one the books used renamed and named in
+           Persian — a row of the garden's own table, committed with no RULE-CHANGE; refused where a used account would
+           move, where a level or a parent does not fit, where the gate would refuse the row, where an input is no
+           column; a walk's write never changes the law, a bean, the journal or a capture
+  remove   a document taken out whole with what of the books named it (a booking, a reversal, an entry resting on the
+           booking), a payment taken out of its bean, a bank's statement taken out and its file importable again;
+           refused where closed books read it (the gate's own words), where another statement names it, for another
+           garden's word, for a sealed statement, for a line read from a source, for the run's own bean, the books'
+           bean, a being's bean, and with no reason
 
 Its runs wait for the minute to turn where one bean is saved twice in it, as test/act.py's do.
 Run: python3 test/books_walks.py   (0 = green; some minutes)
 """
+import difflib
 import json
 import os
 import shutil
@@ -101,6 +111,27 @@ def ratify(on, course):
     return run(PY, 'bin/act.py', on, course or '(no run started)', '--ratify', 'sam')
 
 
+def planned(op, on='box', **inputs):
+    """What the operation would plan from `inputs` — its write, as data — or `REFUSED: <why>`: asked of the books' walks
+    (lib/books_walks.py) as their tool asks them, for a run sitting on `on`; nothing started, nothing saved."""
+    code = ("import datetime, json, os, sys\n"
+            "sys.path[:0] = [os.path.join('assets', 'accounting', 'lib'), os.getcwd(), 'bin']\n"
+            "import books_read as br, books_walks as bw, walktool as W\n"
+            "try:\n"
+            "    w = bw.PLANS[sys.argv[1]](br.read(os.getcwd()), json.loads(sys.argv[3]), "
+            "datetime.date.today().toordinal(), (sys.argv[2], None))\n"
+            "    print(json.dumps(w, ensure_ascii=False))\n"
+            "except W.Refused as e:\n"
+            "    print('REFUSED: ' + str(e))\n")
+    return run(PY, '-c', code, op, on, json.dumps(inputs)).out
+
+
+def entry_of(what):
+    """The journal's last entry that says `what`: its heading and its lines."""
+    j = open(os.path.join(G, 'log', 'journal.md'), encoding='utf-8').read()
+    return next(('## ' + e for e in reversed(j.split('\n## ')) if what in e), '')
+
+
 CAMT = """<?xml version="1.0" encoding="UTF-8"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08">
  <BkToCstmrStmt><GrpHdr><MsgId>S-1</MsgId><CreDtTm>2025-05-01T06:00:00</CreDtTm></GrpHdr>
@@ -180,8 +211,8 @@ files:
              'procedure and the namespace anchor-hostname; wrote [[box]]', '- ratified_by: sam')
     r = run(PY, 'assets/accounting/bin/books.py', 'setup', '--by', 'sam')
     wrote = sorted(f for f in os.listdir(os.path.join(G, 'mappings')) if f.startswith('walk-books-'))
-    check("...then it writes the six walks and the tool, and saves nothing", r.returncode == 0 and wrote ==
-          [f'walk-books-{o}.md' for o in ('book', 'close', 'entry', 'import', 'match', 'reverse')]
+    check("...then it writes the eight walks and the tool, and saves nothing", r.returncode == 0 and wrote ==
+          [f'walk-books-{o}.md' for o in ('book', 'chart', 'close', 'entry', 'import', 'match', 'remove', 'reverse')]
           and os.path.isfile(os.path.join(G, 'beans', 'books-tool.md')) and 'not saved' in r.out, (r.out[-600:], wrote))
     r = save("the books' walks", '- action: wrote [[books-tool]], ' + ', '.join(f'[[{w[:-3]}]]' for w in wrote))
     check("...and they pass the gate as the garden's own", r.returncode == 0, r.out[-900:])
@@ -335,6 +366,70 @@ files:
                                                                   if ln['account'] == '11') == [0, 1000],
           r.out[-500:] + r2.out[-600:] + str(st))
 
+    # ---- CHART: an account of the chart, added or changed — a row of the garden's own table, by a walk
+    tsv = lambda: open(os.path.join(G, 'extracts', 'books.tsv'), encoding='utf-8', newline='').read()
+    row = lambda *cells: '\t'.join(cells) + '\n'
+    was = tsv()
+    r, c = start('box', 'chart', code='60', name='rent', parent='6')
+    p = plan_of('box', c)
+    r2 = ratify('box', c)
+    t, e = tsv(), entry_of('books:60 added')
+    check("chart: a new account beneath its parent, at the level after the parent's — the plan shows its row; ratified, "
+          "it is written among its siblings in the order of their codes, the table's other rows as they were, committed "
+          "with an entry that names the file and is no RULE-CHANGE", '+ extracts/books.tsv: 60\taccount\t6\trent' in p
+          and 'stopped at done' in r2.out and t.replace(row('60', 'account', '6', 'rent', '', '', '', '', ''), '') == was
+          and t.index('\n6\tgroup') < t.index('\n60\t') < t.index('\n61\t')
+          and run('git', 'status', '--porcelain', '--', 'extracts').out.strip() == ''
+          and '- changed: extracts/books.tsv, as the plan showed it' in e and 'RULE-CHANGE' not in e,
+          p[-700:] + r2.out[-500:] + e[-600:])
+    got = planned('book', 'cafe', of='cafe#cake', account='rent')
+    check("...and the books' tools read it at once: a payment may be booked to it by its name",
+          'to: \\"books:60\\"' in got, got[-500:])
+    r, c = start('box', 'chart', code='62', name='the household', **{'name-fa': 'خانه'})
+    r2 = ratify('box', c)
+    t2 = tsv()
+    changed = [d for d in difflib.ndiff(t.splitlines(), t2.splitlines()) if d[:2] in ('- ', '+ ')]
+    check("...an account the books used, renamed and named in Persian: the header gains the column and the row its "
+          "names, nothing else of the table changes, and the gate takes it", 'stopped at done' in r2.out
+          and t2.split('\n', 1)[0] == '\t'.join(ROWS[0] + ['name_fa'])
+          and row('62', 'account', '6', 'the household', '', '', '', '', '', 'خانه') in t2 and len(changed) == 4,
+          r.out[-400:] + r2.out[-500:] + str(changed))
+    r, c = start('bank-a', 'chart', code='61', parent='4')
+    check("...an account the books used is not moved: its parent stays (close it, and add another)",
+          'stopped at refused' in r.out and 'is used by the books' in r.out + plan_of('bank-a', c, ''), r.out[-500:])
+    for why, inputs, said in (
+            ("an account above one the books used keeps its element", dict(code='6', element='asset'),
+             'is used by the books, beneath it'),
+            ("an account at the chart's last level has nothing beneath it", dict(code='64', name='bus', parent='61'),
+             "books's last level: nothing is beneath it"),
+            ("an account with no parent stands at the chart's first level", dict(code='5', name='other', level='account'),
+             "is not group, the level of an account with no parent"),
+            ("a role another account takes, in the gate's own words", dict(code='63', name='fares', parent='6',
+                                                                           role='awaiting'),
+             'takes the role awaiting, which 19 takes'),
+            ("an account closed before the last line the books read in it", dict(code='61', closed='2025-01-01'),
+             'it closes on or after its last line'),
+            ("an input that is no column of a chart", dict(code='63', nmae='fares'), 'nmae: no column of a chart'),
+            ("a being stood for twice, in the gate's own words", {'code': '63', 'name': 'fares', 'parent': '6',
+                                                                 'stands-for': 'card-a'},
+             'stands for card-a, as 21 does'),
+            ("a new account says its name", dict(code='63', parent='6'), 'is a new account, and says its name'),
+            ("a change that changes nothing", dict(code='62', name='the household'), 'holds that already')):
+        got = planned('chart', **inputs)
+        check(f"...refused at its plan: {why}", got.startswith('REFUSED') and said in got, got[-500:])
+    got = planned('chart', code=['63'], name=['fares'], parent='6')
+    check("...an input given as a list of one, as a page's `many` gives it, is that one value",
+          not got.startswith('REFUSED') and '63\\taccount\\t6\\tfares' in got, got[-500:])
+    got = run(PY, '-c', "import sys; sys.path.insert(0, 'bin'); import walktool as W\n"
+              "for p in ('VOCAB.md', 'beans/box.md', 'mappings/walk-books-book.md', 'log/journal.md', 'captures/x', "
+              "'../x.tsv', 'extracts/books.tsv'):\n"
+              "    try:\n        W.garden_file(p); print(p, 'written')\n"
+              "    except W.Refused:\n        print(p, 'refused')\n").out
+    check("...and a walk's write changes a file of the estate the garden keeps, never the law (VOCAB.md, a RULE-CHANGE), "
+          "a bean, the journal, a capture or what lies outside the garden", got.split() == [
+              'VOCAB.md', 'refused', 'beans/box.md', 'refused', 'mappings/walk-books-book.md', 'refused', 'log/journal.md',
+              'refused', 'captures/x', 'refused', '../x.tsv', 'refused', 'extracts/books.tsv', 'written'], got[-600:])
+
     # ---- MATCH
     r, c = start('cafe', 'match', line='bank-a-2025-05#line-002', payment='cafe#cake')
     check("match: a line and a payment whose amounts differ are refused", 'stopped at refused' in r.out and
@@ -347,6 +442,87 @@ files:
           and lines_of(next((v for v in vs if v['ref'] == 'cafe#bread'), {})) == [('11', 0, F('12.50')),
                                                                                   ('19', F('12.50'), 0)],
           r.out[-500:] + r2.out[-600:])
+    # ---- REMOVE: a document, or a payment recorded by mistake, taken out with what of the books names it
+    bean('twice', 'document', 'a receipt entered twice', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: oops, by: sam, of: { count: "25.00", unit: XTS }, through: card-a, at: "2025-04-10" }')
+    bean('heard', 'document', 'a receipt a friend confirmed', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: lent, by: sam, of: { count: "5.00", unit: XTS }, at: "2025-04-11" }',
+         'respond: { by: sam, of: [lent], as: confirms }')
+    save('two receipts', '- action: wrote [[twice]] and [[heard]]')
+    r, c = start('twice', 'book', of='twice#oops', account='61')
+    ratify('twice', c)
+    r, c = start('heard', 'entry', day='2025-04-10', memo='a fee on the receipt', unit='XTS', lines='61 dr 2; 21 cr 2',
+                 of='books-sam#bk-twice-oops')
+    ratify('heard', c)
+    r, c = start('box', 'reverse', of='twice#oops', reason='entered twice')
+    ratify('box', c)
+    sam = open(os.path.join(G, 'beans', 'books-sam.md'), encoding='utf-8').read()
+    fee = next((ln.split('id: ', 1)[1].split(',', 1)[0] for ln in sam.splitlines() if 'a fee on the receipt' in ln), '?')
+    r, c = start('box', 'remove', of='twice', reason='entered twice')
+    p = plan_of('box', c)
+    r2 = ratify('box', c)
+    sam, e = open(os.path.join(G, 'beans', 'books-sam.md'), encoding='utf-8').read(), entry_of('twice taken out whole')
+    vs = books('vouchers')
+    check("remove: a document taken out whole, with what of Sam's books named it — its booking, the payment's reversal, "
+          "and in turn the entry resting on the booking — shown in the plan, named in the entry; the books read none of "
+          "it more", all(x in p for x in ('- the bean twice, taken out whole', '- books-sam: book#bk-twice-oops',
+                                          '- books-sam: book#rv-twice-oops', f'- books-sam: book#{fee}'))
+          and 'stopped at done' in r2.out and not os.path.exists(os.path.join(G, 'beans', 'twice.md'))
+          and not any(x in sam for x in ('twice#oops', 'bk-twice-oops', 'rv-twice-oops', f'id: {fee},'))
+          and not any('twice' in v['ref'] or v.get('memo') == 'a fee on the receipt' for v in vs)
+          and all(x in e for x in ('[[twice]]', 'bk-twice-oops', 'rv-twice-oops', fee)),
+          p[-900:] + r2.out[-500:] + e[-700:])
+    r, c = start('bank-a', 'remove', of='market', reason='a mistake')
+    check("...a document the closed books read is refused in the gate's own words: reverse it instead",
+          'stopped at refused' in r.out and 'closed through 2025-03-31' in r.out + plan_of('bank-a', c, '')
+          and 'walk-books-reverse' in r.out + plan_of('bank-a', c, ''), r.out[-500:])
+    for why, on, inputs, said in (
+            ("a payment another statement still names (a response to it), naming it", 'box',
+             dict(of='heard#lent', reason='never lent'), 'heard: respond still names what would go'),
+            ("a line read from a source: its whole statement goes, or nothing", 'box',
+             dict(of='bank-a-2025-05#line-001', reason='a mistake'), 'take out its statement, bank-a-2025-05, whole'),
+            ("a document taken out whole by a run sitting on it", 'shop', dict(of='shop', reason='a mistake'),
+             'the run sits on shop'),
+            ("the books' own bean", 'box', dict(of='books-sam', reason='a mistake'), "is the books' own bean"),
+            ("a being's bean", 'box', dict(of='card-a', reason='a mistake'), 'is a contract, no document'),
+            ("a removal without its reason", 'box', dict(of='heard'), 'reason: say why'),
+            ("two documents in one input", 'box', dict(of=['heard', 'shop'], reason='a mistake'), 'of: one value, not 2')):
+        got = planned('remove', on, **inputs)
+        check(f"...refused at its plan: {why}", got.startswith('REFUSED') and said in got, got[-500:])
+    r, c = start('cafe', 'remove', of='cafe#cake', reason='recorded by mistake')
+    r2 = ratify('cafe', c)
+    cafe = open(os.path.join(G, 'beans', 'cafe.md'), encoding='utf-8').read()
+    check("...a payment recorded by mistake taken out of its bean, the run sitting on that bean; the bean and its other "
+          "payment stay", 'stopped at done' in r2.out and 'id: cake' not in cafe and 'id: bread' in cafe
+          and not voucher('cafe#cake') and voucher('cafe#bread'), r.out[-400:] + r2.out[-500:])
+    bean('kept-off', 'document', 'a receipt with a sealed line', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: sealed, held: "root:held/0123456789abcdef0123456789abcdef" }')     # read, never saved
+    got = planned('remove', of='kept-off', reason='a mistake') + \
+        planned('remove', of='kept-off#sealed', reason='a mistake')
+    os.remove(os.path.join(G, 'beans', 'kept-off.md'))
+    check("...refused at its plan: a document or a payment that holds a statement sealed off git (erase it first)",
+          got.count('REFUSED: kept-off#sealed is sealed, kept off git: erase it first') == 2, got[-600:])
+    bean('afar', 'garden', "a friend's garden, met here", 'say: { by: sam, at: now }')     # read, never saved
+    bean('their-bill', 'document', "a bill the friend's garden proposed", 'own: { by: sam, of: self }',
+         'say: { by: sam, at: ["2025-04-12 10:00+00:00", afar] }',
+         'pay: { id: owed, by: sam, to: afar, of: { count: "9.00", unit: XTS }, at: "2025-04-12" }')
+    got = planned('remove', of='their-bill', reason='a mistake') + \
+        planned('remove', of='their-bill#owed', reason='a mistake')
+    for b_ in ('afar', 'their-bill'):
+        os.remove(os.path.join(G, 'beans', f'{b_}.md'))
+    check("...refused at its plan: another garden's word, taken from its proposal — disputed there, never taken out "
+          "here", got.count("their-bill#owed (afar's): another garden's word") == 2, got[-600:])
+    csv_bean = next((v['ref'].split('#', 1)[0] for v in books('vouchers') if v['ref'].startswith('statement-')), '?')
+    r, c = start('box', 'remove', of=csv_bean, reason='imported by mistake')
+    r2 = ratify('box', c)
+    again = planned('import', 'card-a', file=os.path.join(G, 'statement-06.csv'), format='csv',
+                    mapping='extracts/bank-csv.yaml', means='bank-a')
+    check("...a bank's statement imported by mistake taken out whole: its lines leave the books, and the same file may "
+          "be imported again", 'stopped at done' in r2.out
+          and not os.path.exists(os.path.join(G, 'beans', f'{csv_bean}.md'))
+          and not any(v['ref'].startswith(csv_bean) for v in books('vouchers')) and not again.startswith('REFUSED'),
+          r.out[-400:] + r2.out[-500:] + again[-400:])
+
     g = run(PY, 'core/check.py', '.')
     check("the garden passes its gate after every run", g.returncode == 0, g.out[-800:])
 finally:
