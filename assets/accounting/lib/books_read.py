@@ -386,13 +386,22 @@ def _vouchers(B, today):
     for ref, bks in sorted(books.items()):                       # any other statement booked, written whole
         if ref in done or ref in pays:
             continue
-        lines_, notes = [], []
-        for _bid, r in bks:
-            lines_ += _written(B, r, None, None, notes)
-        ob, _h, oid = ref.partition('#')                          # booked on its own day, else the day of what it books
+        # ONE VOUCHER A DAY: the bookings of one statement on one day are one entry (each booked on its own day, else
+        # the day of what it books) — the books' `open` carries every journal entry the bookkeeper writes, each its own
+        ob, _h, oid = ref.partition('#')
         hit = G.beans.get(ob).ids.get(oid) if G.beans.get(ob) else None
-        day = _day(next((r.get('at') for _b, r in bks if r.get('at')), None)) or (_day(hit[2].get('at')) if hit else None)
-        B.add(ref, 'entry', day, _unit_of(bks), lines_, notes=notes, knew=known(ref)[1])
+        own = _day(hit[2].get('at')) if hit else None
+        days = {}
+        for b_, r in bks:
+            days.setdefault(_day(r.get('at')) or own, []).append((b_, r))
+        for day, group in sorted(days.items(), key=lambda kv: (kv[0] is None, kv[0] or 0)):
+            lines_, notes = [], []
+            for _bid, r in group:
+                lines_ += _written(B, r, None, None, notes)
+            memo = '; '.join(dict.fromkeys(str(r.get('why')) for _b, r in group if r.get('why')))
+            B.add(ref if day == own or len(days) == 1 else f"{ref}@{datetime.date.fromordinal(day).isoformat()}",
+                  'entry', day, _unit_of(group), lines_, memo=memo, notes=notes, knew=known(ref)[1],
+                  statements=[f"{b_}#{r['id']}" for b_, r in group if isinstance(r.get('id'), str)] or [ref])
     for bid, r, of in reverses:
         # THE MOVE IN THE REVERSE SENSE: a booking written whole, its two ends exchanged; a booking of one side, or a
         # statement, every line its voucher holds — on the reversal's own day

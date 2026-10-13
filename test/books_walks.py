@@ -1,0 +1,318 @@
+#!/usr/bin/env python3
+"""The books' operations as walks (the accounting profile's asset, assets/accounting/bin/books.py): each started with
+what a person gives it (bin/act.py `--start … --input`), its plan a write shown to them, ratified, written as shown and
+read back by the books — in a garden of the core grown from a release made of this tree (test/grow.py).
+
+  setup    the walks and their tool written into the garden as its own, refused until the garden has the kind
+           `procedure` and a host bean naming this machine
+  book     a payment booked to an account and a plan's code; booked again to another while its period is open, the
+           earlier booking replaced; after the period closed, what it placed moved by a booking of it on today, the
+           closed period unchanged; a means the payment does not say; refused when nothing would change
+  reverse  a payment reversed from a day, with its reason; refused in a closed period
+  close    the books' reading through a day, pinned at the commit the plan read; refused for a day still to come and
+           one closed already
+  import   a bank's camt.053 file read into a statement bean of payments read through the bank account, opening + lines
+           = closing; a file with a pending line refused whole, a file imported once; a bank's CSV by a mapping
+  match    a line of it and the payment said, one movement; refused where their amounts differ
+
+Its runs wait for the minute to turn where one bean is saved twice in it, as test/act.py's do.
+Run: python3 test/books_walks.py   (0 = green; some minutes)
+"""
+import json
+import os
+import shutil
+import socket
+import sys
+import tempfile
+from fractions import Fraction
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'test'))
+import grow  # noqa: E402
+
+FAILS = []
+PY = sys.executable
+HOST = socket.gethostname()
+
+
+def check(name, cond, detail=""):
+    print(("PASS  " if cond else "FAIL  ") + name + ("" if cond else "  — " + str(detail)[-1500:]))
+    if not cond:
+        FAILS.append(name)
+
+
+T = tempfile.mkdtemp(prefix='books-walks-')
+G = os.path.join(T, 'g')
+
+
+def run(*a):
+    return grow.run(*a, cwd=G)
+
+
+def write(rel, text):
+    p = os.path.join(G, *rel.split('/'))
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(text)
+
+
+def bean(bid, kind, title, *statements):
+    write(f'beans/{bid}.md', f"---\nbean: {bid}\nkind: {kind}\ntitle: \"{title}\"\nsummary: \"{title}, invented.\"\n"
+                             "statements:\n" + ''.join(f"  - {s}\n" for s in statements) + f"---\n{title}.\n")
+
+
+def save(what, *body):
+    return run(PY, 'bin/save.py', 'sam', what, '--body', *body)
+
+
+def books(*a):
+    r = run(PY, 'assets/accounting/bin/books.py', *a, '--json')
+    try:
+        return json.loads(r.stdout)
+    except ValueError:
+        return {'error': r.out[-1200:]}
+
+
+def voucher(ref):
+    vs = books('vouchers')
+    return next((v for v in vs if v['ref'] == ref), {}) if isinstance(vs, list) else {}
+
+
+F = lambda x: Fraction(str(x))
+lines_of = lambda v: sorted((ln['account'], F(ln['dr']), F(ln['cr'])) for ln in v.get('lines', []))
+
+
+def start(on, op, **inputs):
+    r = run(PY, 'bin/act.py', on, '--start', f'walk-books-{op}', '--by', 'sam',
+            *[x for k, v in inputs.items() for x in ('--input', f'{k}={v}')])
+    course = next((w.strip('.,():') for w in r.out.split() if w.startswith('run-')), None)
+    return r, course
+
+
+def plan_of(on, course, step='plan'):
+    """What the run's step said, every capture of it (its plan, or its refusal)."""
+    d = os.path.join(G, 'captures', 'actions')
+    return ''.join(open(os.path.join(d, c), encoding='utf-8').read() for c in sorted(os.listdir(d))
+                   if c.startswith(f'{on}.{course}.{step}')) if os.path.isdir(d) else ''
+
+
+def ratify(on, course):
+    return run(PY, 'bin/act.py', on, course or '(no run started)', '--ratify', 'sam')
+
+
+CAMT = """<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08">
+ <BkToCstmrStmt><GrpHdr><MsgId>S-1</MsgId><CreDtTm>2025-05-01T06:00:00</CreDtTm></GrpHdr>
+  <Stmt><Id>S-1-1</Id><Acct><Id><IBAN>XX00TEST0000000000000001</IBAN></Id><Ccy>XTS</Ccy></Acct>
+   <Bal><Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp><Amt Ccy="XTS">500.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2025-04-30</Dt></Dt></Bal>
+   <Bal><Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp><Amt Ccy="XTS">587.50</Amt><CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2025-05-31</Dt></Dt></Bal>
+   <Ntry><NtryRef>1</NtryRef><Amt Ccy="XTS">100.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2025-05-02</Dt></BookgDt><AcctSvcrRef>REF-0001</AcctSvcrRef>
+    <NtryDtls><TxDtls><RltdPties><Dbtr><Pty><Nm>A Client</Nm></Pty></Dbtr></RltdPties><RmtInf><Ustrd>a fee</Ustrd></RmtInf></TxDtls></NtryDtls></Ntry>
+   <Ntry><NtryRef>2</NtryRef><Amt Ccy="XTS">12.50</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts><Cd>BOOK</Cd></Sts>
+    <BookgDt><Dt>2025-05-05</Dt></BookgDt><AcctSvcrRef>REF-0002</AcctSvcrRef><AddtlNtryInf>the baker</AddtlNtryInf></Ntry>
+%s  </Stmt>
+ </BkToCstmrStmt>
+</Document>
+"""
+PENDING = """   <Ntry><NtryRef>3</NtryRef><Amt Ccy="XTS">40.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts><Cd>PDNG</Cd></Sts>
+    <BookgDt><Dt>2025-05-31</Dt></BookgDt><AcctSvcrRef>REF-0003</AcctSvcrRef></Ntry>
+"""
+ROWS = [['code', 'level', 'parent', 'name', 'element', 'stands_for', 'parties', 'role', 'closed'],
+        ['1', 'group', '', 'assets', 'asset', '', '', '', ''],
+        ['11', 'account', '1', 'the bank account', '', 'bank-a', '', '', ''],
+        ['19', 'account', '1', 'awaiting an account', '', '', '', 'awaiting', ''],
+        ['2', 'group', '', 'liabilities', 'liability', '', '', '', ''],
+        ['21', 'account', '2', 'the card', '', 'card-a', '', '', ''],
+        ['3', 'group', '', 'equity', 'equity', '', '', '', ''],
+        ['31', 'account', '3', 'opening balances', '', '', '', 'earnings', ''],
+        ['4', 'group', '', 'income', 'income', '', '', '', ''],
+        ['41', 'account', '4', 'fees', '', '', '', '', ''],
+        ['6', 'group', '', 'expenses', 'expense', '', '', '', ''],
+        ['61', 'account', '6', 'food', '', '', '', '', ''],
+        ['62', 'account', '6', 'household', '', '', '', '', '']]
+
+try:
+    REL = grow.release(os.path.join(T, 'release'))
+    r = grow.garden(REL, G, 'sam', '--profile', 'accounting')
+    check(f"a garden of the core (core@{grow.VERSION}) grows taking the accounting profile", r.returncode == 0, r.out[-800:])
+    write('VOCAB.md', """---
+profiles: [accounting]
+schemes:
+  - { scheme: books, classifies: "Sam's chart of accounts", holding: extract, licence: CC0-1.0, publisher: the gardener, url: "https://example.org/books", levels: [ { level: group }, { level: account } ], neighbours: none, sources: extracts/books.tsv, form: chart }
+  - { scheme: centres, classifies: "where Sam's amounts belong", holding: extract, licence: CC0-1.0, publisher: the gardener, url: "https://example.org/centres", levels: [ { level: plan }, { level: account } ], neighbours: none, sources: extracts/centres.tsv }
+files:
+  - { registry: books, file: extracts/books.tsv, key: code }
+  - { registry: centres, file: extracts/centres.tsv, key: code }
+---
+# the garden's own rows
+""")
+    write('extracts/books.tsv', ''.join('\t'.join(r) + '\n' for r in ROWS))
+    write('extracts/centres.tsv', 'code\tlevel\tparent\tname\nhome\tplan\t\thome\nkitchen\taccount\thome\tthe kitchen\n')
+    bean('bank-a', 'contract', "Sam's account at a bank", 'say: { by: sam, at: now }', 'own: { by: sam, of: self }')
+    bean('card-a', 'contract', "Sam's card", 'say: { by: sam, at: now }', 'own: { by: sam, of: self }')
+    bean('market', 'document', 'a receipt from the market', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: veg, by: sam, of: { count: "15.00", unit: XTS }, through: card-a, at: "2025-03-03", '
+         'note: "vegetables" }')
+    bean('shop', 'document', 'a receipt from a shop', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: lamp, by: sam, of: { count: "40.00", unit: XTS }, at: "2025-03-05", note: "a lamp" }')
+    bean('cafe', 'document', 'a receipt from the baker', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: bread, by: sam, of: { count: "12.50", unit: XTS }, at: "2025-05-05" }',
+         'pay: { id: cake, by: sam, of: { count: "13.00", unit: XTS }, at: "2025-05-05" }')
+    r = save('RULE-CHANGE: Sam keeps books', '- action: RULE-CHANGE — VOCAB.md takes the accounting profile, a chart '
+                                             'and a plan; wrote [[bank-a]], [[card-a]], [[market]], [[shop]], [[cafe]]',
+             '- ratified_by: sam')
+    check("the chart, the plan and three receipts not yet booked are saved", r.returncode == 0, r.out[-900:])
+
+    # ---- SETUP: the walks and their tool, the garden's own
+    r = run(PY, 'assets/accounting/bin/books.py', 'setup', '--by', 'sam')
+    check("setup is refused until the garden has the kind `procedure` and a host bean naming this machine, saying so",
+          r.returncode == 2 and 'kind: procedure' in r.out and HOST in r.out, r.out[-800:])
+    v = open(os.path.join(G, 'VOCAB.md'), encoding='utf-8').read()
+    write('VOCAB.md', v.replace('profiles: [accounting]\n', 'profiles: [accounting]\nkinds:\n  - { kind: procedure, '
+                                'nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\nnamespaces:\n'
+                                '  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for '
+                                'itself" }\n', 1))
+    bean('box', 'host', 'the machine the books are kept on', 'read: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         f'name: {{ by: anchor-hostname, of: self, as: {HOST} }}')
+    r = save('RULE-CHANGE: a walk is a procedure; this machine', '- action: RULE-CHANGE — VOCAB.md adds the kind '
+             'procedure and the namespace anchor-hostname; wrote [[box]]', '- ratified_by: sam')
+    r = run(PY, 'assets/accounting/bin/books.py', 'setup', '--by', 'sam')
+    wrote = sorted(f for f in os.listdir(os.path.join(G, 'mappings')) if f.startswith('walk-books-'))
+    check("...then it writes the six walks and the tool, and saves nothing", r.returncode == 0 and wrote ==
+          [f'walk-books-{o}.md' for o in ('book', 'close', 'entry', 'import', 'match', 'reverse')]
+          and os.path.isfile(os.path.join(G, 'beans', 'books-tool.md')) and 'not saved' in r.out, (r.out[-600:], wrote))
+    r = save("the books' walks", '- action: wrote [[books-tool]], ' + ', '.join(f'[[{w[:-3]}]]' for w in wrote))
+    check("...and they pass the gate as the garden's own", r.returncode == 0, r.out[-900:])
+
+    # ---- BOOK
+    r, c = start('market', 'book', of='market#veg', account='61', analytic='kitchen')
+    p = plan_of('market', c)
+    check("book: started with the account and the plan's code, the plan is a write shown — and nothing written yet",
+          'stopped at ratify' in r.out and 'to: "books:61"' in p and 'to: "centres:kitchen"' in p
+          and lines_of(voucher('market#veg')) == [('19', 15, 0), ('21', 0, 15)], r.out[-900:] + p[-600:])
+    r = ratify('market', c)
+    check("...ratified, it is booked as shown and read back: Cr the card 15, Dr food 15",
+          'stopped at done' in r.out and lines_of(voucher('market#veg')) == [('21', 0, 15), ('61', 15, 0)], r.out[-900:])
+    r, c = start('market', 'book', of='market#veg', account='food')
+    check("...booked again to the same account (named by its name), the plan is refused: nothing would change",
+          'stopped at refused' in r.out and 'booked to books:61 already' in r.out + plan_of('market', c), r.out[-900:])
+    r, c = start('shop', 'book', of='shop#lamp', account='62', means='21')
+    r2 = ratify('shop', c)
+    check("...a payment that says no means, booked with the means it was paid through: Cr the card 40, Dr household 40",
+          'stopped at done' in r2.out and lines_of(voucher('shop#lamp')) == [('21', 0, 40), ('62', 40, 0)],
+          r.out[-500:] + r2.out[-500:])
+    r, c = start('market', 'book', of='market#veg', account='62')
+    r2 = ratify('market', c)
+    check("...booked again while its period is open: the earlier booking is replaced — Dr household 15",
+          'stopped at done' in r2.out and lines_of(voucher('market#veg')) == [('21', 0, 15), ('62', 15, 0)],
+          r.out[-500:] + r2.out[-500:] + plan_of('market', c, ''))
+
+    # ---- ENTRY: what no payment says, written whole
+    r, c = start('bank-a', 'entry', day='2025-03-01', memo='opening balances', unit='XTS', lines='11 dr 500; 31 cr 400')
+    check("entry: lines that do not balance are refused, saying so", 'stopped at refused' in r.out and 'do not balance'
+          in r.out + plan_of('bank-a', c, ''), r.out[-600:])
+    r, c = start('bank-a', 'entry', day='2025-03-01', memo='opening balances', unit='XTS',
+                 lines='11 dr 500; opening balances cr 500')
+    p = plan_of('bank-a', c)
+    r2 = ratify('bank-a', c)
+    op = [v for v in books('vouchers') if v.get('as') == 'entry' and v.get('memo') == 'opening balances']
+    check("...the books' opening, an account named by its name: the first entry writes the books' `open` and rests on "
+          "it — Dr the bank 500, Cr opening balances 500", 'open: { id: opened' in p and 'stopped at done' in r2.out
+          and len(op) == 1 and lines_of(op[0]) == [('11', 500, 0), ('31', 0, 500)], p[-600:] + r2.out[-500:] + str(op))
+    r, c = start('card-a', 'entry', day='2025-03-10', memo='a gift of cash, spent', unit='XTS',
+                 lines='62 dr 30; 61 dr 20; 31 cr 50')
+    r2 = ratify('card-a', c)
+    gift = [v for v in books('vouchers') if v.get('memo') == 'a gift of cash, spent']
+    check("...a second entry on another day, three lines, is a voucher of its own beside the opening: each debit met "
+          "by the credit, 30 and 20 from opening balances", 'stopped at done'
+          in r2.out and len(gift) == 1 and lines_of(gift[0]) == [('31', 0, 20), ('31', 0, 30), ('61', 20, 0), ('62', 30, 0)],
+          r.out[-400:] + r2.out[-400:] + str(gift))
+
+    # ---- REVERSE
+    r, c = start('shop', 'reverse', of='shop#lamp', reason='taken back to the shop')
+    r2 = ratify('shop', c)
+    rv = [v for v in books('vouchers') if v.get('as') == 'reversal']
+    check("reverse: a payment reversed from today with its reason, its move's ends exchanged: Dr the card 40, Cr "
+          "household 40", 'stopped at done' in r2.out and len(rv) == 1 and lines_of(rv[0]) == [('21', 40, 0), ('62', 0, 40)],
+          r.out[-500:] + r2.out[-500:] + str(rv))
+
+    # ---- CLOSE
+    r, c = start('box', 'close', day='2999-12-31')
+    check("close: a day still to come is refused", 'stopped at refused' in r.out and 'still to come' in
+          r.out + plan_of('box', c), r.out[-600:])
+    r, c = start('box', 'close', day='2025-03-31')
+    p = plan_of('box', c)
+    r2 = ratify('box', c)
+    cl = books('closes')
+    check("...the books through 31 March: the plan shows each account through the day; ratified, their reading is "
+          "pinned at the commit the plan read", 'as they are closed' in p and 'op: books' in p and 'garden@' in p
+          and 'stopped at done' in r2.out and isinstance(cl, list) and [x['day'] for x in cl] == ['2025-03-31'],
+          p[-900:] + r2.out[-600:] + str(cl))
+    r, c = start('cafe', 'close', day='2025-03-15')
+    check("...a day closed already is refused", 'stopped at refused' in r.out and 'closed through 2025-03-31 already'
+          in r.out + plan_of('cafe', c), r.out[-600:])
+
+    # ---- BOOK IN A CLOSED PERIOD: nothing closed is rewritten
+    r, c = start('market', 'book', of='market#veg', account='61')
+    p = plan_of('market', c)
+    r2 = ratify('market', c)
+    moved = [v for v in books('vouchers') if v.get('as') == 'entry' and v['ref'].startswith('books-sam#bk-')]
+    check("book again after its period closed: the booking stays, and a booking of it moves what it placed from "
+          "household to food on today — the closed period reads as it was", 'moved to books:61' in p
+          and 'stopped at done' in r2.out and lines_of(voucher('market#veg')) == [('21', 0, 15), ('62', 15, 0)]
+          and len(moved) == 1 and lines_of(moved[0]) == [('61', 15, 0), ('62', 0, 15)], p[-700:] + r2.out[-500:])
+    r, c = start('shop', 'reverse', of='market#veg', day='2025-03-20', reason='a mistake')
+    check("reverse: a day in a closed period is refused", 'stopped at refused' in r.out and 'closed through' in
+          r.out + plan_of('shop', c), r.out[-600:])
+
+    # ---- IMPORT
+    write('statement-pending.xml', CAMT % PENDING)
+    r, c = start('bank-a', 'import', file=os.path.join(G, 'statement-pending.xml'), format='camt.053', means='bank-a')
+    check("import: a camt.053 file with a pending line is refused whole, the line named", 'stopped at refused' in r.out
+          and 'not booked' in r.out + plan_of('bank-a', c), r.out[-700:])
+    write('statement-05.xml', CAMT % '')
+    r, c = start('bank-a', 'import', file=os.path.join(G, 'statement-05.xml'), format='camt.053', means='bank-a',
+                 statement='bank-a-2025-05')
+    r2 = ratify('bank-a', c)
+    sv = [v for v in books('vouchers') if v['ref'].startswith('bank-a-2025-05#')]
+    check("...a camt.053 file read into a statement bean, its lines payments read through the bank account: Dr the bank "
+          "100, Cr the bank 12.50, each awaiting an account", 'stopped at done' in r2.out and sorted(
+              tuple(lines_of(v)) for v in sv) == sorted([(('11', 100, 0), ('19', 0, 100)), (('11', 0, F('12.50')),
+                                                                                             ('19', F('12.50'), 0))]),
+          r.out[-500:] + r2.out[-700:] + str(sv))
+    r, c = start('cafe', 'import', file=os.path.join(G, 'statement-05.xml'), format='camt.053', means='bank-a')
+    check("...the same file again is refused: imported already", 'stopped at refused' in r.out and 'imported already' in
+          r.out + plan_of('cafe', c), r.out[-600:])
+    write('extracts/bank-csv.yaml', 'delimiter: ";"\ndecimal: ","\ncurrency: XTS\nday_format: dd.mm.yyyy\n'
+                                     'columns: { day: Datum, text: Text, debit: Soll, credit: Haben, ref: Ref }\n')
+    write('statement-06.csv', 'Datum;Text;Soll;Haben;Ref\n02.06.2025;a fee;;1.000,00;C-1\n03.06.2025;rent;300,00;;C-2\n')
+    save('a mapping of the bank\'s CSV', '- action: wrote extracts/bank-csv.yaml')
+    r, c = start('card-a', 'import', file=os.path.join(G, 'statement-06.csv'), format='csv', mapping='extracts/bank-csv.yaml',
+                 means='bank-a')
+    r2 = ratify('card-a', c)
+    st = [v for v in books('vouchers') if v['ref'].startswith('statement-')]
+    check("...a bank's CSV read by a mapping of the garden's: a decimal comma, a debit and a credit column, a day "
+          "written dd.mm.yyyy", 'stopped at done' in r2.out and sorted(F(ln['dr']) for v in st for ln in v['lines']
+                                                                  if ln['account'] == '11') == [0, 1000],
+          r.out[-500:] + r2.out[-600:] + str(st))
+
+    # ---- MATCH
+    r, c = start('cafe', 'match', line='bank-a-2025-05#line-002', payment='cafe#cake')
+    check("match: a line and a payment whose amounts differ are refused", 'stopped at refused' in r.out and
+          'one movement has one amount' in r.out + plan_of('cafe', c), r.out[-600:])
+    r, c = start('cafe', 'match', line='bank-a-2025-05#line-002', payment='cafe#bread')
+    r2 = ratify('cafe', c)
+    vs = books('vouchers')
+    check("...the baker's line and the bread Sam said, one movement: the line is its evidence, and the bread is read "
+          "through the bank", 'stopped at done' in r2.out and not any(v['ref'] == 'bank-a-2025-05#line-002' for v in vs)
+          and lines_of(next((v for v in vs if v['ref'] == 'cafe#bread'), {})) == [('11', 0, F('12.50')),
+                                                                                  ('19', F('12.50'), 0)],
+          r.out[-500:] + r2.out[-600:])
+    g = run(PY, 'core/check.py', '.')
+    check("the garden passes its gate after every run", g.returncode == 0, g.out[-800:])
+finally:
+    shutil.rmtree(T, ignore_errors=True)
+
+print(f"\nbooks_walks: {len(FAILS)} failed")
+sys.exit(1 if FAILS else 0)

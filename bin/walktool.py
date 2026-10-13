@@ -410,9 +410,22 @@ def apply_writes(bean, course):
     print(out, end='')
 
 
+def _same(planned, got):
+    """A value the plan wrote and the value committed are the same: each `now` of the plan, wherever it stands — a role,
+    or a member of a list (a pin's `at: [now, <commit>]`) — matching the moment the save wrote in its place."""
+    if planned == 'now':
+        return True
+    if isinstance(planned, list) and isinstance(got, list):
+        return len(planned) == len(got) and all(_same(p, g) for p, g in zip(planned, got))
+    if isinstance(planned, dict) and isinstance(got, dict):
+        return planned.keys() == got.keys() and all(_same(planned[k], got[k]) for k in planned)
+    return planned == got
+
+
 def verify_writes(bean, course):
     """The write read back from the garden as committed: each bean made is here and each taken out is not; each
-    statement added holds what the plan wrote (a `now` the save turned into its moment); each taken out is gone."""
+    statement added holds what the plan wrote (each `now` the save turned into its moment, in a role or a list); each
+    taken out is gone."""
     write = shown_write(bean, course)
     _garden_fresh()
     G = _garden()
@@ -425,14 +438,14 @@ def verify_writes(bean, course):
             continue
         if b is None:
             raise Refused(f"the bean {bid} is not here")
+        again = {_statement(line)[1]['id'] for line in e.get('add') or []}     # taken out and written anew: read below
         for sid in e.get('remove') or []:
-            if str(sid) in b.ids:
+            if str(sid) in b.ids and str(sid) not in again:
                 raise Refused(f"{bid} still holds {sid}")
         for line in e.get('add') or []:
             verb, roles = _statement(line)
             hit = b.ids.get(roles['id'])
-            if hit is None or hit[1] != verb or {k: v for k, v in hit[2].items() if roles.get(k) != 'now'} != \
-                    {k: v for k, v in roles.items() if v != 'now'}:
+            if hit is None or hit[1] != verb or not _same(roles, hit[2]):
                 raise Refused(f"{bid}: {verb}#{roles['id']} does not read back as it was written")
     print(f"read back: {len(write.get('beans') or [])} bean(s) as the plan wrote them")
 
