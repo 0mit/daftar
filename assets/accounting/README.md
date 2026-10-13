@@ -89,6 +89,8 @@ is started on a bean with what the person gives it, at the terminal or from a pa
 | `walk-books-import` | `file`, `format` (camt.053, camt.054, ofx, mt940, csv), `means`, `mapping` (a CSV's), `statement` | a statement bean: its lines payments read through the means, refused whole where a line is not read, where opening and lines do not make its closing, or where the file was imported before |
 
 Each statement file is read by `lib/statements.py`, one adapter a format and none privileged; a bank's CSV by a mapping
-the garden keeps (`delimiter`, `decimal`, `day_format`, `columns: { day, amount | debit + credit, text, ref, party,
-currency, value_day, code }`). An XML file that declares a document type is refused before it is parsed: a statement is
-data.
+the garden keeps (`delimiter`, `decimal`, `day_format` — `yyyy-mm-dd`, the default, `dd.mm.yyyy`, `dd/mm/yyyy` or
+`dd-mm-yyyy` — `sign`, `columns: { day, amount | debit + credit, text, ref, party, currency, value_day, code }`); a day
+format or a sign it does not read is refused by name, never passed over. An XML file that declares a document type is
+refused before it is parsed: a statement is data. The `file` is a path on this machine, or the SHA-256 of a file a
+page gave, which the host keeps off git (`W.file`).
