@@ -695,11 +695,22 @@ class Host:
                            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=3600)
         return r.returncode, (r.stdout + r.stderr).strip()
 
-    def _plan_of(self, bean, course):
+    def _plan_of(self, bean, course, step="plan"):
         d = os.path.join(vm.ROOT, "captures", "actions")
-        caps = sorted((f for f in os.listdir(d) if f.startswith("%s.%s.plan." % (bean, course))),
+        caps = sorted((f for f in os.listdir(d) if f.startswith("%s.%s.%s." % (bean, course, step))),
                       key=lambda f: int(f.rsplit(".", 2)[-2]) if f.rsplit(".", 2)[-2].isdigit() else 0) if os.path.isdir(d) else []
         return open(os.path.join(d, caps[-1]), encoding="utf-8", errors="replace").read() if caps else ""
+
+    def _refusal_of(self, bean, course, stands):
+        """What a walk said as it refused a run: the last line of the capture of the last step it reached (verify,
+        apply, check, plan); where that step said nothing, where the run stands."""
+        d = os.path.join(vm.ROOT, "captures", "actions")
+        have = os.listdir(d) if os.path.isdir(d) else []
+        for step in ("verify", "apply", "check", "plan"):
+            if any(f.startswith("%s.%s.%s." % (bean, course, step)) for f in have):
+                said = [x for x in self._plan_of(bean, course, step).splitlines() if x.strip()]
+                return said[-1].strip() if said else stands
+        return stands
 
     def start(self, user, key, el, tool, bean, inputs=None, reason=None):
         """Start the walk the host maps `tool` to, on `bean`, for `user`: the action declared on `el` of drawing `key`,
@@ -798,10 +809,17 @@ class Host:
             rc, out = self._act_py(*args)
         m = re.search(r"^act: \S+ (run-\d+): (.*)$", out, re.M)
         course = m.group(1) if m else None
-        self.audit(dict(base, mode="started" if rc == 0 else "refused", walk=walk, course=course, rc=rc, output_tail=out[-1500:]))
+        # A RUN ITS WALK REFUSED, OR ROLLED BACK, BEFORE ANY PERSON'S STEP (an action's walk ends at `refused` or
+        # `rolled-back`, bin/act.py): answered refused, in the walk's own words — never a plan a person could ratify
+        ended = bool(m) and re.match(r"stopped at (refused|rolled-back)\b", m.group(2)) is not None
+        self.audit(dict(base, mode="refused" if rc != 0 or ended else "started", walk=walk, course=course, rc=rc,
+                        output_tail=out[-1500:]))
         if rc != 0:
             return 422, {"error": out.splitlines()[-1][:600] if out else "the run did not start"}
         self.refresh(force=True, reexec=False)
+        if ended:
+            return 422, {"error": "refused: " + self._refusal_of(bean, course, m.group(2))[:600], "bean": bean,
+                         "course": course}
         return 200, {"mode": "started", "bean": bean, "course": course, "stands": m.group(2) if m else out[-300:],
                      "plan": self._plan_of(bean, course) if course else ""}
 
