@@ -144,8 +144,8 @@ try:
     check("law: the lenses, archetypes and planes are the profiles' tables; a drawing's form holds its values, each "
           "one of the three kinds of live value",
           L.tables['lenses'] == [r['lens'] for r in LAW['view_lenses']]
-          and [a for a in L.tables['archetypes'] if a not in ('queue', 'timeline', 'flows', 'sheet')]   # today's, in its
-          == [r['archetype'] for r in LAW['view_archetypes']]                    # order, beside the four engraved since
+          and [a for a in L.tables['archetypes'] if a not in ('queue', 'timeline', 'flows', 'sheet', 'books')]   # today's,
+          == [r['archetype'] for r in LAW['view_archetypes']]          # in its order, beside the five engraved since
           and L.tables['planes'] == ['data', 'control', 'management']
           and L.form_attr('drawing', 'values.live') and 'live-series' in L.form_attr('drawing', 'values.live')['in'])
 

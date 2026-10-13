@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""view_engraved — the archetypes ENGRAVED FROM READINGS (the view finished for a handplace): a queue, a timeline, flows
-and a sheet. No drawing module draws them; each is what a reading of the garden says, read each time it is asked and
-never stored, and handed to its renderer (`view_queue.js`, `view_timeline.js`, `view_flows.js`, `view_sheet.js`) as data.
+"""view_engraved — the archetypes ENGRAVED FROM READINGS (the view finished for a handplace): a queue, a timeline, flows,
+books and a sheet. No drawing module draws them; each is what a reading of the garden says, read each time it is asked
+and never stored, and handed to its renderer (`view_queue.js`, `view_timeline.js`, `view_flows.js`, `view_books.js`,
+`view_sheet.js`) as data.
 
     queue(reader, may)        what waits for the reader: bin/leads.py's leads, grouped by what each waits on
     timeline(v, may)          the members of a reading at their moments: a happening's time, a clause's due day and each
                               occurrence of its repetition within the drawing's `span`, walked by bin/stale.py
     flows(v, may)             who owes whom (bin/ledger.py's reading, netted per currency), or what went between gardens
+    books(v, may)             an entity's books: the trial balance per currency, each posting account's ledger
     sheet(bean, may, held)    one being: its header, its statements verb by verb with their dependents, its held values
     table(v, may)             a table of a reading on a page that names no drawing module: one line per member the
                               reader may read, each cell the values at its column's path as they are, each line opening
@@ -31,7 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import view_model as vm  # noqa: E402
 
-ENGRAVED = ('queue', 'timeline', 'flows', 'sheet')
+ENGRAVED = ('queue', 'timeline', 'flows', 'sheet', 'books')
 KNOWING = ('say', 'read', 'derive', 'make')
 LEAD_ORDER = ('decision', 'case', 'obligation', 'health', 'session')
 HEADER = ('title', 'summary', 'tags')
@@ -310,6 +312,63 @@ def crossings(may):
     return {'nodes_are': 'gardens', 'nodes': list(nodes.values()),
             'arrows': [{'from': a, 'to': b, 'what': sorted(w)} for (a, b), w in sorted(arrows.items())],
             'partial': False}
+
+
+# --------------------------------------------------------------------------------------------------------------- books
+def books(v, may):
+    """What a drawing of books draws: the books of the being it draws (the entity), in its `chart` (absent, the garden's
+    one), as the accounting profile's asset reads them — never stored — for a reader who may read that being: per
+    currency, the trial balance through today, each account in its chart's order with what it held before the drawing's
+    `span` (its opening), what arrived (debit), what left (credit) and its balance in its element's sense, the totals;
+    and each posting account's ledger, its lines with their running balance, a line naming the bean it rests on only
+    where the reader may read that bean. Every amount a count as text, exact."""
+    kk, entity, _f = vm.draws_of(v)
+    out = {'entity': entity if kk == 'bean' else None, 'title': title_of(entity) if kk == 'bean' else None,
+           'currencies': [], 'notes': []}
+    if kk != 'bean' or _bean(entity) is None or not may('read', entity):
+        out['notes'].append("the books of a being the reader may not read are not drawn")
+        return out
+    lib = os.path.join(vm.ROOT, 'assets', 'accounting', 'lib')
+    if not os.path.isfile(os.path.join(lib, 'books_read.py')):
+        out['notes'].append("the books are read by the accounting profile's asset, which this garden does not hold")
+        return out
+    if lib not in sys.path:
+        sys.path.insert(0, lib)
+    import books_read as br
+    import units as dmunits
+    try:
+        B = br.read(vm.ROOT, entity=entity, chart=v.get('chart'))
+    except ValueError as e:
+        out['notes'].append(str(e))
+        return out
+    today = datetime.date.today().toordinal()
+    s = vm.seconds(v.get('span')) if isinstance(v.get('span'), dict) else None
+    start = today - max(1, int(s // 86400)) + 1 if s else None
+    day = lambda n: datetime.date.fromordinal(n).isoformat() if n else None
+    amount = lambda x: dmunits.show(x)
+    C = B.chart
+    out.update(chart=C.scheme, start=day(start), to=day(today), notes=list(B.notes))
+    for unit in sorted({x['unit'] for x in B.vouchers if x['unit']}):
+        t = br.trial(B, unit, start, today)
+        rows, ledgers = [], {}
+        for r in t['rows']:
+            rows.append({'code': f"{C.scheme}:{r['code']}", 'name': r['name'], 'depth': len(C.path(r['code'])) - 1,
+                         'element': r['element'], 'posts': r['posts'], 'opening': amount(r['opening']),
+                         'dr': amount(r['dr']), 'cr': amount(r['cr']), 'balance': amount(r['balance'])})
+            if r['posts']:
+                L = br.ledger(B, r['code'], unit, None, start, today)
+                lines = []
+                for x in L['rows']:
+                    bean = x['ref'].split('#', 1)[0]
+                    seen = _bean(bean) is not None and may('read', bean)
+                    lines.append({'number': x['number'], 'day': day(x['day']), 'bean': bean if seen else None,
+                                  'title': title_of(bean) if seen else None, 'memo': x['memo'] if seen else '',
+                                  'dr': amount(x['dr']), 'cr': amount(x['cr']), 'balance': amount(x['balance'])})
+                ledgers[f"{C.scheme}:{r['code']}"] = {'opening': amount(L['opening']), 'lines': lines,
+                                                      'closing': amount(L['closing'])}
+        out['currencies'].append({'unit': unit, 'rows': rows, 'ledgers': ledgers, 'balanced': t['balanced'],
+                                  'totals': {k: amount(x) for k, x in t['totals'].items()}})
+    return out
 
 
 # --------------------------------------------------------------------------------------------------------------- table
@@ -811,6 +870,8 @@ def data(key, v, may, reader):
         return flows(v, may)
     if a == 'table':
         return table(v, may)
+    if a == 'books':
+        return books(v, may)
     kk, target, _f = vm.draws_of(v)
     return {'bean': target if kk == 'bean' and may('read', target) else None}
 
@@ -1029,6 +1090,8 @@ def page(may, reader, held=None, keep=None, contact=None, records=None):
                     {a['bean'] for a in d.get('agreements') or []}
         elif v.get('archetype') == 'table':
             show |= {r['bean'] for r in d['rows']}
+        elif v.get('archetype') == 'books':
+            show |= {x['bean'] for c in d['currencies'] for L in c['ledgers'].values() for x in L['lines'] if x['bean']}
         elif d.get('bean'):
             show.add(d['bean'])
         acts = actions_of(k, v)[0]

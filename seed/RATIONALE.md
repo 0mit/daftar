@@ -5692,7 +5692,9 @@ columns — its element, the being an account stands for, the kinds of party who
 closed — so it is a scheme naming the profile's form, and its rows are held to it by the gate: a column neither the
 scheme's nor the form's is refused, and so is a postable account that does not say what it is. An account stands for
 a being — a bank account, a card, a cash box — so a booking may name the being, and a payment's means is read as that
-account. An account a booking used is closed on a day, never moved or deleted, since the bookings that name it stay.
+account. An account a booking used is closed on a day, never moved or deleted, since the bookings that name it stay. A
+chart's row may carry an account's name in a language (`name_<lang>`), as any scheme's may: a book is read in its
+reader's language.
 
 ## core/law/registries.yaml: knowledge_scheme_form.form
 
@@ -5713,3 +5715,19 @@ The books are read by one reader, the profile's asset (`assets/accounting/lib/bo
 profile receives it, and every reading — the vouchers, a trial balance, a ledger, profit and loss, the balance, what
 awaits an account, the reading `books` a close pins — goes through it, so two tools never read one garden's books two
 ways.
+
+## core/law/profiles.yaml: archetypes[books]
+
+THE BOOKS, DRAWN AS BOOKS ARE READ (2026-10-13, the books' design, §7 D). A trial balance and a ledger are what a bookkeeper reads, and a table of a reading's members
+cannot draw them: their rows are accounts of a chart and their figures are read, never stored. The archetype draws the
+books the accounting profile's asset reads, nothing of its own: per currency, each account in its chart's order with its
+opening, what arrived, what left and its balance in its element's sense, and each posting account's ledger. Its columns
+follow the taxis, debit before credit, so a book written right to left reads the debit at the right, as such books are
+kept; and each account is drawn by its name in the reader's language. A reader sees the books of a being only where
+they may read that being, and a ledger's line names its bean only where they may read it.
+
+## core/law/profiles.yaml: forms.drawing.attrs.chart
+
+Which chart a drawing of books reads, where a garden keeps more than one: none is privileged, so the drawing names it,
+and a garden of one chart names none.
+

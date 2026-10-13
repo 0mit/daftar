@@ -1,5 +1,5 @@
 /* view_engraved.js — the archetypes ENGRAVED FROM READINGS, mounted (core/law/profiles.yaml `archetypes`: queue,
-   timeline, flows, sheet). A classic script — no module system, no build step — so the view's own page, which is one
+   timeline, flows, books, sheet). A classic script — no module system, no build step — so the view's own page, which is one
    file, and a host that serves files (daftard) load the same file, as they load widgets/direction.js.
 
      daftarEngraved.mount(el, view, state)   draws a drawing at a lens that is not its story: `view` is the drawing's

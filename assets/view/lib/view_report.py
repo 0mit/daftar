@@ -392,7 +392,7 @@ render();
 DIRECTION_JS = open(os.path.join(HERE, "widgets", "direction.js"), encoding="utf-8").read()
 # the archetypes engraved from readings: their renderers, classic scripts beside the widgets, in the order they lean on
 ENGRAVED_JS = [os.path.join(HERE, f) for f in ("view_engraved.js", "view_queue.js", "view_timeline.js", "view_flows.js",
-                                                "view_sheet.js", "view_table.js")]
+                                                "view_books.js", "view_sheet.js", "view_table.js")]
 
 
 def engraved_assets():

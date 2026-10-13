@@ -318,6 +318,11 @@ archetypes:
     axes: { inline: flow }
     meaning: "who owes whom, and what went between gardens: parties as nodes and, per currency, an arrow from the one who owes to the one owed, netted as bin/ledger.py nets it, its amount exact; or gardens as nodes, an arrow for what went from one to the other. The arrowhead is the glyph of `next` in the reader's script. Engraved from the reading: no drawing module draws it"
     when: "the question is who owes whom, or what crossed between gardens"
+  - archetype: books
+    reads: [book, pay, match]
+    axes: { inline: taxis, block: ordinal }
+    meaning: "an entity's books in a chart, read by the accounting profile's asset: the trial balance — each account in its chart's order, what it held before the drawing's span, what arrived (debit), what left (credit) and its balance in its element's sense, per currency, its totals balanced — and each account that posts opening its ledger, line by line with its running balance. Its columns run along the reader's line, debit before credit, so a right-to-left reader reads the debit at the right"
+    when: "the question is what an entity's books hold"
   - archetype: sheet
     meaning: "one being as it stands: its title and summary, its statements verb by verb — each with the statements that take it as their `of` beneath it, a payment with its shares and the clauses that ask it — and its held values, marked as kept on the machine that holds them; the facts its page's `fields` names for its kind. For a reader who may write it, the one place it is changed: one Edit turns each fact they may write into its widget, and one Save is one commit with one journal entry. Engraved from the being: no drawing module draws it"
     when: "the question is what one being is, or a change to it"
@@ -536,7 +541,10 @@ forms:
               meaning: "the order a map is laid out in: north up and east right, whatever the reader's script"
       span:
         in: extent
-        meaning: "timeline: how far it reaches on each side of the day it is read on, a length on `time` (`measure`); a repetition is walked within it and never beyond. Absent, six weeks on each side: a month's grid and the weeks around it"
+        meaning: "timeline: how far it reaches on each side of the day it is read on, a length on `time` (`measure`); a repetition is walked within it and never beyond. Absent, six weeks on each side: a month's grid and the weeks around it. books: how far back from the day it is read on the period reaches, what came before it each account's opening; absent, the books from their first day"
+      chart:
+        in: { registry: knowledge_schemes, take: scheme }
+        meaning: "books: the chart its entity's books are read in; absent, the garden's one chart"
       layouts:
         in: [week, month, list]
         meaning: "timeline: the readings of its one line a reader switches between — week (a grid of days), month (a grid of weeks), list (a line for each day that holds something) — the first listed shown first; absent, all three, week first"

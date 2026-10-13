@@ -267,8 +267,17 @@ it, swaps the bean's pointer for it (a new contact a line of the body, a new rec
 `- held: <bean> <key|details.<label>> added`, and takes the old record out once it is saved. A field given empty is
 taken out; a record is never emptied (it is erased for its subject); one another host keeps is written there.
 
+**Books.** A drawing `archetype: books` draws the books of the being it draws (`of: [<entity>]`), in its `chart` (absent,
+the garden's one chart), as the accounting profile's asset reads them (`view_engraved.books`, the asset's
+`lib/books_read.py`): per currency, the trial balance in the chart's order — each account's opening before the
+drawing's `span`, what arrived (debit), what left (credit), its balance in its element's sense, the totals — and the
+ledger of each account that posts, opened from its line (`view_books.js`). Its columns run along the reader's line,
+debit before credit, so a right-to-left reader reads the debit at the right; each account is drawn by its name in the
+reader's language (the chart's `name_<lang>`, or its `labels`), its code beside it. Only a reader who may read the
+being is drawn its books, and a ledger's line names the bean it rests on only where that reader may read it.
+
 **Where they are drawn.** The renderers — `lib/view_engraved.js`, `view_queue.js`, `view_timeline.js`,
-`view_flows.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`
+`view_flows.js`, `view_books.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`
 (`h```, `mount`; a position a page computes is a data attribute `mount` sets, never a style attribute) with every value
 through its widget; a host that serves files loads them, and the widgets as the modules they are
 (`window.daftarWidgets`). The page of one file — the report and `view serve`'s page — carries the widgets written into

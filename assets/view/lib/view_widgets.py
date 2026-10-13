@@ -5,7 +5,7 @@ The widgets are ES modules: a host that serves files (daftard) imports them as t
 that is one file — the offline report, read from any disk, and the page `view serve` sends — cannot import one module
 from another, so this writes them into one classic script: each module in a function of its own, its imports bound to
 the modules written before it, its exports returned, every module under `window.daftarWidgets[<name>]`. The renderers
-of the engraved archetypes (`view_queue.js`, `view_timeline.js`, `view_flows.js`, `view_sheet.js`) are classic scripts
+of the engraved archetypes (`view_queue.js`, `view_timeline.js`, `view_flows.js`, `view_books.js`, `view_sheet.js`) are classic scripts
 too, and take the widgets from there — so one renderer, unchanged, runs in either kind of page.
 
 The transform reads only the three forms the widgets are written in, and REFUSES anything else, naming the line:
