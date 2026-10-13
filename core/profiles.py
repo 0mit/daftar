@@ -25,6 +25,7 @@ are postable accounts of one chart open on its day, that its amounts add up, and
     taken(L)              -> [name]               the profiles the garden takes
 """
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -134,12 +135,14 @@ def problems(J, b):
     pages = [(i, r) for i, r in draws if isinstance(r.get('page'), dict)]
     drawings = {r.get('id'): (i, r) for i, r in draws if isinstance(r.get('drawing'), dict) and isinstance(r.get('id'), str)}
     readings = {r.get('id') for _i, r in _live(b, 'reckon') if isinstance(r.get('id'), str)}
+    held_forms = {q: spec['form'] for q, spec in ((L.verbs.get('draw') or {}).get('qualifiers') or {}).items()
+                  if isinstance(spec, dict) and spec.get('form')}        # page, drawing, preferences: each its form
     for i, r in draws:
         where = f"{b.id}: statements[{i}] draw"
-        for q in ('page', 'drawing'):
+        for q, fname in held_forms.items():
             if isinstance(r.get(q), dict):
-                got = lines.attrs_problems(f"{where}.{q}", r[q], L.forms.get(q) or {})
-                out += got or domain_problems(J, b, f"{where}.{q}", r[q], (L.forms.get(q) or {}).get('attrs') or {})
+                got = lines.attrs_problems(f"{where}.{q}", r[q], L.forms.get(fname) or {})
+                out += got or domain_problems(J, b, f"{where}.{q}", r[q], (L.forms.get(fname) or {}).get('attrs') or {})
         if 'drawing' in r and not isinstance(r.get('id'), str):
             out.append((where, "a drawing is named: its `draw` has an `id`, which its page and its drawing module name "
                                "it by"))
@@ -261,8 +264,13 @@ def domain_why(J, b, M, where, v, dom):
         return [(where, f"{s!r} is no signal the catalogue publishes (seed/knowledge/signals.tsv)")]
     if reg == 'lines' and s not in M.lines:
         return [(where, f"{s!r} is no line a drawing can run along: one of {', '.join(sorted(M.lines))}")]
-    if reg in ('lenses', 'archetypes', 'planes') and L.has(reg, s):
+    if reg in ('lenses', 'archetypes', 'planes', 'date_styles', 'currency_displays') and L.has(reg, s):
         return [(where, L.has(reg, s))]
+    if dom.get('type') == 'locale_tag':        # A READER'S WAY OF READING: one tag, as the law's type writes it
+        row = next((t for t in (getattr(L, 'line_law', {}) or {}).get('types') or []
+                    if isinstance(t, dict) and t.get('type') == 'locale_tag'), {})
+        if row.get('pattern') and not (isinstance(v, str) and re.fullmatch(row['pattern'], v)):
+            return [(where, f"{v!r} {row.get('refusal') or 'is no locale_tag'}")]
     if reg == 'orientations':                  # AN ORDER RUNS ON ITS OWN AXIS (the drawing's `axes`): its row says which
         row = next((r for r in L.profile_tables.get('orientations') or [] if str(r.get('order')) == s), None)
         if row is None:
