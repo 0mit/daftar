@@ -259,9 +259,8 @@ def plan_writes(write):
                 raise Refused(f"{bid} holds no statement {sid!r} to take out")
             words.append(f"  - {bid}: {b.ids[sid][1]}#{sid}")
         if b is not None:
-            verb_at = {i: v for i, v, _r in b.items}
             for i in _taken_acts(b, remove):
-                words.append(f"  - {bid}: the {verb_at[i]} that knew only what goes")
+                words.append(f"  - {bid}: the {_acts_named(b, {i})[0]} that knew only what goes")
         for line in e.get('add') or []:
             _verb, roles = _statement(line)
             if b is not None and roles['id'] in b.ids and roles['id'] not in remove:
@@ -360,8 +359,8 @@ def _guarded_save(paths, who, what, body, edit):
 
 
 def _take_out(path, b, ids):
-    """Take the statements `ids` out of the bean `b` at `path`, with the knowing acts that knew only them; the verbs of
-    those acts, for the entry that must name them (rule `kept`)."""
+    """Take the statements `ids` out of the bean `b` at `path`, with the knowing acts that knew only them; how each of
+    those acts is named, for the entry that must name it (rule `kept`): its verb, and its id where it has one."""
     import safe as dmsafe
     acts = set(_taken_acts(b, ids))
 
@@ -374,7 +373,15 @@ def _take_out(path, b, ids):
                 prev = end
         return out + lines[prev:]
     dmsafe._lines_edit(path, change, allow_remove=('statements',))
-    return sorted({v for i, v, _r in b.items if i in acts})
+    return _acts_named(b, acts)
+
+
+def _acts_named(b, acts):
+    """The knowing acts at the indexes `acts` of bean `b`, as an entry names what it takes out: `the <verb>` where none
+    has an id, else each act with an id by its verb and its id (`the say dashboard-…`), so rule `kept` finds every
+    statement taken out named — a page's acts carry ids, a hand's do not."""
+    named = sorted({f"{v} {r['id']}" if isinstance(r.get('id'), str) else v for i, v, r in b.items if i in acts})
+    return named
 
 
 def apply_writes(bean, course):
@@ -408,9 +415,9 @@ def apply_writes(bean, course):
                     fh.write('---\n' + head.rstrip('\n') + '\n---\n' + body.rstrip('\n') + '\n')
             remove = set(str(x) for x in e.get('remove') or [])
             if remove:
-                verbs = _take_out(p, G.beans[bid], remove)
+                acts = _take_out(p, G.beans[bid], remove)
                 said.append(f"- taken out: [[{bid}]] {', '.join(sorted(remove))}"
-                            + (f", and the {' and '.join(verbs)} that knew only them" if verbs else ''))
+                            + (f", and the {' and the '.join(acts)} that knew only them" if acts else ''))
             ids = [_statement(line)[1]['id'] for line in e.get('add') or []]
             if ids:
                 known = _known(e)

@@ -208,6 +208,24 @@ files:
           'stopped at done' in r2.out and lines_of(voucher('market#veg')) == [('21', 0, 15), ('62', 15, 0)],
           r.out[-500:] + r2.out[-500:] + plan_of('market', c, ''))
 
+    # ---- A BOOKING KNOWN BY AN ACT WITH AN ID, BOOKED AGAIN: the act goes with what it knew, and the entry names it
+    bean('rug', 'document', 'a receipt for a rug', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: bought, by: sam, of: { count: "60.00", unit: XTS }, through: card-a, at: "2025-03-06" }')
+    b = open(os.path.join(G, 'beans', 'books-sam.md'), encoding='utf-8').read()
+    write('beans/books-sam.md', b.replace('---\n', '---\n', 1).replace('\nstatements:\n', '\nstatements:\n'
+          '  - book: { id: rug-a1, of: "rug#bought", to: "books:61" }\n'
+          '  - book: { id: rug-c1, of: "rug#bought", to: "centres:kitchen" }\n'
+          '  - say: { id: dashboard-1, by: sam, of: [rug-a1, rug-c1], at: now }\n', 1))
+    r = save('a rug, booked from a page', '- action: wrote [[rug]] and [[books-sam]] rug-a1, rug-c1')
+    r, c = start('rug', 'book', of='rug#bought', account='62')
+    r2 = ratify('rug', c)
+    kept = open(os.path.join(G, 'beans', 'books-sam.md'), encoding='utf-8').read()
+    check("a booking known by an act with an id (a page's `say: { id: … }`), booked again while open: the act goes with "
+          "what it knew, the entry names it by its id, the plan's other booking is written again as it was — Dr "
+          "household 60", 'stopped at done' in r2.out and lines_of(voucher('rug#bought')) == [('21', 0, 60), ('62', 60, 0)]
+          and 'dashboard-1' not in kept and 'id: rug-c1' in kept,
+          r.out[-400:] + r2.out[-600:] + plan_of('rug', c, 'apply'))
+
     # ---- ENTRY: what no payment says, written whole
     r, c = start('bank-a', 'entry', day='2025-03-01', memo='opening balances', unit='XTS', lines='11 dr 500; 31 cr 400')
     check("entry: lines that do not balance are refused, saying so", 'stopped at refused' in r.out and 'do not balance'

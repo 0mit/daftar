@@ -150,12 +150,15 @@ def known_as(B, bid, sid):
 
 
 def flow(x):
-    """A value written as the garden writes a statement: a flow mapping, its words quoted."""
+    """A value written as the garden writes a statement: a flow mapping, an id or a plain word as it is, any other words
+    quoted — so a statement written again reads as it was written."""
     if isinstance(x, dict):
         return '{ ' + ', '.join(f"{k}: {flow(v)}" for k, v in x.items()) + ' }'
     if isinstance(x, list):
         return '[' + ', '.join(flow(v) for v in x) + ']'
-    return json.dumps(str(x), ensure_ascii=False)
+    t = str(x)
+    plain = re.fullmatch(r'[a-z][a-z0-9-]*', t) and t not in ('true', 'false', 'null', 'yes', 'no', 'on', 'off')
+    return t if plain else json.dumps(t, ensure_ascii=False)
 
 
 def kept_known(B, bid, removing):
