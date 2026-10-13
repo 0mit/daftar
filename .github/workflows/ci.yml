@@ -139,6 +139,9 @@ jobs:
       - name: "view_held_names: a person kept off git by name shown by it to a reader who may read them, on the host that keeps it — and by their opaque id to every other reader, host and page of one file"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_held_names.py
+      - name: "view_held_named: what is held off git is opened only by a grant that names it — a sealed statement read and written by the gardener, or whom a grant names it to, never by a grant of the whole bean"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_held_named.py
       - name: "view_pages: a garden's handplace is its pages — several page beans each checked as its own, listed in the order the garden places them, and a table of a reading drawn with no module"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_pages.py

@@ -10,7 +10,7 @@ forms:
     rule: form
     home: core
     replaces: [grants.positions, grants.reason]
-    meaning: "which parts of what a grant covers it opens, and whether each use states a reason. A part is a key of the header (`title`, `summary`, `tags`, `details`, or `body`), a verb's statements (`measure`), or a verb's statements narrowed by their `as` (`be.location`) — the words a card's fact is named by (core/law/profiles.yaml). Absent, the whole of each bean: its header, its body and every statement"
+    meaning: "which parts of what a grant covers it opens, and whether each use states a reason. A part is a key of the header (`title`, `summary`, `tags`, `details`, or `body`), a verb's statements (`measure`), or a verb's statements narrowed by their `as` (`be.location`) — the words a card's fact is named by (core/law/profiles.yaml). Absent, the whole of each bean: its header, its body and every statement — but never by itself what is HELD of it off git (a sealed statement, or a record held off git that the bean points to from a part): that is opened only by a grant that names it, its part here or its statement in the grant's `of`, the gardener aside, and only while the word it is held on stands"
     attrs:
       parts:  { in: { type: part }, meaning: "the parts it opens, a list: `title`, `measure`, `be.location`" }
       reason: { in: [asked], meaning: "asked — each use states a reason, which the guard records" }
