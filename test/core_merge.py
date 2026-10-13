@@ -15,7 +15,7 @@ and `git merge --no-commit` with bin/save.py commits it through the core's gate;
 comes through as it was committed; a true conflict leaves ours for a person, who settles it; a side in today's words is
 refused; and a bean one side removed and the other changed is git's own conflict.
 
-Run: python3 test/core_merge.py   (0 = green; about a minute, since a save waits for the minute to turn once)
+Run: python3 test/core_merge.py   (0 = green; under a minute)
 """
 import os, re, shutil, subprocess, sys, tempfile
 
@@ -293,8 +293,9 @@ def text(rel):
 
 
 def commit(what, body):
-    """A save without the wait for the minute (bin/save.py waits where a bean holds this minute's moment): the clock's
-    heading written by bin/journal.py, its moment in place of each `at: now`, and one commit, through the hook."""
+    """A save made by hand, without bin/save.py's wait for the clock to turn (it waits where a bean holds this second's
+    moment): the clock's heading written by bin/journal.py, its moment in place of each `at: now`, and one commit,
+    through the hook."""
     run(PY, 'bin/journal.py', 'sam', what, '--body', body)
     m = [ln for ln in text('log/journal.md').split('\n') if ln.startswith('## ')][-1][3:].split(' · ', 1)[0]
     for f in os.listdir(os.path.join(G, 'beans')):

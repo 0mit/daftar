@@ -24,8 +24,9 @@ read back by the books — in a garden of the core grown from a release made of 
            garden's word, for a sealed statement, for a line read from a source, for the run's own bean, the books'
            bean, a being's bean, and with no reason
 
-Its runs wait for the minute to turn where one bean is saved twice in it, as test/act.py's do.
-Run: python3 test/books_walks.py   (0 = green; some minutes)
+Its runs save one bean several times within seconds, each save at its own second, so none waits for the minute to
+turn.
+Run: python3 test/books_walks.py   (0 = green; some minutes: its walks are many)
 """
 import difflib
 import json

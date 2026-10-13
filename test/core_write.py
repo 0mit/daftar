@@ -19,7 +19,7 @@ along the order's chains. digest: the garden's machines by their beans and their
 written in statements in place, its acts made now, a name the law lacks refused. upgrade: to a later release of the
 core, the pin moved and the entry a RULE-CHANGE, a refused one put back, an older core refused.
 
-Run: python3 test/core_write.py   (0 = green; about two minutes, since a bean saved twice in one minute waits for the next)
+Run: python3 test/core_write.py   (0 = green; about a minute)
 """
 import os, re, shutil, subprocess, sys, tempfile
 
@@ -285,7 +285,7 @@ try:
             '- action: [[session-tidy-the-laptop]] opened; [[laptop]] tidied', cwd=W)
     made = read.document(SB)[0]['statements'][0]['make']
     check("session: its first save writes the moment its bean was made, the core's gate passing",
-          r.returncode == 0 and re.match(r'^\d{4}-\d\d-\d\d \d\d:\d\d[+-]\d\d:\d\d$', str(made.get('at'))),
+          r.returncode == 0 and re.match(r'^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d[+-]\d\d:\d\d$', str(made.get('at'))),
           r.out[-800:] + str(made))
     write('beans/note.md', '---\nbean: note\nkind: document\ntitle: "a note"\nstatements:\n'
                            '  - say: { by: sam, at: now }\n---\nA note written on the main copy meanwhile.\n')
