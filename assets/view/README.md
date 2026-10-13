@@ -158,7 +158,10 @@ is read each time it is asked, as the release's tools read it, never computed ag
   (CLDR's `firstDay`), in the reader's calendar and digits;
 - **flows** — who owes whom: `bin/ledger.py`'s reading (`ledger.reading`, what `--json` prints) of the agreements the
   reader may read, netted per currency across them, an arrow from the one who owes to the one owed, its head the glyph
-  of `next`; or, with `nodes: gardens`, what went between this garden and the others (`take`, `propose`, `pass`);
+  of `next`; or, with `nodes: gardens`, what went between this garden and the others (`take`, `propose`, `pass`),
+  every garden called by a name and never its id — this garden as the one the page is read in, a garden whose bean
+  says no more than its id as another garden (numbered where there are several), its id in the node's title — and
+  each being that went by how the page calls it;
 - a **sheet** — one being as it stands, and the one place it is changed (below);
 - a **table** of a reading, on a page that names no module — its members the reader may read, one line each, every
   cell the values at its column's path as they are (a day, an amount, a being, text; a step of a walk by the walk's own

@@ -275,13 +275,19 @@ def flows(v, may):
 
 def crossings(may):
     """Gardens as nodes: this garden, and each garden a `take` here came from, a `propose` here went to, or a `pass`
-    names as its `by`; an arrow for each way, with the beans that went."""
+    names as its `by`; an arrow for each way, with the beans that went. A garden is called by its title — never its id:
+    this garden is the one the page is read in (`here`, no title), and one whose bean says no more of it than its id is
+    `unnamed`, the page calling it another garden (`n`, its place among them where there are several)."""
     here = vm.garden_name()
-    nodes, arrows = {here: {'id': here, 'title': here, 'here': True}}, {}
+    nodes, arrows, unnamed = {here: {'id': here, 'title': None, 'here': True}}, {}, []
 
     def node(g):
         if g not in nodes:
-            nodes[g] = {'id': g, 'title': title_of(g) if may('read', g) else None}
+            t = title_of(g) if may('read', g) else None
+            nodes[g] = {'id': g, 'title': t}
+            if t == g:
+                nodes[g].update(title=None, unnamed=True)
+                unnamed.append(g)
         return g
     for bid, b in sorted(vm.CORE.G.beans.items()):
         if not may('read', bid):
@@ -298,6 +304,9 @@ def crossings(may):
             elif verb == 'pass' and 'other-garden' in (r.get('from'), r.get('to')) and isinstance(r.get('by'), str):
                 k = (node(r['by']), here) if r.get('from') == 'other-garden' else (here, node(r['by']))
                 arrows.setdefault(k, set()).update(x for x in _listed(r.get('of')) if isinstance(x, str))
+    if len(unnamed) > 1:
+        for i, g in enumerate(unnamed, 1):
+            nodes[g]['n'] = i
     return {'nodes_are': 'gardens', 'nodes': list(nodes.values()),
             'arrows': [{'from': a, 'to': b, 'what': sorted(w)} for (a, b), w in sorted(arrows.items())],
             'partial': False}

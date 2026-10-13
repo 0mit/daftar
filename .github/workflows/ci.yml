@@ -147,6 +147,9 @@ jobs:
       - name: "view_code_names: a code of a scheme a page holds — an account a payment is booked to — drawn by its name in the scheme's own table, in the reader's language, its code beside it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_code_names.py
+      - name: "view_between_names: what went between gardens with every garden called by a name — this garden as the one read in, an untitled garden as another garden — and what went by its title, never an id"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_between_names.py
       - name: "view_pages: a garden's handplace is its pages — several page beans each checked as its own, listed in the order the garden places them, and a table of a reading drawn with no module"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_pages.py
