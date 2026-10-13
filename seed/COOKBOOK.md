@@ -1643,6 +1643,80 @@ What an account holds is read, never stored: `apportion`, a step of a reading (`
 | budget lines of an analytic account | `book` statements of the clause's payment |
 | `account.analytic.line` | not stored: read from the payments each time it is asked |
 
+## The books of an entity: a chart, and each booking a move (`accounting` profile)
+
+Double entry is the same machinery. A chart of accounts is a scheme of your own whose rows also say what each account
+is — the scheme names the profile's form, `form: chart` — and a booking moves an amount from one account to another.
+Value moves as a charge: it leaves one position and arrives at another, and what an account holds is what arrived
+there less what left it, read each time and never stored. No chart is privileged: yours, or a standard's kept as a
+scheme.
+
+```yaml
+schemes:
+  - { scheme: books, classifies: "Sam's chart of accounts", holding: extract, publisher: the gardener,
+      url: "file:extracts/books.tsv", levels: [ { level: group }, { level: account } ], neighbours: none,
+      sources: extracts/books.tsv, form: chart }
+files:
+  - { registry: books, file: extracts/books.tsv, key: code }
+```
+
+`extracts/books.tsv` holds the scheme's columns and the form's: `element`, what an account is — a row of the profile's
+`elements`, the IFRS Conceptual Framework's five — stated on a group and inherited by the accounts beneath it;
+`stands_for`, the being an account is (a bank account, a card, a cash box), one account a being; `parties`, the kinds
+of being whose current accounts it holds; `role`, the part it plays in the books' readings (a row of the profile's
+`account_roles`), one account a role; and `closed`, the day after which nothing is booked to it — an account a booking
+used is closed, never deleted. A booking names a postable account, one no account has for its
+parent:
+
+```text
+code	level	parent	name	element	stands_for	parties	role	closed
+1	group		assets	asset				
+11	account	1	the bank account		bank-a			
+13	account	1	people who owe Sam, or whom Sam owes			person		
+19	account	1	awaiting an account				awaiting	
+2	group		liabilities	liability				
+21	account	2	the card		card-a			
+3	group		equity	equity				
+31	account	3	opening balances				earnings	
+6	group		expenses	expense				
+61	account	6	food					
+62	account	6	rent					
+```
+
+A booking names `from`, `to`, or both, and the day it is booked on is its `at`, else the day of what it books. Where it
+books a payment and names one side, the other is read from the payment: the account that stands for its `through`, and
+each other bearer's current account for the share they bear — as `bin/ledger.py` reads who owes whom. The books' opening
+is an `open` of the books' bean, and each of its bookings names both sides and an amount. A mistake is never taken out:
+the move is booked again in the reverse sense, `sense: "-1"`, naming no side, from the day of the correction.
+
+<!-- example-check: beans/vps-a.md -->
+```yaml
+  - open: { id: opened, by: sam, of: self, at: "2026-09-01" }
+  - book: { id: o1, of: opened, from: "books:31", to: "books:11", share: { count: "500.00", unit: TRY } }
+  - pay:  { id: october, by: sam, of: { count: "100.00", unit: TRY }, at: "2026-10-02", note: "the server's rent for October" }
+  - book: { id: b1, of: october, from: "books:21", to: "books:61" }
+  - book: { id: r1, of: b1, sense: "-1", at: "2026-10-05", why: "it was the rent, not food" }
+  - book: { id: b2, of: october, from: "books:21", to: "books:62", at: "2026-10-05" }
+```
+
+A bank's line, read from its file, and the payment as you recorded it are records of one movement: `match` says so, and
+it is counted once. Their amounts agree in each currency, and a payment is matched once in an entity's books:
+
+```yaml
+  - match: { of: ["statement-10#line-4", "rent-october#paid"], at: "2026-10-06" }
+```
+
+| an ERP's general ledger | daftar |
+|---|---|
+| `account.account` (`code`, `name`) | a row of the garden's chart, the scheme naming `form: chart` |
+| `account.account.account_type` | `element`, on the row or an ancestor: asset, liability, equity, income, expense |
+| `account.account.deprecated` | `closed`: the day after which nothing is booked to it |
+| a bank journal's default account | the account whose `stands_for` is the bank account's bean |
+| `account.move` and its `account.move.line`s, `debit` and `credit` | not stored: read from each payment and its `book` statements — what arrives at an account and what leaves it |
+| a move's reversal | `book` of it, `sense: "-1"`, from a day |
+| a bank statement line reconciled with a payment | `match` of the two |
+| `account.analytic.line` | not stored: `book` to an analytic code, read by `apportion` |
+
 ## Where a thing is, and what it takes there
 
 A being is placed in, at or among another, by `be`, and `as` says how, from the most general to the most bodily:

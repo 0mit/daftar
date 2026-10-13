@@ -108,7 +108,7 @@ and the default it derives where it has one.
 - **The face's 21 verbs** (`core/law/core.yaml`): the knowing acts `say` `read` `derive` `make`; the order `be` (where
   a being is), `stand`, `part`, `name`; the four questions `come` `own` `answer` `acquire`; the layers' `pass`; and
   the two squares' eight positions.
-- **The 37 rows** (`core/law/verbs.yaml`):
+- **The 38 rows** (`core/law/verbs.yaml`):
 
   | Group | Verbs |
   |---|---|
@@ -118,7 +118,7 @@ and the default it derives where it has one.
   | failure and remedy, disagreement | `fail` `repair` `respond` `rule` |
   | between gardens | `propose` `take` |
   | the network profile | `serve` `carry` `route` `translate` `filter` |
-  | the other profiles | `book` (accounting), `renew` (domain), `mark`, `draw` (view) |
+  | the other profiles | `book` `match` (accounting), `renew` (domain), `mark`, `draw` (view) |
 
 - **A default is never written.** Where a row derives a statement — before the law, the owner answers; whoever paid
   bears it, alone — writing that statement is refused as a placeholder.

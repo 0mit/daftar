@@ -155,7 +155,8 @@ verbs:carry	vehere	vehere (to carry, to convey — vehiculum): coined, a link ca
 verbs:route	dirigere	dis + regere (to set straight): coined, traffic sent on to its next hop	proposed	agent (claude opus-5.5), by hand
 verbs:translate	commutare	com + mutare (to change, to exchange): coined, an address exchanged for another as traffic crosses; transferre is `pass`'s	proposed	agent (claude opus-5.5), by hand
 verbs:filter	percolare	per + colare (to strain through — colum, a strainer): coined for a packet filter, letting traffic cross or stopping it	proposed	agent (claude opus-5.5), by hand
-verbs:book	imputare	in + putare (to reckon into): in rationem imputare, to put to an account — an amount booked, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:book	imputare	in + putare (to reckon into): in rationem imputare, to put to an account — an amount moved from one account to another, or booked in a share	proposed	agent (claude opus-5.5), by hand
+verbs:match	conferre	con + ferre (to bring together: rationes conferre, to compare accounts): records of one movement, counted once	proposed	agent (claude opus-5.5), by hand
 verbs:renew	renovare	re + novare (to make new again): a registration renewed	proposed	agent (claude opus-5.5), by hand
 verbs:mark	terminare	terminus (a boundary stone, and its god): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
 verbs:produce	producere	pro + ducere (to lead forth): an artifact brought into being	proposed	agent (claude opus-5.5), by hand
@@ -172,6 +173,7 @@ qualifiers:placed	collocatio	collocare (to set in place): what a placement holds
 qualifiers:presence	praesentia	prae + esse (to be before): found, or looked for and not found	proposed	agent (claude opus-5.5), by hand
 qualifiers:reading	lectio	legere (to gather, to read): a reading — what a reckoning selects and computes	proposed	agent (claude opus-5.5), by hand
 qualifiers:result	exitus	exire (to go out): an outcome — what came of a measuring	proposed	agent (claude opus-5.5), by hand
+qualifiers:sense	versus	vertere (to turn: the way a thing goes): along a move's direction, or against it	proposed	agent (claude opus-5.5), by hand
 qualifiers:series	series	serere (to join, to string together): a row — here coined for a series of a store's rows, what a line held at each position	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	liberatio	liberare (to set free): the debtor freed by payment — which occurrences of which clauses it settles; solutio is `pay`'s	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	portio	pro portione (by each one's share): one's portion of a cost	proposed	agent (claude opus-5.5), by hand

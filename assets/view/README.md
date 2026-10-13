@@ -224,9 +224,11 @@ garden's pages imports it from the release the garden runs. The entry forms of t
 beside it.
 
 **Held values on a page.** A card's fact may name a verb whose statements are sealed (`held`). The host whose store
-holds one — the host bean whose `roots` declare it — sends its value only to a viewer who may read that statement, while
-the word it is held on (`while`) stands; every other page says where it is kept. It is edited in the same Edit and
-sealed in the same Save; the commit keeps only the pointer. `view check` refuses a public page that would show one, and
+holds one — the host bean whose `roots` declare it — sends its value only to the gardener, or to a viewer a grant NAMES
+it to (the statement's verb or `as` in its `cover`, or the statement in its `of`; never a grant of the whole bean:
+`bin/pass.py may … held`, the law's rule since 2026-10-12), while the word it is held on (`while`) stands; every other
+page says where it is kept. It is edited in the same Edit and sealed in the same Save, by whom the same bar opens it to
+write; the commit keeps only the pointer. `view check` refuses a public page that would show one, and
 the offline report carries none.
 
 **A person kept off git by name** (`bin/held.py person`: an opaque `p-<8 hex>` in git, their name and contacts held on
@@ -238,6 +240,12 @@ host keeps of them off git. And only while the word they were kept on stands (`H
 --basis`: their agree), where one is written: once it is taken out, nobody has their name or contact, the gardener
 neither. Every other reader, every other host and the page of one file have their opaque id, as the ledger does; once
 they are erased from the store, so does the host that kept them.
+
+**A code by its name.** A value a page holds as `<scheme>:<code>`, of a scheme the garden knows (the law's, or its own
+`schemes`) — an account a payment is booked to, a code a being is classified by — is drawn by its name in the scheme's
+own table, read by the one reader (`bin/knowledge.py`): its label in the reader's language where the table carries one
+(a `labels` registry, a `name_<lang>` column), else its name; the code itself stays beside it, in its title
+(`view_engraved.codes_of`, the page's `codes`).
 
 **Where they are drawn.** The renderers — `lib/view_engraved.js`, `view_queue.js`, `view_timeline.js`,
 `view_flows.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`

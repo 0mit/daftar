@@ -294,10 +294,11 @@ class Host:
     # is sent (orgs, shared, beans, actions), and never widen it. What opens a page, a bean or an action is a grant the
     # law declares, asked of `bin/pass.py` for the being the host names for this viewer — before every page, value,
     # history and action.
-    def may(self, user, bean=None, act=False, tool=None, positions=None, reason=None, write=False):
+    def may(self, user, bean=None, act=False, tool=None, positions=None, reason=None, write=False, held=False):
         """(yes, why) — whether `user` may see `bean` (None: the page itself), at `positions` (None: the whole bean), and,
-        with `act`, run `tool` on it, or with `write`, write it. The answer also carries `.grants` (every grant read) and
-        `.reason_asked`."""
+        with `act`, run `tool` on it, or with `write`, write it; with `held`, at positions that hold a value held off git,
+        which only a grant naming them opens (bin/pass.py `may_core`). The answer also carries `.grants` (every grant
+        read) and `.reason_asked`."""
         u = (self.cfg.get("users") or {}).get(user)
         if not isinstance(u, dict):
             return Verdict(False, "no such viewer")
@@ -322,13 +323,13 @@ class Host:
         minute = int(time.time() // 60)
         if getattr(self, "answers_minute", None) != minute:
             self.answers, self.answers_minute = {}, minute
-        k = (actor, what, target, tuple(positions) if positions else None, bool(reason))
+        k = (actor, what, target, tuple(positions) if positions else None, bool(reason), bool(held))
         a = self.answers.get(k)
         if a is None:
             import importlib
             dmpass = importlib.import_module('pass')
             a = dmpass.may(actor, what, target, positions=positions, reason=reason, root=vm.ROOT, beans=self.beans,
-                           gardener=self.gardener)
+                           gardener=self.gardener, **({'held': True} if held else {}))
             self.answers[k] = a
         return Verdict(a.granted, a.why, a.grants, a.reason_asked)
 

@@ -13,7 +13,13 @@ them, each once, and every one of them: a set of statements has no order, and th
 there: a value of the drawing (`key_of: values`), a drawing of the page (`key_of: drawings`), a reading of the bean
 (`key_of: readings`, a `reckon`); and a value is named once on its page, since a page draws its values by their names.
 
+THE ACCOUNTING PROFILE'S BOOKINGS. A booking moves an amount from one account to another (`from`, `to`), or says where
+an entity's part of a payment belongs along a plan (`to` an analytic code); a match says payments are one movement. What
+each account holds is read, never stored, so the gate judges only what a booking says: what it rests on, that its codes
+are postable accounts of one chart open on its day, that its amounts add up, and that a match agrees and is made once.
+
     problems(J, b)        -> [(where, message)]   rule `profile` for one bean, judged by the engine J
+    charts(J)             -> [(where, message)]   rule `profile` for the garden whole: a chart's beings, a match once
     page_of(b)            -> (id, roles) | None   the page's own `draw`, or None where the bean is no page
     drawings_of(b)        -> [(id, roles)]        each drawing's `draw`, in the order the page shows them
     taken(L)              -> [name]               the profiles the garden takes
@@ -117,9 +123,9 @@ def problems(J, b):
                     frame.read(ob, J.systems, J.G.zone)
                 except frame.Refused as e:
                     out.append((f"{where}.observed", str(e)))
-    # THE ACCOUNTING PROFILE'S BOOKINGS, judged plan by plan (v1 part 12b: today's analytic distribution): each books
-    # a payment of this bean to an account of a scheme, in a share or an amount; the accounts under one plan (the
-    # scheme's first level) are shares all, or amounts all — and amounts that add up to the payment
+    # THE ACCOUNTING PROFILE'S BOOKINGS AND MATCHES: each booking a move from one account to another, or a share of
+    # what it books along a plan (v1 part 12b: today's analytic distribution); under one plan shares all, or amounts
+    # all, that add up to the entity's part; a match, records of one movement that agree
     out += _bookings(J, b)
     # THE VIEW PROFILE'S FORMS: the page and its drawings, judged by their forms and by what they name
     draws = _live(b, 'draw')
@@ -312,7 +318,74 @@ def domain_problems(J, b, where, x, attrs, M=None):
     return out
 
 
+BOOKS_OF = ('pay', 'measure', 'open', 'book')       # what a booking rests on: what moved or is asked, a measure, the
+#                                                   books' opening, another booking
+
+
+def _chart(J, sch):
+    """(rows by code, the codes that are some code's parent, the scheme's form) of scheme `sch`, or None."""
+    try:
+        K = J.L.std.knowledge
+        rows = {str(x.get('code')): x for x in K.rows(sch) if isinstance(x, dict)}
+        form = (K.schemes.get(sch) or {}).get('form')
+    except Exception:
+        return None
+    return rows, {str(x.get('parent') or '') for x in rows.values()}, form
+
+
+def _plan_of(J, sch, c):
+    """The plan an analytic code is under: its ancestor at the scheme's first level."""
+    try:
+        K = J.L.std.knowledge
+        rows = {str(x.get('code')): x for x in K.rows(sch) if isinstance(x, dict)}
+        levels = ((K.schemes.get(sch) or {}).get('levels') or [{}])
+    except Exception:
+        return c
+    first = (levels[0] or {}).get('level') if isinstance(levels, list) and levels else None
+    plan, seen = c, set()
+    while plan in rows and plan not in seen and first and rows[plan].get('level') != first:
+        seen.add(plan)
+        plan = str(rows[plan].get('parent') or '')
+    return plan
+
+
+def _day_of(J, r, b):
+    """The day a booking is booked on: its `at`, else the day of what it books, as written; None where neither says."""
+    if isinstance(r.get('at'), str):
+        return r['at']
+    hit = J.statement(r.get('of'), b)
+    at = hit[3].get('at') if hit else None
+    return at if isinstance(at, str) else (at[0] if isinstance(at, list) and at and isinstance(at[0], str) else None)
+
+
+def _part(J, hit, entity, whole):
+    """The entity's part of a payment's whole: its share of what the payment's bearers bear (`bear` of it, in its bean),
+    or the whole where none bears it or the entity bears none — exact, or None where a share is not read."""
+    from core import measures
+    pb, _i, _v, p = hit
+    shares = {}
+    for _j, r in _live(pb, 'bear'):
+        if r.get('of') in (p.get('id'), f"{pb.id}#{p.get('id')}"):
+            s = r.get('share')
+            n = measures.exact(str(s.get('count') if isinstance(s, dict) else s)) if s is not None else 1
+            if n is None:
+                return None
+            shares[str(r.get('by'))] = shares.get(str(r.get('by')), 0) + n
+    total = sum(shares.values())
+    if entity not in shares or not total:
+        return whole
+    return whole * shares[entity] / total
+
+
 def _bookings(J, b):
+    """The accounting profile's bookings of bean `b`, judged (rule `profile`): a booking rests on what moved, is asked or
+    was measured, the books' opening, or another booking; it names `to`, `from` or both, each a code of a scheme or a
+    being — or none, booking in the reverse sense (`sense: "-1"`) the move of what it books, from a day it says; a code
+    of a chart is a postable account (no code has it for its parent), not closed on the day it is booked on; an analytic
+    code is booked `to`, never `from`; its two sides are of one chart; a booking that names both sides moves an amount,
+    or a share of a payment. Under one plan of an entity, the bookings of one statement are shares all, or amounts all:
+    an analytic plan's adding up to the entity's part of the payment, a chart's side to no more than it — the rest waits
+    in the account `awaiting`."""
     from core import measures
     out, books = [], {}
     for i, verb, r in b.items:
@@ -320,43 +393,159 @@ def _bookings(J, b):
             books.setdefault(r['of'], []).append((i, r))
     for pid, bs in books.items():
         hit = J.statement(pid, b)
-        if not hit or hit[2] != 'pay' or not isinstance(hit[3].get('of'), dict):
-            out.append((f"{b.id}: statements[{bs[0][0]}] book.of", f"`{pid}` is no payment: a booking shares what a `pay` "
-                                                                   f"gave"))
+        if not hit or hit[2] not in BOOKS_OF:
+            out.append((f"{b.id}: statements[{bs[0][0]}] book.of", f"`{pid}` is none of what a booking rests on: a payment "
+                                                                   f"(made, or asked by a clause), a `measure`, the books' "
+                                                                   f"`open`, another booking"))
             continue
-        q = hit[3]['of']
-        unit, whole = str(q.get('unit')), measures.exact(str(q.get('count')))
+        q = hit[3].get('of') if hit[2] == 'pay' else None
+        unit = str(q.get('unit')) if isinstance(q, dict) else None
+        whole = measures.exact(str(q.get('count'))) if isinstance(q, dict) else None
         plans = {}
         for i, r in bs:
             w = f"{b.id}: statements[{i}] book"
-            code = r.get('to')
-            if not (isinstance(code, str) and ':' in code):
-                continue                                 # a being booked to, or words: no account of a scheme
-            sch, c = code.split(':', 1)
-            try:
-                rows = {str(x.get('code')): x for x in J.L.std.knowledge.rows(sch) if isinstance(x, dict)}
-                levels = ((J.L.std.knowledge.schemes.get(sch) or {}).get('levels') or [{}])
-            except Exception:
-                rows, levels = {}, [{}]
-            if c not in rows:
-                out.append((f"{w}.to", f"'{c}' is not a code of {sch}"))
+            if r.get('to') is None and r.get('from') is None:
+                if str(r.get('sense')) == '-1':
+                    if r.get('at') is None:
+                        out.append((f"{w}.at", "the reverse of a move is read from a day on: say the day (`at`)"))
+                    continue
+                out.append((w, "a booking names where it goes, `to`, where it comes from, `from`, or both — or, with "
+                               "`sense: \"-1\"`, it books the move of what it books in the reverse sense"))
                 continue
-            first = (levels[0] or {}).get('level') if isinstance(levels, list) and levels else None
-            plan, seen = c, set()
-            while plan in rows and plan not in seen and first and rows[plan].get('level') != first:
-                seen.add(plan)
-                plan = str(rows[plan].get('parent') or '')
-            s = r.get('share')
-            kind = 'amount' if isinstance(s, dict) and str(s.get('unit')) == unit and unit != '1' else 'share'
-            plans.setdefault(plan, []).append((w, kind, s))
-        for plan, xs in sorted(plans.items()):
+            if r.get('sense') is not None and str(r.get('sense')) != '1':
+                out.append((w, "a booking that names a side moves along it: the reverse of a move is a booking of it, "
+                               "`sense: \"-1\"`, naming no side"))
+            sides, charts = {}, set()
+            for role in ('from', 'to'):
+                code = r.get(role)
+                if not (isinstance(code, str) and ':' in code):
+                    continue                             # a being booked to, or words: read through the chart
+                sch, c = code.split(':', 1)
+                ch = _chart(J, sch)
+                if ch is None or c not in ch[0]:
+                    out.append((f"{w}.{role}", f"'{c}' is not a code of {sch}"))
+                    continue
+                rows, parents, form = ch
+                sides[role] = (sch, c, form)
+                if form == 'chart':
+                    charts.add(sch)
+                    if c in parents:
+                        out.append((f"{w}.{role}", f"{sch}:{c} has accounts beneath it: a booking names a postable "
+                                                   f"account, one with none"))
+                    closed, day = str(rows[c].get('closed') or ''), _day_of(J, r, b)
+                    if closed and day and day[:10] > closed[:10]:
+                        out.append((f"{w}.{role}", f"{sch}:{c} closed on {closed}; this is booked on {day}"))
+                elif role == 'from':
+                    out.append((f"{w}.from", f"{sch} is no chart: an analytic code says where a part belongs, booked "
+                                             f"`to` it, never `from`"))
+            if len(charts) > 1:
+                out.append((w, f"its two sides are of two charts, {' and '.join(sorted(charts))}: a booking moves an "
+                               f"amount within one set of books"))
+            s_ = r.get('share')
+            kind = 'amount' if isinstance(s_, dict) and (not unit or (str(s_.get('unit')) == unit and unit != '1')) \
+                else 'share'
+            if 'from' in sides and 'to' in sides and s_ is None and hit[2] != 'pay':
+                out.append((w, "a booking that names both sides of what is no payment moves an amount: "
+                               "`share: { count, unit }`"))
+            entity = str(r.get('by') or J.G.gardener or '')
+            if 'to' in sides and 'from' not in sides:
+                sch, c, form = sides['to']
+                key = (entity, sch, sch if form == 'chart' else _plan_of(J, sch, c), form == 'chart')
+                plans.setdefault(key, []).append((w, kind, s_))
+            elif 'from' in sides and 'to' not in sides:
+                key = (entity, sides['from'][0], f"{sides['from'][0]} from", True)
+                plans.setdefault(key, []).append((w, kind, s_))
+        for (entity, _sch, plan, chart), xs in sorted(plans.items()):
             kinds = {k for _w, k, _s in xs}
             if len(kinds) > 1:
                 out.append((xs[0][0], f"the plan {plan} states amounts for some of its parts and shares for others: no "
                                       f"whole anyone can judge"))
             elif kinds == {'amount'} and whole is not None:
                 got = [measures.exact(str(s.get('count'))) for _w, _k, s in xs]
-                if None not in got and sum(got) != whole:
-                    out.append((xs[0][0], f"the bookings in the plan {plan} add up to {sum(got)} {unit}, and the payment "
-                                          f"is {whole} {unit}"))
+                part = _part(J, hit, entity, whole)
+                if None in got or part is None:
+                    continue
+                show, total = measures.dmunits.show, sum(got)
+                of = f"the payment is {show(whole)} {unit}" + ('' if part == whole else
+                                                              f", {entity}'s part of it {show(part)} {unit}")
+                if chart and total > part:
+                    out.append((xs[0][0], f"the bookings to {plan} add up to {show(total)} {unit}, more than its part: "
+                                          f"{of}"))
+                elif not chart and total != part:
+                    out.append((xs[0][0], f"the bookings in the plan {plan} add up to {show(total)} {unit}, and {of}"))
+    out += _matches(J, b)
+    return out
+
+
+def _known(b, sid):
+    """The verb of the knowing act that knows statement `sid` of bean `b`: the one naming it, else one naming nothing."""
+    acts = ('say', 'read', 'derive', 'make')
+    named = [v for _i, v, r in b.items if v in acts and isinstance(r, dict) and sid in _listed(r.get('of'))]
+    if named:
+        return named[0]
+    return next((v for _i, v, r in b.items if v in acts and isinstance(r, dict) and r.get('of') is None), None)
+
+
+def _matches(J, b):
+    """A match names two payments or more, records of one movement: what was read of it (a line a source gave) and what
+    was said agree in amount per currency."""
+    from core import measures
+    out = []
+    for i, r in _live(b, 'match'):
+        w = f"{b.id}: statements[{i}] match"
+        refs = [x for x in _listed(r.get('of')) if isinstance(x, str)]
+        if len(refs) < 2:
+            out.append((w, "a match names two statements or more: records of one movement"))
+            continue
+        sums = {'read': {}, 'said': {}}
+        for x in refs:
+            hit = J.statement(x, b)
+            if not hit or hit[2] != 'pay' or not isinstance(hit[3].get('of'), dict):
+                out.append((f"{w}.of", f"`{x}` is no payment: a match names payments"))
+                continue
+            q = hit[3].get('charged') if isinstance(hit[3].get('charged'), dict) else hit[3]['of']
+            side = 'read' if _known(hit[0], hit[3].get('id')) == 'read' else 'said'
+            n = measures.exact(str(q.get('count')))
+            if n is not None:
+                sums[side][str(q.get('unit'))] = sums[side].get(str(q.get('unit')), 0) + n
+        if sums['read'] and sums['said'] and sums['read'] != sums['said']:
+            show = lambda d: ', '.join(f"{n} {u}" for u, n in sorted(d.items()))
+            out.append((w, f"what was read ({show(sums['read'])}) and what was said ({show(sums['said'])}) do not agree: "
+                           f"a match counts one movement once"))
+    return out
+
+
+def charts(J):
+    """[(where, message)] of the garden's whole (rule `profile`): each being an account of a chart stands for is one the
+    garden holds; a payment is matched once in an entity's books, wherever the match is written."""
+    out = []
+    try:
+        K = J.L.std.knowledge
+        schemes = sorted(s for s, row in K.schemes.items() if isinstance(row, dict) and row.get('form') == 'chart')
+    except Exception:
+        schemes = []
+    for sch in schemes:
+        try:
+            rows = list(K.rows(sch))
+        except Exception:
+            continue
+        for r in rows:
+            sf = str(r.get('stands_for') or '') if isinstance(r, dict) else ''
+            if sf and sf not in J.G.beans:
+                out.append((f"scheme {sch} {r.get('code')}", f"stands for {sf}, which is no bean of this garden"))
+    seen = {}
+    for bid in sorted(J.G.beans):
+        b = J.G.beans[bid]
+        if b.unread:
+            continue
+        for i, r in _live(b, 'match'):
+            for x in _listed(r.get('of')):
+                if not isinstance(x, str):
+                    continue
+                key = (str(r.get('by') or J.G.gardener or ''), x if '#' in x else f"{bid}#{x}")
+                if key in seen:
+                    out.append((f"{bid}: statements[{i}] match", f"`{x}` is matched already ({seen[key]}): a movement "
+                                                                 f"is counted once"))
+                else:
+                    seen[key] = f"{bid}: statements[{i}]"
     return out

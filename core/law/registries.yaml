@@ -239,6 +239,7 @@ knowledge_scheme_form:
   relations: "a registry of relations between its own codes, rows {from, to, rel}, `rel` one of part-of, requires, adjacent (N23); resolved by the `registry_links` rows the garden declares for it"
   labels: "[{language, registry, attribution?}] — its labels in another language: a registry of {code, name} rows, and the words its publisher asks to be printed with them, verbatim (N25)"
   units: "a registry of rows in the form `units_crosswalk_form` — its codes crossed into the law's units and kinds, one row a code, so a value written with one of its codes is read as the law's, and the law's written back with its code (bin/units.py)"
+  form: "a form of a profile the garden takes (core/law/profiles.yaml `forms`) whose attributes its rows hold, as columns, beside `code`, `level`, `parent` and `name`: the accounting profile's `chart` makes the scheme a chart of accounts. Its rows are held to the form"
 # HOW A SCHEME'S CODES CROSS INTO THE LAW'S UNITS AND KINDS (`knowledge_schemes.units`): one row a code, in a registry of
 # its own whose file holds the columns it uses of these. A crossing is daftar's: it names the provider's codes and pairs
 # each with the law's own rows, and the provider's table stays where its holding keeps it. The law's proof holds every
@@ -279,6 +280,7 @@ forms:
     relations: optional
     labels: optional
     units: optional
+    form: optional
 
 # How a fetched table's rows are read: each reader turns the provider's own file into the rows its `registry_files` file
 # holds, and refuses a file whose columns are not the ones it reads (bin/fetch.py READERS).

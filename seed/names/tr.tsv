@@ -156,6 +156,7 @@ verbs:route	yönlendirme	yön (a direction)	proposed	agent (claude opus-5.5), by
 verbs:translate	adres çevirme	çevirmek (to turn, to translate)	proposed	agent (claude opus-5.5), by hand
 verbs:filter	süzme	süzmek (to strain)	proposed	agent (claude opus-5.5), by hand
 verbs:book	muhasebe kaydı	muhasebe (Arabic: an accounting) + kayıt (a record)	proposed	agent (claude opus-5.5), by hand
+verbs:match	eşleştirme	eş (a mate, a pair): banka mutabakatı — a bank's line and the payment said, one movement counted once	proposed	agent (claude opus-5.5), by hand
 verbs:renew	yenileme	yeni (new)	proposed	agent (claude opus-5.5), by hand
 verbs:mark	işaretleme	işaret (Persian: a sign)	proposed	agent (claude opus-5.5), by hand
 verbs:produce	üretme	üremek (to multiply, to arise)	proposed	agent (claude opus-5.5), by hand
@@ -172,6 +173,7 @@ qualifiers:placed	yerleşim	yer (a place): settling into a place	proposed	agent 
 qualifiers:presence	mevcudiyet	Arabic mawjūd (found, existing)	proposed	agent (claude opus-5.5), by hand
 qualifiers:reading	hesap	Arabic ḥisāb (a reckoning)	proposed	agent (claude opus-5.5), by hand
 qualifiers:result	sonuç	son (the end)	proposed	agent (claude opus-5.5), by hand
+qualifiers:sense	yön	yön (a direction, the way one faces): along a move's direction, or against it	proposed	agent (claude opus-5.5), by hand
 qualifiers:series	dizi	dizmek (to string, to line up)	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	mahsup	Arabic maḥsūb (reckoned): set against what was owed	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	pay	pay (a share, a portion)	proposed	agent (claude opus-5.5), by hand

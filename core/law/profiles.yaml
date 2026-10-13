@@ -7,11 +7,18 @@
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 profiles:
   - profile: accounting
-    meaning: "for a garden that keeps accounts, in the words its field uses. Analytic accounting first: where each amount's cost or revenue belongs, along plans the garden keeps as its own scheme of codes — a plan is a code at the scheme's first level, `plan`, and an account one beneath it, `account`. What an account holds is READ (bin/reckon.py `apportion`), never stored. Its names are the field's: `analytic_distribution` is what an ERP's user already writes, and seed/COOKBOOK.md pairs each of the field's names with where it is kept"
-    verbs: [book]
+    meaning: "for a garden that keeps accounts, in the words its field uses. Analytic accounting first: where each amount's cost or revenue belongs, along plans the garden keeps as its own scheme of codes — a plan is a code at the scheme's first level, `plan`, and an account one beneath it, `account`. What an account holds is READ (bin/reckon.py `apportion`), never stored. Its names are the field's: `analytic_distribution` is what an ERP's user already writes, and seed/COOKBOOK.md pairs each of the field's names with where it is kept. Double entry beside it: books are kept for an entity in a CHART — a scheme whose rows say what each account is (its form `chart`: its element, the being it stands for, the kinds of party whose accounts it holds, its role, the day it closed), the garden's own or a standard's, none privileged — and a booking moves an amount from one account to another, as value moves: it leaves one position and arrives at another, and what a position holds is what arrived less what left, read, never stored. Where a booking of a payment names one side, the other is read from the payment — its means, its shares, what it settles — as bin/ledger.py reads them"
+    verbs: [book, match]
+    tables: [elements, account_roles]
+    forms: [chart]
     went:
       "transactions.analytic_distribution": "the verb `book` (an amount's statement booked to an account, in a share)"
       "clauses.analytic_distribution": "the verb `book` (what a clause asks booked to an account)"
+    vacancies:
+      - at: "table:account_roles"
+        position: tax
+        reason: universal
+        why: "a tax owed or claimable is held in an account of this role, and the clause form already says a tax — an `obligatory` payment to the authority occurring `each` time a sale is made, its `amount` a share of the sale's; no tool computes tax lines yet, and a jurisdiction's codes and return grids are a scheme a garden takes, none privileged"
   - profile: code
     meaning: "for a garden that manages source code: where its trees are and how an agent treats each, and the repository identity of a code bean"
     adds:
@@ -332,12 +339,46 @@ orientations:
   - { order: magnitude, of: "line:temperature", axis: vertical, sense: "-1", follows: "false", commands: [up, down], meaning: "a metered line's value — a temperature, a potential, a measure: more is up" }
   - { order: place, of: "line:place", axis: map, sense: "1", follows: "false", meaning: "a map: north up and east right, whatever the reader's script; a tree of places is the walk" }
   - { order: depth, of: "way:made-of", axis: z, sense: "1", follows: "false", commands: [in, out], meaning: "made-of read inward: in shows a being's parts, out its whole" }
+# THE ACCOUNTING PROFILE'S TABLES: what an account of a chart is (its element), and the roles an account plays in the
+# books' readings. The elements are the IFRS Conceptual Framework's five (§4.2): a published list no jurisdiction's
+# chart owns. Each is read in a SENSE, as each order of the view is (`orientations`): value is a charge that moves — it
+# arrives at a position (the field's debit) and leaves one (its credit) — and an element's balance is its net charge
+# read along the arrival (`1`) or against it (`-1`).
+elements:
+  - { element: asset, sense: "1", meaning: "a present economic resource the entity controls as a result of past events: cash, a bank account, a receivable, a thing bought to keep" }
+  - { element: liability, sense: "-1", meaning: "a present obligation of the entity to transfer an economic resource as a result of past events: a payable, a card's balance, a loan" }
+  - { element: equity, sense: "-1", meaning: "the residual interest in the assets after deducting all liabilities: what the entity's owners put in, and its result kept" }
+  - { element: income, sense: "-1", meaning: "an increase in assets, or decrease in liabilities, that increases equity, other than from owners: a sale, a fee earned, interest received" }
+  - { element: expense, sense: "1", meaning: "a decrease in assets, or increase in liabilities, that decreases equity, other than to owners: what is spent and used up" }
+account_roles:
+  - { role: awaiting, meaning: "where a part no booking places waits, awaiting an account: a statement's line not yet booked" }
+  - { role: unsaid, meaning: "where a payment whose means is not said, or has no account in the chart, is held until it is; absent, the account `awaiting`" }
+  - { role: earnings, meaning: "where a period's result is carried: income less expense, kept" }
+  - { role: tax, meaning: "where a tax owed to an authority, or claimable from one, is held" }
 planes:
   - { plane: data, meaning: "the traffic the being exists to carry or to serve" }
   - plane: control
     meaning: "how the being decides where traffic goes: routing adjacencies, discovery, redundancy election"
   - { plane: management, meaning: "how an operator reaches the being to configure or observe it" }
 forms:
+  chart:
+    meaning: "what each account of a chart of accounts is, on the rows of a scheme that names this form (`form: chart`) beside its code, level, parent and name: a booking names a postable account — a code no other code has for its parent"
+    attrs:
+      element:
+        in: { registry: elements, take: element }
+        meaning: "what the account is — asset, liability, equity, income, expense; stated on a row, or inherited from its nearest ancestor that states one"
+      stands_for:
+        in: being
+        meaning: "the being whose account this is: a bank account, a card, a cash box, a loan agreement. One account of a chart stands for a being; a booking that names the being is read as naming this account"
+      parties:
+        in: { registry: kinds, take: kind }
+        meaning: "the kinds of being whose current accounts it holds, a list: a booking to it names the party, and what a party owes or is owed is read from the payments, as bin/ledger.py reads it"
+      role:
+        in: { registry: account_roles, take: role }
+        meaning: "a role the account plays in the books' readings, one account a role"
+      closed:
+        in: { type: position }
+        meaning: "the day (`YYYY-MM-DD`) after which nothing is booked to it: an account a booking used is closed, never moved or deleted"
   page:
     meaning: "this bean is a page of drawings: the garden's own drawing module, the organisation it opens on, who reads it, the parts a reader looks up, which of a being's own facts a card shows, and the words a reader may hover. What it is called is its `title`; what it draws is its `views`; where its live values come from is its `view_monitors`"
     replaces: [view, view_monitors]
@@ -746,6 +787,8 @@ forms:
   archetypes: { archetype: required, meaning: required, when: required, frame: optional, reads: optional, axes: optional }
   orientations: { order: required, of: required, axis: required, sense: required, follows: required, commands: optional, meaning: required }
   planes: { plane: required, meaning: required }
+  elements: { element: required, sense: required, meaning: required }
+  account_roles: { role: required, meaning: required }
   profiles:
     profile: required
     meaning: required
