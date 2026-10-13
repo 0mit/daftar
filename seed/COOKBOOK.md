@@ -1716,6 +1716,12 @@ match those books read on a day in the period is not changed: a correction is th
   - pin: { id: closed-09, of: [books-2026-09], at: [now, "garden@<the commit before the close>"] }
 ```
 
+A person need not write any of it by hand. `python3 assets/accounting/bin/books.py setup --by <you>` writes the books'
+walks into the garden — book, reverse, match, close, and import a bank's statement (camt.053/054, OFX, MT940, or a CSV by
+a mapping) — and each is run with what you give it: `python3 bin/act.py <bean> --start walk-books-book --by <you> --input
+of=<bean>#<payment> --input account=<code>`, its plan shown as the write it would make, nothing written until you
+ratify it (`--ratify <you>`), or from a page's action.
+
 | an ERP's general ledger | daftar |
 |---|---|
 | `account.account` (`code`, `name`) | a row of the garden's chart, the scheme naming `form: chart` |
