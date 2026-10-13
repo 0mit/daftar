@@ -161,9 +161,10 @@ _words = (dmpublic.estate_words(_G, dmpublic.public_words(_G)) | {w for w in _fi
 _leak = [(f, w) for f in _AFILES for w in dmpublic.hits(_text(f), _words)]
 # the view's archetypes engraved from readings and its one write path read and write a garden of the core's statements,
 # and run in no other garden: they speak the core's words, as its reader does; and so do the books' walks and their
-# setup, which write a garden of the core's beans (the accounting profile's asset)
+# setup, which write a garden of the core's beans (the accounting profile's asset); and view_prefs writes a reader's
+# way of reading as a bean of the core (`kind: document`, the form `reader_preferences`)
 CORE_ONLY = ("view_engraved.py", "view_write.py", "view_engraved.js", "view_queue.js", "view_timeline.js",
-             "view_flows.js", "view_sheet.js", "books.py", "books_walks.py")
+             "view_flows.js", "view_sheet.js", "books.py", "books_walks.py", "view_prefs.py")
 _retired = [(f, n) for f in _AFILES if f.endswith(CODE_EXT)
             and not f.endswith("_core.py")     # an asset's reader of the core (v1 part 11) writes the core's words, and
             # `kind` is the core's name of today's genos (core/law/kinds.yaml), not the word 22.0 retired

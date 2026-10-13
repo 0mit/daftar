@@ -8,11 +8,24 @@ users, daftard's record of the person), never in the garden: a reader's way of r
     settings_of(prefs)    -> what the widgets read (`settings.reader`: locale, zone, date, currency)
     zones()               -> [(the tag's `tz` type, the IANA zone it stands for)], CLDR's
     parse(tag)            -> the tag's parts, read by the grammar of RFC 5646 — never a pattern of ours
+    to_bean(prefs, reader, garden=None, bean=None)  -> a bean that holds them (the view profile's `reader_preferences`)
+    from_bean(text)       -> {bean, reader, garden, prefs} read back from one, checked as `check` checks; or Refused
+
+    python3 view_prefs.py export --config <host file> --user <account> [--garden <garden root>] [--out <bean.md>]
+    python3 view_prefs.py import <bean.md> --config <host file> [--user <account>] [--garden <garden root>]
+
+A BEAN OF THEM, TO KEEP OR TO CARRY (ratified 2026-10-13). A reader's way of reading is the host's to keep, in its own
+file; written as a bean — a `document` whose `draw` of the reader holds the form `reader_preferences` — it is backed up
+or carried to another machine, and read back there, losing nothing: preferences → bean → preferences and bean →
+preferences → bean are each the same. Export and import touch only the three keys of the account they name, and print
+nothing of the host's file. The bean is a file a person carries; a garden holds it only where a person puts it there,
+and then its gate judges the form.
 
 THE STANDARD'S OWN DATA. Which types each key takes is CLDR's (`common/bcp47/*.xml`), carried in
 seed/knowledge/cldr-bcp47.tsv; `python3 view_prefs.py --from-ldml <cldr>/common/bcp47` writes it from any copy of CLDR.
 A page reads the tag with Intl.Locale; the host reads it here. Unset is the language's own, as CLDR says it.
 """
+import json
 import os
 import re
 import sys
@@ -192,6 +205,146 @@ def settings_of(prefs):
     return out
 
 
+# --------------------------------------------------------------------------------------- a bean of them, and back
+_ID = re.compile(r'^[a-z0-9][a-z0-9-]{0,120}$')
+_GARDEN = re.compile(r'^[0-9a-f]{12}$')
+FIELDS = ('locale', 'date', 'currency')
+
+
+def to_bean(prefs, reader, garden=None, bean=None):
+    """The text of a bean holding a reader's preferences, as `check` keeps them: a `document` whose `draw` of the reader
+    holds the form `reader_preferences` (core/law/profiles.yaml), the reader's own `say` and `own`. One written of the
+    same preferences is the same text. Refused where `check` refuses them, or the reader or the garden is no id."""
+    kept, bad = check(prefs)
+    if bad:
+        raise Refused('; '.join(bad))
+    if not isinstance(reader, str) or not _ID.match(reader):
+        raise Refused(f'{reader!r}: the reader is named by their bean\'s id')
+    if garden is not None and not (isinstance(garden, str) and _GARDEN.match(garden)):
+        raise Refused(f'{garden!r}: a garden is named by its id, twelve hexadecimal digits (python3 bin/propose.py id)')
+    bid = bean or f'preferences-{reader}'
+    if not _ID.match(bid):
+        raise Refused(f'{bid!r}: a bean\'s id is lowercase letters, digits and hyphens')
+    form = ([('garden', garden)] if garden else []) + [(k, kept[k]) for k in FIELDS if k in kept]
+    held = ', '.join(f'{k}: {json.dumps(v)}' for k, v in form)
+    return ('---\n'
+            f'bean: {bid}\n'
+            'kind: document\n'
+            f'title: "a way of reading: {reader}"\n'
+            'summary: "a reader\'s own way of reading, kept on the host they read on, written here to keep or to carry"\n'
+            'statements:\n'
+            f'  - say: {{ by: {reader}, at: now }}\n'
+            f'  - own: {{ by: {reader}, of: self }}\n'
+            f'  - draw: {{ id: preferences, by: self, of: [{reader}], preferences: {{ {held} }} }}\n'
+            '---\n'
+            'A reader\'s way of reading: their language, calendar, digits, hour cycle, first day of the week and zone, how a '
+            'day is written and a currency named. The host they read on keeps it; this is its copy.\n')
+
+
+def from_bean(text):
+    """{bean, reader, garden, prefs} of a bean `to_bean` wrote, its preferences checked as `check` checks them — what a
+    host keeps, read back. Refused, by name, where it holds no preferences, names no one reader, or holds what `check`
+    refuses."""
+    import yaml
+    m = re.match(r'^---\r?\n(.*?)\r?\n---', text if isinstance(text, str) else '', re.S)
+    if not m:
+        raise Refused('this is no bean: no front matter')
+    try:
+        fm = yaml.safe_load(m.group(1)) or {}
+    except yaml.YAMLError as e:
+        raise Refused(f'this bean does not read: {e}')
+    bid = fm.get('bean') if isinstance(fm, dict) else None
+    held = [r for s in (fm.get('statements') or []) if isinstance(s, dict) for v, r in s.items()
+            if v == 'draw' and isinstance(r, dict) and isinstance(r.get('preferences'), dict)]
+    if len(held) != 1:
+        raise Refused(f'{bid}: it holds no preferences — one `draw` holds the form `reader_preferences`, and here '
+                      f'{len(held)} do')
+    r = held[0]
+    of = r.get('of') if isinstance(r.get('of'), list) else [r.get('of')]
+    if len(of) != 1 or not isinstance(of[0], str) or not _ID.match(of[0]):
+        raise Refused(f'{bid}: its preferences name no one reader (their `draw` is `of` the reader)')
+    form = r['preferences']
+    extra = sorted(set(form) - set(FIELDS) - {'garden'})
+    if extra:
+        raise Refused(f'{bid}: {", ".join(extra)}: no preference of a reader')
+    garden = form.get('garden')
+    if garden is not None and not (isinstance(garden, str) and _GARDEN.match(garden)):
+        raise Refused(f'{bid}: {garden!r} is no garden\'s id')
+    kept, bad = check({k: form[k] for k in FIELDS if k in form})
+    if bad:
+        raise Refused(f'{bid}: ' + '; '.join(bad))
+    return {'bean': bid, 'reader': of[0], 'garden': garden, 'prefs': kept}
+
+
+def _garden_id(root):
+    """A garden's id (bin/parse.py `garden_id`): the first twelve hexadecimal digits of the root of its history."""
+    import subprocess
+    r = subprocess.run(['git', '-C', root, 'rev-list', '--first-parent', '--max-parents=0', 'HEAD'], capture_output=True,
+                       text=True, encoding='utf-8')
+    roots = r.stdout.split()
+    if r.returncode or not roots:
+        raise Refused(f'{root}: no garden\'s history here, so no garden\'s id')
+    return roots[-1][:12]
+
+
+def _write_private(path, text):
+    """Whole, flushed and swapped in, readable by its owner alone — as the host writes its own file."""
+    import tempfile
+    d = os.path.dirname(os.path.abspath(path))
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=d, prefix='.prefs-')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(text)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, path)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise
+
+
+def export(config, user, garden_root=None):
+    """The bean of an account's preferences in view_serve's host file (its `users`): the account's own bean the reader."""
+    cfg = json.load(open(config, encoding='utf-8'))
+    rec = (cfg.get('users') or {}).get(user)
+    if not isinstance(rec, dict):
+        raise Refused(f'{user!r}: no such account in {config}')
+    if not rec.get('bean'):
+        raise Refused(f'{user!r}: the account names no bean of the garden, so no reader the preferences are of')
+    return to_bean({k: rec[k] for k in FIELDS if rec.get(k)}, rec['bean'],
+                   garden=_garden_id(garden_root) if garden_root else None)
+
+
+def import_(text, config, user=None, garden_root=None):
+    """The preferences a bean holds, written into the host file's account of their reader — that account's three keys
+    made what the bean says (one it does not hold taken out), nothing else of the file changed. (account, prefs)."""
+    got = from_bean(text)
+    if garden_root and got['garden'] and got['garden'] != _garden_id(garden_root):
+        raise Refused(f'{got["bean"]}: its preferences were set in the garden {got["garden"]}, not in this one')
+    cfg = json.load(open(config, encoding='utf-8'))
+    users = cfg.get('users') or {}
+    if user is None:
+        named = [u for u, r in users.items() if isinstance(r, dict) and r.get('bean') == got['reader']]
+        if len(named) != 1:
+            raise Refused(f'{got["bean"]}: {len(named)} accounts here are {got["reader"]}\'s: name the one (--user)')
+        user = named[0]
+    rec = users.get(user)
+    if not isinstance(rec, dict):
+        raise Refused(f'{user!r}: no such account in {config}')
+    if rec.get('bean') != got['reader']:
+        raise Refused(f'{got["bean"]} is {got["reader"]}\'s way of reading, and the account {user!r} is not theirs')
+    for k in FIELDS:
+        if k in got['prefs']:
+            rec[k] = got['prefs'][k]
+        else:
+            rec.pop(k, None)
+    _write_private(config, json.dumps(cfg, indent=1))
+    return user, got['prefs']
+
+
 # --------------------------------------------------------------------------------------- CLDR's own data, as a table
 def from_ldml(folder):
     """The rows of seed/knowledge/cldr-bcp47.tsv from CLDR's own `common/bcp47` (calendar.xml, number.xml,
@@ -213,10 +366,34 @@ def from_ldml(folder):
     return sorted(rows)
 
 
-if __name__ == '__main__':
-    if len(sys.argv) == 3 and sys.argv[1] == '--from-ldml':
+def main(argv):
+    def opt(name):
+        return argv[argv.index(name) + 1] if name in argv and argv.index(name) + 1 < len(argv) else None
+    if len(argv) == 2 and argv[0] == '--from-ldml':
         print('key\ttype\taliases\tdescription')
-        for r in from_ldml(sys.argv[2]):
+        for r in from_ldml(argv[1]):
             print('\t'.join(r))
-    else:
-        print(__doc__)
+        return 0
+    try:
+        if argv[:1] == ['export'] and opt('--config') and opt('--user'):
+            text = export(opt('--config'), opt('--user'), opt('--garden'))
+            if opt('--out'):
+                _write_private(opt('--out'), text)
+                print(f'view_prefs: {opt("--user")}\'s way of reading written to {opt("--out")}')
+            else:
+                sys.stdout.write(text)
+            return 0
+        if argv[:1] == ['import'] and len(argv) > 1 and opt('--config'):
+            user, prefs = import_(open(argv[1], encoding='utf-8').read(), opt('--config'), opt('--user'), opt('--garden'))
+            print(f'view_prefs: {user}\'s way of reading read back from {argv[1]}: '
+                  + (', '.join(f'{k} {v}' for k, v in prefs.items()) or 'their language\'s own'))
+            return 0
+    except (Refused, OSError, ValueError) as e:
+        print(f'view_prefs: {e}', file=sys.stderr)
+        return 1
+    print(__doc__)
+    return 2
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))

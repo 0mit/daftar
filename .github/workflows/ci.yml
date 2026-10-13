@@ -186,6 +186,9 @@ jobs:
       - name: "view_reader_prefs: each reader's own calendar, digits, hours, first day, zone, date and currency — one BCP 47 tag kept with their account on the host, never in the garden"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_reader_prefs.py
+      - name: "view_prefs_bean: a reader's way of reading written as a bean to keep or to carry, and read back — the host's file its source, nothing lost either way, the gate judging the form"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_prefs_bean.py
       - name: "catalogue: every part of the language, how the parts relate and what each is held to — read from the sources each time, the same bytes twice, and in a garden its copy of the language alone"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/catalogue.py

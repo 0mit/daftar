@@ -169,8 +169,8 @@ profiles:
   - profile: view
     meaning: "for a garden that draws what it keeps: a page of drawings, each of a mapping or a bean the garden holds, read at four lenses, with live values beside the drawing and actions a host may run. Its asset is `assets/view/`, which a garden receives only while it extends this profile. A garden that draws nothing should inherit none of it."
     verbs: [draw]
-    tables: [lenses, archetypes, orientations]
-    forms: [page, drawing]
+    tables: [lenses, archetypes, orientations, date_styles, currency_displays]
+    forms: [page, drawing, reader_preferences]
     asset: "assets/view"
     went:
       view: "the form `page`, held by the page's own `draw`"
@@ -345,6 +345,16 @@ orientations:
 # chart owns. Each is read in a SENSE, as each order of the view is (`orientations`): value is a charge that moves — it
 # arrives at a position (the field's debit) and leaves one (its credit) — and an element's balance is its net charge
 # read along the arrival (`1`) or against it (`-1`).
+date_styles:
+  - { style: short, meaning: "the day in figures alone, as its calendar writes it: 1405/7/21" }
+  - { style: medium, meaning: "the day with its month abbreviated where its language abbreviates one" }
+  - { style: long, meaning: "the day with its month's name: 21 Mehr 1405" }
+  - { style: full, meaning: "the day with its weekday and its month's name: Monday, 21 Mehr 1405" }
+currency_displays:
+  - { display: symbol, meaning: "a currency by its symbol where its locale has one, else its code: US$" }
+  - { display: narrowSymbol, meaning: "by its narrowest symbol, where the reader knows which currency it is: $" }
+  - { display: code, meaning: "by its ISO 4217 code: USD" }
+  - { display: name, meaning: "by its name in the reader's language: US dollars" }
 elements:
   - { element: asset, sense: "1", meaning: "a present economic resource the entity controls as a result of past events: cash, a bank account, a receivable, a thing bought to keep" }
   - { element: liability, sense: "-1", meaning: "a present obligation of the entity to transfer an economic resource as a result of past events: a payable, a card's balance, a loan" }
@@ -784,12 +794,29 @@ forms:
       - when: { archetype: flows }
         requires: [nodes]
         why: "flows answer with who owes whom, read from the ledger, or with what passed between gardens"
+  reader_preferences:
+    meaning: "a reader's own way of reading, written as a bean to keep or to carry to another machine: held by a `draw` of the bean whose `of` is the reader (`preferences`). It is kept with the reader's account on the host they read on — that host's own file is its source, never a garden — and a bean of it is a file a person carries, which a garden holds only where a person puts it there. A preference not given is not held: the language's own stands for it"
+    attrs:
+      garden:
+        in: { type: kebab }
+        meaning: "the garden they were set in, by its id (`python3 bin/propose.py id`, twelve hexadecimal digits), where the host keeps a reader's preferences garden by garden; absent, the host's one garden"
+      locale:
+        in: { type: locale_tag }
+        meaning: "their language, its calendar, the first day of their week, their hour cycle, their digits and the zone they read moments in: one tag"
+      date:
+        in: { registry: date_styles, take: style }
+        meaning: "how a day is written for them"
+      currency:
+        in: { registry: currency_displays, take: display }
+        meaning: "how a currency is named for them"
   lenses: { lens: required, depth: required, form: required, max: required, meaning: required }
   archetypes: { archetype: required, meaning: required, when: required, frame: optional, reads: optional, axes: optional }
   orientations: { order: required, of: required, axis: required, sense: required, follows: required, commands: optional, meaning: required }
   planes: { plane: required, meaning: required }
   elements: { element: required, sense: required, meaning: required }
   account_roles: { role: required, meaning: required }
+  date_styles: { style: required, meaning: required }
+  currency_displays: { display: required, meaning: required }
   profiles:
     profile: required
     meaning: required
