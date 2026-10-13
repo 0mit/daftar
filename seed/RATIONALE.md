@@ -4926,6 +4926,13 @@ wherever Python does — on Windows too, where `python3` may be missing or a sto
 without `dm`, so the row states the family and nothing a file name already says; what the tool does is the first line
 of its own help, read from it, never restated.
 
+## core/law/lines.yaml: types[file]
+
+A FILE A PERSON GIVES, NEVER IN THE LEDGER (2026-10-13, ratified by the operator). A bank's statement to import, a scan
+of a receipt: a run needs its bytes, and the ledger, which every clone carries for good, must never hold them. So the
+value a run is given and keeps is the file's SHA-256 alone; the host keeps the file off git under it, readable by its
+owner alone, and the tool reads it by that (bin/walktool.py `file`), refused where its bytes are not those.
+
 ## core/law/lines.yaml: types[coding]
 
 (std-vocab 32: `value_types[coding]`)
@@ -5476,6 +5483,19 @@ amounts are the ledger's, netted per currency as `--between` nets a pair, exact 
 it is. Between gardens the nodes are gardens and the arrows what went from one to another: what a garden took from
 another (`take`), what it proposed to one (`propose`), what passed between them (`pass`).
 
+## core/law/profiles.yaml: forms.drawing.attrs.actions
+
+AN ACTION'S INPUTS, AS A PAGE ASKS THEM (2026-10-13, ratified by the operator). A page that starts a garden's own
+operation — a payment booked to an account, a period closed, a bank's statement imported — asked each input as a line of
+words, so a person typed an account's code, a payment's `<bean>#<id>` they never see on the page, a path on their disk.
+An input now says where its value comes from: chosen `of` a reading's members or a scheme's rows (the account by its
+name, a heading never), `many` of them (the people who share a cost), filled `from` the element the button sits on (the
+payment of the row pressed — the host's to fill, so no page can name another), or a file the person chooses (`type:
+file`). Each is the law's because the gate and every host must read it the same: what a person may be offered, and what
+a host must refuse. A journal entry's lines and a payment's shares are not inputs: they are `book` and `bear`
+statements written on a draft's sheet by the one write path, and the walk posts the draft — one way to write a fact,
+never two.
+
 ## core/law/profiles.yaml: forms.drawing.attrs.axes
 
 AN AXIS NAMES AN ORDER, NEVER A SIDE. A drawing says which order runs along each of its axes — `{ inline: time }` —
@@ -5727,7 +5747,9 @@ columns — its element, the being an account stands for, the kinds of party who
 closed — so it is a scheme naming the profile's form, and its rows are held to it by the gate: a column neither the
 scheme's nor the form's is refused, and so is a postable account that does not say what it is. An account stands for
 a being — a bank account, a card, a cash box — so a booking may name the being, and a payment's means is read as that
-account. An account a booking used is closed on a day, never moved or deleted, since the bookings that name it stay.
+account. An account a booking used is closed on a day, never moved or deleted, since the bookings that name it stay. A
+chart's row may carry an account's name in a language (`name_<lang>`), as any scheme's may: a book is read in its
+reader's language.
 
 ## core/law/registries.yaml: knowledge_scheme_form.form
 
@@ -5748,3 +5770,17 @@ The books are read by one reader, the profile's asset (`assets/accounting/lib/bo
 profile receives it, and every reading — the vouchers, a trial balance, a ledger, profit and loss, the balance, what
 awaits an account, the reading `books` a close pins — goes through it, so two tools never read one garden's books two
 ways.
+
+## core/law/profiles.yaml: forms.drawing.attrs.chart
+
+A TABLE OVER A CHART'S CODES (2026-10-13, the operator's choice: "A table over chart codes", alternative 2 of the books'
+archetype). A trial balance and a ledger are what a bookkeeper reads, and their rows are the accounts of a chart in its
+order, each figure read from the moves, never stored. Asked whether that wanted an archetype of its own, the operator
+chose a second kind of row for `table` instead: a table lists a reading's members, a series' positions, or a chart's
+codes — one of them — and its columns read, for a chart, a figure of each account as the accounting profile's asset reads
+it (`code`, `name`, `element`, `opening`, `debit`, `credit`, `balance`), per currency, with the totals. One archetype
+answers "which ones, and what each holds" for beings and for accounts alike. Its columns follow the taxis in the order the
+page lists them, so a book written right to left reads the debit at the right; each account is drawn by its name in the
+reader's language; a reader sees the books of a being only where they may read that being, and a ledger's line names its
+bean only where they may read it.
+

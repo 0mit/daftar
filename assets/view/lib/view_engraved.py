@@ -8,7 +8,8 @@ never stored, and handed to its renderer (`view_queue.js`, `view_timeline.js`, `
                               occurrence of its repetition within the drawing's `span`, walked by bin/stale.py
     flows(v, may)             who owes whom (bin/ledger.py's reading, netted per currency), or what went between gardens
     sheet(bean, may, held)    one being: its header, its statements verb by verb with their dependents, its held values
-    table(v, may)             a table of a reading on a page that names no drawing module: one line per member the
+    table(v, may)             a table of a chart's codes (`chart`: an account a line, its figures from the books); or of a
+                              reading on a page that names no drawing module: one line per member the
                               reader may read, each cell the values at its column's path as they are, each line opening
                               its being's sheet
     data(key, v, may, reader) the reading a drawing of the page draws, by its archetype
@@ -39,11 +40,13 @@ SPAN_DAYS = 42                       # a timeline's span where the drawing state
 
 
 def engraved(v):
-    """Whether a drawing is engraved from a reading: a queue, a timeline, flows or a sheet always; a table of a reading
-    where its page names no drawing module — its lines are the reading's, and nothing is drawn for it but them."""
+    """Whether a drawing is engraved from a reading: a queue, a timeline, flows or a sheet always; a table of a chart's
+    codes always (its lines are the books' accounts, which no drawing module reads); a table of a reading where its page
+    names no drawing module — its lines are the reading's, and nothing is drawn for it but them."""
     if not isinstance(v, dict):
         return False
-    return v.get('archetype') in ENGRAVED or (v.get('archetype') == 'table' and not vm.page_view().get('drawings'))
+    return v.get('archetype') in ENGRAVED or (v.get('archetype') == 'table' and (v.get('chart') is not None or
+                                                                                 not vm.page_view().get('drawings')))
 
 
 def _listed(x):
@@ -321,6 +324,8 @@ def table(v, may):
     import reckon as dmreckon
     cols = [{'label': str(c.get('label') or c.get('path')), 'path': str(c.get('path'))}
             for c in v.get('columns') or [] if isinstance(c, dict) and c.get('path')]
+    if v.get('chart') is not None:
+        return chart_table(v, may, cols)
     reads = sorted({re.split(r"[.\[>]", c['path'])[0] for c in cols if c['path'] not in ('at', 'position')})
     out = {'columns': cols, 'rows': [], 'notes': []}
     try:
@@ -332,6 +337,68 @@ def table(v, may):
             continue
         out['rows'].append({'bean': m, 'title': title_of(m),
                             'cells': [_steps_said(dmreckon.path_values(vm.fm(m), c['path'], root=vm.ROOT)) for c in cols]})
+    return out
+
+
+FIGURES = ('code', 'name', 'element', 'opening', 'debit', 'credit', 'balance')   # what a table of a chart's column reads
+
+
+def chart_table(v, may, cols):
+    """A table over a chart's codes (`chart`): the books of the being the drawing draws, in that chart, as the accounting
+    profile's asset reads them — never stored — for a reader who may read that being. Per currency, a line for each
+    account in the chart's order (its depth in the chart, whether it posts), each column a figure of it (`FIGURES`): its
+    opening before the drawing's `span`, what arrived (debit), what left (credit), its balance in its element's sense;
+    the totals and whether they balance; and each posting account's ledger, a line naming the bean it rests on only
+    where the reader may read that bean. Every amount a count as text, exact."""
+    kk, entity, _f = vm.draws_of(v)
+    out = {'columns': cols, 'rows': [], 'chart': str(v.get('chart')), 'entity': entity if kk == 'bean' else None,
+           'title': title_of(entity) if kk == 'bean' else None, 'currencies': [], 'notes': []}
+    if kk != 'bean' or _bean(entity) is None or not may('read', entity):
+        out['notes'].append("the books of a being the reader may not read are not drawn")
+        return out
+    lib = os.path.join(vm.ROOT, 'assets', 'accounting', 'lib')
+    if not os.path.isfile(os.path.join(lib, 'books_read.py')):
+        out['notes'].append("the books are read by the accounting profile's asset, which this garden does not hold")
+        return out
+    if lib not in sys.path:
+        sys.path.insert(0, lib)
+    import books_read as br
+    import units as dmunits
+    try:
+        B = br.read(vm.ROOT, entity=entity, chart=str(v['chart']))
+    except ValueError as e:
+        out['notes'].append(str(e))
+        return out
+    today = datetime.date.today().toordinal()
+    s = vm.seconds(v.get('span')) if isinstance(v.get('span'), dict) else None
+    start = today - max(1, int(s // 86400)) + 1 if s else None
+    day = lambda n: datetime.date.fromordinal(n).isoformat() if n else None
+    amount = dmunits.show
+    C = B.chart
+    out.update(start=day(start), to=day(today), notes=list(B.notes))
+    for unit in sorted({x['unit'] for x in B.vouchers if x['unit']}):
+        t = br.trial(B, unit, start, today)
+        lines, ledgers = [], {}
+        for r in t['rows']:
+            code = f"{C.scheme}:{r['code']}"
+            fig = {'code': code, 'name': r['name'], 'element': r['element'], 'opening': amount(r['opening']),
+                   'debit': amount(r['dr']), 'credit': amount(r['cr']), 'balance': amount(r['balance'])}
+            lines.append({'code': code, 'name': r['name'], 'depth': len(C.path(r['code'])) - 1, 'posts': r['posts'],
+                          'cells': [fig.get(c['path']) for c in cols]})
+            if r['posts']:
+                L = br.ledger(B, r['code'], unit, None, start, today)
+                rows = []
+                for x in L['rows']:
+                    bean = x['ref'].split('#', 1)[0]
+                    seen = _bean(bean) is not None and may('read', bean)
+                    rows.append({'number': x['number'], 'day': day(x['day']), 'bean': bean if seen else None,
+                                 'title': title_of(bean) if seen else None, 'memo': x['memo'] if seen else '',
+                                 'dr': amount(x['dr']), 'cr': amount(x['cr']), 'balance': amount(x['balance'])})
+                ledgers[code] = {'opening': amount(L['opening']), 'lines': rows, 'closing': amount(L['closing'])}
+        tot = {'opening': amount(t['totals']['opening']), 'debit': amount(t['totals']['dr']),
+               'credit': amount(t['totals']['cr'])}
+        out['currencies'].append({'unit': unit, 'lines': lines, 'ledgers': ledgers, 'balanced': t['balanced'],
+                                  'totals': [tot.get(c['path']) for c in cols]})
     return out
 
 
@@ -727,10 +794,22 @@ def axes_of(v):
 ACTION_ELEMENTS = {'table': 'line', 'sheet': 'sheet'}
 
 
+def row_elements(v):
+    """THE ROWS OF A SHEET AS ELEMENTS (ratified 2026-10-13, with an action's inputs): a drawing whose sheets an action
+    sits on gives each verb of the law as an element — each statement of it a sheet shows, a button on its row, the
+    statement (`<bean>#<id>`) what the action acts on and what its inputs may be filled `from`."""
+    if v.get('archetype') not in ACTION_ELEMENTS or vm.CORE is None:
+        return []
+    verbs = vm.CORE.L.verbs
+    return sorted({a.get('element') for a in v.get('actions') or [] if isinstance(a, dict) and a.get('element') in verbs})
+
+
 def actions_of(key, v):
-    """(the actions the drawing declares, as vm.actions reads them, [problems]): each on the element its archetype gives."""
+    """(the actions the drawing declares, as vm.actions reads them, [problems]): each on the element its archetype gives,
+    or on a row of a verb its sheets show."""
     el = ACTION_ELEMENTS.get(v.get('archetype'))
-    got, probs = vm.actions(key, v, [{'id': el, 'pattern': 'action', 'bean': None, 'label': el}] if el else [])
+    got, probs = vm.actions(key, v, ([{'id': el, 'pattern': 'action', 'bean': None, 'label': el}] if el else []) +
+                            [{'id': r, 'pattern': 'action', 'bean': None, 'label': r} for r in row_elements(v)])
     notes = {(a.get('element'), a.get('tool')): a.get('note') for a in v.get('actions') or [] if isinstance(a, dict)}
     for a in got:                               # its words: the action's own note, the button a person presses
         if isinstance(notes.get((a['el'], a['tool'])), str):
@@ -739,6 +818,32 @@ def actions_of(key, v):
                    for x in v.get('actions') or []):
             a['confirm'] = ''                   # no question of its own: the page asks none in English
     return got, probs
+
+
+def input_choices(i, may):
+    """What an input asks a person to choose among (its `of`), as this reader may see it: a reading's members, each by
+    its title; a scheme's rows, each `<scheme>:<code>` (named in the reader's language by `codes`, as every code a page
+    holds is), a row others sit beneath a heading never chosen. None for an input that is not chosen."""
+    of = i.get('of')
+    if not isinstance(of, str):
+        return None
+    if of.startswith('scheme:'):
+        import knowledge as dmknowledge
+        sch = of[7:]
+        try:
+            K = dmknowledge.Knowledge(vm.ROOT)
+            rows = [r for r in K.rows(sch) if isinstance(r, dict)]
+            key = (K.decl.get(sch) or {}).get('key', 'code')
+        except Exception:                       # a scheme this host cannot read: nothing offered, nothing guessed
+            return []
+        parents = {str(r.get('parent')) for r in rows if r.get('parent')}
+        return [dict({'value': f"{sch}:{r.get(key)}", 'label': K.name(r) or str(r.get(key))},
+                     **({'disabled': True} if str(r.get(key)) in parents else {})) for r in rows if r.get(key)]
+    try:
+        members = vm.members(of)
+    except Exception:
+        return []
+    return [{'value': m, 'label': title_of(m)} for m in members if _bean(m) is not None and may('read', m)]
 
 
 def entry(key, v, levels, sheet_block):
@@ -776,6 +881,19 @@ def problems(key, v):
     if v.get('archetype') == 'timeline' and isinstance(v.get('span'), dict) and not vm.seconds(v['span']):
         errs.append("%s: a timeline's span is a length on time (`measure`, in a unit of duration): the repetitions are "
                     "walked within it" % key)
+    if v.get('archetype') == 'table':
+        given = [k for k in ('selection', 'series', 'chart') if v.get(k) is not None]
+        if len(given) > 1:
+            errs.append("%s: a table lists a reading's members, a series' positions or a chart's codes: one of them, not "
+                        "%s" % (key, ' and '.join(given)))
+        if v.get('chart') is not None:
+            odd = [c.get('path') for c in v.get('columns') or [] if isinstance(c, dict) and c.get('path') not in FIGURES]
+            if odd:
+                errs.append("%s: a table of a chart's column reads a figure of an account — one of %s — not %s"
+                            % (key, ', '.join(FIGURES), ', '.join(map(str, odd))))
+            if kk != 'bean':
+                errs.append("%s: a table of a chart draws the books of one being, a bean of the garden; it draws %s"
+                            % (key, vm.draws_label(v)))
     if v.get('archetype') == 'sheet' and kk != 'bean':
         errs.append("%s: a sheet draws one being, a bean of the garden; it draws %s" % (key, vm.draws_label(v)))
     errs += actions_of(key, v)[1]
@@ -1029,6 +1147,9 @@ def page(may, reader, held=None, keep=None, contact=None, records=None):
                     {a['bean'] for a in d.get('agreements') or []}
         elif v.get('archetype') == 'table':
             show |= {r['bean'] for r in d['rows']}
+            if d.get('chart'):                                       # a table of a chart: what its ledgers rest on
+                show |= {x['bean'] for c in d['currencies'] for L in c['ledgers'].values() for x in L['lines']
+                         if x['bean']}
         elif d.get('bean'):
             show.add(d['bean'])
         acts = actions_of(k, v)[0]
@@ -1055,8 +1176,9 @@ def page(may, reader, held=None, keep=None, contact=None, records=None):
     for bid in sorted(show | set(named)):
         s = sheet(bid, may, held, records)
         if s is not None:
-            s['actions'] = [{x: a[x] for x in ('drawing', 'el', 'tool', 'bean', 'confirm', 'note', 'inputs', 'reason')
-                             if x in a} for a in acting.get(bid, [])]
+            s['actions'] = [dict({x: a[x] for x in ('drawing', 'el', 'tool', 'bean', 'confirm', 'note', 'reason') if x in a},
+                                 inputs=[dict(i, choices=input_choices(i, may)) if i.get('of') else dict(i)
+                                         for i in a.get('inputs') or []]) for a in acting.get(bid, [])]
             if bid in named:
                 s['contact'] = {k: str(x) for k, x in named[bid].items() if isinstance(x, (str, int))}
                 s['title'] = str(named[bid]['name'])

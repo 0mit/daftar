@@ -135,7 +135,26 @@ def inputs():
         return {}
     with open(p, encoding='utf-8') as fh:
         got = json.load(fh)
-    return {str(k): str(v) for k, v in got.items()} if isinstance(got, dict) else {}
+    return {str(k): [str(x) for x in v] if isinstance(v, list) else str(v) for k, v in got.items()} \
+        if isinstance(got, dict) else {}       # an input given several times (`many`) a list of its words
+
+
+def file(sha):
+    """The path of a file a person gave a run (an input of type `file`): kept by the host off git, under its SHA-256, in
+    the garden's git directory (`daftar-inputs/<sha-256>`). Refused where none is kept here, or its bytes are not those."""
+    import hashlib
+    import re as _re
+    import subprocess
+    if not isinstance(sha, str) or not _re.fullmatch(r'[0-9a-f]{64}', sha):
+        raise Refused(f"{sha!r} is no file's SHA-256")
+    gd = subprocess.run(['git', 'rev-parse', '--absolute-git-dir'], capture_output=True, text=True, encoding='utf-8').stdout.strip()
+    path = os.path.join(gd, 'daftar-inputs', sha)
+    if not os.path.isfile(path):
+        raise Refused(f"no file {sha[:16]}… is kept on this host for the run")
+    with open(path, 'rb') as fh:
+        if hashlib.sha256(fh.read()).hexdigest() != sha:
+            raise Refused(f"the file kept as {sha[:16]}… is not the one given: its bytes changed")
+    return path
 
 
 def save(who, what, body):

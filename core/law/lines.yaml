@@ -657,6 +657,10 @@ types:
     pattern: "^[a-z]{2,8}(-[a-z]{3}){0,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-u((-ca(-[a-z0-9]{3,8})+)(-fw(-[a-z0-9]{3,8})+)?(-hc(-[a-z0-9]{3,8})+)?(-nu(-[a-z0-9]{3,8})+)?(-tz(-[a-z0-9]{3,8})+)?|(-fw(-[a-z0-9]{3,8})+)(-hc(-[a-z0-9]{3,8})+)?(-nu(-[a-z0-9]{3,8})+)?(-tz(-[a-z0-9]{3,8})+)?|(-hc(-[a-z0-9]{3,8})+)(-nu(-[a-z0-9]{3,8})+)?(-tz(-[a-z0-9]{3,8})+)?|(-nu(-[a-z0-9]{3,8})+)(-tz(-[a-z0-9]{3,8})+)?|(-tz(-[a-z0-9]{3,8})+)))?$"
     refusal: "must be a way of reading as BCP 47 writes it, in its canonical form: a language tag, then `-u-` and the Unicode keys a reader sets — `ca` (calendar), `fw` (first day of the week), `hc` (hour cycle), `nu` (digits), `tz` (zone) — in that order, each with its type: `fa-u-ca-persian-nu-arabext`"
     meaning: "a reader's way of reading, as BCP 47 (RFC 5646) writes a language tag and its Unicode extension (UTS #35) says the calendar, the first day of the week, the hour cycle, the digits and the zone a moment is shown in. Each key's type is one CLDR has (`seed/knowledge/cldr-bcp47.tsv`), which assets/view/lib/view_prefs.py checks where it writes and reads one"
+  - type: file
+    pattern: "^[0-9a-f]{64}$"
+    refusal: "must be a file's SHA-256, sixty-four lowercase hexadecimal digits: the host keeps the file under it"
+    meaning: "a FILE a person chose on their machine, given to an action: carried to the host and kept there off git, under its SHA-256 (`<git dir>/daftar-inputs/<sha-256>`, readable by its owner alone), which is the value the run is given and keeps; the tool reads the file by it (bin/walktool.py `file`). Its bytes are never in the ledger"
   - type: coding
     pattern: "^[a-z0-9][a-z0-9-]*:\\S+$"
     scheme_from: knowledge_schemes

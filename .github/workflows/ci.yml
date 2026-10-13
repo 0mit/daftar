@@ -150,12 +150,18 @@ jobs:
       - name: "view_code_names: a code of a scheme a page holds — an account a payment is booked to — drawn by its name in the scheme's own table, in the reader's language, its code beside it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_code_names.py
+      - name: "view_books: an entity's books as a table over a chart's codes — an account a line in the chart's order, its figures per currency, each account's ledger, debit before credit along the reader's line, each account by its name in the reader's language"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_books.py
       - name: "view_between_names: what went between gardens with every garden called by a name — this garden as the one read in, an untitled garden as another garden — and what went by its title, never an id"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_between_names.py
       - name: "view_actions: a run started from a page with what a person gives it — an action on a table's line starts a walk of the garden the host names, its inputs handed to the walk's tool, its plan shown, nothing changed until ratified"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_actions.py
+      - name: "view_action_inputs: an action's inputs as a page asks them — chosen of a reading or a scheme, several, filled from the row a button sits on, a day, a file kept off git under its SHA-256 — each held by the host to what was offered"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_action_inputs.py
       - name: "view_held_records: a record held off git, written from a page — a person's contact, a record of `details` read by the page's words, written into the store of the host that keeps it by the held bar, never into git"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_held_records.py

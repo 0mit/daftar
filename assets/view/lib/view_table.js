@@ -3,14 +3,21 @@
    line one the reader may read). Every cell is shown by the widget of what it holds — a day in the reader's calendar, an
    amount at its currency's places, a being by its title — never as the text a path happened to give, and each line
    opens its being's sheet. Its lines run down the page and its columns along the reader's line (`axes: { inline:
-   taxis, block: ordinal }`), so a right-to-left reader reads the first column at the right. A classic script beside
-   view_engraved.js, built only through safe.js. */
+   taxis, block: ordinal }`), so a right-to-left reader reads the first column at the right.
+   OR A CHART'S CODES (the drawing's `chart`, `view_engraved.py` `chart_table`): per currency, a line for each account of
+   the entity's books in the chart's order, each column a figure of it — its opening, debit, credit, balance — the totals
+   beneath, and the ledger of each account that posts, opened from its line, each ledger line with its running balance
+   and opening the sheet of what it rests on. Debit before credit as the page lists its columns, along the reader's line:
+   a right-to-left reader reads the debit at the right, as their books are written. Every account by its name in the
+   reader's language (the page's `codes`), its code beside it in its title. A classic script beside view_engraved.js,
+   built only through safe.js. */
 (function (root) {
   'use strict';
   var A = root.daftarArchetypes = root.daftarArchetypes || {};
   var ANY = {shape: ['being', 'position', 'text']};
 
   A.table = function (el, data, t) {
+    if (data.chart) { chart(el, data, t); return; }
     var h = t.h, w = t.w, cols = data.columns || [], rows = data.rows || [];
     if (!rows.length) {
       t.mount(el, h`<p class="eg-empty">${t.say('table-empty')}</p>${(data.notes || []).map(function (n) { return h`<p class="eg-partial">${w.text.show(n)}</p>`; })}`);
@@ -32,4 +39,58 @@
     })}</tbody></table></div>${(data.notes || []).map(function (n) { return h`<p class="eg-partial">${w.text.show(n)}</p>`; })}`);
     t.wire(el);
   };
+
+  // A TABLE OF A CHART'S CODES: the books of one being, an account a line, its figures read by the accounting asset
+  function chart(el, data, t) {
+    var h = t.h, w = t.w, cols = data.columns || [], cur = data.currencies || [];
+    var notes = (data.notes || []).map(function (n) { return h`<p class="eg-partial">${w.text.show(n)}</p>`; });
+    if (!cur.length) {
+      t.mount(el, h`<p class="eg-empty">${t.say('chart-empty')}</p>${notes}`);
+      return;
+    }
+    function money(x, unit) {
+      return x && x !== '0' ? root.daftarEngraved.show(t, {count: x, unit: unit}, {}) : h`<span class="w-none">—</span>`;
+    }
+    function account(code, name) {
+      var c = (t.E.codes || {})[code];
+      return h`<span class="eg-code" title="${code}${c && c.by ? ' · ' + c.by : ''}">${w.text.show(c ? c.name : name)}</span>`;
+    }
+    function figure(col, x, line, unit) {
+      if (col.path === 'name') return account(line.code, line.name);
+      if (col.path === 'code') return h`<bdi dir="ltr" class="eg-code">${w.text.show(line.code.split(':').slice(1).join(':'))}</bdi>`;
+      if (col.path === 'element') return w.text.show(x || '');
+      return money(x, unit);
+    }
+    // the first column names the account where it is its name or code; else the line opens with a cell of its own
+    var named = cols.length && (cols[0].path === 'name' || cols[0].path === 'code');
+    var period = data.start ? t.say('chart-period', {from: data.start, to: data.to}) : t.say('chart-through', {to: data.to});
+    t.mount(el, h`<p class="eg-chart-period">${w.text.show(period)}</p>${cur.map(function (c) {
+      var head = h`<tr>${named ? '' : h`<th scope="col"></th>`}${cols.map(function (col) {
+        return h`<th scope="col" data-path="${col.path}">${w.text.show(col.label)}</th>`; })}</tr>`;
+      var lines = c.lines.map(function (line) {
+        var label = named && cols[0].path === 'code' ? figure(cols[0], null, line, c.unit) : account(line.code, line.name);
+        var opener = h`<th scope="row">${line.posts ? h`<button type="button" class="eg-link" data-ledger="${line.code}" data-unit="${c.unit}">${label}</button>` : label}</th>`;
+        return h`<tr data-depth="${String(Math.min(line.depth, 4))}" data-code="${line.code}" data-posts="${line.posts ? 'yes' : 'no'}">${named ? '' : opener}${cols.map(function (col, i) {
+          return named && i === 0 ? opener : h`<td>${figure(col, line.cells[i], line, c.unit)}</td>`;
+        })}</tr>`;
+      });
+      var foot = h`<tr><th scope="row">${t.say('chart-total')}</th>${cols.map(function (col, i) {
+        return named && i === 0 ? '' : h`<td>${c.totals[i] != null ? money(c.totals[i], c.unit) : ''}</td>`; })}</tr>`;
+      var ledgers = c.lines.filter(function (line) { return line.posts && c.ledgers[line.code]; }).map(function (line) {
+        var L = c.ledgers[line.code];
+        return h`<details class="eg-ledger" data-ledger="${line.code}" data-unit="${c.unit}"><summary>${t.say('chart-ledger')}: ${account(line.code, line.name)}</summary><table class="eg-table"><thead><tr><th scope="col">${t.say('chart-day')}</th><th scope="col">${t.say('chart-what')}</th><th scope="col">${t.say('chart-debit')}</th><th scope="col">${t.say('chart-credit')}</th><th scope="col">${t.say('chart-balance')}</th></tr></thead><tbody><tr><td></td><td>${t.say('chart-opening')}</td><td></td><td></td><td>${money(L.opening, c.unit)}</td></tr>${L.lines.map(function (x) {
+          return h`<tr><td>${x.day ? w.moment.show(x.day, {style: 'long'}) : ''}</td><td>${x.bean ? w.being.show(x.bean, x.title || x.bean, {action: 'open'}) : h`<span class="w-none">${t.say('chart-hidden')}</span>`}${x.memo ? h` <span class="eg-memo">${w.text.show(x.memo)}</span>` : ''}</td><td>${money(x.dr, c.unit)}</td><td>${money(x.cr, c.unit)}</td><td>${money(x.balance, c.unit)}</td></tr>`;
+        })}</tbody></table></details>`;
+      });
+      return h`<section class="eg-chart" data-unit="${c.unit}"><h3 class="eg-chart-unit"><bdi dir="ltr">${c.unit}</bdi></h3><div class="eg-table-wrap"><table class="eg-table eg-chart-table"><thead>${head}</thead><tbody>${lines}</tbody><tfoot>${foot}</tfoot></table></div>${c.balanced ? '' : h`<p class="eg-partial">${t.say('chart-unbalanced')}</p>`}${ledgers}</section>`;
+    })}${notes}`);
+    // an account that posts opens its ledger below the table
+    el.querySelectorAll('button[data-ledger]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var d = el.querySelector('details[data-ledger="' + b.getAttribute('data-ledger') + '"][data-unit="' + b.getAttribute('data-unit') + '"]');
+        if (d) { d.open = true; if (d.scrollIntoView) d.scrollIntoView({block: 'nearest'}); }
+      });
+    });
+    t.wire(el);
+  }
 })(typeof window !== 'undefined' ? window : this);

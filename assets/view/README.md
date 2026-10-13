@@ -251,6 +251,22 @@ host's to say) and starts it (`Host.start`: bin/act.py `--start`, as the viewer'
 own capture and given to the walk's tool at each step, bin/walktool.py `inputs`); the plan is shown, and nothing changes
 until a person ratifies it (`Host.decide`: `--ratify`, `--decline`). A served page asks both through `/api/action`.
 
+**An action's inputs, as a page asks them** (ratified 2026-10-13). Besides a table's `line` and a sheet's `sheet`, a
+drawing whose sheets an action sits on gives each verb of the law as an element: each statement of it a sheet shows,
+a button on its row, the statement (`<bean>#<id>`) what the action acts on. An input may be:
+- **chosen** (`of`): among the members of a reading the page declares, each by its title, or among the rows of a
+  scheme the garden knows (`scheme:<name>`), each `<scheme>:<code>` named in the reader's language as every code a page
+  holds is (`codes`) — a row others sit beneath a heading, shown and never chosen;
+- **several** (`many: "true"`): a list — a check box each, for a choice;
+- **filled from the element** (`from: self`, or a path into it): never asked; the host fills it, whatever the page sent;
+- **a day** (`type: position`), read in the reader's calendar and digits; **a file** (`type: file`), chosen on the
+  reader's machine and carried to the host, which keeps it off git under its SHA-256 (`<git dir>/daftar-inputs/`,
+  readable by its owner alone, at most `file_bound` bytes, 16 MiB unless the host sets it) and gives the run that
+  SHA-256; the walk's tool reads the file by it (bin/walktool.py `file`).
+The host holds each value to what the page offered this viewer: a choice not offered, a heading, a row of another verb
+or one the bean has not, a file over its bound, each refused before anything starts. An input given several times is
+a list at the terminal too (bin/act.py `--input name=a --input name=b`), and `W.inputs()` gives it as one.
+
 **A code by its name.** A value a page holds as `<scheme>:<code>`, of a scheme the garden knows (the law's, or its own
 `schemes`) — an account a payment is booked to, a code a being is classified by — is drawn by its name in the scheme's
 own table, read by the one reader (`bin/knowledge.py`): its label in the reader's language where the table carries one
@@ -266,6 +282,17 @@ none. A Save sends `{op: held, key, entry}`: the one write path writes a new rec
 it, swaps the bean's pointer for it (a new contact a line of the body, a new record a label of `details`), journals
 `- held: <bean> <key|details.<label>> added`, and takes the old record out once it is saved. A field given empty is
 taken out; a record is never emptied (it is erased for its subject); one another host keeps is written there.
+
+**A table of a chart's codes.** A `table` drawing that names a `chart` (a scheme naming the accounting profile's form
+`chart`) lists that chart's codes in its order, an account a line, for the books of the being it draws (`of:
+[<entity>]`), as the profile's asset reads them (`view_engraved.chart_table`, the asset's `lib/books_read.py`). Each
+column reads a figure of the account — `code`, `name`, `element`, `opening` (before the drawing's `span`), `debit`,
+`credit`, `balance` (in its element's sense) — per currency, with the totals beneath, and an account that posts opens its
+ledger below the table, each line with its running balance. Its columns run along the reader's line as the page lists
+them, so a page listing debit before credit has a right-to-left reader read the debit at the right; each account is drawn
+by its name in the reader's language (the chart's `name_<lang>`, or its `labels`), its code beside it. Only a reader who
+may read the being is drawn its books, and a ledger's line names the bean it rests on only where that reader may read it.
+A table lists a reading's members, a series' positions or a chart's codes: one of them.
 
 **Where they are drawn.** The renderers — `lib/view_engraved.js`, `view_queue.js`, `view_timeline.js`,
 `view_flows.js`, `view_sheet.js` — are classic scripts, as `widgets/direction.js` is, built only through `safe.js`

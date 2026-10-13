@@ -4,7 +4,7 @@
     python3 bin/act.py <bean> <course>                  # the engine's steps, until a person's step, an end or an exit
     python3 bin/act.py <bean> <course> --ratify <who>   # a person ratifies the plan they were shown
     python3 bin/act.py <bean> <course> --decline <who>  # ...or declines it: the run is refused, nothing changed
-    python3 bin/act.py <bean> --start <walk> --by <who> [--input <name>=<value>]...
+    python3 bin/act.py <bean> --start <walk> --by <who> [--input <name>=<value>]...   (a name given twice: a list)
                                                         # a run started, with what a person gave it: its course placed
                                                         # in the bean, its inputs kept, the engine run to its plan
 
@@ -446,9 +446,11 @@ def start(bean, walk, who, given):
         raise Refused(f"{walk!r} is no walk of an action here (a `procedure` whose steps begin at `plan`)")
     if not _NAME.match(str(who or '')):
         raise Refused("--by names who starts it: the id of their bean")
-    for name, words in given.items():
-        if not _NAME.match(name) or not isinstance(words, str) or _CTRL.search(words) or len(words) > 2000:
-            raise Refused(f"an input is a name (one kebab word) and one line of words: {name!r}")
+    for name, words in given.items():           # one line of words, or a list of them (an input given several times)
+        each = words if isinstance(words, list) else [words]
+        if not _NAME.match(name) or not each or len(each) > 100 or \
+                any(not isinstance(x, str) or _CTRL.search(x) or len(x) > 2000 for x in each):
+            raise Refused(f"an input is a name (one kebab word) and one line of words, or a list of them: {name!r}")
     ans = dmpass.may(who, f"act:{walk}", bean, root=ROOT)
     if not ans.granted:
         raise Refused(f"{who} may not act on {bean} by {walk}: {ans.why}")
@@ -476,10 +478,13 @@ def main(argv):
             if len(argv) < 3 or '--by' not in argv or argv.index('--by') + 1 >= len(argv):
                 raise Refused("--start <walk> --by <who> [--input <name>=<value>]...")
             given = {}
-            for i, a in enumerate(argv):
+            for i, a in enumerate(argv):            # an input named twice or more is a list of its values, in order
                 if a == '--input' and i + 1 < len(argv) and '=' in argv[i + 1]:
                     k, v = argv[i + 1].split('=', 1)
-                    given[k] = v
+                    if k in given:
+                        given[k] = (given[k] if isinstance(given[k], list) else [given[k]]) + [v]
+                    else:
+                        given[k] = v
             at, why, course = start(argv[0], argv[2], argv[argv.index('--by') + 1], given)
         except Refused as e:
             print(f"act: NOT STARTED: {e}", file=sys.stderr)
