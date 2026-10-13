@@ -762,11 +762,51 @@ def names(lang):
 
 
 def localize(p, lang):
-    """A page's readings for a reader of `lang`: the widgets' language, and the law's words in it (`names`)."""
+    """A page's readings for a reader of `lang`: the widgets' language, the law's words in it (`names`), and each code
+    of a scheme the page holds by its label in it (`codes`)."""
     if isinstance(lang, str) and lang:
         p['settings']['garden']['lang'] = lang
         p['names'] = names(lang)
+        p['codes'] = codes_of(p, lang.split('-')[0])
     return p
+
+
+_CODE = re.compile(r'^([a-z][a-z0-9-]*):([^\s:]+)$')
+
+
+def codes_of(p, lang=None):
+    """{`<scheme>:<code>`: {name, by?}} — each code of a scheme the garden knows (the law's, or its own `schemes`) that
+    the page's readings hold, by its name in the scheme's own table, read by the one reader (bin/knowledge.py): its
+    label in `lang` where the table carries one (`by`, the words its publisher asks printed beside it), else its name.
+    A code no table names here is left as it is written."""
+    import knowledge as dmknowledge
+    try:
+        K = dmknowledge.Knowledge(vm.ROOT)
+    except Exception:                           # no law to read schemes from here: nothing named, nothing guessed
+        return {}
+    out, seen = {}, set()
+
+    def walk(x):
+        if isinstance(x, dict):
+            for y in x.values():
+                walk(y)
+        elif isinstance(x, list):
+            for y in x:
+                walk(y)
+        elif isinstance(x, str) and x not in seen:
+            seen.add(x)
+            m = _CODE.match(x)
+            if not m or m.group(1) not in K.schemes:
+                return
+            try:
+                name, by = K.label(m.group(1), m.group(2), lang) if lang else (K.name(K.row(m.group(1), m.group(2))), None)
+            except (KeyError, OSError, ValueError):
+                return
+            if name:
+                out[x] = dict({'name': str(name)}, **({'by': str(by)} if by else {}))
+    walk(p.get('drawings'))
+    walk(p.get('sheets'))
+    return out
 
 
 def settings():
@@ -894,7 +934,7 @@ def page(may, reader, held=None, keep=None, contact=None):
     """For one reader: each engraved drawing's reading (of those `keep` names, where it names some: the drawings the
     reader is sent), the sheet of every being one of them shows, an empty sheet of each kind a drawing makes, the beings
     a role may name, and the widgets' settings."""
-    out = {'drawings': {}, 'sheets': {}, 'blank': {}, 'settings': settings(), 'reader': reader}
+    out = {'drawings': {}, 'sheets': {}, 'blank': {}, 'settings': settings(), 'reader': reader, 'codes': {}}
     show = set()
     for k, v in vm.views_raw():
         if not engraved(v) or (keep is not None and k not in keep):
@@ -941,6 +981,7 @@ def page(may, reader, held=None, keep=None, contact=None):
                           **({'opaque': True} if b.kind == 'person' and bid not in named and title_of(bid) == bid else {}))
                      for bid, b in sorted(vm.CORE.G.beans.items())
                      if not b.unread and os.path.basename(os.path.dirname(b.path or '')) == 'beans' and may('read', bid)]
+    out['codes'] = codes_of(out)                   # each code of a scheme by its name: the reader's language, localize
     return out
 
 
