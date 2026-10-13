@@ -64,3 +64,31 @@ closing: the commit is. A garden that closes every month reads one past reading 
 
 `python3 bin/reckon.py <bean>#<reading>` reads the step `books` itself: each account's net charge through the day, per
 currency.
+
+## The operations, each a walk
+
+What changes the books is written by a person, through a walk whose plan is the write itself (bin/walktool.py
+`plan_writes`): what it would add and take out, shown, ratified, written as shown in one save, read back. The walks are
+the garden's own, written once by
+
+    python3 assets/accounting/bin/books.py setup --by <who>      # then read them, and save them (bin/save.py)
+
+which asks first for the kind `procedure` in VOCAB.md and a host bean naming this machine (the tool runs on it). A run
+is started on a bean with what the person gives it, at the terminal or from a page's action:
+
+    python3 bin/act.py <bean> --start walk-books-<operation> --by <who> --input <name>=<words> …
+    python3 bin/act.py <bean> <course> --ratify <who>
+
+| Walk | Inputs | Writes |
+|---|---|---|
+| `walk-books-book` | `of` (a payment), `account` (a code, or an account's name), `analytic`, `means`, `note` | the booking, in the entity's books bean; one made before on that side is replaced while the payment's period is open, and moved by a booking of it on today once the period is closed |
+| `walk-books-reverse` | `of` (a payment or a booking), `day` (today where none), `reason` | the move in the reverse sense from the day, after the last close |
+| `walk-books-match` | `line` (read from a bank's file), `payment` (the one said) | a `match`: one movement, counted once; refused where the amounts differ or the line is booked |
+| `walk-books-close` | `day` | the books' reading through the day and its `pin` at the commit the run was asked at |
+| `walk-books-entry` | `day`, `memo`, `unit`, `lines` (`<account> dr\|cr <amount>`, joined by `;`; an account by its code or name, or a party), `of` | a journal entry written whole and balanced, resting on `of` or on the books' `open` (the first entry writes it); corrected by its reverse and a new entry, never edited |
+| `walk-books-import` | `file`, `format` (camt.053, camt.054, ofx, mt940, csv), `means`, `mapping` (a CSV's), `statement` | a statement bean: its lines payments read through the means, refused whole where a line is not read, where opening and lines do not make its closing, or where the file was imported before |
+
+Each statement file is read by `lib/statements.py`, one adapter a format and none privileged; a bank's CSV by a mapping
+the garden keeps (`delimiter`, `decimal`, `day_format`, `columns: { day, amount | debit + credit, text, ref, party,
+currency, value_day, code }`). An XML file that declares a document type is refused before it is parsed: a statement is
+data.
