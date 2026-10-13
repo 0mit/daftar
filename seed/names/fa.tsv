@@ -156,7 +156,7 @@ verbs:route	مسیریابی	مسیر (masir: a way) + یافتن: finding the w
 verbs:translate	ترجمهٔ نشانی	ترجمه (tarjome: rendering) + نشانی (neshāni: an address): an address rewritten as traffic crosses	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 verbs:filter	پالایش	پالودن (pāludan: to strain, to purify)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 verbs:book	ثبت حسابداری	ثبت (sabt: writing down) + حسابداری (hesābdāri: book-keeping): an amount booked to an account	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
-verbs:match	تطبیق	ط-ب-ق (Arabic: to fit one upon another): تطبیق صورتحساب بانک — a bank's line and the payment said, one movement counted once	proposed	agent (claude opus-5.5), by hand
+verbs:match	تطبیق	ط-ب-ق (Arabic: to fit one upon another): تطبیق صورتحساب بانک — a bank's line and the payment said, one movement counted once	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-13)
 verbs:renew	تمدید	م-د-د (to stretch): extending	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 verbs:mark	نشانه‌گذاری	نشانه (neshāne: a sign) + گذاشتن (to set): a boundary set by a mark	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 verbs:produce	پدیدآوردن	پدید (padid: come forth) + آوردن (to bring): to bring into being — beside پدید آمدن (come)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
@@ -173,7 +173,7 @@ qualifiers:placed	جای‌گیری	جا (jā: a place) + گرفتن: taking a p
 qualifiers:presence	یافت‌شدن	یافتن (yāftan: to find): found, or looked for and not found	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 qualifiers:reading	خوانش	خواندن (khāndan: to read): a reading	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 qualifiers:result	نتیجه	ن-ت-ج (to bring forth): what came of it	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
-qualifiers:sense	جهت	ج-ه-ت (Arabic: a side, the way one faces): along a move's direction, or against it	proposed	agent (claude opus-5.5), by hand
+qualifiers:sense	جهت	ج-ه-ت (Arabic: a side, the way one faces): along a move's direction, or against it	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-13)
 qualifiers:series	سری	the trade's word for a series	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 qualifiers:settles	تسویه	س-و-ی (to make level): settling	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 qualifiers:share	سهم	س-ه-م (an arrow, a lot): one's portion	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
