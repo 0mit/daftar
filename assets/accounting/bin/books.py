@@ -8,6 +8,8 @@
     python3 assets/accounting/bin/books.py balance  --unit <currency> [--at <day>] [--json]
     python3 assets/accounting/bin/books.py open     [--json]
     python3 assets/accounting/bin/books.py closes   [--json]
+    python3 assets/accounting/bin/books.py setup --by <who> [--tool <bean>]     # the walks, written into the garden
+    python3 assets/accounting/bin/books.py <step> <bean> <course>               # a walk's step, run by bin/act.py
 
 Each takes `--entity <bean>` (whose books; the gardener's by default), `--chart <scheme>` (the garden's one chart by
 default) and `--today <day>` (the day clauses have fallen due by; today by default).
@@ -20,6 +22,7 @@ currency named), with the reason.
 import datetime
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path[:0] = [os.path.join(os.path.dirname(HERE), 'lib'), ROOT, os.path.join(ROOT, 'bin')]
 import books_read as br  # noqa: E402
 import units as dmunits  # noqa: E402
+import walktool as W  # noqa: E402
 
 
 def _arg(a, flag, default=None):
@@ -90,10 +94,133 @@ def text(cmd, out):
             yield f"through {x['day']}  at {x['commit'][:12]}  {e(x['pin'])}"
 
 
+# ------------------------------------------------------------------------------------------------ the walks
+WALK = 'walk-books-'            # each operation a walk of the garden, `walk-books-<operation>` (written by `setup`)
+
+
+def _run(bean, course, show):
+    """The write the run's operation plans, from its inputs (bin/walktool.py `inputs`), read against the books now."""
+    import books_walks as bw
+    walk, _steps = W.course(bean, course)
+    op = walk[len(WALK):] if walk.startswith(WALK) else None
+    if op not in bw.PLANS:
+        raise W.Refused(f"{walk} is no walk of the books: walk-books-<{'|'.join(bw.PLANS)}>")
+    I = W.inputs() if hasattr(W, 'inputs') else {}
+    try:
+        B = br.read(ROOT, entity=I.get('entity'), chart=I.get('chart'))
+    except ValueError as e:
+        raise W.Refused(str(e))
+    write = bw.PLANS[op](B, I, datetime.date.today().toordinal(), (bean, course))
+    return W.plan_writes(write) if show else write
+
+
+def plan(bean, course):
+    _run(bean, course, True)
+
+
+def check(bean, course):
+    """What the plan said holds still: the inputs read against the books as they are now, refused as at plan time."""
+    import contextlib
+    import io
+    with contextlib.redirect_stdout(io.StringIO()):
+        _run(bean, course, False)
+
+
+SETUP = """---
+bean: {walk}
+kind: procedure
+title: "{walk} — {title}"
+statements:
+  - say:  {{ by: {who}, at: now }}
+  - use:  {{ by: self, of: {tool} }}
+  - step: {{ id: plan, as: "what it would write, changing nothing", by: engine, to: [show] }}
+  - step: {{ id: show, as: "the plan, shown", by: engine, to: [check] }}
+  - step: {{ id: check, as: "the books allow it still", by: engine, to: [ratify] }}
+  - step: {{ id: ratify, as: "the bookkeeper ratifies it", by: ratifier, to: [apply, show] }}
+  - step: {{ id: apply, as: "written, as shown", by: engine, to: [verify] }}
+  - step: {{ id: verify, as: "read back", by: engine, to: [done] }}
+  - step: {{ id: done, as: "{done}", walk: {{ final: "true" }} }}
+  - step: {{ id: refused, as: "nothing was written", walk: {{ exit: "true", reasons: [cannot-plan, check-failed, declined] }} }}
+  - step: {{ id: rolled-back, as: "what was written taken out", walk: {{ exit: "true", reasons: [apply-failed, verify-mismatch] }} }}
+---
+{body}
+"""
+OPS = {'book': ('a payment booked where it belongs', 'booked',
+                'A payment booked to an account: `of`, `account`, `analytic`, `means`, `note`.'),
+       'reverse': ('a move booked in the reverse sense', 'reversed',
+                   'A payment or a booking reversed from a day: `of`, `day`, `reason`.'),
+       'match': ('a line and a payment, one movement', 'matched',
+                 "A bank's line and the payment said, counted once: `line`, `payment`."),
+       'close': ('the books closed through a day', 'closed',
+                 "The books' reading through a day, pinned at a commit: `day`."),
+       'entry': ('a journal entry, written whole', 'written',
+                 'What no payment says, balanced: `day`, `memo`, `unit`, `lines` (`<account> dr|cr <amount>; …`), `of`.'),
+       'import': ("a bank's statement read into the garden", 'imported',
+                  "A statement file read into a bean of its lines: `file`, `format`, `means`, `mapping`, `statement`.")}
+
+
+def setup(argv):
+    """`setup --by <who> [--tool <bean>]`: the books' walks and their tool written into this garden as its own — each a
+    bean of the garden's kind `procedure` using the tool, a `program` at this host's copy of this file — written, not
+    saved: the gardener reads them and saves them (bin/save.py), a RULE-CHANGE where VOCAB.md must take a row first."""
+    import platform                     # this machine's name, as bin/where.py reads it; no network is opened
+    who = _arg(argv, '--by')
+    tool = _arg(argv, '--tool', 'books-tool')
+    if not who:
+        print("books: setup --by <who>: the person who writes the walks", file=sys.stderr)
+        return 2
+    from core import engine
+    G = engine.Garden.read(ROOT)
+    missing = []
+    vocab = open(os.path.join(ROOT, 'VOCAB.md'), encoding='utf-8').read() if os.path.isfile(
+        os.path.join(ROOT, 'VOCAB.md')) else ''
+    if not re.search(r'kind:\s*procedure\b', vocab):
+        missing.append('kinds: - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }')
+    try:
+        host = W.this_host()
+    except W.Refused as e:
+        missing.append(f"a host bean naming this machine ({platform.node()}): {e}")
+        host = None
+    if missing:
+        print("books: setup needs, first:\n  " + '\n  '.join(missing), file=sys.stderr)
+        return 2
+    wrote = []
+    if tool not in G.beans:
+        path = os.path.join(ROOT, 'beans', f'{tool}.md')
+        here = os.path.abspath(os.path.join(HERE, 'books.py'))
+        hostname = platform.node()
+        with open(path, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(f'---\nbean: {tool}\nkind: program\ntitle: "{tool} — the books\' tool"\nstatements:\n'
+                     f'  - make: {{ by: {who}, at: now }}\n'
+                     f'  - be: {{ by: self, at: "{hostname}:{here}", as: location }}\n---\n'
+                     f'The accounting profile\'s tool, as this garden runs it on {host}: each walk of the books runs '
+                     f'its steps.\n')
+        wrote.append(tool)
+    for op, (title, done, body) in OPS.items():
+        walk = WALK + op
+        if walk in G.beans:
+            continue
+        os.makedirs(os.path.join(ROOT, 'mappings'), exist_ok=True)
+        with open(os.path.join(ROOT, 'mappings', f'{walk}.md'), 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(SETUP.format(walk=walk, title=title, who=who, tool=tool, done=done, body=body))
+        wrote.append(walk)
+    if not wrote:
+        print("books: the walks and their tool are this garden's already")
+        return 0
+    print("written, not saved: " + ', '.join(wrote) + "\nread them, then save them:\n  python3 bin/save.py "
+          f"{who} \"the books' walks\" --body \"- action: wrote " + ', '.join(f'[[{b}]]' for b in wrote) + '"')
+    return 0
+
+
 def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         print(__doc__)
         return 0
+    if argv[0] in ('plan', 'check', 'apply', 'verify', 'restore'):
+        return W.main('books', {'plan': plan, 'check': check, 'apply': W.apply_writes, 'verify': W.verify_writes,
+                                'restore': W.restore_writes}, argv=argv)
+    if argv[0] == 'setup':
+        return setup(argv[1:])
     cmd, a = argv[0], argv[1:]
     if cmd not in ('vouchers', 'trial', 'ledger', 'pl', 'balance', 'open', 'closes'):
         print(f"books: no reading {cmd!r} — one of vouchers, trial, ledger, pl, balance, open, closes", file=sys.stderr)

@@ -277,7 +277,7 @@ class Law:
         `profile` grants only where the garden takes the profile; its vacancies beside the law's own."""
         self.profiles = {str(p['profile']): p for p in listed(data.get('profiles')) if isinstance(p, dict)}
         keys = {'lenses': 'lens', 'archetypes': 'archetype', 'planes': 'plane', 'orientations': 'order',
-                'elements': 'element', 'account_roles': 'role'}
+                'elements': 'element', 'account_roles': 'role', 'date_styles': 'style', 'currency_displays': 'display'}
         for t, key in keys.items():
             rows = [r for r in listed(data.get(t)) if isinstance(r, dict)]
             self.profile_tables[t] = rows

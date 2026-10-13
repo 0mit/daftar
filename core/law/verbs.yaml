@@ -359,10 +359,10 @@ verbs:
     replaces: [produces, produced_by]
     home: core
   - verb: draw
-    meaning: "a page draws: each drawing is a `draw` of the being or the mapping it draws, holding its form (`drawing`, the live values that sit on it among it), and the page a `draw` of its drawings, in the order it shows them, holding the page's own (`page`)"
+    meaning: "a page draws: each drawing is a `draw` of the being or the mapping it draws, holding its form (`drawing`, the live values that sit on it among it), and the page a `draw` of its drawings, in the order it shows them, holding the page's own (`page`); and a reader's way of reading, written to be kept or carried, a `draw` of the reader by the bean that holds it (`preferences`)"
     roles: { by: { shape: being }, of: { shape: [being, statement], many: true } }
-    qualifiers: { page: { shape: form, form: page }, drawing: { shape: form, form: drawing } }
-    choice: { one_of: [page, drawing] }
+    qualifiers: { page: { shape: form, form: page }, drawing: { shape: form, form: drawing }, preferences: { shape: form, form: reader_preferences } }
+    choice: { one_of: [page, drawing, preferences] }
     required: [by, of]
     replaces: [view, views, view_bindings, view_monitors]
     home: view

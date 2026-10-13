@@ -79,6 +79,7 @@ parts, changes).
    python3 test/core_crosswalks.py
    python3 test/core_inforce.py
    python3 test/books.py
+   python3 test/books_walks.py
    python3 test/mailbox.py
    python3 test/layers.py
    python3 test/act.py
@@ -103,6 +104,7 @@ parts, changes).
    python3 test/names.py
    python3 test/view_sheet_words.py
    python3 test/view_reader_prefs.py
+   python3 test/view_prefs_bean.py
    python3 test/catalogue.py
    python3 test/garden.py
    reuse lint

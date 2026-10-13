@@ -484,6 +484,16 @@ the garden. The page reads the tag with `Intl.Locale`; the host reads it by RFC 
 showing each choice; a Save draws the page again in place, and a day the reader types is read in the calendar and
 digits they chose.
 
+**A way of reading, kept or carried as a bean.** The host's own file stays its source, and a bean of it is a file a
+person keeps or carries to another machine: a `document` whose `draw` of the reader holds the view profile's form
+`reader_preferences` (`locale`, a `locale_tag`; `date`, a row of `date_styles`; `currency`, a row of
+`currency_displays`; and `garden`, the garden's id where a host keeps them garden by garden). `lib/view_prefs.py
+export --config <host file> --user <account> [--garden <root>] [--out <bean>]` writes it; `import <bean> --config <host
+file> [--user <account>]` reads it back into the account whose bean is its reader — that account's three keys made what
+the bean says, nothing else of the file touched, nothing of it printed. Both ways lose nothing: preferences → bean →
+preferences, and bean → preferences → bean, are each the same. A garden holds such a bean only where a person puts it
+there, and its gate judges the form then (test/view_prefs_bean.py).
+
 **Exact on the wire.** A number travels as its written form, or as the exact fraction `n/d` when it was read rather
 than written, never as a JSON float; a widget never rounds a value it takes in.
 

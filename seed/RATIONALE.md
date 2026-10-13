@@ -294,6 +294,16 @@ history that the material was kept out of.
 A LANGUAGE AS THE WORLD ALREADY WRITES ONE (24.0). BCP 47 is the form every other system that names a language uses;
 the pattern takes its language, script and region subtags, which is what a garden's words have needed.
 
+## core/law/lines.yaml: types[locale_tag]
+
+A WAY OF READING, AS THE WORLD ALREADY WRITES ONE (2026-10-13, ratified by the operator). A reader's calendar, digits,
+hour cycle, first day of the week and zone are what BCP 47's Unicode extension says (UTS #35: `-u-ca-…-nu-…`), and every
+browser reads them so (Intl.Locale); assets/view/lib/view_prefs.py kept them as one such tag from the start. The type
+holds the tag in its canonical form, the one view_prefs writes — the language tag, then the keys a reader sets, in
+order — so a tag is written one way, and two readers' equal preferences are equal text. Its pattern is the grammar;
+whether each key's type is one CLDR has is the tool's to judge (seed/knowledge/cldr-bcp47.tsv), as a unit's existence
+is the units table's. Beside `language_tag`, the language alone, which a garden's words still need.
+
 ## core/law/measures.yaml: uncertainty_form
 
 (std-vocab 32: `uncertainty_form`)
@@ -5676,6 +5686,31 @@ them (§4.2): asset, liability, equity, income, expense. Taking them as rows of 
 scheme a garden keeps, makes no jurisdiction's chart the law's. Each element is read in a sense, as each order of the
 view is: an asset or an expense holds what arrived at it, and a liability, equity or income what left it, so a balance
 is shown as a magnitude in its own sense and no sign is stored.
+
+## core/law/profiles.yaml: date_styles
+
+HOW A DAY IS WRITTEN FOR A READER, IN INTL'S OWN WORDS (2026-10-13): short, medium, long, full — the styles every browser
+writes a day in (`Intl.DateTimeFormat` `dateStyle`), the words view_prefs keeps. Its own table, so the form below takes a
+row of it and the gate refuses another word by name.
+
+## core/law/profiles.yaml: currency_displays
+
+HOW A CURRENCY IS NAMED FOR A READER, IN INTL'S OWN WORDS (2026-10-13): symbol, narrowSymbol, code, name (`Intl.NumberFormat`
+`currencyDisplay`), the words view_prefs keeps.
+
+## core/law/profiles.yaml: forms.reader_preferences
+
+A READER'S WAY OF READING, KEPT OR CARRIED AS A BEAN (2026-10-13, ratified by the operator: "a standard way to digest
+them as bean for backup and transfer purposes, two way transformability"). A reader's preferences are kept with their
+account on the host they read on, never in a garden: a way of reading is no fact of the garden. But a person backs up
+what they set, and carries it to the next machine, and that wants one form any tool and any gate can judge — not a
+convention of one tool kept in `details`, which no gate checks. So the view profile says it: its tables `date_styles`
+and `currency_displays` are Intl's own words for how a day is written and a currency named (the ones view_prefs keeps),
+and its form `reader_preferences` holds the tag (`locale_tag`), the day's style, the currency's naming and, where a host
+keeps them garden by garden, the garden's id. A bean holds the form as the view's verb holds its other forms: a `draw`
+of the reader by the bean (`preferences`), as a page is a `draw` of its drawings — a bean's header is closed (a fact is
+a statement), so the form rides on a statement, never on a key of the header. The host's own file stays the source:
+`view_prefs.py export` writes the bean from it, `import` reads one back into it, each losing nothing.
 
 ## core/law/profiles.yaml: account_roles
 
