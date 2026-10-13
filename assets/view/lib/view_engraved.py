@@ -794,10 +794,22 @@ def axes_of(v):
 ACTION_ELEMENTS = {'table': 'line', 'sheet': 'sheet'}
 
 
+def row_elements(v):
+    """THE ROWS OF A SHEET AS ELEMENTS (ratified 2026-10-13, with an action's inputs): a drawing whose sheets an action
+    sits on gives each verb of the law as an element — each statement of it a sheet shows, a button on its row, the
+    statement (`<bean>#<id>`) what the action acts on and what its inputs may be filled `from`."""
+    if v.get('archetype') not in ACTION_ELEMENTS or vm.CORE is None:
+        return []
+    verbs = vm.CORE.L.verbs
+    return sorted({a.get('element') for a in v.get('actions') or [] if isinstance(a, dict) and a.get('element') in verbs})
+
+
 def actions_of(key, v):
-    """(the actions the drawing declares, as vm.actions reads them, [problems]): each on the element its archetype gives."""
+    """(the actions the drawing declares, as vm.actions reads them, [problems]): each on the element its archetype gives,
+    or on a row of a verb its sheets show."""
     el = ACTION_ELEMENTS.get(v.get('archetype'))
-    got, probs = vm.actions(key, v, [{'id': el, 'pattern': 'action', 'bean': None, 'label': el}] if el else [])
+    got, probs = vm.actions(key, v, ([{'id': el, 'pattern': 'action', 'bean': None, 'label': el}] if el else []) +
+                            [{'id': r, 'pattern': 'action', 'bean': None, 'label': r} for r in row_elements(v)])
     notes = {(a.get('element'), a.get('tool')): a.get('note') for a in v.get('actions') or [] if isinstance(a, dict)}
     for a in got:                               # its words: the action's own note, the button a person presses
         if isinstance(notes.get((a['el'], a['tool'])), str):
@@ -806,6 +818,32 @@ def actions_of(key, v):
                    for x in v.get('actions') or []):
             a['confirm'] = ''                   # no question of its own: the page asks none in English
     return got, probs
+
+
+def input_choices(i, may):
+    """What an input asks a person to choose among (its `of`), as this reader may see it: a reading's members, each by
+    its title; a scheme's rows, each `<scheme>:<code>` (named in the reader's language by `codes`, as every code a page
+    holds is), a row others sit beneath a heading never chosen. None for an input that is not chosen."""
+    of = i.get('of')
+    if not isinstance(of, str):
+        return None
+    if of.startswith('scheme:'):
+        import knowledge as dmknowledge
+        sch = of[7:]
+        try:
+            K = dmknowledge.Knowledge(vm.ROOT)
+            rows = [r for r in K.rows(sch) if isinstance(r, dict)]
+            key = (K.decl.get(sch) or {}).get('key', 'code')
+        except Exception:                       # a scheme this host cannot read: nothing offered, nothing guessed
+            return []
+        parents = {str(r.get('parent')) for r in rows if r.get('parent')}
+        return [dict({'value': f"{sch}:{r.get(key)}", 'label': K.name(r) or str(r.get(key))},
+                     **({'disabled': True} if str(r.get(key)) in parents else {})) for r in rows if r.get(key)]
+    try:
+        members = vm.members(of)
+    except Exception:
+        return []
+    return [{'value': m, 'label': title_of(m)} for m in members if _bean(m) is not None and may('read', m)]
 
 
 def entry(key, v, levels, sheet_block):
@@ -1138,8 +1176,9 @@ def page(may, reader, held=None, keep=None, contact=None, records=None):
     for bid in sorted(show | set(named)):
         s = sheet(bid, may, held, records)
         if s is not None:
-            s['actions'] = [{x: a[x] for x in ('drawing', 'el', 'tool', 'bean', 'confirm', 'note', 'inputs', 'reason')
-                             if x in a} for a in acting.get(bid, [])]
+            s['actions'] = [dict({x: a[x] for x in ('drawing', 'el', 'tool', 'bean', 'confirm', 'note', 'reason') if x in a},
+                                 inputs=[dict(i, choices=input_choices(i, may)) if i.get('of') else dict(i)
+                                         for i in a.get('inputs') or []]) for a in acting.get(bid, [])]
             if bid in named:
                 s['contact'] = {k: str(x) for k, x in named[bid].items() if isinstance(x, (str, int))}
                 s['title'] = str(named[bid]['name'])

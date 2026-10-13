@@ -251,6 +251,22 @@ host's to say) and starts it (`Host.start`: bin/act.py `--start`, as the viewer'
 own capture and given to the walk's tool at each step, bin/walktool.py `inputs`); the plan is shown, and nothing changes
 until a person ratifies it (`Host.decide`: `--ratify`, `--decline`). A served page asks both through `/api/action`.
 
+**An action's inputs, as a page asks them** (ratified 2026-10-13). Besides a table's `line` and a sheet's `sheet`, a
+drawing whose sheets an action sits on gives each verb of the law as an element: each statement of it a sheet shows,
+a button on its row, the statement (`<bean>#<id>`) what the action acts on. An input may be:
+- **chosen** (`of`): among the members of a reading the page declares, each by its title, or among the rows of a
+  scheme the garden knows (`scheme:<name>`), each `<scheme>:<code>` named in the reader's language as every code a page
+  holds is (`codes`) — a row others sit beneath a heading, shown and never chosen;
+- **several** (`many: "true"`): a list — a check box each, for a choice;
+- **filled from the element** (`from: self`, or a path into it): never asked; the host fills it, whatever the page sent;
+- **a day** (`type: position`), read in the reader's calendar and digits; **a file** (`type: file`), chosen on the
+  reader's machine and carried to the host, which keeps it off git under its SHA-256 (`<git dir>/daftar-inputs/`,
+  readable by its owner alone, at most `file_bound` bytes, 16 MiB unless the host sets it) and gives the run that
+  SHA-256; the walk's tool reads the file by it (bin/walktool.py `file`).
+The host holds each value to what the page offered this viewer: a choice not offered, a heading, a row of another verb
+or one the bean has not, a file over its bound, each refused before anything starts. An input given several times is
+a list at the terminal too (bin/act.py `--input name=a --input name=b`), and `W.inputs()` gives it as one.
+
 **A code by its name.** A value a page holds as `<scheme>:<code>`, of a scheme the garden knows (the law's, or its own
 `schemes`) — an account a payment is booked to, a code a being is classified by — is drawn by its name in the scheme's
 own table, read by the one reader (`bin/knowledge.py`): its label in the reader's language where the table carries one
