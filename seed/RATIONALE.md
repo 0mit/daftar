@@ -705,6 +705,12 @@ consent it was kept on still bounds it: once the word it is held `while` no long
 is the law's own `may` (`bin/pass.py`, asked with `held`), so the view's pages, its one write path and any host ask the
 same question; a host whose `may` cannot ask it writes a held value for the gardener alone.
 
+THE PERSON IT IS HELD OF READS IT (2026-10-12, a gap the operator named: "a person reading their own held contact
+sees their opaque id"; ratified by the operator 2026-10-13). What is held off git of a person is theirs before it is anyone's: a person a
+grant lets read their own bean reads what is held of them in it — their name, their phone — without a grant naming it
+to them, as the gardener does. To read, never to write; their own bean, nobody else's; and still only while the word it
+is held on stands.
+
 ## core/law/forms.yaml: forms.cover
 
 ABSENT, THE WHOLE — BUT NOT WHAT IS HELD (2026-10-12). The cover's default is the whole bean, its header, body and
