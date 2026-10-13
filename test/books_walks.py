@@ -7,7 +7,8 @@ read back by the books — in a garden of the core grown from a release made of 
            `procedure` and a host bean naming this machine
   book     a payment booked to an account and a plan's code; booked again to another while its period is open, the
            earlier booking replaced; after the period closed, what it placed moved by a booking of it on today, the
-           closed period unchanged; a means the payment does not say; refused when nothing would change
+           closed period unchanged; a means the payment does not say; refused when nothing would change; several
+           payments to one account in one plan, refused whole where one of them is booked there already
   reverse  a payment reversed from a day, with its reason; refused in a closed period
   close    the books' reading through a day, pinned at the commit the plan read; refused for a day still to come and
            one closed already
@@ -83,8 +84,8 @@ lines_of = lambda v: sorted((ln['account'], F(ln['dr']), F(ln['cr'])) for ln in 
 
 
 def start(on, op, **inputs):
-    r = run(PY, 'bin/act.py', on, '--start', f'walk-books-{op}', '--by', 'sam',
-            *[x for k, v in inputs.items() for x in ('--input', f'{k}={v}')])
+    r = run(PY, 'bin/act.py', on, '--start', f'walk-books-{op}', '--by', 'sam',      # a list: the input given each time
+            *[x for k, v in inputs.items() for w in (v if isinstance(v, list) else [v]) for x in ('--input', f'{k}={w}')])
     course = next((w.strip('.,():') for w in r.out.split() if w.startswith('run-')), None)
     return r, course
 
@@ -254,6 +255,25 @@ files:
     check("reverse: a payment reversed from today with its reason, its move's ends exchanged: Dr the card 40, Cr "
           "household 40", 'stopped at done' in r2.out and len(rv) == 1 and lines_of(rv[0]) == [('21', 40, 0), ('62', 0, 40)],
           r.out[-500:] + r2.out[-500:] + str(rv))
+
+    # ---- SEVERAL PAYMENTS, ONE ACCOUNT, ONE PLAN: the lines a person ticks on a statement's page
+    bean('grocer', 'document', 'two receipts from the grocer', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: apples, by: sam, of: { count: "4.00", unit: XTS }, through: card-a, at: "2025-04-02" }',
+         'pay: { id: pears, by: sam, of: { count: "6.50", unit: XTS }, through: card-a, at: "2025-04-03" }')
+    save('the grocer', '- action: wrote [[grocer]]')
+    r, c = start('grocer', 'book', of=['grocer#apples', 'grocer#pears'], account='61')
+    p = plan_of('grocer', c)
+    r2 = ratify('grocer', c)
+    check("book several: two payments booked to one account in one plan, ratified once, written in one save — Dr food "
+          "4 and 6.50", 'stopped at done' in r2.out and p.count('to: "books:61"') == 2
+          and '2 payments booked to books:61' in open(os.path.join(G, 'log', 'journal.md'), encoding='utf-8').read()
+          and lines_of(voucher('grocer#apples')) == [('21', 0, 4), ('61', 4, 0)]
+          and lines_of(voucher('grocer#pears')) == [('21', 0, F('6.50')), ('61', F('6.50'), 0)],
+          p[-700:] + r2.out[-500:])
+    r, c = start('grocer', 'book', of=['grocer#apples', 'market#veg'], account='62')
+    check("...refused whole, naming the one already booked there: nothing written", 'stopped at refused' in r.out
+          and 'market#veg is booked to books:62 already' in r.out + plan_of('grocer', c, '')
+          and lines_of(voucher('grocer#apples')) == [('21', 0, 4), ('61', 4, 0)], r.out[-600:])
 
     # ---- CLOSE
     r, c = start('box', 'close', day='2999-12-31')
