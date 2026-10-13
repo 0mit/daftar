@@ -246,10 +246,25 @@ def is_code(m, path, drawn=()):
             or path in drawn or path.startswith(CODE_FOLDERS))
 
 
+def _decided(merged, base, sides):
+    """Whether a merge decided `merged` itself, for a value merged three ways as MERGE.md §3 merges a statement: a
+    member of the base stays only where no side took it out, and one a side added is kept. `merged` and each side are
+    sets; anything else (one value: a page's drawing module) is what the side that changed it from the base holds, or
+    the base's where none did — and where two sides changed it apart, any value is the merge's own."""
+    if isinstance(merged, (set, frozenset)):
+        want = {x for x in set().union(*sides) | base if (all(x in s for s in sides) if x in base else True)}
+        return merged != want
+    moved = {s for s in sides if s != base}
+    return len(moved) > 1 or merged != (moved.pop() if moved else base)
+
+
 def rights(writer, commit, parent, env, tmp, others=()):
     """What the writer changed that its grants at the parent do not open: [(path, act)]. A MERGE (`others`, its other
     parents) brings what each side committed, judged when it was committed: what the merge itself changed — and its
-    writer needs grants for — is a path that differs from every parent (MERGE.md §5, as the gate reads a merge)."""
+    writer needs grants for — is a path that differs from every parent (MERGE.md §5, as the gate reads a merge). And
+    within such a path, an identity anchor or a page's drawing module is the merge's own only where it is not what the
+    merge of its parents makes of it (MERGE.md §3): an anchor one side added is the side's, judged then, whichever parent
+    is first; one a side took out and the merge keeps, the merge decided."""
     before = Tree(parent, env) if parent else None
     if before is None or writer == before.gardener():
         return []
@@ -270,9 +285,16 @@ def rights(writer, commit, parent, env, tmp, others=()):
     m = dmpass.Map.here(root)
     drawn = {d for fm in list(beans.values()) + list(after.beans().values()) for d in [_drawn(fm)] if d}
     missing = []
+    # A MERGE OF TWO is read against its base, each side as it committed it; any other merge, against its first parent
+    base = git('merge-base', parent, others[0], env=env)[1].strip() if len(others) == 1 else ''
+    sides = [Tree(c, env) for c in [parent, *others]] if len(others) == 1 else []
+    under = Tree(base, env) if base else None
 
     def ratify_g():
         return dmpass.may(writer, 'ratify:G', before.gardener() or '', root=root, beans=beans).granted
+
+    def side(t, p):
+        return _fm(t.text(p), t.core) if t is not None else None
 
     for p in paths:
         if m.layer_of(p)[0] in dmpass.RULED or is_code(m, p, drawn):
@@ -284,10 +306,16 @@ def rights(writer, commit, parent, env, tmp, others=()):
             was, now = _fm(before.text(p), before.core), _fm(after.text(p), after.core)
             if not dmpass.may(writer, 'write', bid, root=root, beans=beans).granted:
                 missing.append((p, 'write'))
-            if _anchors(was, once) != _anchors(now, once) and \
-                    not dmpass.may(writer, 'ratify:F', bid, root=root, beans=beans).granted:
+            if sides:
+                ours = [side(t, p) for t in sides]
+                anchored = _decided(set(_anchors(now, once)), set(_anchors(side(under, p), once)),
+                                    [set(_anchors(fm, once)) for fm in ours])
+                redrawn = _decided(_drawn(now), _drawn(side(under, p)), [_drawn(fm) for fm in ours])
+            else:
+                anchored, redrawn = _anchors(was, once) != _anchors(now, once), _drawn(was) != _drawn(now)
+            if anchored and not dmpass.may(writer, 'ratify:F', bid, root=root, beans=beans).granted:
                 missing.append((p, 'ratify:F'))
-            if _drawn(was) != _drawn(now) and not ratify_g():
+            if redrawn and not ratify_g():
                 missing.append((p, 'ratify:G'))
         elif p.startswith('series/') and p.count('/') >= 2:
             bid = p.split('/')[1]
