@@ -198,7 +198,7 @@ try {
   A.sheet(document.getElementById('p'), E.sheets['%(pid)s'], t, null);
   const c = document.querySelector('#p [data-fact="contact"]');
   out.contact = c ? c.innerText : null;
-  const ph = c && [...c.querySelectorAll('.eg-detail')].find(x => x.innerText.includes('phone'));
+  const ph = c && [...c.querySelectorAll('.eg-detail')].find(x => x.innerText.includes('%(phone)s'));   // by its value: its label is the page's or the release's word
   const v = ph && ph.lastElementChild;
   out.phoneDir = v ? getComputedStyle(v).direction : null;
 } catch (e) { out.errs.push('driver: ' + e.message + ' ' + (e.stack || '').split('\\n')[1]); }
@@ -207,7 +207,7 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
         path = os.path.join(T, 'held.html')
         with open(path, 'w', encoding='utf-8') as fh:
             fh.write(page % {'css': view_widgets.css() + open(os.path.join(LIB, 'view_engraved.css'), encoding='utf-8').read(),
-                             'js': js, 'payload': json.dumps(sam, ensure_ascii=False), 'pid': PID})
+                             'js': js, 'payload': json.dumps(sam, ensure_ascii=False), 'pid': PID, 'phone': PHONE})
         r = subprocess.run([browser, '--headless=new', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=5000',
                             '--dump-dom', 'file://' + path], capture_output=True, text=True, encoding='utf-8', errors='replace',
                            timeout=180)
