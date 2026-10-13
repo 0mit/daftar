@@ -221,9 +221,11 @@ garden's pages imports it from the release the garden runs. The entry forms of t
 beside it.
 
 **Held values on a page.** A card's fact may name a verb whose statements are sealed (`held`). The host whose store
-holds one — the host bean whose `roots` declare it — sends its value only to a viewer who may read that statement, while
-the word it is held on (`while`) stands; every other page says where it is kept. It is edited in the same Edit and
-sealed in the same Save; the commit keeps only the pointer. `view check` refuses a public page that would show one, and
+holds one — the host bean whose `roots` declare it — sends its value only to the gardener, or to a viewer a grant NAMES
+it to (the statement's verb or `as` in its `cover`, or the statement in its `of`; never a grant of the whole bean:
+`bin/pass.py may … held`, the law's rule since 2026-10-12), while the word it is held on (`while`) stands; every other
+page says where it is kept. It is edited in the same Edit and sealed in the same Save, by whom the same bar opens it to
+write; the commit keeps only the pointer. `view check` refuses a public page that would show one, and
 the offline report carries none.
 
 **A person kept off git by name** (`bin/held.py person`: an opaque `p-<8 hex>` in git, their name and contacts held on

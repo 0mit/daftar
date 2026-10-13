@@ -19,7 +19,8 @@ whole.
 WHAT HAPPENS, IN ORDER. The clone holds nothing uncommitted (its undo is git's). Each op is read against its verb's row:
 the roles and qualifiers it takes, and text that is one line. `may(act, bean, positions)` is asked for the bean — and
 where the whole is not open, for the part each op touches (the statement by its id, a verb for one added, `title` or
-`summary`), as a grant's `cover` opens parts. Each edit goes through bin/safe.py by its key with an expected count of 1;
+`summary`), as a grant's `cover` opens parts; and a held value, whatever the whole, only where a grant NAMES it (`held`:
+the gardener aside, never by a grant of the whole bean). Each edit goes through bin/safe.py by its key with an expected count of 1;
 a held value is sealed by bin/held.py before its statement is written, so what it says reaches the store and never the
 bean's file. The statements added or changed are known by a `say` of the writer's, at `now` — or, where an op says the
 writer read it from a source (`read: {from, through}`: a place a lookup found, from the map or the gazetteer that has
@@ -96,13 +97,23 @@ def _mint(ids, verb):
     return f"{verb}-{n}"
 
 
+def _may_held(may, root, who, bean, part):
+    """Whether `may` opens a held `part` of `bean` to write. A host's own `may` from before the naming rule cannot say
+    it (it takes no `held`): then only the gardener, whom every law opens it to — the default is caution."""
+    try:
+        return bool(may('write', bean, [part], held=True))
+    except TypeError:
+        import importlib
+        return who == importlib.import_module('pass').gardener_of(root)
+
+
 def default_may(root, who):
     """The law's answer for the writer, where the caller gives none: bin/pass.py `may`."""
     import importlib
     dmpass = importlib.import_module('pass')
 
-    def may(act, bean, positions=None):
-        return dmpass.may(who, act, bean, positions=positions, root=root).granted
+    def may(act, bean, positions=None, held=False):
+        return dmpass.may(who, act, bean, positions=positions, root=root, held=held).granted
     return may
 
 
@@ -274,8 +285,22 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
         refuse(None, None, "nothing to write: each op says what the bean says already")
         return result(False)
 
-    # ---- 2. MAY THE WRITER WRITE IT: the whole bean, or each part an op touches
+    # ---- 2. MAY THE WRITER WRITE IT: the whole bean, or each part an op touches — and a held value, only where a grant
+    # NAMES it (bin/pass.py `may_core`, `held`): its statement's id, else its verb; never by a grant of the whole bean
     whole = may('write', bean)
+    for n, act, key, verb, x in plan:
+        if act == 'header':
+            continue
+        o = x if act == 'remove' else x['old']
+        if not (act != 'remove' and x['held'] or o is not None and 'held' in o):
+            continue
+        part = o['id'] if o is not None and isinstance(o.get('id'), str) else verb
+        if not _may_held(may, root, who, bean, part):
+            refuse(n, key if act != 'add' else f"{verb}#{x['id']}",
+                   f"what {key if act != 'add' else 'a `' + verb + '`'} holds is kept off git: only the gardener, or a grant "
+                   f"that names it to {who}, opens it to write")
+    if refusals:
+        return result(False)
     if not whole:
         if new:
             refuse(None, None, f"{who} may not make a being here: a new being is the gardener's, or a grant's that opens it")
