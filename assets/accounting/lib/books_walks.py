@@ -18,6 +18,13 @@ its bookings, else `books-<entity>`, made by the first write:
            where their amounts differ, where either is matched already, or where the line is booked (book the payment).
   close    `day`: the books' reading through the day (`reckon`, its step `books`) and its `pin` at the commit the plan
            read — after the last close, not after today.
+  remove   `of` (a document's bean, or a payment `<bean>#<id>`), `reason`: taken out — the bean whole, or the payment
+           with its shares — with every booking and match of the entity's that names what goes, in turn; refused where
+           closed books read any of it (reverse it instead), where another statement names it, where a statement that
+           would go is sealed, for a line read from a source (its whole statement goes), and on the run's own bean.
+  chart    `code`, and `name`, `parent`, `level`, `element`, `stands-for`, `parties`, `role`, `closed`, `name-<lang>`: an
+           account of the chart added beneath its parent, or changed — a row of the garden's own table (`files`) — never
+           a code changed, never an account the books used moved; the row held to the chart's form as the gate holds it.
   entry    `day`, `memo`, `unit`, `lines` (`<account> dr|cr <amount>`, joined by `;`), `of` (optional): what no payment
            says, written whole and balanced, resting on `of` or the books' `open` (written by the first entry); an
            entry is corrected by its reverse and a new one, never edited.
@@ -567,4 +574,351 @@ def entry(B, I, today, run=(None, None)):
             'body': [f"- action: a journal entry on {iso(day)} in [[{books}]]: {I['memo'].strip()}"]}
 
 
-PLANS = {'book': book, 'reverse': reverse, 'match': match, 'close': close, 'import': import_, 'entry': entry}
+# ------------------------------------------------------------------------------------------------ remove
+PROSE = ('id', 'why', 'note', 'held')       # what a statement holds beside its roles that names nothing of the garden
+
+
+def one(I, name):
+    """The input `name` as one line of words ('' where none was given): a list of one is that one (a page's input of
+    `many` comes as a list however many it holds); a list of more is refused."""
+    x = I.get(name)
+    if isinstance(x, list):
+        if len(x) != 1:
+            refuse(f"{name}: one value, not {len(x)}")
+        x = x[0]
+    return str(x or '').strip()
+
+
+def _refs_in(x):
+    """Every string a value holds, at any depth."""
+    if isinstance(x, dict):
+        for v in x.values():
+            yield from _refs_in(v)
+    elif isinstance(x, list):
+        for v in x:
+            yield from _refs_in(v)
+    elif isinstance(x, str):
+        yield x
+
+
+def names(B, ob, v, r):
+    """What a statement of bean `ob` names, read as the engine reads a filler (core/engine.py `norm`): a statement by
+    `<bean>#<id>`, or by its id in its own bean; a being by its bean — never in the statement's prose (`why`, `note`), nor
+    what a knowing act knows (its `of`: that act goes with what it knew, `kept_known`)."""
+    b, out = B.G.beans[ob], set()
+    for k, x in r.items():
+        if k in PROSE or (v in br.KNOWING and k == 'of'):
+            continue
+        for s in _refs_in(x):
+            if '#' in s:
+                out.add(s)
+            elif s in b.ids:
+                out.add(f"{ob}#{s}")
+            elif s == 'self' or s in B.G.beans:
+                out.add(ob if s == 'self' else s)
+    return out
+
+
+def from_garden(B, ref):
+    """The garden whose word the statement `<bean>#<id>` is — known by an act whose moment is that garden's (a `garden`
+    bean in its `at`: taken from that garden's proposal, core/commit.py `knowing`) — or None for this garden's own. Its
+    act is the one naming it, else one naming nothing (core/engine.py `_acts_of`)."""
+    bid, _h, sid = ref.partition('#')
+    b = B.G.beans.get(bid)
+    acts = [r for _i, v, r in (b.items if b else []) if v in br.KNOWING and sid in map(str, br._listed(r.get('of')))] \
+        or [r for _i, v, r in (b.items if b else []) if v in br.KNOWING and r.get('of') is None]
+    return next((x for r in acts for x in br._listed(r.get('at')) if isinstance(x, str) and x in B.G.beans
+                 and B.G.beans[x].kind == 'garden'), None)
+
+
+def kept_closed(B, entries):
+    """What rule `kept` refuses of a write, its books' half, asked of the gate itself (core/commit.py `_closed`, the
+    closes of every entity and chart of the garden): each statement closed books read that the write would take out or
+    change, in the gate's words — [] where none."""
+    from core import commit
+    closes = commit._closes(B.G)
+    out = []
+    for e in entries if closes else []:
+        b = B.G.beans.get(e['bean'])
+        if b is None or e.get('new'):
+            continue
+        rel = os.path.relpath(b.path, B.root).replace(os.sep, '/')
+        was = commit.statements_of(B.root, 'HEAD', rel)
+        again = {_W()._statement(x)[1]['id'] for x in e.get('add') or []}     # written again as it was: unchanged
+        out_ids = set(e.get('remove') or []) - again
+        now = [] if e.get('gone') else [x for x in was if x[2].get('id') not in out_ids]
+        out += [f"{rel}: {msg}" for _rule, _where, msg in commit._closed(B.root, B.G, closes, rel, was, now)]
+    return out
+
+
+def remove(B, I, today, run=(None, None)):
+    """A document recorded by mistake taken out whole (`of`: its bean, a `document`), or one payment recorded by mistake
+    taken out of its bean (`of`: `<bean>#<id>`), with `reason`. With it goes every booking and match of the entity's
+    that names what goes — a booking of a booking, a reversal, an entry resting on it, in turn — and a share of the
+    payment beside it (`bear`); the knowing acts that knew only what goes go too (what else such an act knew is written
+    again as it was). Refused where closed books read any of it (the gate's own words: reverse it instead); where another
+    statement of the garden still names what goes; where any of it is another garden's word, taken from its proposal
+    (dispute it there); where a sealed statement would go (erase it first, bin/held.py);
+    where the payment was read from a source (its whole statement is taken out); where the bean is the books' own or no
+    document; and where the run sits on the bean it takes out whole."""
+    of, reason = one(I, 'of'), one(I, 'reason')
+    if not of:
+        refuse("of: the document's bean, or a payment `<bean>#<id>`")
+    if not reason:
+        refuse("reason: say why it is taken out")
+    E = B.entity
+    books, _made = books_bean(B)
+    if '#' in of:
+        bid, verb, p = statement(B, of)
+        sid = of.split('#', 1)[1]
+        if verb != 'pay':
+            refuse(f"of: {of} is a `{verb}`: a payment recorded by mistake is taken out, or a whole document")
+        if known_as(B, bid, sid) == 'read':
+            refuse(f"of: {of} was read from a source: what a source said goes with all it said — take out its "
+                   f"statement, {bid}, whole")
+        gone, whole = {of}, False
+    else:
+        bid, sid = of, None
+        b = B.G.beans.get(bid)
+        if b is None:
+            refuse(f"of: no bean {bid!r} here")
+        if b.kind != 'document':
+            refuse(f"of: {bid} is a {b.kind}, no document: a document is taken out whole, a being is not")
+        if bid == books:
+            refuse(f"of: {bid} is the books' own bean: what it holds is taken out one payment at a time")
+        if run[0] == bid:
+            refuse(f"the run sits on {bid}, which it would take out whole: start it on another bean (the books', "
+                   f"{books})")
+        gone, whole = {f"{bid}#{r['id']}" for _i, _v, r in b.items if isinstance(r.get('id'), str)} | {bid}, True
+    takes, others, grew = {}, set(), True     # what goes with it, by bean; what else names it, which refuses the plan
+    while grew:                                # in turn: a booking of a booking goes with the booking
+        grew = False
+        for ob, b in sorted(B.G.beans.items()):
+            if whole and ob == bid:
+                continue
+            for _i, v, r in b.items:
+                own = r.get('id') if isinstance(r.get('id'), str) else None
+                if f"{ob}#{own}" in gone or not (names(B, ob, v, r) & gone):
+                    continue
+                mine = v in ('book', 'match') and str(r.get('by') or B.G.gardener) == E
+                shared = v == 'bear' and ob == bid and not whole        # a share of the payment goes with it
+                if (mine or shared) and own:
+                    takes.setdefault(ob, []).append(own)
+                    gone.add(f"{ob}#{own}")
+                    grew = True
+                else:
+                    others.add(f"{ob}: {v}{'#' + own if own else ''}")
+    theirs = sorted(f"{x} ({g}'s)" for x in gone if '#' in x for g in [from_garden(B, x)] if g)
+    if theirs:
+        refuse(f"{', '.join(theirs[:4])}{' …' if len(theirs) > 4 else ''}: another garden's word, taken from its "
+               f"proposal — answered there (`respond … as: disputes`), never taken out here")
+    if others:
+        refuse(f"{', '.join(sorted(others)[:6])}{' …' if len(others) > 6 else ''} still name"
+               f"{'s' if len(others) == 1 else ''} what would go: take it out, or answer it, first")
+    entries = [{'bean': bid, 'gone': True}] if whole else []
+    if not whole:
+        takes.setdefault(bid, []).insert(0, sid)
+    for ob, ids in sorted(takes.items()):
+        more, again = kept_known(B, ob, ids)
+        entries.append({'bean': ob, 'remove': sorted(set(ids) | set(more)), 'add': again})
+    held = sorted(x for x in gone if '#' in x and 'held' in statement(B, x)[2])
+    if held:
+        refuse(f"{', '.join(held[:6])} {'is' if len(held) == 1 else 'are'} sealed, kept off git: erase "
+               f"{'it' if len(held) == 1 else 'them'} first (bin/held.py), in a save that says so")
+    shut = kept_closed(B, entries)
+    if shut:
+        refuse('; '.join(shut[:3]) + " — a closed period is never rewritten: reverse it (walk-books-reverse) instead")
+    went = sorted(x for x in gone if x not in (of, bid) and not (whole and x.startswith(bid + '#')))
+    return {'what': f"{of} taken out{' whole' if whole else ''}: {reason}", 'beans': entries,
+            'body': [f"- action: [[{bid}]]{' ' + sid if sid else ''} taken out{' whole' if whole else ''}: {reason}"]
+            + ([f"- action: with what of {E}'s books named it: {', '.join(went)}"] if went else [])}
+
+
+# ------------------------------------------------------------------------------------------------ chart
+FIXED = ('parent', 'level', 'element')     # where an account stands and what it is: never moved once the books used it
+
+
+def _code_key(code):
+    """A code's place among its siblings: its runs of digits as numbers, the rest as words (`9` before `10`)."""
+    return [(0, int(t), '') if t.isdigit() else (1, 0, t) for t in re.findall(r'\d+|\D+', code)]
+
+
+def _used(B):
+    """(the codes of the chart the books read a line in, or any booking of the garden names; and those with every code
+    above them)."""
+    C = B.chart
+    used = {str(ln['account']) for v in B.vouchers for ln in v['lines']}
+    for b in B.G.beans.values():
+        for _i, v, r in b.items:
+            if v == 'book':
+                used |= {x.split(':', 1)[1] for x in (r.get('from'), r.get('to'))
+                         if isinstance(x, str) and x.startswith(C.scheme + ':')}
+    return used, {a for c in used for a in C.path(c) if a in C.rows}
+
+
+def chart(B, I, today, run=(None, None)):
+    """An account of the chart added, or changed — a row of the scheme's table, the garden's own file (`extracts/…`,
+    one row a line): `code`, and any of `name`, `parent`, `level`, `element`, `stands-for`, `parties`, `role`, `closed`,
+    `name-<lang>` (the form's columns, core/law/profiles.yaml `chart`, each input by its kebab name: `stands-for` is the
+    column `stands_for`, `name-fa` the column `name_fa`). A new account says its name; it stands beneath its
+    parent (a code of the chart at the level above its own: its level, where it says none, is the one after its
+    parent's), among its siblings in the order of their codes. A code given is never changed. An account the books used,
+    or one above it, is not moved — its parent, level and element stay: close it (`closed`), and add another; its name,
+    the being it stands for, its parties, its role and the day it closed may change. A parent the books used gets no
+    account beneath it, and an account closes on or after the day of the last line the books read in it. The rows written are
+    held to the chart's form by the gate's own reading (core/law.py `chart_problems`) before the plan is shown."""
+    import csv
+    import io
+    from core import check as dmcheck
+    from core.law import NAME_IN
+    C = B.chart
+    L = dmcheck.garden_law(B.root)
+    K = L.std.knowledge
+    decl = K.decl.get(C.scheme) or {}
+    rel = str(decl.get('file') or '')
+    if not rel or decl.get('format') == 'yaml':
+        refuse(f"the chart {C.scheme} is held in {rel or 'no file'}: a walk writes a chart kept as a table, a row a line")
+    try:
+        path = _W().garden_file(rel)
+    except _W().Refused as e:
+        refuse(f"the chart {C.scheme} is {rel}, which no walk writes ({e}): a garden changes a chart of its own, and a "
+               f"standard's table changes with its authority")
+    with open(path, encoding='utf-8', newline='') as fh:
+        before = fh.read()
+    read = lambda text: [dict(r) for r in csv.DictReader(io.StringIO(text, newline=None), delimiter='\t')]
+    lines = before.splitlines(keepends=True)
+    cells = [next(csv.reader([ln.rstrip('\r\n')], delimiter='\t')) if ln.strip('\r\n') else None for ln in lines]
+    if not cells or not cells[0] or 'code' not in cells[0]:
+        refuse(f"{rel} has no header naming `code`")
+    head, eol = cells[0], ('\r\n' if lines[0].endswith('\r\n') else '\n')
+    if [dict(zip(head, c)) for c in cells[1:] if c] != [{k: v for k, v in r.items() if v is not None}
+                                                        for r in read(before)]:
+        refuse(f"{rel} is not one row a line (a cell spans lines, or a row holds more cells than its header): a walk "
+               f"writes a chart a row a line")
+    ci = head.index('code')
+    at = {}
+    for n, c in enumerate(cells[1:], 1):
+        if c and len(c) > ci:
+            if c[ci] in at:
+                refuse(f"{rel}: the code {c[ci]} is written twice")
+            at[c[ci]] = n
+    # what the person gave: each input a column of the form by its kebab name (`stands-for`, `name-fa`), one value; the
+    # run's own (`entity`, `chart`) aside
+    cols = ['code', 'level', 'parent', 'name'] + [k for k in (L.forms.get('chart') or {}).get('attrs') or {}]
+    given = {}
+    for k in I:
+        if k in ('entity', 'chart'):
+            continue
+        col = 'name_' + k[5:] if k.startswith('name-') else k.replace('-', '_')
+        if col not in cols and not NAME_IN.match(col):
+            refuse(f"{k}: no column of a chart ({', '.join(c.replace('_', '-') for c in cols)}, or a name in a "
+                   f"language, `name-<lang>`)")
+        given[col] = one(I, k)
+        if any(x in given[col] for x in '\t\r\n'):
+            refuse(f"{k}: a cell holds no tab and no line break")
+    code = given.pop('code', '')
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', code):
+        refuse(f"code: {code!r} is no code — letters, digits, `.`, `_`, `-`")
+    if given.get('parent', '').startswith(C.scheme + ':'):
+        given['parent'] = given['parent'].split(':', 1)[1]
+    levels = [str(x.get('level')) for x in (K.schemes.get(C.scheme) or {}).get('levels') or [] if isinstance(x, dict)]
+    used, beneath_used = _used(B)
+    if code in at:
+        old = dict(zip(head, cells[at[code]]))
+        new = dict(old, **given)
+        moved = [k for k in FIXED if k in given and given[k] != old.get(k, '')]
+        placing = bool({'parent', 'level'} & set(moved))
+        if moved and code in beneath_used:
+            refuse(f"{', '.join(moved)}: {C.scheme}:{code} is used by the books"
+                   + ('' if code in used else ', beneath it') + " — it is not moved: close it (`closed`), and add another")
+        if moved and any(str(r.get('parent') or '') == code for r in C.rows.values()) and set(moved) - {'element'}:
+            refuse(f"{', '.join(moved)}: {C.scheme}:{code} has accounts beneath it — it is not moved")
+        what = f"{C.scheme}:{code} changed"
+    else:
+        if not given.get('name'):
+            refuse(f"name: {C.scheme}:{code} is a new account, and says its name")
+        new = dict({k: '' for k in head}, **given, code=code)
+        placing = True
+        what = f"{C.scheme}:{code} added"
+    if placing:                                 # where it stands: beneath its parent, at the level after the parent's
+        parent = new.get('parent', '')
+        if parent == code or (parent and parent not in C.rows):
+            refuse(f"parent: {parent!r} is no other code of {C.scheme}")
+        if levels:
+            plevel = str(C.rows[parent].get('level') or '') if parent else None
+            if parent and plevel not in levels:
+                refuse(f"parent: {C.scheme}:{parent} stands at {plevel!r}, none of {C.scheme}'s levels "
+                       f"({', '.join(levels)})")
+            want = levels.index(plevel) + 1 if parent else 0
+            if want >= len(levels):
+                refuse(f"parent: {C.scheme}:{parent} stands at {plevel}, {C.scheme}'s last level: nothing is beneath it")
+            if not new.get('level'):
+                new['level'] = levels[want]
+            if new['level'] != levels[want]:
+                refuse(f"level: {new['level']!r} is not {levels[want]}, the level "
+                       + (f"beneath {C.scheme}:{parent}'s ({plevel})" if parent else
+                          f"of an account with no parent ({C.scheme}'s first)"))
+        elif not new.get('level'):
+            refuse(f"level: {C.scheme} declares no levels, and the account says none")
+        if parent and parent in used:
+            refuse(f"parent: {C.scheme}:{parent} is used by the books: an account beneath it would leave its lines on "
+                   f"no postable account")
+    if new.get('closed'):
+        shut = day_of(new['closed'], 'closed')
+        last = max((v['day'] for v in B.vouchers for ln in v['lines'] if str(ln['account']) == code and v['day']),
+                   default=None)
+        if last is not None and last > shut:
+            refuse(f"closed: the books read a line in {C.scheme}:{code} on {iso(last)}, after {iso(shut)}: it closes on "
+                   f"or after its last line")
+    for k in new:
+        if k not in head:
+            head = head + [k]                   # a column the table has not had: the header grows, no row changes
+    out = io.StringIO()
+    csv.writer(out, delimiter='\t', lineterminator=eol).writerow([new.get(k, '') for k in head])
+    line, lines = out.getvalue(), list(lines)
+    if lines and not lines[-1].endswith(('\n', '\r')):
+        lines[-1] += eol
+    if head != cells[0]:
+        hout = io.StringIO()
+        csv.writer(hout, delimiter='\t', lineterminator=eol).writerow(head)
+        lines[0] = hout.getvalue()
+    if code in at:
+        lines[at[code]] = line
+    else:                                       # among its siblings, in the order of their codes; else after its parent
+        par = new.get('parent', '')
+        sib = [n for n, c in enumerate(cells[1:], 1) if c and len(c) > ci and c[ci] in C.rows
+               and str(C.rows[c[ci]].get('parent') or '') == par]
+        later = [n for n in sib if _code_key(cells[n][ci]) > _code_key(code)]
+        if later:
+            pos = later[0]
+        elif sib:
+            pos = sib[-1] + 1                   # after the last sibling and every account beneath it
+            while pos < len(cells) and cells[pos] and len(cells[pos]) > ci \
+                    and cells[sib[-1]][ci] in C.path(cells[pos][ci])[:-1]:
+                pos += 1
+        else:
+            pos = at[par] + 1 if par in at else len(lines)
+        lines.insert(pos, line)
+    after = ''.join(lines)
+    if after == before:
+        refuse(f"{C.scheme}:{code} holds that already: nothing would change")
+    rows = read(after)                          # read back as the garden reads it, and judged as the gate judges it
+    mine = next((r for r in rows if r.get('code') == code), None)
+    if mine is None or any((mine.get(k) or '') != (new.get(k) or '') for k in head):
+        refuse(f"{C.scheme}:{code} would not read back as written")
+    plain = lambda rs: [{k: v for k, v in r.items() if v not in (None, '')} for r in rs if r.get('code') != code]
+    if plain(rows) != plain(read(before)):
+        refuse(f"{rel}: the other accounts would not read back as they are")
+    K._rows[C.scheme] = rows
+    found = [(w, m) for w, m in L.chart_problems() if w.split()[:2] == ['scheme', C.scheme]]
+    if found:
+        refuse('; '.join(f"{w}: {m}" for w, m in found[:4]))
+    sf = new.get('stands_for')
+    if sf and sf not in B.G.beans:
+        refuse(f"stands_for: {sf!r} is no bean of this garden")
+    return {'what': what, 'beans': [], 'files': [{'path': rel, 'before': before, 'after': after}],
+            'body': [f"- action: {what} in {rel}" + (f": {new.get('name')}" if new.get('name') else '')]}
+
+
+PLANS = {'book': book, 'reverse': reverse, 'match': match, 'close': close, 'import': import_, 'entry': entry,
+         'remove': remove, 'chart': chart}
