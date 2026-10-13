@@ -4926,6 +4926,13 @@ wherever Python does — on Windows too, where `python3` may be missing or a sto
 without `dm`, so the row states the family and nothing a file name already says; what the tool does is the first line
 of its own help, read from it, never restated.
 
+## core/law/lines.yaml: types[file]
+
+A FILE A PERSON GIVES, NEVER IN THE LEDGER (2026-10-13, ratified by the operator). A bank's statement to import, a scan
+of a receipt: a run needs its bytes, and the ledger, which every clone carries for good, must never hold them. So the
+value a run is given and keeps is the file's SHA-256 alone; the host keeps the file off git under it, readable by its
+owner alone, and the tool reads it by that (bin/walktool.py `file`), refused where its bytes are not those.
+
 ## core/law/lines.yaml: types[coding]
 
 (std-vocab 32: `value_types[coding]`)
@@ -5475,6 +5482,19 @@ order runs along the reader's line (`orientations`), so its arrowhead points to 
 amounts are the ledger's, netted per currency as `--between` nets a pair, exact — an uneven one shown as the fraction
 it is. Between gardens the nodes are gardens and the arrows what went from one to another: what a garden took from
 another (`take`), what it proposed to one (`propose`), what passed between them (`pass`).
+
+## core/law/profiles.yaml: forms.drawing.attrs.actions
+
+AN ACTION'S INPUTS, AS A PAGE ASKS THEM (2026-10-13, ratified by the operator). A page that starts a garden's own
+operation — a payment booked to an account, a period closed, a bank's statement imported — asked each input as a line of
+words, so a person typed an account's code, a payment's `<bean>#<id>` they never see on the page, a path on their disk.
+An input now says where its value comes from: chosen `of` a reading's members or a scheme's rows (the account by its
+name, a heading never), `many` of them (the people who share a cost), filled `from` the element the button sits on (the
+payment of the row pressed — the host's to fill, so no page can name another), or a file the person chooses (`type:
+file`). Each is the law's because the gate and every host must read it the same: what a person may be offered, and what
+a host must refuse. A journal entry's lines and a payment's shares are not inputs: they are `book` and `bear`
+statements written on a draft's sheet by the one write path, and the walk posts the draft — one way to write a fact,
+never two.
 
 ## core/law/profiles.yaml: forms.drawing.attrs.axes
 

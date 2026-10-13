@@ -503,10 +503,19 @@ forms:
                     required: "true"
                     in: origin
                     meaning: "`{act: read, nature: soma, by: reader}`, the clock; any other, a value the person pressing gives"
-                  type: { in: { registry: types, take: type }, meaning: "the form of a value given" }
+                  type: { in: { registry: types, take: type }, meaning: "the form of a value given: a day (`position`) read in the reader's calendar; a file (`file`) the person chooses on their machine" }
                   quantity:
                     in: { registry: quantities, take: quantity }
                     meaning: "the quantity a value given measures"
+                  of:
+                    in: prose
+                    meaning: "where a value given is chosen from, and nothing else is taken: a reading this page declares, by its id (its members, each by its title, those the reader may read), or a scheme the garden knows, `scheme:<name>` (its rows, each by its name in the reader's language; a row others sit beneath is a heading, never chosen; a value `<scheme>:<code>`)"
+                  many:
+                    in: ["true"]
+                    meaning: "several values of it, a list: each one as the input asks"
+                  from:
+                    in: { type: field_path }
+                    meaning: "filled by the host from the element the button sits on, never asked of the person: `self`, the element's own (the being of a table's line or a sheet; `<bean>#<id>`, the statement of a sheet's row), or a path into it (`of.unit`)"
                   note: { in: prose }
                 keyed_by: name
             reason:

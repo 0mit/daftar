@@ -695,26 +695,73 @@ class Host:
     def start(self, user, key, el, tool, bean, inputs=None, reason=None):
         """Start the walk the host maps `tool` to, on `bean`, for `user`: the action declared on `el` of drawing `key`,
         its inputs as it declares them, asked of the law as `act:<tool>` for the viewer's being. (status, answer): the
-        run's course, where it stopped, and the plan it would apply, for a person to ratify."""
+        run's course, where it stopped, and the plan it would apply, for a person to ratify.
+
+        AN ACTION'S INPUTS (ratified 2026-10-13): on a row of a sheet (`el` a verb), `bean` names the row's statement,
+        `<bean>#<id>`, which must be one of that verb in that bean; an input filled `from` the element is the host's to
+        fill, whatever the page sent; one chosen `of` a reading or a scheme must be one of the choices this viewer is
+        offered (a heading never); `many` takes a list; a `file` is kept off git under its SHA-256, the run given that."""
         v = self._bound(user, key)
         a = next((x for x in (v or {}).get("actions", []) if x["el"] == el and x["tool"] == tool), None)
         actor = ((self.cfg.get("users") or {}).get(user) or {}).get("bean")
         base = {"user": user, "actor": actor, "view": key, "element": el, "tool": tool, "act": "act:" + str(tool),
                 "bean": bean, "head": (self.head or "")[:12], "reason": reason or None}
+        bean, _sep, stmt = str(bean or "").partition("#")
         bean = (a or {}).get("bean") or bean          # an action fixed on one being (`acts_on`) acts on that one
-        base["bean"] = bean
+        base["bean"] = bean + ("#" + stmt if stmt else "")
         if not a or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,120}", str(bean or "")):
             return 404, {"error": "no action is declared on that element in the ledger"}
+        verbs = vm.CORE.L.verbs if vm.CORE is not None else {}
+        if el in verbs:                               # a row of a sheet: one statement of that verb in that bean
+            b = vm.CORE.G.beans.get(bean)
+            row = next((r for _i, vb, r in (b.items if b is not None else []) if vb == el and r.get("id") == stmt
+                        and "held" not in r), None) if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,120}", stmt or "") else None
+            if row is None:
+                return 404, {"error": "no %s %r in %s: the action sits on a row of its sheet" % (el, stmt, bean)}
+        elif stmt:
+            return 400, {"error": "the action sits on the being, not on a row of it"}
+        else:
+            row = None
+        import view_engraved as ve                    # the choices an input offers this viewer, as the page drew them
         declared = {i.get("name"): i for i in a.get("inputs") or []}
-        given = {k: str(x) for k, x in (inputs or {}).items() if k in declared}
-        undeclared = sorted(set(inputs or {}) - set(declared))
-        missing = sorted(n for n, i in declared.items() if not given.get(n, "").strip() and given_by_person(i))
+        undeclared = sorted(set(inputs or {}) - set(declared) - {n for n, i in declared.items() if i.get("from")})
+        given, why = {}, []
+        mine = lambda act, b, *x, **k: self.may(user, b)[0]
+        for name, i in declared.items():
+            if i.get("from"):                          # the host's to fill, never the page's
+                given[name] = self._filled(bean, stmt, row, i["from"])
+                continue
+            got = (inputs or {}).get(name)
+            if str(i.get("type") or "") == "file":
+                if got in (None, "", {}):
+                    continue
+                sha, err = self._keep_file(got)
+                if err:
+                    why.append("%s: %s" % (name, err))
+                else:
+                    given[name] = sha
+                continue
+            vals = got if isinstance(got, list) else ([] if got in (None, "") else [got])
+            vals = [str(x) for x in vals if str(x).strip()]
+            if len(vals) > 1 and i.get("many") not in ("true", True):
+                why.append("%s: one value, not %d" % (name, len(vals)))
+                continue
+            if i.get("of"):
+                offered = {c["value"] for c in (ve.input_choices(i, mine) or []) if not c.get("disabled")}
+                wrong = [x for x in vals if x not in offered]
+                if wrong:
+                    why.append("%s: %s is no choice offered here" % (name, ", ".join(wrong)))
+                    continue
+            if vals:
+                given[name] = vals if i.get("many") in ("true", True) else vals[0]
+        missing = sorted(n for n, i in declared.items() if n not in given and given_by_person(i) and not i.get("from")
+                         and not any(n in w.split(":")[0] for w in why))
         base["inputs"] = given
-        if undeclared or missing:
+        if undeclared or missing or why:
             self.audit(dict(base, mode="refused", why="inputs"))
             return 400, {"error": "refused: " + "; ".join(
                 (["the action declares no input %s" % ", ".join(undeclared)] if undeclared else []) +
-                (["the action asks for %s" % ", ".join(missing)] if missing else []))}
+                (["the action asks for %s" % ", ".join(missing)] if missing else []) + why)}
         if a.get("reason") and not reason:
             return 400, {"error": "refused: the action asks a reason", "reason_asked": True}
         ans = self.may(user, bean, act=True, tool=tool, reason=reason)
@@ -726,7 +773,10 @@ class Host:
         if not walk:
             self.audit(dict(base, mode="refused", why="the host maps the tool to no walk"))
             return 403, {"error": "the host starts no walk for tool %r — nothing ran" % tool}
-        args = [bean, "--start", walk, "--by", actor] + [x for k, w in sorted(given.items()) for x in ("--input", "%s=%s" % (k, w))]
+        args = [bean, "--start", walk, "--by", actor]
+        for k, w in sorted(given.items()):             # a list given as its values, each an `--input` of the name
+            for x in (w if isinstance(w, list) else [w]):
+                args += ["--input", "%s=%s" % (k, x)]
         with self.wlock:
             rc, out = self._act_py(*args)
         m = re.search(r"^act: \S+ (run-\d+): (.*)$", out, re.M)
@@ -737,6 +787,51 @@ class Host:
         self.refresh(force=True, reexec=False)
         return 200, {"mode": "started", "bean": bean, "course": course, "stands": m.group(2) if m else out[-300:],
                      "plan": self._plan_of(bean, course) if course else ""}
+
+    def _filled(self, bean, stmt, row, path):
+        """An input filled from the element: `self` its own (the row's statement `<bean>#<id>`, or the being), or a path
+        into it — into the row's roles on a row, into the being's front matter on a line or a sheet."""
+        if path == "self":
+            return "%s#%s" % (bean, stmt) if stmt else bean
+        if row is not None:
+            x = row
+            for part in str(path).split("."):
+                x = x.get(part) if isinstance(x, dict) else None
+            return "" if x is None else str(x)
+        import reckon as dmreckon
+        got = dmreckon.path_values(vm.fm(bean), str(path), root=vm.ROOT)
+        return str(got[0]) if isinstance(got, list) and got else ("" if got in (None, []) else str(got))
+
+    def _keep_file(self, got):
+        """A file a person gave, kept off git under its SHA-256 in the garden's git directory (`daftar-inputs/`, readable
+        by its owner alone), at most the host's bound (`file_bound`, 16 MiB unless set): (sha-256, None) or (None, why).
+        Its bytes are never written to the audit, the ledger or the run's capture: its SHA-256 is."""
+        import base64, hashlib
+        if not isinstance(got, dict) or not isinstance(got.get("data"), str):
+            return None, "a file is given as its name and its bytes"
+        bound = int(self.cfg.get("file_bound") or 16 * 2 ** 20)
+        if len(got["data"]) > (bound * 4) // 3 + 4:
+            return None, "the file is larger than this host takes (%d bytes)" % bound
+        try:
+            data = base64.b64decode(got["data"], validate=True)
+        except (ValueError, TypeError):
+            return None, "the file's bytes do not read"
+        if len(data) > bound:
+            return None, "the file is larger than this host takes (%d bytes)" % bound
+        sha = hashlib.sha256(data).hexdigest()
+        r = subprocess.run(["git", "-C", vm.ROOT, "rev-parse", "--absolute-git-dir"], capture_output=True, text=True,
+                           encoding="utf-8")
+        if r.returncode:
+            return None, "no garden's git directory to keep it in"
+        d = os.path.join(r.stdout.strip(), "daftar-inputs")
+        os.makedirs(d, mode=0o700, exist_ok=True)
+        path = os.path.join(d, sha)
+        if not os.path.isfile(path):
+            fd = os.open(path + ".part", os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, "wb") as fh:
+                fh.write(data)
+            os.replace(path + ".part", path)
+        return sha, None
 
     def decide(self, user, bean, course, do):
         """A person's ratification of a run's plan, or their refusal of it (bin/act.py `--ratify`, `--decline`): who may

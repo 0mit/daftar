@@ -143,6 +143,8 @@ def problems(J, b):
             if isinstance(r.get(q), dict):
                 got = lines.attrs_problems(f"{where}.{q}", r[q], L.forms.get(fname) or {})
                 out += got or domain_problems(J, b, f"{where}.{q}", r[q], (L.forms.get(fname) or {}).get('attrs') or {})
+        if isinstance(r.get('drawing'), dict):
+            out += _action_inputs(J, b, f"{where}.drawing", r['drawing'], readings)
         if 'drawing' in r and not isinstance(r.get('id'), str):
             out.append((where, "a drawing is named: its `draw` has an `id`, which its page and its drawing module name "
                                "it by"))
@@ -238,6 +240,41 @@ def _units_named(L):
 
 def _signals(L):
     return {str(r.get('signal')) for r in L.std._tsv(os.path.join('seed', 'knowledge', 'signals.tsv')) if r.get('signal')}
+
+
+CLOCK = {'act': 'read', 'nature': 'soma', 'by': 'reader'}
+
+
+def _action_inputs(J, b, where, drawing, readings):
+    """AN ACTION'S INPUTS, ASKED AS A PAGE ASKS THEM (ratified 2026-10-13): a value chosen `of` a reading this page
+    declares or a scheme the garden knows (`scheme:<name>`); one filled `from` the element, only where a person would
+    give it (never the clock's), and never both filled and chosen."""
+    out = []
+    for n, a in enumerate(_listed(drawing.get('actions'))):
+        if not isinstance(a, dict):
+            continue
+        for m, i in enumerate(_listed(a.get('inputs'))):
+            if not isinstance(i, dict):
+                continue
+            w = f"{where}.actions[{n}].inputs[{m}]"
+            of = i.get('of')
+            if isinstance(of, str):
+                if of.startswith('scheme:'):
+                    try:
+                        known = J.L.std.knowledge.schemes
+                    except Exception:
+                        known = {}
+                    if of[7:] not in known:
+                        out.append((f"{w}.of", f"{of!r}: no scheme the garden knows (its VOCAB.md `schemes`, or the law's)"))
+                elif of not in readings:
+                    out.append((f"{w}.of", f"{of!r}: no reading this page declares (a `reckon` of its bean), and no "
+                                           f"`scheme:<name>`"))
+            if i.get('from') is not None:
+                if i.get('origin') == CLOCK:
+                    out.append((f"{w}.from", "the clock's input is read by the reader, never filled from the element"))
+                if of is not None:
+                    out.append((f"{w}.from", "an input filled from the element is not chosen too: `from` or `of`"))
+    return out
 
 
 def domain_why(J, b, M, where, v, dom):

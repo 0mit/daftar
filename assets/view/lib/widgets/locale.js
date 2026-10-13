@@ -219,6 +219,7 @@ export const SAID = {
   'act-decline': {en: 'Decline', fa: 'رد'},
   'act-waits': {en: 'It waits at: {at}', fa: 'منتظر می‌ماند در: {at}'},
   'act-refused': {en: 'Refused — nothing was changed.', fa: 'پذیرفته نشد — چیزی تغییر نکرد.'},
+  'act-file-unread': {en: 'The file could not be read — nothing was started.', fa: 'پرونده خوانده نشد — چیزی آغاز نشد.'},
   // the fields of a contact as bin/held.py `person` keeps them, and a record held off git made from a sheet
   'held-name': {en: 'Name', fa: 'نام'},
   'held-phone': {en: 'Phone', fa: 'تلفن'},

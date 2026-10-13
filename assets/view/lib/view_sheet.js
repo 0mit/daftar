@@ -68,7 +68,7 @@
     function readOne(s) {
       var held = s.held ? h`<span class="eg-held">${s.held.here ? t.say('sheet-held') : s.held.host ? t.say('sheet-kept-on', {host: t.titleOf(s.held.host) || s.held.host}) : t.say('sheet-kept-off')}</span>` : '';
       return h`<li class="eg-statement${s.held ? ' eg-sealed' : ''}" data-fact="${s.key}">
-        <div class="eg-roles">${s.roles ? rolesOf(s.verb, s.roles) : ''} ${held}</div>${known(s)}
+        <div class="eg-roles">${s.roles ? rolesOf(s.verb, s.roles) : ''} ${held}</div>${known(s)}${rowActions(s)}
         ${(s.defaults || []).map(function (d) {
           return h`<div class="eg-default">${heading(d.verb)}: ${w.being.show(d.by, t.titleOf(d.by) || d.title || d.by, {action: 'open'})} — ${t.say('sheet-default', {says: d.says})}</div>`; })}
         ${(s.dependents || []).length ? h`<ol class="eg-dependents">${s.dependents.map(function (d) {
@@ -225,19 +225,46 @@
     // (the page's `actions`; its button its `note`), its inputs drawn by their form — a day in the reader's calendar, a
     // number in their digits, words — started by the host, its plan shown, then ratified or declined: nothing is changed
     // until a person ratifies it
+    // an action on the sheet's being (a table's line, the sheet), or on each row of a verb it shows (a statement)
+    function onRow(a) { return a.el !== 'line' && a.el !== 'sheet'; }
     function actionsOf() {
-      if (!t.act || editing || !(data.actions || []).length) return '';
+      if (!t.act || editing || !(data.actions || []).some(function (a) { return !onRow(a); })) return '';
       return h`<section class="eg-row eg-actions" data-fact="actions">${(data.actions || []).map(function (a, n) {
-        return h`<div class="eg-action" data-action-n="${n}"><button type="button" class="eg-btn" data-act-open="${n}">${w.text.show(a.note || a.tool)}</button><div class="eg-act-body"></div></div>`;
+        return onRow(a) ? '' : h`<div class="eg-action" data-action-n="${n}"><button type="button" class="eg-btn" data-act-open="${n}">${w.text.show(a.note || a.tool)}</button><div class="eg-act-body"></div></div>`;
       })}</section>`;
     }
+    // ON A ROW: a button for each action that sits on the row's verb, its statement what the action acts on
+    function rowActions(s) {
+      if (!t.act || editing || !s.id) return '';
+      var acts = (data.actions || []).map(function (a, n) { return [a, n]; }).filter(function (x) { return onRow(x[0]) && x[0].el === s.verb; });
+      return acts.length ? h`<div class="eg-actions eg-row-actions">${acts.map(function (x) {
+        return h`<span class="eg-action"><button type="button" class="eg-btn" data-act-row="${s.id}" data-act-n="${x[1]}">${w.text.show(x[0].note || x[0].tool)}</button><span class="eg-act-body" data-act-box=""></span></span>`;
+      })}</div>` : '';
+    }
+    // a choice's rows: a reading's members by title; a scheme's by its code's name in the reader's language (`codes`)
+    function choicesOf(i) {
+      return (i.choices || []).map(function (c) {
+        var named = ((t.E.codes || {})[c.value] || {}).name;
+        return {value: c.value, label: named || c.label || c.value, disabled: !!c.disabled};
+      });
+    }
+    function actInput(i) {
+      var nm = 'act.' + i.name, ty = String(i.type || ''), many = i.many === 'true' || i.many === true;
+      if (i.choices && many) {
+        return h`<span class="eg-choices">${choicesOf(i).map(function (c) {
+          return h`<label class="eg-choice"><input type="checkbox" name="${nm}" value="${c.value}"${c.disabled ? h` disabled` : ''}> ${w.text.show(c.label)}</label>`;
+        })}</span>`;
+      }
+      if (i.choices) return w.choice.edit(nm, '', choicesOf(i));
+      if (ty === 'file') return h`<input type="file" class="w-input w-file-input" name="${nm}">`;
+      if (/position|day|date|moment/.test(ty)) return w.moment.edit(nm, '');
+      if (i.quantity || /count|number|decimal/.test(ty)) return w.number.edit(nm, '');
+      return w.text.edit(nm, '', many ? {lines: true} : {});
+    }
     function actForm(a) {
-      var said = (a.inputs || []).filter(function (i) { var o = i.origin || {}; return !(o.act === 'read' && o.by === 'reader'); });
+      var said = (a.inputs || []).filter(function (i) { var o = i.origin || {}; return !(o.act === 'read' && o.by === 'reader') && !i.from; });
       return h`${a.confirm ? h`<p class="eg-known">${w.text.show(a.confirm)}</p>` : ''}${said.map(function (i) {
-        var nm = 'act.' + i.name, ty = String(i.type || '');
-        var input = /day|date|moment/.test(ty) ? w.moment.edit(nm, '') : (i.quantity || /count|number|decimal/.test(ty))
-          ? w.number.edit(nm, '') : w.text.edit(nm, '');
-        return h`<label class="eg-field" data-role="${i.name}"><span class="eg-role-name">${w.text.show(i.note || i.name)}</span> ${input}<span class="eg-err" data-err="${nm}"></span></label>`;
+        return h`<label class="eg-field" data-role="${i.name}"><span class="eg-role-name">${w.text.show(i.note || i.name)}</span> ${actInput(i)}<span class="eg-err" data-err="${'act.' + i.name}"></span></label>`;
       })}${a.reason ? h`<label class="eg-field" data-role="reason"><span class="eg-role-name">${t.say('act-reason')}</span> ${w.text.edit('act.reason', '', {lines: true})}</label>` : ''}<div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-act-start="">${t.say('act-start')}</button> <span class="eg-err" data-err-act=""></span></div>`;
     }
     function wireActions() {
@@ -248,27 +275,65 @@
           box.querySelector('[data-act-start]').addEventListener('click', function () { startAct(a, box); });
         });
       });
+      el.querySelectorAll('[data-act-row]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var a = data.actions[Number(b.getAttribute('data-act-n'))], box = b.nextElementSibling, row = b.getAttribute('data-act-row');
+          t.mount(box, actForm(a));
+          box.querySelector('[data-act-start]').addEventListener('click', function () { startAct(a, box, row); });
+        });
+      });
     }
-    function startAct(a, box) {
-      var inputs = {}, bad = false, say = function (x) { var e = box.querySelector('[data-err-act]'); if (e) e.textContent = x; };
-      box.querySelectorAll('[name^="act."]').forEach(function (f) {
-        var name = f.getAttribute('name').slice(4), v = f.value.trim();
-        if (name === 'reason') return;
-        if (f.classList.contains('w-moment-input') && v) {
-          var m = w.moment.take(v);
-          if (m.error) { box.querySelector('[data-err="act.' + name + '"]').textContent = m.error; bad = true; return; }
-          v = m.value;
-        } else if (f.classList.contains('w-num-input') && v) {
-          var c = w.number.take(v);
-          if (c.error) { box.querySelector('[data-err="act.' + name + '"]').textContent = c.error; bad = true; return; }
-          v = c.value;
+    // a file chosen, as the host takes it: its name and its bytes (base64)
+    function fileOf(f) {
+      return new Promise(function (ok, no) {
+        var rd = new FileReader();
+        rd.onload = function () { var u = String(rd.result || ''); ok({name: f.name, data: u.slice(u.indexOf(',') + 1)}); };
+        rd.onerror = function () { no(rd.error); };
+        rd.readAsDataURL(f);
+      });
+    }
+    function startAct(a, box, row) {
+      var inputs = {}, bad = false, files = [], say = function (x) { var e = box.querySelector('[data-err-act]'); if (e) e.textContent = x; };
+      var err = function (name, x) { var e = box.querySelector('[data-err="act.' + name + '"]'); if (e) e.textContent = x; bad = true; };
+      (a.inputs || []).forEach(function (i) {
+        var o = i.origin || {}, name = i.name, many = i.many === 'true' || i.many === true;
+        if (i.from || (o.act === 'read' && o.by === 'reader')) return;      // the host's to fill, or the clock's
+        var fs = [].slice.call(box.querySelectorAll('[name="act.' + name + '"]'));
+        if (!fs.length) return;
+        if (String(i.type || '') === 'file') {
+          if (fs[0].files && fs[0].files[0]) files.push(fileOf(fs[0].files[0]).then(function (x) { inputs[name] = x; }));
+          return;
         }
-        inputs[name] = v;
+        if (i.choices && many) {
+          inputs[name] = fs.filter(function (f) { return f.checked; }).map(function (f) { return f.value; });
+          return;
+        }
+        var v = String(fs[0].value || '').trim();
+        if (!v) return;
+        if (i.choices) {
+          var c = w.choice.take(v, choicesOf(i));
+          if (c.error) return err(name, c.error);
+          inputs[name] = c.value;
+        } else if (fs[0].classList.contains('w-moment-input')) {
+          var m = w.moment.take(v);
+          if (m.error) return err(name, m.error);
+          inputs[name] = m.value;
+        } else if (fs[0].classList.contains('w-num-input')) {
+          var n = w.number.take(v);
+          if (n.error) return err(name, n.error);
+          inputs[name] = n.value;
+        } else {
+          inputs[name] = many ? v.split('\n').map(function (x) { return x.trim(); }).filter(Boolean) : v;
+        }
       });
       if (bad) return;
       var why = box.querySelector('[name="act.reason"]');
-      t.act(Object.assign({m: a.drawing, el: a.el, tool: a.tool, bean: a.bean, inputs: inputs}, why && why.value.trim() ? {reason: why.value.trim()} : {}))
+      Promise.all(files).then(function () {
+        return t.act(Object.assign({m: a.drawing, el: a.el, tool: a.tool, bean: row ? a.bean + '#' + row : a.bean, inputs: inputs},
+                                   why && why.value.trim() ? {reason: why.value.trim()} : {}));
+      }, function () { say(t.say('act-file-unread')); return null; })
         .then(function (r) {
+          if (!r) return;
           var ans = r.answer || {};
           if (r.status !== 200) { say(t.say('act-refused') + ' ' + (ans.error || '')); return; }
           t.mount(box, h`<p class="eg-known">${t.say('act-plan')}</p><pre class="eg-plan" dir="auto">${ans.plan || ''}</pre><p class="eg-known">${t.say('act-waits', {at: ans.stands || ''})}</p><div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-act-do="ratify">${t.say('act-ratify')}</button> <button type="button" class="eg-btn" data-act-do="decline">${t.say('act-decline')}</button> <span class="eg-err" data-err-act=""></span></div>`);
