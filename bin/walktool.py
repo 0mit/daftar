@@ -16,6 +16,8 @@ restore, its service's model — and names nothing of a garden in its code.
     W.save(who, what, body)  -> what it said    bin/act.py's save (bin/save.py): the change journalled and committed,
                                                 or the tool stopped
     W.seal(bean, ids)        -> [journal line]  bin/held.py: each statement sealed in this host's store
+    W.garden_file(path)      -> path            a file of the garden a write may change whole (`files`, below), or a
+                                                refusal
     W.main(name, steps, more)                   `<step> <bean> <course>` to `steps[step](bean, course)`, `<command> …`
                                                 to `more[command](argv)`, anything else the usage; a refusal (Refused)
                                                 said as the tool's own, exit 1
@@ -38,9 +40,14 @@ out, a bean made or taken out whole — its plan is that write, and the steps ar
 per bean, the statements to add (`<verb>: { id: …, … }`, one a line, each with an id), the ids to take out, the head
 and body of a bean made (`new: {head, body}`) or `gone: true` for one taken out whole, and how what it adds is known
 (`known`: `{act: say}`, the default, or `{act: read, from: <a being>, through: <how>}` for what was read from a source).
+And `files: [{path, before, after}]`: a file of the garden other than a bean — a scheme's table of the garden's own, a
+mapping of a bank's columns — changed whole, its text as the plan read it (`before`; none for a file it makes) and as it
+writes it (`after`); refused where the file is none a write changes (`garden_file`) or not as the plan read it, read
+back as written, put back as it was on restore.
 A statement is taken out only with the knowing acts that name nothing else: an act that also names a statement kept is
 refused at the plan — a knowing act is never rewritten, and nobody's word is restated for them.
 """
+import difflib
 import json
 import os
 import re
@@ -213,6 +220,40 @@ def _path(G, bid, new=False):
     return b.path
 
 
+def garden_file(rel):
+    """The path of `rel`, a file of the garden a write changes whole: one its layer map places in the estate (the law's
+    rows, core/law/layers.yaml, or the garden's own) and no release keeps — a scheme's table of the garden's own, a
+    mapping of a bank's columns — and no bean, whose statements a write adds and takes out. A refusal for any other: a
+    file of the law changes by a RULE-CHANGE, a person's own save; the journal, a capture, git's own are no write's."""
+    import importlib
+    dmpass = importlib.import_module('pass')
+    rel = str(rel or '')
+    why = dmpass.unwritten(rel)
+    if why:
+        raise Refused(f"{rel!r} is no path of a file of the garden: {why}")
+    m = dmpass.Map.here(ROOT)
+    layer, _placed = m.layer_of(rel)
+    if layer != 'estate':
+        raise Refused(f"{rel} stands in {'the layer ' + layer if layer else 'no layer'}: a write changes a file of the "
+                      f"estate — one of the law changes by a RULE-CHANGE, a person's own save")
+    if rel.startswith(dmpass.DOCUMENTS):
+        raise Refused(f"{rel} is a bean's file: a write changes a bean by its statements")
+    if m.keeper_of(rel) != 'here':
+        raise Refused(f"{rel} is a release's: it changes with the release that keeps it")
+    path = os.path.join(ROOT, *rel.split('/'))
+    real = os.path.realpath(path)
+    if os.path.commonpath([real, os.path.realpath(ROOT)]) != os.path.realpath(ROOT):
+        raise Refused(f"{rel} leads out of the garden")
+    return path
+
+
+def _text(path):
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding='utf-8', newline='') as fh:
+        return fh.read()
+
+
 def _taken_acts(b, remove):
     """The knowing acts of bean `b` that go with the statements `remove`: each names only statements taken out. An act
     that names one taken out and one kept is refused: a knowing act is never rewritten, and its word is its knower's."""
@@ -267,6 +308,20 @@ def plan_writes(write):
                 raise Refused(f"{bid} holds a statement {roles['id']!r} already")
             words.append(f"  + {bid}: {line}")
         _known(e)
+    seen = set()
+    for f in write.get('files') or []:
+        if not isinstance(f, dict) or not isinstance(f.get('after'), str) or f.get('path') in seen \
+                or not isinstance(f.get('before'), (str, type(None))):
+            raise Refused("a file a plan writes is `{path, before, after}`, its texts as read and as written, each "
+                          "path once")
+        seen.add(f['path'])
+        if _text(garden_file(f['path'])) != f['before']:
+            raise Refused(f"{f['path']} is not as the plan read it")
+        if f['before'] is None:
+            words.append(f"  + the file {f['path']}, made")
+        for d in difflib.ndiff((f['before'] or '').splitlines(), f['after'].splitlines()):
+            if d[:2] in ('- ', '+ '):
+                words.append(f"  {d[0]} {f['path']}: {d[2:]}")
     text = '\n'.join(words) + '\n' + PLAN_MARK + '\n' + json.dumps(write, ensure_ascii=False, sort_keys=True) + '\n'
     print(text, end='')
     return text
@@ -398,6 +453,7 @@ def apply_writes(bean, course):
     G = _garden()
     entries = write.get('beans') or []
     paths = {str(e.get('bean')): _path(G, str(e.get('bean')), new=bool(e.get('new'))) for e in entries}
+    files = [(f, garden_file(f.get('path'))) for f in write.get('files') or []]
     course_path, moves = _path(G, bean), []
 
     def edit():
@@ -428,9 +484,17 @@ def apply_writes(bean, course):
                     act = f"- say: {{ by: {who}, of: [{', '.join(ids)}], at: now }}\n"
                 dmsafe.add_statements(p, ''.join(f"- {line}\n" for line in e['add']) + act)
                 said.append(f"- added: [[{bid}]] {', '.join(ids)}")
+        for f, p in files:
+            if _text(p) != f.get('before'):
+                raise Refused(f"{f['path']} changed since the plan was shown")
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, 'w', encoding='utf-8', newline='') as fh:
+                fh.write(f['after'])
+            said.append(f"- {'made' if f.get('before') is None else 'changed'}: {f['path']}, as the plan showed it")
         return said + [f"- action: the plan {who} ratified for the course {course} of {bean}, written as it was shown"]
     what = str(write.get('what') or f"{bean} {course}: applied")
-    out = _guarded_save(list(paths.values()) + [course_path], who, what, write.get('body') or [], edit)
+    out = _guarded_save(list(paths.values()) + [p for _f, p in files] + [course_path], who, what,
+                        write.get('body') or [], edit)
     if moves and moves[0]:
         dmsafe.add_statements(course_path, moves[0])
     print(out, end='')
@@ -473,13 +537,18 @@ def verify_writes(bean, course):
             hit = b.ids.get(roles['id'])
             if hit is None or hit[1] != verb or not _same(roles, hit[2]):
                 raise Refused(f"{bid}: {verb}#{roles['id']} does not read back as it was written")
-    print(f"read back: {len(write.get('beans') or [])} bean(s) as the plan wrote them")
+    for f in write.get('files') or []:
+        if _text(garden_file(f.get('path'))) != f.get('after'):
+            raise Refused(f"{f.get('path')} does not read back as the plan wrote it")
+    print(f"read back: {len(write.get('beans') or [])} bean(s) and {len(write.get('files') or [])} file(s) as the plan "
+          f"wrote them")
 
 
 def restore_writes(bean, course):
-    """Take out what apply added — each statement, the act it wrote to know them, each bean it made — in a save of its
-    own. What apply took out is in git; only a person restates it, so a plan that took anything out is restored in part,
-    and this says so and exits 1."""
+    """Take out what apply added — each statement, the act it wrote to know them, each bean it made — and put each file it
+    changed back as the plan read it (where it still reads as apply wrote it), in a save of its own. What apply took out
+    is in git; only a person restates it, so a plan that took anything out is restored in part, and this says so and
+    exits 1."""
     write = shown_write(bean, course)
     _garden_fresh()
     G = _garden()
@@ -494,8 +563,18 @@ def restore_writes(bean, course):
         if e.get('new') or ids:
             todo.append((b, bool(e.get('new')), ids))
 
+    files = [(f, garden_file(f.get('path'))) for f in write.get('files') or []]
+    files = [(f, p) for f, p in files if _text(p) == f.get('after') and f.get('before') != f.get('after')]
+
     def edit():
         said = []
+        for f, p in files:
+            if f.get('before') is None:
+                os.remove(p)
+            else:
+                with open(p, 'w', encoding='utf-8', newline='') as fh:
+                    fh.write(f['before'])
+            said.append(f"- put back: {f['path']}, as it was before the plan")
         for b, made, ids in todo:
             if made:
                 os.remove(b.path)
@@ -505,8 +584,9 @@ def restore_writes(bean, course):
             said.append(f"- taken out: [[{b.id}]] {', '.join(sorted(ids))}, as the plan added them"
                         + (f", and the {' and '.join(verbs)} that knew them" if verbs else ''))
         return said + [f"- action: the course {course} of {bean} restored: what its plan added is taken out"]
-    out = _guarded_save([b.path for b, _m, _i in todo], who, f"{bean} {course}: what the plan added, taken out", [],
-                        edit) if todo else "nothing the plan added is here: nothing to take out\n"
+    out = _guarded_save([b.path for b, _m, _i in todo] + [p for _f, p in files], who,
+                        f"{bean} {course}: what the plan added, taken out", [], edit) if todo or files else \
+        "nothing the plan added is here: nothing to take out\n"
     print(out, end='')
     if gone:
         raise Refused(f"restored in part: what the plan took out of {', '.join(gone)} is in git, and only a person "
