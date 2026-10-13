@@ -62,3 +62,16 @@
 .eg-tag{display:inline-block;padding:1px 8px;border:1px solid var(--line,#cfd8e2);border-radius:10px;font-size:.85em;margin-inline-end:4px}
 .eg-actions .eg-action{margin-block:6px}.eg-act-body:not(:empty){margin-block:6px;padding-inline-start:12px;border-inline-start:2px solid var(--line,#cfd8e2)}
 .eg-plan{white-space:pre-wrap;font-size:.85em;background:var(--panel,#fff);border:1px solid var(--line,#cfd8e2);border-radius:6px;padding:6px 8px;max-height:16em;overflow:auto}
+.eg-chart{margin-block:0 1.5em}
+.eg-chart-unit{font-size:1em;margin-block:.6em .3em}
+.eg-chart-period{color:var(--muted,#5a6a7b);margin-block:0 .4em}
+.eg-chart-table td,.eg-ledger td{text-align:end;font-variant-numeric:tabular-nums}
+.eg-chart-table tr[data-posts="no"] th,.eg-chart-table tr[data-posts="no"] td{font-weight:600}
+.eg-chart-table tr[data-depth="1"] th{padding-inline-start:1.6em}
+.eg-chart-table tr[data-depth="2"] th{padding-inline-start:2.6em}
+.eg-chart-table tr[data-depth="3"] th,.eg-chart-table tr[data-depth="4"] th{padding-inline-start:3.6em}
+.eg-chart-table tfoot th,.eg-chart-table tfoot td{border-block-start:2px solid var(--line,#cfd8e2);font-weight:600}
+.eg-ledger{margin-block:.4em}
+.eg-ledger summary{cursor:pointer}
+.eg-ledger td:nth-child(2){text-align:start}
+.eg-link{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline dotted}

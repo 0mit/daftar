@@ -91,6 +91,7 @@ parts, changes).
    python3 test/view_held_names.py
    python3 test/view_held_named.py
    python3 test/view_code_names.py
+   python3 test/view_books.py
    python3 test/view_between_names.py
    python3 test/view_actions.py
    python3 test/view_held_records.py
