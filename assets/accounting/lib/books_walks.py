@@ -19,9 +19,10 @@ its bookings, else `books-<entity>`, made by the first write:
   close    `day`: the books' reading through the day (`reckon`, its step `books`) and its `pin` at the commit the plan
            read — after the last close, not after today.
   remove   `of` (a document's bean, or a payment `<bean>#<id>`), `reason`: taken out — the bean whole, or the payment
-           with its shares — with every booking and match of the entity's that names what goes, in turn; refused where
-           closed books read any of it (reverse it instead), where another statement names it, where a statement that
-           would go is sealed, for a line read from a source (its whole statement goes), and on the run's own bean.
+           with its shares — with every booking and match of the entity's that names what goes, in turn, and each key
+           of a bean's `details` that names it (a category, a note kept beside a payment); refused where closed books
+           read any of it (reverse it instead), where another statement names it, where a statement that would go is
+           sealed, for a line read from a source (its whole statement goes), and on the run's own bean.
   chart    `code`, and `name`, `parent`, `level`, `element`, `stands-for`, `parties`, `role`, `closed`, `name-<lang>`: an
            account of the chart added beneath its parent, or changed — a row of the garden's own table (`files`) — never
            a code changed, never an account the books used moved; the row held to the chart's form as the gate holds it.
@@ -631,6 +632,28 @@ def from_garden(B, ref):
                  and B.G.beans[x].kind == 'garden'), None)
 
 
+def details_naming(B, gone, bid, whole):
+    """{bean: [path of keys]}: each key of a bean's `details`, at any depth, that names what goes — `<bean>#<id>` of a
+    statement that goes (in that statement's own bean, its id alone too) or, for a document taken out whole, its bean
+    or any key `<bean>#…` under it. What is beneath such a key goes with it: the category, the note, the history a
+    garden kept of a payment beside the payment."""
+    out = {}
+
+    def walk(ob, b, node, path):
+        for k, v in node.items():
+            if not isinstance(k, str):
+                continue
+            ref = k if '#' in k else f"{ob}#{k}" if k in b.ids else k
+            if ref in gone or (whole and (k == bid or k.startswith(bid + '#'))):
+                out.setdefault(ob, []).append(path + [k])
+            elif isinstance(v, dict):
+                walk(ob, b, v, path + [k])
+    for ob, b in sorted(B.G.beans.items()):
+        if not (whole and ob == bid) and isinstance(b.header.get('details'), dict):
+            walk(ob, b, b.header['details'], [])
+    return out
+
+
 def kept_closed(B, entries):
     """What rule `kept` refuses of a write, its books' half, asked of the gate itself (core/commit.py `_closed`, the
     closes of every entity and chart of the garden): each statement closed books read that the write would take out or
@@ -656,7 +679,7 @@ def remove(B, I, today, run=(None, None)):
     taken out of its bean (`of`: `<bean>#<id>`), with `reason`. With it goes every booking and match of the entity's
     that names what goes — a booking of a booking, a reversal, an entry resting on it, in turn — and a share of the
     payment beside it (`bear`); the knowing acts that knew only what goes go too (what else such an act knew is written
-    again as it was). Refused where closed books read any of it (the gate's own words: reverse it instead); where another
+    again as it was); and each key of a bean's `details` that names what goes, with what is beneath it. Refused where closed books read any of it (the gate's own words: reverse it instead); where another
     statement of the garden still names what goes; where any of it is another garden's word, taken from its proposal
     (dispute it there); where a sealed statement would go (erase it first, bin/held.py);
     where the payment was read from a source (its whole statement is taken out); where the bean is the books' own or no
@@ -721,6 +744,12 @@ def remove(B, I, today, run=(None, None)):
     for ob, ids in sorted(takes.items()):
         more, again = kept_known(B, ob, ids)
         entries.append({'bean': ob, 'remove': sorted(set(ids) | set(more)), 'add': again})
+    for ob, paths in details_naming(B, gone, bid, whole).items():          # what a garden kept of it beside it
+        e = next((x for x in entries if x['bean'] == ob), None)
+        if e is None:
+            entries.append({'bean': ob, 'unset': paths})
+        else:
+            e['unset'] = paths
     held = sorted(x for x in gone if '#' in x and 'held' in statement(B, x)[2])
     if held:
         refuse(f"{', '.join(held[:6])} {'is' if len(held) == 1 else 'are'} sealed, kept off git: erase "
