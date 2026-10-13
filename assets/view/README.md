@@ -241,6 +241,16 @@ host keeps of them off git. And only while the word they were kept on stands (`H
 neither. Every other reader, every other host and the page of one file have their opaque id, as the ledger does; once
 they are erased from the store, so does the host that kept them.
 
+**A run started from a page.** A drawing engraved from a reading gives elements an action may sit on (the law's
+`actions`, "the drawn element … by the id its drawing gives it"): a table's `line` and a sheet's `sheet`, each its
+being. Each sheet carries the actions of the drawing it was opened from that its reader may act by (`act:<tool>`, an
+`enact` grant of the being), its button the action's `note`, its question its `confirm`, its inputs a form drawn by
+their `type` (a day in the reader's calendar, a number in their digits, words) and named by their `note`. The host
+maps the action's `tool` to a walk of the garden (`tools: { <name>: { walk: <walk> } }`: what a page may start is the
+host's to say) and starts it (`Host.start`: bin/act.py `--start`, as the viewer's being, the inputs kept as the run's
+own capture and given to the walk's tool at each step, bin/walktool.py `inputs`); the plan is shown, and nothing changes
+until a person ratifies it (`Host.decide`: `--ratify`, `--decline`). A served page asks both through `/api/action`.
+
 **A code by its name.** A value a page holds as `<scheme>:<code>`, of a scheme the garden knows (the law's, or its own
 `schemes`) — an account a payment is booked to, a code a being is classified by — is drawn by its name in the scheme's
 own table, read by the one reader (`bin/knowledge.py`): its label in the reader's language where the table carries one

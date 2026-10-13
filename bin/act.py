@@ -4,6 +4,16 @@
     python3 bin/act.py <bean> <course>                  # the engine's steps, until a person's step, an end or an exit
     python3 bin/act.py <bean> <course> --ratify <who>   # a person ratifies the plan they were shown
     python3 bin/act.py <bean> <course> --decline <who>  # ...or declines it: the run is refused, nothing changed
+    python3 bin/act.py <bean> --start <walk> --by <who> [--input <name>=<value>]...
+                                                        # a run started, with what a person gave it: its course placed
+                                                        # in the bean, its inputs kept, the engine run to its plan
+
+A RUN STARTED, WITH ITS INPUTS (a page's action, or a person at the terminal): `--start` asks the law whether `who` may
+act on the bean by the walk (`may … act:<walk>`: the gardener, or an `enact` grant of the bean), places a course of the
+walk in the bean (`be: { id: run-<n>, by: self, at: <walk>, as: order }`, known by `who`'s `say`), keeps the inputs it
+was given as the run's first capture (`captures/actions/<bean>.<course>.inputs.1.txt`, JSON: each name, its words), and
+runs the engine from `plan`, all of it saved in the engine's one commit. Every step of its tool is given that capture in DAFTAR_ACTION_INPUTS
+(bin/walktool.py `inputs`), as `apply` is given the plan it was shown.
 
 AN ACTION IS A WALK, AND A RUN IS A COURSE (MODEL.md; nothing here is a second sequence). The action is a mapping of the
 garden's `procedure` kind whose `step`s are its steps; the being it changes is placed on it, `be: { id: <course>, by:
@@ -109,8 +119,17 @@ def walk_of(bean, course):
     return wid, steps, path, hid
 
 
+def inputs_of(bean, course):
+    """The path of the inputs a run was started with (its `inputs` capture), or None."""
+    d = os.path.join(ROOT, 'captures', 'actions')
+    got = sorted(f for f in os.listdir(d) if f.startswith(f"{bean}.{course}.inputs.")) if os.path.isdir(d) else []
+    return os.path.join(d, got[-1]) if got else None
+
+
 def run_tool(path, step, bean, course, env=None):
-    """(exit code, what it printed) of the tool's `step`."""
+    """(exit code, what it printed) of the tool's `step` — given the run's inputs where it was started with some."""
+    given = inputs_of(bean, course)
+    env = dict(env or {}, **({'DAFTAR_ACTION_INPUTS': given} if given else {}))
     r = subprocess.run([sys.executable, path, step, bean, course] if path.endswith('.py') else [path, step, bean, course],
                        cwd=ROOT, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=3600,
                        env=dict(os.environ, **(env or {})))
@@ -218,7 +237,8 @@ def engine(bean, course, arrived=False, before=None, readings=None):
     """Run the engine's steps from where the course stands, until a person's step, an end, an exit or a pause: (where it
     stopped, why). A move is the course arriving at a step; an engine's step's tool runs on arrival. `arrived`: the course
     was just moved into its step by a person (apply, after a ratification), or returned from a pause, and its tool runs
-    now; `before`, (who, the entry's lines) of that act, written already and saved in the same commit as the engine's."""
+    now; `before`, (who, the entry's lines[, the act's word: ratified, started]) of that act, written already and saved
+    in the same commit as the engine's."""
     import routines as dmroutines
     fresh()
     wid, steps, tool, hid = walk_of(bean, course)
@@ -326,8 +346,9 @@ def engine(bean, course, arrived=False, before=None, readings=None):
         add_moves(bean, wid, course, [tuple(m) for m in moves], hid, 'make')
     if beside:
         dmsafe.add_statements(os.path.join(ROOT, 'beans', bean + '.md'), '\n'.join(beside) + '\n')
-    who, said = before or (hid, [])
-    save(who, f"{bean} {course}: " + ('ratified' + (', then ' if moves else '') if before and before[0] != hid else '')
+    who, said = (before or (hid, []))[:2]
+    word = before[2] if before and len(before) > 2 else 'ratified'       # the person's act: a ratification, or a start
+    save(who, f"{bean} {course}: " + (word + (', then ' if moves else '') if before and before[0] != hid else '')
          + ', '.join(m[0] for m in moves), said + (
         [f"- action: the engine moved [[{bean}]]'s course {course} on [[{wid}]]: "
          + ' → '.join(m[0] + (f" ({m[2]})" if m[2] else '') for m in moves)] if moves else []) + lines)
@@ -409,10 +430,62 @@ def ratify(bean, course, who, decline=False):
         f"- action: {who} ratified [[{bean}]]'s course {course} on [[{wid}]]"]))
 
 
+_NAME = re.compile(r'^[a-z][a-z0-9-]{0,63}$')
+_CTRL = re.compile('[\x00-\x1f\x7f-\x9f\u2028\u2029]')
+
+
+def start(bean, walk, who, given):
+    """A run of `walk` on `bean` started by `who` with `given` ({name: words}): (where the engine stopped, why, course).
+    Refused, writing nothing, where the law does not open it to them, or the walk is no action's."""
+    fresh()
+    _law, G = dmseq.core(ROOT)
+    b, w = G.beans.get(bean), G.beans.get(walk)
+    if b is None:
+        raise Refused(f"no bean {bean!r} here")
+    if w is None or not any(v == 'step' and r.get('id') == 'plan' for _i, v, r in w.items):
+        raise Refused(f"{walk!r} is no walk of an action here (a `procedure` whose steps begin at `plan`)")
+    if not _NAME.match(str(who or '')):
+        raise Refused("--by names who starts it: the id of their bean")
+    for name, words in given.items():
+        if not _NAME.match(name) or not isinstance(words, str) or _CTRL.search(words) or len(words) > 2000:
+            raise Refused(f"an input is a name (one kebab word) and one line of words: {name!r}")
+    ans = dmpass.may(who, f"act:{walk}", bean, root=ROOT)
+    if not ans.granted:
+        raise Refused(f"{who} may not act on {bean} by {walk}: {ans.why}")
+    ids = {r.get('id') for _i, _v, r in b.items if isinstance(r.get('id'), str)}
+    n = 1
+    while f"run-{n}" in ids:
+        n += 1
+    course = f"run-{n}"
+    rel, sha = capture(bean, course, 'inputs', json.dumps(given, ensure_ascii=False, sort_keys=True, indent=1) + '\n')
+    dmsafe.add_statements(os.path.join(ROOT, 'beans', bean + '.md'),
+                          f"- be: {{ id: {course}, by: self, at: {walk}, as: order }}\n"
+                          f"- say: {{ by: {who}, of: [{course}], at: now }}\n")
+    at, why = engine(bean, course, before=(who, [
+        f"- action: [[{who}]] started [[{walk}]] on [[{bean}]] (its course {course})",
+        f"- inputs: {', '.join(sorted(given)) or 'none'} — {rel} (sha-256 {sha[:16]})"], 'started'))
+    return at, why, course
+
+
 def main(argv):
     if len(argv) < 2 or argv[0] in ('-h', '--help'):
         print(__doc__)
         return 0 if argv[:1] in (['-h'], ['--help']) else 2
+    if argv[1] == '--start':
+        try:
+            if len(argv) < 3 or '--by' not in argv or argv.index('--by') + 1 >= len(argv):
+                raise Refused("--start <walk> --by <who> [--input <name>=<value>]...")
+            given = {}
+            for i, a in enumerate(argv):
+                if a == '--input' and i + 1 < len(argv) and '=' in argv[i + 1]:
+                    k, v = argv[i + 1].split('=', 1)
+                    given[k] = v
+            at, why, course = start(argv[0], argv[2], argv[argv.index('--by') + 1], given)
+        except Refused as e:
+            print(f"act: NOT STARTED: {e}", file=sys.stderr)
+            return 1
+        print(f"act: {argv[0]} {course}: {why}")
+        return 0
     bean, course = argv[0], argv[1]
     try:
         if '--ratify' in argv or '--decline' in argv:

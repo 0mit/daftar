@@ -221,6 +221,69 @@
         return h`<div class="eg-detail" data-detail="${k}"><span class="eg-role-name">${w.text.show(labels[k] || k)}</span> ${one(data.details[k])}</div>`;
       })}<p class="eg-known">${t.say('sheet-details-kept')}</p></section>`;
     }
+    // WHAT A PERSON MAY START FROM THIS SHEET: each action of the drawing it was opened from that the reader may act by
+    // (the page's `actions`; its button its `note`), its inputs drawn by their form — a day in the reader's calendar, a
+    // number in their digits, words — started by the host, its plan shown, then ratified or declined: nothing is changed
+    // until a person ratifies it
+    function actionsOf() {
+      if (!t.act || editing || !(data.actions || []).length) return '';
+      return h`<section class="eg-row eg-actions" data-fact="actions">${(data.actions || []).map(function (a, n) {
+        return h`<div class="eg-action" data-action-n="${n}"><button type="button" class="eg-btn" data-act-open="${n}">${w.text.show(a.note || a.tool)}</button><div class="eg-act-body"></div></div>`;
+      })}</section>`;
+    }
+    function actForm(a) {
+      var said = (a.inputs || []).filter(function (i) { var o = i.origin || {}; return !(o.act === 'read' && o.by === 'reader'); });
+      return h`${a.confirm ? h`<p class="eg-known">${w.text.show(a.confirm)}</p>` : ''}${said.map(function (i) {
+        var nm = 'act.' + i.name, ty = String(i.type || '');
+        var input = /day|date|moment/.test(ty) ? w.moment.edit(nm, '') : (i.quantity || /count|number|decimal/.test(ty))
+          ? w.number.edit(nm, '') : w.text.edit(nm, '');
+        return h`<label class="eg-field" data-role="${i.name}"><span class="eg-role-name">${w.text.show(i.note || i.name)}</span> ${input}<span class="eg-err" data-err="${nm}"></span></label>`;
+      })}${a.reason ? h`<label class="eg-field" data-role="reason"><span class="eg-role-name">${t.say('act-reason')}</span> ${w.text.edit('act.reason', '', {lines: true})}</label>` : ''}<div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-act-start="">${t.say('act-start')}</button> <span class="eg-err" data-err-act=""></span></div>`;
+    }
+    function wireActions() {
+      el.querySelectorAll('[data-act-open]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var a = data.actions[Number(b.getAttribute('data-act-open'))], box = b.nextElementSibling;
+          t.mount(box, actForm(a));
+          box.querySelector('[data-act-start]').addEventListener('click', function () { startAct(a, box); });
+        });
+      });
+    }
+    function startAct(a, box) {
+      var inputs = {}, bad = false, say = function (x) { var e = box.querySelector('[data-err-act]'); if (e) e.textContent = x; };
+      box.querySelectorAll('[name^="act."]').forEach(function (f) {
+        var name = f.getAttribute('name').slice(4), v = f.value.trim();
+        if (name === 'reason') return;
+        if (f.classList.contains('w-moment-input') && v) {
+          var m = w.moment.take(v);
+          if (m.error) { box.querySelector('[data-err="act.' + name + '"]').textContent = m.error; bad = true; return; }
+          v = m.value;
+        } else if (f.classList.contains('w-num-input') && v) {
+          var c = w.number.take(v);
+          if (c.error) { box.querySelector('[data-err="act.' + name + '"]').textContent = c.error; bad = true; return; }
+          v = c.value;
+        }
+        inputs[name] = v;
+      });
+      if (bad) return;
+      var why = box.querySelector('[name="act.reason"]');
+      t.act(Object.assign({m: a.drawing, el: a.el, tool: a.tool, bean: a.bean, inputs: inputs}, why && why.value.trim() ? {reason: why.value.trim()} : {}))
+        .then(function (r) {
+          var ans = r.answer || {};
+          if (r.status !== 200) { say(t.say('act-refused') + ' ' + (ans.error || '')); return; }
+          t.mount(box, h`<p class="eg-known">${t.say('act-plan')}</p><pre class="eg-plan" dir="auto">${ans.plan || ''}</pre><p class="eg-known">${t.say('act-waits', {at: ans.stands || ''})}</p><div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-act-do="ratify">${t.say('act-ratify')}</button> <button type="button" class="eg-btn" data-act-do="decline">${t.say('act-decline')}</button> <span class="eg-err" data-err-act=""></span></div>`);
+          box.querySelectorAll('[data-act-do]').forEach(function (d) {
+            d.addEventListener('click', function () {
+              t.act({do: d.getAttribute('data-act-do'), bean: ans.bean, course: ans.course}).then(function (r2) {
+                var a2 = r2.answer || {};
+                if (r2.status !== 200) { say(t.say('act-refused') + ' ' + (a2.error || '')); return; }
+                t.mount(box, h`<p class="eg-said">${w.text.show(a2.said || a2.mode || '')}</p>`);
+                if (root.location && root.location.reload) setTimeout(function () { root.location.reload(); }, 600);
+              });
+            });
+          });
+        });
+    }
     // THE TAGS, a set of words the page names among a being's facts: each a word of its own, in its own isolate
     function tagsOf(tags) {
       return tags && (tags.value || []).length ? h`<p class="eg-tags" data-fact="header:tags">${t.join(tags.value.map(function (x) { return h`<span class="eg-tag">${w.text.show(x)}</span>`; }), ' ')}</p>` : '';
@@ -250,8 +313,9 @@
         : !mayAny ? ''
           : editing ? h`<div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-do="save">${t.say('sheet-save')}</button> <button type="button" class="eg-btn" data-do="cancel">${t.say('sheet-cancel')}</button> <span class="eg-said" data-said=""></span></div>`
             : h`<div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-do="edit">${t.say('sheet-edit')}</button></div>`;
-      t.mount(el, h`${head}${rows}${bar}<p class="eg-err eg-general" data-err-general=""></p>`);
+      t.mount(el, h`${head}${rows}${actionsOf()}${bar}<p class="eg-err eg-general" data-err-general=""></p>`);
       wire();
+      wireActions();
     }
 
     // a place field's lookup: the garden's own places the page carries, then the host's, where it has one

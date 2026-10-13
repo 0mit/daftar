@@ -11,6 +11,8 @@ restore, its service's model — and names nothing of a garden in its code.
     W.instances(of, host)    -> [instance id]   the instances `use`ing `of` (a technology's code, or a program), each one
                                                 `be`ing at `host` (this host where none is said), as their beans say
     W.shown()                -> path            the plan this apply was given to run (DAFTAR_ACTION_PLAN), or a refusal
+    W.inputs()               -> {name: words}   what the person who started the run gave it (DAFTAR_ACTION_INPUTS):
+                                                a page's action's inputs, `--input`s at the terminal; {} where none
     W.save(who, what, body)  -> what it said    bin/act.py's save (bin/save.py): the change journalled and committed,
                                                 or the tool stopped
     W.seal(bean, ids)        -> [journal line]  bin/held.py: each statement sealed in this host's store
@@ -122,6 +124,18 @@ def shown():
     if not p or not os.path.isfile(p):
         raise Refused("apply runs the plan it was shown: DAFTAR_ACTION_PLAN names none")
     return p
+
+
+def inputs():
+    """What the run was started with — each input a page's action declares, or an `--input` at the terminal, by its
+    name: its words (bin/act.py `--start`, captured with the run) — {} for a run started with none."""
+    import json
+    p = os.environ.get('DAFTAR_ACTION_INPUTS')
+    if not p or not os.path.isfile(p):
+        return {}
+    with open(p, encoding='utf-8') as fh:
+        got = json.load(fh)
+    return {str(k): str(v) for k, v in got.items()} if isinstance(got, dict) else {}
 
 
 def save(who, what, body):

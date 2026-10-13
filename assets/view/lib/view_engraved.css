@@ -60,3 +60,5 @@
 .eg-more{margin-block:4px}.eg-more>summary{cursor:pointer;color:var(--muted,#5a6a7b);font-size:.85em}
 .eg-tags{margin:.2em 0 .5em}
 .eg-tag{display:inline-block;padding:1px 8px;border:1px solid var(--line,#cfd8e2);border-radius:10px;font-size:.85em;margin-inline-end:4px}
+.eg-actions .eg-action{margin-block:6px}.eg-act-body:not(:empty){margin-block:6px;padding-inline-start:12px;border-inline-start:2px solid var(--line,#cfd8e2)}
+.eg-plan{white-space:pre-wrap;font-size:.85em;background:var(--panel,#fff);border:1px solid var(--line,#cfd8e2);border-radius:6px;padding:6px 8px;max-height:16em;overflow:auto}
