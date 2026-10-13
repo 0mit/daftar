@@ -155,7 +155,8 @@ verbs:carry	porter	portare (to carry): a link carries a tunnel, a disk a volume 
 verbs:route	acheminer	chemin (a way): traffic sent on to its next hop — acheminement, French networking's routing	proposed	agent (claude opus-5.5), by hand
 verbs:translate	traduire	traducere (to lead across): an address rewritten as traffic crosses — traduction d'adresses réseau	proposed	agent (claude opus-5.5), by hand
 verbs:filter	filtrer	filtrum (felt, which strains): letting traffic cross or stopping it	proposed	agent (claude opus-5.5), by hand
-verbs:book	imputer	imputare (to put to one's account): imputer une charge à un compte analytique — an amount booked, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:book	imputer	imputare (to put to one's account): imputer une écriture — an amount moved from one account to another, or booked to an analytic account in a share	proposed	agent (claude opus-5.5), by hand
+verbs:match	rapprocher	proche (near): le rapprochement bancaire — a bank's line and the payment said, one movement counted once	proposed	agent (claude opus-5.5), by hand
 verbs:renew	renouveler	re + novellus (new again): a registration renewed	proposed	agent (claude opus-5.5), by hand
 verbs:mark	borner	borne (a boundary stone): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
 verbs:produce	produire	producere (to lead forth): an artifact brought into being — a file, a build, a report	proposed	agent (claude opus-5.5), by hand
@@ -172,6 +173,7 @@ qualifiers:placed	emplacement	platea (a broad street): a place where a thing is 
 qualifiers:presence	présence	praesentia (being before): found, or looked for and not found	proposed	agent (claude opus-5.5), by hand
 qualifiers:reading	lecture	legere (to gather, to read): a reading — what a reckoning selects and computes, read each time	proposed	agent (claude opus-5.5), by hand
 qualifiers:result	résultat	resultare (to spring back): what came of a measuring — a code	proposed	agent (claude opus-5.5), by hand
+qualifiers:sense	sens	sensus (le sens d'un vecteur, beside its direction): along a move's direction, or against it	proposed	agent (claude opus-5.5), by hand
 qualifiers:series	série	series (a row, from serere, to join): what a line held at each position	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	règlement	regula (a rule): régler une facture, to settle — which occurrences of which clauses a payment settles	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	quote-part	quota pars (how great a part): one's portion of a cost	proposed	agent (claude opus-5.5), by hand

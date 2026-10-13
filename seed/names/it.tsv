@@ -155,7 +155,8 @@ verbs:carry	veicolare	vehiculum (a carriage): a link carries a tunnel, a disk a 
 verbs:route	instradare	in + strada (to set on a road): traffic sent on to its next hop — instradamento, Italian networking's routing	proposed	agent (claude opus-5.5), by hand
 verbs:translate	tradurre	traducere (to lead across): an address rewritten as traffic crosses — traduzione degli indirizzi	proposed	agent (claude opus-5.5), by hand
 verbs:filter	filtrare	filtrum (felt, which strains): letting traffic cross or stopping it	proposed	agent (claude opus-5.5), by hand
-verbs:book	imputare	imputare (to put to one's account): an amount booked to an account of the analytic scheme, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:book	imputare	imputare (to put to one's account): an amount moved from one account to another, or booked to an analytic account in a share	proposed	agent (claude opus-5.5), by hand
+verbs:match	riconciliare	re + conciliare (to bring together again): la riconciliazione bancaria — a bank's line and the payment said, one movement counted once	proposed	agent (claude opus-5.5), by hand
 verbs:renew	rinnovare	renovare (to make new again): a registration renewed	proposed	agent (claude opus-5.5), by hand
 verbs:mark	delimitare	limes (a boundary path): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
 verbs:produce	produrre	producere (to lead forth): an artifact brought into being — a file, a build, a report	proposed	agent (claude opus-5.5), by hand
@@ -172,6 +173,7 @@ qualifiers:placed	collocazione	collocare (to set in place): what a placement hol
 qualifiers:presence	presenza	praesentia (being before): found, or looked for and not found	proposed	agent (claude opus-5.5), by hand
 qualifiers:reading	lettura	legere (to gather, to read): a reading — what a reckoning selects and computes	proposed	agent (claude opus-5.5), by hand
 qualifiers:result	risultato	resultare (to spring back): what came of a measuring — a code	proposed	agent (claude opus-5.5), by hand
+qualifiers:sense	verso	vertere (to turn: il verso di un vettore, beside its direction): along a move's direction, or against it	proposed	agent (claude opus-5.5), by hand
 qualifiers:series	serie	series (a row, from serere, to join): what a line held at each position	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	estinzione	exstinguere (to put out): an obligation put out by payment — which occurrences of which clauses it settles	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	quota	quota pars (how great a part): one's portion of a cost	proposed	agent (claude opus-5.5), by hand

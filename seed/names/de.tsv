@@ -155,7 +155,8 @@ verbs:carry	Tragen	tragen (to carry): a link carries a tunnel, a disk a volume �
 verbs:route	Weiterleiten	weiter (onward) + leiten (to lead): traffic sent on to its next hop — Leitweg (a route)	proposed	agent (claude opus-5.5), by hand
 verbs:translate	Umsetzen	um + setzen (to set over, to convert): an address rewritten as traffic crosses — Netzwerkadressumsetzung	proposed	agent (claude opus-5.5), by hand
 verbs:filter	Filtern	filtrum (felt, which strains): letting traffic cross or stopping it	proposed	agent (claude opus-5.5), by hand
-verbs:book	Buchen	Buch (a book): an amount booked to an account of the analytic scheme, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:book	Buchen	Buch (a book): an amount moved from one account to another, or booked to an analytic account in a share	proposed	agent (claude opus-5.5), by hand
+verbs:match	Abgleichen	gleich (alike): der Kontenabgleich — a bank's line and the payment said, one movement counted once	proposed	agent (claude opus-5.5), by hand
 verbs:renew	Verlängern	lang (long): a registration lengthened; erneuern (to make new)	proposed	agent (claude opus-5.5), by hand
 verbs:mark	Abgrenzen	Grenze (a boundary): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
 verbs:produce	Erzeugen	zeugen (to beget): an artifact brought into being — a file, a build, a report	proposed	agent (claude opus-5.5), by hand
@@ -172,6 +173,7 @@ qualifiers:placed	Lage	liegen (to lie): where a thing lies — what a placement 
 qualifiers:presence	Vorhandensein	vor + Hand (before the hand, at hand): found, or looked for and not found	proposed	agent (claude opus-5.5), by hand
 qualifiers:reading	Auswertung	aus + werten (to draw the worth out): what a reckoning selects and computes, read each time	proposed	agent (claude opus-5.5), by hand
 qualifiers:result	Ergebnis	ergeben (to yield): what came of a measuring — a code	proposed	agent (claude opus-5.5), by hand
+qualifiers:sense	Richtungssinn	Richtung + Sinn (the sense a direction runs in, as a vector has): along a move's direction, or against it	proposed	agent (claude opus-5.5), by hand
 qualifiers:series	Reihe	Reihe (a row): a series — Zeitreihe, a time series; what a line held at each position	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	Begleichung	gleich (even): begleichen, to make even — which occurrences of which clauses a payment settles	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	Anteil	an + Teil (a part): one's portion of a cost	proposed	agent (claude opus-5.5), by hand

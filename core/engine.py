@@ -1214,6 +1214,8 @@ class Judge:
             if not b.unread:
                 for where, msg in profiles.problems(self, b):
                     self.err('profile', where, msg)
+        for where, msg in profiles.charts(self):
+            self.err('profile', where, msg)
 
     # ------------------------------------------------------------------------------------------------ measured
     def measured(self):

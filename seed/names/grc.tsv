@@ -155,7 +155,8 @@ verbs:carry	ὀχεῖν	ὀχέω (to carry, to bear up — ὄχημα, a carr
 verbs:route	ὁδηγεῖν	ὁδός (a road) + ἡγέομαι (to lead): to show the way — coined, traffic sent on to its next hop	proposed	agent (claude opus-5.5), by hand
 verbs:translate	μεταγράφειν	μετά + γράφω (to rewrite, to transcribe): coined, an address rewritten as traffic crosses	proposed	agent (claude opus-5.5), by hand
 verbs:filter	διηθεῖν	διά + ἠθέω (to strain through — ἠθμός, a strainer): coined for a packet filter, letting traffic cross or stopping it	proposed	agent (claude opus-5.5), by hand
-verbs:book	καταχωρίζειν	κατά + χωρίζω (to put in its place: to enter in a register — the papyri's word for entering accounts): an amount booked, in a share	proposed	agent (claude opus-5.5), by hand
+verbs:book	καταχωρίζειν	κατά + χωρίζω (to put in its place: to enter in a register — the papyri's word for entering accounts): an amount moved from one account to another, or booked in a share	proposed	agent (claude opus-5.5), by hand
+verbs:match	ἀντιβάλλειν	ἀντί + βάλλω (to throw against: the papyri's word for collating a copy with its original): records of one movement, counted once	proposed	agent (claude opus-5.5), by hand
 verbs:renew	ἀνανεοῦν	ἀνά + νέος (new again): a registration renewed — as a treaty was renewed	proposed	agent (claude opus-5.5), by hand
 verbs:mark	ὁρίζειν	ὅρος (a boundary stone — and a definition): a cell's boundary fixed by a mark at a position	proposed	agent (claude opus-5.5), by hand
 verbs:produce	ἀπεργάζεσθαι	ἀπό + ἐργάζομαι (to work off, to finish a work): an artifact brought into being — a file, a build, a report	proposed	agent (claude opus-5.5), by hand
@@ -172,6 +173,7 @@ qualifiers:placed	θέσις	τίθημι (to set, to place): a placing — what
 qualifiers:presence	ὕπαρξις	ὑπάρχω (to be there, to be at hand): found, or looked for and not found; παρεῖναι is kept for `attend`	proposed	agent (claude opus-5.5), by hand
 qualifiers:reading	λογισμός	λογίζομαι (to reckon): a reckoning — what it selects and computes, read each time	proposed	agent (claude opus-5.5), by hand
 qualifiers:result	ἀποτέλεσμα	ἀποτελέω (to bring to its end): an outcome — what came of a measuring	proposed	agent (claude opus-5.5), by hand
+qualifiers:sense	φορά	φέρω (to carry: Aristotle's word for a motion from place to place, and the way it goes): along a move's direction, or against it	proposed	agent (claude opus-5.5), by hand
 qualifiers:series	σειρά	σειρά (a cord, a chain — Modern Greek's series): coined for what a line held at each position, row by row	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	λύσις	λύω (to loose): a debt loosed — which occurrences of which clauses a payment settles	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	μερίς	μείρομαι (to receive one's portion): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
