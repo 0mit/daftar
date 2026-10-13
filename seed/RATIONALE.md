@@ -705,6 +705,12 @@ consent it was kept on still bounds it: once the word it is held `while` no long
 is the law's own `may` (`bin/pass.py`, asked with `held`), so the view's pages, its one write path and any host ask the
 same question; a host whose `may` cannot ask it writes a held value for the gardener alone.
 
+THE PERSON IT IS HELD OF READS IT (2026-10-12, a gap the operator named: "a person reading their own held contact
+sees their opaque id"; ratified by the operator 2026-10-13). What is held off git of a person is theirs before it is anyone's: a person a
+grant lets read their own bean reads what is held of them in it — their name, their phone — without a grant naming it
+to them, as the gardener does. To read, never to write; their own bean, nobody else's; and still only while the word it
+is held on stands.
+
 ## core/law/forms.yaml: forms.cover
 
 ABSENT, THE WHOLE — BUT NOT WHAT IS HELD (2026-10-12). The cover's default is the whole bean, its header, body and
@@ -5505,6 +5511,16 @@ statement another names is said by its own words (a step by its walk's); a being
 whose name this host does not hold as a person, never an id; a move made is history, and a new one is a step chosen by
 its walk's words. The alternative — a names layer of a garden's own for its keys — would put a page's words outside the
 page that shows them; a label sits on the page and changes with it.
+
+A HELD RECORD'S FIELDS IN THE PAGE'S WORDS (2026-10-12, ratified by the operator: "Ratify it"). What a being points to
+off git — a person's contact, a record of `details` — is written from its sheet by the host that keeps it, and its
+fields need the page's words as much as its statements do: a phone, a level, named in the reader's language, never
+their keys. A page names one by the record's key and the field (`contact.phone`, `intake.level`), as it names a path
+into `details`, and the record itself by its key alone (`intake`), for the words its fields are gathered under; on
+the host that keeps the record it is read under that key, as a reading reads one (`bin/held.py unsealed`), and nowhere
+else. It is opened only as every held value is: to the gardener, or to whom a
+grant names its part (`core/law/core.yaml: rules[harm]`). A page that names a record's fields may also make one for a
+being that has none, its fields the ones the page names.
 
 ## core/law/profiles.yaml: forms.page.attrs.drawings
 

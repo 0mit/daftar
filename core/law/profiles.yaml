@@ -418,7 +418,7 @@ forms:
             fact:
               required: "true"
               in: { pattern: "^[a-z][a-z0-9_.-]*$" }
-              meaning: "the fact a card shows: a verb of the law (the being's statements of it), a key of the header (`title`, `summary`, `tags`), or a key `details` keeps, or a path into one (`case.opened_on`). A statement of the verb that is sealed (`held`) is shown by the host that holds its store, and only to a reader who may read it; every other reader is told where it is kept"
+              meaning: "the fact a card shows: a verb of the law (the being's statements of it), a key of the header (`title`, `summary`, `tags`), or a key `details` keeps, or a path into one (`case.opened_on`), or a field of a record held off git that the being points to, by the record's key (`contact.phone`, `intake.level`), or that record itself (`intake`), the words its fields are gathered under. A statement of the verb that is sealed (`held`), and a record held off git, is shown by the host that holds its store, and only to a reader a grant names it to; every other reader is told where it is kept"
             shown_from:
               required: "true"
               in: { registry: lenses, take: lens }

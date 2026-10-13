@@ -26,7 +26,7 @@
     if (!data) { t.mount(el, h`<p class="eg-empty">—</p>`); return; }
     var editing = false, n = 0, fo = {names: (t.E.names || {}).forms || {}};   // a form's attributes in the reader's language
     var mayAny = data.may_write || data.rows.some(function (r) { return r.may_add || r.statements.some(function (s) { return s.may; }); })
-      || Object.keys(data.header || {}).some(function (k) { return data.header[k].may; });
+      || Object.keys(data.header || {}).some(function (k) { return data.header[k].may; }) || (data.records || []).length > 0;
     var said = data.said || {}, labels = data.labels || {}, courses = data.courses || {};
 
     // THE PAGE'S WORD FOR A FACT (its `fields` … `label`, in the page's language), else the law's word as the names layer
@@ -202,7 +202,7 @@
       var c = data.contact;
       if (!c) return '';
       return h`<section class="eg-row eg-contact" data-fact="contact"><h4>${t.say('sheet-contact')}</h4>${Object.keys(c).map(function (k) {
-        return h`<div class="eg-detail"><span class="eg-role-name">${w.text.show(k)}</span> ${/^[+\d][\d\s()-]{5,}$/.test(String(c[k])) ? w.name.show(c[k], {kind: 'phone'}) : w.text.show(c[k])}</div>`;
+        return h`<div class="eg-detail"><span class="eg-role-name">${w.text.show(fieldWord('contact', k))}</span> ${/^[+\d][\d\s()-]{5,}$/.test(String(c[k])) ? w.name.show(c[k], {kind: 'phone'}) : w.text.show(c[k])}</div>`;
       })}<p class="eg-held">${t.say('sheet-held')}</p></section>`;
     }
     // WHAT A PAGE NAMES OF `details` (its `fields`): what fits no verb yet, kept whole until one is proposed — drawn as it
@@ -284,6 +284,36 @@
           });
         });
     }
+    // WHAT IS HELD OF IT OFF GIT, IN EDIT: each record this host keeps of the being that the reader may write — a
+    // person's contact, a record of `details` — its fields by the page's words for them (`<key>.<field>`), else the
+    // release's for a contact's, else the field's own name; one a map one level down. One the being has none of yet is
+    // offered empty. Saved as `held` ops by the one write path, into the store, never into the ledger
+    function fieldWord(key, f) {
+      if (labels[key + '.' + f]) return labels[key + '.' + f];
+      var said_ = key === 'contact' ? t.say('held-' + f) : '';
+      return said_ && said_ !== 'held-' + f ? said_ : f;
+    }
+    function heldInput(name, v, f) {
+      return /phone|mail|tel/.test(f) ? w.name.edit(name, v == null ? '' : String(v)) : w.text.edit(name, v == null ? '' : String(v));
+    }
+    function heldEdit() {
+      return t.join((data.records || []).map(function (r) {
+        var head = labels[r.key] || (r.key === 'contact' ? t.say('sheet-contact') : r.key), e = r.entry || {}, maps = r.maps || {};
+        return h`<section class="eg-row eg-held-record" data-fact="held:${r.key}" data-held-key="${r.key}"><h4>${w.text.show(head)}</h4>${
+          r.new ? h`<p class="eg-held">${t.say('sheet-held-new')}</p>` : ''}${(r.fields || []).map(function (f) {
+          var v = e[f];
+          // a map: each field of it the record holds, and each the page names, held yet or not
+          if ((v && typeof v === 'object' && !Array.isArray(v)) || maps[f]) {
+            var m = (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+            var keys = Object.keys(m).concat((maps[f] || []).filter(function (g) { return !(g in m); }));
+            return h`<fieldset class="eg-held-map"><legend>${w.text.show(fieldWord(r.key, f))}</legend>${keys.map(function (g) {
+              return h`<label class="eg-field" data-role="${f}.${g}"><span class="eg-role-name">${w.text.show(labels[r.key + '.' + f + '.' + g] || g)}</span> ${heldInput('held.' + r.key + '.' + f + '.' + g, m[g], g)}</label>`;
+            })}</fieldset>`;
+          }
+          return h`<label class="eg-field" data-role="${f}"><span class="eg-role-name">${w.text.show(fieldWord(r.key, f))}</span> ${heldInput('held.' + r.key + '.' + f, v, f)}</label>`;
+        })}<p class="eg-held">${t.say('sheet-held')}</p><span class="eg-err" data-err-fact="held:${r.key}"></span></section>`;
+      }), '');
+    }
     // THE TAGS, a set of words the page names among a being's facts: each a word of its own, in its own isolate
     function tagsOf(tags) {
       return tags && (tags.value || []).length ? h`<p class="eg-tags" data-fact="header:tags">${t.join(tags.value.map(function (x) { return h`<span class="eg-tag">${w.text.show(x)}</span>`; }), ' ')}</p>` : '';
@@ -295,7 +325,7 @@
       var head = editing
         ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">${labels.title || word('header', 'title')}</span> ${w.text.edit('header.title', title.value === data.bean ? '' : (title.value || ''), {placeholder: data.title})}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
             ${tags ? (tags.may ? h`<label class="eg-field" data-fact="header:tags"><span class="eg-role-name">${labels.tags || word('header', 'tags')}</span> ${w.text.edit('header.tags', (tags.value || []).join(t.say('sheet-tags-sep')))}<span class="eg-err" data-err-fact="header:tags"></span></label>` : tagsOf(tags)) : ''}
-            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${labels.summary || word('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>${details()}`
+            ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${labels.summary || word('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>${details()}${heldEdit()}`
         : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}${tagsOf(tags)}</div>${contact()}${details()}`;
       // a verb whose statements are each shown beneath the one they are `of` (a clause beneath what it asks) has no row of
       // its own: it is added there
@@ -458,6 +488,25 @@
         if (canon(now) !== canon(s.roles)) {
           ops.push(Object.assign({op: 'change', key: key, roles: now}, s.held ? {held: true} : {}, known.read ? {read: known.read} : {})); where.push(li);
         }
+      });
+      (data.records || []).forEach(function (r) {   // a held record: the fields changed, one given empty taken out
+        var box = el.querySelector('[data-held-key="' + r.key + '"]');
+        if (!box) return;
+        var was = r.entry || {}, changed = {};
+        box.querySelectorAll('[name^="held.' + r.key + '."]').forEach(function (f) {
+          var path = f.getAttribute('name').slice(('held.' + r.key + '.').length).split('.'), v = f.value.trim();
+          if (path.length === 1) {
+            if (v !== (was[path[0]] == null ? '' : String(was[path[0]]))) changed[path[0]] = v;
+          } else {
+            var inner = (was[path[0]] && typeof was[path[0]] === 'object') ? was[path[0]] : {};
+            if (v !== (inner[path[1]] == null ? '' : String(inner[path[1]]))) {
+              changed[path[0]] = Object.assign({}, inner, changed[path[0]] || {});
+              changed[path[0]][path[1]] = v;
+            }
+          }
+        });
+        if (r.new) Object.keys(changed).forEach(function (k) { if (changed[k] === '') delete changed[k]; });
+        if (Object.keys(changed).length) { ops.push({op: 'held', key: r.key, entry: changed}); where.push(box); }
       });
       if (errs.length) {
         errs.forEach(function (e) { var x = el.querySelector('[data-err="' + e[0] + '"]'); if (x) x.textContent = e[1]; });

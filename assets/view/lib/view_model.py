@@ -1452,16 +1452,29 @@ def check(figs=None):
         b = r.get("being")
         if fm(b) and r.get("system") and not address(b, r["system"]):
             warns.append("reference: %s states no position in %s, so the page shows no address for it" % (b, r["system"]))
-    def held_at(path):          # a path into what `details` keeps (`case.opened_on`), held by some being here
+    def held_at(path):          # a path into what `details` keeps (`case.opened_on`), held by some being here —
+        import held as dmheld   # or into a record held off git a being points to (`contact.phone`, `intake.level`),
+        elsewhere = False       # read under its own key where it is kept
+        head = path.split(".")[0]
         for b in (CORE.G.beans.values() if CORE is not None else []):
             node = b.header.get("details")
             for part in path.split("."):
                 node = node.get(part) if isinstance(node, dict) else None
             if node is not None:
                 return True
-        return False
+            try:
+                recs = dmheld.records(b.path, root=ROOT) if b.path else []
+            except OSError:
+                recs = []
+            for r in recs:
+                rec = r["record"]
+                if r["here"] is not True:
+                    elsewhere = True    # kept on another machine, or erased: a path into it is not judged here
+                elif isinstance(rec, dict) and rec.get("key") == head:
+                    return True
+        return elsewhere
     for _i, f in entries_of_view("fields"):
-        if f.get("term") and f["term"] not in known_terms and not ("." in f["term"] and held_at(f["term"])):
+        if f.get("term") and f["term"] not in known_terms and not held_at(f["term"]):   # a record itself, by its key, too
             errs.append(("view.fields: %r is no term the law declares" if CORE is None else
                          "page.fields: %r is no fact a being here holds — a verb of the law, a key of the header, or a key "
                          "`details` keeps") % f["term"])

@@ -1622,13 +1622,17 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
     the bean a record held off git is pointed to from, `body` or `details.<key>`) is opened only by a grant that NAMES
     it: its `cover` naming the part (a statement's id, its verb, its verb narrowed by its `as`), or its `of` naming the
     statement (`<bean>#<id>`). A grant of the whole bean opens what the bean holds, never by itself what is held of it
-    elsewhere; the gardener aside (RULE-CHANGE 2026-10-12). Asked with no positions, nothing held is opened."""
+    elsewhere; the gardener aside (RULE-CHANGE 2026-10-12), and the person it is held of, who reads what is held of
+    them in their own bean. Asked with no positions, nothing held is opened."""
     if actor is None:
         return Answer(False, "nobody named: an actor no one can name is granted nothing")
     if actor == gardener:
         return Answer(True, f"{actor} is the gardener, who keeps the garden")
     asked = CORE_GRANTS.get(act) or ('enact' if str(act).startswith('act:') else 'ratify' if str(act).startswith('ratify:')
                                      else act)
+    if held and asked == 'read' and positions and actor == bean and \
+            ((beans if beans is not None else beans_here(root)).get(bean) or {}).get('kind') == 'person':
+        return Answer(True, f"{actor} reads what is held of them, in their own bean")
     klass = str(act).split(':', 1)[1] if str(act).startswith('ratify:') else None
     beans = beans if beans is not None else beans_here(root)
     fm = beans.get(bean) or {}

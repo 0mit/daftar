@@ -14,7 +14,8 @@ may read the lessons alone. Then:
   one file      the report, a page of one file, carries the opaque id and never the name or the phone
   a browser     Sam's page in Persian: the lessons' `agree` shows the person by their name; their sheet shows how to reach
                 them under «نشانی و تماس», the phone left to right as it is written, and says it is held on this machine
-  by the law   asked of the law's own grants: a reader whom a grant opens the person's whole bean to has their opaque
+  by the law   asked of the law's own grants: the person themselves, granted their own bean, reads their own name
+                and contact; a reader whom a grant opens the person's whole bean to has their opaque
                 id and nothing of their contact — a held contact is opened by a grant that names the part of the bean that
                 says where it is held (`cover: {parts: [body]}`), never by a grant of the bean alone; a reader such a
                 grant names it to has it; the gardener has both persons by name, the second kept on their consent (an
@@ -81,7 +82,7 @@ sys.path[:0] = [os.path.join('.', 'assets', 'view', 'lib'), 'bin']
 import view_model as vm, view_engraved as ve, view_serve as vs
 vm.init('.', 'page')
 dmpass = importlib.import_module('pass')
-USERS = ('sam', 'p-0a0a0a0a', 'p-0b0b0b0b')
+USERS = ('sam', 'p-0a0a0a0a', 'p-0b0b0b0b') + tuple(sys.argv[1:])
 def may(user, bean, positions=None, write=False, held=False):
     kw = {'held': True} if held else {}
     a = dmpass.may(user, 'write' if write else 'read', bean, positions=positions, root='.', gardener='sam', **kw)
@@ -91,8 +92,8 @@ print(json.dumps({u: ve.scoped(host, u) for u in USERS}, default=str, ensure_asc
 """
 
 
-def scoped(code=SCOPED):
-    rc, out = run(PY, '-c', code)
+def scoped(code=SCOPED, *more):
+    rc, out = run(PY, '-c', code, *more)
     try:
         return json.loads(out.strip().splitlines()[-1])
     except (ValueError, IndexError):
@@ -198,7 +199,7 @@ try {
   A.sheet(document.getElementById('p'), E.sheets['%(pid)s'], t, null);
   const c = document.querySelector('#p [data-fact="contact"]');
   out.contact = c ? c.innerText : null;
-  const ph = c && [...c.querySelectorAll('.eg-detail')].find(x => x.innerText.includes('phone'));
+  const ph = c && [...c.querySelectorAll('.eg-detail')].find(x => x.innerText.includes('%(phone)s'));   // by its value: its label is the page's or the release's word
   const v = ph && ph.lastElementChild;
   out.phoneDir = v ? getComputedStyle(v).direction : null;
 } catch (e) { out.errs.push('driver: ' + e.message + ' ' + (e.stack || '').split('\\n')[1]); }
@@ -207,7 +208,7 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
         path = os.path.join(T, 'held.html')
         with open(path, 'w', encoding='utf-8') as fh:
             fh.write(page % {'css': view_widgets.css() + open(os.path.join(LIB, 'view_engraved.css'), encoding='utf-8').read(),
-                             'js': js, 'payload': json.dumps(sam, ensure_ascii=False), 'pid': PID})
+                             'js': js, 'payload': json.dumps(sam, ensure_ascii=False), 'pid': PID, 'phone': PHONE})
         r = subprocess.run([browser, '--headless=new', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=5000',
                             '--dump-dom', 'file://' + path], capture_output=True, text=True, encoding='utf-8', errors='replace',
                            timeout=180)
@@ -251,12 +252,13 @@ Consents.
     put('beans/sam.md', get('beans/sam.md').replace('\n---\n', (
         '\n  - grant: { id: readers-read, by: self, to: [p-0a0a0a0a, p-0b0b0b0b], of: [lessons, page, %s, %s], as: read }\n'
         '  - grant: { id: b-reaches, by: self, to: [p-0b0b0b0b], of: [%s], as: read, cover: { parts: [body] } }\n'
-        '  - say: { by: sam, of: [readers-read, b-reaches], at: now }\n---\n') % (PID, PID2, PID), 1))
+        '  - grant: { id: self-reads, by: self, to: [%s], of: [lessons, page, %s], as: read }\n'
+        '  - say: { by: sam, of: [readers-read, b-reaches, self-reads], at: now }\n---\n') % (PID, PID2, PID, PID, PID), 1))
     rc, out = run(PY, 'bin/save.py', 'sam', 'two readers, a second person kept on their consent', '--body',
                   f'- action: wrote [[{PID2}]], [[p-0a0a0a0a]], [[p-0b0b0b0b]] and [[consents]]; [[sam]] grants the readers to read')
     check("a second person is kept by name on their consent, and two readers are granted the person's bean — the second "
           "also the part that says where they are held", rc == 0 and NAME2 not in get(f'beans/{PID2}.md'), out[-1500:])
-    L = scoped(SCOPED_LAW)
+    L = scoped(SCOPED_LAW, PID)
     a, b, s_ = L.get('p-0a0a0a0a') or {}, L.get('p-0b0b0b0b') or {}, L.get('sam') or {}
     ja = json.dumps(a, ensure_ascii=False)
     pa = (a.get('sheets') or {}).get(PID) or {}
@@ -267,6 +269,9 @@ Consents.
     pb = (b.get('sheets') or {}).get(PID) or {}
     check("...a reader a grant names that part to has their name and their contact",
           pb.get('title') == NAME and (pb.get('contact') or {}).get('phone') == PHONE, (pb, L.get('error')))
+    me = ((L.get(PID) or {}).get('sheets') or {}).get(PID) or {}
+    check("...the person themselves, granted their own bean, reads their own name and contact, held of them",
+          me.get('title') == NAME and (me.get('contact') or {}).get('phone') == PHONE, (me, L.get('error')))
     p1, p2 = (s_.get('sheets') or {}).get(PID) or {}, (s_.get('sheets') or {}).get(PID2) or {}
     check("...the gardener has both persons by their names and contacts, the second while their consent stands",
           p1.get('title') == NAME and (p1.get('contact') or {}).get('phone') == PHONE and p2.get('title') == NAME2

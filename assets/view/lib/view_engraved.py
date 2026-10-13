@@ -462,10 +462,28 @@ def labels_shown(kind):
             if str(e.get('genos')) == str(kind) and e.get('term') and isinstance(e.get('label'), str) and e['label'].strip()}
 
 
-def details_at(b, fact):
+def facts_named_held(kind):
+    """The keys of records held off git that the page names a path into for a kind (`intake.level`): a head of a
+    path the page names that some being of the kind keeps as a record of `details` on this host — never a key `details`
+    keeps in git."""
+    heads = {f.split('.', 1)[0] for f, _l in facts_shown(kind) if '.' in f}
+    keys = set()
+    for bid, b in (vm.CORE.G.beans.items() if heads else ()):
+        if b.kind != kind:
+            continue
+        for r in held_of(bid):
+            rec = r['record']
+            if r['part'] != 'body' and isinstance(rec, dict) and rec.get('key') in heads:
+                keys.add(rec['key'])
+    return sorted(keys)
+
+
+def details_at(b, fact, opened=None):
     """What `details` keeps at a fact a page names: a key of it, or a path into it (`case.opened_on`),
-    as it is held; None where it keeps nothing there."""
-    node = b.header.get('details')
+    as it is held; None where it keeps nothing there. A record held off git that the reader is opened is read under
+    its own key (`opened`: {key: entry}), as bin/held.py `unsealed` reads one for a reading made where it is kept."""
+    head = fact.split('.', 1)[0]
+    node = {head: opened[head]} if opened and head in opened else b.header.get('details')
     for part in fact.split('.'):
         if not isinstance(node, dict) or part not in node:
             return None
@@ -537,11 +555,14 @@ def courses_of(b):
     return out
 
 
-def sheet(bid, may, held=None):
+def sheet(bid, may, held=None, records=None):
     """One being as its sheet shows it: its header facts, then each verb the page's `fields` names for its kind, its
     statements of that verb in the order the bean holds them, each with the statements that take it as their `of`
     beneath it, who knows it (its knowing act) and, sealed, where it is kept — its roles only where `held(bean, sid)`
-    gives them. `may` decides what is sent and what is offered to write: the whole bean, or the parts a grant covers."""
+    gives them. `may` decides what is sent and what is offered to write: the whole bean, or the parts a grant covers.
+    `records(bid)` gives what this host keeps off git of it that the reader is opened (scoped's): a fact the page names
+    into a record is read from it, and each the reader may write is offered in Edit (`records`), with one the page names
+    and the being has none of, and a person's contact where they have none, to make."""
     b = _bean(bid)
     if b is None or not may('read', bid):
         return None
@@ -617,10 +638,34 @@ def sheet(bid, may, held=None):
     header = {h: b.header.get(h) for h in HEADER if h in [f for f, _l in shown] or h == 'title'}
     forms = sorted({s['form'] for v in verbs for s in list(verb_row(v)['roles'].values()) + list(verb_row(v)['qualifiers'].values())
                     if s.get('form')})
-    details = {f: details_at(b, f) for f, _l in shown if f not in L.verbs and f not in HEADER}
+    recs, missing = records(bid) if records else ([], [])
+    opened = {r['key']: r['entry'] for r in recs if r.get('entry') is not None}
+    details = {f: details_at(b, f, opened) for f, _l in shown     # a record named itself is the words its fields are
+               if f not in L.verbs and f not in HEADER and f not in opened}   # gathered under, not one more fact
+    named, maps = {}, {}                         # the fields of each record the page names, by the record's key; and of
+    for f, _l in shown:                          # a map in one, the fields of the map it names (`intake.kit.case`)
+        if '.' in f and f not in L.verbs:
+            k, rest = f.split('.', 1)
+            head, _dot, sub = rest.partition('.')
+            named.setdefault(k, []).append(head)
+            if sub:
+                maps.setdefault(k, {}).setdefault(head, set()).add(sub.split('.', 1)[0])
+
+    def mapped(r):
+        """each map of the record the page names fields of: those fields, and the map's own, held yet or not"""
+        e = r.get('entry') or {}
+        return {f: sorted(subs | (set(e[f]) if isinstance(e.get(f), dict) else set()))
+                for f, subs in maps.get(r['key'], {}).items()}
+    editable = [dict(r, fields=sorted(set(r.get('entry') or {}) | set(named.get(r['key'], []))), maps=mapped(r))
+                for r in recs if r.get('write') and r.get('entry') is not None]
+    for m in missing:                           # a record the page names, or a person's contact, the being has none of
+        if m['key'] in named or m['key'] == 'contact':
+            editable.append(dict(m, entry={}, fields=sorted(named.get(m['key'], [])) or ['name', 'phone', 'email'],
+                                 maps=mapped(m)))
     return {'bean': bid, 'kind': b.kind, 'title': title_of(bid), 'forms': {f: form_def(f, b) for f in forms},
             'header': {h: {'value': x, 'may': may_part(h)} for h, x in header.items()},
             'details': {f: x for f, x in details.items() if x is not None},
+            'records': [{k: r[k] for k in ('key', 'part', 'entry', 'fields', 'maps', 'new') if k in r} for r in editable],
             'labels': labels_shown(b.kind),
             'said': said_refs(b, [s.get('roles') for r in rows for s in r['statements']]
                               + [d.get('roles') for r in rows for s in r['statements'] for d in s['dependents']]),
@@ -925,7 +970,17 @@ def places(may):
     return out
 
 
-_CONTACT = re.compile(r'(root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32})`?(?: on ([A-Za-z0-9][A-Za-z0-9_.-]*(?:#[A-Za-z0-9_.-]+)?))?')
+def held_of(bid):
+    """[{part, pointer, basis, record, here}] — each record held off git the being points to (bin/held.py `records`): its
+    contact from its body, a record from its `details`; `record` where this host's store holds it."""
+    b = _bean(bid)
+    if b is None or not b.path:
+        return []
+    import held as dmheld
+    try:
+        return dmheld.records(b.path, root=vm.ROOT)
+    except OSError:
+        return []
 
 
 def contact_of(bid):
@@ -935,21 +990,13 @@ def contact_of(bid):
     `<bean>#<id>`), None where none is written — or (None, None, None) where this host's stores hold none of theirs
     (another machine's, erased, or none)."""
     b = _bean(bid)
-    if b is None or b.kind != 'person' or not b.path:
+    if b is None or b.kind != 'person':
         return None, None, None
-    import held as dmheld
-    try:
-        with open(b.path, encoding='utf-8') as fh:
-            text = fh.read()
-    except OSError:
-        return None, None, None
-    for pointer, basis in dict.fromkeys(_CONTACT.findall(text)):
-        try:
-            rec = dmheld.resolve(pointer, root=vm.ROOT)
-        except (dmheld.NotHere, dmheld.Erased, ValueError, OSError):
-            continue
-        if isinstance(rec, dict) and rec.get('bean') == bid and rec.get('term') == 'person' and rec.get('key') == 'contact':
-            return pointer, rec, basis.rstrip('.') or None
+    for r in held_of(bid):
+        rec = r['record']
+        if r['part'] == 'body' and isinstance(rec, dict) and rec.get('bean') == bid and rec.get('term') == 'person' \
+                and rec.get('key') == 'contact':
+            return r['pointer'], rec, r['basis']
     return None, None, None
 
 
@@ -962,7 +1009,7 @@ def stands(ref, bid):
     return engine.Judge(vm.CORE.L, vm.CORE.G).statement(ref, _bean(bid)) is not None
 
 
-def page(may, reader, held=None, keep=None, contact=None):
+def page(may, reader, held=None, keep=None, contact=None, records=None):
     """For one reader: each engraved drawing's reading (of those `keep` names, where it names some: the drawings the
     reader is sent), the sheet of every being one of them shows, an empty sheet of each kind a drawing makes, the beings
     a role may name, and the widgets' settings."""
@@ -1006,7 +1053,7 @@ def page(may, reader, held=None, keep=None, contact=None):
                 if isinstance(c, dict) and str(c.get('name') or '').strip():
                     named[bid] = c
     for bid in sorted(show | set(named)):
-        s = sheet(bid, may, held)
+        s = sheet(bid, may, held, records)
         if s is not None:
             s['actions'] = [{x: a[x] for x in ('drawing', 'el', 'tool', 'bean', 'confirm', 'note', 'inputs', 'reason')
                              if x in a} for a in acting.get(bid, [])]
@@ -1077,7 +1124,32 @@ def scoped(host, user, keep=None):
         if basis and not stands(basis, bid):
             return None
         return rec['entry']
-    p = page(may, u.get('bean'), held, keep, contact)
+    def records(bid):
+        """What this host keeps off git of a being, to the bar of every held value (`may … held`, by the part it is
+        pointed to from; its consent standing): [{key, part, entry (None where not opened), write}], and the records
+        it could be given — a person's contact where they have none anywhere, a record of `details` — [{key, part,
+        new}] where the reader may write them."""
+        b = _bean(bid)
+        if b is None:
+            return [], []
+        recs, out = held_of(bid), []
+        for r in recs:
+            rec = r['record']
+            if r['here'] is not True or not isinstance(rec, dict) or not isinstance(rec.get('key'), str):
+                continue
+            if r['basis'] and not stands(r['basis'], bid):
+                continue
+            out.append({'key': rec['key'], 'part': r['part'],
+                        'entry': rec.get('entry') if may('read', bid, [r['part']], held=True) else None,
+                        'write': may('write', bid, [r['part']], held=True)})
+        missing = []
+        if b.kind == 'person' and not any(r['part'] == 'body' for r in recs) and may('write', bid, ['body'], held=True):
+            missing.append({'key': 'contact', 'part': 'body', 'new': True})
+        if not any(r['here'] is not True for r in recs if r['part'] != 'body') and may('write', bid, ['details'], held=True):
+            have = {x['key'] for x in out}
+            missing += [{'key': k, 'part': 'details', 'new': True} for k in facts_named_held(b.kind) if k not in have]
+        return out, missing
+    p = page(may, u.get('bean'), held, keep, contact, records)
     p['places'] = places(may)                                     # what a place lookup offers first: the reader's own
     g = p['settings']['garden']
     if isinstance(u.get('calendar'), str) and u['calendar']:
