@@ -29,11 +29,11 @@ its bookings, else `books-<entity>`, made by the first write:
   entry    `day`, `memo`, `unit`, `lines` (`<account> dr|cr <amount>`, joined by `;`), `of` (optional): what no payment
            says, written whole and balanced, resting on `of` or the books' `open` (written by the first entry); an
            entry is corrected by its reverse and a new one, never edited.
-  import   `file` (on this machine), `format` (camt.053, camt.054, ofx, mt940, csv), `means` (the being the account
-           stands for: the bank account, the card), `mapping` (a CSV's, a file of the garden), `statement` (the bean's
-           id; `statement-<the file's SHA-256, 12>` where none): a statement bean, its lines payments read from the
-           file through the means; refused whole where a line is not read, where opening + lines is not the closing,
-           or where the file was imported already.
+  import   `file` (a path on this machine, or the SHA-256 of a file a page gave, kept by the host), `format`
+           (camt.053, camt.054, ofx, mt940, csv), `means` (the being the account stands for: the bank account, the
+           card), `mapping` (a CSV's, a file of the garden), `statement` (the bean's id; `statement-<the file's SHA-256,
+           12>` where none): a statement bean, its lines payments read from the file through the means; refused whole
+           where a line is not read, where opening + lines is not the closing, or where the file was imported already.
 """
 import datetime
 import hashlib
@@ -445,9 +445,14 @@ def close(B, I, today, run=(None, None)):
 # ------------------------------------------------------------------------------------------------ import
 def import_(B, I, today, run=(None, None)):
     import statements as st
-    path = str(I.get('file') or '')
-    if not path or not os.path.isfile(path):
-        refuse(f"file: {path!r} is no file on this machine")
+    path = name = said = str(I.get('file') or '')
+    if re.fullmatch(r'[0-9a-f]{64}', path) and not os.path.isfile(path):     # a page's file: kept by the host off git,
+        path = _W().file(name)                                                # under its SHA-256, which the run is given
+        said = f"the file a page gave ({name[:12]}…)"
+    elif not path or not os.path.isfile(path):
+        refuse(f"file: {path!r} is no file on this machine, nor one a page gave (its SHA-256)")
+    else:
+        name = said = os.path.basename(path)
     fmt = str(I.get('format') or '')
     if fmt not in st.FORMATS:
         refuse(f"format: {fmt!r} is none of {', '.join(st.FORMATS)}")
@@ -499,17 +504,17 @@ def import_(B, I, today, run=(None, None)):
         note = ' '.join(x for x in (ln.get('text'), ln.get('party')) if x)
         adds.append(f'pay: {{ id: line-{n:03d}, {who}, of: {amt}, through: {means}, at: "{ln["day"]}"' +
                     (f', note: {json.dumps(note[:200], ensure_ascii=False)}' if note else '') + ' }')
-    details = {'statement': {'file': os.path.basename(path), 'sha256': sha, 'format': fmt, 'account': S['account'],
+    details = {'statement': {'file': name, 'sha256': sha, 'format': fmt, 'account': S['account'],
                              'opening': S['opening'], 'closing': S['closing'],
                              'lines': {f"line-{n:03d}": {k: ln.get(k) for k in ('ref', 'value_day', 'code') if ln.get(k)}
                                        for n, ln in enumerate(S['lines'], 1)}}}
     head = f'bean: {sid}\nkind: document\ntitle: "{sid} — the statement of {means}, {S["lines"][0]["day"]} to ' \
            f'{S["lines"][-1]["day"]}"\ndetails: ' + json.dumps(details, ensure_ascii=False)
-    return {'what': f"{os.path.basename(path)}: {len(adds)} lines of {means}'s statement", 'beans': [
-        {'bean': sid, 'new': {'head': head, 'body': f"The statement of {means}, read from {os.path.basename(path)} "
+    return {'what': f"{said}: {len(adds)} lines of {means}'s statement", 'beans': [
+        {'bean': sid, 'new': {'head': head, 'body': f"The statement of {means}, read from {said} "
                                                     f"({fmt}): its lines as the payments it shows."},
-         'add': adds, 'remove': [], 'known': {'act': 'read', 'from': means, 'through': f"file:{os.path.basename(path)}"}}],
-        'body': [f"- action: wrote [[{sid}]]: {len(adds)} lines read from {os.path.basename(path)} ({fmt}, sha256 "
+         'add': adds, 'remove': [], 'known': {'act': 'read', 'from': means, 'through': f"file:{name}"}}],
+        'body': [f"- action: wrote [[{sid}]]: {len(adds)} lines read from {said} ({fmt}, sha256 "
                  f"{sha[:12]})"]}
 
 
@@ -540,9 +545,12 @@ def entry(B, I, today, run=(None, None)):
     shut = last_close(B)
     if shut is not None and day <= shut:
         refuse(f"day: the books are closed through {iso(shut)}: an entry for it is written after that day")
+    from core import check as dmcheck, measures
+    L = dmcheck.garden_law(B.root)                  # the amounts read as the gate reads them (core/measures.py)
     unit = str(I['unit']).strip()
-    if not re.fullmatch(r'[A-Z]{3}', unit):
-        refuse(f"unit: {unit!r} is no currency's code (ISO 4217: three letters)")
+    why = measures.quantity_why(L, {'count': '1', 'unit': unit}, 'money')
+    if why:
+        refuse(f"unit: {why}")
     dr, cr = [], []
     for part in [x for x in str(I['lines']).split(';') if x.strip()]:
         m = LINE.match(part)
@@ -557,6 +565,10 @@ def entry(B, I, today, run=(None, None)):
     if sum(a for _s, a in dr) != sum(a for _s, a in cr):
         refuse(f"lines: debits {show(sum(a for _s, a in dr))} and credits {show(sum(a for _s, a in cr))} {unit} do "
                f"not balance")
+    for _s, a in dr + cr:
+        why = measures.quantity_why(L, {'count': show(a), 'unit': unit}, 'money')
+        if why:
+            refuse(f"lines: {why}")
     books, made = books_bean(B)
     adds, taken = [], set()
     rests = I.get('of')
