@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """hub — the gate again, at the hub: who pushed, what they may change, and the garden as it would stand (24.0; N32).
 
-    python3 bin/hub.py install <bare repository> [--only <person>] [--each]
+    python3 bin/hub.py install <repository> [--only <person>] [--each]   # the hub's init: its hook, and its own key
+    python3 bin/hub.py key <repository>                               # the hub's key, shown again
     python3 bin/hub.py pre-receive [--only <person>] [--each]        # what the installed hook runs, reading stdin
     python3 bin/hub.py receive <ref> [--each]                         # a peer judges what a fetch brought, as a hub
 
@@ -35,6 +36,22 @@ clone's). Exit 0 and `taken` where every commit passes; the refusals otherwise, 
 
 `--only <person>` accepts pushes signed by the gardener and that one writer: the `view` host's own key (F5 (a)).
 It writes nothing to the garden; a refusal names the commit, the writer and what was missing.
+
+A HUB HAS ITS OWN KEY, made when it is initialized for a garden (the operator's word, 2026-10-13: every commit the hub
+itself writes — a merge with no conflict, its own records — is signed with it). `install <repository>` is that init:
+on a bare repository it writes the hook (left as it is where it is that hook already); on a working copy — the hub
+daftard keeps in step, which judges what it fetches (`receive`) — it writes none, since nothing is pushed into a
+working copy and a hook there would be a file of the garden's tree. Either way it makes the hub's key where this
+account has none for the garden: ed25519, with no passphrase, since nobody sits to give one, in this account's daftar
+state folder — daftard's own: DAFTARD_STATE where it is set, %LOCALAPPDATA%\\Daftar on Windows, $XDG_STATE_HOME/daftar
+(~/.local/state/daftar) elsewhere — under `hubs/<garden id>/key`, the folder 0700 and the key 0600: outside every
+working copy and repository, so no copy, backup or synchronised folder of the garden carries it. One account on one
+machine is one hub of a garden, however many repositories of it it keeps. It is made once and never over: a new key is
+a new identity, the gardener's (class F). It prints the fingerprint, the public line and the statement the gardener
+adds to the hub's bean (`name: { by: ssh, of: self, as: "SHA256:…" }`), and never the private key; `key` prints them
+again. The key waits for the garden's first commit in an empty repository (it is the garden's id that names it), and
+root makes none for a repository another account owns: the key is that account's, made by its own `install`. A hub's
+commits are judged as any writer's are: by the bean its key names, within that bean's grants.
 
 A PERSON'S LABELS (Y8) are their own words for the handplace's interface, on `refs/daftar/custom/<person>` beside the
 garden's branch. The hub takes a commit there when it is signed by a key that person's bean carries (as the garden
@@ -435,23 +452,138 @@ def receive(ref, each=False, env=None):
     return judge(ZERO, sha.strip(), None, each, env, known=('--branches',))
 
 
-def install(bare, only=None, each=False):
-    hook = os.path.join(bare, 'hooks', 'pre-receive')
-    os.makedirs(os.path.dirname(hook), exist_ok=True)
+def install(repo, only=None, each=False):
+    """The hook of a bare repository, written by this hub's code: (path, written). A hook that is already the one this
+    would write is left as it is (a runbook makes it root's, which the hub's own account may not write). A working copy
+    gets none: (None, False)."""
+    if git('-C', repo, 'rev-parse', '--is-bare-repository')[1].strip() != 'true':
+        return None, False
+    hook = os.path.join(repo, 'hooks', 'pre-receive')
     args = ' '.join(filter(None, [f"--only '{only}'" if only else '', '--each' if each else '']))
+    text = (f"#!/bin/sh\n# written by bin/hub.py install: the gate again, at the hub (N32)\n"
+            f"exec '{sys.executable}' '{HERE}' pre-receive {args}\n")
+    try:
+        with open(hook, encoding='utf-8', newline='') as fh:
+            if fh.read() == text:
+                return hook, False
+    except OSError:
+        pass
+    os.makedirs(os.path.dirname(hook), exist_ok=True)
     with open(hook, 'w', encoding='utf-8', newline='\n') as fh:
-        fh.write(f"#!/bin/sh\n# written by bin/hub.py install: the gate again, at the hub (N32)\n"
-                 f"exec '{sys.executable}' '{HERE}' pre-receive {args}\n")
+        fh.write(text)
     os.chmod(hook, 0o755)
-    return hook
+    return hook, True
+
+
+def state_dir():
+    """This account's daftar state folder, which is daftard's own (daftar-hub internal/state): DAFTARD_STATE where it
+    is set, %LOCALAPPDATA%\\Daftar on Windows, $XDG_STATE_HOME/daftar (~/.local/state/daftar) elsewhere."""
+    if os.environ.get('DAFTARD_STATE'):
+        return os.path.normpath(os.environ['DAFTARD_STATE'])
+    if os.name == 'nt':
+        return os.path.join(os.environ.get('LOCALAPPDATA') or os.path.expanduser('~'), 'Daftar')
+    return os.path.join(os.environ.get('XDG_STATE_HOME') or os.path.join(os.path.expanduser('~'), '.local', 'state'),
+                        'daftar')
+
+
+def key_of(repo):
+    """(the path of the hub's key of the garden `repo` holds, the garden's id), or (None, None) where it holds no garden
+    yet — no commit, or a shallow clone that cannot see its root."""
+    gid = dmparse.garden_id(repo)
+    return (os.path.join(state_dir(), 'hubs', gid, 'key'), gid) if gid else (None, None)
+
+
+def _shown(path):
+    """(fingerprint, public line) of the key at `path`, read from its public half."""
+    r = subprocess.run(['ssh-keygen', '-l', '-f', path + '.pub'], capture_output=True, text=True, encoding='utf-8',
+                       errors='replace')
+    m = re.search(r'(SHA256:[A-Za-z0-9+/]{43})', r.stdout + r.stderr)
+    with open(path + '.pub', encoding='utf-8') as fh:
+        return (m.group(1) if m else None), fh.read().strip()
+
+
+def _private(path, folder):
+    """The key and its folder narrowed to this account again, as daftard narrows its state folder on each start."""
+    if os.name != 'nt':
+        os.chmod(folder, 0o700)
+        os.chmod(path, 0o600)
+
+
+def make_key(repo):
+    """THE HUB'S OWN KEY, made once where this account has none for the garden: (path, made, why not). Never made over:
+    a new key is a new identity, the gardener's to name (class F)."""
+    path, gid = key_of(repo)
+    if path is None:
+        return None, False, ("the repository holds no garden yet: the hub's key is named by the garden's id, and is made "
+                             "when `install` runs again after the garden's first commit is here")
+    if hasattr(os, 'geteuid') and os.geteuid() == 0:
+        owner = os.stat(repo).st_uid
+        if owner != 0:
+            try:
+                import pwd
+                who = pwd.getpwuid(owner).pw_name
+            except (ImportError, KeyError):
+                who = f"uid {owner}"
+            return None, False, (f"the hub's key is its own account's ({who}, who owns {repo}), never root's: that "
+                                 f"account's own `install` makes it")
+    folder = os.path.dirname(path)
+    if os.path.isfile(path):
+        _private(path, folder)
+        return path, False, ''
+    if not shutil.which('ssh-keygen'):
+        return None, False, "this machine has no ssh-keygen to make the hub's key with"
+    os.makedirs(os.path.dirname(state_dir()), exist_ok=True)
+    for d in (state_dir(), os.path.dirname(folder), folder):     # what it makes of the state folder, this account's alone
+        if not os.path.isdir(d):
+            os.mkdir(d, 0o700)
+    r = subprocess.run(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-C', f'hub@{gid}', '-f', path],
+                       capture_output=True, text=True, encoding='utf-8', errors='replace', stdin=subprocess.DEVNULL)
+    if r.returncode != 0 or not os.path.isfile(path):
+        return None, False, f"ssh-keygen did not make the hub's key: {(r.stdout + r.stderr).strip()[:300]}"
+    _private(path, folder)
+    return path, True, ''
+
+
+def key_lines(path, made):
+    """What a person is shown of the hub's key: its fingerprint, its public line and the statement for the hub's bean
+    — never the private key."""
+    fpr, pub = _shown(path)
+    return [f"hub: the key of this hub: {fpr} — " + ("made now" if made else
+                                                    "kept: made before, and never made over (a new one is the "
+                                                    "gardener's to name)"),
+            f"hub: its public half: {pub}",
+            f"hub: the gardener adds it to the hub's bean, a name that establishes an identity (class F): "
+            f"name: {{ by: ssh, of: self, as: \"{fpr}\" }}",
+            f"hub: kept in {os.path.dirname(path)}, this account's alone: never in the garden, and never copied to "
+            f"another machine"]
 
 
 def main(argv):
     argv = list(argv)
     only = argv[argv.index('--only') + 1] if '--only' in argv else None
     each = '--each' in argv
-    if argv[:1] == ['install'] and len(argv) >= 2:
-        print(f"hub: installed {install(os.path.abspath(argv[1]), only, each)}")
+    if argv[:1] in (['install'], ['key']) and len(argv) >= 2:
+        repo = os.path.abspath(argv[1])
+        if git('-C', repo, 'rev-parse', '--git-dir')[0] != 0:
+            print(f"hub: {repo} is no git repository — nothing written", file=sys.stderr)
+            return 2
+        if argv[0] == 'key':
+            path = key_of(repo)[0]
+            if not path:
+                print("hub: the repository holds no garden yet, so no hub's key: `install` makes it once the garden's "
+                      "first commit is here", file=sys.stderr)
+                return 1
+            if not os.path.isfile(path):
+                print("hub: this account keeps no key of this hub of the garden — `install` makes it", file=sys.stderr)
+                return 1
+            print('\n'.join(key_lines(path, False)))
+            return 0
+        hook, wrote = install(repo, only, each)
+        print(f"hub: installed {hook}" if wrote else f"hub: the hook is there already, as it should be: {hook}" if hook
+              else f"hub: {repo} is a working copy: nothing is pushed into it, and it judges what it fetches "
+                   f"(`receive`, bin/sync.py) — no hook")
+        path, made, why = make_key(repo)
+        print('\n'.join(key_lines(path, made)) if path else f"hub: no key made — {why}")
         return 0
     if argv[:1] == ['receive'] and len(argv) >= 2:
         refused = receive(argv[1], each)
