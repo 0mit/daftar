@@ -1122,27 +1122,49 @@ def _covers(granted, asked):
                for a in asked)
 
 
-def _day(x):
+def today_in(zone):
+    """Today's day number (cal's count) in `zone`, the civil time zone a garden reckons its days in (GARDEN.md `zone`):
+    the day its people are living, which east of UTC begins hours before UTC's and west of it ends hours after. UTC's
+    where no zone is named, or the one named is not read here."""
+    import time
+    import stale as dmstale
+    now = int(time.time() * 1000)
+    try:
+        return dmstale.local_day(now, zone or 'UTC')
+    except dmstale.Unreckoned:
+        return dmstale.local_day(now, 'UTC')
+
+
+def _day(x, zone=None):
+    """The day number of a position: a day as written, a moment the day it falls on in `zone` (UTC's where none)."""
     import cal as dmcal
     s = str(x).strip()
     try:
-        return dmcal.moment(s).ms // dmcal.DAY_MS
+        ms = dmcal.moment(s).ms
     except Exception:
         return dmcal.to_day(s)
+    import stale as dmstale
+    try:
+        return dmstale.local_day(ms - dmcal.UNIX_DAY * dmcal.DAY_MS, zone or 'UTC')
+    except dmstale.Unreckoned:
+        return ms // dmcal.DAY_MS
 
 
-def _during(d, at):
-    """Whether a grant's `during` holds on the day of `at` (today when absent). None where a bound is not read."""
+def _during(d, at, zone=None):
+    """Whether a grant's `during` holds on the day of `at` (today when absent), its days the garden's: read in `zone`.
+    None where a bound is not read."""
     if not isinstance(d, dict):
         return True
-    import time
     try:
         # TODAY IN THE SAME COUNT AS THE BOUNDS: cal's day number. It was the count of days since 1970, and a bound's is
         # cal's (about 739,000 now against about 20,700), so a grant with a `to` never ended and one with a `from`
         # never began, wherever no `at` was given — the view host, the hub, the gate.
-        now = _day(at) if at else _day(time.strftime('%Y-%m-%d', time.gmtime(time.time())))
-        lo = _day(d['from']) if d.get('from') is not None else None
-        hi = _day(d['to']) if d.get('to') is not None else None
+        # AND IN THE GARDEN'S ZONE (2026-10-14): today, and the day a moment falls on, were UTC's, so east of UTC a
+        # grant whose last day had ended still opened until UTC's midnight — hours into the next day where its people
+        # live — and one whose first day had begun opened nothing until then; west of UTC, the reverse.
+        now = _day(at, zone) if at else today_in(zone)
+        lo = _day(d['from'], zone) if d.get('from') is not None else None
+        hi = _day(d['to'], zone) if d.get('to') is not None else None
     except Exception:
         return None
     return (lo is None or lo <= now) and (hi is None or now <= hi)
@@ -1266,6 +1288,7 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
     fm = beans.get(bean) or {}
     subjects = _subjects(bean, fm)
     read, forbid, permit, notes = [], [], [], []
+    zone = zone_of(root)                                # a grant's days are the garden's
     for holder, hfm in sorted(beans.items()):
         gs = hfm.get('grants')
         if not isinstance(gs, dict):
@@ -1286,7 +1309,7 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
             if not any(a.get('who') == actor or (a.get('selection') is not None and actor in (_select(holder, a['selection'], root) or ()))
                        for a in aud if isinstance(a, dict)):
                 continue
-            held = _during(g.get('during'), at)
+            held = _during(g.get('during'), at, zone)
             if held is None:
                 notes.append(f"{holder}:grants[{key}] — its `during` is not read here, so it opens nothing")
             if not held:
@@ -1699,12 +1722,12 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
                 continue
             gid = r.get('id') if isinstance(r.get('id'), str) else f"grant@{i}"
             span = str(r.get('at')) if r.get('at') else None
+            if zone is False:
+                zone = zone_of(root)                        # its days, and its window, are the garden's
             if r.get('window') is None:
                 holds = _during({'from': span.split('/')[0] or None, 'to': span.split('/')[1] or None}
-                                if span and '/' in span else None, at)
+                                if span and '/' in span else None, at, zone)
             else:                                           # in its `at`, and in an occurrence of its window
-                if zone is False:
-                    zone = zone_of(root)
                 holds, why = _windowed(span, r['window'], at, zone, root)
                 if why:
                     notes.append(f"{holder}#{gid}: {why}")

@@ -305,11 +305,35 @@ Sam keeps""", 1))
             ("and its `at` bounds that too: the last day's occurrence holds until its midnight, not past it", 'rack',
              ['2026-10-23 23:59+02:00'], ['2026-10-24 01:00+02:00', '2026-10-18 23:00+02:00']),
             ("a grant without a window holds as it did, at any moment of its days", 'nas',
-             ['2026-10-24 03:00+02:00', '2026-10-30'], ['2026-10-31'])):
+             ['2026-10-24 03:00+02:00', '2026-10-30'], ['2026-10-31']),
+            ("a grant without a window holds over its days in the garden's zone: in the small hours east of UTC, a "
+             "moment of its first day is inside it and one of the day after its last outside, whatever day it is in "
+             "UTC", 'nas', ['2026-10-19 00:30+02:00', '2026-10-18 22:30Z'], ['2026-10-31 00:30+01:00', '2026-10-30 23:30Z'])):
         got = {t: may(bean, t) for t in inside + outside}
         check(f"may: a grant in a window opens {name}" if bean != 'nas' else f"may: {name}",
               all(got[t].granted for t in inside) and not any(got[t].granted for t in outside),
               {t: (a.granted, a.why) for t, a in got.items()})
+    # ...AND TODAY IS THE GARDEN'S: asked with no moment, a grant's days are read against today in the garden's zone, as
+    # what is due to be erased is — the clock held in the small hours of a Berlin day that is still yesterday in UTC
+    probe = r"""import sys, time, json; sys.path.insert(0, 'bin'); import cal, importlib
+dmpass = importlib.import_module('pass'); import held
+out = {}
+for t in ('2026-10-18 22:30Z', '2026-10-30 23:30Z'):
+    time.time = lambda t=t: (cal.moment(t).ms - cal.UNIX_DAY * cal.DAY_MS) / 1000
+    out[t] = [dmpass.may('p-0000aaaa', 'read', 'nas', root='.').granted,
+              dmpass.today_in(dmpass.zone_of('.')) - cal.to_day('2026-10-01') if hasattr(dmpass, 'today_in') else None,
+              held.due(root='.', beans={'x': {'records': {'a': {'held': 'root:vault/' + '0' * 32, 'until': '2026-10-31'}}}}, days=0)]
+print(json.dumps(out))"""
+    r = grow.run(PY, '-c', probe, cwd=G)
+    try:
+        got = json.loads(r.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        got = {}
+    check("may: asked with no moment, a grant's days are read against TODAY IN THE GARDEN'S ZONE, and what is due to be "
+          "erased too — at 22:30Z on 18 October it is the 19th in Berlin, the grant's first day; at 23:30Z on 30 October "
+          "the 31st, the day after its last, when an entry kept until the 31st is due",
+          got.get('2026-10-18 22:30Z') == [True, 18, []]
+          and got.get('2026-10-30 23:30Z') == [False, 30, [['x', 'records', 'a', 0]]], (got, r.out[-800:]))
     a = may('hive-1', '2026-10-20')
     check("may: a grant in a window is judged at a moment — a day asked opens nothing through it, and says why",
           not a.granted and 'window' in a.why, a)
