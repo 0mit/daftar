@@ -251,6 +251,29 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.8** (2026-10-14, daftar v2.8.0, human-ratified rule-changes: a page field that is a reading of the being its
+  sheet shows; a line for each party beneath an account that holds parties; shares of an agreement; the week as day
+  timelines) — **a person's account, read where the person is; shares said once for an agreement; a week read for its
+  hours; what others owe a person reaching them.** MINOR: nothing a garden could write under core 2.7 is refused.
+  - A person's account: a chart's account that holds parties (a persons' current account) draws a line for each person
+    beneath it, each opening their own ledger, and a line for its lines that name nobody; its ledger names each line's
+    person and why the line is there (a share, a payment, what is owed back, what a clause asks), in the reader's words,
+    never an English memo. A page field may be one of the page's readings, given the being its card shows (`fields` …
+    `reading`): the books' step with `party` gives a person's account, so a person's sheet says who owes whom and lists
+    their lines. Where the books and the agreements read a person's account otherwise, the books' table says so. A
+    booking to an account that holds persons names the person, or the books' walks refuse it; a line naming nobody
+    waits for one (open items, `awaits: party`). The books are read once per version of the garden a process holds.
+  - Shares of an agreement: a `bear` of the agreement itself (`of: self` in its bean) bears each payment it holds that
+    names no bearers of its own and pays none of these — a transfer between the parties is no cost they share. One
+    reader, core/shares.py, holds it for who owes whom, the books, the gate and a page. A sheet draws a payment's shares
+    as one line — each bearer's fraction (1/2, never 0.5) and amount, where the shares come from, who then owes whom —
+    and the share form opens with the shares as they stand, each row's part read as it is filled; shares that add up to
+    the payment are amounts.
+  - The week as day timelines: each day a column of its hours, the hours the week's own, what takes them a block at
+    them, overlaps side by side, what is kept in view at a time in a narrow lane beside them, what has no time under the
+    day's label, today's column the hour it is now; on a narrow screen, one day at a time. The month keeps core 2.7's
+    cell.
+  - Leads for the creditor: an obligation falling due is a lead for whom it is owed to as well as for who pays it.
 - **core 2.7** (2026-10-14, daftar v2.7.0, human-ratified rule-changes: an attendance that says it does not take its
   hours, `transparency`, a row of iCalendar's TRANSP; and a page action's list given row by row beside another,
   `beside`) — **a garden held in its daemon's memory and answered from it; a calendar's day drawn as the hours taken
