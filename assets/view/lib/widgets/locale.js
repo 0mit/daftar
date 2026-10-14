@@ -113,6 +113,7 @@ export const SAID = {
                   fa: 'عدد را با رقم و حداکثر یک ممیز بنویسید.'},
   'number-places': {en: 'At most {n} decimal places.', fa: 'حداکثر {n} رقم اعشار.'},
   'number-positive': {en: 'It must be more than zero.', fa: 'باید بزرگ‌تر از صفر باشد.'},
+  rounded: {en: 'Shown to this currency’s places, rounded; exactly {exact}', fa: 'تا رقم‌های این ارز، گرد شده؛ دقیقاً {exact}'},
   uneven: {en: 'It does not come out even in this currency’s places: who takes the remainder is a clause of the agreement, not rounding.',
            fa: 'به رقم‌های اعشار این ارز سرراست نمی‌شود؛ اینکه باقی‌مانده با کیست را بند توافق می‌گوید، نه گرد کردن'},
   'day-required': {en: 'Write the day.', fa: 'تاریخ را بنویسید.'},
