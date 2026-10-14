@@ -223,6 +223,7 @@ export const SAID = {
   'sheet-saved': {en: 'Saved.', fa: 'ذخیره شد.'},
   'sheet-refused': {en: 'Refused — nothing was kept.', fa: 'رد شد — چیزی نگه داشته نشد.'},
   'sheet-new': {en: 'New', fa: 'تازه'},
+  'sheet-new-kind': {en: 'New {kind}', fa: 'افزودن {kind}'},
   'sheet-unknown': {en: 'not yet known', fa: 'هنوز معلوم نیست'},
   'sheet-contact': {en: 'How to reach them', fa: 'نشانی و تماس'},
   // a run started from a sheet: its inputs, the plan it would apply, a person's ratification of it

@@ -40,6 +40,7 @@
 .eg-held{font-size:.82em;color:#8250df;margin-inline-start:6px}
 .eg-dependents{margin-inline-start:14px;margin-block-start:4px;border-inline-start:2px solid var(--line,#cfd8e2);padding-inline-start:8px}
 .eg-field{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-block:3px}
+.eg-field textarea{flex:1 1 100%;width:100%;min-width:0;min-height:4.5em;box-sizing:border-box;resize:vertical}
 .eg-req-word{color:#a0522d}
 .eg-err{color:#f85149;font-size:.85em}
 .eg-err:empty{display:none}

@@ -584,8 +584,10 @@ window.addEventListener('load', async () => {
  try {
   const tabs = [...document.querySelectorAll('.tab')].map(b => b.dataset.t), lens = [...document.querySelectorAll('#lens button')].map(b => b.dataset.l);
   for (const t of tabs) for (const l of lens) { __go(t, l); out[t + '/' + l] = (document.querySelector('#view').innerText || '').length; }
-  __go('ali', 'operate'); document.querySelector('#view [data-do="edit"]').click();
-  const s = document.querySelector('#view [name="header.summary"]'); editing = !!s; s.value = %s;
+  __go('ali', 'operate'); out.news = [...document.querySelectorAll('#view [data-new]')].map(b => [b.textContent.trim(), b.getAttribute('aria-label') || '']);
+  document.querySelector('#view [data-do="edit"]').click();
+  const s = document.querySelector('#view [name="header.summary"]'); editing = !!s;
+  out.widths = [Math.round(s.getBoundingClientRect().width), Math.round(s.closest('.eg-field').getBoundingClientRect().width)]; s.value = %s;
  } catch (e) { window.__errs.push('driver: ' + e.message); }
  __kept({errs: window.__errs.slice(), csp: window.__csp.slice(), out, editing, injected: window.__injected === 1, saving: true});
  try { document.querySelector('#view [data-do="save"]').click(); } catch (e) { window.__errs.push('driver: ' + e.message); }
@@ -653,6 +655,13 @@ window.addEventListener('load', async () => {
                   "allows by their hashes, with no error and no script refused but the one injected, which does not run",
                   not f1.get('errs') and len(draws) == 4 * 5 and all(v > 20 for v in draws.values())
                   and f1.get('csp') == ['script-src-elem inline'] and f1.get('injected') is False, lv)
+            news, widths = (f1.get('out') or {}).get('news') or [], (f1.get('out') or {}).get('widths') or [0, 1]
+            check("...a kind a page may make is offered as «+» and the kind alone — no «new» word, which «+» says — its "
+                  "whole name («افزودن …», «New …») the button's label for the ear and the tooltip; the summary being "
+                  "edited takes its field's whole width",
+                  news and all(x.startswith('+ ') and 'تازه' not in x and 'New' not in x and lab and x[2:] in lab
+                               and lab != x for x, lab in news)
+                  and widths[0] >= 0.9 * widths[1] and widths[0] > 200, (news, widths))
             entry2 = get('log/journal.md')[len(j2):]
             check("...and a sheet's Save there is the renderers' own write, its CSRF token the page's: one commit, one "
                   "journal entry, and the page the Save reloads, again under its policy, shows the new head",

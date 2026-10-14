@@ -396,7 +396,7 @@
     function draw() {
       n = 0;
       var hd = data.header || {}, title = hd.title || {}, summary = hd.summary, tags = hd.tags;
-      var named = data.new ? (t.say('sheet-new') + ' ' + t.name('kinds', data.kind)) : data.title;
+      var named = data.new ? t.say('sheet-new-kind', {kind: t.name('kinds', data.kind)}) : data.title;
       var head = editing
         ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">${labels.title || word('header', 'title')}</span> ${w.text.edit('header.title', title.value === data.bean ? '' : (title.value || ''), {placeholder: data.title})}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
             ${tags ? (tags.may ? h`<label class="eg-field" data-fact="header:tags"><span class="eg-role-name">${labels.tags || word('header', 'tags')}</span> ${w.text.edit('header.tags', (tags.value || []).join(t.say('sheet-tags-sep')))}<span class="eg-err" data-err-fact="header:tags"></span></label>` : tagsOf(tags)) : ''}
