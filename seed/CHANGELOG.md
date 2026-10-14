@@ -251,6 +251,48 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.6** (2026-10-14, daftar v2.6.0, human-ratified rule-changes: a held record opened only by a grant that
+  names it, #184; held records written from a page and a person reading what is held of them, #192, #193; the books —
+  a chart held to its form, a booking a move, its reverse, a match — with their Persian names confirmed, #190, #191; the
+  books read and a period closed as a pin, #194; a reader's way of reading as a bean, #200; the books drawn as a table
+  over a chart's codes, the operator's choice of 2026-10-13, #201; an action's inputs as a page asks them, #202; the
+  meaningful optional inputs, #204; a save stamped to the second, #209) — **the books are kept, read, drawn and worked
+  from a page; what is held off git is opened by name; and a save no longer waits for the minute to turn.** MINOR:
+  nothing a garden could write under core 2.5 is refused.
+  - Held records:
+    - What is held off git is opened only by a grant that names it (#184), written from a page in its words and never
+      into git (#192), and a person reads their own name and contact, not their id (#193).
+  - The books (the accounting profile and its asset):
+    - A chart of accounts held to its form; a booking a move from one account to another; its reverse in the reverse
+      sense; a match (#190), «تطبیق» and «جهت» (#191).
+    - The books read from what moved — trial balance, ledgers, opening — and a period closed as the reading pinned at a
+      commit (#194); a payment a clause asks is no payment made (#186).
+    - Their operations are walks: book a payment, write a journal entry, reverse, match, close, import a statement
+      (ISO 20022 camt.053/054, OFX, MT940, a bank's CSV by a declared mapping) and set up (#198); several payments to one
+      account in one plan (#207); a document recorded by mistake taken out with what names it, and an account of the
+      chart added or changed (#205), with what the garden kept beside it in `details` (#210); a file a page gave, an
+      amount in any money unit the garden's law holds, a mapping's unknown day form refused by name (#208); booking a
+      posted line again names the act it takes out (#203).
+    - Drawn as a `table` over a chart's codes: an account a line, debit before credit along the reader's line, each by
+      its name in the reader's language, with its ledger (#201).
+  - The view:
+    - A code of a scheme is drawn by its name in the reader's language (#185); what went between gardens names every
+      garden and being that went (#187).
+    - A run is started from a page with what a person gives it, its plan shown, then ratified (#188); a plan that is a
+      write is said, ratified, written as shown and read back (#189); an action's inputs are chosen among a reading's
+      members or a scheme's rows, several, filled from the row, a day or a file kept off git (#202), and an input may be
+      left empty where its walk gives the emptiness a meaning (#204); a run its walk refuses before any step is answered
+      is refused in the walk's own words (#206).
+    - A reader's way of reading is kept as a bean, to keep or to carry, and back, losing nothing (#200).
+  - Time:
+    - A save stamps the clock's reading to the second, true to the minute's discipline: a bean saved again within the
+      minute no longer waits for it to turn (#209). A page's booking, start to done, went from minutes to seconds.
+    - A grant's days, and the day a moment falls on, are read in the garden's zone, and so is what is due to be erased
+      (#211).
+  - Speed (not a rule-change): the gate reads YAML with libyaml where it is installed, asks for held records in one git
+    process and its own Python, checks the law once per version and builds the room graph once (#212). The whole list
+    of 67 suites runs in about four minutes, from about thirty.
+
 - **core 2.5** (2026-10-12, daftar v2.5.0, human-ratified rule-changes: the law's words in Persian, confirmed by the
   operator, #141; a handplace's pages, under the view-handplace design ratified 2026-10-11, #152; the sheet in its
   reader's words, each reader's way of reading and the places fetched from GeoNames and OpenStreetMap, ratified
