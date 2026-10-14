@@ -134,6 +134,8 @@ def said_of(x):
             m = _moment(str(x['due']))
             if m:
                 out['day'] = m[0]
+        if x.get('side') == 'owed':                   # who owes it, by how the page calls them
+            out['owed_by_titles'] = [title_of(p) if _bean(p) is not None else p for p in x.get('owed_by') or []]
     elif k == 'health':
         b = _bean(x.get('about'))
         f = next((r for _i, v, r in (b.items if b is not None else []) if v == 'fail' and isinstance(r, dict)

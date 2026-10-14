@@ -338,11 +338,13 @@ try:
     rc, out = run(PY, 'bin/leads.py', '--for', 'sam', '--json')
     leads = json.loads(out) if rc == 0 else []
     q = E['drawings']['waits']
+    owed = [x for x in q['leads'] if x['kind'] == 'obligation']
     check("queue: the reader's leads are bin/leads.py --json's for them, grouped by what each waits on — Sam's parked "
-          "decision, and not Ali's deposit, which is hers",
+          "decision, and Ali's deposit as owed to him, by Ali, by how the page calls her; paying it stays hers",
           sorted((x['kind'], x['about']) for x in q['leads']) == sorted((x['kind'], x['about']) for x in leads)
           and ('decision', 'camera-insurance') in [(x['kind'], x['about']) for x in q['leads']]
-          and not [x for x in q['leads'] if x['kind'] == 'obligation'], (q, leads))
+          and [(x['clause'], x.get('side'), x.get('owed_by_titles')) for x in owed] == [('deposit-due', 'owed', ['Ali'])],
+          (q, leads))
     sh = (E.get('sheets') or {}).get('camera') or {}
     pay = next((x for r in sh.get('rows', []) if r['verb'] == 'pay' for x in r['statements'] if x['key'] == 'pay#camera'), {})
     check("sheet: a payment shows the shares that take it as their `of` beneath it — its `bear`s — and who said it",

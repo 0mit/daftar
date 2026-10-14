@@ -14,6 +14,10 @@
     // English `why` stays on the line as its title, for a lead of a kind no sentence names yet
     function said(x) {
       if (x.kind === 'case') return t.say('lead-case', {step: x.step_says || x.step});
+      if (x.kind === 'obligation' && x.side === 'owed') {    // what another owes the reader, falling due
+        return t.say(x.days != null && x.days < 0 ? 'lead-owed-past' : 'lead-owed', {what: x.what || t.say('lead-clause'),
+          by: (x.owed_by_titles || []).join(t.say('sheet-tags-sep')) || t.say('flows-someone')});
+      }
       if (x.kind === 'obligation') return t.say(x.days != null && x.days < 0 ? 'lead-due-past' : 'lead-due', {what: x.what || t.say('lead-clause')});
       if (x.kind === 'decision') return t.say('lead-decision', {cls: x['class'] || '—'});
       if (x.kind === 'health') return t.say('lead-health', {as: x.fails_as || ''});

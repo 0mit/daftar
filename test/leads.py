@@ -210,9 +210,11 @@ A machine.
           [x['for'] for x in by('session', 'session-open-work')] == ['sam'] and not by('session', 'session-open')
           and not by('session', 'session-closed'), leads)
     o = by('obligation', 'flat-lease')
-    check("leads: an obligation falling due within its notice is the party's it binds — who pays what it asks — and one "
-          "far off is nobody's yet", [(x['for'], x.get('clause')) for x in o] == [('p-1a2b3c4d', 'rent-due')]
-          and o[0].get('due') == soon, o)
+    check("leads: an obligation falling due within its notice is the party's it binds — who pays what it asks — and "
+          "the party it is owed to, told it is owed (`side: owed`, the payer named); one far off is nobody's yet",
+          sorted((x['for'], x.get('clause'), x.get('side'), x.get('owed_by')) for x in o) ==
+          [('p-1a2b3c4d', 'rent-due', 'pays', None), ('sam', 'rent-due', 'owed', ['p-1a2b3c4d'])]
+          and all(x.get('due') == soon for x in o), o)
     hl = [x for x in leads if x.get('kind') == 'health']
     check("leads: a failure a reading shows, not yet repaired, is the keeper's — and one repaired, or a finding with no "
           "reading behind it, is nobody's", [(x['for'], x['about'], x['fail']) for x in hl] == [('p-1a2b3c4d', 'box-slow', 'clock-drift')]

@@ -174,6 +174,8 @@ export const SAID = {
   'lead-due': {en: '{what} — falls due', fa: '{what} — موعدش می‌رسد'},
   'lead-due-past': {en: '{what} — fell due', fa: '{what} — موعدش گذشته است'},
   'lead-clause': {en: 'a clause', fa: 'یک بند'},
+  'lead-owed': {en: '{what} — {by} is to pay you', fa: '{what} — {by} باید به شما بپردازد'},
+  'lead-owed-past': {en: '{what} — {by} was to pay you', fa: '{what} — موعد پرداخت {by} به شما گذشته است'},
   'lead-decision': {en: 'a decision only you may take (class {cls})', fa: 'تصمیمی که فقط با شماست (ردهٔ {cls})'},
   'lead-health': {en: 'failing: {as}', fa: 'خرابی: {as}'},
   'lead-session': {en: 'an agent\u2019s session is open: {ahead} commit(s) not yet in the main copy', fa: 'نشست یک عامل باز مانده است: {ahead} ثبت هنوز در نسخهٔ اصلی نیست'},
