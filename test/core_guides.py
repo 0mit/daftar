@@ -200,7 +200,7 @@ try:
 
     def judged(path, text):
         """The gate's findings on the bean at `path` with the statements `text` added to it, nothing committed."""
-        garden = engine.Garden.read(G)
+        garden = engine.Garden.read(G).copy()       # its own: a bean is put in place below, and what is held is read only
         bid = os.path.basename(path)[:-3]
         if bid not in garden.beans:
             return [('form', bid, 'no such bean in the garden')]

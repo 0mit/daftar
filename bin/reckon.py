@@ -180,6 +180,14 @@ def k_factor(registry):
 NEGATED = {'≠': 'is'}                     # a sign the core reads that today's words lacked: not equal
 
 
+_VIEWED = {}        # a garden's root -> (the version held, its beans' views, their folders, their print or None)
+
+
+def _viewprint(fm):
+    import hashlib
+    return hashlib.blake2b(repr(sorted(fm.items(), key=lambda kv: kv[0])).encode(), digest_size=20).digest()
+
+
 class Garden:
     """The front matter of every bean and mapping of one garden, as it stands now or at a commit."""
 
@@ -202,11 +210,30 @@ class Garden:
                 self._put(f"{os.path.basename(os.path.dirname(path))}/{os.path.basename(path)}", head)
 
     def _core(self):
-        """A garden of the core, now or at the pin's commit: each bean as core/lines.py views it."""
+        """A garden of the core, now or at the pin's commit: each bean as core/lines.py views it.
+
+        Now, the views are made once per garden held (core/engine.py `Garden.read`): a page's hundred readings of one
+        garden share them, each reading with its own mappings of them; DAFTAR_HELD_CHECK=1 names a reading that
+        changes a view it shares."""
         sys.path.insert(0, ROOT)
         from core import engine, lines, read
         if self.pin is None:
             G = engine.Garden.read(self.root)
+            kept = _VIEWED.get(self.root)
+            check = os.environ.get('DAFTAR_HELD_CHECK') == '1'
+            if kept is not None and G.held is not None and kept[0] is G.held:
+                if check and _viewprint(kept[1]) != kept[3]:
+                    raise engine.HeldChanged(f"a reading changed the views held for {self.root!r}: they are read, "
+                                             f"never written")
+                self.fm, self.kind = dict(kept[1]), dict(kept[2])
+                return
+            for bid, b in G.beans.items():
+                if not b.unread:
+                    self.fm[bid] = lines.view(b, G)
+                    self.kind[bid] = os.path.basename(os.path.dirname(b.path)) if b.path else 'beans'
+            if G.held is not None:
+                _VIEWED[self.root] = (G.held, dict(self.fm), dict(self.kind), _viewprint(self.fm) if check else None)
+            return
         else:
             self._check_pin()
             beans = {}
