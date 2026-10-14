@@ -87,7 +87,7 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
                              'js': js, 'payload': json.dumps(E, ensure_ascii=False), 'day': DAY})
         r = subprocess.run([browser, '--headless=new', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=5000',
                             '--dump-dom', 'file://' + path], capture_output=True, text=True, encoding='utf-8', errors='replace',
-                           timeout=180)
+                           timeout=180, env=dict(os.environ, TMPDIR=T))     # what the browser leaves, in the folder that goes
         m = re.search(r'<pre id="__out">(.*?)</pre>', r.stdout, re.S)
         B = json.loads(html.unescape(m.group(1))) if m else {'errs': ['no result: ' + r.stderr[-600:]]}
         takes = {x['minutes']: x for x in B.get('takes') or []}

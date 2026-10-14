@@ -49,6 +49,9 @@
 .eg-held{font-size:.82em;color:#8250df;margin-inline-start:6px}
 .eg-dependents{margin-inline-start:14px;margin-block-start:4px;border-inline-start:2px solid var(--line,#cfd8e2);padding-inline-start:8px}
 .eg-field{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-block:3px}
+.eg-rows{border-collapse:collapse;margin-block:4px;width:100%}
+.eg-rows th,.eg-rows td{padding:3px 6px;border-block-end:1px solid var(--line,#cfd8e2);text-align:start}
+.eg-rows .w-num-input{width:6em}
 .eg-sort{all:unset;cursor:pointer;font:inherit;color:inherit}
 .eg-sort:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 th[aria-sort=ascending] .eg-sort::after{content:" ▲";font-size:.7em}

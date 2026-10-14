@@ -513,6 +513,9 @@ forms:
                   many:
                     in: ["true"]
                     meaning: "several values of it, a list: each one as the input asks"
+                  beside:
+                    in: { type: kebab }
+                    meaning: "a list given row by row beside another list of this action (ratified 2026-10-14): both `many`, this one beside the other, which is beside none — the page draws them as one table, a row each, and the tool is handed the two lists aligned, of one length (a person beside their share)"
                   optional:
                     in: ["true"]
                     meaning: "a value the person pressing may leave empty, where empty has a meaning the tool states (no note, no cost centre, today's day): left empty, the tool is given no value of that name, never an empty one. Never an input filled `from` the element, nor the clock's: a tool cannot run without them. Absent, the input is asked, and a run is not started without it"

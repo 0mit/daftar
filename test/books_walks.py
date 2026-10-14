@@ -37,6 +37,7 @@ Run: python3 test/books_walks.py   (0 = green; some minutes: its walks are many)
 import difflib
 import json
 import os
+import re
 import shutil
 import socket
 import sys
@@ -217,8 +218,8 @@ files:
              'procedure and the namespace anchor-hostname; wrote [[box]]', '- ratified_by: sam')
     r = run(PY, 'assets/accounting/bin/books.py', 'setup', '--by', 'sam')
     wrote = sorted(f for f in os.listdir(os.path.join(G, 'mappings')) if f.startswith('walk-books-'))
-    check("...then it writes the eight walks and the tool, and saves nothing", r.returncode == 0 and wrote ==
-          [f'walk-books-{o}.md' for o in ('book', 'chart', 'close', 'entry', 'import', 'match', 'remove', 'reverse')]
+    check("...then it writes the nine walks and the tool, and saves nothing", r.returncode == 0 and wrote ==
+          [f'walk-books-{o}.md' for o in ('book', 'chart', 'close', 'entry', 'import', 'match', 'remove', 'reverse', 'share')]
           and os.path.isfile(os.path.join(G, 'beans', 'books-tool.md')) and 'not saved' in r.out, (r.out[-600:], wrote))
     r = save("the books' walks", '- action: wrote [[books-tool]], ' + ', '.join(f'[[{w[:-3]}]]' for w in wrote))
     check("...and they pass the gate as the garden's own", r.returncode == 0, r.out[-900:])
@@ -334,6 +335,36 @@ files:
     check("reverse: a payment reversed from today with its reason, its move's ends exchanged: Dr the card 40, Cr "
           "household 40", 'stopped at done' in r2.out and len(rv) == 1 and lines_of(rv[0]) == [('21', 40, 0), ('62', 0, 40)],
           r.out[-500:] + r2.out[-500:] + str(rv))
+
+    # ---- SHARE: who bears a payment's cost, each in whole parts (the operator, 2026-10-14: a card line put on another
+    # as their debt, or shared among some in their proportions)
+    write('beans/p-0a1b2c3d.md', '---\nbean: p-0a1b2c3d\nkind: person\ntitle: "p-0a1b2c3d"\nstatements:\n'
+                                 '  - say: { by: sam, at: now }\n---\nA friend who shares costs, kept by an opaque id.\n')
+    bean('club', 'org', 'a club that shares costs', 'say: { by: sam, at: now }')
+    save('who shares costs', '- action: wrote [[p-0a1b2c3d]], [[club]]')
+    no = [planned('share', on='shop', of='shop#lamp', who=['sam', 'p-0a1b2c3d'], share=['1']),
+          planned('share', on='shop', of='shop#lamp', who=['p-0a1b2c3d'], share=['0']),
+          planned('share', on='shop', of='shop#lamp', who=['p-0a1b2c3d'], share=['1.5']),
+          planned('share', on='shop', of='shop#lamp', who=['grocer-x'], share=['1']),
+          planned('share', on='shop', of='shop#lamp', who=['sam', 'sam'], share=['1', '1'])]
+    check("share: refused — a share for each who bears it, a whole number of parts of one or more, a person or an "
+          "organisation of the garden, each once",
+          all(x.startswith('REFUSED') for x in no) and 'a share beside each' in no[0] and 'whole number' in no[1]
+          and 'whole number' in no[2] and 'no person or organisation' in no[3] and 'each one once' in no[4], no)
+    r, c = start('shop', 'share', of='shop#lamp', who=['sam', 'p-0a1b2c3d'], share=['2', '1'])
+    r2 = ratify('shop', c)
+    shop = open(os.path.join(G, 'beans', 'shop.md'), encoding='utf-8').read()
+    bears = re.findall(r'bear: \{ id: ([a-z0-9-]+), by: ([a-z0-9-]+), of: lamp, share: "(\d+)" \}', shop)
+    check("share: the lamp's cost borne by sam in two parts and the friend in one — `bear` statements beside the payment, "
+          "each with its id; nothing stored of what is owed",
+          'stopped at done' in r2.out and sorted((b, s) for _i, b, s in bears) == [('p-0a1b2c3d', '1'), ('sam', '2')],
+          r.out[-400:] + r2.out[-400:] + shop[-600:])
+    r, c = start('shop', 'share', of='shop#lamp', who=['club'], share=['1'])
+    r2 = ratify('shop', c)
+    shop = open(os.path.join(G, 'beans', 'shop.md'), encoding='utf-8').read()
+    bears = re.findall(r'bear: \{ id: ([a-z0-9-]+), by: ([a-z0-9-]+), of: lamp, share: "(\d+)" \}', shop)
+    check("...shared again, put on another whole: the club bears it all, in place of the two before",
+          'stopped at done' in r2.out and [(b, s) for _i, b, s in bears] == [('club', '1')], r2.out[-400:] + shop[-600:])
 
     # ---- SEVERAL PAYMENTS, ONE ACCOUNT, ONE PLAN: the lines a person ticks on a statement's page
     bean('grocer', 'document', 'two receipts from the grocer', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',

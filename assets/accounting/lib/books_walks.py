@@ -35,6 +35,9 @@ its bookings, else `books-<entity>`, made by the first write:
            card), `mapping` (a CSV's, a file of the garden), `statement` (the bean's id; `statement-<the file's SHA-256,
            12>` where none): a statement bean, its lines payments read from the file through the means; refused whole
            where a line is not read, where opening + lines is not the closing, or where the file was imported already.
+  share    `of` (a payment), `who`, each beside their `share` (a whole number of parts): who bears its cost, in place of
+           whoever this walk had bearing it; refused where one is no person or organisation here, a share is not a
+           whole number, the two lists are not one row each, or a share was written by hand with no id.
 """
 import datetime
 import hashlib
@@ -980,5 +983,46 @@ def chart(B, I, today, run=(None, None)):
             'body': [f"- action: {what} in {rel}" + (f": {new.get('name')}" if new.get('name') else '')]}
 
 
+# ------------------------------------------------------------------------------------------------ share
+def share(B, I, today, run=(None, None)):
+    """A PAYMENT'S COST, BORNE (the operator, 2026-10-14: a card line put on another as their debt, or shared among
+    some in their proportions; one form, a person beside their share — the view's `beside`): `of`, the payment; `who`,
+    those who bear it, each beside their `share`, a whole number of parts (verbs.yaml `bear`: the ratio the parties
+    said, whole, so the arithmetic stays exact). Whoever bore it before is replaced — this walk's own `bear` statements
+    of it taken out, the new written — and one written by hand, with no id to take it out by, is refused rather than
+    lost. What each owes whom is read from them (bin/ledger.py), never stored."""
+    ref = I.get('of')
+    bid, verb, r = statement(B, ref)
+    if verb != 'pay':
+        refuse(f"{ref} is a `{verb}`: what is borne is a payment's cost")
+    who, parts = I.get('who') or [], I.get('share') or []
+    who, parts = ([who] if isinstance(who, str) else list(who)), ([parts] if isinstance(parts, str) else list(parts))
+    if not who or len(who) != len(parts):
+        refuse("who and share: a share beside each one who bears it")
+    if len(set(who)) != len(who):
+        refuse("who: each one once, with all their parts in one share")
+    for w, s in zip(who, parts):
+        x = B.G.beans.get(w)
+        if x is None or x.kind not in ('person', 'org'):
+            refuse(f"who: {w} is no person or organisation of this garden")
+        if not re.fullmatch(r'[1-9][0-9]{0,5}', str(s)):
+            refuse(f"share: {s!r} is not a whole number of parts, one or more")
+    sid = ref.split('#', 1)[1]
+    b = B.G.beans[bid]
+    olds = [x for _i, v, x in b.items if v == 'bear' and x.get('of') == sid]
+    if any(not isinstance(x.get('id'), str) for x in olds):
+        refuse(f"{ref} is borne already by a statement with no id, written by hand: change it there")
+    removes = [x['id'] for x in olds]
+    taken, adds = set(removes), []
+    for w, s in zip(who, parts):
+        nid = fresh_id(B, bid, f"bear-{sid}-{w}", taken - set(removes))
+        taken.add(nid)
+        adds.append(f'bear: {{ id: {nid}, by: {w}, of: {sid}, share: "{s}" }}')
+    said = ', '.join(f"[[{w}]] {s}" for w, s in zip(who, parts))
+    return {'what': f"{ref} borne by " + ', '.join(f"{w} {s}" for w, s in zip(who, parts)),
+            'beans': [{'bean': bid, 'add': adds, 'remove': removes}],
+            'body': [f"- action: who bears {ref}, in parts: {said}" + (f"; in place of {', '.join(removes)}" if removes else '')]}
+
+
 PLANS = {'book': book, 'reverse': reverse, 'match': match, 'close': close, 'import': import_, 'entry': entry,
-         'remove': remove, 'chart': chart}
+         'remove': remove, 'chart': chart, 'share': share}

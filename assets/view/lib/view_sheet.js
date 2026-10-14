@@ -264,11 +264,29 @@
     // an input a person may leave empty (the law's `optional`): left so, the host gives the tool nothing of that name;
     // any other is marked as the entry form marks a required role, and asked before anything is sent
     function optional(i) { return i.optional === 'true' || i.optional === true; }
+    // A LIST BESIDE A LIST (the law's `beside`, ratified 2026-10-14): the lists one stands beside drawn as one table, a
+    // row each — where the first chooses among a reading's members or a scheme's rows, every one of them listed, a
+    // field of each other list beside it; a row left empty is not given. A person beside their share.
+    function besides(a, i) { return (a.inputs || []).filter(function (x) { return x.beside === i.name; }); }
+    function pairsOf(a) {
+      var out = {};
+      (a.inputs || []).forEach(function (i) { if (i.beside) (out[i.beside] = out[i.beside] || []).push(i); });
+      return out;
+    }
+    function rowsInput(a, i) {
+      var with_ = besides(a, i), opts = i.choices ? choicesOf(i) : [0, 1, 2, 3, 4].map(function () { return null; });
+      var head = h`<tr><th scope="col">${w.text.show(i.note || i.name)}</th>${with_.map(function (b) { return h`<th scope="col">${w.text.show(b.note || b.name)}</th>`; })}</tr>`;
+      return h`<table class="eg-rows" data-rows-of="${i.name}"><thead>${head}</thead><tbody>${opts.map(function (c) {
+        var first = c ? h`<th scope="row" data-row-value="${c.value}">${w.text.show(c.label)}</th>` : h`<td>${w.text.edit('rowv.' + i.name, '')}</td>`;
+        return h`<tr>${first}${with_.map(function (b) { return h`<td>${actInput(b)}</td>`; })}</tr>`;
+      })}</tbody></table>`;
+    }
     function actForm(a) {
-      var said = (a.inputs || []).filter(function (i) { var o = i.origin || {}; return !(o.act === 'read' && o.by === 'reader') && !i.from; });
+      var said = (a.inputs || []).filter(function (i) { var o = i.origin || {}; return !(o.act === 'read' && o.by === 'reader') && !i.from && !i.beside; });
+      var paired = pairsOf(a);
       return h`${a.confirm ? h`<p class="eg-known">${w.text.show(a.confirm)}</p>` : ''}${said.map(function (i) {
         var req = !optional(i);
-        return h`<label class="eg-field${req ? ' eg-req' : ''}" data-role="${i.name}"><span class="eg-role-name">${w.text.show(i.note || i.name)}${req ? h` <span class="eg-req-word">(${t.say('sheet-required')})</span>` : ''}</span> ${actInput(i)}<span class="eg-err" data-err="${'act.' + i.name}"></span></label>`;
+        return h`<label class="eg-field${req ? ' eg-req' : ''}" data-role="${i.name}"><span class="eg-role-name">${w.text.show(i.note || i.name)}${req ? h` <span class="eg-req-word">(${t.say('sheet-required')})</span>` : ''}</span> ${paired[i.name] ? rowsInput(a, i) : actInput(i)}<span class="eg-err" data-err="${'act.' + i.name}"></span></label>`;
       })}${a.reason ? h`<label class="eg-field" data-role="reason"><span class="eg-role-name">${t.say('act-reason')}</span> ${w.text.edit('act.reason', '', {lines: true})}</label>` : ''}<div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-act-start="">${t.say('act-start')}</button> <span class="eg-err" data-err-act=""></span></div>`;
     }
     function wireActions() {
@@ -300,9 +318,34 @@
       var inputs = {}, bad = false, files = [], say = function (x) { var e = box.querySelector('[data-err-act]'); if (e) e.textContent = x; };
       var err = function (name, x) { var e = box.querySelector('[data-err="act.' + name + '"]'); if (e) e.textContent = x; bad = true; };
       box.querySelectorAll('[data-err^="act."]').forEach(function (e) { e.textContent = ''; });
+      // the lists given row by row: each row whose fields beside are given, its first value and theirs, aligned
+      var paired = pairsOf(a);
+      Object.keys(paired).forEach(function (name) {
+        var first = (a.inputs || []).filter(function (x) { return x.name === name; })[0] || {}, cols = paired[name];
+        var lists = [[]].concat(cols.map(function () { return []; })), table = box.querySelector('[data-rows-of="' + name + '"]');
+        [].slice.call(table ? table.tBodies[0].rows : []).forEach(function (tr) {
+          var cells = cols.map(function (b, k) { return tr.cells[k + 1].querySelector('[name="act.' + b.name + '"]'); });
+          var vals = cells.map(function (f) { return String(f && f.value || '').trim(); });
+          if (!vals.some(Boolean)) return;
+          var key = tr.cells[0].getAttribute('data-row-value') || String((tr.cells[0].querySelector('input') || {}).value || '').trim();
+          if (!key) { err(name, t.say('required')); return; }
+          var got = [key];
+          for (var k = 0; k < cols.length; k++) {
+            var f = cells[k], v = vals[k], x = v;
+            if (!v) { err(cols[k].name, t.say('required')); return; }
+            if (f.classList.contains('w-num-input')) { var nn = w.number.take(v); if (nn.error) { err(cols[k].name, nn.error); return; } x = nn.value; }
+            got.push(x);
+          }
+          got.forEach(function (x, k) { lists[k].push(x); });
+        });
+        if (!lists[0].length) { if (!optional(first)) err(name, t.say('required')); return; }
+        inputs[name] = lists[0];
+        cols.forEach(function (b, k) { inputs[b.name] = lists[k + 1]; });
+      });
       (a.inputs || []).forEach(function (i) {
         var o = i.origin || {}, name = i.name, many = i.many === 'true' || i.many === true;
         if (i.from || (o.act === 'read' && o.by === 'reader')) return;      // the host's to fill, or the clock's
+        if (paired[name] || i.beside) return;                             // given row by row, above
         var fs = [].slice.call(box.querySelectorAll('[name="act.' + name + '"]'));
         if (!fs.length) return;
         // left empty: nothing sent of it — the tool's own meaning where it is optional, else asked for here

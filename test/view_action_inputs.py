@@ -398,6 +398,86 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
               and ins.get('day') == '2026-10-01' and 'of' not in ins
               and (ins.get('scan') or {}).get('name') == 'scan.txt'
               and base64.b64decode((ins.get('scan') or {}).get('data') or '') == b'a scan', (sent, Bx.get('errs')))
+
+    # ------------------------------------------------------------------ a list beside a list (ratified 2026-10-14)
+    # each helper beside their share of the work: two lists of one action, given row by row (`beside`)
+    HELP = 'of: people, many: "true", note: "یاری‌کنندگان" }'
+    PARTS = HELP + ', { name: parts, origin: { act: say }, type: count, many: "true", beside: helpers, note: "سهم" }'
+    put('beans/page.md', get('beans/page.md').replace(HELP, PARTS, 1).replace(
+        '  - draw:   { id: ledger,', '  - say:    { by: sam, at: now }\n  - draw:   { id: ledger,', 1))   # the change known by Sam, now
+    rc, out = run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: each helper beside their share', '--body',
+                  '- action: RULE-CHANGE — [[page]]\'s action gives the helpers row by row, each beside their share',
+                  '- ratified_by: sam')
+    rc2, out2 = run(PY, 'assets/view/bin/view.py', 'check', '--page', 'page')
+    check("beside: a list given row by row beside another passes the gate and the page's check", rc == 0 and rc2 == 0,
+          (out + out2)[-800:])
+    bad = {'a list beside nothing of the action': ('beside: helpers', 'beside: nobody'),
+           'one beside what is no list': ('beside: helpers', 'beside: shelf'),
+           'one that is no list itself': ('type: count, many: "true", beside', 'type: count, beside'),
+           'one filled from the element': ('{ name: parts, origin: { act: say }', '{ name: parts, from: self, origin: { act: say }'),
+           'a list beside one beside another': ('note: "سهم" }', 'note: "سهم" }, { name: more, origin: { act: say }, type: count, many: "true", beside: parts }')}
+    said = {}
+    for what, (x, y) in bad.items():
+        put('beans/page.md', get('beans/page.md').replace(x, y, 1))
+        rc3, out3 = run(PY, 'core/check.py')
+        run('git', 'checkout', '--', 'beans/page.md')
+        said[what] = (rc3 != 0 and 'beside' in out3, out3[-300:])
+    check("...and refuses " + "; ".join(said), all(v[0] for v in said.values()), said)
+    base = {'of': 'receipt-1#tip', 'shelf': 'shelf:11', 'day': '2026-10-03',
+            'scan': {'name': 'scan.txt', 'data': base64.b64encode(SCAN).decode()}}
+    half = host('start', ['sam', 'ledger', 'pay', 'file', 'receipt-1#tip', dict(base, helpers=[ADA, BEN], parts=['2'])])
+    check("...the host refuses lists given row by row of two lengths, nothing started",
+          isinstance(half, list) and half[0] == 400 and 'row by row' in str(half), half)
+    st = host('start', ['sam', 'ledger', 'pay', 'file', 'receipt-1#tip', dict(base, helpers=[ADA, BEN], parts=['2', '1'])])
+    caps = sorted(f for f in os.listdir(os.path.join(G, 'captures', 'actions')) if '.inputs.' in f)
+    last = json.load(open(os.path.join(G, 'captures', 'actions', caps[-1]), encoding='utf-8')) if caps else {}
+    check("...and hands the walk the two lists aligned, a helper beside each share",
+          isinstance(st, list) and st[0] == 200 and last.get('helpers') == [ADA, BEN] and last.get('parts') == ['2', '1'],
+          (st, last))
+    if browser:
+        P = host('page', ['sam'])
+        sam = P.get('sam') or {}
+        pg = """<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>%(css)s</style></head>
+<body><div id="s" class="vw light" dir="rtl"></div><script>%(js)s</script><script>
+const out = {errs: []}, E = %(payload)s;
+window.addEventListener('error', e => out.errs.push(String(e.message)));
+(async () => {
+try {
+  const t = window.daftarEngraved.tools({engraved: E, act: b => { out.sent = b; return new Promise(() => {}); }});
+  const el = document.getElementById('s');
+  window.daftarArchetypes.sheet(el, E.sheets['receipt-1'], t, null);
+  el.querySelector('[data-act-row]').click();
+  const box = el.querySelector('[data-act-box]'), table = box.querySelector('table.eg-rows[data-rows-of="helpers"]');
+  out.rows = table ? [...table.tBodies[0].rows].map(tr => [tr.cells[0].getAttribute('data-row-value'), !!tr.querySelector('[name="act.parts"]')]) : null;
+  out.heads = table ? [...table.tHead.rows[0].cells].map(c => c.textContent.trim()) : null;
+  out.boxes = box.querySelectorAll('input[type="checkbox"][name="act.helpers"]').length;
+  const sel = box.querySelector('select[name="act.shelf"]'); if (sel) sel.value = 'shelf:12';
+  const day = box.querySelector('[name="act.day"]'); if (day) day.value = '2026-10-04';
+  const f = box.querySelector('input[type="file"][name="act.scan"]');
+  if (f) { const dt = new DataTransfer(); dt.items.add(new File(['a scan'], 'scan.txt')); f.files = dt.files; }
+  const row = [...table.tBodies[0].rows].find(tr => tr.cells[0].getAttribute('data-row-value') === %(ben)s);
+  row.querySelector('[name="act.parts"]').value = '۲';
+  box.querySelector('[data-act-start]').click();
+  await new Promise(r => setTimeout(r, 300));
+} catch (e) { out.errs.push('driver: ' + e.message + ' ' + (e.stack || '').split('\\n')[1]); }
+const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = JSON.stringify(out); document.body.appendChild(pre);
+})();
+</script></body></html>"""
+        path = os.path.join(T, 'beside.html')
+        with open(path, 'w', encoding='utf-8') as fh:
+            fh.write(pg % {'css': view_widgets.css() + open(os.path.join(LIB, 'view_engraved.css'), encoding='utf-8').read(),
+                           'js': js, 'payload': json.dumps(sam, ensure_ascii=False), 'ben': json.dumps(BEN)})
+        r = subprocess.run([browser, '--headless=new', '--disable-gpu', '--no-sandbox', '--virtual-time-budget=5000',
+                            '--dump-dom', 'file://' + path], capture_output=True, text=True, encoding='utf-8', errors='replace',
+                           timeout=180, env=dict(os.environ, TMPDIR=T))
+        m = re.search(r'<pre id="__out">(.*?)</pre>', r.stdout, re.S)
+        Bb = json.loads(html.unescape(m.group(1))) if m else {'errs': ['no result: ' + r.stderr[-600:]]}
+        ins = (Bb.get('sent') or {}).get('inputs') or {}
+        check("...in a browser: the helpers one table, a row each with a share field beside, never a box each; a share "
+              "given on one row alone sends that helper beside it, as the law writes the count",
+              not Bb.get('errs') and sorted(x for x, _ in Bb.get('rows') or []) == sorted([ADA, BEN])
+              and all(y for _, y in Bb.get('rows') or [False]) and Bb.get('boxes') == 0
+              and Bb.get('heads') == ['یاری‌کنندگان', 'سهم'] and ins.get('helpers') == [BEN] and ins.get('parts') == ['2'], Bb)
 finally:
     if TRACES:
         print("TRACEBACKS:\n" + "\n---\n".join(TRACES[:3]))

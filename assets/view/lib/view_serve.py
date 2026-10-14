@@ -780,6 +780,14 @@ class Host:
                     continue
             if vals:
                 given[name] = vals if i.get("many") in ("true", True) else vals[0]
+        # A LIST BESIDE A LIST (the law's `beside`, ratified 2026-10-14): given row by row, so of one length — a person
+        # beside their share; one given without the other is half a row
+        for name, i in declared.items():
+            other = i.get("beside")
+            if other and (name in given or other in given):
+                if name not in given or other not in given or len(given[name]) != len(given[other]):
+                    why.append("%s: given row by row beside %s, one value of each a row (%d and %d)"
+                               % (name, other, len(given.get(name) or []), len(given.get(other) or [])))
         missing = sorted(n for n, i in declared.items() if n not in given and given_by_person(i) and not i.get("from")
                          and not optional(i) and not any(n in w.split(":")[0] for w in why))
         base["inputs"] = given
