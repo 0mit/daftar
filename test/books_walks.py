@@ -10,23 +10,28 @@ read back by the books — in a garden of the core grown from a release made of 
            closed period unchanged; a means the payment does not say; refused when nothing would change; several
            payments to one account in one plan, refused whole where one of them is booked there already
   reverse  a payment reversed from a day, with its reason; refused in a closed period
+  entry    the books' opening and an entry of three lines, refused unbalanced; one in a garden's own money unit, and
+           the gate's refusals of a unit it does not hold and of more decimal places than a currency has
   close    the books' reading through a day, pinned at the commit the plan read; refused for a day still to come and
            one closed already
   import   a bank's camt.053 file read into a statement bean of payments read through the bank account, opening + lines
-           = closing; a file with a pending line refused whole, a file imported once; a bank's CSV by a mapping
+           = closing; a file with a pending line refused whole, a file imported once; a file a page gave, by its SHA-256
+           where the host keeps it; a bank's CSV by a mapping
   match    a line of it and the payment said, one movement; refused where their amounts differ
   chart    an account added beneath its parent, among its siblings, and one the books used renamed and named in
            Persian — a row of the garden's own table, committed with no RULE-CHANGE; refused where a used account would
            move, where a level or a parent does not fit, where the gate would refuse the row, where an input is no
            column; a walk's write never changes the law, a bean, the journal or a capture
   remove   a document taken out whole with what of the books named it (a booking, a reversal, an entry resting on the
-           booking), a payment taken out of its bean, a bank's statement taken out and its file importable again;
-           refused where closed books read it (the gate's own words), where another statement names it, for another
-           garden's word, for a sealed statement, for a line read from a source, for the run's own bean, the books'
-           bean, a being's bean, and with no reason
+           booking) and what the books kept beside it in `details`, a payment taken out of its bean (the last key of
+           `details` with it, and `details`), a bank's statement taken out and its file importable again; refused
+           where closed books read it (the gate's own words), where another statement names it, for another garden's
+           word, for a sealed statement, for a line read from a source, for the run's own bean, the books' bean, a
+           being's bean, with no reason, and where a `details` naming it is written otherwise than a tool writes it
 
-Its runs wait for the minute to turn where one bean is saved twice in it, as test/act.py's do.
-Run: python3 test/books_walks.py   (0 = green; some minutes)
+Its runs save one bean several times within seconds, each save at its own second, so none waits for the minute to
+turn.
+Run: python3 test/books_walks.py   (0 = green; some minutes: its walks are many)
 """
 import difflib
 import json
@@ -278,6 +283,27 @@ files:
           "by the credit, 30 and 20 from opening balances", 'stopped at done'
           in r2.out and len(gift) == 1 and lines_of(gift[0]) == [('31', 0, 20), ('31', 0, 30), ('61', 20, 0), ('62', 30, 0)],
           r.out[-400:] + r2.out[-400:] + str(gift))
+    v = open(os.path.join(G, 'VOCAB.md'), encoding='utf-8').read()      # a money unit of the garden's own law
+    write('VOCAB.md', v.replace('\nfiles:\n', '\nunits:\n  - { unit: XTOK, name: "a token Sam counts as money", quantity: '
+                                'money, ucum: "false", why: "invented: a money unit of the garden\'s own" }\nfiles:\n', 1))
+    bean('tokens', 'document', 'tokens Sam was given', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: given, by: { someone: person }, to: sam, of: { count: "1.23456789", unit: XTOK }, at: "2025-03-11" }')
+    r = save('RULE-CHANGE: a token Sam counts as money', '- action: RULE-CHANGE — VOCAB.md adds the unit XTOK; wrote '
+             '[[tokens]]', '- ratified_by: sam')
+    check("...a money unit of the garden's own, added with what uses it", r.returncode == 0, r.out[-600:])
+    r, c = start('card-a', 'entry', day='2025-03-11', memo='a token given', unit='XTOK', lines='62 dr 1.23456789; 31 cr '
+                 '1.23456789')
+    r2 = ratify('card-a', c)
+    tok = [v for v in books('vouchers') if v.get('memo') == 'a token given']
+    check("...an entry in a money unit of the garden's own law (four letters), read as the gate reads an amount",
+          'stopped at done' in r2.out and len(tok) == 1 and tok[0]['unit'] == 'XTOK'
+          and lines_of(tok[0]) == [('31', 0, F('1.23456789')), ('62', F('1.23456789'), 0)], r.out[-400:] + r2.out[-400:])
+    r, c = start('shop', 'entry', day='2025-03-11', memo='a fee', unit='xtk', lines='62 dr 1; 31 cr 1')
+    r2, c2 = start('market', 'entry', day='2025-03-11', memo='a fee', unit='USD', lines='62 dr 0.015; 31 cr 0.015')
+    check("...refused, in the gate's words: a unit the law does not hold, and a count with more places than its currency "
+          "has", 'stopped at refused' in r.out and "unit: 'xtk'" in r.out + plan_of('shop', c)
+          and 'stopped at refused' in r2.out and 'more decimal places than USD has' in r2.out + plan_of('market', c2),
+          r.out[-500:] + r2.out[-500:])
 
     # ---- REVERSE
     r, c = start('shop', 'reverse', of='shop#lamp', reason='taken back to the shop')
@@ -353,10 +379,41 @@ files:
     r, c = start('cafe', 'import', file=os.path.join(G, 'statement-05.xml'), format='camt.053', means='bank-a')
     check("...the same file again is refused: imported already", 'stopped at refused' in r.out and 'imported already' in
           r.out + plan_of('cafe', c), r.out[-600:])
+    import hashlib                       # a file a page gave: kept by the host off git, under its SHA-256 (#202)
+    kept = (CAMT % '').replace('S-1', 'S-2')
+    sha = hashlib.sha256(kept.encode('utf-8')).hexdigest()
+    gd = run('git', 'rev-parse', '--absolute-git-dir').out.strip()
+    os.makedirs(os.path.join(gd, 'daftar-inputs'), exist_ok=True)
+    with open(os.path.join(gd, 'daftar-inputs', sha), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(kept)
+    r, c = start('card-a', 'import', file='0' * 64, format='camt.053', means='bank-a')
+    check("...a file a page gave is read by its SHA-256 where the host keeps it, and refused where it keeps none",
+          'stopped at refused' in r.out and 'is kept on this host' in r.out + plan_of('card-a', c), r.out[-600:])
+    r, c = start('card-a', 'import', file=sha, format='camt.053', means='bank-a', statement='bank-a-2025-05-again')
+    p = plan_of('card-a', c)
+    r2 = ratify('card-a', c)
+    b = os.path.join(G, 'beans', 'bank-a-2025-05-again.md')
+    b = open(b, encoding='utf-8').read() if os.path.isfile(b) else ''
+    check("...the file kept for a run, read into a statement bean as a path's would be: named by its SHA-256, and no "
+          "file the garden commits holding it", 'stopped at done' in r2.out and f'through: "file:{sha}"' in b
+          and f'"file": "{sha}"' in b and run('git', 'grep', '-l', 'S-2-1', 'HEAD').out.strip() == ''
+          and len([v for v in books('vouchers') if v['ref'].startswith('bank-a-2025-05-again#')]) == 2,
+          p[-600:] + r2.out[-500:])
     write('extracts/bank-csv.yaml', 'delimiter: ";"\ndecimal: ","\ncurrency: XTS\nday_format: dd.mm.yyyy\n'
                                      'columns: { day: Datum, text: Text, debit: Soll, credit: Haben, ref: Ref }\n')
     write('statement-06.csv', 'Datum;Text;Soll;Haben;Ref\n02.06.2025;a fee;;1.000,00;C-1\n03.06.2025;rent;300,00;;C-2\n')
     save('a mapping of the bank\'s CSV', '- action: wrote extracts/bank-csv.yaml')
+    write('statement-07.csv', 'Date,Text,Amount\n02-07-2025,a fee,100.00\n')
+    got = run(PY, '-c', "import json, sys; sys.path[:0] = ['assets/accounting/lib']; import statements as st\n"
+              "cols = {'day': 'Date', 'text': 'Text', 'amount': 'Amount'}\n"
+              "for m in ({'day_format': 'dd-mm-yyyy'}, {'day_format': 'mm-dd-yyyy'}, {'sign': 'negative'}):\n"
+              "    try:\n        S = st.read('statement-07.csv', 'csv', dict(m, columns=cols, currency='XTS'))\n"
+              "        print('read', [ln['day'] for ln in S['lines']], len(S['refused']))\n"
+              "    except st.Unreadable as e:\n        print('refused', e)\n").out
+    check("...a CSV's days written dd-mm-yyyy are read; a day format or a sign the adapter does not read is refused by "
+          "name, never passed over", got.splitlines()[:1] == ["read ['2025-07-02'] 0"]
+          and "refused day_format: 'mm-dd-yyyy' is none the adapter reads" in got
+          and "refused sign: 'negative' is none the adapter reads" in got, got[-600:])
     r, c = start('card-a', 'import', file=os.path.join(G, 'statement-06.csv'), format='csv', mapping='extracts/bank-csv.yaml',
                  means='bank-a')
     r2 = ratify('card-a', c)
@@ -458,6 +515,14 @@ files:
     ratify('box', c)
     sam = open(os.path.join(G, 'beans', 'books-sam.md'), encoding='utf-8').read()
     fee = next((ln.split('id: ', 1)[1].split(',', 1)[0] for ln in sam.splitlines() if 'a fee on the receipt' in ln), '?')
+    import yaml                              # what a garden keeps beside its payments, written as a translation writes it
+    D = type('D', (yaml.SafeDumper,), {})
+    D.add_representer(str, lambda d, v: d.represent_scalar('tag:yaml.org,2002:str', v, style='|' if '\n' in v else None))
+    kept = lambda x: yaml.dump({'details': x}, Dumper=D, allow_unicode=True, sort_keys=False, width=100000)
+    write('beans/books-sam.md', sam.replace('\nstatements:\n', '\n' + kept({'transactions': {
+        'twice#oops': {'category': 'a mistake', 'note': 'entered twice,\nby hand'},
+        'cafe#cake': {'category': 'sweets'}}}) + 'statements:\n', 1))
+    save('a category kept beside two payments', '- action: wrote [[books-sam]] details')
     r, c = start('box', 'remove', of='twice', reason='entered twice')
     p = plan_of('box', c)
     r2 = ratify('box', c)
@@ -472,6 +537,10 @@ files:
           and not any('twice' in v['ref'] or v.get('memo') == 'a fee on the receipt' for v in vs)
           and all(x in e for x in ('[[twice]]', 'bk-twice-oops', 'rv-twice-oops', fee)),
           p[-900:] + r2.out[-500:] + e[-700:])
+    check("...and what Sam's books kept beside its payment (`details`, keyed `twice#oops`) goes with it, shown in the "
+          "plan and named in the entry; the rest of `details` stays byte for byte as it was written",
+          '- books-sam: details › transactions › twice#oops' in p and 'details.transactions.twice#oops' in e
+          and kept({'transactions': {'cafe#cake': {'category': 'sweets'}}}) in sam, p[-700:] + sam[:700])
     r, c = start('bank-a', 'remove', of='market', reason='a mistake')
     check("...a document the closed books read is refused in the gate's own words: reverse it instead",
           'stopped at refused' in r.out and 'closed through 2025-03-31' in r.out + plan_of('bank-a', c, '')
@@ -495,6 +564,20 @@ files:
     check("...a payment recorded by mistake taken out of its bean, the run sitting on that bean; the bean and its other "
           "payment stay", 'stopped at done' in r2.out and 'id: cake' not in cafe and 'id: bread' in cafe
           and not voucher('cafe#cake') and voucher('cafe#bread'), r.out[-400:] + r2.out[-500:])
+    sam = open(os.path.join(G, 'beans', 'books-sam.md'), encoding='utf-8').read()
+    check("...and the last key `details` held goes with its payment, `details` itself with it, named in the entry",
+          'details' not in sam.split('\nstatements:\n', 1)[0] and 'cafe#cake' not in sam
+          and '`details`, which held nothing more' in entry_of('cafe#cake taken out'), sam[:600])
+    bean('loose', 'document', 'a receipt noted by hand', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: tip, by: sam, of: { count: "2.00", unit: XTS }, at: "2025-04-15" }')
+    j = open(os.path.join(G, 'beans', 'heard.md'), encoding='utf-8').read()
+    write('beans/heard.md', j.replace('\nstatements:\n', '\ndetails: { "loose#tip": { note: "by hand" } }\nstatements:\n', 1))
+    save('a receipt, noted by hand beside another', '- action: wrote [[loose]] and [[heard]] details')
+    r, c = start('box', 'remove', of='loose', reason='a mistake')
+    check("...refused where a `details` naming what goes is not written as a tool writes it: a person's own save takes "
+          "it out", 'stopped at refused' in r.out and 'heard: its `details` is not written as a tool writes it'
+          in r.out + plan_of('box', c, '')
+          and os.path.exists(os.path.join(G, 'beans', 'loose.md')), r.out[-600:])
     bean('kept-off', 'document', 'a receipt with a sealed line', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
          'pay: { id: sealed, held: "root:held/0123456789abcdef0123456789abcdef" }')     # read, never saved
     got = planned('remove', of='kept-off', reason='a mistake') + \
