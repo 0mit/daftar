@@ -146,6 +146,9 @@ export function edit(name, value, o = {}) {
 }
 // a time of day, HH:MM, shown in the reader's digits
 export const showTime = (t, o = {}) => /^\d{2}:\d{2}$/.test(String(t ?? '')) ? h`<bdi dir="ltr" class="w-time">${timeText(t, o)}</bdi>` : h`<span class="w-none">—</span>`;
+// a time of day as plain text, for where no markup goes (an element's title): isolated left to right, so a right-to-left
+// line never turns its hours and minutes round
+export const timeAsText = (t, o = {}) => /^\d{2}:\d{2}$/.test(String(t ?? '')) ? '\u2066' + timeText(t, o) + '\u2069' : '';
 export function takeTime(input, o = {}) {
   const s = toAscii(String(input ?? '').trim()).replace(BIDI_CONTROLS, '');
   if (!s) return o.required ? {error: say('time-required', o)} : {value: ''};

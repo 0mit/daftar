@@ -311,7 +311,7 @@ archetypes:
   - archetype: timeline
     frame: [time]
     axes: { inline: time }
-    meaning: "the members of a reading placed by their moments in the reader's calendar — a happening's time, a clause's due day and each occurrence of its repetition within the drawing's `span`, walked by bin/stale.py, the function that warns — as a week (a grid of days, its first the day the reader's region begins a week on), a month, or a list: three readings of one line. Engraved from the reading: no drawing module draws it"
+    meaning: "the members of a reading placed by their moments in the reader's calendar — a happening's time, a clause's due day and each occurrence of its repetition within the drawing's `span`, walked by bin/stale.py, the function that warns — as a week (its days side by side, its first the day the reader's region begins a week on, each day a timeline of its hours: what takes them a block at them, what is kept in view beside them), a month, or a list: three readings of one line. Engraved from the reading: no drawing module draws it"
     when: "the question is when"
   - archetype: flows
     reads: [pay, bear, pass]
@@ -570,7 +570,7 @@ forms:
         meaning: "table: or the codes of a chart — a scheme naming the accounting profile's form `chart` — in the chart's order, one line each: an account of the books of the being the drawing draws, as the profile's asset reads them"
       layouts:
         in: [week, month, list]
-        meaning: "timeline: the readings of its one line a reader switches between — week (a grid of days), month (a grid of weeks), list (a line for each day that holds something) — the first listed shown first; absent, all three, week first"
+        meaning: "timeline: the readings of its one line a reader switches between — week (each day a timeline of its hours), month (a grid of weeks), list (a line for each day that holds something) — the first listed shown first; absent, all three, week first"
       nodes:
         in: [parties, gardens]
         meaning: "flows: what its nodes are. parties — the parties to the agreements its `selection` holds (absent, every agreement here), and per currency an arrow from the one who owes to the one owed, netted as bin/ledger.py nets it | gardens — the garden and each other garden it records, and an arrow for what went from one to the other: what it took from it (`take`), what it proposed to it (`propose`), what passed to or from another garden (`pass`)"

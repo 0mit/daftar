@@ -155,7 +155,12 @@ is read each time it is asked, as the release's tools read it, never computed ag
   `span`, walked by `bin/stale.py`'s `occurrences`, the function that warns; a repetition of an attendance (a series'
   sessions) keeps that attendance's hour, and is named by its being, never by the statement's id.
   Week, month and list are three readings of one line; the week begins on the day the reader's region begins one
-  (CLDR's `firstDay`), in the reader's calendar and digits;
+  (CLDR's `firstDay`), in the reader's calendar and digits. The WEEK draws each day as a timeline of its hours, the hours
+  the week's own (from the hour its earliest begins to the hour its latest ends; 08:00 to 20:00 where nothing has a
+  time), on a scale at the start of the reader's line: what takes hours a block at them, overlaps side by side; what is
+  kept in view at a time (`transparency: transparent`) an outlined block in a narrow lane at the column's end; what has
+  no time under the day's label; today's column the hour it is now; on a narrow screen, one day at a time. The MONTH's
+  day is its width shared among what takes hours, each by its minutes, what is kept in view laid below its label;
 - **flows** — who owes whom: `bin/ledger.py`'s reading (`ledger.reading`, what `--json` prints) of the agreements the
   reader may read, netted per currency across them, an arrow from the one who owes to the one owed, its head the glyph
   of `next`; or, with `nodes: gardens`, what went between this garden and the others (`take`, `propose`, `pass`),

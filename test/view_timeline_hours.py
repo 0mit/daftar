@@ -2,10 +2,11 @@
 """A day's hours, and what is kept in view (the operator, 2026-10-14; `transparency`, core 2.7).
 
 The server's timeline gives each event the minutes of its day it takes and whether it takes them
-(`view_engraved.py` `timeline`: an attendance's extent, a session's `lasts`; its `transparency`), and the week's cell
-draws them apart (view_timeline.js). Read here, then drawn in a browser, in Persian, from a day of invented events —
-yoga at 08:30 for 150 minutes, a course kept in view (transparent) at 10:00 for an hour, a weekly session at 15:30 for
-90 minutes, a rent due with no time:
+(`view_engraved.py` `timeline`: an attendance's extent, a session's `lasts`; its `transparency`), and the month's cell
+draws them apart, and the week draws each day as a timeline of its hours (view_timeline.js). Read here, then drawn in a
+browser, in Persian, from a day of invented events — yoga at 08:30 for 150 minutes, a call at 09:00 for an hour, a
+course kept in view (transparent) at 10:00 for an hour, a weekly session at 15:30 for 90 minutes, a rent due with no
+time:
 
   minutes    the server reads an extent's minutes of its day (to the day's end where it runs on), a repetition's `lasts`
              in minutes or hours, and nothing for a moment or a day
@@ -16,6 +17,10 @@ yoga at 08:30 for 150 minutes, a course kept in view (transparent) at 10:00 for 
              divided between them, over the hours; never a strip
   label      the day's label holds, in its title, the day in the reader's other calendars (here the Gregorian and the
              Hijri beside the Persian shown)
+  the week   each day a timeline of its hours (the operator, 2026-10-14), the hours the week's own — 08:00 to 17:00 here;
+             each that takes hours a block at them, its top and height its start and length; the yoga and the call, which
+             overlap, side by side; the course kept in view in a narrow lane at the column's end; the rent, with no time,
+             under the day's label; the hour scale at the start of the reader's line
 
 Run: python3 test/view_timeline_hours.py   (0 = green; a NOTE, and no browser check, where no Chromium is on the machine)
 """
@@ -43,7 +48,7 @@ check("minutes: an extent's minutes of its day, to the day's end where it runs o
       and ve._lasts({'lasts': {'measure': {'count': '1.5', 'unit': 'hour'}}}) == 90 and ve._lasts({}) is None)
 
 DAY = '2026-10-14'
-DATA = {'today': DAY, 'from': '2026-10-01', 'to': '2026-10-31', 'layouts': ['week'], 'events': [
+DATA = {'today': DAY, 'from': '2026-10-01', 'to': '2026-10-31', 'layouts': ['month', 'week'], 'events': [
     {'day': DAY, 'time': '08:30', 'bean': 'yoga', 'title': 'یوگا', 'kind': 'happening', 'minutes': 150, 'transparency': 'opaque'},
     {'day': DAY, 'time': '10:00', 'bean': 'course', 'title': 'دوره', 'kind': 'happening', 'minutes': 60, 'transparency': 'transparent'},
     {'day': DAY, 'time': '15:30', 'bean': 'class', 'title': 'کلاس', 'kind': 'due', 'clause': 'weekly', 'what': None,
@@ -51,7 +56,9 @@ DATA = {'today': DAY, 'from': '2026-10-01', 'to': '2026-10-31', 'layouts': ['wee
     {'day': DAY, 'time': None, 'bean': 'rent', 'title': 'اجاره', 'kind': 'due', 'clause': 'monthly', 'what': 'اجاره',
      'minutes': None, 'transparency': None, 'index': 1, 'times': None},
 ]}
-E = {'settings': {'garden': {'lang': 'fa'}, 'currencies': []}, 'drawings': {'t': DATA}}
+CALL = {'day': DAY, 'time': '09:00', 'bean': 'call', 'title': 'تماس', 'kind': 'happening', 'minutes': 60, 'transparency': 'opaque'}
+WEEK = dict(DATA, layouts=['week'], events=DATA['events'] + [CALL])
+E = {'settings': {'garden': {'lang': 'fa'}, 'currencies': []}, 'drawings': {'t': DATA, 'w': WEEK}}
 
 browser = next((x for x in ('chromium', 'chromium-browser', 'google-chrome', 'google-chrome-stable') if shutil.which(x)), None)
 if not browser:
@@ -64,7 +71,7 @@ else:
         js = view_widgets.bundle() + ''.join(open(os.path.join(LIB, f), encoding='utf-8').read() for f in (
             os.path.join('widgets', 'direction.js'), 'view_engraved.js', 'view_timeline.js'))
         page = """<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><style>%(css)s</style></head>
-<body><div id="t" class="vw light" dir="rtl" style="width:980px"></div><script>%(js)s</script><script>
+<body><div id="t" class="vw light" dir="rtl" style="width:980px"></div><div id="w" class="vw light" dir="rtl" style="width:980px"></div><script>%(js)s</script><script>
 const out = {errs: []}, E = %(payload)s;
 window.addEventListener('error', e => out.errs.push(String(e.message)));
 try {
@@ -78,6 +85,19 @@ try {
   const head = cell.querySelector('.eg-day-head');
   out.headTitle = head.title; out.headBelow = cell.querySelector('.eg-kept').getBoundingClientRect().top >= head.getBoundingClientRect().bottom - 1;
   out.over = [...cell.querySelectorAll('.eg-kept, .eg-day-head')].every(x => Number(getComputedStyle(x).zIndex) > Number(getComputedStyle(cell.querySelector('.eg-hours')).zIndex));
+  const wk = document.getElementById('w');
+  window.daftarArchetypes.timeline(wk, E.drawings.w, t, {engraved: {axes: {inline: 'time'}}});
+  const g = wk.querySelector('.eg-weektime'), line = wk.querySelector('.eg-wt-day[data-day="%(day)s"] .eg-dayline');
+  const L = line.getBoundingClientRect();
+  out.hours = g && g.dataset.hours;
+  out.days = wk.querySelectorAll('.eg-wt-day').length;
+  out.blocks = [...line.querySelectorAll('.eg-block')].map(b => { const r = b.getBoundingClientRect();
+    return {minutes: Number(b.dataset.minutes), keep: b.classList.contains('eg-keep'), top: (r.top - L.top) / L.height,
+            h: r.height / L.height, x: r.left + r.width / 2, w: r.width / L.width, title: b.title}; });
+  out.strip = [...wk.querySelectorAll('.eg-wt-strip[data-day="%(day)s"] .eg-event')].map(x => x.innerText.trim());
+  const gut = wk.querySelector('.eg-wt-gutter').getBoundingClientRect();
+  out.gutterRight = gut.left > L.right;
+  out.marks = [...wk.querySelectorAll('.eg-wt-hour')].map(x => x.textContent.trim());
 } catch (e) { out.errs.push('driver: ' + e.message + ' ' + (e.stack || '').split('\\n')[1]); }
 const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = JSON.stringify(out); document.body.appendChild(pre);
 </script></body></html>"""
@@ -107,6 +127,25 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
               and len(kept) == 2 and abs(kept[0]['h'] - kept[1]['h']) < 3, B)
         check("label: its title is the day in the reader's other calendars — the Gregorian and the Hijri beside the "
               "Persian shown", '۲۰۲۶' in (B.get('headTitle') or '') and '۱۴۴۸' in (B.get('headTitle') or ''), B.get('headTitle'))
+        bl = {(b['minutes'], b['keep']): b for b in B.get('blocks') or []}
+        y, c, k, s_ = bl.get((150, False)), bl.get((60, False)), bl.get((60, True)), bl.get((90, False))
+        span = 9 * 60                                         # the week's hours: 08:00 to 17:00
+        check("the week: each day a timeline of its hours, the hours the week's own — 08:00, where the earliest begins, to "
+              "17:00, where the latest ends — on a scale at the start of the reader's line (its right, in Persian)",
+              not B['errs'] and B.get('hours') == '480-1020' and B.get('days') == 7 and B.get('gutterRight')
+              and len(B.get('marks') or []) == 9, {k_: B.get(k_) for k_ in ('hours', 'days', 'gutterRight', 'marks', 'errs')})
+        check("...what takes hours a block at them, its top its start and its height its length: the yoga 08:30 for 150 "
+              "minutes, the session 15:30 for 90",
+              y and s_ and abs(y['top'] - 30 / span) < 0.01 and abs(y['h'] - 150 / span) < 0.01
+              and abs(s_['top'] - 450 / span) < 0.01 and abs(s_['h'] - 90 / span) < 0.01, B.get('blocks'))
+        check("...the yoga and the call, which overlap, side by side, each half the column, the earlier at the start of "
+              "the reader's line", y and c and abs(y['w'] - c['w']) < 0.05 and y['x'] > c['x'] and y['w'] < 0.6, B.get('blocks'))
+        check("...the course kept in view an outlined block in a narrow lane at the column's end, at its hour, never over "
+              "what takes them; the rent, with no time, under the day's label",
+              k and k['w'] < 0.1 and abs(k['top'] - 120 / span) < 0.01 and k['x'] < min(y['x'], c['x'])
+              and [x.split()[0] for x in B.get('strip') or []] == ['اجاره'], (B.get('blocks'), B.get('strip')))
+        check("...each block's title says its hours as text — never markup", y and '<' not in (y.get('title') or '')
+              and '۰۸:۳۰' in (y.get('title') or ''), y)
     finally:
         shutil.rmtree(T, ignore_errors=True)
 

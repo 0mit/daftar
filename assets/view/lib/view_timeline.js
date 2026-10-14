@@ -1,8 +1,8 @@
 /* view_timeline.js — the `timeline` archetype: the members of a reading at their moments — a happening's time, a
    clause's due day and each occurrence of its repetition — as the server read them within the drawing's span
    (`view_engraved.py` `timeline`, the occurrences walked by bin/stale.py: never walked here). Three readings of one line,
-   chosen by a switch: a WEEK (a grid of days, its first the day the reader's region begins a week on — CLDR's
-   `firstDay`, through Intl, never typed), a MONTH of the reader's calendar, and a LIST. Time runs along the reader's line
+   chosen by a switch: a WEEK (its days side by side, each a timeline of its hours; its first the day the reader's
+   region begins a week on — CLDR's `firstDay`, through Intl, never typed), a MONTH of the reader's calendar, and a LIST. Time runs along the reader's line
    (`axes: { inline: time }`): earlier at its start, in either script, as widgets/direction.js says; the keys and the
    swipe that move it are named by meaning, `earlier` and `later`. A classic script, built only through safe.js. */
 (function (root) {
@@ -63,7 +63,7 @@
     }
     function strip(e) {
       var a = clock(e.time), b = Math.min(1440, a + Number(e.minutes));
-      var span = w.moment.showTime(e.time) + '–' + w.moment.showTime(String(Math.floor(b / 60)).padStart(2, '0') + ':' + String(b % 60).padStart(2, '0'));
+      var span = w.moment.timeAsText(e.time) + '–' + w.moment.timeAsText(String(Math.floor(b / 60)).padStart(2, '0') + ':' + String(b % 60).padStart(2, '0'));
       return h`<span class="eg-take" data-minutes="${String(e.minutes)}" title="${(e.title || '') + ' · '}${span}">${w.being.show(e.bean, e.title, {action: 'open'})}</span>`;
     }
     function cell(day, gc, gr) {
@@ -77,12 +77,86 @@
         <div class="eg-day-head" title="${equivalents(day)}"><span class="eg-wd">${dayName.format(new Date(ms(day)))}</span> <span class="eg-dn">${dayNum(day)}</span></div>
         <ol class="eg-events eg-kept">${kept.map(ev)}</ol></div>`;
     }
+    /* THE WEEK AS DAY TIMELINES (the operator, 2026-10-14). Each day is a column of its hours, top to bottom, the hours
+       the week's own — from the hour its earliest begins to the hour its latest ends, 08:00 to 20:00 where nothing has a
+       time — on a scale at the start of the reader's line. What takes hours is a block at them, opaque; what overlaps
+       stands side by side, each cluster of overlaps sharing the column. What is kept in view at a time — an attendance
+       said transparent — is an outlined block in a narrow lane at the column's end, never over what takes the hours; what
+       has no time — a due day, a whole day — is listed under the day's label. Today's column carries the hour it is now.
+       A screen too narrow for seven columns shows one day, and moves a day at a time. Every place is a grid line set
+       through safe.js (`data-gr`, `data-gc`, `data-rows`, `data-cols`), never a style a page writes. */
+    var SLOT = 5;                                  // the minutes a row of a day's column stands for: 12 rows an hour
+    var gcd = function (a, b) { return b ? gcd(b, a % b) : a; };
+    var hhmm = function (m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+    function span(e) { var a = clock(e.time); return [a, Math.min(1440, a + Math.max(SLOT, Number(e.minutes) || 0))]; }
+    function timed(e) { return Boolean(e.time && e.minutes); }
+    function hoursOf(days) {
+      var lo = 1440, hi = 0;
+      days.forEach(function (d) { (by[d] || []).filter(timed).forEach(function (e) { var x = span(e); lo = Math.min(lo, x[0]); hi = Math.max(hi, x[1]); }); });
+      if (lo >= hi) return [480, 1200];
+      return [Math.floor(lo / 60) * 60, Math.min(1440, Math.ceil(hi / 60) * 60)];
+    }
+    // overlaps side by side: each cluster of what overlaps shares the column in as many lanes as it needs at once
+    function lanes(items) {
+      items.sort(function (x, y) { return x.a - y.a || y.b - x.b; });
+      var cluster = [], until = -1, ends = [];
+      function close() { cluster.forEach(function (x) { x.k = ends.length; }); cluster = []; ends = []; }
+      items.forEach(function (x) {
+        if (x.a >= until) { close(); until = -1; }
+        var l = ends.findIndex(function (e) { return e <= x.a; });
+        if (l < 0) { l = ends.length; ends.push(x.b); } else ends[l] = x.b;
+        x.lane = l; cluster.push(x); until = Math.max(until, x.b);
+      });
+      close();
+      return items;
+    }
+    function dayLine(day, hours) {
+      var lo = hours[0], rows = (hours[1] - hours[0]) / SLOT;
+      var all = by[day] || [];
+      var takers = lanes(all.filter(function (e) { return timed(e) && e.transparency !== 'transparent'; })
+        .map(function (e) { var x = span(e); return {e: e, a: x[0], b: x[1]}; }));
+      var keeps = all.filter(function (e) { return timed(e) && e.transparency === 'transparent'; })
+        .map(function (e) { var x = span(e); return {e: e, a: x[0], b: x[1]}; });
+      var L = takers.reduce(function (acc, x) { return acc * x.k / gcd(acc, x.k); }, 1);
+      var cols = 'repeat(' + L + ', minmax(0, 1fr))' + (keeps.length ? ' 8px' : '');
+      var row = function (m) { return Math.max(1, Math.min(rows + 1, Math.round((m - lo) / SLOT) + 1)); };
+      function block(x, gc, cls) {
+        var when = w.moment.timeAsText(x.e.time) + '–' + w.moment.timeAsText(hhmm(x.b));
+        var r0 = row(x.a), r1 = Math.max(r0 + 1, row(x.b));
+        return h`<div class="eg-block${cls}" data-gr="${r0 + ' / ' + r1}" data-gc="${gc}" data-minutes="${String(x.e.minutes)}" title="${(x.e.title || '') + ' · ' + when}">${w.being.show(x.e.bean, x.e.title, {action: 'open'})} <span class="eg-when">${w.moment.showTime(x.e.time)}–${w.moment.showTime(hhmm(x.b))}</span></div>`;
+      }
+      var now = '';
+      if (day === data.today) {
+        var d = new Date(), m = d.getHours() * 60 + d.getMinutes();
+        if (m >= lo && m < hours[1]) now = h`<div class="eg-now" data-gr="${row(m) + ' / ' + (row(m) + 1)}" data-gc="1 / -1" title="${w.moment.timeAsText(hhmm(m))}"></div>`;
+      }
+      return h`<div class="eg-dayline" data-rows="${'repeat(' + rows + ', 5px)'}" data-cols="${cols}">${takers.map(function (x) {
+        var n = L / x.k;
+        return block(x, (x.lane * n + 1) + ' / ' + ((x.lane + 1) * n + 1), '');
+      })}${keeps.map(function (x) { return block(x, String(L + 1), ' eg-keep'); })}${now}</div>`;
+    }
     function week() {
-      var start = add(state.focus, -((weekday(state.focus) - first + 7) % 7)), days = [];
-      for (var i = 0; i < 7; i++) days.push(add(start, i));
-      return {label: h`${w.moment.show(days[0], {style: 'long'})} – ${w.moment.show(days[6], {style: 'long'})}`,
-              body: h`<div class="eg-grid eg-week">${days.map(function (d, i) { return cell(d, fwd ? i + 1 : 7 - i, 1); })}</div>`,
-              step: 7};
+      var narrow = el.clientWidth > 0 && el.clientWidth < 560;
+      var start = narrow ? state.focus : add(state.focus, -((weekday(state.focus) - first + 7) % 7)), days = [];
+      for (var i = 0; i < (narrow ? 1 : 7); i++) days.push(add(start, i));
+      var hours = hoursOf(days), n = days.length;
+      var marks = [];
+      for (var m = hours[0]; m < hours[1]; m += 60) marks.push(m);
+      var gutter = h`<div class="eg-wt-gutter" data-gr="3" data-gc="1" data-rows="${'repeat(' + ((hours[1] - hours[0]) / SLOT) + ', 5px)'}">${marks.map(function (m) {
+        var r = (m - hours[0]) / SLOT + 1;
+        return h`<span class="eg-wt-hour" data-gr="${r + ' / ' + (r + 12)}">${w.moment.showTime(hhmm(m))}</span>`;
+      })}</div>`;
+      var cols = days.map(function (d, i) {
+        var gc = String(fwd ? i + 2 : n + 1 - i);
+        var cls = (d === data.today ? ' eg-today' : '') + (inSpan(d) ? '' : ' eg-beyond');
+        var kept = (by[d] || []).filter(function (e) { return !timed(e); });
+        return h`<div class="eg-wt-head${cls}" data-day="${d}" data-gr="1" data-gc="${gc}" title="${equivalents(d)}"><span class="eg-wd">${dayName.format(new Date(ms(d)))}</span> <span class="eg-dn">${dayNum(d)}</span></div>
+          <ol class="eg-events eg-kept eg-wt-strip${cls}" data-day="${d}" data-gr="2" data-gc="${gc}">${kept.map(ev)}</ol>
+          <div class="eg-wt-day${cls}" data-day="${d}" data-gr="3" data-gc="${gc}"${inSpan(d) ? '' : h` title="${t.say('timeline-beyond')}"`}>${dayLine(d, hours)}</div>`;
+      });
+      return {label: n === 1 ? w.moment.show(days[0], {style: 'weekday'}) : h`${w.moment.show(days[0], {style: 'long'})} – ${w.moment.show(days[n - 1], {style: 'long'})}`,
+              body: h`<div class="eg-weektime" data-hours="${hours.join('-')}" data-cols="${'auto repeat(' + n + ', minmax(0, 1fr))'}">${gutter}${cols}</div>`,
+              step: n};
     }
     function month() {
       var p = w.moment.toCalendar(state.focus, cal), start = w.moment.fromCalendar(cal, p.y, p.m, 1) || state.focus;

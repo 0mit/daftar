@@ -29,6 +29,23 @@
 .eg-day.eg-today{border-color:var(--accent,#ff9d4a)}
 .eg-day.eg-beyond{opacity:.5}
 .eg-day-head{color:var(--muted,#5a6a7b);font-size:.85em;margin-block-end:3px}
+/* the week as day timelines: an hour scale, then a column of hours per day (view_timeline.js `week`) */
+.eg-weektime{display:grid;column-gap:4px;row-gap:2px;align-items:start}
+.eg-wt-head{color:var(--muted,#5a6a7b);font-size:.85em;padding:2px 4px;border-block-end:2px solid var(--line,#cfd8e2)}
+.eg-wt-head.eg-today{color:var(--accent,#c45f00);border-block-end-color:var(--accent,#ff9d4a)}
+.eg-wt-strip{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;min-height:.5em;font-size:.85em}
+.eg-wt-strip .eg-event{flex:none}
+.eg-wt-gutter{display:grid;font-size:.72em;color:var(--muted,#5a6a7b);font-variant-numeric:tabular-nums}
+.eg-wt-hour{align-self:start;padding-inline-end:4px;line-height:1;transform:translateY(-.45em);white-space:nowrap}
+.eg-wt-day{border-inline-start:1px solid var(--line,#cfd8e2);min-width:0}
+.eg-wt-day.eg-beyond,.eg-wt-head.eg-beyond{opacity:.55}
+.eg-dayline{display:grid;position:relative;column-gap:2px;background-image:repeating-linear-gradient(to bottom,var(--line,#cfd8e2) 0 1px,transparent 1px 60px)}
+.eg-wt-day.eg-today .eg-dayline{background-color:color-mix(in srgb,var(--accent,#ff9d4a) 6%,transparent)}
+.eg-block{min-width:0;min-height:0;overflow:hidden;border-radius:4px;padding:1px 4px;font-size:.78em;line-height:1.25;background:var(--take,#c9dfd4);border-inline-start:3px solid var(--take-2,#5f9c80)}
+.eg-block .eg-when{display:block;color:var(--muted,#5a6a7b);font-size:.9em}
+.eg-block .w-being{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eg-block.eg-keep{background:transparent;border:1px dashed var(--muted,#5a6a7b);border-radius:3px;padding:0;font-size:0}
+.eg-now{border-block-start:2px solid #c0392b;align-self:start;z-index:2;pointer-events:none}
 .eg-dn{font-weight:600;color:var(--fg,#17202b)}
 .eg-event{margin-block-end:3px}
 .eg-list-day{display:grid;grid-template-columns:minmax(9em,auto) 1fr;gap:10px;padding-block:5px;border-block-end:1px solid var(--line,#cfd8e2)}
