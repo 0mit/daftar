@@ -992,41 +992,62 @@ def chart(B, I, today, run=(None, None)):
 def share(B, I, today, run=(None, None)):
     """A PAYMENT'S COST, BORNE (the operator, 2026-10-14: a card line put on another as their debt, or shared among
     some in their proportions; one form, a person beside their share — the view's `beside`): `of`, the payment; `who`,
-    those who bear it, each beside their `share`, a whole number of parts (verbs.yaml `bear`: the ratio the parties
-    said, whole, so the arithmetic stays exact). Whoever bore it before is replaced — this walk's own `bear` statements
-    of it taken out, the new written — and one written by hand, with no id to take it out by, is refused rather than
-    lost. What each owes whom is read from them (bin/ledger.py), never stored."""
-    ref = I.get('of')
-    bid, verb, r = statement(B, ref)
-    if verb != 'pay':
-        refuse(f"{ref} is a `{verb}`: what is borne is a payment's cost")
+    those who bear it, each beside their `share` — parts, whole or decimal, so the arithmetic stays exact (verbs.yaml
+    `bear`); shares that add up to the payment are each one's amount. Whoever bore it before is replaced — this walk's
+    own `bear` statements of it taken out, the new written — and one written by hand, with no id to take it out by, is
+    refused rather than lost. `of` an agreement (its bean) writes the shares the agreement holds each of its payments
+    in (`of: self` in its bean, ratified 2026-10-14), each payment that names none of its own. What each owes whom is read
+    from them (bin/ledger.py), never stored."""
+    from fractions import Fraction
+    ref = str(I.get('of') or '')
+    whole = '#' not in ref and ref in B.G.beans
+    if whole:
+        bid = ref
+        if B.G.beans[bid].kind != 'contract':
+            refuse(f"of: {bid} is a {B.G.beans[bid].kind}: shares are of a payment, or of an agreement's payments")
+        sid, target = 'self', 'self'
+    else:
+        bid, verb, r = statement(B, ref)
+        if verb != 'pay':
+            refuse(f"{ref} is a `{verb}`: what is borne is a payment's cost")
+        sid = target = ref.split('#', 1)[1]
     who, parts = I.get('who') or [], I.get('share') or []
     who, parts = ([who] if isinstance(who, str) else list(who)), ([parts] if isinstance(parts, str) else list(parts))
     if not who or len(who) != len(parts):
         refuse("who and share: a share beside each one who bears it")
     if len(set(who)) != len(who):
         refuse("who: each one once, with all their parts in one share")
-    for w, s in zip(who, parts):
-        x = B.G.beans.get(w)
-        if x is None or x.kind not in ('person', 'org'):
+    for w, x in zip(who, parts):
+        b_ = B.G.beans.get(w)
+        if b_ is None or b_.kind not in ('person', 'org'):
             refuse(f"who: {w} is no person or organisation of this garden")
-        if not re.fullmatch(r'[1-9][0-9]{0,5}', str(s)):
-            refuse(f"share: {s!r} is not a whole number of parts, one or more")
-    sid = ref.split('#', 1)[1]
+        if not re.fullmatch(r'(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,8})?', str(x)) or Fraction(str(x)) <= 0:
+            refuse(f"share: {x!r} is not a number of parts more than nothing (whole, or with decimals: an amount)")
     b = B.G.beans[bid]
-    olds = [x for _i, v, x in b.items if v == 'bear' and x.get('of') == sid]
+    olds = [x for _i, v, x in b.items if v == 'bear' and x.get('of') == target]
     if any(not isinstance(x.get('id'), str) for x in olds):
         refuse(f"{ref} is borne already by a statement with no id, written by hand: change it there")
     removes = [x['id'] for x in olds]
     taken, adds = set(removes), []
-    for w, s in zip(who, parts):
+    for w, x in zip(who, parts):
         nid = fresh_id(B, bid, f"bear-{sid}-{w}", taken - set(removes))
         taken.add(nid)
-        adds.append(f'bear: {{ id: {nid}, by: {w}, of: {sid}, share: "{s}" }}')
-    said = ', '.join(f"[[{w}]] {s}" for w, s in zip(who, parts))
-    return {'what': f"{ref} borne by " + ', '.join(f"{w} {s}" for w, s in zip(who, parts)),
-            'beans': [{'bean': bid, 'add': adds, 'remove': removes}],
-            'body': [f"- action: who bears {ref}, in parts: {said}" + (f"; in place of {', '.join(removes)}" if removes else '')]}
+        adds.append(f'bear: {{ id: {nid}, by: {w}, of: {target}, share: "{x}" }}')
+    total = sum((Fraction(str(x)) for x in parts), Fraction(0))
+    each = []
+    for w, x in zip(who, parts):
+        f = Fraction(str(x)) / total
+        frac = str(f.numerator) if f.denominator == 1 else f"{f.numerator}/{f.denominator}"
+        if not whole:
+            W, unit = amount_of(r)
+            each.append(f"[[{w}]] {x} ({frac}{f', {show(W * f)} {unit}' if W is not None else ''})")
+        else:
+            each.append(f"[[{w}]] {x} ({frac})")
+    what = (f"{bid}'s payments borne by " if whole else f"{ref} borne by ") + ', '.join(f"{w} {x}" for w, x in zip(who, parts))
+    lead = f"who bears each payment of [[{bid}]] that names none of its own, in parts: " if whole \
+        else f"who bears {ref}, in parts: "
+    return {'what': what, 'beans': [{'bean': bid, 'add': adds, 'remove': removes}],
+            'body': [f"- action: {lead}{'; '.join(each)}" + (f"; in place of {', '.join(removes)}" if removes else '')]}
 
 
 PLANS = {'book': book, 'reverse': reverse, 'match': match, 'close': close, 'import': import_, 'entry': entry,

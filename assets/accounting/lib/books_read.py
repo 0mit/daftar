@@ -391,14 +391,16 @@ def _vouchers(B, today):
                 means_from[x] = through
     accrued = {ref for ref in books if ref in asked}
     done = set()
+    from core import shares as dmshares
     for ref, (bid, p) in sorted(pays.items()):
         if ref in evidence or ref in asked:
             continue
         mine = books.get(ref, [])
-        parties = {str(p.get('by')), str(p.get('to'))} | {str(x.get('by')) for x in bears.get(ref, [])}
+        borne, _source = dmshares.of_payment(G, bid, p, bears.get(ref, []))   # its own shares, else its agreement's
+        parties = {str(p.get('by')), str(p.get('to'))} | {str(x.get('by')) for x in borne}
         if E not in parties and not mine:
             continue
-        _pay_voucher(B, ref, p, mine, bears.get(ref, []), analytic.get(ref, []), means_from.get(ref), accrued, pays,
+        _pay_voucher(B, ref, p, mine, borne, analytic.get(ref, []), means_from.get(ref), accrued, pays,
                      known(ref)[1])
         done.add(ref)
     for ref in sorted(accrued):

@@ -3547,6 +3547,21 @@ a name lapsing is known ninety days ahead or it is lost, and a lease is known si
 its default is too short, and `bin/dmstale.py` reads it there — it once named a term and its date in its own source,
 which left every other agreement that ages first-class to the gate and invisible to the tool.
 
+## core/law/verbs.yaml: verbs[bear]
+
+(ratified by the operator, 2026-10-14: "Shares of an agreement")
+
+SHARES SAID ONCE, FOR AN AGREEMENT. Two people who split a household's costs in halves agree it once, and every receipt
+after is split that way without a word. The law could say it only per payment: each payment needed a `bear` for each
+bearer, or the default held — whoever paid bears it, alone — so a receipt nobody remembered to split was read as the
+payer's own, against what the two had agreed. A `bear` may now name an agreement as a whole (`of` its bean, `self` in
+it): each payment the agreement holds, and each a bean holds that is `part` of it, is borne in those shares — unless the
+payment names its own bearers, which then hold for it alone, or it pays one of those bearers, since a transfer between
+the parties is how a debt between them is settled, not a cost they share. The default stays the last word, where
+neither speaks. One reader holds this for every tool that reads shares (core/shares.py) — who owes whom, the books, the
+gate's part of a payment, the books a close fixes, a page's sheet — so no two of them can read one receipt two ways. A
+payer bearing a payment alone, where the agreement would share it, is a word of its own and no default.
+
 ## core/law/verbs.yaml: verbs[attend]
 
 (ratified by the operator, 2026-10-14)
