@@ -928,7 +928,7 @@ def check_moves(moves, steps, walk_name):
     out = []
     by_id = {st['id']: st for st in steps if isinstance(st, dict) and isinstance(st.get('id'), str)}
     ids = [st['id'] for st in steps if isinstance(st, dict) and isinstance(st.get('id'), str)]
-    prev, pause_from, prev_ms = None, None, None
+    prev, pause_from, prev_ms, prev_res = None, None, None, None
     seen = {}
     for i, mv in moves:
         sid = mv.get('step')
@@ -946,10 +946,14 @@ def check_moves(moves, steps, walk_name):
             prev = None
             continue
         try:
-            ms = dmcal.moment(mv.get('at')).ms
+            mo = dmcal.moment(mv.get('at'))
+            ms, res = mo.ms, mo.resolution
         except Exception:
-            ms = None                                        # its form is the type's to refuse, by name
-        if ms is not None and prev_ms is not None and ms < prev_ms:
+            ms, res = None, None                             # its form is the type's to refuse, by name
+        # A MOMENT IS HELD TO THE UNIT IT IS WRITTEN AT: a move written to the minute (before a stamp was to the second,
+        # 2026-10-14) names its whole minute, so a move written to the second within it is not before it, nor after it.
+        # Two moves are compared at the coarser of their two units.
+        if ms is not None and prev_ms is not None and _at_unit(ms, res, prev_res) < _at_unit(prev_ms, prev_res, res):
             out.append((i, 'error', f"is at {dmcal.shown(mv.get('at'))}, before the move it follows: a course's moments never go back "
                                     f"— each move is written when it is made"))
         offered = None
@@ -986,8 +990,17 @@ def check_moves(moves, steps, walk_name):
                 out.append((i, 'error', f"cites the reason '{r}', which is not one of the step '{sid}''s: {', '.join(rs)}"))
         if st.get('resumes') is True and prev is not None:
             pause_from = prev if not (by_id.get(prev) or {}).get('resumes') else pause_from
-        prev, prev_ms = sid, ms if ms is not None else prev_ms
+        prev, prev_ms, prev_res = (sid, ms, res) if ms is not None else (sid, prev_ms, prev_res)
     return out
+
+
+_UNIT_MS = {'minute': 60000, 'second': 1000, 'millisecond': 1}
+
+
+def _at_unit(ms, res, other):
+    """`ms` cut to the coarser of the units `res` and `other` (a moment's resolution: minute, second or millisecond)."""
+    step = max(_UNIT_MS.get(res, 1), _UNIT_MS.get(other, 1))
+    return ms - ms % step
 
 
 # ============================================================================ reading from a garden

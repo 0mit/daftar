@@ -135,10 +135,10 @@ python3 bin/save.py "sam" "the first beans" --body "- action: added [[sam]], [[l
 ```
 
 The line breaks inside the quotes are kept, in a Unix shell and in PowerShell alike, and the journal then holds
-`## 2026-09-17 09:30+03:00 · sam · the first beans` — the moment it was run — above those lines. The same run writes
-that moment in place of each `at: now`: the moment a fact was written down is the clock's, and never typed. A body kept
-in a file can come on standard input instead (`… "the first beans" < entry.md`) in a shell that has `<`; PowerShell has
-not.
+`## 2026-09-17 09:30:12+03:00 · sam · the first beans` — the moment it was run, to the second — above those lines. The
+same run writes that moment in place of each `at: now`: the moment a fact was written down is the clock's, and never
+typed. A body kept in a file can come on standard input instead (`… "the first beans" < entry.md`) in a shell that has
+`<`; PowerShell has not.
 
 The `[[bean-id]]` is what makes the entry count: the gate refuses a bean the commit changes that the entry does not
 name, and a change to the law whose entry does not say RULE-CHANGE. `- action:` is the only required line; `detail`

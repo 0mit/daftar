@@ -20,20 +20,21 @@ its bookings, else `books-<entity>`, made by the first write:
   close    `day`: the books' reading through the day (`reckon`, its step `books`) and its `pin` at the commit the plan
            read — after the last close, not after today.
   remove   `of` (a document's bean, or a payment `<bean>#<id>`), `reason`: taken out — the bean whole, or the payment
-           with its shares — with every booking and match of the entity's that names what goes, in turn; refused where
-           closed books read any of it (reverse it instead), where another statement names it, where a statement that
-           would go is sealed, for a line read from a source (its whole statement goes), and on the run's own bean.
+           with its shares — with every booking and match of the entity's that names what goes, in turn, and each key
+           of a bean's `details` that names it (a category, a note kept beside a payment); refused where closed books
+           read any of it (reverse it instead), where another statement names it, where a statement that would go is
+           sealed, for a line read from a source (its whole statement goes), and on the run's own bean.
   chart    `code`, and `name`, `parent`, `level`, `element`, `stands-for`, `parties`, `role`, `closed`, `name-<lang>`: an
            account of the chart added beneath its parent, or changed — a row of the garden's own table (`files`) — never
            a code changed, never an account the books used moved; the row held to the chart's form as the gate holds it.
   entry    `day`, `memo`, `unit`, `lines` (`<account> dr|cr <amount>`, joined by `;`), `of` (optional): what no payment
            says, written whole and balanced, resting on `of` or the books' `open` (written by the first entry); an
            entry is corrected by its reverse and a new one, never edited.
-  import   `file` (on this machine), `format` (camt.053, camt.054, ofx, mt940, csv), `means` (the being the account
-           stands for: the bank account, the card), `mapping` (a CSV's, a file of the garden), `statement` (the bean's
-           id; `statement-<the file's SHA-256, 12>` where none): a statement bean, its lines payments read from the
-           file through the means; refused whole where a line is not read, where opening + lines is not the closing,
-           or where the file was imported already.
+  import   `file` (a path on this machine, or the SHA-256 of a file a page gave, kept by the host), `format`
+           (camt.053, camt.054, ofx, mt940, csv), `means` (the being the account stands for: the bank account, the
+           card), `mapping` (a CSV's, a file of the garden), `statement` (the bean's id; `statement-<the file's SHA-256,
+           12>` where none): a statement bean, its lines payments read from the file through the means; refused whole
+           where a line is not read, where opening + lines is not the closing, or where the file was imported already.
 """
 import datetime
 import hashlib
@@ -445,9 +446,14 @@ def close(B, I, today, run=(None, None)):
 # ------------------------------------------------------------------------------------------------ import
 def import_(B, I, today, run=(None, None)):
     import statements as st
-    path = str(I.get('file') or '')
-    if not path or not os.path.isfile(path):
-        refuse(f"file: {path!r} is no file on this machine")
+    path = name = said = str(I.get('file') or '')
+    if re.fullmatch(r'[0-9a-f]{64}', path) and not os.path.isfile(path):     # a page's file: kept by the host off git,
+        path = _W().file(name)                                                # under its SHA-256, which the run is given
+        said = f"the file a page gave ({name[:12]}…)"
+    elif not path or not os.path.isfile(path):
+        refuse(f"file: {path!r} is no file on this machine, nor one a page gave (its SHA-256)")
+    else:
+        name = said = os.path.basename(path)
     fmt = str(I.get('format') or '')
     if fmt not in st.FORMATS:
         refuse(f"format: {fmt!r} is none of {', '.join(st.FORMATS)}")
@@ -499,17 +505,17 @@ def import_(B, I, today, run=(None, None)):
         note = ' '.join(x for x in (ln.get('text'), ln.get('party')) if x)
         adds.append(f'pay: {{ id: line-{n:03d}, {who}, of: {amt}, through: {means}, at: "{ln["day"]}"' +
                     (f', note: {json.dumps(note[:200], ensure_ascii=False)}' if note else '') + ' }')
-    details = {'statement': {'file': os.path.basename(path), 'sha256': sha, 'format': fmt, 'account': S['account'],
+    details = {'statement': {'file': name, 'sha256': sha, 'format': fmt, 'account': S['account'],
                              'opening': S['opening'], 'closing': S['closing'],
                              'lines': {f"line-{n:03d}": {k: ln.get(k) for k in ('ref', 'value_day', 'code') if ln.get(k)}
                                        for n, ln in enumerate(S['lines'], 1)}}}
     head = f'bean: {sid}\nkind: document\ntitle: "{sid} — the statement of {means}, {S["lines"][0]["day"]} to ' \
            f'{S["lines"][-1]["day"]}"\ndetails: ' + json.dumps(details, ensure_ascii=False)
-    return {'what': f"{os.path.basename(path)}: {len(adds)} lines of {means}'s statement", 'beans': [
-        {'bean': sid, 'new': {'head': head, 'body': f"The statement of {means}, read from {os.path.basename(path)} "
+    return {'what': f"{said}: {len(adds)} lines of {means}'s statement", 'beans': [
+        {'bean': sid, 'new': {'head': head, 'body': f"The statement of {means}, read from {said} "
                                                     f"({fmt}): its lines as the payments it shows."},
-         'add': adds, 'remove': [], 'known': {'act': 'read', 'from': means, 'through': f"file:{os.path.basename(path)}"}}],
-        'body': [f"- action: wrote [[{sid}]]: {len(adds)} lines read from {os.path.basename(path)} ({fmt}, sha256 "
+         'add': adds, 'remove': [], 'known': {'act': 'read', 'from': means, 'through': f"file:{name}"}}],
+        'body': [f"- action: wrote [[{sid}]]: {len(adds)} lines read from {said} ({fmt}, sha256 "
                  f"{sha[:12]})"]}
 
 
@@ -540,9 +546,12 @@ def entry(B, I, today, run=(None, None)):
     shut = last_close(B)
     if shut is not None and day <= shut:
         refuse(f"day: the books are closed through {iso(shut)}: an entry for it is written after that day")
+    from core import check as dmcheck, measures
+    L = dmcheck.garden_law(B.root)                  # the amounts read as the gate reads them (core/measures.py)
     unit = str(I['unit']).strip()
-    if not re.fullmatch(r'[A-Z]{3}', unit):
-        refuse(f"unit: {unit!r} is no currency's code (ISO 4217: three letters)")
+    why = measures.quantity_why(L, {'count': '1', 'unit': unit}, 'money')
+    if why:
+        refuse(f"unit: {why}")
     dr, cr = [], []
     for part in [x for x in str(I['lines']).split(';') if x.strip()]:
         m = LINE.match(part)
@@ -557,6 +566,10 @@ def entry(B, I, today, run=(None, None)):
     if sum(a for _s, a in dr) != sum(a for _s, a in cr):
         refuse(f"lines: debits {show(sum(a for _s, a in dr))} and credits {show(sum(a for _s, a in cr))} {unit} do "
                f"not balance")
+    for _s, a in dr + cr:
+        why = measures.quantity_why(L, {'count': show(a), 'unit': unit}, 'money')
+        if why:
+            refuse(f"lines: {why}")
     books, made = books_bean(B)
     adds, taken = [], set()
     rests = I.get('of')
@@ -650,6 +663,28 @@ def from_garden(B, ref):
                  and B.G.beans[x].kind == 'garden'), None)
 
 
+def details_naming(B, gone, bid, whole):
+    """{bean: [path of keys]}: each key of a bean's `details`, at any depth, that names what goes — `<bean>#<id>` of a
+    statement that goes (in that statement's own bean, its id alone too) or, for a document taken out whole, its bean
+    or any key `<bean>#…` under it. What is beneath such a key goes with it: the category, the note, the history a
+    garden kept of a payment beside the payment."""
+    out = {}
+
+    def walk(ob, b, node, path):
+        for k, v in node.items():
+            if not isinstance(k, str):
+                continue
+            ref = k if '#' in k else f"{ob}#{k}" if k in b.ids else k
+            if ref in gone or (whole and (k == bid or k.startswith(bid + '#'))):
+                out.setdefault(ob, []).append(path + [k])
+            elif isinstance(v, dict):
+                walk(ob, b, v, path + [k])
+    for ob, b in sorted(B.G.beans.items()):
+        if not (whole and ob == bid) and isinstance(b.header.get('details'), dict):
+            walk(ob, b, b.header['details'], [])
+    return out
+
+
 def kept_closed(B, entries):
     """What rule `kept` refuses of a write, its books' half, asked of the gate itself (core/commit.py `_closed`, the
     closes of every entity and chart of the garden): each statement closed books read that the write would take out or
@@ -675,7 +710,7 @@ def remove(B, I, today, run=(None, None)):
     taken out of its bean (`of`: `<bean>#<id>`), with `reason`. With it goes every booking and match of the entity's
     that names what goes — a booking of a booking, a reversal, an entry resting on it, in turn — and a share of the
     payment beside it (`bear`); the knowing acts that knew only what goes go too (what else such an act knew is written
-    again as it was). Refused where closed books read any of it (the gate's own words: reverse it instead); where another
+    again as it was); and each key of a bean's `details` that names what goes, with what is beneath it. Refused where closed books read any of it (the gate's own words: reverse it instead); where another
     statement of the garden still names what goes; where any of it is another garden's word, taken from its proposal
     (dispute it there); where a sealed statement would go (erase it first, bin/held.py);
     where the payment was read from a source (its whole statement is taken out); where the bean is the books' own or no
@@ -740,6 +775,12 @@ def remove(B, I, today, run=(None, None)):
     for ob, ids in sorted(takes.items()):
         more, again = kept_known(B, ob, ids)
         entries.append({'bean': ob, 'remove': sorted(set(ids) | set(more)), 'add': again})
+    for ob, paths in details_naming(B, gone, bid, whole).items():          # what a garden kept of it beside it
+        e = next((x for x in entries if x['bean'] == ob), None)
+        if e is None:
+            entries.append({'bean': ob, 'unset': paths})
+        else:
+            e['unset'] = paths
     held = sorted(x for x in gone if '#' in x and 'held' in statement(B, x)[2])
     if held:
         refuse(f"{', '.join(held[:6])} {'is' if len(held) == 1 else 'are'} sealed, kept off git: erase "

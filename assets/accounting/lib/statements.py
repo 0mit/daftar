@@ -9,7 +9,9 @@ each format is an adapter beside the others, and a bank's own CSV is read by a m
 
 FORMATS: `camt.053` and `camt.054` (ISO 20022, any version of the namespace), `ofx` (1.x SGML and 2.x XML), `mt940`
 (SWIFT), `csv` (with a mapping: { delimiter, decimal, skip, columns: { day, amount | debit+credit, text, ref, party,
-currency, value_day, code }, day_format, sign: as-is | negate }). Every amount is read as written — a decimal string,
+currency, value_day, code }, day_format: yyyy-mm-dd (absent) | dd.mm.yyyy | dd/mm/yyyy | dd-mm-yyyy, sign: as-is |
+negate } — a `day_format` or a `sign` the adapter does not read is refused by name, never passed over). Every amount
+is read as written — a decimal string,
 never a float; a statement's own arithmetic (opening + lines = closing, per currency) is the caller's check. `code` is
 the bank's own code of a line's transaction (camt's BkTxCd, OFX's TRNTYPE, MT940's transaction type), kept as written.
 
@@ -197,10 +199,19 @@ def _yymmdd(t):
 
 
 # ------------------------------------------------------------------------------------------------ a bank's CSV, by a mapping
+DAY_FORMATS = {'yyyy-mm-dd': None, 'dd.mm.yyyy': '.', 'dd/mm/yyyy': '/', 'dd-mm-yyyy': '-'}   # each, its separator
+SIGNS = ('as-is', 'negate')
+
+
 def _csv(path, m):
     cols = m.get('columns') or {}
     if not cols.get('day') or not (cols.get('amount') or (cols.get('debit') and cols.get('credit'))):
         raise Unreadable("a CSV mapping names the columns of `day` and of `amount` (or `debit` and `credit`)")
+    fmt = m.get('day_format') or 'yyyy-mm-dd'
+    if fmt not in DAY_FORMATS:
+        raise Unreadable(f"day_format: {fmt!r} is none the adapter reads ({', '.join(DAY_FORMATS)})")
+    if m.get('sign', 'as-is') not in SIGNS:
+        raise Unreadable(f"sign: {m.get('sign')!r} is none the adapter reads ({', '.join(SIGNS)})")
     dec = m.get('decimal', '.')
     with open(path, encoding=m.get('encoding', 'utf-8-sig'), newline='') as fh:
         rows = list(csv.DictReader(fh, delimiter=m.get('delimiter', ',')))
@@ -219,12 +230,11 @@ def _csv(path, m):
             if m.get('sign') == 'negate':
                 cnt = _neg(cnt)
             day = (r.get(cols['day']) or '').strip()
-            if m.get('day_format') == 'dd.mm.yyyy':
-                day = '-'.join(reversed(day.split('.')))
-            elif m.get('day_format') == 'dd/mm/yyyy':
-                day = '-'.join(reversed(day.split('/')))
+            if DAY_FORMATS[fmt] and re.fullmatch(r'\d{2}' + re.escape(DAY_FORMATS[fmt]) + r'\d{2}'
+                                                 + re.escape(DAY_FORMATS[fmt]) + r'\d{4}', day):
+                day = '-'.join(reversed(day.split(DAY_FORMATS[fmt])))
             if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', day):
-                raise ValueError(f"{day!r} is no day in the form the mapping says")
+                raise ValueError(f"{day!r} is no day in the form the mapping says ({fmt})")
             out['lines'].append({'ref': (r.get(cols.get('ref', '')) or str(n)).strip(), 'day': day,
                                  'value_day': (r.get(cols.get('value_day', '')) or None),
                                  'count': cnt, 'unit': (r.get(cols.get('currency', '')) or m.get('currency')),

@@ -44,8 +44,8 @@ under the lock it took before it fetched — is told so by DAFTAR_SAVE_LOCK_HELD
 under that lock.
 
 IN A GARDEN OF THE CORE (v1 part 5) the save is the same act: the entry, the moment written at each `at: now`
-(bin/journal.py, by the law the garden runs), everything staged, the core's gate at the commit, and a save that waits
-for the next minute where this one's moment is taken (below). The SAVE trace reads the core's flow law
+(bin/journal.py, by the law the garden runs, to the second), everything staged, the core's gate at the commit, and a
+save that waits for the next second where this one's moment is taken (below). The SAVE trace reads the core's flow law
 (core/law/flows.yaml, v1 part 8): a said value is a role of a statement a `say` knows, at `<verb>#<id>.<role>`, and its
 pass is logged in the core's form, `{from, to, through, as, metadata}` (bin/launch.py, v1 part 10).
 
@@ -364,7 +364,7 @@ def main(argv):
         print(dmparse.said(f"save: this entry is written already, and waiting — committing it, as --again does"),
               file=sys.stderr)
         return commit('; '.join(what_of(h) for h in pending), again=True)
-    the_minute_turns()
+    the_second_turns()
     try:
         journal.append(who, what, body)
     except SystemExit as e:                       # the journal tool refused the entry, and wrote nothing
@@ -372,30 +372,32 @@ def main(argv):
     return commit('; '.join([what_of(h) for h in pending] + [what.strip()]), again=False)
 
 
-def the_minute_turns():
-    """A GARDEN OF STATEMENTS SAVES ONE BEAN ONCE A MINUTE (v1, 2026-10-01). A heading's moment is the clock's to the
-    minute, and the save writes it in place of each knowing act's `now`: a bean the last commit changed, saved again in
-    the same minute, would get the moment its act held already — an act no commit adds — and the core's gate would
-    refuse what it says (core/commit.py, `knowing`). So in a garden that runs the core, where the last heading is this
-    minute's and a document this save writes holds this minute's moment as committed, the save waits for the next
-    minute, and says so. Moments finer than the minute were let go (33.0, 2026-10-01)."""
+def the_second_turns():
+    """A GARDEN OF STATEMENTS SAVES ONE BEAN AT MOST ONCE A SECOND (once a minute from v1, 2026-10-01, to 2026-10-14). A
+    heading's moment is the clock's to the second (bin/journal.py), and the save writes it in place of each knowing
+    act's `now`: a bean the last commit changed, saved again in the same second, would get the moment its act held
+    already — an act no commit adds — and the core's gate would refuse what it says (core/commit.py, `knowing`). So in a
+    garden that runs the core, where the last heading is this second's and a document this save writes holds this
+    second's moment as committed, the save waits for the next second, and says so. A save mostly takes longer than a
+    second, its gate alone, so this is rare, and the wait is under a second: it was up to a minute while a stamp was to
+    the minute, and a walk's saves of the bean it runs on met it at each press of a page."""
     out = lambda *a: (lambda r: r.stdout if r.returncode == 0 else '')(git(*a))
     import check                                # the one reader of a garden's pin (bin/check.py)
     if not check.pin(ROOT, 'HEAD').startswith('core@'):
         return
     heads = [ln for ln in out('show', 'HEAD:log/journal.md').split('\n') if ln.startswith('## ')]
-    now = lambda: datetime.datetime.now().astimezone().isoformat(timespec='minutes').replace('T', ' ')
+    now = lambda: datetime.datetime.now().astimezone().isoformat(timespec='seconds').replace('T', ' ')
     if not heads or heads[-1][3:3 + len(now())] != now():
         return
     mine = {rec[3:] for rec in out('status', '--porcelain', '-z', '--untracked-files=all').split('\0') if len(rec) > 3}
     both = sorted(p for p in mine if p.startswith(('beans/', 'mappings/')) and now() in out('show', f'HEAD:{p}'))
     if not both:
         return
-    print(dmparse.said(f"save: {', '.join(both[:3])}{' …' if len(both) > 3 else ''} was saved in this minute already; "
-                       f"waiting for the next, since a knowing act's moment is the minute's"), file=sys.stderr)
-    minute = now()
-    while now() == minute:
-        time.sleep(0.5)
+    print(dmparse.said(f"save: {', '.join(both[:3])}{' …' if len(both) > 3 else ''} was saved in this second already; "
+                       f"waiting for the next, since a knowing act's moment is the second's"), file=sys.stderr)
+    second = now()
+    while now() == second:
+        time.sleep(0.05)
 
 
 if __name__ == '__main__':

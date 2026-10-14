@@ -225,7 +225,7 @@ statements:
 {Them}.
 """)
         add(g, me, f'name: {{ id: crossing, by: garden, of: self, as: "{gid_me}/person:{me}" }}', me)
-        if g == A:                    # ada's bean is saved once here: the save waits a minute for a bean saved twice
+        if g == A:                    # ada's bean is saved once here, with what she keeps
             write(os.path.join(A, 'beans', 'pact.md'), PACT)
             write(os.path.join(A, 'beans', 'notes.md'), NOTES)
             add(A, 'ada', 'grant: { id: ben-reads, by: self, to: [ben], of: [notes], as: read }', 'ada')

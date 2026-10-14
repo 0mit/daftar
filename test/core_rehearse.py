@@ -186,14 +186,12 @@ def main():
         grow.release(REL)
         run('git', 'config', 'user.name', 't', cwd=G)
         run('git', 'config', 'user.email', 't@x', cwd=G)
-        # THE MINUTE TURNS FIRST. A heading's moment is the clock's to the minute, so two saves in one minute share one; the
-        # garden was grown within the last minute, and history's moments must be told from the adoption's own.
-        import datetime, time
+        # HISTORY'S MOMENTS ARE TOLD FROM THE ADOPTION'S OWN, with no wait for the minute to turn: the release in today's
+        # words wrote its headings to the minute, and this release writes the adoption's, and every one after it, to the
+        # second (core/law/flows.yaml, the method `stamp`), so no moment of history is one this garden's saves write now.
         last = [ln for ln in open(os.path.join(G, 'log', 'journal.md'), encoding='utf-8').read().split('\n') if ln.startswith('## ')][-1]
-        for _i in range(70):
-            if datetime.datetime.now().astimezone().isoformat(timespec='minutes').replace('T', ' ')[:16] != last[3:19]:
-                break
-            time.sleep(1)
+        check("today's words wrote the garden's history to the minute", re.match(r'^## \d{4}-\d\d-\d\d \d\d:\d\d[+-]', last)
+              is not None, last)
         head = run('git', 'rev-parse', 'HEAD', cwd=G).stdout.strip()
         r = run(PY, 'bin/dmupgrade.py', 'v1.0.0', '--from', REL, cwd=G)
         out = r.stdout + r.stderr
@@ -226,6 +224,9 @@ def main():
         out = r.stdout + r.stderr
         check("...and passes the core's gate once a person has filled them: the acts granted the moments history recorded",
               r.returncode == 0 and '— 0 error(s)' in out, out[-1500:])
+        adopted = [ln for ln in open(jp, encoding='utf-8').read().split('\n') if ln.startswith('## ')][-1]
+        check("...its own heading written to the second, so it is no moment history holds",
+              re.match(r'^## \d{4}-\d\d-\d\d \d\d:\d\d:\d\d[+-]', adopted) is not None, adopted)
         acts = [next(iter(s.values())).get('at') for s in read.document(os.path.join(G, 'beans', 'laptop.md'))[0]['statements']
                 if next(iter(s)) in ('say', 'read', 'derive', 'make')]
         write(G, 'beans/late.md', "---\nbean: late\nkind: document\ntitle: late\nstatements:\n  - say: { by: sam, at: '%s' }\n---\nA late note."

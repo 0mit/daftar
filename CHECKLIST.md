@@ -147,8 +147,8 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       old act's moment is older than the statement.
 - [ ] Only the commit that adopts the core, saying RULE-CHANGE, carries the moments its history recorded; it need not
       name what it takes out of a bean, since the translator's count proves nothing was lost.
-- [ ] A bean saved twice in one minute would get the moment its act held already: `bin/save.py` waits for the next
-      minute, and says so.
+- [ ] That moment is the clock's reading to the second, true to the minute (the method `stamp`). A bean saved twice in
+      one second would get the moment its act held already: `bin/save.py` waits for the next second, and says so.
 
 These checks confirm that the words are there and well formed, not that they are true. What the gate cannot read it
 refuses, saying what and where: a traceback from the gate is a defect of the gate, never its verdict (manifesto:

@@ -8,7 +8,7 @@
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 methods:
   - { method: edit, meaning: "a writer changes a file, by hand or through a tool at the writer's word" }
-  - { method: stamp, meaning: "the save writes the clock's reading where `now` stood, from a clock within half the stamp's resolution (thirty seconds for a minute's stamp) of its time sources; a save that cannot show it refuses to stamp, and writes nothing (bin/clock.py: the sources are siblings — the kernel's discipline, the servers the host was given, those its keeper names)" }
+  - { method: stamp, meaning: "the save writes the clock's reading where `now` stood — to the second, with its offset, the moment of the journal heading it writes beside it — from a clock within half a minute of its time sources: the second tells two acts of one minute apart, in the order they were made, and the stamp is true to the minute, no finer; a save that cannot show its clock within that refuses to stamp, and writes nothing (bin/clock.py: the sources are siblings — the kernel's discipline, the servers the host was given, those its keeper names)" }
   - { method: append, meaning: "an entry added after the last, and nothing before it changed" }
   - { method: record, meaning: "a tool writes what it read off the world, with the reading's moment" }
   - { method: capture, meaning: "a command's output kept as it came, its owner and its command named" }

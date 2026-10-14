@@ -8,9 +8,11 @@
 typed.) Give the body only: no `## ` line, because the heading is this tool's to write.
 
 The heading is `## <when> · <who> · <what>`, and <when> is the position in time the gate accepts — to the
-minute, with its offset — read from this machine's clock at the moment of writing. A heading typed by hand
+second, with its offset — read from this machine's clock at the moment of writing. A heading typed by hand
 is a moment remembered rather than measured, and twice in one evening a writer typed the time before reading
-it. The gate checks the FORM of a heading; only the clock can supply its truth, so the clock supplies it.
+it. The gate checks the FORM of a heading; only the clock can supply its truth, so the clock supplies it. The second
+tells two entries of one minute apart, in the order they were written; how true the reading is, is the clock's
+discipline (bin/clock.py: within half a minute of its sources), and no more is claimed for it.
 
 The body is appended as given. It is not checked here: the gate checks that it names each bean the commit
 changes, that it says RULE-CHANGE where the law moved, and that no `(fill in` is left. Nothing is committed.
@@ -131,9 +133,10 @@ def registered(root=ROOT):
 
 
 def heading(who, what, when=None):
-    """The heading form (std-vocab 10.0): `## YYYY-MM-DD HH:MM+HH:MM · who · what`."""
+    """The heading form (std-vocab 10.0): `## YYYY-MM-DD HH:MM:SS+HH:MM · who · what`, the clock's reading to the second
+    (core/law/flows.yaml, the method `stamp`)."""
     when = when or datetime.datetime.now().astimezone()
-    return f"## {when.isoformat(timespec='minutes').replace('T', ' ')} · {who} · {what}"
+    return f"## {when.isoformat(timespec='seconds').replace('T', ' ')} · {who} · {what}"
 
 
 def stamp(who, what, root=ROOT):

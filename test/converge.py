@@ -60,8 +60,8 @@ def write(g, rel, t):
 
 
 def commit(g, what, body):
-    """A save without the wait for the minute: the clock's heading written by bin/journal.py, its moment in place of each
-    `at: now`, and one commit, through the hook (the core's gate)."""
+    """A save made by hand, without bin/save.py's wait for the clock to turn: the clock's heading written by
+    bin/journal.py, its moment in place of each `at: now`, and one commit, through the hook (the core's gate)."""
     grow.run(PY, 'bin/journal.py', 'sam', what, '--body', body, cwd=g)
     m = [ln for ln in text(g, 'log/journal.md').split('\n') if ln.startswith('## ')][-1][3:].split(' · ', 1)[0]
     for f in os.listdir(os.path.join(g, 'beans')):
