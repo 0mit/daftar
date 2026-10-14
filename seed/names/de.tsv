@@ -177,6 +177,7 @@ qualifiers:sense	Richtungssinn	Richtung + Sinn (the sense a direction runs in, a
 qualifiers:series	Reihe	Reihe (a row): a series — Zeitreihe, a time series; what a line held at each position	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	Begleichung	gleich (even): begleichen, to make even — which occurrences of which clauses a payment settles	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	Anteil	an + Teil (a part): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
+qualifiers:transparency	Zeitbelegung	Zeit (time) + belegen (to occupy): whether it takes the hours — belegt (opaque) or frei (transparent)	proposed	agent (claude opus-5.5), by hand
 qualifiers:value	Wert	Wert (worth): the value a measuring read, with how well it is known	proposed	agent (claude opus-5.5), by hand
 qualifiers:walk	Ablauf	ab + laufen (to run off): the course a walk runs at a step	proposed	agent (claude opus-5.5), by hand
 qualifiers:weighing	Paarvergleiche	Paar (a pair) + vergleichen (to make alike, to compare): the judgments, pair by pair	proposed	agent (claude opus-5.5), by hand

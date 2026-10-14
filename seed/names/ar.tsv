@@ -177,6 +177,7 @@ qualifiers:sense	اِتِّجاه	و-ج-ه (to face): along a move's direction, 
 qualifiers:series	سِلْسِلة	س-ل-س-ل (a chain): a series — what a line held at each position, its rows	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	تَسْوِية	س-و-ي (to make level): which occurrences of which clauses a payment settles, and how much of each	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	حِصّة	ح-ص-ص (to fall to one's lot): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
+qualifiers:transparency	إشغال الوقت	ش-غ-ل (to occupy) + وقت (time): whether it takes the hours — مشغول (opaque) or فارغ (transparent)	proposed	agent (claude opus-5.5), by hand
 qualifiers:value	قِيمة	ق-و-م (to stand up, to be worth): the value a measuring read, with how well it is known	proposed	agent (claude opus-5.5), by hand
 qualifiers:walk	مَسْلَك	س-ل-ك (to go along a path): how a walk goes at a step — who acts, how long, the ways out	proposed	agent (claude opus-5.5), by hand
 qualifiers:weighing	مُقارَنات	ق-ر-ن (to join, to pair): the comparisons, pair by pair — the judgments a weighing writes	proposed	agent (claude opus-5.5), by hand

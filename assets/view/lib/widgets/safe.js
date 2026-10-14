@@ -22,12 +22,13 @@ export function mount(el, safe) {
   if (el.querySelectorAll) place(el);
 }
 // A position a page computes (a session's place on a timetable) cannot be a style attribute where the page's CSP
-// allows none. It is written as data-gc (grid-column), data-gr (grid-row) or data-rows (grid-template-rows) and set by
-// mount through the CSSOM. A value that is not a grid-line expression is left unset.
-const GRID = /^[0-9a-z ()\/,.+-]{1,80}$/;
-const PLACES = {gc: 'gridColumn', gr: 'gridRow', rows: 'gridTemplateRows'};
+// allows none. It is written as data-gc (grid-column), data-gr (grid-row), data-rows (grid-template-rows) or data-cols
+// (grid-template-columns: a day's hours shared among what takes them) and set by mount through the CSSOM. A value that
+// is not a grid-line expression is left unset.
+const GRID = /^[0-9a-z ()\/,.+-]{1,200}$/;
+const PLACES = {gc: 'gridColumn', gr: 'gridRow', rows: 'gridTemplateRows', cols: 'gridTemplateColumns'};
 export function place(root) {
-  for (const el of root.querySelectorAll('[data-gc],[data-gr],[data-rows]')) {
+  for (const el of root.querySelectorAll('[data-gc],[data-gr],[data-rows],[data-cols]')) {
     for (const [key, prop] of Object.entries(PLACES)) if (el.dataset[key] && GRID.test(el.dataset[key])) el.style[prop] = el.dataset[key];
   }
 }

@@ -177,6 +177,7 @@ qualifiers:sense	sens	sensus (le sens d'un vecteur, beside its direction): along
 qualifiers:series	série	series (a row, from serere, to join): what a line held at each position	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	règlement	regula (a rule): régler une facture, to settle — which occurrences of which clauses a payment settles	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	quote-part	quota pars (how great a part): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
+qualifiers:transparency	occupation	occupare (to take up): whether it takes the hours — occupé (opaque) or libre (transparent)	proposed	agent (claude opus-5.5), by hand
 qualifiers:value	valeur	valere (to be strong, to be worth): the value a measuring read	proposed	agent (claude opus-5.5), by hand
 qualifiers:walk	parcours	percursus (a running through): how a walk goes at a step	proposed	agent (claude opus-5.5), by hand
 qualifiers:weighing	comparaisons par paires	comparare (to pair together): the judgments, pair by pair	proposed	agent (claude opus-5.5), by hand

@@ -158,6 +158,8 @@ jobs:
         run: python3 test/view_code_names.py
       - name: "view_table_sort: a reading's table sorts by each column — an amount by its exact value, a day as the law writes it, words in the reader's language's order, the empty last; the lines moved, never drawn again"
         run: python3 test/view_table_sort.py
+      - name: "view_timeline_hours: a day's width shared among what takes its hours, opaque, earlier first; what is kept in view laid below its label; the label's title the day in the reader's other calendars (transparency, core 2.7)"
+        run: python3 test/view_timeline_hours.py
       - name: "view_books: an entity's books as a table over a chart's codes — an account a line in the chart's order, its figures per currency, each account's ledger, debit before credit along the reader's line, each account by its name in the reader's language"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_books.py

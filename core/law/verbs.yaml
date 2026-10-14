@@ -13,6 +13,7 @@ tables:                                   # the small tables these rows name; a 
   verdicts:      [confirms, disputes, abstains]        # what a response to another's statement says of it (v1 part 12b)
   treatments:    [route, mangle, queue]                # how a forwarding device steers traffic: by a route, a mark, a queue
   senses:        ["1", "-1"]                          # a move along its direction, or against it: its reverse
+  transparencies: [opaque, transparent]               # whether an attendance takes the hours of those present (iCalendar TRANSP, RFC 5545 3.8.2.7)
 standard_tables: [protocols, knowledge, properties, units]   # read from their standards (IANA, our knowledge tree, ISO 19156, SI and UCUM)
 
 verbs:
@@ -156,8 +157,9 @@ verbs:
     replaces: [steps]
     home: core
   - verb: attend
-    meaning: "to be present at an event, which takes the hours of those present"
+    meaning: "to be present at an event, which takes the hours of those present — unless it says it does not (`transparency: transparent`: kept in view, its hours free for another)"
     roles: { by: { shape: being }, of: { shape: being }, at: { shape: position } }
+    qualifiers: { transparency: { shape: row, table: transparencies } }
     required: [by, of]
     replaces: [takes_time_of]
     home: core

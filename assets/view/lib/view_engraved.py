@@ -167,10 +167,43 @@ def _moment(x):
     return datetime.date.fromordinal(n).isoformat(), (t.group(1) if t else None)
 
 
+def _clock(t):
+    return int(t[:2]) * 60 + int(t[3:5])
+
+
+def _minutes(x):
+    """How long an extent (`a/b`) takes of the day it starts on, in whole minutes — to that day's end where it runs on;
+    None for a moment, a day, or an extent with no time of day."""
+    if not isinstance(x, str) or '/' not in x:
+        return None
+    a, b = x.split('/', 1)
+    ma, mb = _moment(a), _moment(b)
+    if not ma or not mb or not ma[1]:
+        return None
+    if mb[0] != ma[0]:
+        return 24 * 60 - _clock(ma[1]) if mb[0] > ma[0] else None
+    return (_clock(mb[1]) - _clock(ma[1]) if mb[1] else None) or None
+
+
+def _lasts(every):
+    """The minutes each occurrence of a repetition lasts (its `lasts`, a measure of time), or None."""
+    from fractions import Fraction
+    m = ((every or {}).get('lasts') or {}).get('measure') or {}
+    per = {'minute': 1, 'min': 1, 'hour': 60, 'h': 60}
+    try:
+        return int(Fraction(str(m.get('count'))) * per[m.get('unit')]) or None
+    except (KeyError, ValueError, ZeroDivisionError):
+        return None
+
+
 def timeline(v, may, on=None):
     """The members of the drawing's reading (`selection`) at their moments within its span: each happening's time (a `be`
     of it at a moment), and each clause's due day and every occurrence of its repetition, walked by bin/stale.py's
-    `occurrences`. A member the reader may not read is left out; what cannot be walked is said, never guessed."""
+    `occurrences`. A member the reader may not read is left out; what cannot be walked is said, never guessed.
+
+    Each event says how many minutes of its day it takes (`minutes`: an attendance's extent, a session's `lasts`) and
+    whether it takes them (`transparency`, the attendance's: opaque unless it says transparent; ratified 2026-10-14) —
+    so a day is drawn as the hours taken and, beside them, what is kept in view."""
     import stale as dmstale
     from core import measures
     day0 = on or today()
@@ -188,6 +221,7 @@ def timeline(v, may, on=None):
             continue
         t = title_of(bid)
         times = {}                              # a statement's own time of day, by its id: what a repetition of it keeps
+        clear = {}                              # a statement's transparency, by its id: what a repetition of it keeps
         sessions = {}                           # the days a statement's own session is on, by its id
         for _i, verb, r in b.items:
             # A HAPPENING'S TIME: its `be` at a moment, or an attendance at its own moment (`attend … at`: a session of a
@@ -196,6 +230,8 @@ def timeline(v, may, on=None):
                 continue
             if not (verb == 'be' and r.get('by') in ('self', bid) or verb == 'attend' and r.get('of') in ('self', bid)):
                 continue
+            if isinstance(r.get('id'), str):
+                clear.setdefault(r['id'], r.get('transparency') or 'opaque')
             for x in _listed(r.get('at')):
                 m = _moment(x)
                 if m and isinstance(r.get('id'), str):
@@ -204,7 +240,8 @@ def timeline(v, may, on=None):
                 if m and lo <= datetime.date.fromisoformat(m[0]).toordinal() <= hi and \
                         not any(e['bean'] == bid and e['day'] == m[0] and e['time'] == m[1] for e in events):
                     events.append({'day': m[0], 'time': m[1], 'at': x, 'bean': bid, 'title': t, 'kind': 'happening',
-                                   'statement': r.get('id')})
+                                   'statement': r.get('id'), 'minutes': _minutes(x),
+                                   'transparency': r.get('transparency') or 'opaque'})
         for cid, e in (measures.clauses_of(b, vm.ROOT) or {}).items():
             if not isinstance(e, dict) or e.get('state') in ('met', 'waived', 'broken') or e.get('due') is None:
                 continue
@@ -219,7 +256,9 @@ def timeline(v, may, on=None):
             of_statement = e.get('what') in times
             base = {'bean': bid, 'title': t, 'kind': 'due', 'clause': cid, 'what': None if of_statement else e.get('what'),
                     'by': e.get('by'), 'to': e.get('to'), 'amount': e.get('amount'), 'permission': e.get('permission'),
-                    'at_time': times.get(e.get('what')) if of_statement else None}
+                    'at_time': times.get(e.get('what')) if of_statement else None,
+                    'minutes': _lasts(rec) if of_statement else None,
+                    'transparency': clear.get(e.get('what')) if of_statement else None}
             if rec is None:
                 if lo <= first <= hi:
                     events.append(dict(base, day=datetime.date.fromordinal(first).isoformat(), time=base['at_time'], index=1, times='1'))
