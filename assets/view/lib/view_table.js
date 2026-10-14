@@ -63,8 +63,13 @@
     }
     // the first column names the account where it is its name or code; else the line opens with a cell of its own
     var named = cols.length && (cols[0].path === 'name' || cols[0].path === 'code');
-    var period = data.start ? t.say('chart-period', {from: data.start, to: data.to}) : t.say('chart-through', {to: data.to});
-    t.mount(el, h`<p class="eg-chart-period">${w.text.show(period)}</p>${cur.map(function (c) {
+    // the period in the reader's words, each of its days drawn as a day, in the reader's calendar and digits: a day
+    // written into the sentence as text is read right to left in a right-to-left page (2026-10-14 as 14-10-2026)
+    var days = {from: data.start, to: data.to};
+    var period = t.say(data.start ? 'chart-period' : 'chart-through').split(/\{(\w+)\}/).map(function (part, i) {
+      return i % 2 ? (days[part] ? w.moment.show(days[part], {style: 'long'}) : '') : part;
+    });
+    t.mount(el, h`<p class="eg-chart-period">${period}</p>${cur.map(function (c) {
       var head = h`<tr>${named ? '' : h`<th scope="col"></th>`}${cols.map(function (col) {
         return h`<th scope="col" data-path="${col.path}">${w.text.show(col.label)}</th>`; })}</tr>`;
       var lines = c.lines.map(function (line) {

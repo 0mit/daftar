@@ -189,6 +189,8 @@ try {
   el.querySelector('button[data-ledger="books:11"]').click();
   out.opened = [...el.querySelectorAll('details.eg-ledger')].filter(d => d.open).map(d => d.getAttribute('data-ledger'));
   out.text = el.innerText;
+  const per = el.querySelector('.eg-chart-period');
+  out.period = per ? {text: per.innerText, days: [...per.querySelectorAll('time.w-moment')].map(x => x.getAttribute('datetime'))} : null;
 } catch (e) { out.errs.push('driver: ' + e.message + ' ' + (e.stack || '').split('\\n')[1]); }
 const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = JSON.stringify(out); document.body.appendChild(pre);
 </script></body></html>"""
@@ -211,6 +213,10 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
               (B.get('rows') or []) and 'books:11' not in (B.get('text') or ''), B.get('rows'))
         check("...each ledger closed until its account is opened: the bank's opens from its line",
               B.get('closed') and not any(B['closed']) and B.get('opened') == ['books:11'], B)
+        Pd = B.get('period') or {}
+        check("...the day it is read to drawn as a day, in the reader's calendar and digits — never the ISO day as text, "
+              "which a right-to-left line reverses (14-10-2026)", bool(Pd.get('days')) and re.search(r'[۰-۹]', Pd.get('text') or '')
+              and not re.search(r'[0-9]', Pd.get('text') or ''), Pd)
 finally:
     if TRACES:
         print("TRACEBACKS:\n" + "\n---\n".join(TRACES[:3]))
