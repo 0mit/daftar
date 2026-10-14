@@ -131,7 +131,8 @@ def iso(n):
 
 
 def account(B, words, name):
-    """A postable account of the chart, by its code (`<scheme>:<code>` or `<code>`) or its name, open on `today`."""
+    """A postable account of the chart, by its code (`<scheme>:<code>` or `<code>`) or its name, open on `today` — never one
+    that holds persons, where each line names the person it is with."""
     C = B.chart
     w = str(words or '').strip()
     if not w:
@@ -145,6 +146,10 @@ def account(B, words, name):
         code = named[0]
     if code not in C.postable:
         refuse(f"{name}: {C.scheme}:{code} has accounts beneath it: name a postable one")
+    if code in br.holds_parties(B):
+        # AN ACCOUNT THAT HOLDS PERSONS IS NEVER BOOKED TO WITH NOBODY NAMED: each line in it is some person's
+        refuse(f"{name}: {C.scheme}:{code} holds persons: name the person — who bears a payment is its `share`, and a "
+               f"journal line names the person in place of the account (`<person> dr|cr <amount>`)")
     return code
 
 

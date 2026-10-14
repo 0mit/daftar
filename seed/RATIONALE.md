@@ -5618,6 +5618,17 @@ else. It is opened only as every held value is: to the gardener, or to whom a
 grant names its part (`core/law/core.yaml: rules[harm]`). A page that names a record's fields may also make one for a
 being that has none, its fields the ones the page names.
 
+A READING ON A SHEET (2026-10-14, ratified by the operator: "A sheet field as a reading"). A person's sheet showed what
+the person's bean says and nothing of what the garden reads about them: opening the friend a gardener's books said owed
+her thirty thousand showed a summary and "this page names no fact of a person". What a garden knows of a being is often
+read, never stored — a person's account, the payments a case moved, the services a host runs — and a sheet that may show
+only stored facts sends its reader to another page to find it. A `fields` entry may therefore name one of the page's own
+readings (`reading`): the card gives it the being it shows as its first input, and draws what it gives under the
+entry's label, read as the card is opened. The reading stays the page's — one grammar, bin/reckon.py, with no reading
+language of the sheet's own — and the being is an input the asker says, as any reading's is; a person's account is the
+books' step with `party`, which the sheet draws as the books draw a ledger. The alternative, an archetype that draws a
+sheet's readings, would have made a second place where a page's readings are named.
+
 ## core/law/profiles.yaml: forms.page.attrs.drawings
 
 A PAGE OF READINGS NAMES NO CODE. A drawing module is the garden's code, which the host runs. The four archetypes
@@ -5830,6 +5841,13 @@ what left, per currency — is read from the moves the garden holds by the accou
 `apportion` reads where amounts belong. A reading is what a `pin` rests on, so a period's close is this reading pinned at
 a commit, and needs no word of its own.
 
+ONE PARTY'S PART (2026-10-14, with the sheet's reading the operator ratified). An account that holds parties — a
+persons' current account — is one account in the chart and a detail for each person in the books, as a bookkeeper's
+floating detail accounts are: the person is the detail, never a row copied into the chart. `party` reads one party's
+part of each account that holds it, so "what Ali owes me, and in which account" is a reading like any other, and a
+person's sheet reads it of the person it shows (`forms.page.attrs.fields`, `reading`). Its day (`to`) may be an input,
+the reader's clock, so a page that shows today's account names no day.
+
 ## core/law/profiles.yaml: profiles[accounting].asset
 
 The books are read by one reader, the profile's asset (`assets/accounting/lib/books_read.py`): a garden that takes the
@@ -5849,4 +5867,13 @@ answers "which ones, and what each holds" for beings and for accounts alike. Its
 page lists them, so a book written right to left reads the debit at the right; each account is drawn by its name in the
 reader's language; a reader sees the books of a being only where they may read that being, and a ledger's line names its
 bean only where they may read it.
+
+A LINE FOR EACH PARTY (2026-10-14, ratified by the operator: "Chart table: a row per person"). A persons' current
+account drawn as one line mixed every person's debts into one balance — what a friend owed and what was owed a partner
+netted into a figure nobody owes — and named each person only inside a line's note, in the reader's English. An account
+that holds parties now draws a line for each party its lines name beneath it, each opening its own ledger, and a line
+for its lines that name nobody, which waits for a person; its own ledger names each line's party and why the line is
+there (a share, a payment, what is owed back, what a clause asks), as data the page words in its reader's language. What
+a party owes is read twice — from the books, and from the agreements by bin/ledger.py — and where the two differ the
+table says so, under it: one truth of who owes whom, or a difference shown.
 

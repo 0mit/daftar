@@ -70,6 +70,10 @@ def text(cmd, out):
         for r in out['rows']:
             yield f"{e(r['code']):<8} {e(r['name'])[:32]:<32} {f(r['opening']):>14} {f(r['dr']):>14} {f(r['cr']):>14} " \
                   f"{f(r['closing']):>14}"
+            for q in r.get('parties') or []:
+                who = e(q['party']) if q['party'] is not None else '(no party)'
+                yield f"{'':<8}   {who[:29]:<29} {f(q['opening']):>14} {f(q['dr']):>14} {f(q['cr']):>14} " \
+                      f"{f(q['closing']):>14}"
         t = out['totals']
         yield f"{'':<8} {'total':<32} {f(t['opening']):>14} {f(t['dr']):>14} {f(t['cr']):>14}  " \
               + ('balanced' if out['balanced'] else 'NOT BALANCED')
@@ -88,7 +92,8 @@ def text(cmd, out):
         yield f"result {dmunits.show(out['result'])} {out['unit']}"
     elif cmd == 'open':
         for x in out:
-            yield f"{x['day'] or '(no day)'}  {e(x['ref'])}  {e(x['account'])}  {f(x['dr']) or '-' + f(x['cr'])} {x['unit']}"
+            yield f"{x['day'] or '(no day)'}  {e(x['ref'])}  {e(x['account'])}  {f(x['dr']) or '-' + f(x['cr'])} {x['unit']}" \
+                  + ('  awaits a party' if x.get('awaits') == 'party' else '')
     elif cmd == 'closes':
         for x in out:
             yield f"through {x['day']}  at {x['commit'][:12]}  {e(x['pin'])}"

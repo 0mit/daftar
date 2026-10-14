@@ -221,6 +221,36 @@
         return h`<div class="eg-detail" data-detail="${k}"><span class="eg-role-name">${w.text.show(labels[k] || k)}</span> ${one(data.details[k])}</div>`;
       })}<p class="eg-known">${t.say('sheet-details-kept')}</p></section>`;
     }
+    // WHAT THE PAGE READS FOR THIS BEING (its `fields` … `reading`): read as the sheet is opened, never stored. A person's
+    // account in the books says who owes whom in a sentence of the reader's words — the reader themselves as "you" where
+    // the books are theirs — and opens its lines: each with the record it rests on and why it is there
+    function readings() {
+      var rs = data.readings || [], E = root.daftarEngraved;
+      if (!rs.length) return '';
+      return rs.map(function (r) {
+        var notes = (r.notes || []).map(function (x) { return h`<p class="eg-partial">${w.text.show(x)}</p>`; });
+        var body = '';
+        if (r.books) {
+          body = (r.accounts || []).length ? r.accounts.map(function (a) {
+            var amount = E.show(t, {count: String(a.balance).replace(/^-/, ''), unit: a.unit}, {});
+            var you = r.entity && r.entity.you;
+            var key = a.owes === 'party' ? (you ? 'account-owes-you' : 'account-owes')
+              : a.owes === 'entity' ? (you ? 'account-you-owe' : 'account-entity-owes') : 'account-settled';
+            var name = ((t.E.codes || {})[a.code] || {}).name || a.name;
+            return h`<div class="eg-account" data-account="${a.code}" data-unit="${a.unit}" data-owes="${a.owes || 'none'}"><p class="eg-account-says">${E.sentence(t, key, {party: E.party(t, r.party), entity: E.party(t, r.entity), amount: amount})}</p><details class="eg-ledger"><summary>${t.say('account-lines')} · ${w.text.show(name)}</summary>${E.ledger(t, {lines: a.lines}, a.unit, {noOpening: true})}</details></div>`;
+          }) : h`<p class="eg-empty">${t.say('account-none')}</p>`;
+        } else if ((r.groups || []).length) {
+          body = h`<table class="eg-table"><tbody>${r.groups.map(function (g) {
+            return h`<tr><th scope="row">${E.show(t, g.key, {shape: ['text']})}</th><td>${g.unit ? E.show(t, {count: g.amount, unit: g.unit}, {}) : w.text.show(g.amount)}</td></tr>`;
+          })}</tbody></table>`;
+        } else if ((r.members || []).length) {
+          body = h`<ul class="eg-members">${r.members.map(function (m) { return h`<li>${w.being.show(m.bean, m.title || m.bean, {action: 'open'})}</li>`; })}</ul>`;
+        } else if (r.value) {
+          body = h`<p>${r.value.unit ? E.show(t, {count: r.value.amount, unit: r.value.unit}, {}) : w.text.show(r.value.amount)}</p>`;
+        }
+        return h`<section class="eg-row eg-reading" data-fact="${r.fact}" data-reading="${r.reading}"><h4>${w.text.show(r.label || r.fact)}</h4>${body}${notes}</section>`;
+      });
+    }
     // WHAT A PERSON MAY START FROM THIS SHEET: each action of the drawing it was opened from that the reader may act by
     // (the page's `actions`; its button its `note`), its inputs drawn by their form — a day in the reader's calendar, a
     // number in their digits, words — started by the host, its plan shown, then ratified or declined: nothing is changed
@@ -444,7 +474,7 @@
         ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">${labels.title || word('header', 'title')}</span> ${w.text.edit('header.title', title.value === data.bean ? '' : (title.value || ''), {placeholder: data.title})}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
             ${tags ? (tags.may ? h`<label class="eg-field" data-fact="header:tags"><span class="eg-role-name">${labels.tags || word('header', 'tags')}</span> ${w.text.edit('header.tags', (tags.value || []).join(t.say('sheet-tags-sep')))}<span class="eg-err" data-err-fact="header:tags"></span></label>` : tagsOf(tags)) : ''}
             ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${labels.summary || word('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>${details()}${heldEdit()}`
-        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}${tagsOf(tags)}</div>${contact()}${details()}`;
+        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}${tagsOf(tags)}</div>${contact()}${details()}${readings()}`;
       // a verb whose statements are each shown beneath the one they are `of` (a clause beneath what it asks) has no row of
       // its own: it is added there
       var ownRows = data.rows.filter(function (r) {
@@ -456,7 +486,7 @@
         return h`<section class="eg-row" data-verb="${r.verb}"><h4 title="${meaning}">${heading(r.verb)}</h4><ol class="eg-statements">${
           editing ? r.statements.map(function (s) { return editOne(s); }) : r.statements.map(function (s) { return readOne(s); })}</ol>${
           editing && r.may_add ? h`<button type="button" class="eg-btn eg-add" data-add="${r.verb}">+ ${t.say('sheet-add')} ${heading(r.verb)}</button>` : ''}</section>`;
-      }) : h`<p class="eg-empty">${t.say('sheet-none', {kind: t.name('kinds', data.kind)})}</p>`;
+      }) : (data.readings || []).length && !editing ? '' : h`<p class="eg-empty">${t.say('sheet-none', {kind: t.name('kinds', data.kind)})}</p>`;
       var bar = !t.write ? h`<p class="eg-copy">${t.say('sheet-copy')}</p>`
         : !mayAny ? ''
           : editing ? h`<div class="eg-bar"><button type="button" class="eg-btn eg-primary" data-do="save">${t.say('sheet-save')}</button> <button type="button" class="eg-btn" data-do="cancel">${t.say('sheet-cancel')}</button> <span class="eg-said" data-said=""></span></div>`

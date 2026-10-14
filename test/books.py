@@ -332,6 +332,33 @@ try:
     o = reading('open')
     check("open items: each line awaiting an account — lunch's 5 and the rent's 300", isinstance(o, list)
           and sorted((x['ref'], F(x['dr'])) for x in o) == [('oct-rent#paid', 300), ('salary#lunch', 5)], o)
+    t13 = next((r for r in t.get('rows', []) if r['code'] == '13'), {})
+    check("an account that holds persons carries a row for each person its lines name, and one for its lines naming "
+          "nobody, last: Ali 30; nobody's 5 and its reverse, nil", [(q['party'], F(q['closing']))
+                                                                 for q in t13.get('parties', [])] == [('ali', 30), (None, 0)], t13)
+    check("...and each line in a person's account says why it is there, as data a page words in its own language: "
+          "Ali's share of the dinner", [x.get('why') for x in A.get('rows', [])] == [{'as': 'share', 'party': 'ali'}]
+          and A['rows'][0].get('note') is not None, A)
+    bean('coffee', 'document', 'a coffee booked to the persons with no one named', 'say: { by: sam, at: now }',
+         'own: { by: sam, of: self }',
+         'pay: { id: cup, by: sam, of: { count: "7.00", unit: XTS }, through: card-a, at: "2026-10-08" }',
+         'book: { of: cup, to: "books:13" }')
+    o2 = reading('open')
+    check("a line in an account of persons that names nobody waits for a person — the coffee's 7; the opening's 5 and "
+          "its reverse wait for nothing", sorted((x['ref'], x['account'], F(x['dr'])) for x in o2
+                                                  if x.get('awaits') == 'party') == [('coffee#cup', '13', 7)]
+          and {x.get('awaits') for x in o2} == {'account', 'party'}, o2)
+    os.remove(os.path.join(G, 'beans', 'coffee.md'))
+    write('reading.yaml', 'what: "a person\'s account in Sam\'s books"\n'
+                          'inputs: [ { name: who, origin: { act: say } }, { name: today, origin: { act: read, by: reader } } ]\n'
+                          'steps:\n  - { id: acct, op: books, to: today, chart: books, party: who }\n')
+    r = run(PY, 'bin/reckon.py', '--ad-hoc', 'reading.yaml', '--input', 'who=ali')
+    r2 = run(PY, 'bin/reckon.py', '--ad-hoc', 'reading.yaml', '--input', 'who=nobody-here')
+    os.remove(os.path.join(G, 'reading.yaml'))
+    check("the books' reading of one party (`party`, an input the asker says; its day the reader's clock): Ali's part "
+          "of each account that holds him — 30 in the persons' account; a party the garden does not hold is refused",
+          r.returncode == 0 and re.findall(r'^  (\S+ XTS): (.*)$', r.out, re.M) == [('13 XTS', '30 XTS')]
+          and r2.returncode != 0 and 'no bean of this garden' in r2.out, r.out[-600:] + r2.out[-300:])
     r = run(PY, 'assets/accounting/bin/books.py', 'trial', '--unit', 'XTS', '--chart', 'books', '--today', '2026-10-12')
     check("...and the trial balance printed for a person reads `balanced`", r.returncode == 0 and 'balanced' in r.out
           and '1200' in r.out, r.out[-900:])

@@ -422,23 +422,181 @@ def chart_table(v, may, cols):
             code = f"{C.scheme}:{r['code']}"
             fig = {'code': code, 'name': r['name'], 'element': r['element'], 'opening': amount(r['opening']),
                    'debit': amount(r['dr']), 'credit': amount(r['cr']), 'balance': amount(r['balance'])}
+            holds = 'parties' in r
             lines.append({'code': code, 'name': r['name'], 'depth': len(C.path(r['code'])) - 1, 'posts': r['posts'],
-                          'cells': [fig.get(c['path']) for c in cols]})
+                          'cells': [fig.get(c['path']) for c in cols], **({'holds': True} if holds else {})})
             if r['posts']:
                 L = br.ledger(B, r['code'], unit, None, start, today)
-                rows = []
-                for x in L['rows']:
-                    bean = x['ref'].split('#', 1)[0]
-                    seen = _bean(bean) is not None and may('read', bean)
-                    rows.append({'number': x['number'], 'day': day(x['day']), 'bean': bean if seen else None,
-                                 'title': title_of(bean) if seen else None, 'memo': x['memo'] if seen else '',
-                                 'dr': amount(x['dr']), 'cr': amount(x['cr']), 'balance': amount(x['balance'])})
-                ledgers[code] = {'opening': amount(L['opening']), 'lines': rows, 'closing': amount(L['closing'])}
+                ledgers[code] = {'opening': amount(L['opening']), 'lines': _ledger_lines(L, may, holds),
+                                 'closing': amount(L['closing']), **({'holds': True} if holds else {})}
+            for q in r.get('parties') or []:      # an account that holds parties: each party its own line and ledger
+                who = q['party']
+                pid = _party_ref(who, may)
+                pfig = dict(fig, name=pid['title'], opening=amount(q['opening']), debit=amount(q['dr']),
+                            credit=amount(q['cr']), balance=amount(q['balance']))
+                key = f"{code}|{who if who is not None else ''}"
+                lines.append({'code': key, 'account': code, 'party': pid, 'name': pid['title'],
+                              'depth': len(C.path(r['code'])), 'posts': True, 'cells': [pfig.get(c['path']) for c in cols],
+                              'owes': _owes(q['closing'])})
+                PL = br.ledger(B, r['code'], unit, who, start, today, nobody=who is None)
+                ledgers[key] = {'opening': amount(PL['opening']), 'lines': _ledger_lines(PL, may),
+                                'closing': amount(PL['closing']), 'party': pid}
+        disagree = _disagree(B, t, unit, may) if start is None else []
         tot = {'opening': amount(t['totals']['opening']), 'debit': amount(t['totals']['dr']),
                'credit': amount(t['totals']['cr'])}
         out['currencies'].append({'unit': unit, 'lines': lines, 'ledgers': ledgers, 'balanced': t['balanced'],
-                                  'totals': [tot.get(c['path']) for c in cols]})
+                                  'totals': [tot.get(c['path']) for c in cols],
+                                  **({'disagree': disagree} if disagree else {})})
     return out
+
+
+def _party_ref(who, may):
+    """A party of the books as a page names it: its bean and how it is called, where the reader may read it; a party
+    nobody named (`unknown`) and the lines naming none (None) are said so, never as an id."""
+    if who is None:
+        return {'bean': None, 'title': None, 'nobody': True}
+    if who == 'unknown':
+        return {'bean': None, 'title': None, 'unknown': True}
+    if _bean(who) is not None and may('read', who):
+        return {'bean': who, 'title': title_of(who)}
+    return {'bean': None, 'title': None, 'hidden': True}
+
+
+def _disagree(B, t, unit, may):
+    """ONE TRUTH OF WHO OWES WHOM: each party's part of the accounts that hold parties, as the books read it, beside what
+    the agreements read (bin/ledger.py, the flows' reading) between the entity and that party, in one currency — each
+    party for whom the two differ: [{party, books, agreements}], what the party owes the entity (negative: what the
+    entity owes it). The lines that name no party are not compared: they wait for a person (`open_items`)."""
+    import ledger as dmledger
+    from fractions import Fraction
+    import units as dmunits
+    books, owed = {}, {}
+    for r in t['rows']:
+        for q in r.get('parties') or []:
+            if q['party'] is not None:
+                books[q['party']] = books.get(q['party'], Fraction(0)) + q['closing']
+    try:
+        net = dmledger.reading().get('net') or []
+    except Exception:            # noqa: BLE001 — the agreements unread: nothing to hold the books to
+        return []
+    for n in net:
+        if n.get('unit') != unit:
+            continue
+        x = Fraction(str(n.get('count')))
+        if n.get('to') == B.entity:
+            owed[n.get('from')] = owed.get(n.get('from'), Fraction(0)) + x
+        elif n.get('from') == B.entity:
+            owed[n.get('to')] = owed.get(n.get('to'), Fraction(0)) - x
+    out = []
+    for who in sorted(set(books) | set(owed), key=str):
+        a, b = books.get(who, Fraction(0)), owed.get(who, Fraction(0))
+        if a != b and who is not None:
+            out.append({'party': _party_ref(who, may), 'books': dmunits.show(a), 'agreements': dmunits.show(b)})
+    return out
+
+
+def _owes(closing):
+    """Who owes whom, read from a party's closing in its account: what arrived less what left — a debit balance is
+    owed by the party to the entity (`party`), a credit one by the entity to the party (`entity`); nil, nobody."""
+    return 'party' if closing > 0 else 'entity' if closing < 0 else None
+
+
+def _ledger_lines(L, may, holds=False):
+    """A ledger's lines as a page draws them: each with the bean it rests on, where the reader may read it, its party and
+    why it is there (`why`, the reader's own words for it) — never the reader's English memo for a party's line. In an
+    account that holds parties (`holds`) every line names its party, or that it names none."""
+    import units as dmunits
+    day = lambda n: datetime.date.fromordinal(n).isoformat() if n else None
+    out = []
+    for x in L['rows']:
+        bean = x['ref'].split('#', 1)[0]
+        seen = _bean(bean) is not None and may('read', bean)
+        why = x.get('why')
+        line = {'number': x['number'], 'day': day(x['day']), 'bean': bean if seen else None,
+                'title': title_of(bean) if seen else None,
+                'memo': (x.get('note') or '') if why else (x['memo'] if seen else ''),
+                'dr': dmunits.show(x['dr']), 'cr': dmunits.show(x['cr']), 'balance': dmunits.show(x['balance'])}
+        if not seen:
+            line['memo'] = ''
+        if holds or x.get('party') is not None or why:
+            line['party'] = _party_ref(x.get('party'), may)
+        if why:
+            line['why'] = {'as': why['as'], 'party': _party_ref(why.get('party'), may),
+                           **({'clause': why['clause']} if why.get('clause') else {})}
+        out.append(line)
+    return out
+
+
+def sheet_readings(bid, kind, may, reader):
+    """What a sheet shows of the page's readings for its being (`fields` … `reading`): each reading given the being as
+    its first input, read as the card is opened, never stored. A reading whose last step reads the books for a party
+    (`books` with `party`) is the being's account: each account it holds a part of, per currency, its balance, who owes
+    whom, and its lines — drawn only for a reader who may read the books' entity."""
+    out = []
+    page_bean = _bean(vm.PAGE)
+    for _i, e in vm.entries_of_view('fields'):
+        if str(e.get('genos')) != str(kind) or not isinstance(e.get('reading'), str):
+            continue
+        rid = e['reading']
+        entry = next((r.get('reading') for _j, v, r in (page_bean.items if page_bean else [])
+                      if v == 'reckon' and isinstance(r, dict) and r.get('id') == rid), None)
+        part = {'fact': str(e.get('term') or rid), 'label': e.get('label'), 'reading': rid, 'groups': [], 'notes': []}
+        out.append(part)
+        if not isinstance(entry, dict):
+            part['notes'].append(f"{rid} is no reading of this page")
+            continue
+        first = next((i.get('name') for i in entry.get('inputs') or [] if isinstance(i, dict)), None)
+        last = (entry.get('steps') or [{}])[-1] if isinstance(entry.get('steps'), list) else {}
+        if isinstance(last, dict) and last.get('op') == 'books' and last.get('party') is not None:
+            part.update(_account_of(bid, last, first, may, reader))
+            continue
+        import reckon as dmreckon
+        try:
+            r = dmreckon.evaluate("%s:%s" % (vm.PAGE, rid), root=vm.ROOT, inputs={first: bid} if first else None)
+        except Exception as x:          # noqa: BLE001 — a reading refused is said on the card, never raised
+            part['notes'].append(str(x))
+            continue
+        import units as dmunits
+        v = r.value
+        if isinstance(v, dict):
+            part['groups'] = [{'key': str(k), 'amount': dmunits.show(x.v) if hasattr(x, 'v') else str(x),
+                               'unit': getattr(x, 'unit', None)} for k, x in v.items()]
+        elif isinstance(v, list):
+            part['members'] = [{'bean': m.id, 'title': title_of(m.id)} for m in v if may('read', m.id)]
+        else:
+            part['value'] = {'amount': dmunits.show(v.v) if hasattr(v, 'v') else str(v), 'unit': getattr(v, 'unit', None)}
+    return out
+
+
+def _account_of(bid, step, first, may, reader):
+    """A person's account (a reading whose last step is `books` with `party`): the books of its entity read once per
+    version of the garden (books_read.read), its part of each account that holds it, per currency."""
+    lib = os.path.join(vm.ROOT, 'assets', 'accounting', 'lib')
+    if not os.path.isfile(os.path.join(lib, 'books_read.py')):
+        return {'notes': ["the books are read by the accounting profile's asset, which this garden does not hold"]}
+    if lib not in sys.path:
+        sys.path.insert(0, lib)
+    import books_read as br
+    import units as dmunits
+    party = bid if step.get('party') == first else str(step.get('party'))
+    try:
+        B = br.read(vm.ROOT, entity=step.get('entity'), chart=step.get('chart'))
+    except ValueError as x:
+        return {'notes': [str(x)]}
+    if not may('read', B.entity):
+        return {'notes': ["the books of a being the reader may not read are not drawn"]}
+    accounts = []
+    for unit in sorted({x['unit'] for x in B.vouchers if x['unit']}):
+        for r in br.trial(B, unit)['rows']:
+            q = next((x for x in r.get('parties') or [] if x['party'] == party), None)
+            if q is None:
+                continue
+            L = br.ledger(B, r['code'], unit, party)
+            accounts.append({'code': f"{B.chart.scheme}:{r['code']}", 'name': r['name'], 'unit': unit,
+                             'balance': dmunits.show(q['closing']), 'owes': _owes(q['closing']),
+                             'lines': _ledger_lines(L, may)})
+    return {'books': True, 'entity': {'bean': B.entity, 'title': title_of(B.entity), 'you': B.entity == reader},
+            'party': {'bean': party, 'title': title_of(party)}, 'accounts': accounts}
 
 
 _STEP = re.compile(r'([a-z0-9][a-z0-9-]*)#([A-Za-z0-9][A-Za-z0-9_.-]*)')
@@ -1186,9 +1344,10 @@ def page(may, reader, held=None, keep=None, contact=None, records=None):
                     {a['bean'] for a in d.get('agreements') or []}
         elif v.get('archetype') == 'table':
             show |= {r['bean'] for r in d['rows']}
-            if d.get('chart'):                                       # a table of a chart: what its ledgers rest on
+            if d.get('chart'):                                       # a table of a chart: what its ledgers rest on,
                 show |= {x['bean'] for c in d['currencies'] for L in c['ledgers'].values() for x in L['lines']
-                         if x['bean']}
+                         if x['bean']}                                  # and each party its accounts hold
+                show |= {(ln.get('party') or {}).get('bean') for c in d['currencies'] for ln in c['lines']} - {None}
         elif d.get('bean'):
             show.add(d['bean'])
         acts = actions_of(k, v)[0]
@@ -1215,6 +1374,7 @@ def page(may, reader, held=None, keep=None, contact=None, records=None):
     for bid in sorted(show | set(named)):
         s = sheet(bid, may, held, records)
         if s is not None:
+            s['readings'] = sheet_readings(bid, s['kind'], may, reader)
             s['actions'] = [dict({x: a[x] for x in ('drawing', 'el', 'tool', 'bean', 'confirm', 'note', 'reason') if x in a},
                                  inputs=[dict(i, choices=input_choices(i, may)) if i.get('of') else dict(i)
                                          for i in a.get('inputs') or []]) for a in acting.get(bid, [])]
