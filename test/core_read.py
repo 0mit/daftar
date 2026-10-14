@@ -364,6 +364,39 @@ try:
     r = run(PY, 'bin/ledger.py', '--between', 'sam', 'ali', '--json')
     check("ledger --between --json: the pair's net, as the prose nets it",
           r.returncode == 0 and '"between": [' in r.out and '"from": "sam"' in r.out and '"count": "30"' in r.out, r.out[-800:])
+    # SHARES OF AN AGREEMENT (ratified 2026-10-14): a `bear` of the agreement itself holds for each payment it holds that
+    # names no bearers of its own and pays none of the agreement's bearers — a transfer between them is no shared cost
+    write('beans/flat-share.md', '---\nbean: flat-share\nkind: contract\n'
+          'title: "flat-share — Sam and Ali share the flat\'s costs"\nsummary: "What the flat costs, halved."\nstatements:\n'
+          '  - say:    { by: sam, at: now }\n  - own:    { by: theone, of: self }\n'
+          '  - answer: { by: sam, of: self, as: law }\n  - answer: { by: ali, of: self, as: law }\n'
+          '  - agree:  { by: [sam, ali], of: "the flat\'s costs, halved", through: spoken }\n'
+          '  - bear:   { id: half-sam, by: sam, of: self, share: "1" }\n  - bear:   { id: half-ali, by: ali, of: self, share: "1" }\n'
+          '  - pay:    { id: food, by: sam, of: { count: "80", unit: EUR }, at: "2026-10-01" }\n'
+          '  - pay:    { id: gift, by: sam, of: { count: "30", unit: EUR }, at: "2026-10-02" }\n'
+          '  - bear:   { by: sam, of: gift }\n'
+          '  - pay:    { id: back, by: ali, to: sam, of: { count: "25", unit: EUR }, at: "2026-10-03" }\n'
+          '  - bear:   { by: sam, of: back }\n'
+          '  - pay:    { id: lent, by: sam, to: ali, of: { count: "10", unit: EUR }, at: "2026-10-04" }\n'
+          '---\nThe flat.\n')
+    r0 = save('the flat shared', '- action: wrote [[flat-share]]')
+    r = run(PY, 'bin/ledger.py', 'flat-share', '--json')
+    try:
+        F = {t['id']: t for t in json.loads(r.out)['agreements'][0]['transactions']}
+    except (ValueError, KeyError, IndexError):
+        F = {}
+    check("an agreement's shares: the gate takes a `bear` of the agreement itself; the food, naming no bearers, is borne "
+          "half each as the agreement shares it, Ali owing Sam 40; the gift by its own share, Sam's alone; Ali's 25 back "
+          "by its own; and what Sam lent Ali, paying one of the agreement's bearers, by the law's default",
+          r0.returncode == 0 and (F.get('food') or {}).get('source') == 'agreement'
+          and [(x['by'], x['count']) for x in F['food'].get('borne', [])] == [('ali', '40'), ('sam', '40')]
+          and [(o['from'], o['to'], o['count']) for o in F['food'].get('owes', [])] == [('ali', 'sam', '40')]
+          and (F.get('gift') or {}).get('source') == 'payment' and not F['gift'].get('owes')
+          and (F.get('back') or {}).get('source') == 'payment'
+          and (F.get('lent') or {}).get('source') == 'default', (r0.out[-600:], r.out[-1500:]))
+    r = run(PY, 'bin/ledger.py', 'flat-share')
+    check("...and netted, as the prose reads it: Ali owes Sam 15 (40 of the food, less the 25 he gave back)",
+          r.returncode == 0 and 'ali owes sam 15 EUR' in r.out, r.out[-900:])
     # A PAYMENT A CLAUSE ASKS IS NOT A PAYMENT MADE: the rent the lease asks each month is the `of` of its clause, and
     # only the deposit moved. The rent is read under its clause, never among what moved.
     write('beans/room-lease.md', '---\nbean: room-lease\nkind: contract\n'

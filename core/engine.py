@@ -588,8 +588,23 @@ class Judge:
                 if d.get('alone') == TRUE and any(v2 == verb and j != i and self.norm(r2.get('of'), b) == self.norm(r.get('of'), b)
                                                   for j, v2, r2 in b.items):
                     continue
+                if verb == 'bear' and self._shared_otherwise(r, b):
+                    continue          # the payer alone, where its agreement would share it: no default, a word of its own
                 self.err('placeholder', f"{b.id}[{i}] {verb}", f"says what the law derives already ({d.get('says')}): "
                                                                f"a default is never written")
+
+    def _shared_otherwise(self, r, b):
+        """Whether the payment a `bear` is `of` would be borne otherwise if it said nothing: in the shares of the agreement
+        that holds it (core/shares.py) — so its payer bearing it alone is a word of its own, and no default."""
+        from core import shares as dmshares
+        of = r.get('of')
+        if not isinstance(of, str):
+            return False
+        pb = self.G.beans.get(of.split('#', 1)[0]) if '#' in of else b
+        pid = of.split('#', 1)[1] if '#' in of else of
+        pay = next((x for _j, v, x in pb.items if v == 'pay' and isinstance(x, dict) and x.get('id') == pid), None) \
+            if pb is not None else None
+        return pay is not None and dmshares.of_payment(self.G, pb.id, pay, [])[1] == 'agreement'
 
     def _derive(self, how, r, b):
         if 'the' in how:

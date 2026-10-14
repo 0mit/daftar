@@ -50,8 +50,8 @@ verbs:
     replaces: [paid_by, transactions, charged, settles, under]
     home: core
   - verb: bear
-    meaning: "to bear a cost, in a share: whoever bears what was paid"
-    roles: { by: { shape: being }, of: { shape: statement } }
+    meaning: "to bear a cost, in a share: whoever bears what was paid — a payment (`of` it), or each payment an agreement holds (`of` the agreement, `self` in its bean): each its bean holds, and each a bean holds that is `part` of it, but one that names its own bearers or pays one of these"
+    roles: { by: { shape: being }, of: { shape: [statement, being] } }
     qualifiers: { share: { shape: quantity } }
     required: [by, of]
     default:                              # the one who paid bears it, alone: the `by` of the statement it bears

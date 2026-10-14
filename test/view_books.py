@@ -194,6 +194,16 @@ A page.
     check("...but a line of the books naming Ali that no agreement holds — five lent him, booked from the opening — is "
           "said under the table: the books read 35, the agreements 30", cur2.get('disagree') == [
               {'party': {'bean': 'ali', 'title': 'Ali'}, 'books': '35', 'agreements': '30'}], cur2.get('disagree'))
+    meal = next((x for r in ((P.get('sheets') or {}).get('dinner') or {}).get('rows') or [] if r['verb'] == 'pay'
+                 for x in r['statements'] if x.get('id') == 'meal'), {})
+    sh = meal.get('shares') or {}
+    check("a payment's shares in one line of its sheet: each bearer's part as the fraction it is and an amount — Sam 2/3 "
+          "(60), Ali 1/3 (30) — its own shares, and what Ali then owes Sam",
+          sh.get('source') == 'payment' and sh.get('unit') == 'XTS'
+          and sorted((b.get('bean'), b.get('share'), b.get('amount')) for b in sh.get('bearers') or []) ==
+          [('ali', '1/3', '30'), ('sam', '2/3', '60')]
+          and [((o['from'] or {}).get('bean'), (o['to'] or {}).get('bean'), o['amount']) for o in sh.get('owes') or []] ==
+          [('ali', 'sam', '30')], meal)
     A = ((P.get('sheets') or {}).get('ali') or {}).get('readings') or [{}]
     acc = (A[0].get('accounts') or [{}])[0]
     check("Ali's sheet shows his account, read by the page's reading of him: the persons' account, 30 he owes Sam, its "
@@ -244,6 +254,10 @@ try {
   const s = document.createElement('div'); document.body.appendChild(s);
   A.sheet(s, E.sheets.ali, t, null);
   out.says = (s.querySelector('.eg-account-says') || {}).innerText;
+  const d = document.createElement('div'); document.body.appendChild(d);
+  A.sheet(d, E.sheets.dinner, t, null);
+  out.shares = (d.querySelector('.eg-shares') || {}).textContent;
+  out.bearDeps = d.querySelectorAll('.eg-dependent').length;
   out.lines = [...s.querySelectorAll('.eg-account td.eg-what')].map(x => x.textContent.trim());
   const per = el.querySelector('.eg-chart-period');
   out.period = per ? {text: per.innerText, days: [...per.querySelectorAll('time.w-moment')].map(x => x.getAttribute('datetime'))} : null;
@@ -276,6 +290,10 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
         check("...and Ali's sheet says in Persian that he owes Sam 30, the amount drawn in its currency, his one line the "
               "dinner and his share", re.fullmatch(r'Ali .*۳۰.* به شما بدهکار است', (B.get('says') or '').replace('\n', ' '))
               is not None and len(B.get('lines') or []) == 1 and 'سهم Ali' in B['lines'][0], (B.get('says'), B.get('lines')))
+        check("...and the dinner's shares drawn as one line, in Persian, the fractions as fractions, with who owes whom: "
+              "no line of its own for each share", re.search(r'[۰-۹]/[۰-۹]|[۰-۹]⁄[۰-۹]', B.get('shares') or '')
+              and 'Ali' in (B.get('shares') or '') and 'بدهکار است' in (B.get('shares') or '')
+              and B.get('bearDeps') == 0, (B.get('shares'), B.get('bearDeps')))
         Pd = B.get('period') or {}
         check("...the day it is read to drawn as a day, in the reader's calendar and digits — never the ISO day as text, "
               "which a right-to-left line reverses (14-10-2026)", bool(Pd.get('days')) and re.search(r'[۰-۹]', Pd.get('text') or '')

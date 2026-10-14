@@ -353,13 +353,13 @@ files:
     save('who shares costs', '- action: wrote [[p-0a1b2c3d]], [[club]]')
     no = [planned('share', on='shop', of='shop#lamp', who=['sam', 'p-0a1b2c3d'], share=['1']),
           planned('share', on='shop', of='shop#lamp', who=['p-0a1b2c3d'], share=['0']),
-          planned('share', on='shop', of='shop#lamp', who=['p-0a1b2c3d'], share=['1.5']),
+          planned('share', on='shop', of='shop#lamp', who=['p-0a1b2c3d'], share=['a half']),
           planned('share', on='shop', of='shop#lamp', who=['grocer-x'], share=['1']),
           planned('share', on='shop', of='shop#lamp', who=['sam', 'sam'], share=['1', '1'])]
-    check("share: refused — a share for each who bears it, a whole number of parts of one or more, a person or an "
+    check("share: refused — a share for each who bears it, a number of parts more than nothing, a person or an "
           "organisation of the garden, each once",
-          all(x.startswith('REFUSED') for x in no) and 'a share beside each' in no[0] and 'whole number' in no[1]
-          and 'whole number' in no[2] and 'no person or organisation' in no[3] and 'each one once' in no[4], no)
+          all(x.startswith('REFUSED') for x in no) and 'a share beside each' in no[0] and 'more than nothing' in no[1]
+          and 'not a number of parts' in no[2] and 'no person or organisation' in no[3] and 'each one once' in no[4], no)
     r, c = start('shop', 'share', of='shop#lamp', who=['sam', 'p-0a1b2c3d'], share=['2', '1'])
     r2 = ratify('shop', c)
     shop = open(os.path.join(G, 'beans', 'shop.md'), encoding='utf-8').read()
@@ -374,6 +374,31 @@ files:
     bears = re.findall(r'bear: \{ id: ([a-z0-9-]+), by: ([a-z0-9-]+), of: lamp, share: "(\d+)" \}', shop)
     check("...shared again, put on another whole: the club bears it all, in place of the two before",
           'stopped at done' in r2.out and [(b, s) for _i, b, s in bears] == [('club', '1')], r2.out[-400:] + shop[-600:])
+    r, c = start('shop', 'share', of='shop#lamp', who=['sam', 'p-0a1b2c3d'], share=['27.50', '12.50'])
+    p = plan_of('shop', c)
+    r2 = ratify('shop', c)
+    shop = open(os.path.join(G, 'beans', 'shop.md'), encoding='utf-8').read()
+    bears = re.findall(r'bear: \{ id: ([a-z0-9-]+), by: ([a-z0-9-]+), of: lamp, share: "([0-9.]+)" \}', shop)
+    check("...and by amounts: shares that add up to the lamp's 40 are each one's amount — Sam 27.50 (11/16), the friend "
+          "12.50 (5/16), each said in the plan before it is ratified",
+          'stopped at done' in r2.out and sorted((b, s) for _i, b, s in bears) == [('p-0a1b2c3d', '12.50'), ('sam', '27.50')]
+          and '11/16, 27.5 XTS' in p and '5/16, 12.5 XTS' in p, p[-600:] + r2.out[-400:] + shop[-600:])
+    bean('household', 'contract', 'Sam and the friend share the house', 'say: { by: sam, at: now }',
+         'own: { by: sam, of: self }',
+         'pay: { id: rent, by: sam, of: { count: "900.00", unit: XTS }, at: "2025-03-01", note: "the rent" }')
+    save('the house', '- action: wrote [[household]]')
+    r, c = start('household', 'share', of='household', who=['sam', 'p-0a1b2c3d'], share=['1', '1'])
+    r2 = ratify('household', c)
+    house = open(os.path.join(G, 'beans', 'household.md'), encoding='utf-8').read()
+    once = re.findall(r'bear: \{ id: ([a-z0-9-]+), by: ([a-z0-9-]+), of: self, share: "(\d+)" \}', house)
+    rent = next((v for v in books('vouchers') if v.get('ref') == 'household#rent'), {})
+    no = planned('share', on='shop', of='shop', who=['sam'], share=['1'])
+    check("an agreement's shares, written once (`of` the agreement): each of its payments that names none of its own is "
+          "borne by them — the rent half the friend's, read in the books as the friend's share; and a bean that is no "
+          "agreement is refused",
+          'stopped at done' in r2.out and sorted((b, s) for _i, b, s in once) == [('p-0a1b2c3d', '1'), ('sam', '1')]
+          and any(ln.get('party') == 'p-0a1b2c3d' and ln.get('dr') == '450' for ln in rent.get('lines', []))
+          and no.startswith('REFUSED') and 'of an agreement' in no, (r2.out[-400:], house[-500:], rent, no))
 
     # ---- SEVERAL PAYMENTS, ONE ACCOUNT, ONE PLAN: the lines a person ticks on a statement's page
     bean('grocer', 'document', 'two receipts from the grocer', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',

@@ -65,13 +65,33 @@
         return h`<span class="eg-role" data-role="${k}"><span class="eg-role-name">${label(verb, k)}</span> ${showRole(roles[k], specs[k] || {shape: ['text']})}</span>`;
       }), ' ');
     }
+    // WHO BEARS A PAYMENT, IN ONE LINE (view_engraved.py `shares_of`): each bearer, their part as the fraction it is and
+    // as an amount, where the shares come from — the payment's own, its agreement's, or the law's default — and what each
+    // then owes each payer; who said each share is the line's title, never a line of its own
+    function sharesLine(s) {
+      var sh = s.shares, E = root.daftarEngraved;
+      if (!sh) return '';
+      var said = (s.dependents || []).filter(function (d) { return d.verb === 'bear' && d.known; }).map(function (d) {
+        return t.say('sheet-said-by', {who: t.titleOf(d.known.by) || d.known.by || '', at: d.known.at || ''});
+      }).join(' · ');
+      var parts = t.join(sh.bearers.map(function (b) {
+        return h`<span class="eg-bearer">${E.party(t, b)} ${w.number.show(b.share, {fraction: 'inline'})} (${E.show(t, {count: b.amount, unit: sh.unit}, {})})</span>`;
+      }), ' · ');
+      var from = sh.source === 'agreement' ? h` <span class="eg-share-from">${t.say('shares-from-agreement')}</span>`
+        : sh.source === 'default' ? h` <span class="eg-share-from">${t.say('shares-default')}</span>` : '';
+      var owes = t.join((sh.owes || []).map(function (o) {
+        return h`<span class="eg-owes">${E.sentence(t, 'shares-owes', {from: E.party(t, o.from), to: E.party(t, o.to), amount: E.show(t, {count: o.amount, unit: sh.unit}, {})})}</span>`;
+      }), ' · ');
+      return h`<div class="eg-shares" data-source="${sh.source}"${said ? h` title="${said}"` : ''}><span class="eg-verb">${heading('bear')}:</span> ${parts}${from}${(sh.owes || []).length ? h` → ${owes}` : ''}</div>`;
+    }
     function readOne(s) {
       var held = s.held ? h`<span class="eg-held">${s.held.here ? t.say('sheet-held') : s.held.host ? t.say('sheet-kept-on', {host: t.titleOf(s.held.host) || s.held.host}) : t.say('sheet-kept-off')}</span>` : '';
+      var deps = (s.dependents || []).filter(function (d) { return !(s.shares && d.verb === 'bear'); });
       return h`<li class="eg-statement${s.held ? ' eg-sealed' : ''}" data-fact="${s.key}">
         <div class="eg-roles">${s.roles ? rolesOf(s.verb, s.roles) : ''} ${held}</div>${known(s)}${rowActions(s)}
-        ${(s.defaults || []).map(function (d) {
+        ${s.shares ? sharesLine(s) : (s.defaults || []).map(function (d) {
           return h`<div class="eg-default">${heading(d.verb)}: ${w.being.show(d.by, t.titleOf(d.by) || d.title || d.by, {action: 'open'})} — ${t.say('sheet-default', {says: d.says})}</div>`; })}
-        ${(s.dependents || []).length ? h`<ol class="eg-dependents">${s.dependents.map(function (d) {
+        ${deps.length ? h`<ol class="eg-dependents">${deps.map(function (d) {
           return h`<li class="eg-dependent" data-fact="${d.key}"><span class="eg-verb">${heading(d.verb)}</span> ${d.roles ? rolesOf(d.verb, d.roles) : ''}${known(d)}</li>`;
         })}</ol>` : ''}</li>`;
     }
@@ -331,9 +351,56 @@
         b.addEventListener('click', function () {
           var a = data.actions[Number(b.getAttribute('data-act-n'))], box = b.nextElementSibling, row = b.getAttribute('data-act-row');
           t.mount(box, actForm(a));
+          sharesForm(box, statementOf(row));
           box.querySelector('[data-act-start]').addEventListener('click', function () { startAct(a, box, row); });
         });
       });
+    }
+    function statementOf(id) {
+      var hit = null;
+      data.rows.forEach(function (r) { r.statements.forEach(function (s) { if (s.id === id) hit = s; }); });
+      return hit;
+    }
+    // EXACT, NEVER THROUGH A FLOAT: a count as written (`3`, `1250.50`, `9650/3`) as [numerator, denominator] in BigInt
+    function frac(x) {
+      var m = String(x == null ? '' : x).trim().match(/^(\d+)(?:\.(\d+))?(?:\/(\d+))?$/);
+      if (!m) return null;
+      var d = m[2] ? 10n ** BigInt(m[2].length) : 1n;
+      return [BigInt(m[1] + (m[2] || '')), d * (m[3] ? BigInt(m[3]) : 1n)];
+    }
+    function gcd(a, b) { while (b) { var r = a % b; a = b; b = r; } return a < 0n ? -a : a; }
+    function text(n, d) { var g = gcd(n, d) || 1n; n /= g; d /= g; return d === 1n ? String(n) : n + '/' + d; }
+    // A PAYMENT'S SHARES, IN ITS FORM (the share walk's, on the payment's own line — its `share` beside each one who bears
+    // it): each one's share as it stands now,
+    // and, as the form is filled, each one's part of the whole as the fraction it is and the amount it comes to — what
+    // the walk will write, before it is started; shares that add up to the payment are each one's amount
+    function sharesForm(box, s) {
+      // the share walk's form: a person beside their `share`, the input the walk takes by that name (books_walks.py)
+      var sh = s && s.shares, tbl = box.querySelector('table.eg-rows'), of = s && s.roles && s.roles.of;
+      if (!sh || !tbl || !tbl.querySelector('[name="act.share"]')) return;
+      var W = of && typeof of === 'object' ? frac(of.count) : null, unit = of && of.unit;
+      var den = sh.bearers.reduce(function (acc, b) { var f = frac(b.share); return f ? acc * f[1] / gcd(acc, f[1]) : acc; }, 1n);
+      var rows = [].slice.call(tbl.querySelectorAll('tbody tr'));
+      rows.forEach(function (tr) {
+        var th = tr.querySelector('[data-row-value]'), input = tr.querySelector('input, textarea');
+        var b = th && sh.bearers.filter(function (x) { return x.bean === th.getAttribute('data-row-value'); })[0];
+        if (b && input && !input.value) { var f = frac(b.share); if (f) input.value = text(f[0] * den / f[1], 1n); }
+        tr.appendChild(document.createElement('td')).className = 'eg-part';
+      });
+      var head = tbl.querySelector('thead tr');
+      if (head) { var c = document.createElement('th'); c.setAttribute('scope', 'col'); c.textContent = t.say('shares-part'); head.appendChild(c); }
+      function live() {
+        var vals = rows.map(function (tr) { var i = tr.querySelector('input, textarea'); return frac(i && i.value); });
+        var sum = vals.reduce(function (acc, f) { return f ? [acc[0] * f[1] + f[0] * acc[1], acc[1] * f[1]] : acc; }, [0n, 1n]);
+        rows.forEach(function (tr, k) {
+          var f = vals[k], cell = tr.querySelector('td.eg-part');
+          if (!f || !f[0] || !sum[0]) { t.mount(cell, ''); return; }
+          var n = f[0] * sum[1], d = f[1] * sum[0];         // its part of the whole: its share over the shares' sum
+          t.mount(cell, t.h`${w.number.show(text(n, d))}${W && unit ? t.h` (${root.daftarEngraved.show(t, {count: text(W[0] * n, W[1] * d), unit: unit}, {})})` : ''}`);
+        });
+      }
+      tbl.addEventListener('input', live);
+      live();
     }
     // a file chosen, as the host takes it: its name and its bytes (base64)
     function fileOf(f) {

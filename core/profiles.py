@@ -428,18 +428,19 @@ def _day_of(J, r, b):
 
 
 def _part(J, hit, entity, whole):
-    """The entity's part of a payment's whole: its share of what the payment's bearers bear (`bear` of it, in its bean),
-    or the whole where none bears it or the entity bears none — exact, or None where a share is not read."""
-    from core import measures
+    """The entity's part of a payment's whole: its share of what the payment's bearers bear (`bear` of it, in its bean;
+    else of its agreement, core/shares.py), or the whole where none bears it or the entity bears none — exact, or None
+    where a share is not read."""
+    from core import measures, shares as dmshares
     pb, _i, _v, p = hit
     shares = {}
-    for _j, r in _live(pb, 'bear'):
-        if r.get('of') in (p.get('id'), f"{pb.id}#{p.get('id')}"):
-            s = r.get('share')
-            n = measures.exact(str(s.get('count') if isinstance(s, dict) else s)) if s is not None else 1
-            if n is None:
-                return None
-            shares[str(r.get('by'))] = shares.get(str(r.get('by')), 0) + n
+    own = [r for _j, r in _live(pb, 'bear') if r.get('of') in (p.get('id'), f"{pb.id}#{p.get('id')}")]
+    for r in dmshares.of_payment(J.G, pb.id, p, own)[0]:
+        s = r.get('share')
+        n = measures.exact(str(s.get('count') if isinstance(s, dict) else s)) if s is not None else 1
+        if n is None:
+            return None
+        shares[str(r.get('by'))] = shares.get(str(r.get('by')), 0) + n
     total = sum(shares.values())
     if entity not in shares or not total:
         return whole

@@ -95,6 +95,9 @@ th[aria-sort=descending] .eg-sort::after{content:" ▼";font-size:.7em}
 .eg-chart-table tr[data-party] th,.eg-chart-table tr[data-party] td{font-weight:400}
 .eg-chart-table tr.eg-warn th,.eg-chart-table tr.eg-warn td,.eg-nobody{color:#a0522d}
 .eg-why{color:var(--muted,#5a6a7b)}
+.eg-shares{margin-block:.25em;font-size:.95em}
+.eg-shares .eg-share-from{color:var(--muted,#5a6a7b)}
+.eg-shares .eg-owes{font-weight:600}
 .eg-account{margin-block:.3em .7em}
 .eg-account-says{font-weight:600;margin-block:.2em .3em}
 .eg-link{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline dotted}

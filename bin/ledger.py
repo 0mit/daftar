@@ -12,7 +12,8 @@ first time a transaction was added and the balance was not. So an agreement reco
 paid how much of it, who bears it in what shares — and this tool reads the rest, the same way every time:
 
   POSITION   per agreement and per currency, what each party paid less the share it bears. A single payer that states
-             no amount paid the whole; a transaction with no bearers is borne by whoever paid it. A payment a clause
+             no amount paid the whole; a transaction that names no bearers is borne in its agreement's shares (a `bear`
+             of the agreement itself, core/shares.py) unless it pays one of their bearers, else by whoever paid it. A payment a clause
              asks — the `of` of a position on the permission square: a rent, an instalment — is no payment made: it is
              read under its clause, and moves no position.
   WHO OWES   each bearer owes each payer its share of what that payer put in, and the two directions between a pair are
@@ -879,7 +880,8 @@ def core_agreement(b, G, units):
             tx['whole'], tx['unit'], tx['paid'] = C, str(ch.get('unit')), {r['by']: C}
             W = C
         shares, bad = {}, None
-        on = bears.get(key, [])
+        from core import shares as dmshares
+        on, tx['source'] = dmshares.of_payment(G, b.id, r, bears.get(key, []))     # its own, else its agreement's
         for bb in on:
             s = bb.get('share')
             if s is None and len(on) > 1:
@@ -896,6 +898,7 @@ def core_agreement(b, G, units):
             left(bad)
             continue
         total = sum(shares.values())
+        tx['shares'] = dict(shares)
         tx['borne'] = {p: Fraction(W * s, total) for p, s in shares.items()} if shares else dict(tx['paid'])
         if asked:
             continue
@@ -1058,6 +1061,14 @@ def agreement_json(ag, units, today):
             t['paid'] = [dict(figure(x, tx['unit'], units), by=p) for p, x in sorted(tx['paid'].items())]
             t['borne'] = [dict(figure(x, tx['unit'], units), by=p) for p, x in sorted(tx['borne'].items())]
             t['borne_by_payer'] = tx['borne'] == tx['paid']
+            # WHO BEARS IT, AND WHY: the shares as written, each a whole number of parts or a fraction (`shares`), where
+            # they come from — the payment's own, its agreement's, or the law's default (`source`) — and what each owes
+            # each payer of it (`owes`), as `owed` reads it
+            t['source'] = tx.get('source') or 'default'
+            if tx.get('shares'):
+                t['shares'] = [{'by': p, 'share': dmunits.show(x)} for p, x in sorted(tx['shares'].items())]
+            t['owes'] = [dict(figure(x, tx['unit'], units), **{'from': d, 'to': c})
+                         for (d, c), x in sorted(owed(tx).items()) if x]
         if tx.get('priced'):
             c, u = tx['priced']
             t['priced'] = figure(c, u, units)

@@ -887,6 +887,7 @@ def sheet(bid, may, held=None, records=None):
                 dependents.setdefault(by_id[x], []).append((k, v, r))
                 nested.add(k)
     derived = defaults_of(bid, may)
+    borne = shares_of(bid, may)
     rows = []
     for f in verbs_shown:
         sts = []
@@ -896,6 +897,8 @@ def sheet(bid, may, held=None, records=None):
             s = one(k, v, r)
             s['dependents'] = [one(dk, dv, dr) for dk, dv, dr in dependents.get(k, [])]
             s['defaults'] = derived.get(r.get('id'), []) if isinstance(r.get('id'), str) else []
+            if v == 'pay' and isinstance(r.get('id'), str) and r['id'] in borne:
+                s['shares'] = borne[r['id']]
             sts.append(s)
         rows.append({'verb': f, 'statements': sts, 'may_add': may_part(f)})
     verbs = sorted(set(verbs_shown) | {dv for ds in dependents.values() for _k, dv, _r in ds})
@@ -959,6 +962,40 @@ def defaults_of(bid, may=None):
                 shown = may is None or may('read', payers[0])
                 out[t['id']] = [{'verb': w, 'says': str(d.get('says') or ''), 'by': payers[0],
                                  'title': title_of(payers[0]) if shown else None, 'alone': bool(d.get('alone'))}]
+    return out
+
+
+def shares_of(bid, may=None):
+    """{payment id: shares} — who bears each payment of the bean, as bin/ledger.py reads it (core/shares.py): `source`
+    its own shares (`payment`), its agreement's (`agreement`) or the law's default (`default`: whoever paid bears it,
+    alone); each bearer's part of it as a fraction of the whole and an amount (`bearers`); and what each then owes each
+    payer (`owes`) — one line on its sheet. A being's title only where `may` lets the reader read it."""
+    if _bean(bid) is None or not any(v == 'pay' for _i, v, _r in _bean(bid).items):
+        return {}
+    import ledger as dmledger
+    from fractions import Fraction
+    import units as dmunits
+
+    def ratio(x):                 # a share is the fraction it is — a half as 1/2, never 0.5
+        return str(x.numerator) if x.denominator == 1 else f"{x.numerator}/{x.denominator}"
+
+    def who(x):
+        seen = isinstance(x, str) and _bean(x) is not None and (may is None or may('read', x))
+        return {'bean': x if seen else None, 'title': title_of(x) if seen else None,
+                **({'unknown': True} if x == 'unknown' else {} if seen else {'hidden': True})}
+    out = {}
+    for ag in dmledger.reading([bid])['agreements']:
+        for t in ag['transactions'] + ag.get('asked', []):
+            if not t.get('paid') or not t.get('whole'):
+                continue
+            borne = {x['by']: x['count'] for x in t.get('borne') or []}
+            written = {x['by']: Fraction(str(x['share'])) for x in t.get('shares') or []}
+            total = sum(written.values(), Fraction(0))
+            out[t['id']] = {'source': t.get('source') or 'default', 'unit': t['whole']['unit'],
+                            'bearers': [dict(who(b), share=ratio(written[b] / total) if total else '1', amount=x)
+                                        for b, x in borne.items()],
+                            'owes': [{'from': who(o['from']), 'to': who(o['to']), 'amount': o['count']}
+                                     for o in t.get('owes') or []]}
     return out
 
 

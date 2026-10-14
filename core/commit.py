@@ -432,10 +432,14 @@ def _closed(root, garden, closes, path, st_was, st_now):
         if v == 'bear' and isinstance(r.get('of'), str):
             bears.setdefault(here(r['of']), set()).add(str(r.get('by')))
 
+    from core import shares as dmshares
+    whole = {str(r.get('by')) for r in dmshares.of_agreement(garden, bid)}   # who bears what the agreement holds
+
     def read_by(v, r, entity, chart):
         if v == 'pay':
             ref = f"{bid}#{r['id']}"
             return entity in (str(r.get('by')), str(r.get('to'))) or entity in bears.get(ref, ()) \
+                or (not bears.get(ref) and entity in whole) \
                 or ref in booked.get(entity, ())
         if by(r) != entity:
             return False
