@@ -283,6 +283,21 @@ def _action_inputs(J, b, where, drawing, readings):
                                                  "empty: the tool acts on it"))
                 if i.get('origin') == CLOCK:
                     out.append((f"{w}.optional", "the clock's input is read by the reader, never left empty"))
+            # A LIST BESIDE A LIST (ratified 2026-10-14): two lists of one action, given row by row — a person beside
+            # their share. Both lists; the one it stands beside is one of this action's, and beside none itself.
+            if i.get('beside') is not None:
+                by_name = {x.get('name'): x for x in _listed(a.get('inputs')) if isinstance(x, dict)}
+                other = by_name.get(i.get('beside'))
+                if i.get('many') not in ('true', True):
+                    out.append((f"{w}.beside", "an input given beside a list is a list itself: `many: \"true\"`"))
+                if other is None or other is i:
+                    out.append((f"{w}.beside", f"{i.get('beside')!r}: no other input of this action"))
+                elif other.get('many') not in ('true', True):
+                    out.append((f"{w}.beside", f"{i.get('beside')!r} is no list: what a list stands beside is a list"))
+                elif other.get('beside') is not None:
+                    out.append((f"{w}.beside", f"{i.get('beside')!r} stands beside another itself: one list, one beside it"))
+                elif i.get('from') is not None or other.get('from') is not None:
+                    out.append((f"{w}.beside", "lists given row by row are a person's to give, never filled from the element"))
     return out
 
 

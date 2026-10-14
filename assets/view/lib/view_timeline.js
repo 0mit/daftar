@@ -44,12 +44,38 @@
         : (e.time ? w.moment.showTime(e.time) : '');
       return h`<li class="eg-event eg-${e.kind}" data-day="${e.day}">${w.being.show(e.bean, e.title, {action: 'open'})} ${what}</li>`;
     }
+    /* A DAY'S HOURS, AND WHAT IS KEPT IN VIEW (the operator, 2026-10-14). The day's width is divided among what takes
+       hours — an attendance or a session with its time and length that does not say it leaves them free
+       (`transparency`, core 2.7) — each its share by its minutes, opaque, earlier at the start of the reader's line, its
+       title under the day's label. What is kept in view without taking them — an attendance said transparent, a due
+       day, a moment with no length — is laid over them below that, the day's height divided among them. The label's
+       title is the day in the reader's calendars beside the one shown. */
+    var clock = function (tm) { return Number(tm.slice(0, 2)) * 60 + Number(tm.slice(3, 5)); };
+    var takes = function (e) { return Boolean(e.time && e.minutes && e.transparency !== 'transparent'); };
+    var EQUIV = ['persian', 'gregory', 'islamic-umalqura'];
+    function equivalents(day) {
+      var at = new Date(ms(day));
+      return EQUIV.filter(function (c) { return c !== cal; }).map(function (c) {
+        try {
+          return new Intl.DateTimeFormat(w.locale.tagWith(t.lang, {ca: c, nu: ns}), {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'}).format(at);
+        } catch (err) { return ''; }
+      }).filter(Boolean).join(' · ');
+    }
+    function strip(e) {
+      var a = clock(e.time), b = Math.min(1440, a + Number(e.minutes));
+      var span = w.moment.showTime(e.time) + '–' + w.moment.showTime(String(Math.floor(b / 60)).padStart(2, '0') + ':' + String(b % 60).padStart(2, '0'));
+      return h`<span class="eg-take" data-minutes="${String(e.minutes)}" title="${(e.title || '') + ' · '}${span}">${w.being.show(e.bean, e.title, {action: 'open'})}</span>`;
+    }
     function cell(day, gc, gr) {
       var cls = 'eg-day' + (day === data.today ? ' eg-today' : '') + (inSpan(day) ? '' : ' eg-beyond');
-      return h`<div class="${cls}" data-day="${day}"${gc ? h` data-gc="${String(gc)}"` : ''}${gr ? h` data-gr="${String(gr)}"` : ''}${
+      var all = by[day] || [], kept = all.filter(function (e) { return !takes(e); });
+      var taken = all.filter(takes).sort(function (x, y) { return clock(x.time) - clock(y.time); });
+      var shares = taken.map(function (e) { return String(Math.max(1, Math.round(Number(e.minutes)))) + 'fr'; }).join(' ');
+      return h`<div class="${cls}${taken.length ? ' eg-has-hours' : ''}" data-day="${day}"${gc ? h` data-gc="${String(gc)}"` : ''}${gr ? h` data-gr="${String(gr)}"` : ''}${
         inSpan(day) ? '' : h` title="${t.say('timeline-beyond')}"`}>
-        <div class="eg-day-head"><span class="eg-wd">${dayName.format(new Date(ms(day)))}</span> <span class="eg-dn">${dayNum(day)}</span></div>
-        <ol class="eg-events">${(by[day] || []).map(ev)}</ol></div>`;
+        ${taken.length ? h`<div class="eg-hours" data-cols="${shares}">${taken.map(strip)}</div>` : ''}
+        <div class="eg-day-head" title="${equivalents(day)}"><span class="eg-wd">${dayName.format(new Date(ms(day)))}</span> <span class="eg-dn">${dayNum(day)}</span></div>
+        <ol class="eg-events eg-kept">${kept.map(ev)}</ol></div>`;
     }
     function week() {
       var start = add(state.focus, -((weekday(state.focus) - first + 7) % 7)), days = [];

@@ -30,15 +30,65 @@
     // a line opens its being's sheet from its first cell: the title where the first column is the title, else a cell
     // of its own before the columns, holding the title
     var titled = cols.length && cols[0].path === 'title';
-    t.mount(el, h`<div class="eg-table-wrap"><table class="eg-table"><thead><tr>${titled ? '' : h`<th scope="col"></th>`}${cols.map(function (c) {
-      return h`<th scope="col" data-path="${c.path}">${w.text.show(c.label)}</th>`; })}</tr></thead><tbody>${rows.map(function (r) {
+    // EACH COLUMN SORTS ITS LINES (the operator, 2026-10-14): its head a button, once rising, again falling, by what the
+    // cells hold — an amount by its exact value, a day as the law writes it, a being by its title, words in the reader's
+    // language's order — never by the text drawn; an empty cell last either way. The lines are moved, nothing drawn again.
+    t.mount(el, h`<div class="eg-table-wrap"><table class="eg-table"><thead><tr>${titled ? '' : h`<th scope="col"></th>`}${cols.map(function (c, i) {
+      return h`<th scope="col" data-path="${c.path}" aria-sort="none"><button type="button" class="eg-sort" data-sort="${String(i)}">${w.text.show(c.label)}</button></th>`; })}</tr></thead><tbody>${rows.map(function (r, n) {
       var open = h`<th scope="row">${w.being.show(r.bean, r.title || r.bean, {action: 'open'})}</th>`;
-      return h`<tr data-bean="${r.bean}">${titled ? '' : open}${cols.map(function (c, i) {
+      return h`<tr data-bean="${r.bean}" data-line="${String(n)}">${titled ? '' : open}${cols.map(function (c, i) {
         return titled && i === 0 ? open : h`<td>${cell(r.cells[i])}</td>`;
       })}</tr>`;
     })}</tbody></table></div>${(data.notes || []).map(function (n) { return h`<p class="eg-partial">${w.text.show(n)}</p>`; })}`);
     t.wire(el);
+    sortable(el.querySelector('table.eg-table'), rows, titled, t);
   };
+
+  // a cell's key to sort by: [kind, value] — an amount (exact, n/d), a day or moment (as the law writes it), or words
+  var DAY = /^\d{4}-\d{2}-\d{2}/;
+  function keyOf(v, r, titled, i, w) {
+    if (titled && i === 0) return ['words', r.title || r.bean || ''];
+    var x = Array.isArray(v) ? v[0] : v;
+    if (x === undefined || x === null || x === '') return null;
+    if (typeof x === 'object' && x.count !== undefined) { var e = w.exact.of(x.count); return e ? ['amount', e] : null; }
+    if (typeof x === 'object') return ['words', String(x.title || x.name || x.value || x.bean || '')];
+    var s = String(x), e2 = /^-?\d+(\.\d+)?$|^-?\d+\/\d+$/.test(s) ? w.exact.of(s) : null;
+    if (e2) return ['amount', e2];
+    if (DAY.test(s)) return ['day', s];
+    return ['words', s];
+  }
+  function sortable(table, rows, titled, t) {
+    if (!table) return;
+    var w = t.w, words = new Intl.Collator(t.lang || undefined, {numeric: true, sensitivity: 'base'});
+    var by = {col: null, up: true};
+    function cmp(a, b) {
+      if (!a || !b) return a ? -1 : b ? 1 : 0;                       // an empty cell last
+      if (a[0] !== b[0]) return a[0] < b[0] ? -1 : 1;                 // amounts, days and words each among their own
+      if (a[0] === 'amount') { var l = a[1][0] * b[1][1], r = b[1][0] * a[1][1]; return l < r ? -1 : l > r ? 1 : 0; }
+      if (a[0] === 'day') return a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
+      return words.compare(a[1], b[1]);
+    }
+    table.addEventListener('click', function (ev) {
+      var btn = ev.target.closest('button.eg-sort');
+      if (!btn || !table.contains(btn)) return;
+      var col = Number(btn.dataset.sort);
+      by = {col: col, up: by.col === col ? !by.up : true};
+      var body = table.tBodies[0], lines = Array.prototype.slice.call(body.rows);
+      var keyed = lines.map(function (tr) {
+        var n = Number(tr.dataset.line), r = rows[n] || {cells: []};
+        return {tr: tr, n: n, k: keyOf(r.cells[col], r, titled, col, w)};
+      });
+      keyed.sort(function (a, b) {
+        if (!a.k || !b.k) return cmp(a.k, b.k) || a.n - b.n;            // empty last, rising or falling
+        return (by.up ? cmp(a.k, b.k) : cmp(b.k, a.k)) || a.n - b.n;
+      });
+      keyed.forEach(function (x) { body.appendChild(x.tr); });
+      Array.prototype.forEach.call(table.tHead.rows[0].cells, function (th) {
+        var b = th.querySelector('button.eg-sort');
+        th.setAttribute('aria-sort', b && Number(b.dataset.sort) === col ? (by.up ? 'ascending' : 'descending') : 'none');
+      });
+    });
+  }
 
   // A TABLE OF A CHART'S CODES: the books of one being, an account a line, its figures read by the accounting asset
   function chart(el, data, t) {

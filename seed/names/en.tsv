@@ -177,6 +177,7 @@ qualifiers:sense	sense	sensus (a perceiving; in geometry the way a direction run
 qualifiers:series	series	series (a row, from serere, to join)	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	settles	setl (Old English: a seat): which occurrences of which clauses it pays, and how much	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	share	scearu (Old English: a cutting, a division)	proposed	agent (claude opus-5.5), by hand
+qualifiers:transparency	transparency	trans (through) + parere (to appear): iCalendar's TRANSP — opaque takes the time, transparent leaves it free	proposed	agent (claude opus-5.5), by hand
 qualifiers:value	value	valere (to be strong, to be worth)	proposed	agent (claude opus-5.5), by hand
 qualifiers:walk	walk	wealcan (Old English: to roll, to go): how a walk goes at a step	proposed	agent (claude opus-5.5), by hand
 qualifiers:weighing	weighing	wegan (to weigh): the judgments, pair by pair	proposed	agent (claude opus-5.5), by hand

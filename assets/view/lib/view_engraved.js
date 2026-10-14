@@ -107,7 +107,9 @@
   function head(t, view) {
     var h = t.h, e = view.engraved || {};
     return h`<div class="eg-head">${(e.new || []).length ? h`<span class="eg-new">${e.new.map(function (k) {
-      return h`<button type="button" class="eg-btn" data-new="${k}">+ ${t.say('sheet-new')} ${t.name('kinds', k)}</button>`; })}</span>` : ''}</div>`;
+      // «+» says «new» enough (the operator, 2026-10-14): the kind beside it; its whole name for the reader's ear and tooltip
+      var add = t.say('sheet-new-kind', {kind: t.name('kinds', k)});
+      return h`<button type="button" class="eg-btn" data-new="${k}" aria-label="${add}" title="${add}">+ ${t.name('kinds', k)}</button>`; })}</span>` : ''}</div>`;
   }
 
   function mount(el, view, state) {

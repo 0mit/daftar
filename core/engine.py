@@ -1274,6 +1274,8 @@ class Judge:
             for i, verb, r in b.items:
                 if verb != 'attend' or 'held' in r or (b.id, i) in declined:
                     continue
+                if r.get('transparency') == 'transparent':   # kept in view, its hours free: it takes no one's time
+                    continue
                 sp = self._span(r.get('at'), True)
                 for t in self._beans_in(r.get('of'), b) if sp is None else []:
                     sp = next((s for _j, v2, r2 in self.G.beans[t].items if v2 == 'be' and 'held' not in r2
@@ -1289,6 +1291,8 @@ class Judge:
             for b in self.G.beans.values():
                 for i, verb, r in b.items:
                     if verb != x.get('verb') or 'held' in r or (b.id, i) in declined:
+                        continue
+                    if r.get('transparency') == 'transparent':   # kept in view, holding no one: as above
                         continue
                     sp = self._span(r.get('at'))
                     for w in self._beans_in(r.get('by'), b) if sp else []:

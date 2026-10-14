@@ -16,7 +16,16 @@
 .eg-layouts,.eg-nav{display:inline-flex;gap:4px}
 .eg-label{font-weight:600}
 .eg-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.eg-day{border:1px solid var(--line,#cfd8e2);border-radius:6px;padding:4px 6px;min-height:4.5em;font-size:.9em}
+.eg-day{border:1px solid var(--line,#cfd8e2);border-radius:6px;padding:4px 6px;min-height:4.5em;font-size:.9em;position:relative;display:flex;flex-direction:column;overflow:hidden}
+.eg-day.eg-has-hours{min-height:6em}
+.eg-hours{position:absolute;inset:0;display:grid;grid-template-columns:1fr;grid-auto-flow:column;z-index:0}
+.eg-take{grid-row:1;min-width:0;background:var(--take,#c9dfd4);opacity:1;overflow:hidden;white-space:nowrap;font-size:.78em;padding-block-start:1.9em;border-inline-end:2px solid var(--panel,#fff)}
+.eg-take:nth-child(even){background:var(--take-2,#b5d3c4)}
+.eg-has-hours .eg-kept{margin-block-start:1.5em}
+.eg-take .w-being{display:block;overflow:hidden;text-overflow:ellipsis;padding-inline:2px}
+.eg-day-head,.eg-kept{position:relative;z-index:1}
+.eg-kept{flex:1;display:flex;flex-direction:column;gap:2px}
+.eg-kept .eg-event{flex:1;margin:0;padding:1px 4px;border-radius:4px;background:color-mix(in srgb,var(--panel,#fff) 82%,transparent);border-inline-start:3px solid var(--accent,#ff9d4a)}
 .eg-day.eg-today{border-color:var(--accent,#ff9d4a)}
 .eg-day.eg-beyond{opacity:.5}
 .eg-day-head{color:var(--muted,#5a6a7b);font-size:.85em;margin-block-end:3px}
@@ -40,6 +49,14 @@
 .eg-held{font-size:.82em;color:#8250df;margin-inline-start:6px}
 .eg-dependents{margin-inline-start:14px;margin-block-start:4px;border-inline-start:2px solid var(--line,#cfd8e2);padding-inline-start:8px}
 .eg-field{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-block:3px}
+.eg-rows{border-collapse:collapse;margin-block:4px;width:100%}
+.eg-rows th,.eg-rows td{padding:3px 6px;border-block-end:1px solid var(--line,#cfd8e2);text-align:start}
+.eg-rows .w-num-input{width:6em}
+.eg-sort{all:unset;cursor:pointer;font:inherit;color:inherit}
+.eg-sort:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+th[aria-sort=ascending] .eg-sort::after{content:" ▲";font-size:.7em}
+th[aria-sort=descending] .eg-sort::after{content:" ▼";font-size:.7em}
+.eg-field textarea{flex:1 1 100%;width:100%;min-width:0;min-height:4.5em;box-sizing:border-box;resize:vertical}
 .eg-req-word{color:#a0522d}
 .eg-err{color:#f85149;font-size:.85em}
 .eg-err:empty{display:none}

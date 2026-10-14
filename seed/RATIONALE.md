@@ -3547,6 +3547,21 @@ a name lapsing is known ninety days ahead or it is lost, and a lease is known si
 its default is too short, and `bin/dmstale.py` reads it there — it once named a term and its date in its own source,
 which left every other agreement that ages first-class to the gate and invisible to the tool.
 
+## core/law/verbs.yaml: verbs[attend]
+
+(ratified by the operator, 2026-10-14)
+
+AN ATTENDANCE TAKES THE HOURS OF THOSE PRESENT, UNLESS IT SAYS IT DOES NOT. Attending has always taken the time of whoever
+attends, and the `room` rule holds it to that: nobody spends one hour twice. But a calendar keeps things a person attends
+without giving them the hours — a course followed in the background, a holiday kept in view, a window someone else's work
+fills — and a calendar with only one kind has to leave them out or show the person as twice busy. The law took
+iCalendar's answer rather than inventing one (RFC 5545 §3.8.2.7, TRANSP): an event is OPAQUE, taking the time, or
+TRANSPARENT, its time free for another. `transparency` is a row of that table, so an import or export of a calendar maps
+it one to one; left out, an attendance is opaque, as every attendance written before it was. A transparent attendance is
+outside the `room` rule's hours, and a calendar draws the two apart: the hours taken as the width of a day, the
+attendances kept in view beside them. The word is not a flag of daftar's own because a standard already says it, and the
+law prefers a standard's table to a word of its own (`tables`).
+
 ## core/law/verbs.yaml: verbs[pay]
 
 (std-vocab 32: `terms[transactions]`)

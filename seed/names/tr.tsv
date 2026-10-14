@@ -177,6 +177,7 @@ qualifiers:sense	yön	yön (a direction, the way one faces): along a move's dire
 qualifiers:series	dizi	dizmek (to string, to line up)	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	mahsup	Arabic maḥsūb (reckoned): set against what was owed	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	pay	pay (a share, a portion)	proposed	agent (claude opus-5.5), by hand
+qualifiers:transparency	meşguliyet	meşgul (Arabic شغل, occupied): whether it takes the hours — meşgul (opaque) or boş (transparent)	proposed	agent (claude opus-5.5), by hand
 qualifiers:value	değer	değmek (to touch, to be worth)	proposed	agent (claude opus-5.5), by hand
 qualifiers:walk	süreç	sürmek (to drive on, to last): a course	proposed	agent (claude opus-5.5), by hand
 qualifiers:weighing	karşılaştırmalar	karşı (opposite): set against each other	proposed	agent (claude opus-5.5), by hand

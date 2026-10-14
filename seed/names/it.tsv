@@ -177,6 +177,7 @@ qualifiers:sense	verso	vertere (to turn: il verso di un vettore, beside its dire
 qualifiers:series	serie	series (a row, from serere, to join): what a line held at each position	proposed	agent (claude opus-5.5), by hand
 qualifiers:settles	estinzione	exstinguere (to put out): an obligation put out by payment — which occurrences of which clauses it settles	proposed	agent (claude opus-5.5), by hand
 qualifiers:share	quota	quota pars (how great a part): one's portion of a cost	proposed	agent (claude opus-5.5), by hand
+qualifiers:transparency	occupazione	occupare (to take up): whether it takes the hours — occupato (opaque) or libero (transparent)	proposed	agent (claude opus-5.5), by hand
 qualifiers:value	valore	valere (to be strong, to be worth): the value a measuring read	proposed	agent (claude opus-5.5), by hand
 qualifiers:walk	percorso	percursus (a running through): how a walk goes at a step	proposed	agent (claude opus-5.5), by hand
 qualifiers:weighing	confronti a coppie	confrontare (to set face to face) + copula (a pair): the judgments, pair by pair	proposed	agent (claude opus-5.5), by hand

@@ -86,7 +86,19 @@ ok('fa: Persian digits and separators, from CLDR', () => {
 ok('fa: money at the currency\'s places, an uneven amount said in Persian', () => {
   assert.equal(strip(money.show('260.5', 'TRY')), '۲۶۰٫۵۰ TRY');
   assert.equal(strip(money.show('1500', 'JPY')), '۱٬۵۰۰ JPY');
-  assert.ok(String(money.show('9650/3', 'TRY')).includes('w-uneven') && String(money.show('9650/3', 'TRY')).includes('بند'));
+  // AT THE CURRENCY'S PLACES, ROUNDED FOR THE EYE (the operator, 2026-10-14): an amount that does not end there is shown
+  // rounded half away from zero, marked, its exact amount in the mark's title; the exact is what is kept and summed
+  const third = String(money.show('9650/3', 'TRY'));
+  assert.equal(strip(third), '۳٬۲۱۶٫۶۷* TRY');
+  assert.ok(third.includes('w-rounded') && third.includes('۳٬۲۱۶ ۲/۳'), third);
+  assert.equal(strip(money.show('1351.565', 'TRY')), '۱٬۳۵۱٫۵۷* TRY');
+  assert.equal(strip(money.show('-1351.565', 'TRY')), '−۱٬۳۵۱٫۵۷* TRY');
+  assert.equal(strip(money.show('0.004', 'TRY')), '۰٫۰۰* TRY');
+  assert.equal(strip(money.show('2.5', 'JPY')), '۳* JPY');
+  assert.equal(money.text('9650/3', 'TRY'), '\u2066۳٬۲۱۶٫۶۷\u2069 TRY');
+  assert.ok(String(money.show('9650/3', 'TRY', {exact: true})).includes('w-frac'));          // the exact, where it is asked
+  assert.ok(String(money.show('200/3', 'XTS')).includes('w-frac'));                          // a unit with no places: exact
+  assert.ok(String(money.show('200/3', 'XTS')).includes('بند'));
   assert.ok(money.uneven('9650/3', 'TRY') && money.negative('-2/3') && money.sign('0.00') === 0 && money.sign('-1') === -1);
   assert.ok(money.take('100.255', 'TRY').error);
 });

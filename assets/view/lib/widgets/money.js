@@ -1,7 +1,12 @@
 // money (core/law/values.yaml: money, a quantity): the number widget is its digits, at the currency's places
 // (quantities.yaml money: units_from currencies, digits); the currency's label stays outside the number's isolate, in
-// the sentence's own direction. An amount that does not come out even in those places is shown as the fraction it is
-// and says so, never rounded: who takes the remainder is a clause, not arithmetic.
+// the sentence's own direction.
+//
+// AT THE CURRENCY'S PLACES, ROUNDED FOR THE EYE (the operator, 2026-10-14): an amount that does not end at its
+// currency's places is shown rounded to them, half away from zero, with a mark whose title says so and gives the exact
+// amount. Only the showing rounds: what is kept, summed and compared is the exact amount (exact.js, n/d where it is
+// uneven), and who takes a remainder stays a clause of the agreement, never arithmetic. A unit with no places (none
+// known for it) is shown exactly, the fraction it is; `exact: true` asks the exact anywhere.
 import { h } from './safe.js';
 import { settings } from './settings.js';
 import { langOf, say } from './locale.js';
@@ -28,20 +33,43 @@ function labelOf(unit, o) {
   return unit;
 }
 export const places = unit => settings.places[unit];
+// the amount at `places`, rounded half away from zero, as the law writes a count; null where it ends there already
+export function rounded(v, places) {
+  const p = number.parse(v);
+  if (!p || places === undefined) return null;
+  let n = p.whole * p.den + p.rest, d = p.den;
+  if (p.decimals) {
+    d = 10n ** BigInt(p.decimals.length);
+    n = p.whole * d + BigInt(p.decimals);
+  }
+  const scale = 10n ** BigInt(places);
+  if ((n * scale) % d === 0n) return null;
+  const q = n * scale / d + (2n * ((n * scale) % d) >= d ? 1n : 0n);
+  const s = q.toString().padStart(places + 1, '0');
+  const neg = p.neg && q !== 0n ? '-' : '';
+  return neg + (places ? s.slice(0, -places) + '.' + s.slice(-places) : s);
+}
 // options: label 'code'|'name'|'none'; abs (no sign); everything number.show takes
 export function show(v, unit, o = {}) {
   const at = o.places ?? settings.places[unit];
   const value = o.abs ? String(v ?? '').trim().replace(/^-/, '') : v;
-  const p = number.parts(value, {...o, places: at});
-  const n = number.show(value, {...o, places: at});
-  const said = say('uneven', o);
-  const flag = p && p.uneven ? h`<span class="w-uneven" title="${said}" aria-label="${said}">*</span>` : '';
+  const round = o.exact ? null : rounded(value, at);
+  let flag = '';
+  if (round !== null) {
+    const said = say('rounded', o, {exact: number.count(value, o)});
+    flag = h`<span class="w-uneven w-rounded" title="${said}" aria-label="${said}">*</span>`;
+  } else {
+    const p = number.parts(value, {...o, places: at});
+    const said = say('uneven', o);
+    flag = p && p.uneven ? h`<span class="w-uneven" title="${said}" aria-label="${said}">*</span>` : '';
+  }
+  const n = number.show(round ?? value, {...o, places: at});
   const label = labelOf(unit, o);
   return label ? h`<span class="w-money">${n}${flag} <span class="w-unit">${label}</span></span>` : h`<span class="w-money">${n}${flag}</span>`;
 }
 export function text(v, unit, o = {}) {
-  const label = labelOf(unit, o);
-  return number.text(v, {...o, places: o.places ?? settings.places[unit]}) + (label ? ' ' + label : '');
+  const label = labelOf(unit, o), at = o.places ?? settings.places[unit];
+  return number.text((o.exact ? null : rounded(v, at)) ?? v, {...o, places: at}) + (label ? ' ' + label : '');
 }
 export const take = (input, unit, o = {}) => number.take(input, {...o, places: settings.places[unit]});
 export const edit = (name, value, unit, o = {}) => number.edit(name, value, o);

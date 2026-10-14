@@ -10,7 +10,7 @@ read (it has no width). Then:
                  fraction, inside a sentence of the other script, in a page of either direction, two side by side; a
                  right-to-left override held inside an isolate, and the same override, not held, reaching what follows
                  it — the lab's cases, their values invented
-  the widgets    what money.js writes — an amount, an uneven one, a negative one — read in both directions, and never the
+  the widgets    what money.js writes — an amount, an uneven one rounded and asked exactly, a negative one — read in both directions, and never the
                  form the lab found broken (a conjunction or a plain slash inside a number, a mark in place of an
                  isolate)
   the drawings   the design's seven cases, drawn by the renderers themselves: a week row whose first day is the reader's
@@ -98,13 +98,15 @@ try {
   out.cases.flowEn = flow('ltr', 'en', 'Sam', 'Ali');
   // 3. AN AMOUNT AND ITS CURRENCY INSIDE RIGHT-TO-LEFT TEXT, and one that does not come out even
   page('rtl', 'fa'); let d = box('rtl');
-  W.safe.mount(d, W.safe.h`<span id="m1">مانده ${W.money.show('312.50', 'XTS')} است</span> <span id="m2">${W.money.show('200/3', 'XTS', {fraction: 'inline'})}</span>`);
+  W.safe.mount(d, W.safe.h`<span id="m1">مانده ${W.money.show('312.50', 'XTS')} است</span> <span id="m2">${W.money.show('200/3', 'XTS', {fraction: 'inline', exact: true})}</span>`);
   out.cases.amount = visual(d.querySelector('#m1')); out.cases.uneven = visual(d.querySelector('#m2'));
+  d = box('rtl'); W.safe.mount(d, W.safe.h`<span id="m4">مانده ${W.money.show('200/3', 'XTS')} است</span>`);
+  out.cases.rounded = visual(d.querySelector('#m4'));
   page('ltr', 'en'); d = box('ltr');
   W.safe.mount(d, W.safe.h`<span id="m3">Balance ${W.money.show('-1234', 'XTS')}</span>`);
   out.cases.amountEn = visual(d.querySelector('#m3'));
   page('rtl', 'fa'); d = box('rtl');
-  W.safe.mount(d, W.safe.h`<span id="f1">${W.money.show('200/3', 'XTS')}</span> <span id="f2">${W.money.show('-1234', 'XTS')}</span>`);
+  W.safe.mount(d, W.safe.h`<span id="f1">${W.money.show('200/3', 'XTS', {exact: true})}</span> <span id="f2">${W.money.show('-1234', 'XTS')}</span>`);
   out.cases.forms = ['#f1', '#f2'].map(s => { const n = d.querySelector(s + ' .w-num');
     return {text: n.textContent, isolate: n.tagName === 'BDI' && n.getAttribute('dir') === 'ltr'}; });
   // 4. A SHEET'S LABEL AND A LATIN VALUE: a phone and a mail, in a right-to-left page
@@ -196,8 +198,10 @@ try:
     check("flow, ltr: the arrow turns with the script — «Sam → Ali»", C.get('flowEn') == 'Sam → Ali', C.get('flowEn'))
     check("amount, rtl: inside a Persian sentence the number reads as written and its code follows it on the line",
           C.get('amount') == 'تسا XTS ۳۱۲٫۵۰ هدنام', C.get('amount'))
-    check("amount, rtl: one that does not come out even is the fraction it is, marked, never rounded — «۶۶ ۲⁄۳»",
-          C.get('uneven') == 'XTS *۶۶ ۲⁄۳', C.get('uneven'))
+    check("amount, rtl: one that does not come out even is shown at the currency's places, rounded and marked "
+          "(the operator, 2026-10-14) — «۶۶٫۶۷*», inside right-to-left text as a whole amount is",
+          C.get('rounded') == 'تسا XTS *۶۶٫۶۷ هدنام', C.get('rounded'))
+    check("...and asked exactly, the fraction it is, marked — «۶۶ ۲⁄۳»", C.get('uneven') == 'XTS *۶۶ ۲⁄۳', C.get('uneven'))
     check("amount, ltr: a negative amount, its sign first", C.get('amountEn') == 'Balance −1,234.00 XTS', C.get('amountEn'))
     check("sheet, rtl: a phone reads left to right as it is written, beside its label", C.get('phone', '').endswith('+1 555 555 0100')
           or C.get('phone', '').startswith('+1 555 555 0100'), C.get('phone'))

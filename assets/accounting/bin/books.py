@@ -162,7 +162,9 @@ OPS = {'book': ('a payment booked where it belongs', 'booked',
                  "An account of the chart added beneath its parent, or changed — a row of the garden's own table: `code`, "
                  '`name`, `parent`, `level`, `element`, `stands-for`, `parties`, `role`, `closed`, `name-<lang>`.'),
        'import': ("a bank's statement read into the garden", 'imported',
-                  "A statement file read into a bean of its lines: `file`, `format`, `means`, `mapping`, `statement`.")}
+                  "A statement file read into a bean of its lines: `file`, `format`, `means`, `mapping`, `statement`."),
+       'share': ("a payment's cost, borne by whom in what parts", 'shared',
+                 "Who bears a payment's cost, each with a whole number of parts, beside them: `of`, `who`, `share`.")}
 
 
 def setup(argv):
