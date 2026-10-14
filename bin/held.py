@@ -482,11 +482,11 @@ def check(*, root=ROOT, host=None, beans=None):
 
 def due(*, root=ROOT, beans=None, days=30):
     """[(bean, term, label, days left)] of sealed entries whose `until` falls within `days`."""
-    import time
     import cal as dmcal
     # today in cal's count of days, as `until` is read: the count since 1970 (about 20,700 against about 739,000) put
-    # every `until` two thousand years off, and no sealed entry was ever due
-    today = dmcal.to_day(time.strftime('%Y-%m-%d', time.gmtime(time.time())))
+    # every `until` two thousand years off, and no sealed entry was ever due. And the garden's today, in its zone: UTC's
+    # was a day behind east of UTC in the small hours (bin/pass.py `today_in`)
+    today = dmpass.today_in(dmpass.zone_of(root))
     out = []
     for bid, fm in sorted((beans or dmpass.beans_here(root)).items()):
         for t, label, e in _pointers(fm):
