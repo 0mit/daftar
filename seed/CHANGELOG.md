@@ -251,6 +251,31 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.7** (2026-10-14, daftar v2.7.0, human-ratified rule-changes: an attendance that says it does not take its
+  hours, `transparency`, a row of iCalendar's TRANSP; and a page action's list given row by row beside another,
+  `beside`) — **a garden held in its daemon's memory and answered from it; a calendar's day drawn as the hours taken
+  and what is kept in view; a card's purchase shared from one form; the view's numbers, lists and words for their
+  reader.** MINOR: nothing a garden could write under core 2.6 is refused.
+  - Speed (not a rule-change), asked by the operator for answers in under a millisecond:
+    - `Garden.read` holds a garden per version of its files — each document's stat, GARDEN.md's, git's index and HEAD —
+      a document changed read again alone, a racily written one judged by its bytes; each reader is given a copy of its
+      own over beans never changed, which `DAFTAR_HELD_CHECK=1` proves; a reckoning's views made once per version
+      (#216). One of a garden's pages, 9.9 s before, 0.25 s.
+    - daftard (daftar-hub) holds each page's answer per version and answers from memory, and runs one daemon per
+      garden, kept by the machine's (its own release).
+  - The calendar: `attend` takes `transparency` — `opaque`, taking the hours of those present, as every attendance did
+    and does when it says nothing, or `transparent`, kept in view with its hours free; the `room` rule holds a
+    transparent attendance in neither of its halves. A day's cell is its width shared among what takes hours, each by
+    its minutes, opaque, earlier first along the reader's line; what is kept in view laid below its label, the day's
+    height divided among them; the label's title the day in the reader's other calendars.
+  - The books: a page action's input may stand `beside` another list of it, both drawn as one table, a row each, and
+    handed to the tool aligned; the books' walk `share` writes who bears a payment's cost, each in whole parts, from
+    one form listing people with a share each, in place of whoever bore it before.
+  - The view: a page's new-being button is «+» and the kind, its whole name its label; a summary being edited takes
+    its field's width; money is shown at its currency's places, rounded half away from zero and marked, the exact
+    amount kept in every sum and given in the mark's title, proportions as the fractions they are; a reading's table
+    sorts by each column, by what the cells hold.
+
 - **core 2.6** (2026-10-14, daftar v2.6.0, human-ratified rule-changes: a held record opened only by a grant that
   names it, #184; held records written from a page and a person reading what is held of them, #192, #193; the books —
   a chart held to its form, a booking a move, its reverse, a match — with their Persian names confirmed, #190, #191; the
