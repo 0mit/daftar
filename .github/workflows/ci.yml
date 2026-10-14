@@ -80,6 +80,9 @@ jobs:
       - name: "core_speed: what makes the gate fast, held to the same verdicts — libyaml's loader or the pure one, held's question in one git process, the gate and held in one Python, the law's self-check once per version, the room graph once per judge"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_speed.py
+      - name: "core_held: the garden held — read again, the same garden while nothing it was read from changed; a document changed, added or removed, GARDEN.md, the index, a racily written file and a worktree each seen; DAFTAR_HELD_CHECK names a reader that changes what is held"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/core_held.py
       - name: "core_ported: where each of today's suites and each check of today's gate went in v1 — none waiting — and today's words read only from v0.49.0, held to the tree"
         run: python3 test/core_ported.py
       - name: "core_exact: a count is exact everywhere it is read — rates between currencies, and no float in the code"

@@ -82,21 +82,37 @@ class Garden:
     @classmethod
     def read(cls, root):
         """A garden from its tree: `beans/**/*.md` and `mappings/**/*.md`, GARDEN.md's `zone`, and the files git tracks
-        (or the tree's)."""
-        beans = {}
-        for dirpath, _dirs, names in [w for d in DOCUMENTS for w in os.walk(os.path.join(root, d))]:
-            for n in sorted(names):
-                if not n.endswith('.md'):
-                    continue
-                p = os.path.join(dirpath, n)
-                bid = n[:-3]
-                try:
-                    head, body = read.document(p)
-                    with open(p, encoding='utf-8') as fh:
-                        raw = dmparse.split_front_matter(fh.read())[0]
-                    beans[bid] = Bean(bid, p, head, raw=raw, body=body)
-                except read.Unread as e:
-                    beans[bid] = Bean(bid, p, unread=str(e))
+        (or the tree's).
+
+        HELD (2026-10-14): in a git work tree, a process that reads the garden again — daftard's worker draws one page
+        from a hundred readings, and each read the whole garden — is given the garden it read before while nothing it
+        was read from has changed: each document's stat, GARDEN.md's, and git's index and HEAD (the files git tracks,
+        and the history the garden's id is read from). A document that changed is read again alone; one written within
+        the last RACY seconds is compared by its content, as git does a racily clean file. Each reader is given a
+        garden of its own (`copy`: its own mapping of beans, its files and manifest) over the beans held, so one that
+        puts a bean in place or filters the mapping changes only its own; the beans themselves are shared and never
+        changed — DAFTAR_HELD_CHECK=1 makes each hand-out prove it (test/core_held.py). `held` names the version read
+        (readers that keep what they made of a garden key it so); DAFTAR_HELD=0 reads afresh every time."""
+        if os.environ.get('DAFTAR_HELD', '1') == '0':
+            return cls._fresh(root)
+        return _held(cls, root)
+
+    held = None                            # the version of the garden held this was read at (Garden.read), or None
+
+    def copy(self):
+        """A garden of its own to change — a bean put in its place, the mapping filtered, a file added — over the same
+        beans, which are never changed (Garden.read)."""
+        g = Garden(dict(self.beans), self.zone, list(self.files), self.root, dict(self.manifest), self.gid)
+        g.has_manifest, g.manifest_unread, g.held = self.has_manifest, self.manifest_unread, self.held
+        return g
+
+    @classmethod
+    def _fresh(cls, root, beans=None):
+        """The garden read from its tree, each document read now unless `beans` gives it already read."""
+        if beans is None:
+            beans = {}
+            for p, bid in _documents(root):
+                beans[bid] = _bean(p, bid)
         manifest, unread = {}, None
         if os.path.isfile(os.path.join(root, 'GARDEN.md')):
             try:
@@ -112,6 +128,161 @@ class Garden:
         g = cls(beans, manifest.get('zone'), _files(root), root, manifest, gid)
         g.has_manifest, g.manifest_unread = os.path.isfile(os.path.join(root, 'GARDEN.md')), unread
         return g
+
+
+def _documents(root):
+    """(path, bean id) of each document of the garden, in the order Garden.read has always read them."""
+    for d in DOCUMENTS:
+        for dirpath, _dirs, names in os.walk(os.path.join(root, d)):
+            for n in sorted(names):
+                if n.endswith('.md'):
+                    yield os.path.join(dirpath, n), n[:-3]
+
+
+def _bean(p, bid):
+    """One document read as a Bean, or as the Bean that says why it could not be read."""
+    try:
+        head, body = read.document(p)
+        with open(p, encoding='utf-8') as fh:
+            raw = dmparse.split_front_matter(fh.read())[0]
+        return Bean(bid, p, head, raw=raw, body=body)
+    except read.Unread as e:
+        return Bean(bid, p, unread=str(e))
+
+
+# ------------------------------------------------------------------------------------------------ the garden held
+RACY = 2                # seconds: a file written this recently may be written again within its own timestamp
+_HELD = {}              # (root as given, the directory it is relative to) -> (token, garden, print or None)
+_DOCS = {}              # a document's path -> (stat, digest of its bytes, Bean)
+_GIT = {}               # (root, …) -> (git dir, common dir), or None outside a work tree
+_PRINTS = {}            # id of a Bean held -> its print as read (DAFTAR_HELD_CHECK)
+
+
+class _Kept:
+    """Beans as a garden would hold them, for `_changed` to look over before a garden is made of them."""
+
+    def __init__(self, beans):
+        self.beans = beans
+
+
+def _stat(p):
+    try:
+        st = os.stat(p)
+    except OSError:
+        return None
+    return st.st_ino, st.st_mtime_ns, st.st_size
+
+
+def _digest(p):
+    import hashlib
+    try:
+        with open(p, 'rb') as fh:
+            return hashlib.blake2b(fh.read(), digest_size=20).digest()
+    except OSError:
+        return None
+
+
+def _gitdirs(key, root):
+    if key not in _GIT:
+        try:
+            r = subprocess.run(['git', '-C', root, 'rev-parse', '--absolute-git-dir', '--git-common-dir'],
+                               capture_output=True, text=True, encoding='utf-8', timeout=10)
+            lines = r.stdout.split('\n')
+            if r.returncode != 0 or len(lines) < 2 or not lines[0]:
+                _GIT[key] = None
+            else:
+                common = lines[1] if os.path.isabs(lines[1]) else os.path.join(root, lines[1])
+                _GIT[key] = (lines[0], os.path.abspath(common))
+        except (OSError, subprocess.SubprocessError):
+            _GIT[key] = None
+    return _GIT[key]
+
+
+def _token(root, dirs):
+    """What a read of the garden depends on, as its files' stat, and the files written too recently to be judged so."""
+    gitdir, common = dirs
+    docs = [(p, bid, _stat(p)) for p, bid in _documents(root)]
+    head = os.path.join(gitdir, 'HEAD')
+    try:
+        with open(head, encoding='utf-8') as fh:
+            ref = fh.read().strip()
+    except OSError:
+        ref = ''
+    gits = [os.path.join(root, 'GARDEN.md'), os.path.join(gitdir, 'index'), head, os.path.join(common, 'packed-refs')]
+    if ref.startswith('ref: '):
+        gits.append(os.path.join(common, ref[5:]))
+    gits = [(p, _stat(p)) for p in gits]
+    import time
+    recent = time.time_ns() - RACY * 1_000_000_000
+    racy = [p for p, _bid, st in docs if st and st[1] >= recent] + [p for p, st in gits if st and st[1] >= recent]
+    # a file written within RACY seconds is judged by its bytes too: its stat alone could hide a second write
+    return (tuple((p, st) for p, _bid, st in docs), tuple(gits), ref, tuple((p, _digest(p)) for p in racy)), docs, racy
+
+
+def _beanprint(b):
+    """What a reader could change in a bean held, as one digest (DAFTAR_HELD_CHECK): taken when it is read from its
+    file, so no later reading of the garden can take a changed bean for the one read."""
+    import hashlib
+    return hashlib.blake2b(repr((b.id, b.path, b.kind, b.header, b.statements, b.items, b.ids, b.raw, b.body,
+                                 b.unread)).encode(), digest_size=20).digest()
+
+
+def _print(g):
+    """What a reader could change in a garden held beyond its beans, as one digest (DAFTAR_HELD_CHECK)."""
+    import hashlib
+    return hashlib.blake2b(repr((sorted(g.beans), g.zone, g.files, g.root, g.manifest, g.gardener, g.gid,
+                                 g.has_manifest, g.manifest_unread)).encode(), digest_size=20).digest()
+
+
+def _changed(g, prints):
+    """The first bean of the garden held, or the garden itself, that no longer is as it was read; None."""
+    for bid, b in g.beans.items():
+        if prints.get(id(b)) is not None and _beanprint(b) != prints[id(b)]:
+            return bid
+    return None
+
+
+class HeldChanged(RuntimeError):
+    """A reader changed the garden it was given while it was held for the next one."""
+
+
+def _held(cls, root):
+    key = (root, None if os.path.isabs(root) else os.getcwd())
+    dirs = _gitdirs(key, root)
+    if dirs is None:
+        return cls._fresh(root)
+    token, docs, racy = _token(root, dirs)
+    check = os.environ.get('DAFTAR_HELD_CHECK') == '1'
+    was = _HELD.get(key)
+    if was is not None and was[0] == token:
+        if check and (_print(was[1]) != was[2] or _changed(was[1], _PRINTS)):
+            raise HeldChanged(f"a reader changed the garden held for {root!r} "
+                              f"({_changed(was[1], _PRINTS) or 'its mapping, files or manifest'}): a held garden is "
+                              f"read, never written")
+        return was[1].copy()
+    beans, recent = {}, set(racy)
+    for p, bid, st in docs:
+        kept = _DOCS.get(p)
+        if kept is not None and kept[0] == st and p not in recent:
+            beans[bid] = kept[2]
+            continue
+        dg = _digest(p)
+        if kept is not None and kept[1] == dg and dg is not None:
+            _DOCS[p] = (st, dg, kept[2])
+            beans[bid] = kept[2]
+            continue
+        b = _bean(p, bid)
+        _DOCS[p] = (st, dg, b)
+        if check:
+            _PRINTS[id(b)] = _beanprint(b)
+        beans[bid] = b
+    if check and _changed(_Kept(beans), _PRINTS):
+        raise HeldChanged(f"a reader changed a bean held for {root!r} ({_changed(_Kept(beans), _PRINTS)}): a held "
+                          f"garden is read, never written")
+    g = cls._fresh(root, beans)
+    g.held = object()                      # this version: a reader keeps what it made of the garden by it
+    _HELD[key] = (token, g, _print(g) if check else None)
+    return g.copy()
 
 
 def _files(root):
