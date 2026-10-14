@@ -84,11 +84,11 @@ try {
   // 1. A WEEK ROW: the first day the reader's region begins a week on, at the start of the reader's line
   const week = (dir, lang) => { page(dir, lang); const d = box(dir);
     A.timeline(d, {today: '2026-10-14', from: '2026-09-01', to: '2026-11-30', layouts: ['week'], events: [], notes: []}, tools(), {engraved: {axes: {inline: 'time'}}});
-    const cells = [...d.querySelectorAll('.eg-week .eg-day')], xs = cells.map(x);
+    const cells = [...d.querySelectorAll('.eg-weektime .eg-wt-head')], xs = cells.map(x);
     const first = cells[0], firstX = x(first), atStart = dir === 'rtl' ? firstX === Math.max(...xs) : firstX === Math.min(...xs);
     const later = dir === 'rtl' ? xs.every((v, i) => i === 0 || v < xs[i - 1]) : xs.every((v, i) => i === 0 || v > xs[i - 1]);
     return {first: first.dataset.day, weekday: new Date(first.dataset.day + 'T12:00Z').getUTCDay(), atStart, later,
-            head: visual(first.querySelector('.eg-day-head'))}; };
+            head: visual(first)}; };
   out.cases.weekFa = week('rtl', 'fa'); out.cases.weekGb = week('ltr', 'en-GB');
   // 2. A DEBT'S ARROW: from the one who owes, at the line's start, to the one owed, the glyph of `next` between
   const flow = (dir, lang, from, to) => { page(dir, lang); const d = box(dir);

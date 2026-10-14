@@ -5542,6 +5542,15 @@ asks for when it next falls due — through the day, in the calendar it is count
 would hold a second calendar arithmetic. The week, the month and the list are three readings of one line, and the week
 begins on the day the reader's region begins one (CLDR's `firstDay`), never a day typed for a language.
 
+
+THE WEEK AS DAY TIMELINES (2026-10-14, the operator: "for the week we are going to treat cells as day timelines"). A week
+drawn as seven boxes said what fell on a day and not when: two classes on one day were two strips of one cell, a
+morning's and an evening's alike. A week is read for its hours — what is free on Thursday afternoon — so each of its
+days is drawn as a timeline: the hours down the column, what takes them a block at them, overlaps side by side, and
+what is kept in view without taking them (an attendance said transparent) in a narrow lane at the column's end, so it
+never hides what does. The hours drawn are the week's own, from the hour its earliest begins to the hour its latest
+ends, so an empty night takes no room. The month keeps the cell that shares its width among what takes hours: a month
+is read for which days are full, and seven narrow timelines a week, five weeks deep, would draw nothing readable.
 ## core/law/profiles.yaml: archetypes[flows]
 
 WHO OWES WHOM IS AN ARROW, ITS HEAD THE GLYPH OF NEXT. A debt runs from the one who owes to the one owed: a flow, whose
