@@ -23,10 +23,11 @@ read back by the books — in a garden of the core grown from a release made of 
            move, where a level or a parent does not fit, where the gate would refuse the row, where an input is no
            column; a walk's write never changes the law, a bean, the journal or a capture
   remove   a document taken out whole with what of the books named it (a booking, a reversal, an entry resting on the
-           booking), a payment taken out of its bean, a bank's statement taken out and its file importable again;
-           refused where closed books read it (the gate's own words), where another statement names it, for another
-           garden's word, for a sealed statement, for a line read from a source, for the run's own bean, the books'
-           bean, a being's bean, and with no reason
+           booking) and what the books kept beside it in `details`, a payment taken out of its bean (the last key of
+           `details` with it, and `details`), a bank's statement taken out and its file importable again; refused
+           where closed books read it (the gate's own words), where another statement names it, for another garden's
+           word, for a sealed statement, for a line read from a source, for the run's own bean, the books' bean, a
+           being's bean, with no reason, and where a `details` naming it is written otherwise than a tool writes it
 
 Its runs wait for the minute to turn where one bean is saved twice in it, as test/act.py's do.
 Run: python3 test/books_walks.py   (0 = green; some minutes)
@@ -513,6 +514,14 @@ files:
     ratify('box', c)
     sam = open(os.path.join(G, 'beans', 'books-sam.md'), encoding='utf-8').read()
     fee = next((ln.split('id: ', 1)[1].split(',', 1)[0] for ln in sam.splitlines() if 'a fee on the receipt' in ln), '?')
+    import yaml                              # what a garden keeps beside its payments, written as a translation writes it
+    D = type('D', (yaml.SafeDumper,), {})
+    D.add_representer(str, lambda d, v: d.represent_scalar('tag:yaml.org,2002:str', v, style='|' if '\n' in v else None))
+    kept = lambda x: yaml.dump({'details': x}, Dumper=D, allow_unicode=True, sort_keys=False, width=100000)
+    write('beans/books-sam.md', sam.replace('\nstatements:\n', '\n' + kept({'transactions': {
+        'twice#oops': {'category': 'a mistake', 'note': 'entered twice,\nby hand'},
+        'cafe#cake': {'category': 'sweets'}}}) + 'statements:\n', 1))
+    save('a category kept beside two payments', '- action: wrote [[books-sam]] details')
     r, c = start('box', 'remove', of='twice', reason='entered twice')
     p = plan_of('box', c)
     r2 = ratify('box', c)
@@ -527,6 +536,10 @@ files:
           and not any('twice' in v['ref'] or v.get('memo') == 'a fee on the receipt' for v in vs)
           and all(x in e for x in ('[[twice]]', 'bk-twice-oops', 'rv-twice-oops', fee)),
           p[-900:] + r2.out[-500:] + e[-700:])
+    check("...and what Sam's books kept beside its payment (`details`, keyed `twice#oops`) goes with it, shown in the "
+          "plan and named in the entry; the rest of `details` stays byte for byte as it was written",
+          '- books-sam: details › transactions › twice#oops' in p and 'details.transactions.twice#oops' in e
+          and kept({'transactions': {'cafe#cake': {'category': 'sweets'}}}) in sam, p[-700:] + sam[:700])
     r, c = start('bank-a', 'remove', of='market', reason='a mistake')
     check("...a document the closed books read is refused in the gate's own words: reverse it instead",
           'stopped at refused' in r.out and 'closed through 2025-03-31' in r.out + plan_of('bank-a', c, '')
@@ -550,6 +563,20 @@ files:
     check("...a payment recorded by mistake taken out of its bean, the run sitting on that bean; the bean and its other "
           "payment stay", 'stopped at done' in r2.out and 'id: cake' not in cafe and 'id: bread' in cafe
           and not voucher('cafe#cake') and voucher('cafe#bread'), r.out[-400:] + r2.out[-500:])
+    sam = open(os.path.join(G, 'beans', 'books-sam.md'), encoding='utf-8').read()
+    check("...and the last key `details` held goes with its payment, `details` itself with it, named in the entry",
+          'details' not in sam.split('\nstatements:\n', 1)[0] and 'cafe#cake' not in sam
+          and '`details`, which held nothing more' in entry_of('cafe#cake taken out'), sam[:600])
+    bean('loose', 'document', 'a receipt noted by hand', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
+         'pay: { id: tip, by: sam, of: { count: "2.00", unit: XTS }, at: "2025-04-15" }')
+    j = open(os.path.join(G, 'beans', 'heard.md'), encoding='utf-8').read()
+    write('beans/heard.md', j.replace('\nstatements:\n', '\ndetails: { "loose#tip": { note: "by hand" } }\nstatements:\n', 1))
+    save('a receipt, noted by hand beside another', '- action: wrote [[loose]] and [[heard]] details')
+    r, c = start('box', 'remove', of='loose', reason='a mistake')
+    check("...refused where a `details` naming what goes is not written as a tool writes it: a person's own save takes "
+          "it out", 'stopped at refused' in r.out and 'heard: its `details` is not written as a tool writes it'
+          in r.out + plan_of('box', c, '')
+          and os.path.exists(os.path.join(G, 'beans', 'loose.md')), r.out[-600:])
     bean('kept-off', 'document', 'a receipt with a sealed line', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
          'pay: { id: sealed, held: "root:held/0123456789abcdef0123456789abcdef" }')     # read, never saved
     got = planned('remove', of='kept-off', reason='a mistake') + \
