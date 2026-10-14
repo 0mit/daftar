@@ -36,10 +36,13 @@ out, a bean made or taken out whole — its plan is that write, and the steps ar
     W.restore_writes(bean, course)                take out what apply added, in a save of its own; what apply took out
                                                   is in git, and only a person restates it
     (verify and restore read the plan the run applied: the one the engine names, else the course's last captured)
-`write` is `{what, body, beans: [{bean, add, remove, new, gone, known}]}`: the save's one line and its journal lines;
-per bean, the statements to add (`<verb>: { id: …, … }`, one a line, each with an id), the ids to take out, the head
-and body of a bean made (`new: {head, body}`) or `gone: true` for one taken out whole, and how what it adds is known
-(`known`: `{act: say}`, the default, or `{act: read, from: <a being>, through: <how>}` for what was read from a source).
+`write` is `{what, body, beans: [{bean, add, remove, unset, new, gone, known}]}`: the save's one line and its journal
+lines; per bean, the statements to add (`<verb>: { id: …, … }`, one a line, each with an id), the ids to take out, the
+keys to take out of its `details` (`unset`: each a path of keys, `["transactions", "<bean>#<id>"]`, with each mapping
+it leaves empty — refused where the block is not written as a tool writes it, one line of JSON or a block of YAML, so
+nothing else of it changes), the head and body of a bean made (`new: {head, body}`) or `gone: true` for one taken out
+whole, and how what it adds is known (`known`: `{act: say}`, the default, or `{act: read, from: <a being>, through:
+<how>}` for what was read from a source).
 And `files: [{path, before, after}]`: a file of the garden other than a bean — a scheme's table of the garden's own, a
 mapping of a bank's columns — changed whole, its text as the plan read it (`before`; none for a file it makes) and as it
 writes it (`after`); refused where the file is none a write changes (`garden_file`) or not as the plan read it, read
@@ -277,6 +280,71 @@ def _known(e):
     return k
 
 
+DETAILS = 'details'          # the header key a bean keeps what fits no verb in, whole (core/law/terms.yaml)
+
+
+def _details_text(form, value):
+    """`details` written as a tool writes it: one line of JSON (`json`, as an import writes a statement's), or a block of
+    YAML (`yaml`, text of several lines as a block scalar, as a translation writes it)."""
+    if form == 'json':
+        return f"{DETAILS}: " + json.dumps(value, ensure_ascii=False) + '\n'
+    import yaml
+
+    class Dumper(yaml.SafeDumper):
+        pass
+    Dumper.add_representer(str, lambda d, v: d.represent_scalar('tag:yaml.org,2002:str', v,
+                                                                 style='|' if '\n' in v else None))
+    return yaml.dump({DETAILS: value}, Dumper=Dumper, allow_unicode=True, sort_keys=False, width=100000)
+
+
+def _details_form(text, value, bid):
+    """The form the `details` block of bean `bid`'s text is written in, where a tool writing `value` writes it byte for
+    byte so — else a refusal: a block written otherwise is a person's to change, not a tool's."""
+    import safe as dmsafe
+    try:
+        s, e = dmsafe.top_level_span(text, DETAILS)
+    except dmsafe.UnsafeEdit as why:
+        raise Refused(f"{bid}: its `{DETAILS}` is not found: {why}")
+    for form in ('json', 'yaml'):
+        try:
+            if _details_text(form, value) == text[s:e]:
+                return form, (s, e)
+        except (TypeError, ValueError):
+            continue
+    raise Refused(f"{bid}: its `{DETAILS}` is not written as a tool writes it (one line of JSON, or a block of YAML): "
+                  f"what is taken out of it is taken out by a person's own save")
+
+
+def _without(value, paths, bid):
+    """`value`, a bean's `details`, with each path of keys taken out, and each mapping that leaves empty."""
+    import copy
+    out = copy.deepcopy(value)
+    for path in paths:
+        stack, node = [], out
+        for k in path[:-1]:
+            if not isinstance(node, dict) or k not in node:
+                raise Refused(f"{bid} holds no {DETAILS} › {' › '.join(map(str, path))} to take out")
+            stack.append((node, k))
+            node = node[k]
+        if not isinstance(node, dict) or path[-1] not in node:
+            raise Refused(f"{bid} holds no {DETAILS} › {' › '.join(map(str, path))} to take out")
+        del node[path[-1]]
+        while stack and node == {}:
+            parent, k = stack.pop()
+            del parent[k]
+            node = parent
+    return out
+
+
+def _unset(e):
+    """The paths of keys a bean's entry takes out of its `details`: each a list of strings, or a refusal."""
+    paths = e.get('unset') or []
+    if not isinstance(paths, list) or not all(isinstance(p, list) and p and all(isinstance(k, str) for k in p)
+                                              for p in paths):
+        raise Refused(f"what is taken out of {e.get('bean')}'s {DETAILS} is a list of paths, each a list of its keys")
+    return paths
+
+
 def plan_writes(write):
     """Print the write — in words, then PLAN_MARK and the write as one line of JSON — and return that text: what the
     person is shown and ratifies. Refused where the garden is not as the write would have it."""
@@ -308,6 +376,16 @@ def plan_writes(write):
                 raise Refused(f"{bid} holds a statement {roles['id']!r} already")
             words.append(f"  + {bid}: {line}")
         _known(e)
+        if _unset(e):
+            if b is None or e.get('new'):
+                raise Refused(f"{bid}: a bean the plan makes has no {DETAILS} to take out of")
+            left = _without(b.header.get(DETAILS), _unset(e), bid)
+            with open(b.path, encoding='utf-8') as fh:
+                _details_form(fh.read(), b.header.get(DETAILS), bid)
+            for path in _unset(e):
+                words.append(f"  - {bid}: {DETAILS} › {' › '.join(path)}")
+            if not left:
+                words.append(f"  - {bid}: {DETAILS}, which holds nothing more")
     seen = set()
     for f in write.get('files') or []:
         if not isinstance(f, dict) or not isinstance(f.get('after'), str) or f.get('path') in seen \
@@ -439,6 +517,23 @@ def _acts_named(b, acts):
     return named
 
 
+def _take_out_details(path, bid, paths):
+    """Take the paths of keys out of the `details` of the bean at `path` (and each mapping that leaves empty, `details`
+    itself among them), the block rewritten in the form it is written in and nothing else of the bean changed; the
+    entry's lines naming each (rule `kept`: a header key taken out is named)."""
+    import safe as dmsafe
+    with open(path, encoding='utf-8') as fh:
+        held = dmsafe.parse(fh.read())[0].get(DETAILS)
+    left = _without(held, paths, bid)
+
+    def change(text):
+        form, (s, e) = _details_form(text, dmsafe.parse(text)[0].get(DETAILS), bid)
+        return text[:s] + (_details_text(form, left) if left else '') + text[e:]
+    dmsafe.edit(path, change, allow_remove=[DETAILS + '.' + '.'.join(p) for p in paths] + ([] if left else [DETAILS]))
+    return [f"- taken out: [[{bid}]] {DETAILS}.{'.'.join(p)}" for p in paths] + \
+        ([] if left else [f"- taken out: [[{bid}]] `{DETAILS}`, which held nothing more"])
+
+
 def apply_writes(bean, course):
     """Write exactly the plan shown, known by the person who ratified it, in ONE save; its entry names every bean it
     touches and each statement it takes out. The run's own moves (the ratification the engine wrote, unsaved) are set
@@ -484,6 +579,8 @@ def apply_writes(bean, course):
                     act = f"- say: {{ by: {who}, of: [{', '.join(ids)}], at: now }}\n"
                 dmsafe.add_statements(p, ''.join(f"- {line}\n" for line in e['add']) + act)
                 said.append(f"- added: [[{bid}]] {', '.join(ids)}")
+            if _unset(e):
+                said += _take_out_details(p, bid, _unset(e))
         for f, p in files:
             if _text(p) != f.get('before'):
                 raise Refused(f"{f['path']} changed since the plan was shown")
@@ -537,6 +634,12 @@ def verify_writes(bean, course):
             hit = b.ids.get(roles['id'])
             if hit is None or hit[1] != verb or not _same(roles, hit[2]):
                 raise Refused(f"{bid}: {verb}#{roles['id']} does not read back as it was written")
+        for path in _unset(e):
+            node = b.header.get(DETAILS)
+            for k in path:
+                node = node.get(k) if isinstance(node, dict) else None
+            if node is not None:
+                raise Refused(f"{bid} still holds {DETAILS} › {' › '.join(path)}")
     for f in write.get('files') or []:
         if _text(garden_file(f.get('path'))) != f.get('after'):
             raise Refused(f"{f.get('path')} does not read back as the plan wrote it")
@@ -553,7 +656,7 @@ def restore_writes(bean, course):
     _garden_fresh()
     G = _garden()
     who = ratifier(bean, course) or 'unknown'
-    gone = [str(e.get('bean')) for e in write.get('beans') or [] if e.get('gone') or e.get('remove')]
+    gone = [str(e.get('bean')) for e in write.get('beans') or [] if e.get('gone') or e.get('remove') or e.get('unset')]
     todo = []
     for e in write.get('beans') or []:
         b = G.beans.get(str(e.get('bean')))
