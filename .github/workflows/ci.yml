@@ -116,13 +116,13 @@ jobs:
       - name: "books: a chart of accounts held to its form, a booking as a move from one account to another, the reverse of a move as its reverse sense, a match counted once"
         run: python3 test/books.py
       - name: "books_walks: the books' operations as walks — a payment booked, booked again, reversed, a bank's statement imported and matched, a period closed — each planned as a write, ratified, written as shown and read back"
-        if: github.event_name == 'workflow_dispatch'   # the whole list: its commits wait for the minute to turn
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/books_walks.py
       - name: "act: an action run on the law's own walk — plan, show, check, a person's ratification, apply, verify; refused and rolled back with their reasons"
-        if: github.event_name == 'workflow_dispatch'   # the whole list: its commits wait for the minute to turn
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/act.py
       - name: "routines: a machine's routines read from the garden and run by the one engine — when each falls due at its clock time, which waits on what and why, a run that waits, skips, runs, fails its proof; crossings; cron adopted byte for byte"
-        if: github.event_name == 'workflow_dispatch'   # the whole list: its commits wait for the minute to turn
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/routines.py
       - name: "mailbox: a proposal laid in another garden's mailbox by a key that can do nothing else, and only a proposal taken"
         run: python3 test/mailbox.py

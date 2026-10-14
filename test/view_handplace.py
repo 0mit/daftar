@@ -32,7 +32,7 @@ a module. Then:
                     timeline's three layouts and a sheet opened, in a left-to-right and a right-to-left page, with no
                     exception; and on the served page the sheet's one Edit
 
-Run: python3 test/view_handplace.py   (0 = green; about four minutes: a save waits for its minute to turn)
+Run: python3 test/view_handplace.py   (0 = green; about two minutes)
 """
 import datetime, json, os, re, shutil, socket, subprocess, sys, tempfile
 
@@ -578,6 +578,7 @@ window.addEventListener('load', async () => {
  const first = __kept();
  if (first && first.saving) { let summary = '';
   try { __go('ali', 'operate'); summary = (document.querySelector('#view .eg-summary') || {}).textContent || ''; } catch (e) { window.__errs.push('driver: ' + e.message); }
+  for (let i = 0; i < 20 && !window.__csp.length; i++) await __wait(100);   // the policy's report is an event of its own
   return __done({first, errs: window.__errs, csp: window.__csp, summary, injected: window.__injected === 1}); }
  const out = {}; let editing = false;
  try {

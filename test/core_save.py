@@ -7,7 +7,9 @@ call. Checks that a knowing act's `at: now` is written as the moment of the head
 there is refused, and saved once it is `now`; that a bean the entry does not name is refused; that a statement added
 under an old act is refused until an act of this commit knows it; that a change to the law is refused until an entry
 says RULE-CHANGE; that the engine's own refusals stop the commit; that a heading typed into the journal by hand is
-refused; and that what is judged is the index, not the working tree.
+refused; that what is judged is the index, not the working tree; that a bean saved four times in a row is saved in
+seconds, each act at its own moment, to the second, and one saved again in the second it was saved waits for the next;
+and that the stamp's moment written finer or coarser than the clock wrote it is refused.
 """
 import os, re, shutil, subprocess, sys, tempfile
 
@@ -294,29 +296,81 @@ try:
     r = run(PY, 'core/check.py')
     check("the garden as saved passes the core's check", r.returncode == 0, r.stdout)
 
-    # THE PIN IS READ AS THE GATE READS IT (bin/check.py `pin`), quoted as YAML may write it. A bean saved twice in one
-    # minute, its act said `now` both times, would hold the moment the last commit gave it already — an act no commit
-    # adds — so in a garden of the core the second save waits for the next minute
+    # THE PIN IS READ AS THE GATE READS IT (bin/check.py `pin`), quoted as YAML may write it
     g = text('GARDEN.md')
     pinned = re.search(r'(?m)^extends: (core@\S+)$', g).group(1)
     with open(os.path.join(G, 'GARDEN.md'), 'w', encoding='utf-8') as fh:
         fh.write(g.replace(f'extends: {pinned}\n', f'extends: "{pinned}"\n', 1))
     r = save('sam', 'RULE-CHANGE: the pin quoted', '- action: RULE-CHANGE, GARDEN.md writes its pin quoted; ratified by sam')
     check(f'a pin written quoted (`extends: "{pinned}"`) is the same pin: the gate saves it', r.returncode == 0, r.out[-600:])
+
+    # A BEAN SAVED AGAIN IN THE MINUTE IT WAS SAVED (the method `stamp`: the clock's reading, to the second). Its act that
+    # knows what no other act knows, said `now` each time, would hold the moment the last commit gave it already were the
+    # moment the minute's — an act no commit adds — and a save waited for the minute to turn. To the second, four saves of
+    # one bean in a row are four acts at four moments, saved in seconds, not minutes.
     import time
 
     def sam_now(job, does):
         st = read.loads(git('show', 'HEAD:beans/sam.md').stdout.split('---\n')[1])['statements']
         st[0] = {'say': {'by': 'sam', 'at': 'now'}}                  # the act that knows what no other act knows
         bean('sam', 'person', st + [{'do': {'id': job, 'by': 'self', 'as': does}}])
-    while time.localtime().tm_sec > 45:       # both saves in one minute
-        time.sleep(1)
-    sam_now('desk', 'web')
-    r1 = save('sam', 'a desk', '- action: [[sam]] keeps a desk')
-    sam_now('lab', 'app-host')
-    r2 = save('sam', 'a lab', '- action: [[sam]] keeps a lab')
-    check("...and a bean saved twice in one minute under a quoted pin waits for the next minute, and is saved",
-          r1.returncode == 0 and r2.returncode == 0 and 'waiting for the next' in r2.out, (r1.out[-400:], r2.out[-900:]))
+    t0, outs, heads, ats = time.time(), [], [], []
+    for job, does in (('desk', 'web'), ('lab', 'app-host'), ('shed', 'workstation'), ('loft', 'web')):
+        sam_now(job, does)
+        r = save('sam', f'a {job}', f'- action: [[sam]] keeps a {job}')
+        outs.append(r)
+        heads.append(last_heading()[3:].split(' · ', 1)[0])
+        ats.append((head_bean('sam').get('statements') or [{}])[0].get('say', {}).get('at'))
+    took = time.time() - t0
+    check(f"a bean saved four times in a row, its act re-said `now` each time, is saved four times in "
+          f"{took:.0f} s, not minutes: each act at its own heading's moment, to the second ({', '.join(heads)})",
+          all(r.returncode == 0 for r in outs) and took < 30 and len(set(heads)) == 4 and ats == heads
+          and all(re.fullmatch(r'\d{4}-\d\d-\d\d \d\d:\d\d:\d\d[+-]\d\d:\d\d', h) for h in heads)
+          and not any('waiting for the next minute' in r.out for r in outs),
+          (took, heads, ats, [r.out[-300:] for r in outs]))
+
+    # ...AND TWO IN ONE SECOND STILL WAIT, FOR THE SECOND: a save of a bean the last commit holds at this second's moment
+    # waits for the next, the pin read quoted as the gate reads it — the clock held at that second for a few readings
+    sam_now('attic', 'web')
+    r = run(PY, '-c', "import datetime, sys\nsys.path.insert(0, 'bin')\nimport save\n"
+                      "h = [l for l in open('log/journal.md', encoding='utf-8').read().split('\\n') if l.startswith('## ')][-1]\n"
+                      "held = datetime.datetime.fromisoformat(h[3:].split(' · ', 1)[0])\nn = []\n"
+                      "class Clock(datetime.datetime):\n"
+                      "    @classmethod\n"
+                      "    def now(cls, tz=None):\n"
+                      "        n.append(1)\n"
+                      "        return held if len(n) < 6 else held + datetime.timedelta(seconds=1)\n"
+                      "save.datetime = type('clock', (), {'datetime': Clock})\nsave.the_second_turns()\n"
+                      "print('read', len(n))\n")
+    check("...and a bean saved again in the second it was saved waits for the next second, and says so",
+          r.returncode == 0 and 'was saved in this second already' in r.stderr and 'beans/sam.md' in r.stderr
+          and re.search(r'read ([6-9]|\d\d)', r.stdout) is not None, r.stdout + r.stderr)
+    git('checkout', '-q', '--', 'beans/sam.md')
+
+    # A FALSE PRECISION, AND A COARSE ONE: the moment the clock wrote for this entry, written finer than it was read (a
+    # millisecond the clock never gave) or coarser (its minute alone), is no moment the entry was written at
+    bean('memo', 'document', [{'say': {'by': 'sam', 'at': 'now'}}])
+    run(PY, 'bin/journal.py', 'sam', 'a memo', '--body', '- action: wrote [[memo]]')
+    m = last_heading()[3:].split(' · ', 1)[0]
+    clock = re.match(r'^(.* \d\d:\d\d)(:\d\d)?([+-]\d\d:\d\d|Z)$', m)
+    finer = clock.group(1) + (clock.group(2) or ':00') + '.000' + clock.group(3)
+    coarser = clock.group(1) + clock.group(3)
+    said = []
+    for written in (finer, coarser):
+        if written == m:
+            continue
+        bean('memo', 'document', [{'say': {'by': 'sam', 'at': written}}])
+        git('add', '-A')
+        r = git('commit', '-q', '-m', 'a memo')
+        said.append((written, r.returncode, r.stdout + r.stderr))
+    check(f"the stamp's own moment written finer ({finer}) or coarser ({coarser}) than the clock wrote it ({m}) is "
+          f"refused: a knowing act's moment is the entry's, as stamped",
+          len(said) == 2 and all(rc != 0 and 'is no moment this commit' in out and '— 1 error(s)' in out
+                                 for _w, rc, out in said), said)
+    bean('memo', 'document', [{'say': {'by': 'sam', 'at': 'now'}}])
+    r = run(PY, 'bin/save.py', '--again')
+    check("...and saved once it says `now`", r.returncode == 0
+          and (head_bean('memo').get('statements') or [{}])[0].get('say', {}).get('at') == m, r.stdout + r.stderr)
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

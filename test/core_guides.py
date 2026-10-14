@@ -40,7 +40,8 @@ KNOWING = ('say', 'read', 'derive', 'make')
 FORM_KEYS = {'provenance', 'genos', 'nature', 'status', 'class', 'establishing', 'key', 'unit', 'system', 'kind', 'as_of',
              'openness'}
 SQUARE = {'required': 'obligatory', 'permitted': 'permitted', 'forbidden': 'forbidden', 'omissible': 'omissible'}
-STAMPED = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}[+-]\d{2}:\d{2}$')    # a moment the save wrote in place of `now`
+STAMPED = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?[+-]\d{2}:\d{2}$')   # a moment a save wrote for `now`: to
+                                             # the second, or to the minute where an older release's save wrote it
 ACTS = {'asserted-by-human': 'say', 'stated-in-document': 'say', 'observed': 'read', 'inferred': 'derive',
         'generated-by-tool': 'derive'}           # a provenance's `src` is the act that knows it (core/law/core.yaml)
 FORM_WORDS = {'true', 'false', 'now', '', 'self', 'legal', 'technical', 'experience', 'financial', 'holder', 'owner',
@@ -150,7 +151,7 @@ T = tempfile.mkdtemp(prefix='dmcoreguides-')
 G, TODAY, COPY = os.path.join(T, 'guides'), os.path.join(T, 'today'), os.path.join(T, 'copy')
 written = {}                                 # path -> the text last written there, as the page shows it
 added = set()                                # (path, text) of the statements a page added to a bean
-waited = []                                  # the saves that waited for the minute to turn (bin/save.py)
+waited = []                                  # the saves that waited for the clock to turn (bin/save.py): (what, unit)
 
 
 try:
@@ -241,8 +242,9 @@ try:
         before = run('git', 'rev-parse', 'HEAD', cwd=G).stdout
         r = run(PY, 'bin/save.py', 'sam', what[:60], '--body', body, cwd=G)
         moved = run('git', 'rev-parse', 'HEAD', cwd=G).stdout != before
-        if 'was saved in this minute already' in r.stderr:
-            waited.append(what)
+        for unit in ('minute', 'second'):
+            if f'was saved in this {unit} already' in r.stderr:
+                waited.append((what, unit))
         return (r.returncode == 0 and moved, (r.stdout + r.stderr)[-1500:])
 
     # README.MD: THE FIRST BEANS, SAVED BY THE COMMAND THE PAGE SHOWS
@@ -281,8 +283,9 @@ try:
         check(f"{placed(page)}: each section's examples commit through the core's gate ({done}), and the "
               f"statements it shows for a bean pass beside it ({judged_n})", not failed and done >= 1, failed)
 
-    check(f"the save waits for the minute to turn where it would save one bean twice in it, and the commit is made "
-          f"({len(waited)}: {'; '.join(waited)[:200]})", len(waited) >= 1, waited)
+    minute = [w for w, u in waited if u == 'minute']
+    check(f"no save waits for the minute to turn where the guides save one bean again in it: each stamps its own second "
+          f"(waits for the second: {sum(1 for _w, u in waited if u == 'second')})", not minute, minute)
     r = run(PY, 'core/check.py', cwd=G)
     beans = [f for d in ('beans', 'mappings') if os.path.isdir(os.path.join(G, d)) for f in os.listdir(os.path.join(G, d))]
     check(f"the garden of the guides' {len(beans)} beans passes the core's gate whole", r.returncode == 0

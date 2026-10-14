@@ -15,8 +15,7 @@ save traced and committed, its log claimed; a said value from a guide refused by
 a pass in today's form, a pass the flow law refuses, a said value with no pass, a log rewritten and a log nobody names,
 each refused by rule `layers`.
 
-Run: python3 test/core_gate.py   (0 = green; three or four minutes, since a save waits for the next minute where its
-bean was saved in this one)
+Run: python3 test/core_gate.py   (0 = green; about two minutes)
 """
 import http.server, json, os, re, shutil, subprocess, sys, tempfile, threading
 

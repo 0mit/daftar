@@ -7,7 +7,9 @@ placed on the walk four times. Then: the engine runs plan, show and check and st
 a ratification runs apply and verify to done, the thing changed and read back; a check that fails refuses the run with
 its reason and changes nothing; a verify that mismatches rolls back, `restore` run; a plan declined is refused; a plan
 that changed since it was shown goes back to show; and someone no grant names may not ratify. Every move is judged by
-the gate's rule `line` at its commit, and where each run stands is read by bin/seq.py.
+the gate's rule `line` at its commit, and where each run stands is read by bin/seq.py. A walk run as a page runs it —
+started, ratified, its plan writing the bean it runs on, and started again — saves that bean four times in a row, in
+seconds: a save stamps the clock's reading to the second, so none waits for the minute to turn.
 
 Run: python3 test/act.py   (0 = green)
 """
@@ -183,7 +185,7 @@ The tool.
 ''')
     write(G, 'mappings/action-cert-deploy.md', WALK % ('action-cert-deploy', 'action-cert-deploy', 'a certificate deployed', 'cert-tool'))
     courses = ('deploy-a', 'deploy-b', 'deploy-c', 'deploy-d', 'deploy-e')
-    for c in courses:               # a bean each: a save of a bean waits for the minute its last save is not
+    for c in courses:               # a bean each, one course on each
         write(G, f'beans/cert-{c}.md', f'---\nbean: cert-{c}\nkind: document\ntitle: "cert-{c} — a certificate"\n'
               f'statements:\n  - say: {{ by: sam, at: now }}\n  - be: {{ id: {c}, by: self, at: action-cert-deploy, as: order }}\n'
               '---\nA certificate.\n')
@@ -402,6 +404,53 @@ The tool.
     r = grow.run(PY, 'tools/scribe.py', 'plan', 'scribe-c', 'run', cwd=G)
     check("write: a plan whose additions would be known otherwise than by `say`, or by `read` from a being named by its "
           "id, is refused at the plan", r.returncode == 1 and 'known by `say`, or by `read` from a being' in r.out, r.out[-400:])
+
+    # ---- A WALK AS A PAGE RUNS IT, ITS PLAN WRITING THE BEAN IT RUNS ON: started (one save of the bean), ratified (the
+    #      write's save and the engine's), started again (a fourth) — four saves of one bean, each stamped to the second,
+    #      so none waits for the minute to turn: seconds, not minutes
+    write(G, 'beans/pantry.md', '---\nbean: pantry\nkind: contract\ntitle: "pantry — what Sam buys for the house"\n'
+          'statements:\n  - say:   { by: sam, at: now }\n  - own:   { by: sam, of: self }\n---\nThe pantry.\n')
+    r = grow.run(PY, 'bin/save.py', 'sam', 'the pantry', '--body', '- action: wrote [[pantry]]', cwd=G)
+    import time
+    before, t0 = grow.run('git', 'rev-parse', 'HEAD', cwd=G).out.strip(), time.time()
+    open(os.path.join(LIVE, 'pantry.write.json'), 'w').write(json.dumps({'what': 'rice for the pantry', 'beans': [
+        {'bean': 'pantry', 'add': ['pay: { id: q1, by: sam, of: { count: "2", unit: EUR }, note: "rice" }']}]}))
+    r1 = grow.run(PY, 'bin/act.py', 'pantry', '--start', 'action-scribe', '--by', 'sam', cwd=G)
+    r2 = grow.run(PY, 'bin/act.py', 'pantry', 'run-1', '--ratify', 'sam', cwd=G)
+    open(os.path.join(LIVE, 'pantry.write.json'), 'w').write(json.dumps({'what': 'tea for the pantry', 'beans': [
+        {'bean': 'pantry', 'add': ['pay: { id: q2, by: sam, of: { count: "3", unit: EUR }, note: "tea" }']}]}))
+    r3 = grow.run(PY, 'bin/act.py', 'pantry', '--start', 'action-scribe', '--by', 'sam', cwd=G)
+    took = time.time() - t0
+    saves = grow.run('git', 'log', '--format=%H', f'{before}..HEAD', '--', 'beans/pantry.md', cwd=G).out.split()
+    added = grow.run('git', 'diff', before, 'HEAD', '--', 'log/journal.md', cwd=G).out.split('\n')
+    heads = [ln[4:].split(' · ', 1)[0] for ln in added if ln.startswith('+## ')]
+    check(f"a walk run as a page runs it — started, ratified, its plan writing the bean it runs on, and started again: four "
+          f"saves of one bean in a row, each of which waited for the minute to turn while a stamp was to the minute — "
+          f"takes {took:.0f} s, not minutes, each save at its own moment "
+          f"({', '.join(heads)})", 'stopped at ratify' in r1.out and 'stopped at done' in r2.out
+          and 'stopped at ratify' in r3.out and 'id: q1' in text(G, 'beans/pantry.md') and len(saves) == 4
+          and len(heads) == 4 and len(set(heads)) == 4 and took < 60
+          and grow.run(PY, 'bin/check.py', cwd=G).returncode == 0,
+          (took, saves, heads, r1.out[-300:], r2.out[-400:], r3.out[-300:]))
+
+    # ---- A MOMENT IS HELD TO THE UNIT IT IS WRITTEN AT (bin/seq.py `check_moves`, rule `line`): a move written to the
+    #      minute, as every move was before a stamp was to the second, names its whole minute, so a move written to the
+    #      second within it is neither before it nor after it; a course whose moves span the change never goes back
+    import seq as dmseq
+    STEPS = [{'id': 'plan', 'next': [{'to': 'show'}]}, {'id': 'show', 'next': [{'to': 'check'}]}, {'id': 'check'}]
+
+    def back(*ats):
+        moves = [(i, {'course': 'c', 'at': a, 'step': s}) for i, (a, s) in enumerate(zip(ats, ('plan', 'show', 'check')))]
+        return [w for _i, _lv, w in dmseq.check_moves(moves, STEPS, 'w') if 'never go back' in w]
+    check("rule line: a course's moves compared at the coarser of their units — a move to the second within the minute a "
+          "move was written to is not before it, either way; one second before the last, or a minute later than the next, "
+          "goes back", not back('2026-10-14 10:00+03:00', '2026-10-14 10:00:30+03:00')
+          and not back('2026-10-14 10:00:30+03:00', '2026-10-14 10:00+03:00')
+          and not back('2026-10-14 10:00:30+03:00', '2026-10-14 10:00:30+03:00', '2026-10-14 10:00:31+03:00')
+          and back('2026-10-14 10:00:31+03:00', '2026-10-14 10:00:30+03:00')
+          and back('2026-10-14 10:01:05+03:00', '2026-10-14 10:00+03:00'),
+          [back('2026-10-14 10:00+03:00', '2026-10-14 10:00:30+03:00'), back('2026-10-14 10:00:30+03:00', '2026-10-14 10:00+03:00'),
+           back('2026-10-14 10:00:31+03:00', '2026-10-14 10:00:30+03:00'), back('2026-10-14 10:01:05+03:00', '2026-10-14 10:00+03:00')])
 except Exception as e:  # noqa: BLE001
     import traceback
     traceback.print_exc()

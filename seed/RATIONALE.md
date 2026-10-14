@@ -226,6 +226,11 @@ offset, since civil time is read from a place. The ATTRIBUTE says where it needs
 to the minute (`unit: minute`), and that unit is what the save writes for `now`, as a stamped `observed` says `day`. A
 day that must never be finer — none was, once `accepted` could be read at a moment — needs no type of its own.
 
+WHAT THE SAVE WRITES FOR `now` IS THE STAMP'S (2026-10-14). Since a stamp is the clock's reading to the second, true to
+the minute (`core/law/flows.yaml: methods[stamp]`), the save writes finer than the unit an attribute asks: that unit is
+the coarsest the attribute holds, so a moment written to the minute before stays what it was, and one written to the
+second meets it.
+
 (std-vocab 32: `value_types[position].exists`)
 
 A DAY ITS CALENDAR DOES NOT HAVE IS NOT A DATE. A pattern admits `persian:1404-12-30` and `2026-02-30` alike, and
@@ -269,6 +274,9 @@ A MOMENT IS A JOURNAL HEADING'S POSITION, and nothing new. The heading has alway
 offset, in any declared calendar; a value the save stamps from the clock takes the same form, so it is the form the
 tool writes and the gate reads. Without the offset a wall-clock reading is ambiguous — the law's own `gregorian-civil`
 row says why — so a position read on a clock always carries one. A day its calendar lacks is no moment, as it is no day.
+
+The heading and the moments stamped beside it are written to the second since 2026-10-14, and are still one form: the
+calendar's own, with a clock reading of seconds where it had minutes (`core/law/flows.yaml: methods[stamp]`).
 
 ## core/law/lines.yaml: types[field_path]
 
@@ -777,8 +785,9 @@ keeps a body.
 
 CLOSED BOOKS ARE KEPT, BY THE COMMIT (2026-10-13, the books' design; the operator: "Yes yes", to a close as a `pin`).
 Closing a period in books fixes what was read through its last day, so a report given on it stays true. A rule that
-compared each change with a moment of closing could not order two saves within one minute, and the journal's headings
-are by the minute; a commit orders them exactly. So a close is the books' reading through a day, pinned at a commit, as
+compared each change with a moment of closing could not order two saves within one minute, while the journal's headings
+were by the minute — nor, to the second since, two saves in one second, or two machines' within the half minute their
+clocks are held to; a commit orders them exactly. So a close is the books' reading through a day, pinned at a commit, as
 any reading rests on one (`core/law/verbs.yaml: verbs[pin]`), and the rule asks of each commit only this: whether a
 payment, a booking or a match the closed books read — the entity's, in that chart — on a day on or before the closed
 one, and in its bean at the pinned commit, is taken out or changed. A correction is the move's reverse and a booking
@@ -3650,6 +3659,12 @@ pause, returns from a pause to where it was, and nothing follows a final step; a
 only with its `why`, and warns, because the world does not always follow a procedure and the record must say so
 rather than refuse it. The moves merge by course, moment and step, so a step visited twice never collides with itself; a move is stamped to the minute, so two moves of one course to one step in one minute would be one move written twice, and the gate says so before a merge must refuse it.
 
+A move is stamped to the second since 2026-10-14 (`core/law/flows.yaml: methods[stamp]`), so it is two moves of
+one course to one step in one SECOND that would be one move written twice; the save waits for the next second where
+a bean saved in this one is saved again. A course whose moves span that day holds moves to the minute and then to the
+second, and two moves are compared at the coarser of their units: a move written to the minute names its whole
+minute, so one written to the second within it is neither before it nor after it.
+
 ## core/law/measures.yaml: forms.placement
 
 (std-vocab 32: `terms[located_at]`)
@@ -5062,10 +5077,32 @@ row held.
 
 ONLY A DISCIPLINED CLOCK WRITES `now`. The save writes the clock's reading where `now` stood, and a typed moment is
 refused, so a wrong clock writes false moments into every bean it saves: a machine found six weeks off would have
-dated a ledger by its mistake. A stamp is to the minute, so the clock must be within half a minute of its time sources
-— the kernel's own discipline, the servers the host was given, those its keeper names, all siblings — or the save
-writes nothing and says how to set it right. It is the save's to check and not the gate's: a gate judges files the
+dated a ledger by its mistake. A stamp is true to the minute, so the clock must be within half a minute of its time
+sources — the kernel's own discipline, the servers the host was given, those its keeper names, all siblings — or the
+save writes nothing and says how to set it right. It is the save's to check and not the gate's: a gate judges files the
 same on every machine, and a clock is a property of one.
+
+WRITTEN TO THE SECOND, TRUE TO THE MINUTE (2026-10-14; the operator, of a booking started from a page that took minutes:
+"implement it as soon as possible — maybe it's better to reduce the minute to milliseconds"). A stamped moment does two
+things: it says when an act was made, and it tells one act from another, since the commit's rule `knowing` finds the
+acts a commit adds by comparing them with the last commit's. Written to the minute, it did both at the minute's grain: a
+bean saved again in the minute it was saved, its act re-said `now`, held that act's moment already — an act no commit
+adds — so the save waited for the minute to turn. A walk saves the bean it runs on three times in a few seconds, and a
+booking started and ratified from a page waited about a minute at each press (measured: three bookings 311 s, 259 of
+them waiting; 50 s with no wait, the gate green). So the save writes the clock's reading to the second, and what it
+claims is unchanged: the clock is shown within half a minute of its sources, so a stamp is true to the minute, and its
+second orders the acts of one minute and claims nothing more — as the law already tells how finely a value is written
+from how well it is known (a quantity's `u`, a placement's `placed`; a calendar's resolution is never read from its
+digits). The second is read from the clock, as the minute was: "a precision written rather than read" was a heading
+typed (10.0), and a typed moment is refused as before. NOT THE MILLISECOND: no clock a garden runs on can be shown
+within half of one (one machine's kernel bounded its error at 0.8 s, estimating 1 ms; a time server across the
+Internet shows a clock to tens of milliseconds at best); a clone's saves are one at a time and most take longer than a
+second, so the second already tells them apart, and the rare two in one second wait under a second; and a journal is
+read by people. NOT A DISCIPLINE OF HALF A SECOND: the kernel's bound grows half a millisecond each second its daemon
+does not set it, so a machine a quarter of an hour off the network, or one whose daemon polls its servers less often
+than that, would ask the servers at every save or refuse it, for a truth nothing that reads a stamp asks. A moment
+written before keeps the unit it was written at: a move written to the minute names its whole minute, and two moves are
+compared at the coarser of their units.
 
 ## core/law/registries.yaml: fetch_shape
 

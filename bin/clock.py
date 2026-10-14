@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""clock — whether this machine's clock may stamp: within half the stamp's resolution of its time sources (the method
-`stamp`'s meaning, core/law/flows.yaml), so that what a save writes where `now` stood is the moment it was.
+"""clock — whether this machine's clock may stamp: within half a minute of its time sources (the method `stamp`'s
+meaning, core/law/flows.yaml), so that what a save writes where `now` stood is the moment it was, true to the minute.
 
     python3 bin/clock.py        # what each source shows of this clock, and whether it may stamp (exit 0), or not (1)
 
-A save stamps to the minute (bin/journal.py), so the tolerance is half a minute: thirty seconds. A clock that cannot be
-shown within it stamps nothing — the save is refused before anything is written, naming this machine and its keeper —
-while every reading and showing goes on. It is the save's to check and not the gate's: a gate judges files the same on
-every machine, and a clock is a property of one.
+A save writes the clock's reading to the second (bin/journal.py), and the reading is true to the minute: the tolerance
+is half a minute, thirty seconds. The second orders the acts of one minute — two saves are two moments, in the order
+they were made — and claims no more truth than the tolerance: an act's moment is known to within half a minute. A clock
+that cannot be shown within it stamps nothing — the save is refused before anything is written, naming this machine and
+its keeper — while every reading and showing goes on. It is the save's to check and not the gate's: a gate judges files
+the same on every machine, and a clock is a property of one.
 
 THE SOURCES ARE SIBLINGS, none privileged (manifesto: sibling):
   the kernel   on Linux, the kernel's own discipline (adjtimex, read only): when a time daemon keeps it synchronised,
@@ -30,7 +32,7 @@ import sys
 import threading
 import time
 
-TOLERANCE = 30.0          # seconds: half the stamp's resolution, a minute (core/law/flows.yaml, the method `stamp`)
+TOLERANCE = 30.0          # seconds: half a minute, the truth a stamp is held to (core/law/flows.yaml, the method `stamp`)
 NTP_EPOCH = 2208988800    # 1900-01-01 to 1970-01-01, in seconds
 WAIT = 1.5                # seconds a server is waited for
 MOST = 4                  # servers asked at once
@@ -265,7 +267,7 @@ def main(argv):
         print(f"{r.shows:<8} {r.source}: {r.said}")
     if not found:
         print("nothing  this host names no time server, and no kernel discipline shows this clock")
-    print(f"clock: {'may stamp' if ok else 'may NOT stamp'} — tolerance {TOLERANCE:.0f} s, half a minute's stamp")
+    print(f"clock: {'may stamp' if ok else 'may NOT stamp'} — tolerance {TOLERANCE:.0f} s, a stamp true to the minute")
     return 0 if ok else 1
 
 
