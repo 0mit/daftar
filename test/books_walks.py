@@ -4,7 +4,8 @@ what a person gives it (bin/act.py `--start … --input`), its plan a write show
 read back by the books — in a garden of the core grown from a release made of this tree (test/grow.py).
 
   setup    the walks and their tool written into the garden as its own, refused until the garden has the kind
-           `procedure` and a host bean naming this machine
+           `procedure` and a host bean naming this machine; in a garden whose path reads as a Windows path, the tool's
+           place written as the law reads it, and found there
   book     a payment booked to an account and a plan's code; booked again to another while its period is open, the
            earlier booking replaced; after the period closed, what it placed moved by a booking of it on today, the
            closed period unchanged; a means the payment does not say; refused when nothing would change; several
@@ -221,6 +222,27 @@ files:
           and os.path.isfile(os.path.join(G, 'beans', 'books-tool.md')) and 'not saved' in r.out, (r.out[-600:], wrote))
     r = save("the books' walks", '- action: wrote [[books-tool]], ' + ', '.join(f'[[{w[:-3]}]]' for w in wrote))
     check("...and they pass the gate as the garden's own", r.returncode == 0, r.out[-900:])
+    W_ = os.path.join(T, 'C:\\v6-rehearsal\\20261014-042310\\garden')     # on Linux, one directory of that name
+    shutil.copytree(G, W_, symlinks=True)
+    for f in ['beans/books-tool.md'] + [f'mappings/{w}' for w in wrote]:
+        os.remove(os.path.join(W_, *f.split('/')))
+    r = grow.run(PY, 'assets/accounting/bin/books.py', 'setup', '--by', 'sam', cwd=W_)
+    g = grow.run(PY, 'core/check.py', '.', cwd=W_)
+    tool = open(os.path.join(W_, 'beans', 'books-tool.md'), encoding='utf-8').read()
+    try:
+        at = next(st['be']['at'] for st in json.loads(grow.run(PY, '-c', "import json, sys; sys.path.insert(0, 'bin'); "
+                  "import parse; print(json.dumps(parse.loads(open('beans/books-tool.md', encoding='utf-8').read()"
+                  ".split('---')[1])['statements']))", cwd=W_).stdout) if 'be' in st)
+    except (ValueError, KeyError, StopIteration):
+        at = None
+    found = grow.run(PY, '-c', "import sys; sys.path[:0] = ['bin', '.']; import routines; from core import engine; "
+                     "print(routines.tool_path(engine.Garden.read('.'), 'books-tool'))", cwd=W_).stdout.strip()
+    here = os.path.join(W_, 'assets', 'accounting', 'bin', 'books.py')
+    check("setup in a garden whose path reads as a Windows path (`C:\\v6-…\\2026…`): the tool's place is written in the "
+          "law's form and quoted as the parser reads it back — the gate passes, the place reads back exactly, and the "
+          "engine finds the tool there", r.returncode == 0 and g.returncode == 0 and at == f"{HOST.lower()}:{here}"
+          and found == here, (r.out[-400:], g.out[-600:], at, found, tool[:400]))
+    shutil.rmtree(W_, ignore_errors=True)
 
     # ---- BOOK
     r, c = start('market', 'book', of='market#veg', account='61', analytic='kitchen')

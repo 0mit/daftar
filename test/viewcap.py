@@ -37,6 +37,7 @@ import http.cookiejar
 import http.server
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -48,6 +49,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from http.server import ThreadingHTTPServer
+
+import yaml
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'test'))
@@ -237,6 +240,23 @@ _want = hashlib.sha256(open(_s1, "rb").read()).hexdigest()
 check("V-4 render --keep: the document is kept as a `document` bean named by its content (a name `sha-256` gives), saved "
       "through the core's gate", _rc == 0 and len(_docs) == 1 and _want in get("beans/" + _docs[0])
       and head() != _h0 and clean(), _o[-2000:])
+_win = os.path.join(T, "out", "C:\\v6-rehearsal\\20261014-042310\\slips")     # on Linux, one directory of that name
+_had = set(os.listdir(os.path.join(G, "beans")))
+_o, _rc = view("render", "outings", "--out", _win, "--member", "outing-1004", "--keep", "--who", "rosa")
+_doc = next(iter(sorted(set(os.listdir(os.path.join(G, "beans"))) - _had)), None)     # the bean this render kept
+try:                             # read as the garden's parser reads it: a bean that does not parse holds no place
+    _at = next((st["be"].get("at") for st in (yaml.safe_load(get("beans/" + _doc).split("\n---\n")[0][4:]) or {}).get(
+        "statements", []) if "be" in st), None) if _doc else None
+except yaml.YAMLError:
+    _at = None
+_hn = re.sub(r"[^a-z0-9.-]", "-", platform.node().lower()).strip("-.") or "localhost"   # view.py `_host`
+check("V-4 ...kept from a directory whose path reads as a Windows path (`C:\\v6-…\\2026…`): where its copy is, written as "
+      "the parser reads it back — saved through the gate, the position exact",
+      _rc == 0 and _at == "unix-filesystem:%s:%s" % (_hn, os.path.join(_win, "slip-outing-1004.md")) and clean(),
+      (_o[-1500:], _at))
+if not clean():                  # put the garden back as it was, so a refusal here leaves the checks below their own
+    run("git", "reset", "-q", "--hard", cwd=G)
+    run("git", "clean", "-fdq", "--", "beans", cwd=G)
 
 # ---------------------------------------------------------------- the host
 _hyg = {"humidity": 71.5, "rooms": {"sail-loft": 60, "boat-bay": 75}}

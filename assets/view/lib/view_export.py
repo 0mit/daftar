@@ -92,33 +92,45 @@ def sha256(text):
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _where(path):
+    """(the filesystem system a kept copy's `<host>:<path>` is written in — `windows-filesystem` for `<host>:C:\\…`, else
+    `unix-filesystem` (bin/where.py `system_of`) — and the position quoted as the garden's parser reads it back)."""
+    import where as dmwhere
+    return dmwhere.system_of(path) or "unix-filesystem", vm.dmparse.quoted(path)
+
+
 def document_bean(bid, title, digest, path, keeper, member):
-    """A `document` bean for a kept render: named by its content, where its copy is, and what it was rendered from."""
-    return ("---\nbean: %s\ngenos: document\ntitle: \"%s\"\nstatus: active\nsummary: \"%s\"\nnature: lekton\n"
+    """A `document` bean for a kept render: named by its content, where its copy is, and what it was rendered from. Every
+    value of words or of a path is quoted as the parser reads it back: a Windows path's `\\U` is no escape."""
+    q = vm.dmparse.quoted
+    system, at = _where(path)
+    return ("---\nbean: %s\ngenos: document\ntitle: %s\nstatus: active\nsummary: %s\nnature: lekton\n"
             "identity:\n  status: confirmed\n  anchors:\n    - { key: content_hash, value: \"%s\", class: logical, establishing: true }\n"
             "provenance: { src: generated-by-tool, by: \"view render\", as_of: now }\n"
             "owned_by: { owner: { bean: %s } }\n"
             "refs: { rendered-from: { bean: %s, rel: rendered-from } }\n"
-            "located_at:\n  - { system: unix-filesystem, openness: here, at: \"%s\", observed: now }\n"
+            "located_at:\n  - { system: %s, openness: here, at: %s, observed: now }\n"
             "---\n%s, rendered from [[%s]] by the page's template and kept by its content.\n"
-            % (bid, title.replace('"', "'"), ("A document rendered from %s's record." % member), digest, keeper,
-               member, path.replace('"', "'"), title.replace('"', "'"), member))
+            % (bid, q(title), q("A document rendered from %s's record." % member), digest, keeper,
+               member, system, at, title, member))
 
 
 def document_bean_core(bid, title, digest, path, keeper, member, source):
     """The same, in a garden of the core (v1 part 11; v1 part 12): derived by its keeper from the drawing whose template
     rendered it (`source`, `<page>#<drawing>`), through the member's record, named by its content in the namespace
-    `sha-256`, owned by its keeper, and where its copy is."""
-    q = lambda x: str(x).replace('"', "'")
-    return ("---\nbean: %s\nkind: document\ntitle: \"%s\"\nsummary: \"%s\"\nstatements:\n"
-            "  - derive: { by: %s, from: [\"%s\"], through: %s, at: now, note: \"rendered by the page's template (view render)\" }\n"
+    `sha-256`, owned by its keeper, and where its copy is: `<system>:<host>:<path>`, the system the path's form says
+    (`windows-filesystem` for `C:\\…`). Every value of words or of a path is quoted as the parser reads it back."""
+    q = vm.dmparse.quoted
+    system, _at = _where(path)
+    return ("---\nbean: %s\nkind: document\ntitle: %s\nsummary: %s\nstatements:\n"
+            "  - derive: { by: %s, from: [%s], through: %s, at: now, note: \"rendered by the page's template (view render)\" }\n"
             "  - name: { by: sha-256, of: self, as: \"%s\" }\n"
             "  - own: { by: %s, of: self }\n"
-            "  - be: { by: self, at: \"unix-filesystem:%s\", as: location }\n"
+            "  - be: { by: self, at: %s, as: location }\n"
             "---\n%s, rendered from [[%s]] by the page's template and kept by its content.\n"
-            % (bid, q(title), q("A document rendered from %s's record." % member), keeper, source, member,
-               digest[len("sha256:"):] if digest.startswith("sha256:") else digest, keeper, q(path),
-               q(title), member))
+            % (bid, q(title), q("A document rendered from %s's record." % member), keeper, q(source), member,
+               digest[len("sha256:"):] if digest.startswith("sha256:") else digest, keeper, q("%s:%s" % (system, path)),
+               title, member))
 
 
 # ---------------------------------------------------------------------------------------------------------------------

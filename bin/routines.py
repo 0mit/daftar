@@ -1053,7 +1053,7 @@ def adopt_cron(text, host, user, at_day, crontab_path):
 def proposal_text(rows, host, user, crontab_path):
     """The statements a person would save for adopted jobs: for each, a walk (the job as cron runs it, present in the
     crontab) and, in the host's bean, its `run` and its clause."""
-    parts = []
+    parts, at = [], dmparse.quoted(f"{host}:{crontab_path}")          # a path, quoted as the parser reads it back
     for r in rows:
         if r.get('refused'):
             continue
@@ -1062,7 +1062,7 @@ def proposal_text(rows, host, user, crontab_path):
         parts.append(f"# mappings/{r['slug']}.md (kind procedure) — line {r['n']} of {crontab_path}"
                      + (f", spelled `{r['spelled']}` and kept as spelled" if r.get('spelled') else '') + "\n"
                      f"  - say:  {{ by: <who adopts it>, at: now }}\n"
-                     f"  - be:   {{ id: in-crontab, by: self, at: \"{host}:{crontab_path}\", as: presence }}\n"
+                     f"  - be:   {{ id: in-crontab, by: self, at: {at}, as: presence }}\n"
                      f"  - step: {{ id: run, as: {json.dumps(r['command'])}, by: engine }}\n"
                      f"# beans/{host}.md\n"
                      f"  - run:        {{ id: {r['slug']}, by: self, of: {r['slug']} }}\n"

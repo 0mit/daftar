@@ -565,6 +565,18 @@ def loads(text):
     return _yaml.load(text, Loader=LOADER)
 
 
+# What YAML takes for a line's end, or refuses, inside a double-quoted scalar: written as an escape instead.
+_RAW_UNSAFE = re.compile('[^\x09\x20-\x7e\xa0-\u2027\u202a-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]')
+
+
+def quoted(text):
+    """`text` as one YAML scalar that `loads` reads back as exactly `text`: double-quoted, with JSON's escapes (which are
+    YAML's), and every character YAML would take for a line's end or refuse written as `\\uXXXX`. A backslash is
+    written `\\\\`, so a Windows path (`C:\\Users`, `\\v6`, `\\2026`) is never read as an escape. The one way a
+    tool writes a path, or any words, into a statement or a header by hand."""
+    return _RAW_UNSAFE.sub(lambda m: '\\u%04x' % ord(m.group()), json.dumps(str(text), ensure_ascii=False))
+
+
 # ---- A COMMENT IN A FRONT MATTER, AND WHAT IT SITS ON (24.0: the law carries no story) ----------------------------------
 # A `#` begins a comment where it is outside quotes, at a line's start or after a blank, and outside a block scalar
 # (`|`, `>`), whose lines are the value's text. What a comment sits on is the item on its line, or, for a comment on a
