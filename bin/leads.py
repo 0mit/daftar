@@ -15,7 +15,9 @@ disagrees with the garden. A lead says what waits, whose it is, and what it is a
              keeps the being (`answer … as: keeping`) — a routine's run waiting on its interlocks, a run rolled back —
              else the gardener's, saying so
   obligation a clause of an agreement (or any term the law gives an expiry) falling due within its notice, or past
-             it, as bin/stale.py reads it: the party it binds — who makes the payment it asks — else the gardener. A
+             it, as bin/stale.py reads it: the party it binds — who makes the payment it asks (`side: pays`) — else the
+             gardener; and the party the payment is owed to (`to`), told it is owed and by whom (`side: owed`,
+             `owed_by`), so what others owe a person reaches them too. A
              routine's clause (a clause of a `run`, bin/routines.py) is none: the machine keeps it, and a person is
              told of it only when a run waits, fails or is rolled back
   health     a failure a reading shows is happening — a `fail` whose `through` names a `measure` (a probe's
@@ -161,15 +163,20 @@ def read(root=ROOT):
                 if days > notice:
                     continue
                 cid = str(held.get('id') or label.strip('[].')) if isinstance(held, dict) else label.strip('[].')
-                bound = []
+                bound, owed = [], []
                 for _i, verb, r in (b.items if b else []):
                     if r.get('id') == cid and isinstance(r.get('of'), str):
                         paid = next((pr for _j, pv, pr in b.items if pv == 'pay' and pr.get('id') == r['of']), None)
                         bound = [str(x) for x in listed((paid or {}).get('by')) if isinstance(x, str)]
+                        owed = [str(x) for x in listed((paid or {}).get('to')) if isinstance(x, str) and x not in bound]
+                when = (f"falls due on {shown}, in {days} day(s)" if days >= 0 else f"fell due on {shown}, {-days} day(s) ago")
                 for who in bound or ([gardener] if gardener else []):
                     leads.append({'for': who, 'kind': 'obligation', 'about': bid, 'clause': cid, 'due': shown,
-                                  'days': days, 'why': (f"{bid} {cid} falls due on {shown}, in {days} day(s)" if days >= 0
-                                                        else f"{bid} {cid} fell due on {shown}, {-days} day(s) ago")})
+                                  'days': days, 'side': 'pays', 'why': f"{bid} {cid} {when}"})
+                for who in owed:                  # WHAT OTHERS OWE A PERSON reaches them too: the one it is owed to
+                    leads.append({'for': who, 'kind': 'obligation', 'about': bid, 'clause': cid, 'due': shown,
+                                  'days': days, 'side': 'owed', 'owed_by': bound,
+                                  'why': f"{bid} {cid}, owed to {who} by {', '.join(bound) or 'nobody named'}, {when}"})
 
     # HEALTH: a failure a reading shows, not yet repaired — for whoever keeps the being
     repaired = {(str(r.get('of')) if '#' in str(r.get('of')) else f"{rb}#{r.get('of')}")   # a bare id is its own bean's

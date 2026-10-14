@@ -6,7 +6,8 @@ A sheet of a payment of 90 is drawn in a browser, in Persian, its shares as they
 walk's action on its line. Its form:
 
   prefilled   opens with each one's share as it stands now, in whole parts over the shares' common denominator: Sam 2,
-              Ali 1 — the form shows what is, before anyone changes it
+              Ali 1, in the reader's digits — the form shows what is, before anyone changes it; a share typed in Persian
+              digits is read as one in Latin ones
   live        beside each row, that one's part of the whole as the fraction it is and the amount it comes to — Sam 2/3
               (60), Ali 1/3 (30) — and again as the form is changed: given 1 and 1, a half each, 45 each
   amounts     shares that add up to the payment are each one's amount: 70 and 20, read 7/9 (70) and 2/9 (20)
@@ -81,7 +82,7 @@ try {
   out.prefilled = read();
   const set = (a, b) => { const [r1, r2] = rows(); r1.querySelector('[name="act.share"]').value = a; r2.querySelector('[name="act.share"]').value = b;
                           table.dispatchEvent(new Event('input', {bubbles: true})); };
-  set('1', '1'); out.halves = read();
+  set('۱', '1'); out.halves = read();
   set('70', '20'); out.amounts = read();
   const o = document.getElementById('o');
   window.daftarArchetypes.sheet(o, E.sheets.other, t, null);
@@ -104,7 +105,7 @@ const pre = document.createElement('pre'); pre.id = '__out'; pre.textContent = J
         pre = B.get('prefilled') or []
         check("prefilled: the form opens with each one's share as it stands, in whole parts — Sam 2, Ali 1 — and a column "
               "of each one's part", not B['errs'] and B.get('heads') == ['چه کسی', 'سهم', 'سهم از کل']
-              and {who: v for who, v, _p in pre} == {'sam': '2', 'ali': '1'}, B)
+              and {who: v for who, v, _p in pre} == {'sam': fa('2'), 'ali': fa('1')}, B)
         p0 = part(pre)
         check("live: beside each row, its part of the whole as the fraction it is and the amount it comes to — Sam 2/3 "
               "(60), Ali 1/3 (30)", fa('2') in p0.get('sam', '') and fa('3') in p0.get('sam', '') and fa('60') in p0.get('sam', '')
