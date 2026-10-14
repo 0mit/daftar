@@ -170,6 +170,26 @@ HOST_FORM = re.compile(r'^([a-z0-9][a-z0-9.-]*):(/.*|[A-Za-z]:\\.*)$')
 SYSTEM_FORM = re.compile(r'^([a-z][a-z0-9-]*):(.+)$')
 
 
+def literal(path, host=None):
+    """A literal path on this machine (or on the machine named `host`) as the law writes a position on a host,
+    `<host>:<path>` — `unix-filesystem` where the path is `/…`, `windows-filesystem` where it is `<Drive>:\\…`
+    (core/law/systems.yaml) — the host as `here` names this machine, in lower case. A ValueError for a path that is
+    neither, or a name that is no host's. It is a value: written into a bean it is quoted as the parser reads it back
+    (bin/parse.py `quoted`), never put between double quotes by hand, where a Windows path's `\\U` is an escape."""
+    pos = f"{str(host or socket.gethostname()).lower()}:{path}"
+    if not HOST_FORM.match(pos):
+        raise ValueError(f"{pos!r} is no position on a host: `<host>:/…` or `<host>:<Drive>:\\…`, the host's name in "
+                         f"lower case letters, digits, dots and dashes")
+    return pos
+
+
+def system_of(position):
+    """The host-bound filesystem a `<host>:<path>` position is written in: `windows-filesystem` where its path opens with
+    a drive (`C:\\…`), else `unix-filesystem` — or None for no such position."""
+    m = HOST_FORM.match(str(position))
+    return None if not m else 'unix-filesystem' if m.group(2).startswith('/') else 'windows-filesystem'
+
+
 def on_host(position, roots, names=()):
     """ONE RESOLVER FOR EVERY DATUM A HOST DEFINES: a position -> (literal path here, object, why not).
 

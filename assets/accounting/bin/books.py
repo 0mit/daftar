@@ -192,13 +192,18 @@ def setup(argv):
         return 2
     wrote = []
     if tool not in G.beans:
+        import parse as dmparse
+        import where as dmwhere
         path = os.path.join(ROOT, 'beans', f'{tool}.md')
-        here = os.path.abspath(os.path.join(HERE, 'books.py'))
-        hostname = platform.node()
+        try:            # this file on this machine, in the law's form (`<host>:/…`, `<host>:<Drive>:\…`), quoted as read
+            at = dmparse.quoted(dmwhere.literal(os.path.abspath(os.path.join(HERE, 'books.py'))))
+        except ValueError as e:
+            print(f"books: setup cannot say where its tool is on this machine: {e}", file=sys.stderr)
+            return 2
         with open(path, 'w', encoding='utf-8', newline='\n') as fh:
             fh.write(f'---\nbean: {tool}\nkind: program\ntitle: "{tool} — the books\' tool"\nstatements:\n'
                      f'  - make: {{ by: {who}, at: now }}\n'
-                     f'  - be: {{ by: self, at: "{hostname}:{here}", as: location }}\n---\n'
+                     f'  - be: {{ by: self, at: {at}, as: location }}\n---\n'
                      f'The accounting profile\'s tool, as this garden runs it on {host}: each walk of the books runs '
                      f'its steps.\n')
         wrote.append(tool)
