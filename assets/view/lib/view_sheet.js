@@ -363,7 +363,9 @@
     }
     // EXACT, NEVER THROUGH A FLOAT: a count as written (`3`, `1250.50`, `9650/3`) as [numerator, denominator] in BigInt
     function frac(x) {
-      var m = String(x == null ? '' : x).trim().match(/^(\d+)(?:\.(\d+))?(?:\/(\d+))?$/);
+      var latin = String(x == null ? '' : x).trim().replace(/[\u06F0-\u06F9]/g, function (c) { return String(c.charCodeAt(0) - 0x06F0); })
+        .replace(/[\u0660-\u0669]/g, function (c) { return String(c.charCodeAt(0) - 0x0660); }).replace(/[\u066B\u060C]/g, '.');
+      var m = latin.match(/^(\d+)(?:\.(\d+))?(?:\/(\d+))?$/);
       if (!m) return null;
       var d = m[2] ? 10n ** BigInt(m[2].length) : 1n;
       return [BigInt(m[1] + (m[2] || '')), d * (m[3] ? BigInt(m[3]) : 1n)];
@@ -384,7 +386,10 @@
       rows.forEach(function (tr) {
         var th = tr.querySelector('[data-row-value]'), input = tr.querySelector('input, textarea');
         var b = th && sh.bearers.filter(function (x) { return x.bean === th.getAttribute('data-row-value'); })[0];
-        if (b && input && !input.value) { var f = frac(b.share); if (f) input.value = text(f[0] * den / f[1], 1n); }
+        if (b && input && !input.value) {            // in the reader's digits, as they would type it
+          var f = frac(b.share);
+          if (f) input.value = w.locale.inDigits(text(f[0] * den / f[1], 1n), w.locale.digitsOf({}));
+        }
         tr.appendChild(document.createElement('td')).className = 'eg-part';
       });
       var head = tbl.querySelector('thead tr');
