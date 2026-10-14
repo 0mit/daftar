@@ -2,7 +2,9 @@
 """check — the gate: judges a garden by the core's law, and refuses what breaks it.
 
     python3 bin/check.py [--all]          # the whole garden, as the working tree holds it
-    python3 bin/check.py --staged         # what a commit would hold: the index (the pre-commit hook runs this)
+    python3 bin/check.py --staged         # what a commit would hold: the index
+    python3 bin/check.py --staged --held  # ...and, the gate passed, every pointer it adds resolves on this host (the
+                                          # pre-commit hook runs this: bin/held.py `new --staged`, in the same process)
     python3 bin/check.py --merge-commit   # a merge git commits itself (the pre-merge-commit hook runs this)
     python3 bin/check.py --law            # the core's law alone, proved one law (a release's own tree too)
 
@@ -76,7 +78,13 @@ def main(argv):
     if argv[:1] in (['-h'], ['--help']):
         print(__doc__.strip())
         return 0
+    held = '--held' in argv
+    argv = [a for a in argv if a != '--held']
     staged = '--staged' in argv or '--merge-commit' in argv
+    if held and not staged:
+        print("check: --held asks, after the gate over the index, that every pointer the commit adds resolves on this "
+              "host: it goes with --staged (or --merge-commit), as the hook runs it", file=sys.stderr)
+        return 2
     p = pin(toplevel(), '') if staged else pin(ROOT)
     if not runs_core(p):
         print(f"check: this garden runs today's words ({p}), and this release's gate judges the core's statements: adopt "
@@ -94,7 +102,20 @@ def main(argv):
         print("check: no GARDEN.md here pins a law: the gate judges a garden (`--law` proves this release's law)",
               file=sys.stderr)
         return 2
-    return subprocess.run([sys.executable, os.path.join(ROOT, 'core', 'check.py')] + (rest or [ROOT])).returncode
+    # THE CORE'S GATE, IN THIS PROCESS (2026-10-14): core/check.py's own `main`, given what it was given on its command
+    # line, and nothing else — it was spawned as a second interpreter, which paid for Python and its imports twice at
+    # every commit. It reads the index and judges it exactly as before; only the process is one.
+    from core import check as core_check
+    sys.stdout.flush()
+    code = core_check.main(rest or [ROOT])
+    sys.stdout.flush()
+    if code or not held:
+        return code
+    # MATERIAL SEALED HERE IS HERE (the hook's, `--held`): every pointer the index adds resolves in a store on this host
+    # (bin/held.py `new --staged`), asked in the same process after the gate passed, as the hook asked it after. The
+    # gate itself never reads a store — it judges alike on every copy, in CI and at the hub — so only the hook names it.
+    import held as dmheld
+    return dmheld.main(['new', '--staged'])
 
 
 if __name__ == '__main__':

@@ -8,7 +8,8 @@
     python3 bin/held.py erase <person>
     python3 bin/held.py check
     python3 bin/held.py due [--days N]
-    python3 bin/held.py new --staged        # the pointers the index adds that do not resolve here; the hook runs it
+    python3 bin/held.py new --staged        # the pointers the index adds that do not resolve here; the hook asks it
+                                            # through bin/check.py --staged --held, in the gate's process
 
 A SEALED ENTRY is `{held: root:<name>/<32 hex>, basis?, until?}` in place of an entry's attributes (`held_form`). What
 it held is a file `<store>/<32 hex>.yaml` holding `{bean, term, key, entry, about}`, where `<store>` is what THIS host's
@@ -16,7 +17,8 @@ it held is a file `<store>/<32 hex>.yaml` holding `{bean, term, key, entry, abou
 
 GIT KEEPS ONLY THE POINTER: no hash, no name, no count. The gate never reads a store — a gate that fails on one
 machine and passes on another is a gate people disable — so a store is checked where it is: here, by `check`, and
-by the pre-commit hook on every commit (`new --staged`), which runs on the host whose stores these are.
+by the pre-commit hook on every commit (`new --staged`, through bin/check.py `--held`), which runs on the host
+whose stores these are.
 
 ERASURE deletes every file the subject is in and writes the key to `<store>/ERASED`, which names no one: a pointer
 to it then resolves to `Erased`, and one this host cannot reach to `NotHere`. Neither is an error of the bean.
@@ -529,23 +531,46 @@ def _staged_beans(root):
     return out
 
 
+def _at_head(root, paths):
+    """{path: text} of each of `paths` as HEAD holds it, read in one `git cat-file --batch`; a path HEAD lacks is
+    left out."""
+    import subprocess
+    if not paths:
+        return {}
+    r = subprocess.run(['git', '-C', root, 'cat-file', '--batch'], capture_output=True,
+                       input=''.join(f'HEAD:{p}\n' for p in paths).encode('utf-8'))
+    out, buf = {}, r.stdout
+    for p in paths:
+        line, _, buf = buf.partition(b'\n')
+        parts = line.split()
+        if len(parts) != 3 or parts[1] != b'blob':            # `<object> missing`: HEAD has no such file
+            continue
+        n = int(parts[2])
+        out[p], buf = buf[:n].decode('utf-8', 'replace'), buf[n + 1:]
+    return out
+
+
 def unresolved_new(*, root=ROOT, staged=False):
     """The pointers the beans hold that HEAD's do not, and which do not resolve here: a commit refuses them — material
     sealed on this host is on this host. `staged` reads the index, as the hook must; otherwise the working tree."""
-    import subprocess
     bad = []
     beans = _staged_beans(root) if staged else dmpass.beans_here(root)
-    for bid, fm in sorted(beans.items()):
-        r = subprocess.run(['git', '-C', root, 'show', f'HEAD:beans/{bid}.md'], capture_output=True, text=True,
-                           encoding='utf-8', errors='replace')
+    # ONLY A BEAN THAT HOLDS A POINTER CAN ADD ONE, and HEAD's copy of each such bean is read in ONE `git cat-file
+    # --batch` (2026-10-14): it was one `git show` per bean of the garden on every commit — 225 processes for a
+    # 239-bean garden, most of whose beans hold no pointer at all.
+    holding = {bid: list(_pointers(fm)) for bid, fm in beans.items()}
+    holding = {bid: ps for bid, ps in holding.items() if ps}
+    head = _at_head(root, [f'beans/{bid}.md' for bid in sorted(holding)])
+    for bid, ps in sorted(holding.items()):
+        text = head.get(f'beans/{bid}.md')
         was = set()
-        if r.returncode == 0:
-            _f = dmparse.split_front_matter(r.stdout)[0]
+        if text is not None:
+            _f = dmparse.split_front_matter(text)[0]
             try:
                 was = {e['held'] for _t, _l, e in _pointers(dmparse.loads(_f) if _f else {})}
             except Exception:
                 was = set()
-        for t, label, e in _pointers(fm):
+        for t, label, e in ps:
             if e['held'] in was:
                 continue
             try:
