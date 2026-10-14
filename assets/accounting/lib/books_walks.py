@@ -130,9 +130,9 @@ def iso(n):
     return datetime.date.fromordinal(n).isoformat()
 
 
-def account(B, words, name):
-    """A postable account of the chart, by its code (`<scheme>:<code>` or `<code>`) or its name, open on `today` — never one
-    that holds persons, where each line names the person it is with."""
+def account(B, words, name, persons=False):
+    """A postable account of the chart, by its code (`<scheme>:<code>` or `<code>`) or its name, open on `today` — one
+    that holds persons only where the person is named beside it (`persons`), each line of it naming who it is with."""
     C = B.chart
     w = str(words or '').strip()
     if not w:
@@ -146,10 +146,10 @@ def account(B, words, name):
         code = named[0]
     if code not in C.postable:
         refuse(f"{name}: {C.scheme}:{code} has accounts beneath it: name a postable one")
-    if code in br.holds_parties(B):
+    if code in br.holds_parties(B) and not persons:
         # AN ACCOUNT THAT HOLDS PERSONS IS NEVER BOOKED TO WITH NOBODY NAMED: each line in it is some person's
-        refuse(f"{name}: {C.scheme}:{code} holds persons: name the person — who bears a payment is its `share`, and a "
-               f"journal line names the person in place of the account (`<person> dr|cr <amount>`)")
+        refuse(f"{name}: {C.scheme}:{code} holds persons: name the person beside it (`party`) — who bears a payment is "
+               f"its `share`, and a journal line names the person in place of the account (`<person> dr|cr <amount>`)")
     return code
 
 
@@ -221,6 +221,8 @@ def book(B, I, today, run=(None, None)):
             refuse(f"{ref} is a line matched with what was said of it: book the payment said, which carries the "
                    f"bookings")
         each.append((ref, bid, p, 'from' if (to == E and by != E) else 'to'))
+    if str(I.get('party') or '').strip():
+        return _book_to_party(B, I, refs, each, str(I['party']).strip(), today)
     code = account(B, I.get('account'), 'account')
     closed = (C.rows.get(code) or {}).get('closed')
     if closed and today > day_of(closed, 'closed'):
@@ -245,6 +247,69 @@ def book(B, I, today, run=(None, None)):
     what = f"{refs[0]} booked" if len(refs) == 1 else f"{len(refs)} payments booked"
     return {'what': f"{what} to {C.scheme}:{code}", 'beans': entries,
             'body': [f"- action: {s}" for s in said] + [f"- action: wrote [[{e['bean']}]]" for e in entries]}
+
+
+def _book_to_party(B, I, refs, each, party, today):
+    """A PAYMENT PUT ON A PERSON'S ACCOUNT (the operator, 2026-10-14: "she can't assign a credit card statement row
+    directly to me"): the account that holds persons, and the person — its detail account — beside it (`party`). Written
+    as the person bearing the payment's cost alone, a `bear` as the share walk writes one, in place of whoever bore it
+    before, so the books read it in that person's account (Dr their account, Cr the payment's means) and who owes whom
+    reads the same; the entity's own bookings of its part — where it belonged, a plan's code — are taken out, its part now
+    nothing. A payment whose day the books are closed through is refused: its booking stays as closed."""
+    C = B.chart
+    x = B.G.beans.get(party)
+    if x is None or x.kind not in ('person', 'org'):
+        refuse(f"party: {party} is no person or organisation of this garden")
+    held, why = B.account(party)
+    if held is None:
+        refuse(f"party: {why}")
+    if str(I.get('account') or '').strip():
+        code = account(B, I['account'], 'account', persons=True)
+        if code != held:
+            refuse(f"account: {party} is held in {C.scheme}:{held}, an account that holds persons — not {C.scheme}:{code}")
+    for name in ('analytic', 'means'):
+        if I.get(name):
+            refuse(f"{name}: a payment {party} bears alone is in {party}'s account: no part of it is the entity's to place")
+    shut = last_close(B)
+    E = B.entity
+    entries, said = {}, []
+
+    def entry(b_):
+        return entries.setdefault(b_, {'bean': b_, 'add': [], 'remove': []})
+    for ref, bid, p, _side in each:
+        pday = br._day(p.get('at'))
+        if shut is not None and pday is not None and pday <= shut:
+            refuse(f"{ref}'s day is in the books closed through {iso(shut)}: reverse it, and book it again on a later day")
+        sid = ref.split('#', 1)[1]
+        b = B.G.beans[bid]
+        olds = [r for _i, v, r in b.items if v == 'bear' and r.get('of') in (sid, ref)]
+        if any(not isinstance(r.get('id'), str) for r in olds):
+            refuse(f"{ref} is borne already by a statement with no id, written by hand: change it there")
+        if olds and all(str(r.get('by')) == party for r in olds) and len(olds) == 1:
+            refuse(f"{ref} is borne by {party} already")
+        entry(bid)['remove'] += [r['id'] for r in olds]
+        nid = fresh_id(B, bid, f"bear-{sid}-{party}", set())
+        entry(bid)['add'].append(f'bear: {{ id: {nid}, by: {party}, of: {sid}, share: "1" }}')
+        # the entity's own part placed somewhere — to an account, or a plan's code — goes; where it was paid from (a
+        # booking naming `from` alone, its means) stays: the person's account is read against it
+        mine = [(b2.id, r) for b2 in B.G.beans.values() for _i, v, r in b2.items if v == 'book'
+                and isinstance(r.get('id'), str) and str(r.get('by') or B.G.gardener) == E
+                and r.get('of') in (ref, sid if b2.id == bid else None) and str(r.get('sense') or '1') == '1'
+                and r.get('to') is not None and r.get('from') is None]
+        for b_, r in mine:
+            entry(b_)['remove'].append(r['id'])
+        said.append(f"{ref}: borne by [[{party}]] alone, in {C.scheme}:{held}"
+                    + (f"; in place of {', '.join(r['id'] for r in olds)}" if olds else '')
+                    + (f"; {E}'s booking of it ({', '.join(r['id'] for _b, r in mine)}) taken out" if mine else ''))
+    out = []
+    for b_, e in sorted(entries.items()):
+        more, again = kept_known(B, b_, e['remove'])
+        e['remove'] = sorted(set(e['remove']) | set(more))
+        e['add'] = again + e['add']
+        out.append(e)
+    what = f"{refs[0]} put on {party}'s account" if len(refs) == 1 else f"{len(refs)} payments put on {party}'s account"
+    return {'what': what, 'beans': out,
+            'body': [f"- action: {x}" for x in said] + [f"- action: wrote [[{e['bean']}]]" for e in out]}
 
 
 def _book_one(B, I, ref, bid, p, side, code, books, shut, today, taken, adds, removes, said):

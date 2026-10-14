@@ -151,7 +151,7 @@ statements:
 {body}
 """
 OPS = {'book': ('a payment booked where it belongs', 'booked',
-                'A payment booked to an account: `of`, `account`, `analytic`, `means`, `note`.'),
+                'A payment booked to an account: `of`, `account`, `analytic`, `means`, `note`; or to a person\'s account: `account` holding persons, `party`.'),
        'reverse': ('a move booked in the reverse sense', 'reversed',
                    'A payment or a booking reversed from a day: `of`, `day`, `reason`.'),
        'match': ('a line and a payment, one movement', 'matched',

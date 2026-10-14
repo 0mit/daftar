@@ -400,6 +400,36 @@ files:
           and any(ln.get('party') == 'p-0a1b2c3d' and ln.get('dr') == '450' for ln in rent.get('lines', []))
           and no.startswith('REFUSED') and 'of an agreement' in no, (r2.out[-400:], house[-500:], rent, no))
 
+    # ---- A PAYMENT PUT ON A PERSON'S ACCOUNT (the operator, 2026-10-14: a card line assigned straight to another): the
+    # account that holds persons and the person, its detail — the person bears it alone; the entity's own booking of it out
+    bean('gift', 'document', 'a gift bought for the friend, on the card', 'say: { by: sam, at: now }',
+         'own: { by: sam, of: self }',
+         'pay: { id: scarf, by: sam, of: { count: "36.00", unit: XTS }, through: card-a, at: "2025-03-07", note: "a scarf" }')
+    save('the gift', '- action: wrote [[gift]]')
+    r, c = start('gift', 'book', of='gift#scarf', account='61')
+    ratify('gift', c)
+    no = [planned('book', on='gift', of='gift#scarf', account='13'),
+          planned('book', on='gift', of='gift#scarf', account='61', party='p-0a1b2c3d'),
+          planned('book', on='gift', of='gift#scarf', account='13', party='grocer-x')]
+    check("book to a person: the persons' account naming nobody is refused, saying to name the person; a person beside "
+          "an account that holds no persons, and a party that is no person of the garden, refused",
+          all(x.startswith('REFUSED') for x in no) and '`party`' in no[0] and 'is held in books:13' in no[1]
+          and 'no person or organisation' in no[2], no)
+    r, c = start('gift', 'book', of='gift#scarf', account='13', party='p-0a1b2c3d')
+    p = plan_of('gift', c)
+    r2 = ratify('gift', c)
+    gift = open(os.path.join(G, 'beans', 'gift.md'), encoding='utf-8').read()
+    v = next((x for x in books('vouchers') if x.get('ref') == 'gift#scarf'), {})
+    check("...the persons' account and the friend: the scarf borne by the friend alone, as the share walk writes it — "
+          "Dr the persons' account 36 in the friend's name, Cr the card 36 — Sam's own booking of it to food taken out",
+          'stopped at done' in r2.out and re.search(r'bear: \{ id: [a-z0-9-]+, by: p-0a1b2c3d, of: scarf, share: "1" \}', gift)
+          and lines_of(v) == [('13', 36, 0), ('21', 0, 36)]
+          and any(ln.get('party') == 'p-0a1b2c3d' for ln in v.get('lines', []))
+          and not [ln for f in os.listdir(os.path.join(G, 'beans')) if f.endswith('.md')
+                   for ln in open(os.path.join(G, 'beans', f), encoding='utf-8').read().splitlines()
+                   if 'gift#scarf' in ln and 'books:61' in ln],
+          p[-700:] + r2.out[-400:] + str(v))
+
     # ---- SEVERAL PAYMENTS, ONE ACCOUNT, ONE PLAN: the lines a person ticks on a statement's page
     bean('grocer', 'document', 'two receipts from the grocer', 'say: { by: sam, at: now }', 'own: { by: sam, of: self }',
          'pay: { id: apples, by: sam, of: { count: "4.00", unit: XTS }, through: card-a, at: "2025-04-02" }',
