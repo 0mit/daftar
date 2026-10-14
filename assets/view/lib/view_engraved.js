@@ -84,6 +84,44 @@
     return w.text.show(s);
   }
 
+  /* A PARTY OF THE BOOKS (view_engraved.py `_party_ref`): a being by how it is called, opening its sheet; a party nobody
+     named, the lines naming none, and one the reader may not read, each said so — never an id */
+  function party(t, p) {
+    var h = t.h;
+    if (!p) return '';
+    if (p.bean) return t.w.being.show(p.bean, t.titleOf(p.bean) || p.title || p.bean, {action: 'open'});
+    if (p.nobody) return h`<span class="w-none eg-nobody">${t.say('chart-nobody')}</span>`;
+    if (p.unknown) return h`<span class="eg-someone">${t.say('flows-someone')}</span>`;
+    return h`<span class="w-none">${t.say('chart-hidden')}</span>`;
+  }
+
+  /* a sentence of the reader's words, each `{name}` in it a drawn part: a name or an amount is markup, never text a
+     right-to-left line could turn round */
+  function sentence(t, key, parts) {
+    return t.say(key).split(/\{(\w+)\}/).map(function (x, i) { return i % 2 ? (parts[x] || '') : x; });
+  }
+
+  /* why a line stands in a party's account (books_read.py `WHY`), in the reader's words */
+  function why(t, y) {
+    return y && y.as ? t.h`<span class="eg-why">${sentence(t, 'why-' + y.as, {party: party(t, y.party)})}</span>` : '';
+  }
+
+  /* A LEDGER: an account's lines in day order, each with the record it rests on (opening its sheet), why it is there,
+     what arrived and left and the running balance; with `person`, a column naming each line's party */
+  function ledger(t, L, unit, o) {
+    var h = t.h, w = t.w;
+    o = o || {};
+    function money(x) {
+      return x && x !== '0' ? show(t, {count: x, unit: unit}, {}) : h`<span class="w-none">—</span>`;
+    }
+    var lines = (L.lines || []).map(function (x) {
+      var rec = x.bean ? w.being.show(x.bean, x.title || x.bean, {action: 'open'}) : h`<span class="w-none">${t.say('chart-hidden')}</span>`;
+      return h`<tr><td>${x.day ? w.moment.show(x.day, {style: 'long'}) : ''}</td>${o.person ? h`<td class="eg-who">${party(t, x.party)}</td>` : ''}<td class="eg-what">${rec}${x.why ? h` · ${why(t, x.why)}` : ''}${x.memo ? h` <span class="eg-memo">${w.text.show(x.memo)}</span>` : ''}</td><td>${money(x.dr)}</td><td>${money(x.cr)}</td><td>${money(x.balance)}</td></tr>`;
+    });
+    var opening = o.noOpening ? '' : h`<tr><td></td>${o.person ? h`<td></td>` : ''}<td class="eg-what">${t.say('chart-opening')}</td><td></td><td></td><td>${money(L.opening)}</td></tr>`;
+    return h`<table class="eg-table eg-ledger-table"><thead><tr><th scope="col">${t.say('chart-day')}</th>${o.person ? h`<th scope="col">${t.say('chart-person')}</th>` : ''}<th scope="col">${t.say('chart-what')}</th><th scope="col">${t.say('chart-debit')}</th><th scope="col">${t.say('chart-credit')}</th><th scope="col">${t.say('chart-balance')}</th></tr></thead><tbody>${opening}${lines}</tbody></table>`;
+  }
+
   /* where an order runs: true where the reader's line runs the order's way (so the order is written in reading order),
      false where it runs against it — asked of direction.js for the order the drawing's axes name, never a side */
   function forward(t, order) {
@@ -152,5 +190,6 @@
     if (!dialog.open) { if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', ''); }
   }
 
-  root.daftarEngraved = {mount: mount, open: open, show: show, forward: forward, tools: tools};
+  root.daftarEngraved = {mount: mount, open: open, show: show, forward: forward, tools: tools, party: party, why: why,
+                         ledger: ledger, sentence: sentence};
 })(typeof window !== 'undefined' ? window : this);

@@ -135,10 +135,19 @@ class Books:
         return v
 
 
-def line(account, amount, party=None, memo='', analytic=None):
-    """A line whose `amount` is a debit when positive and a credit when negative."""
+def line(account, amount, party=None, memo='', analytic=None, why=None):
+    """A line whose `amount` is a debit when positive and a credit when negative. `why`, on a line the reader wrote in a
+    party's account, says what it is as data — `{as, party}` (and `clause`), `as` one of WHY — for a page to word in its
+    own language; `memo` says the same in English, for the command line."""
     return {'account': account, 'party': party, 'dr': amount if amount > 0 else ZERO, 'cr': -amount if amount < 0 else ZERO,
-            'memo': memo, 'analytic': dict(analytic or {})}
+            'memo': memo, 'analytic': dict(analytic or {}), 'why': why}
+
+
+# WHY a line stands in a party's account: `share` — the party's share of what the entity paid (the party owes it); `paid`
+# — what the party paid of what the entity bears (the entity owes it); `owed` — the entity's share of what it received
+# from the party (owed back to it); `settles` — what a payment settles of a clause between them; `asked-owed` and
+# `asked-owing` — what a clause asks, fallen due: owed by the entity to the party, or by the party to the entity
+WHY = ('share', 'paid', 'owed', 'settles', 'asked-owed', 'asked-owing')
 
 
 def _count(q):
@@ -179,9 +188,14 @@ def charts_of(root, G):
     return charts, other
 
 
+_HELD = {}     # (root, entity, chart, today, pinned) -> (the garden's held version, the books read at it)
+
+
 def read(root, entity=None, chart=None, today=None, pinned=True):
     """The books of `entity` (the gardener's where none is named) in `chart` (the garden's one chart where none is); with
-    `pinned`, a period a `pin` closed read as the pinned commit read it (`closes`)."""
+    `pinned`, a period a `pin` closed read as the pinned commit read it (`closes`). Read once per version of the garden a
+    process holds (core/engine.py `Garden.read`): asked again at that version, the same books — a page's sheets, each
+    reading a person's account, read them once. The books are only read from: no reading writes into them."""
     _paths(root)
     from core import engine
     import importlib
@@ -195,14 +209,21 @@ def read(root, entity=None, chart=None, today=None, pinned=True):
         chart = next(iter(charts))
     if chart not in charts:
         raise ValueError(f"{chart} is no chart of this garden (a scheme whose form is `chart`)")
+    today = today or datetime.date.today().toordinal()
+    key = (os.path.abspath(root), entity, chart, today, pinned)
+    kept = _HELD.get(key)
+    if G.held is not None and kept is not None and kept[0] is G.held:
+        return kept[1]
     B = Books(root, entity, charts[chart], G, charts, analytic)
     B.sides = sides(root)
-    _vouchers(B, today or datetime.date.today().toordinal())
+    _vouchers(B, today)
     if pinned:
         closed = closes(B)
         if closed:
             _as_pinned(B, closed, today)
     _numbered(B)
+    if G.held is not None:
+        _HELD[key] = (G.held, B)
     return B
 
 
@@ -588,7 +609,8 @@ def _pay_voucher(B, ref, p, mine, bears, ana, matched_means, accrued, pays, knew
         amt, _u = _count(st.get('amount')) if isinstance(st.get('amount'), dict) else (W, unit)
         other = str(pays[asked_ref][1].get('to') if by == E else pays[asked_ref][1].get('by'))
         acct, party = _party_account(B, other, notes)
-        lines_.append(line(acct, amt if by == E else -amt, party=party, memo=f"settles {cl}"))
+        lines_.append(line(acct, amt if by == E else -amt, party=party, memo=f"settles {cl}",
+                           why={'as': 'settles', 'party': other, 'clause': cl}))
         settled += amt
     R = W - settled
     if by == E and to == E:
@@ -604,7 +626,7 @@ def _pay_voucher(B, ref, p, mine, bears, ana, matched_means, accrued, pays, knew
                     lines_.append(line(acct, x, party=party, analytic=a))
             else:
                 acct, party = _party_account(B, who, notes)
-                lines_.append(line(acct, part, party=party, memo=f"the share of {who}"))
+                lines_.append(line(acct, part, party=party, memo=f"the share of {who}", why={'as': 'share', 'party': who}))
     elif to == E:
         # RECEIVED: the whole reached its means. What the entity bears of it is owed back to the payer, as bin/ledger.py
         # reads a transfer (each bearer owes the payer its share); the rest belongs where its own bookings say
@@ -612,7 +634,7 @@ def _pay_voucher(B, ref, p, mine, bears, ana, matched_means, accrued, pays, knew
         owe = R * shares.get(E, ZERO) / total if E in shares and by not in (E,) and set(shares) != {by} else ZERO
         if owe:
             acct, party = _party_account(B, by, notes)
-            lines_.append(line(acct, -owe, party=party, memo=f"owed to {by}"))
+            lines_.append(line(acct, -owe, party=party, memo=f"owed to {by}", why={'as': 'owed', 'party': by}))
         for acct, x, party in _spread(B, R - owe, [m for m in mine if m[1].get('from') is not None], 'from', notes, a):
             lines_.append(line(acct, -x, party=party, analytic=a))
     elif E in shares:
@@ -620,7 +642,7 @@ def _pay_voucher(B, ref, p, mine, bears, ana, matched_means, accrued, pays, knew
         for acct, x, party in _spread(B, part, [m for m in mine if m[1].get('to') is not None], 'to', notes, a):
             lines_.append(line(acct, x, party=party, analytic=a))
         acct, party = _party_account(B, by, notes)
-        lines_.append(line(acct, -part, party=party, memo=f"paid by {by}"))
+        lines_.append(line(acct, -part, party=party, memo=f"paid by {by}", why={'as': 'paid', 'party': by}))
     else:
         notes.append("the entity is no party to it; its bookings name one side only")
     B.add(ref, 'pay', day, unit, lines_, memo=str(p.get('note') or ''), notes=notes, knew=knew)
@@ -677,12 +699,12 @@ def _accrual(B, ref, pay, bks, today, knew):
             for acct, x, party in _spread(B, W, [m for m in bks if m[1].get('to') is not None], 'to', notes, {}):
                 lines_.append(line(acct, x, party=party))
             acct, party = _party_account(B, to, notes)
-            lines_.append(line(acct, -W, party=party, memo='owed'))
+            lines_.append(line(acct, -W, party=party, memo='owed', why={'as': 'asked-owed', 'party': to}))
         elif to == E:
             for acct, x, party in _spread(B, W, [m for m in bks if m[1].get('from') is not None], 'from', notes, {}):
                 lines_.append(line(acct, -x, party=party))
             acct, party = _party_account(B, by, notes)
-            lines_.append(line(acct, W, party=party, memo='owed to the entity'))
+            lines_.append(line(acct, W, party=party, memo='owed to the entity', why={'as': 'asked-owing', 'party': by}))
         B.add(f"{ref}@{n}" if len(days) > 1 else ref, 'asked', day, unit, lines_, memo=str(p.get('note') or ''),
               notes=notes, knew=knew)
 
@@ -704,21 +726,35 @@ def sides(root):
             if isinstance(r, dict) and r.get('element')}
 
 
+def holds_parties(B):
+    """The accounts of the chart that hold parties (its `parties` column): each party a detail of the account, its own
+    balance within it."""
+    return {c for cs in B.chart.parties.values() for c in cs}
+
+
 def trial(B, unit, start=None, end=None):
     """Each account touched, rolled up its chart: opening (before `start`), debit, credit, closing (debit less credit);
-    and its `balance`, the closing read in its element's sense (a liability's credit balance positive)."""
-    acc = {}
+    and its `balance`, the closing read in its element's sense (a liability's credit balance positive). An account that
+    holds parties carries a row for each party its lines name (`parties`: party, opening, debit, credit, closing,
+    balance), in the order of their ids, and a row for its lines that name none (`party: None`) last."""
+    acc, per = {}, {}
+    held = holds_parties(B)
     for v in B.vouchers:
         if v['unit'] != unit or (end is not None and (v['day'] is None or v['day'] > end)):
             continue
         before = start is not None and v['day'] is not None and v['day'] < start
         for l in v['lines']:
             a = acc.setdefault(l['account'], {'opening': ZERO, 'dr': ZERO, 'cr': ZERO})
-            if before:
-                a['opening'] += l['dr'] - l['cr']
-            else:
-                a['dr'] += l['dr']
-                a['cr'] += l['cr']
+            targets = [a]
+            if l['account'] in held:
+                targets.append(per.setdefault(l['account'], {}).setdefault(l['party'], {'opening': ZERO, 'dr': ZERO,
+                                                                                         'cr': ZERO}))
+            for a in targets:
+                if before:
+                    a['opening'] += l['dr'] - l['cr']
+                else:
+                    a['dr'] += l['dr']
+                    a['cr'] += l['cr']
     rows = {}
     for code, a in acc.items():
         for c in B.chart.path(code):
@@ -730,21 +766,30 @@ def trial(B, unit, start=None, end=None):
         r = rows[code]
         el = B.chart.element(code)
         closing = r['opening'] + r['dr'] - r['cr']
-        out.append(dict(r, code=code, name=B.chart.name(code), element=el, closing=closing,
-                        balance=closing * B.sides.get(el, 1), posts=code in acc))
+        row = dict(r, code=code, name=B.chart.name(code), element=el, closing=closing,
+                   balance=closing * B.sides.get(el, 1), posts=code in acc)
+        if code in per:
+            row['parties'] = []
+            for party in sorted(per[code], key=lambda x: (x is None, str(x))):
+                q = per[code][party]
+                c = q['opening'] + q['dr'] - q['cr']
+                row['parties'].append(dict(q, party=party, closing=c, balance=c * B.sides.get(el, 1)))
+        out.append(row)
     leaf = [acc[c] for c in acc]
     totals = {k: sum((a[k] for a in leaf), ZERO) for k in ('opening', 'dr', 'cr')}
     return {'rows': out, 'totals': totals, 'balanced': totals['dr'] == totals['cr'] and totals['opening'] == 0,
             'unit': unit}
 
 
-def ledger(B, code, unit, party=None, start=None, end=None):
+def ledger(B, code, unit, party=None, start=None, end=None, nobody=False):
+    """An account's lines in day order with their running balance: every line, or one party's (`party`), or the lines
+    that name none (`nobody`)."""
     rows, run, opening = [], ZERO, ZERO
     for v in B.vouchers:
         if v['unit'] != unit:
             continue
         for l in v['lines']:
-            if l['account'] != code or (party and l['party'] != party):
+            if l['account'] != code or (party and l['party'] != party) or (nobody and l['party'] is not None):
                 continue
             amt = l['dr'] - l['cr']
             if start is not None and (v['day'] is None or v['day'] < start):
@@ -754,7 +799,8 @@ def ledger(B, code, unit, party=None, start=None, end=None):
                 continue
             run += amt
             rows.append({'number': v['number'], 'ref': v['ref'], 'day': v['day'], 'memo': l['memo'] or v['memo'],
-                         'party': l['party'], 'dr': l['dr'], 'cr': l['cr'], 'balance': opening + run})
+                         'note': v['memo'], 'why': l.get('why'), 'party': l['party'], 'dr': l['dr'], 'cr': l['cr'],
+                         'balance': opening + run})
     return {'code': code, 'party': party, 'opening': opening, 'rows': rows, 'closing': opening + run, 'unit': unit}
 
 
@@ -776,11 +822,31 @@ def balance(B, unit, at=None):
 
 
 def open_items(B):
-    wait = {B.chart.role('awaiting'), B.chart.role('unsaid')} - {None}
+    """What waits: each line in the account awaiting an account or the one a payment's unsaid means is read to (`awaits:
+    account`); and each line of an account that holds parties naming none (`awaits: party`) — but a line and its reverse,
+    equal and opposite, wait for nothing."""
+    awaiting, unsaid = B.chart.role('awaiting'), B.chart.role('unsaid')
+    wait = {awaiting, unsaid} - {None}
+    held = holds_parties(B)
+    nobody = {}
+    for v in B.vouchers:
+        for l in v['lines']:
+            if l['account'] in held and l['party'] is None:
+                nobody.setdefault((l['account'], v['unit']), []).append((v, l))
     out = []
     for v in B.vouchers:
         for l in v['lines']:
             if l['account'] in wait:
                 out.append({'ref': v['ref'], 'day': v['day'], 'account': l['account'], 'dr': l['dr'], 'cr': l['cr'],
-                            'unit': v['unit']})
+                            'unit': v['unit'], 'awaits': 'account' if l['account'] == awaiting else 'means'})
+    for (code, unit), ls in sorted(nobody.items()):
+        left = list(ls)                       # a line and its reverse, equal and opposite, wait for nothing
+        for v, l in ls:
+            if not any(m is l for _w, m in left):
+                continue
+            twin = next(((w, m) for w, m in left if m is not l and m['dr'] == l['cr'] and m['cr'] == l['dr']), None)
+            if twin:
+                left = [x for x in left if x[1] is not l and x[1] is not twin[1]]
+        out += [{'ref': v['ref'], 'day': v['day'], 'account': code, 'dr': l['dr'], 'cr': l['cr'], 'unit': unit,
+                 'awaits': 'party'} for v, l in left]
     return out

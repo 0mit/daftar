@@ -1431,8 +1431,9 @@ class Reckoner:
     def op_books(self, s):
         """EACH ACCOUNT'S NET CHARGE THROUGH A DAY (the accounting profile's): what arrived less what left, per account
         of the chart and per currency, read by the profile's asset (assets/accounting/lib/books_read.py) as the books
-        read now — a reading of it pinned (`pin`) is the books closed through that day. Refused in a garden that does not
-        hold the asset: the books are read by it."""
+        read now — a reading of it pinned (`pin`) is the books closed through that day. With `party`, one party's alone:
+        its part of each account that holds parties — the party a bean, or an input or step naming one (a page's sheet
+        gives the being it shows). Refused in a garden that does not hold the asset: the books are read by it."""
         lib = os.path.join(ROOT, 'assets', 'accounting', 'lib')
         if not os.path.isfile(os.path.join(lib, 'books_read.py')):
             raise Refused(f"step {s['id']}: the books are read by the accounting profile's asset, which this garden "
@@ -1441,17 +1442,37 @@ class Reckoner:
             sys.path.insert(0, lib)
         import books_read
         import stale as dmstale
+        through = s['to']
+        if isinstance(through, str) and through in self.env:      # an input naming the day: the reader's clock, or said
+            x = self.env[through]
+            through = str(x.v) if isinstance(x, V) else str(x)
         try:
-            to = dmstale.day_of(s['to'])
+            to = dmstale.day_of(through)
             B = books_read.read(ROOT, entity=s.get('entity'), chart=s.get('chart'), today=to, pinned=False)
         except ValueError as e:
             raise Refused(f"step {s['id']}: {e}")
+        party = s.get('party')
+        if party is not None:
+            pv = self.env.get(party, party)
+            if isinstance(pv, list):
+                if len(pv) != 1:
+                    raise Refused(f"step {s['id']}: `party: {party}` holds {len(pv)} members, where one party is read")
+                pv = pv[0].id
+            pv = str(pv.v) if isinstance(pv, V) else str(pv)
+            if pv not in self.g.kind:
+                raise Refused(f"step {s['id']}: `party: {pv}` is no bean of this garden")
+            party = pv
         out = {}
         for unit in sorted({v['unit'] for v in B.vouchers if v['unit']}):
             for r in books_read.trial(B, unit, None, to)['rows']:
-                if r['posts']:
+                if party is not None:
+                    q = next((x for x in r.get('parties') or [] if x['party'] == party), None)
+                    if q is not None:
+                        out[f"{r['code']} {unit}"] = V(q['closing'], unit)
+                elif r['posts']:
                     out[f"{r['code']} {unit}"] = V(r['closing'], unit)
-        self.lines.append(f"  the books of {B.entity} in {B.chart.scheme} through {s['to']}: {len(out)} account(s)")
+        self.lines.append(f"  the books of {B.entity} in {B.chart.scheme} through {through}"
+                          + (f", {party}'s part" if party is not None else '') + f": {len(out)} account(s)")
         return out
 
     def op_apportion(self, s):

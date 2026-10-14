@@ -197,10 +197,11 @@ operations:
     exact: "true"
     u_rule: none
     takes:
-      to: { required: "true", in: { type: position }, meaning: "the day the books are read through" }
+      to: { required: "true", in: { type: position }, meaning: "the day the books are read through: a day, or an input naming one — the reader's clock, read as it is asked" }
       chart: { in: { registry: knowledge_schemes, take: scheme }, meaning: "the chart; absent, the garden's one chart" }
       entity: { in: { type: kebab }, meaning: "whose books; absent, the gardener's" }
-    meaning: "each account's net charge through a day, in an entity's books in a chart — what arrived there less what left, per currency — read from the moves the garden holds by the accounting profile's reader (its asset). A `pin` of a reading whose step is this closes the books through that day: read at the pinned commit, they are fixed, and a move that comes after it with an earlier day is read on the first day after it"
+      party: { in: { type: kebab }, meaning: "one party's part alone: a being the chart holds as a party, or an input or a step naming one — each account that holds parties, what that party holds in it" }
+    meaning: "each account's net charge through a day, in an entity's books in a chart — what arrived there less what left, per currency — read from the moves the garden holds by the accounting profile's reader (its asset); with `party`, one party's part of each account that holds parties. A `pin` of a reading whose step is this closes the books through that day: read at the pinned commit, they are fixed, and a move that comes after it with an earlier day is read on the first day after it"
   - op: apportion
     gives: groups
     exact: "true"

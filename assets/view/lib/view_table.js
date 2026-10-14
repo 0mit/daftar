@@ -122,22 +122,33 @@
     t.mount(el, h`<p class="eg-chart-period">${period}</p>${cur.map(function (c) {
       var head = h`<tr>${named ? '' : h`<th scope="col"></th>`}${cols.map(function (col) {
         return h`<th scope="col" data-path="${col.path}">${w.text.show(col.label)}</th>`; })}</tr>`;
+      var E = root.daftarEngraved;
       var lines = c.lines.map(function (line) {
-        var label = named && cols[0].path === 'code' ? figure(cols[0], null, line, c.unit) : account(line.code, line.name);
-        var opener = h`<th scope="row">${line.posts ? h`<button type="button" class="eg-link" data-ledger="${line.code}" data-unit="${c.unit}">${label}</button>` : label}</th>`;
-        return h`<tr data-depth="${String(Math.min(line.depth, 4))}" data-code="${line.code}" data-posts="${line.posts ? 'yes' : 'no'}">${named ? '' : opener}${cols.map(function (col, i) {
-          return named && i === 0 ? opener : h`<td>${figure(col, line.cells[i], line, c.unit)}</td>`;
+        // a party of an account that holds parties: its own line beneath the account, named as the page calls it, its
+        // ledger its own; the lines naming nobody, where they hold anything, marked to be booked to a person
+        var nobody = line.party && line.party.nobody;
+        var label = line.party ? E.party(t, line.party)
+          : named && cols[0].path === 'code' ? figure(cols[0], null, line, c.unit) : account(line.code, line.name);
+        // the line opens its ledger; a person's own sheet opens from the ledger's heading (no button inside a button)
+        var text = line.party && line.party.bean ? w.text.show(t.titleOf(line.party.bean) || line.party.title || '') : label;
+        var opener = h`<th scope="row">${line.posts ? h`<button type="button" class="eg-link" data-ledger="${line.code}" data-unit="${c.unit}">${text}</button>` : label}</th>`;
+        var quiet = nobody && (line.cells || []).every(function (x, i) { return cols[i].path === 'name' || !x || x === '0'; });
+        return h`<tr data-depth="${String(Math.min(line.depth, 4))}" data-code="${line.code}" data-posts="${line.posts ? 'yes' : 'no'}"${line.party ? h` data-party="${line.party.bean || (nobody ? 'nobody' : 'someone')}"` : ''}${nobody && !quiet ? h` class="eg-warn" title="${t.say('chart-nobody-note')}"` : ''}>${named ? '' : opener}${cols.map(function (col, i) {
+          return named && i === 0 ? opener : h`<td>${col.path === 'name' && line.party ? label : figure(col, line.cells[i], line, c.unit)}</td>`;
         })}</tr>`;
       });
       var foot = h`<tr><th scope="row">${t.say('chart-total')}</th>${cols.map(function (col, i) {
         return named && i === 0 ? '' : h`<td>${c.totals[i] != null ? money(c.totals[i], c.unit) : ''}</td>`; })}</tr>`;
       var ledgers = c.lines.filter(function (line) { return line.posts && c.ledgers[line.code]; }).map(function (line) {
         var L = c.ledgers[line.code];
-        return h`<details class="eg-ledger" data-ledger="${line.code}" data-unit="${c.unit}"><summary>${t.say('chart-ledger')}: ${account(line.code, line.name)}</summary><table class="eg-table"><thead><tr><th scope="col">${t.say('chart-day')}</th><th scope="col">${t.say('chart-what')}</th><th scope="col">${t.say('chart-debit')}</th><th scope="col">${t.say('chart-credit')}</th><th scope="col">${t.say('chart-balance')}</th></tr></thead><tbody><tr><td></td><td>${t.say('chart-opening')}</td><td></td><td></td><td>${money(L.opening, c.unit)}</td></tr>${L.lines.map(function (x) {
-          return h`<tr><td>${x.day ? w.moment.show(x.day, {style: 'long'}) : ''}</td><td>${x.bean ? w.being.show(x.bean, x.title || x.bean, {action: 'open'}) : h`<span class="w-none">${t.say('chart-hidden')}</span>`}${x.memo ? h` <span class="eg-memo">${w.text.show(x.memo)}</span>` : ''}</td><td>${money(x.dr, c.unit)}</td><td>${money(x.cr, c.unit)}</td><td>${money(x.balance, c.unit)}</td></tr>`;
-        })}</tbody></table></details>`;
+        var name = line.party ? h`${account(line.account, (c.lines.filter(function (x) { return x.code === line.account; })[0] || {}).name || '')} · ${E.party(t, line.party)}` : account(line.code, line.name);
+        return h`<details class="eg-ledger" data-ledger="${line.code}" data-unit="${c.unit}"><summary>${t.say('chart-ledger')}: ${name}</summary>${E.ledger(t, L, c.unit, {person: !!L.holds})}</details>`;
       });
-      return h`<section class="eg-chart" data-unit="${c.unit}"><h3 class="eg-chart-unit"><bdi dir="ltr">${c.unit}</bdi></h3><div class="eg-table-wrap"><table class="eg-table eg-chart-table"><thead>${head}</thead><tbody>${lines}</tbody><tfoot>${foot}</tfoot></table></div>${c.balanced ? '' : h`<p class="eg-partial">${t.say('chart-unbalanced')}</p>`}${ledgers}</section>`;
+      // ONE TRUTH OF WHO OWES WHOM: a person whose account here the agreements read otherwise, said under the table
+      var dis = (c.disagree || []).map(function (d) {
+        return h`<p class="eg-partial eg-disagree" data-party="${(d.party || {}).bean || ''}">${E.sentence(t, 'chart-disagree', {party: E.party(t, d.party), books: money(d.books, c.unit), agreements: money(d.agreements, c.unit)})}</p>`;
+      });
+      return h`<section class="eg-chart" data-unit="${c.unit}"><h3 class="eg-chart-unit"><bdi dir="ltr">${c.unit}</bdi></h3><div class="eg-table-wrap"><table class="eg-table eg-chart-table"><thead>${head}</thead><tbody>${lines}</tbody><tfoot>${foot}</tfoot></table></div>${c.balanced ? '' : h`<p class="eg-partial">${t.say('chart-unbalanced')}</p>`}${dis}${ledgers}</section>`;
     })}${notes}`);
     // an account that posts opens its ledger below the table
     el.querySelectorAll('button[data-ledger]').forEach(function (b) {

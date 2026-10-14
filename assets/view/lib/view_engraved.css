@@ -90,5 +90,11 @@ th[aria-sort=descending] .eg-sort::after{content:" ▼";font-size:.7em}
 .eg-chart-table tfoot th,.eg-chart-table tfoot td{border-block-start:2px solid var(--line,#cfd8e2);font-weight:600}
 .eg-ledger{margin-block:.4em}
 .eg-ledger summary{cursor:pointer}
-.eg-ledger td:nth-child(2){text-align:start}
+.eg-ledger td:nth-child(2),.eg-ledger td.eg-what,.eg-ledger td.eg-who{text-align:start}
+.eg-ledger td.eg-what ~ td{text-align:end}
+.eg-chart-table tr[data-party] th,.eg-chart-table tr[data-party] td{font-weight:400}
+.eg-chart-table tr.eg-warn th,.eg-chart-table tr.eg-warn td,.eg-nobody{color:#a0522d}
+.eg-why{color:var(--muted,#5a6a7b)}
+.eg-account{margin-block:.3em .7em}
+.eg-account-says{font-weight:600;margin-block:.2em .3em}
 .eg-link{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline dotted}

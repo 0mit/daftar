@@ -160,6 +160,7 @@ PENDING = """   <Ntry><NtryRef>3</NtryRef><Amt Ccy="XTS">40.00</Amt><CdtDbtInd>D
 ROWS = [['code', 'level', 'parent', 'name', 'element', 'stands_for', 'parties', 'role', 'closed'],
         ['1', 'group', '', 'assets', 'asset', '', '', '', ''],
         ['11', 'account', '1', 'the bank account', '', 'bank-a', '', '', ''],
+        ['13', 'account', '1', 'people Sam deals with', '', '', 'person', '', ''],
         ['19', 'account', '1', 'awaiting an account', '', '', '', 'awaiting', ''],
         ['2', 'group', '', 'liabilities', 'liability', '', '', '', ''],
         ['21', 'account', '2', 'the card', '', 'card-a', '', '', ''],
@@ -257,6 +258,10 @@ files:
     r, c = start('market', 'book', of='market#veg', account='food')
     check("...booked again to the same account (named by its name), the plan is refused: nothing would change",
           'stopped at refused' in r.out and 'booked to books:61 already' in r.out + plan_of('market', c), r.out[-900:])
+    r, c = start('market', 'book', of='market#veg', account='13')
+    check("...booked to the account that holds persons, naming nobody, the plan is refused, saying how a person is named",
+          'stopped at refused' in r.out and 'books:13 holds persons: name the person' in r.out + plan_of('market', c, ''),
+          r.out[-900:])
     r, c = start('shop', 'book', of='shop#lamp', account='62', means='21')
     r2 = ratify('shop', c)
     check("...a payment that says no means, booked with the means it was paid through: Cr the card 40, Dr household 40",
@@ -290,6 +295,10 @@ files:
     r, c = start('bank-a', 'entry', day='2025-03-01', memo='opening balances', unit='XTS', lines='11 dr 500; 31 cr 400')
     check("entry: lines that do not balance are refused, saying so", 'stopped at refused' in r.out and 'do not balance'
           in r.out + plan_of('bank-a', c, ''), r.out[-600:])
+    r, c = start('bank-a', 'entry', day='2025-03-01', memo='lent', unit='XTS', lines='13 dr 5; 11 cr 5')
+    check("entry: a line in the account that holds persons naming nobody is refused, saying to name the person in its "
+          "place", 'stopped at refused' in r.out and 'books:13 holds persons' in r.out + plan_of('bank-a', c, '')
+          and '<person> dr|cr <amount>' in r.out + plan_of('bank-a', c, ''), r.out[-600:])
     r, c = start('bank-a', 'entry', day='2025-03-01', memo='opening balances', unit='XTS',
                  lines='11 dr 500; opening balances cr 500')
     p = plan_of('bank-a', c)

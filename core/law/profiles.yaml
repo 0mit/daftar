@@ -302,7 +302,7 @@ archetypes:
   - archetype: table
     reads: [record]
     axes: { inline: taxis, block: ordinal }
-    meaning: "the members of a reading, or the rows of a series, one line each with a column per path: the report, and an offline file of it. Or the codes of a chart (the drawing's `chart`), in the chart's order: the books of the being it draws, an account a line, each column a figure the accounting profile's asset reads of it — per currency, with the totals and whether they balance, an account that posts opening its ledger"
+    meaning: "the members of a reading, or the rows of a series, one line each with a column per path: the report, and an offline file of it. Or the codes of a chart (the drawing's `chart`), in the chart's order: the books of the being it draws, an account a line — and beneath an account that holds parties a line for each party its lines name, and one for its lines that name none — each column a figure the accounting profile's asset reads of it, per currency, with the totals and whether they balance; an account that posts opening its ledger, and a party its own"
     when: "the question is which ones, and what each holds"
   - archetype: queue
     axes: { block: ordinal }
@@ -428,7 +428,10 @@ forms:
             fact:
               required: "true"
               in: { pattern: "^[a-z][a-z0-9_.-]*$" }
-              meaning: "the fact a card shows: a verb of the law (the being's statements of it), a key of the header (`title`, `summary`, `tags`), or a key `details` keeps, or a path into one (`case.opened_on`), or a field of a record held off git that the being points to, by the record's key (`contact.phone`, `intake.level`), or that record itself (`intake`), the words its fields are gathered under. A statement of the verb that is sealed (`held`), and a record held off git, is shown by the host that holds its store, and only to a reader a grant names it to; every other reader is told where it is kept"
+              meaning: "the fact a card shows: a verb of the law (the being's statements of it), a key of the header (`title`, `summary`, `tags`), or a key `details` keeps, or a path into one (`case.opened_on`), or a field of a record held off git that the being points to, by the record's key (`contact.phone`, `intake.level`), or that record itself (`intake`), the words its fields are gathered under; or, with `reading`, the word the reading's part of the card goes by. A statement of the verb that is sealed (`held`), and a record held off git, is shown by the host that holds its store, and only to a reader a grant names it to; every other reader is told where it is kept"
+            reading:
+              in: { key_of: readings }
+              meaning: "a reading of the page (a `reckon` of its bean) that the card shows for its being: given that being as the reading's first input, what it gives is drawn under `label` — read for each card as it is opened, never stored. The books' step with `party` gives a person's account, each account its balance and its lines"
             shown_from:
               required: "true"
               in: { registry: lenses, take: lens }
