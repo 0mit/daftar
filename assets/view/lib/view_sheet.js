@@ -370,12 +370,14 @@
     }
     function gcd(a, b) { while (b) { var r = a % b; a = b; b = r; } return a < 0n ? -a : a; }
     function text(n, d) { var g = gcd(n, d) || 1n; n /= g; d /= g; return d === 1n ? String(n) : n + '/' + d; }
-    // A PAYMENT'S SHARES, IN ITS FORM (the share walk's, on the payment's own line): each one's share as it stands now,
+    // A PAYMENT'S SHARES, IN ITS FORM (the share walk's, on the payment's own line — its `share` beside each one who bears
+    // it): each one's share as it stands now,
     // and, as the form is filled, each one's part of the whole as the fraction it is and the amount it comes to — what
     // the walk will write, before it is started; shares that add up to the payment are each one's amount
     function sharesForm(box, s) {
+      // the share walk's form: a person beside their `share`, the input the walk takes by that name (books_walks.py)
       var sh = s && s.shares, tbl = box.querySelector('table.eg-rows'), of = s && s.roles && s.roles.of;
-      if (!sh || !tbl) return;
+      if (!sh || !tbl || !tbl.querySelector('[name="act.share"]')) return;
       var W = of && typeof of === 'object' ? frac(of.count) : null, unit = of && of.unit;
       var den = sh.bearers.reduce(function (acc, b) { var f = frac(b.share); return f ? acc * f[1] / gcd(acc, f[1]) : acc; }, 1n);
       var rows = [].slice.call(tbl.querySelectorAll('tbody tr'));
