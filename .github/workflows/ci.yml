@@ -156,6 +156,8 @@ jobs:
       - name: "view_code_names: a code of a scheme a page holds — an account a payment is booked to — drawn by its name in the scheme's own table, in the reader's language, its code beside it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_code_names.py
+      - name: "view_table_sort: a reading's table sorts by each column — an amount by its exact value, a day as the law writes it, words in the reader's language's order, the empty last; the lines moved, never drawn again"
+        run: python3 test/view_table_sort.py
       - name: "view_books: an entity's books as a table over a chart's codes — an account a line in the chart's order, its figures per currency, each account's ledger, debit before credit along the reader's line, each account by its name in the reader's language"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/view_books.py
