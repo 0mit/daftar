@@ -7,8 +7,9 @@ Each operation reads its inputs by name (bin/walktool.py `inputs`: a page's acti
 terminal), and writes in the entity's books bean — the bean that holds its books' `open`, else the one holding most of
 its bookings, else `books-<entity>`, made by the first write:
 
-  book     `of` (a payment, `<bean>#<id>`), `account` (a postable account, by its code or its name), `analytic` (a code
-           of a plan, optional), `means` (the account it was paid through, where the payment does not say it), `note`.
+  book     `of` (a payment, `<bean>#<id>`; given several times, several, each booked alike in one plan), `account` (a
+           postable account, by its code or its name), `analytic` (a code of a plan, optional), `means` (the account it
+           was paid through, where the payment does not say it), `note`.
            The entity's part goes to the account; a booking of the same side made before is taken out where the
            payment's day is after the books' last close, and moved by a booking of it from the old account to the new
            one, on today, where it is not — a closed period is never rewritten.
@@ -29,11 +30,11 @@ its bookings, else `books-<entity>`, made by the first write:
   entry    `day`, `memo`, `unit`, `lines` (`<account> dr|cr <amount>`, joined by `;`), `of` (optional): what no payment
            says, written whole and balanced, resting on `of` or the books' `open` (written by the first entry); an
            entry is corrected by its reverse and a new one, never edited.
-  import   `file` (on this machine), `format` (camt.053, camt.054, ofx, mt940, csv), `means` (the being the account
-           stands for: the bank account, the card), `mapping` (a CSV's, a file of the garden), `statement` (the bean's
-           id; `statement-<the file's SHA-256, 12>` where none): a statement bean, its lines payments read from the
-           file through the means; refused whole where a line is not read, where opening + lines is not the closing,
-           or where the file was imported already.
+  import   `file` (a path on this machine, or the SHA-256 of a file a page gave, kept by the host), `format`
+           (camt.053, camt.054, ofx, mt940, csv), `means` (the being the account stands for: the bank account, the
+           card), `mapping` (a CSV's, a file of the garden), `statement` (the bean's id; `statement-<the file's SHA-256,
+           12>` where none): a statement bean, its lines payments read from the file through the means; refused whole
+           where a line is not read, where opening + lines is not the closing, or where the file was imported already.
 """
 import datetime
 import hashlib
@@ -190,28 +191,60 @@ def kept_known(B, bid, removing):
 
 # ------------------------------------------------------------------------------------------------ book
 def book(B, I, today, run=(None, None)):
-    ref = I.get('of')
-    bid, verb, p = statement(B, ref)
-    if verb != 'pay':
-        refuse(f"{ref} is a `{verb}`: the walk books a payment (`entry` books what no payment says)")
+    """A payment booked where it belongs (`of`, `<bean>#<id>`) — or several, each the same way, to the one account in
+    one plan, where `of` is given several times (a page's input of `many`: the lines a person ticks on a statement's
+    page). Each is refused as it would be alone, the plan with it, naming it."""
+    refs = I.get('of') if isinstance(I.get('of'), list) else [I.get('of')]
+    if len(set(map(str, refs))) != len(refs):
+        refuse(f"of: {', '.join(sorted({str(x) for x in refs if refs.count(x) > 1}))} named twice")
     E, C = B.entity, B.chart
-    by, to = str(p.get('by')), str(p.get('to') or '')
-    bears = [r for _i, v, r in B.G.beans[bid].items if v == 'bear' and r.get('of') in (p.get('id'), ref)]
-    if E not in (by, to) and E not in {str(r.get('by')) for r in bears}:
-        refuse(f"{ref} is no payment of {E}'s: {E} paid, received and bears none of it")
-    matched = [r for b in B.G.beans.values() for _i, v, r in b.items if v == 'match'
-               and ref in [x if '#' in str(x) else f"{b.id}#{x}" for x in br._listed(r.get('of'))]]
-    if matched and known_as(B, bid, p.get('id')) == 'read':
-        refuse(f"{ref} is a line matched with what was said of it: book the payment said, which carries the bookings")
-    side = 'from' if (to == E and by != E) else 'to'
-    other = 'to' if side == 'from' else 'from'
+    each = []
+    for ref in refs:
+        bid, verb, p = statement(B, ref)
+        if verb != 'pay':
+            refuse(f"{ref} is a `{verb}`: the walk books a payment (`entry` books what no payment says)")
+        by, to = str(p.get('by')), str(p.get('to') or '')
+        bears = [r for _i, v, r in B.G.beans[bid].items if v == 'bear' and r.get('of') in (p.get('id'), ref)]
+        if E not in (by, to) and E not in {str(r.get('by')) for r in bears}:
+            refuse(f"{ref} is no payment of {E}'s: {E} paid, received and bears none of it")
+        matched = [r for b in B.G.beans.values() for _i, v, r in b.items if v == 'match'
+                   and ref in [x if '#' in str(x) else f"{b.id}#{x}" for x in br._listed(r.get('of'))]]
+        if matched and known_as(B, bid, p.get('id')) == 'read':
+            refuse(f"{ref} is a line matched with what was said of it: book the payment said, which carries the "
+                   f"bookings")
+        each.append((ref, bid, p, 'from' if (to == E and by != E) else 'to'))
     code = account(B, I.get('account'), 'account')
     closed = (C.rows.get(code) or {}).get('closed')
     if closed and today > day_of(closed, 'closed'):
         refuse(f"account: {C.scheme}:{code} closed on {closed}")
     books, made = books_bean(B)
-    pday = br._day(p.get('at'))
     shut = last_close(B)
+    taken, adds, removes, said = set(), [], {}, []
+    for ref, bid, p, side in each:
+        _book_one(B, I, ref, bid, p, side, code, books, shut, today, taken, adds, removes, said)
+    entries, again_books = [], []
+    for b_, ids in sorted(removes.items()):
+        more, again = kept_known(B, b_, ids)
+        removes[b_] = sorted(set(ids) | set(more))
+        if b_ != books:
+            entries.append({'bean': b_, 'add': again, 'remove': removes[b_]})
+        else:
+            again_books = again
+    own = {'bean': books, 'add': again_books + adds, 'remove': sorted(set(removes.get(books, [])))}
+    if made:
+        own['new'] = new_bean(B, books)
+    entries.insert(0, own)
+    what = f"{refs[0]} booked" if len(refs) == 1 else f"{len(refs)} payments booked"
+    return {'what': f"{what} to {C.scheme}:{code}", 'beans': entries,
+            'body': [f"- action: {s}" for s in said] + [f"- action: wrote [[{e['bean']}]]" for e in entries]}
+
+
+def _book_one(B, I, ref, bid, p, side, code, books, shut, today, taken, adds, removes, said):
+    """One payment of `book`, its bookings added to `adds` and those it replaces to `removes` (by bean), what it does
+    said in `said`; the ids it takes kept in `taken`, so several in one plan never share one."""
+    E, C = B.entity, B.chart
+    other = 'to' if side == 'from' else 'from'
+    pday = br._day(p.get('at'))
     in_closed = shut is not None and pday is not None and pday <= shut
     mine = [(b.id, r) for b in B.G.beans.values() for _i, v, r in b.items if v == 'book' and isinstance(r.get('id'), str)
             and str(r.get('by') or B.G.gardener) == E and r.get('of') in (ref, p.get('id') if b.id == bid else None)
@@ -219,8 +252,7 @@ def book(B, I, today, run=(None, None)):
     before = [(b_, r) for b_, r in mine if str(r.get(side) or '').startswith(C.scheme + ':') and r.get(other) is None]
     ana_before = [(b_, r) for b_, r in mine if r.get('from') is None and isinstance(r.get('to'), str)
                   and r['to'].split(':', 1)[0] in B.analytic]
-    taken, adds, removes, said = set(), [], {}, []
-    base = fresh_id(B, books, f"bk-{ref.replace('#', '-')}")
+    base = fresh_id(B, books, f"bk-{ref.replace('#', '-')}", taken)
     taken.add(base)
     note = f", note: {json.dumps(I['note'], ensure_ascii=False)}" if I.get('note') else ''
     if in_closed and before:
@@ -270,22 +302,9 @@ def book(B, I, today, run=(None, None)):
                 if str(r.get(other) or '').startswith(C.scheme + ':') and r.get(side) is None:
                     removes.setdefault(b_, []).append(r['id'])
             mid = fresh_id(B, books, f"{base}-m", taken)
+            taken.add(mid)
             adds.append(f'book: {{ id: {mid}, of: "{ref}", {other}: "{C.scheme}:{mcode}" }}')
             said.append(f"{ref}: {'paid through' if other == 'from' else 'received into'} {C.scheme}:{mcode}")
-    entries, again_books = [], []
-    for b_, ids in sorted(removes.items()):
-        more, again = kept_known(B, b_, ids)
-        removes[b_] = sorted(set(ids) | set(more))
-        if b_ != books:
-            entries.append({'bean': b_, 'add': again, 'remove': removes[b_]})
-        else:
-            again_books = again
-    own = {'bean': books, 'add': again_books + adds, 'remove': sorted(set(removes.get(books, [])))}
-    if made:
-        own['new'] = new_bean(B, books)
-    entries.insert(0, own)
-    return {'what': f"{ref} booked to {C.scheme}:{code}", 'beans': entries,
-            'body': [f"- action: {s}" for s in said] + [f"- action: wrote [[{e['bean']}]]" for e in entries]}
 
 
 def analytic(B, words):
@@ -427,9 +446,14 @@ def close(B, I, today, run=(None, None)):
 # ------------------------------------------------------------------------------------------------ import
 def import_(B, I, today, run=(None, None)):
     import statements as st
-    path = str(I.get('file') or '')
-    if not path or not os.path.isfile(path):
-        refuse(f"file: {path!r} is no file on this machine")
+    path = name = said = str(I.get('file') or '')
+    if re.fullmatch(r'[0-9a-f]{64}', path) and not os.path.isfile(path):     # a page's file: kept by the host off git,
+        path = _W().file(name)                                                # under its SHA-256, which the run is given
+        said = f"the file a page gave ({name[:12]}…)"
+    elif not path or not os.path.isfile(path):
+        refuse(f"file: {path!r} is no file on this machine, nor one a page gave (its SHA-256)")
+    else:
+        name = said = os.path.basename(path)
     fmt = str(I.get('format') or '')
     if fmt not in st.FORMATS:
         refuse(f"format: {fmt!r} is none of {', '.join(st.FORMATS)}")
@@ -481,17 +505,17 @@ def import_(B, I, today, run=(None, None)):
         note = ' '.join(x for x in (ln.get('text'), ln.get('party')) if x)
         adds.append(f'pay: {{ id: line-{n:03d}, {who}, of: {amt}, through: {means}, at: "{ln["day"]}"' +
                     (f', note: {json.dumps(note[:200], ensure_ascii=False)}' if note else '') + ' }')
-    details = {'statement': {'file': os.path.basename(path), 'sha256': sha, 'format': fmt, 'account': S['account'],
+    details = {'statement': {'file': name, 'sha256': sha, 'format': fmt, 'account': S['account'],
                              'opening': S['opening'], 'closing': S['closing'],
                              'lines': {f"line-{n:03d}": {k: ln.get(k) for k in ('ref', 'value_day', 'code') if ln.get(k)}
                                        for n, ln in enumerate(S['lines'], 1)}}}
     head = f'bean: {sid}\nkind: document\ntitle: "{sid} — the statement of {means}, {S["lines"][0]["day"]} to ' \
            f'{S["lines"][-1]["day"]}"\ndetails: ' + json.dumps(details, ensure_ascii=False)
-    return {'what': f"{os.path.basename(path)}: {len(adds)} lines of {means}'s statement", 'beans': [
-        {'bean': sid, 'new': {'head': head, 'body': f"The statement of {means}, read from {os.path.basename(path)} "
+    return {'what': f"{said}: {len(adds)} lines of {means}'s statement", 'beans': [
+        {'bean': sid, 'new': {'head': head, 'body': f"The statement of {means}, read from {said} "
                                                     f"({fmt}): its lines as the payments it shows."},
-         'add': adds, 'remove': [], 'known': {'act': 'read', 'from': means, 'through': f"file:{os.path.basename(path)}"}}],
-        'body': [f"- action: wrote [[{sid}]]: {len(adds)} lines read from {os.path.basename(path)} ({fmt}, sha256 "
+         'add': adds, 'remove': [], 'known': {'act': 'read', 'from': means, 'through': f"file:{name}"}}],
+        'body': [f"- action: wrote [[{sid}]]: {len(adds)} lines read from {said} ({fmt}, sha256 "
                  f"{sha[:12]})"]}
 
 
@@ -522,9 +546,12 @@ def entry(B, I, today, run=(None, None)):
     shut = last_close(B)
     if shut is not None and day <= shut:
         refuse(f"day: the books are closed through {iso(shut)}: an entry for it is written after that day")
+    from core import check as dmcheck, measures
+    L = dmcheck.garden_law(B.root)                  # the amounts read as the gate reads them (core/measures.py)
     unit = str(I['unit']).strip()
-    if not re.fullmatch(r'[A-Z]{3}', unit):
-        refuse(f"unit: {unit!r} is no currency's code (ISO 4217: three letters)")
+    why = measures.quantity_why(L, {'count': '1', 'unit': unit}, 'money')
+    if why:
+        refuse(f"unit: {why}")
     dr, cr = [], []
     for part in [x for x in str(I['lines']).split(';') if x.strip()]:
         m = LINE.match(part)
@@ -539,6 +566,10 @@ def entry(B, I, today, run=(None, None)):
     if sum(a for _s, a in dr) != sum(a for _s, a in cr):
         refuse(f"lines: debits {show(sum(a for _s, a in dr))} and credits {show(sum(a for _s, a in cr))} {unit} do "
                f"not balance")
+    for _s, a in dr + cr:
+        why = measures.quantity_why(L, {'count': show(a), 'unit': unit}, 'money')
+        if why:
+            refuse(f"lines: {why}")
     books, made = books_bean(B)
     adds, taken = [], set()
     rests = I.get('of')
