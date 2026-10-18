@@ -17,8 +17,6 @@ registry_files:
   - { registry: ics-gssps, file: "seed/knowledge/ics-gssps-2026-09.tsv", key: boundary }
   - { registry: substances, file: "seed/knowledge/substances.tsv", key: code }
   - { registry: mechanisms, file: "seed/knowledge/mechanisms.yaml", key: mechanism, format: yaml }
-  - { registry: crosswalk-fhir-r5-observation, file: "seed/knowledge/crosswalk-fhir-r5-observation.tsv", key: fhir }
-  - { registry: crosswalk-dwc, file: "seed/knowledge/crosswalk-dwc.tsv", key: dwc }
   - { registry: coefficients, file: "seed/knowledge/coefficients.yaml", key: coefficient, format: yaml }
   - { registry: unece-rec20, key: code }
   - { registry: units-unece-rec20, file: "seed/knowledge/units-unece-rec20.tsv", key: code }

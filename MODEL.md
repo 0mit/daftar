@@ -436,6 +436,31 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   stores are, reading git as well: whole, by the engine's own rules, while the union is small; by queries when it is
   large, naming what it did not judge. The gate never reads a store, so its verdict on git is the same on every host.
 
+## Imports and exports: one machinery
+- **One way in and out.** Another system's records come in, and the garden's statements go out, through one
+  machinery: a **format** turns bytes into records and back (core/law/formats.yaml `formats`: a container's syntax,
+  never a model of records); a **reader** gives the records of a model where a format alone cannot (`readers`: a path
+  split into its folders, an id minted by a convention, a provider's columns checked); a **crosswalk** says what each
+  field is in the law's grammar (core/law/crosswalks.yaml), read both ways; one **knowing act** knows what came in; a
+  **keeping** holds it — a store, or a bean. `python3 bin/import.py` and `python3 bin/export.py` are its two doors.
+- **A crosswalk read both ways.** A row that names its `format` and its `act` is read into statements as well as out of
+  them: a field's path `<verb>[<role>=<value>,…].<role>` names the statement it writes, `self` in the one required
+  role of a being the verb leaves; a field's `as` names its conversion (formats.yaml `conversions`), each with its
+  inverse or saying it has none. What runs through beans, a position, a course's standing, is read one way only, and an
+  import lists such a field, never guesses it. A garden's own rows (VOCAB.md `crosswalks`) are read the same way.
+- **Each import is a knowing act**: a `read` where a body read the thing (a scan, a device, a file's metadata), a `say`
+  where a document states it, a `derive` from statements kept, a `make` where a tool made it — one act for all an
+  import keeps, or one a record. The flow law is asked for the pass before anything is written (core/law/flows.yaml).
+- **The same source again changes nothing.** A row is named by its form, so a statement read twice is one row; one
+  source read by the same act is imported already. A second reading adds its act to each row it read, so when a thing
+  was last seen is read from the acts, and what a later reading does not find keeps its rows: change is read, never
+  stored. A statement an import wrote with `unknown` in a role a later import fills is taken out, its removal recorded.
+- **The account.** Every value of every record is carried, or listed as not carried with why — counted by its field
+  when there are many — and a crosswalk marked `whole` fails on any it lists. Nothing is passed over in silence.
+- **Where an export goes is the flow law's.** Printed or written on this host, statements are shown to whoever runs it;
+  a garden's own material never goes to a public repository; another garden is given a proposal (bin/propose.py),
+  never a file; a sealed statement is never read.
+
 ## Merging
 Two branches of one garden merge bean by bean. A bean's statements are a set: what both sides hold is kept once, and
 what either side added is kept, a disagreement side by side. The header and `details` merge three ways against their

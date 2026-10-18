@@ -89,6 +89,9 @@ jobs:
       - name: "run: every job a tool starts, a course on the standard walk, its registry the store runs — setup, start and how it ends, names and keys, a stop whole, tasks and children, identity, the store's statements judged against the walk, a reader of another user, many writers"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/run.py
+      - name: "io: imports and exports, one machinery — every format gives back what it wrote and keeps its guard, a scan's index and an archive's copies into a store as the law's crosswalks say, the same source again writing nothing and a second reading adding its act, a photograph's camera named and filled since, a record into a bean and back, the flow law asked for every pass"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/io.py
       - name: "core_ported: where each of today's suites and each check of today's gate went in v1 — none waiting — and today's words read only from v0.49.0, held to the tree"
         run: python3 test/core_ported.py
       - name: "core_exact: a count is exact everywhere it is read — rates between currencies, and no float in the code"

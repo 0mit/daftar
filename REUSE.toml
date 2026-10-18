@@ -7,7 +7,7 @@ SPDX-PackageDownloadLocation = "https://github.com/0mit/daftar"
 [[annotations]]
 path = ["*.md", "NOTICE", "seed/*.md", "seed/LANGUAGE", "seed/PUBLIC-ALLOW", "seed/RELEASE-SIGNERS",
         "seed/knowledge/SOURCES.md", "seed/knowledge/technology.tsv", "seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv",
-        "seed/knowledge/crosswalk-dwc.tsv", "seed/knowledge/signals.tsv", "seed/knowledge/technology-daftar.tsv",
+        "seed/knowledge/signals.tsv", "seed/knowledge/technology-daftar.tsv",
         "seed/knowledge/units-*.tsv",
         "seed/names/*.tsv",
         "site/*.html", "site/*.yaml", "site/assets/**", "site/RELEASE", ".github/ISSUE_TEMPLATE/**",
@@ -28,8 +28,7 @@ SPDX-License-Identifier = "AGPL-3.0-or-later WITH LicenseRef-daftar-garden-excep
 # THE SEEDS OF A GARDEN'S OWN FILES — CC0 1.0: what grows from them is the gardener's; and daftar's tables of facts
 [[annotations]]
 path = ["seed/*.template", "seed/FORMS.md", ".gitignore", ".gitattributes", "assets/*/templates/**",
-        "seed/knowledge/substances.tsv", "seed/knowledge/mechanisms.yaml", "seed/knowledge/coefficients.yaml",
-        "seed/knowledge/crosswalk-fhir-r5-observation.tsv"]
+        "seed/knowledge/substances.tsv", "seed/knowledge/mechanisms.yaml", "seed/knowledge/coefficients.yaml"]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Omid (Ahmad Kordbacheh, 0mit) and daftar's contributors"
 SPDX-License-Identifier = "CC0-1.0"

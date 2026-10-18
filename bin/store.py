@@ -106,39 +106,7 @@ def now():
 
 
 # ------------------------------------------------------------------------------------------------ a name in bytes
-_KEEP = re.compile(rb'[\x00-\x1f\x7f%]')
-
-
-def escape(raw):
-    """A name the world gives in bytes, as text (`escaped`): UTF-8, and `%XX` for a byte that is no part of well-formed
-    UTF-8, a control character (C0, DEL, C1) and `%` itself."""
-    if isinstance(raw, str):
-        raw = os.fsencode(raw)
-    out = []
-    text = raw.decode('utf-8', 'surrogateescape')
-    for ch in text:
-        o = ord(ch)
-        if 0xDC80 <= o <= 0xDCFF:                       # a byte surrogateescape kept: not well-formed UTF-8
-            out.append('%%%02X' % (o - 0xDC00))
-        elif o < 0x20 or o == 0x7F or 0x80 <= o <= 0x9F or ch == '%':
-            for b in ch.encode('utf-8'):
-                out.append('%%%02X' % b)
-        else:
-            out.append(ch)
-    return ''.join(out)
-
-
-def unescape(text):
-    """The bytes a text written `escaped` stands for."""
-    out, i = bytearray(), 0
-    while i < len(text):
-        if text[i] == '%' and re.match(r'^[0-9A-F]{2}$', text[i + 1:i + 3]):
-            out.append(int(text[i + 1:i + 3], 16))
-            i += 3
-        else:
-            out += text[i].encode('utf-8')
-            i += 1
-    return bytes(out)
+from core.formats import escape, unescape  # noqa: E402,F401 — the one form of a name in bytes (core/formats.py)
 
 
 # ------------------------------------------------------------------------------------------------ forms and ids
@@ -782,7 +750,8 @@ class Store:
         """Keep many statements of one verb fast, for a tool that writes millions: `rows` of (being, roles), every
         being a filler names declared first (`beings`), the roles in `beings` naming beings by their ids (`unknown`
         apart), each row named by its form unless it gives an id. Every `judge_every`th row (and the first) is judged as
-        `put` judges one; a row kept already is kept once. Returns how many rows were new."""
+        `put` judges one; a row kept already is kept once, and gains `act` where another act knew it (a second reading
+        of what was read before). Returns how many rows were new."""
         cols = self.columns(verb)
         if verb not in self.law.knowing:
             self._check_act(act)
@@ -828,8 +797,22 @@ class Store:
                 out += [roles.get('while'), roles.get('why'), roles.get('note'), a]
                 yield out
 
+        also = (f"INSERT OR IGNORE INTO known_also (verb, row, act) SELECT ?, n, ? FROM {_q(table)} "
+                f"WHERE being = (SELECT n FROM being WHERE id = ?) AND id = ? AND known IS NOT ?")
         with self.batch():
-            self.db.executemany(sql, args())
+            if not before or a is None:                     # a relation empty before: no row of it is kept already
+                self.db.executemany(sql, args())
+            else:
+                chunk = []
+                for out in args():
+                    chunk.append(out)
+                    if len(chunk) >= 50000:
+                        self.db.executemany(sql, chunk)
+                        self.db.executemany(also, [(verb, a, r[0], r[1], a) for r in chunk])
+                        chunk = []
+                if chunk:
+                    self.db.executemany(sql, chunk)
+                    self.db.executemany(also, [(verb, a, r[0], r[1], a) for r in chunk])
         return self.db.execute(f"SELECT COUNT(*) FROM {_q(table)}").fetchone()[0] - before
 
     def gone(self, being, sid, *, by, why, at=None):

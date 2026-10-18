@@ -12,7 +12,7 @@ families:
   - family: measure
     meaning: "place and quantity: calendars, coordinates, units, published knowledge and its crosswalks"
   - family: between
-    meaning: "between gardens and places: proposals, merges, readings across, what passes where, what is held"
+    meaning: "between gardens, places and other systems: imports and exports, proposals, merges, readings across, what passes where, what is held"
   - { family: launch, meaning: "daftar's own loop: a model called with every request logged" }
   - { family: run, meaning: "the jobs a tool starts: each a course on the walk of a run, held by its identity, kept in the store `runs`" }
 tools:
@@ -61,6 +61,8 @@ tools:
   - { tool: pass, family: between }
   - { tool: held, family: between }
   - { tool: store, family: between }
+  - { tool: import, family: between }
+  - { tool: export, family: between }
   - { tool: run, family: run }
   - { tool: relay, family: between }
   - { tool: launch, family: launch }

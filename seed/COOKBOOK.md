@@ -1802,6 +1802,28 @@ stores. When a person speaks of a being a store keeps, `python3 bin/store.py exp
 --write` gives it a bean of its rows, known there by one `derive` from the acts that knew them; `import` keeps a bean's
 statements in a store with their acts. A name that is no UTF-8 is written `escaped` (`%FF`), and read back to its bytes.
 
+## Another system's records, in and out
+
+A crosswalk of the law says how a system's records are statements, both ways; `daftar import --list` names those that
+say how their records come. Into a bean, the statements are printed with the act that knows them, and `--write` writes
+them for your save:
+
+    python3 bin/import.py dwc-occurrence occurrences.csv                 # what it would write, and what it would not
+    python3 bin/import.py dwc-occurrence occurrences.csv --into bean --write
+    python3 bin/export.py dwc-occurrence rowan-north --format csv        # and back out
+
+Into a store, a reader gives a source's records, and one act knows them all — a scan's index, or a photograph's
+metadata, its camera found by the serial a namespace of the garden's own names it by:
+
+    python3 bin/import.py file-tree vol-a.sqlite --volume vol-a --carrier disk-1 --into store:catalogue \
+        --act '{"verb": "read", "in": "vol-a", "id": "scan-1", "by": "host-a", "from": "vol-a", "through": "scan"}'
+    exiftool -json -G1 -n -r /mnt/vol-a > exif.json
+    python3 bin/import.py exif-image exif.json --volume vol-a --root /mnt/vol-a --named device-serial \
+        --into store:catalogue
+
+Every value no field carries is listed, counted by its field; the same source read again writes nothing, and a camera
+named since fills the `unknown` the first import left.
+
 ## A job a tool runs
 
 A scan, a copy, a download, a server: each is a run, started through `bin/run.py` and held by its process's identity,

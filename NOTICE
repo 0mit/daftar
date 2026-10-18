@@ -36,10 +36,11 @@ Third-party data, distributed alongside daftar as separate works, each under its
     Derived from the IANA time zone database (tzdb), release 2026d: its zone1970.tab and one row of its etcetera file.
     In the public domain, as the database itself states (LICENSES/LicenseRef-tzdb-public-domain.txt).
 
-  seed/knowledge/crosswalk-dwc.tsv
+  core/law/crosswalks.yaml, the row dwc-occurrence
     Cites the names of Darwin Core's occurrence terms, © Biodiversity Information Standards (TDWG), published under
-    CC BY 4.0 (dwc.tdwg.org/terms). The pairings and notes are daftar's own, and the file is CC BY 4.0
-    (LICENSES/CC-BY-4.0.txt).
+    CC BY 4.0 (dwc.tdwg.org/terms). The pairings are daftar's own, and the file is CC BY 4.0 (LICENSES/CC-BY-4.0.txt).
+    The row fhir-r5-observation beside it cites the field names of HL7 FHIR R5's Observation, which FHIR publishes
+    under CC0.
 
   seed/knowledge/units-unece-rec20.tsv
     Cites the codes of UN/CEFACT's Recommendation No. 20 (codes for units of measure used in international trade),
@@ -92,5 +93,4 @@ A font, distributed alongside daftar's widgets as a separate work:
 
 daftar's own curated tables (seed/knowledge/technology.tsv, crosswalk-isco-08-isced-f-2013.tsv, and each
 seed/knowledge/units-<scheme>.tsv, a standard's codes crossed into the law's units) are CC BY 4.0.
-daftar's own tables of facts (seed/knowledge/substances.tsv, mechanisms.yaml, coefficients.yaml) and the FHIR R5
-crosswalk (seed/knowledge/crosswalk-fhir-r5-observation.tsv; FHIR is published under CC0) are CC0 1.0.
+daftar's own tables of facts (seed/knowledge/substances.tsv, mechanisms.yaml, coefficients.yaml) are CC0 1.0.
