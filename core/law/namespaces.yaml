@@ -12,6 +12,7 @@ namespaces:
   - { namespace: ieee-eui48, once: "true", pattern: '^([0-9a-f]{2}:){5}[0-9a-f]{2}$', meaning: "a MAC address the IEEE registry's blocks give (EUI-48), six bytes in hexadecimal, `aa:bb:cc:dd:ee:ff`" }
   - { namespace: uuid,       once: "true", pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$', meaning: "a universally unique identifier (RFC 9562), in its hyphenated hexadecimal form" }
   - { namespace: sha-256,    once: "true", pattern: '^[0-9a-f]{64}$', meaning: "the SHA-256 digest of a content (FIPS 180-4), in lowercase hexadecimal: it names that content" }
+  - { namespace: blake3,     once: "true", pattern: '^[0-9a-f]{64}$', meaning: "the BLAKE3 digest of a content (its default output of 256 bits, as the reference implementation's b3sum prints it), in lowercase hexadecimal: it names that content. One content may carry this name and its `sha-256` beside it" }
   - { namespace: openpgp,    once: "true", pattern: '^[0-9A-F]{40}([0-9A-F]{24})?$', meaning: "an OpenPGP key's fingerprint (RFC 9580), in hexadecimal" }
   - { namespace: ssh,        once: "true", pattern: '^SHA256:[A-Za-z0-9+/]{43}$', meaning: "an SSH public key's fingerprint as OpenSSH prints it, `SHA256:` and its base64" }
   - { namespace: passkey,    once: "true", pattern: '^[A-Za-z0-9_-]{22,1364}\.[A-Za-z0-9_-]{58,700}$', meaning: "a passkey (W3C Web Authentication): its credential id and its COSE public key, each in base64url without padding, joined by a dot — what a served page verifies a person's sign-in against" }

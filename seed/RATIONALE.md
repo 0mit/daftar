@@ -2707,6 +2707,19 @@ reader could not tell a rule from a remark, and nothing kept the next one from a
 is now declared, and the gate holds every term to it, the law's, a profile's and a garden's alike. What a writer needs
 to apply a term is its `meaning`; why it is so is reasoning, here, under the term's path.
 
+## core/law/core.yaml: verbs[make]
+
+(ratified by the operator, 2026-10-18: "all ratified", of `make` gaining `from` and `through`)
+
+A COPY IS MADE, FROM WHAT IT COPIES, THROUGH WHAT COPIED IT. A copy of a file on another disk is a fact the ledger
+holds because a tool made it: the second disk holds the content (`hold`), and that holding came to be by the copier's
+act. It is not derived — nothing was inferred, a new thing exists — and it is not read off the world either, since the
+copier knows it by having done it. So `make` takes what it made a thing out of (`from`, the holding copied) and the
+tool it made it with (`through`), as `derive` takes what it came from and through what. No `copy` verb: a copy is a
+making, and the operator's word for it was "it is somehow making a copy". `from` takes statements, as `derive`'s
+does, so a copy names the very holding it was made from, and a chain of copies is read back to the first. A thing made
+from nothing given — prose written, a name minted, a session's bean — names no `from`, as before.
+
 ## core/law/core.yaml: verbs[own]
 
 (std-vocab 32: `terms[owned_by].schema.required`)
@@ -5068,6 +5081,18 @@ bidi formatting characters are `Cf`, and the code's pattern (`\S+`) admitted U+2
 of Trojan Source (CVE-2021-42574): a code could be made to read as another. Not every `Cf` is refused — a Persian word
 needs ZWNJ — only Unicode's own property, Bidi_Control (PropList.txt), so the list is the standard's and not a hand's.
 Free text keeps such characters as written, isolated where it is shown, since a writer may mean them.
+
+## core/law/namespaces.yaml: namespaces[blake3]
+
+(ratified by the operator, 2026-10-18: "all ratified", of a `blake3` namespace beside `sha-256`)
+
+A CONTENT'S WORKING NAME, BESIDE THE ONE THAT CROSSES. A tool that keeps many contents — a catalogue of disks, a
+backup, an archive — names each by a digest of its bytes, and the digest it computes is the one fast enough to read
+terabytes with: BLAKE3, whose reference implementation (b3sum) prints its default 256 bits in hexadecimal. Writing
+those names as `sha-256` would be false, and computing SHA-256 again for every file only to have a namespace for it
+would read every disk twice. So BLAKE3 is a namespace of its own, giving a name once, in the same form as SHA-256's,
+and one content may carry both: BLAKE3 where it is kept and compared, SHA-256 where it crosses to others, who check
+the digest they know. Neither is privileged; each names exactly what its standard computes.
 
 ## core/law/namespaces.yaml: namespace_shape
 

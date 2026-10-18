@@ -5,7 +5,7 @@
 
 # The law's version. A garden that runs this law pins it in GARDEN.md, `extends: core@<version>`, and the gate holds the
 # pin to it; it moves with a change to the law, a RULE-CHANGE.
-version: "2.8"
+version: "2.9"
 
 # ---------------------------------------------------------------------------------------------------------------- roles
 # The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ὡς.
@@ -112,8 +112,8 @@ verbs:
     roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: statement, many: true }, through: { shape: being }, at: { shape: [position, being], many: true } }
     required: [by, from, at]
   - verb: make
-    meaning: "to make the statements its `of` names: they are in the ledger because their maker made them, neither said, read nor derived — as a session's bean is made by itself at its opening, `at: now`"
-    roles: { by: { shape: being }, of: { shape: statement, many: true }, at: { shape: [position, being], many: true } }
+    meaning: "to make the statements its `of` names: they are in the ledger because their maker made them, neither said, read nor derived — as a session's bean is made by itself at its opening, `at: now`; or made out of others, `from` them, `through` a tool: a copy is a holding made from the holding it copies, through the copier"
+    roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: statement, many: true }, through: { shape: being }, at: { shape: [position, being], many: true } }
     required: [by, at]
   # the order
   - verb: be

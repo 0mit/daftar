@@ -100,7 +100,7 @@ roles:as	ὡς	ὡς (the way in which): Aristotle's ὡς — ὡς ὕλη, �
 verbs:say	λέγειν	λέγω (to gather, to lay in order, to say): to give one's word — whose deed is λεχθέν (acts:said); φάναι (to affirm)	proposed	agent (claude opus-5.5), by hand
 verbs:read	ἀναγιγνώσκειν	ἀναγιγνώσκω (to know again, to recognise: to read): what a body read off a thing — whose deed is ἀναγνωσθέν (acts:read)	proposed	agent (claude opus-5.5), by hand
 verbs:derive	παράγειν	παράγω (to lead aside, to bring forth): whose deed is παράγωγον (acts:derived); συνάγειν (to gather a conclusion: the logicians' inferring)	proposed	agent (claude opus-5.5), by hand
-verbs:make	ποιεῖν	ποιέω (to make — the root of poetry): made here from nothing given — whose deed is ποιηθέν (acts:made)	proposed	agent (claude opus-5.5), by hand
+verbs:make	ποιεῖν	ποιέω (to make — the root of poetry): made here — from nothing given, or out of what it copies — whose deed is ποιηθέν (acts:made)	proposed	agent (claude opus-5.5), by hand
 verbs:be	εἶναι	εἰμί (to be): where a being is — ποῦ ἐστιν; κεῖσθαι (to lie: term:located_at, which `be` replaces)	proposed	agent (claude opus-5.5), by hand
 verbs:stand	ἑστάναι	ἵστημι (to set, to stand): ἑστάναι ἐπί, to stand on — what a step stands on, made of it (ἐξ οὗ) or possible on it; στάσις (a standing)	proposed	agent (claude opus-5.5), by hand
 verbs:part	μέρος εἶναι	μέρος (a part, a share, from μείρομαι, to receive one's portion) + εἶναι: to be a part of a whole; ὅλον (the whole)	proposed	agent (claude opus-5.5), by hand

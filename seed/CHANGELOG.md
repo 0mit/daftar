@@ -251,6 +251,15 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.9** (2026-10-18, daftar v2.9.0, human-ratified rule-changes: a `blake3` namespace beside `sha-256`; `make`
+  gains `from` and `through`) — **a content named by the digest its tool computes; a copy made from what it copies.**
+  MINOR: nothing a garden could write under core 2.8 is refused.
+  - `blake3`: the BLAKE3 digest of a content, its 256 bits in lowercase hexadecimal, given once. One content may carry
+    it and its `sha-256` beside it: BLAKE3 where a storage tool keeps and compares contents, SHA-256 where a content
+    crosses to others.
+  - `make` takes `from` (the statements it made a thing out of) and `through` (the tool): a copy is a holding (`hold`)
+    made from the holding it copies, through the copier. No `copy` verb.
+  - The first of three releases of programme item 2 (the store): the store itself, and runs as daftar's own, follow.
 - **core 2.8** (2026-10-14, daftar v2.8.0, human-ratified rule-changes: a page field that is a reading of the being its
   sheet shows; a line for each party beneath an account that holds parties; shares of an agreement; the week as day
   timelines) — **a person's account, read where the person is; shares said once for an agreement; a week read for its
