@@ -4668,6 +4668,77 @@ sibling's word, so a missing name is seen and not hidden. The tables' form — s
 of the law that exists, no two of a page's words alike in one language — is held by `test/names.py`, since the gate
 reads nothing of this layer.
 
+## core/law/layers.yaml: store_shape
+
+(ratified by the operator, 2026-10-18: "tier is law", "sqlite now", "there is no line, there is universe there, they
+may have overlaps", and the reading of it put to him point by point, "Yes, as written"; the pointer, "store:<kind>:<id>")
+
+WHAT GIT CANNOT CARRY. A garden is a file a being, and that is right for what a person says and reads: a machine, an
+agreement, a payment. It is wrong for what a tool reads off the world in millions — the files of fourteen disks, each
+named by the digest of its bytes; the moves of every process a machine runs. Those were kept beside daftar in a tool's
+own database, in a tool's own words, and nothing joined them to the beans. A store keeps them as daftar's own
+statements, in the law's grammar, off git, on the host that keeps them.
+
+ONE UNIVERSE, NOT TWO. The line between a bean and a row is not drawn by kind. A file is not "never a bean": the day a
+person speaks of one, it has a bean, and its rows are still its statements. So a being has one id wherever it is kept,
+and its statements are the union of every keeping, read as MERGE.md reads two branches of a bean: as a set, one
+statement where the forms are one, a conflict where one id holds two. A class, a pattern's members, an aspect's
+neighbours are read from the union, and a being in many of them is ordinary; the order rule over the union keeps the
+loops out.
+
+A ROW NAMES ITS ACT. In a bean an act names what it knows; a scan that read a million files cannot list them, so a row
+names the act that knows it instead. It is the same relation written from the other end, and two acts of one
+statement are both kept: a row read by a scan and later spoken of in a bean is known twice.
+
+IDS FROM THE FORM. A tool writes millions of statements and names none of them; a person names the few others take as
+fillers. So a row given no id is named from its form, and the same statement put twice is one row — an import is
+idempotent, and a statement a bean gave no id is reached from a store by the same digest.
+
+THE POINTER NAMES NO STORE. A bean names a being kept only in a store by its kind and its id, so the gate can judge the
+nature its role takes without reading the store, as it judges `{ someone: <kind> }`; the store's check, where the store
+is, judges whether it resolves. A pointer that named the store would break each time a being moved between stores or
+gained a bean; this one does not.
+
+THE FORM, NOT THE ENGINE. `forms` names what a store's file may be kept in, and SQLite is the one occupant today: a store
+is the place, and an engine fills it. Another engine comes as another row, beside it and no less.
+
+THE GATE NEVER READS A STORE, as it never reads the held layer: a gate that judged one machine's disk would pass on one
+host and fail on another, and a gate that does that is a gate people turn off. The rules that span keepings are judged
+by the store's own check, on the host that keeps it, over git and every store there.
+
+A NAME IN BYTES. A filesystem's names are bytes, and some are no UTF-8 at all; a statement's text holds no control
+character. `escaped` writes such a name as text and reads it back to its bytes, losing nothing, in a store and a bean
+alike.
+
+## core/law/kinds.yaml: kinds[volume]
+
+(ratified by the operator, 2026-10-18: "Ratify as proposed", of the disk catalogue's shape)
+
+What a storage tool keeps needed three kinds the law did not have. A volume is a filesystem, a tree of names, which its
+carrier — a disk, a body — holds (the bearer rule: the carrier says what it holds). A folder gives a name to each thing
+it holds and is part of its parent, so the hierarchy is `part`, and the order rule keeps it free of loops; a
+classification inherited down a folder walks it. A content is an exact sequence of bytes, named by its digest; it is
+what a file holds, and the same content on two disks is one being held twice. A file is not a fourth kind: it is a
+holding, a folder holding a content under a name.
+
+## core/law/kinds.yaml: kinds[folder]
+
+(ratified with `volume`, 2026-10-18) A directory: the names it gives what it holds, part of its parent or its volume.
+
+## core/law/kinds.yaml: kinds[content]
+
+(ratified with `volume`, 2026-10-18) Bytes, named once by a digest (`blake3`, `sha-256`); its size is a measure of the
+information it carries, never of its carrier.
+
+## core/law/verbs.yaml: verbs[hold]
+
+(`as` ratified by the operator, 2026-10-18: "Ratify as proposed")
+
+A HOLDING UNDER A NAME. A folder holds a content as `IMG_7475.CR2`: the name is how the holder holds it, not a name of
+the content, which another folder holds under another. So `hold` takes `as`, the name it holds a thing by, as `as`
+elsewhere is the name given (Aristotle's ὡς). A file is that holding; a copy of it is another holding, made from it
+through the copier (`make`, core 2.9).
+
 ## core/law/layers.yaml: standing
 
 (std-vocab 32: `layers`)

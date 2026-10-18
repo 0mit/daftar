@@ -5,7 +5,7 @@
 
 # The law's version. A garden that runs this law pins it in GARDEN.md, `extends: core@<version>`, and the gate holds the
 # pin to it; it moves with a change to the law, a RULE-CHANGE.
-version: "2.9"
+version: "2.10"
 
 # ---------------------------------------------------------------------------------------------------------------- roles
 # The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ὡς.
@@ -21,8 +21,8 @@ roles:
 # ---------------------------------------------------------------------------------------------------------------- grammar
 # What a filler can be, and the few words a statement may carry beside its roles.
 shapes:
-  - { shape: being,    meaning: "a bean, `self` (the being this bean records), or `someone` of a kind, reached `at` a being or a named place" }
-  - { shape: statement, meaning: "a statement, by its `id`, in this bean or another (`<bean>#<id>`)" }
+  - { shape: being,    meaning: "a bean, `self` (the being this bean records), `someone` of a kind, reached `at` a being or a named place, or a being kept only in a store, `store:<kind>:<id>` (core/law/layers.yaml `store_shape`)" }
+  - { shape: statement, meaning: "a statement, by its `id`, in this bean or another (`<bean>#<id>`), or of a being kept only in a store (`store:<kind>:<id>#<id>`)" }
   - { shape: position, meaning: "a dot in a system of positions, in that system's one form; an extent is two, as ISO 8601 writes an interval" }
   - { shape: quantity, meaning: "{ count, unit }: plain decimal digits, and a unit of SI / UCUM or a currency of ISO 4217; a bare number is a count of the unit one (a share). How well it is known is inside it: `u`, its standard uncertainty, or `accuracy`, as its maker stated it with its kind — at most one (core/law/measures.yaml `uncertainty_form`)" }
   - { shape: row,      meaning: "a row of a table the core keeps, or a standard's" }
@@ -42,6 +42,7 @@ words:                                     # grammar words the engine knows by n
   - { word: now,      meaning: "the moment of the save, written by the engine in place of the word" }
   - { word: self,     meaning: "the being this bean records" }
   - { word: someone,  meaning: "a being of a kind, unknown by name, reached through what is known" }
+  - { word: store,    meaning: "the pointer's word: `store:<kind>:<id>` names a being kept only in a store; no system of positions takes the name" }
 knowing: [say, read, derive, make]         # the acts a statement is known by: each takes statements as its `of`
 provenance:                                # today's `src`, derived and never written: an act, by a being of a nature
   - { src: asserted-by-human,  act: say,    nature: body, rung: reason }
@@ -192,7 +193,7 @@ manifest_forms:
 rules:
   - { rule: form,       says: "a statement is one verb of the verb row, with roles from the seven, the qualifiers its row declares, and id, while, why, note (and held, sealed); nothing else. Text holds no control character but a tab, and a line feed only in a block scalar. GARDEN.md holds the manifest's keys alone, each in its form, and pins this law's version; once the garden holds a bean, it names its gardener, a person or an organisation it holds a bean for. A grant is to a being or to every member of a reading, and its cover names parts a bean has — a key of its header, `body`, a verb's statements, or a verb's narrowed by their `as`" }
   - { rule: valency,    says: "each required role is filled, each filler has the shape and nature its role takes, and no role is filled that the verb does not take" }
-  - { rule: knowing,    says: "every statement of a bean is the `of` of a knowing act in it; a knowing act's `at` is `now` until the save writes the moment, and a moment typed there is refused — but where the act was known in another garden: its `at` then holds that garden's bean beside the moment it was known at there, and the commit that brings it takes it from that garden (`take`)" }
+  - { rule: knowing,    says: "every statement of a bean is the `of` of a knowing act in it; a knowing act's `at` is `now` until the save writes the moment, and a moment typed there is refused — but where the act was known in another garden: its `at` then holds that garden's bean beside the moment it was known at there, and the commit that brings it takes it from that garden (`take`). A row of a store names the act or acts that know it instead, each a knowing act kept in git or a store, and the store's check judges it where the store is kept" }
   - { rule: placeholder, says: "a statement the engine derives (a verb's default) is never written: written, it is refused" }
   - { rule: order,      says: "nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or needs itself through others; a part never stands above what its whole is made of" }
   - { rule: life,       says: "a living being comes through the living; a made or said being comes through hands, a being at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded" }

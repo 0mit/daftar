@@ -118,8 +118,8 @@ verbs:
     replaces: [roles]
     home: core
   - verb: hold
-    meaning: "to hold a quantity, or a being: what a being can hold, and what it holds"
-    roles: { by: { shape: being }, of: { shape: [quantity, being], many: true } }
+    meaning: "to hold a quantity, or a being: what a being can hold, and what it holds — under the name it holds it by (`as`): a folder holds a content as a file's name"
+    roles: { by: { shape: being }, of: { shape: [quantity, being], many: true }, as: { shape: text } }
     required: [by, of]
     replaces: [capacity]
     home: core

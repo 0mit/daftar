@@ -301,6 +301,8 @@ class Judge:
     def __init__(self, law, garden):
         self.L, self.G = law, garden
         self.out = []
+        pat = ((getattr(law, 'store_shape', None) or {}).get('pointer') or {}).get('pattern')
+        self.pointer = re.compile(pat) if pat else None   # a being kept only in a store (core/law/layers.yaml)
         self.systems = law.systems               # the standards', and the garden's own (part 7)
         self._up = None                          # the part/at graph, read once (`_part_at`)
 
@@ -316,7 +318,15 @@ class Judge:
             return b.kind
         if isinstance(x, str) and x in self.G.beans:
             return self.G.beans[x].kind
+        m = self.stored(x)
+        if m:
+            return m[0]
         return None
+
+    def stored(self, x):
+        """(kind, id, statement id or None) where `x` is the pointer to a being kept only in a store, else None."""
+        m = self.pointer.match(x) if self.pointer is not None and isinstance(x, str) else None
+        return (m.group(1), m.group(2), (m.group(3) or '')[1:] or None) if m else None
 
     def nature(self, kind):
         return (self.L.kinds.get(kind) or {}).get('nature')
@@ -331,6 +341,9 @@ class Judge:
             return b.id
         if isinstance(x, str) and x in b.ids:
             return f"{b.id}#{x}"
+        m = self.stored(x)
+        if m:                                  # a being has one id wherever it is kept: the pointer reads as the id
+            return f"{m[1]}#{m[2]}" if m[2] else m[1]
         if isinstance(x, dict):
             return tuple(sorted((k, self.norm(v, b) if not isinstance(v, (dict, list)) else repr(v)) for k, v in x.items()))
         if isinstance(x, list):
@@ -357,6 +370,9 @@ class Judge:
         if shape == 'statement':
             if self.statement(x, b) is not None:
                 return ''
+            m = self.stored(x)
+            if m and m[2]:                      # a statement of a being kept in a store: its shape here, the rest there
+                return self._stored_kind(m)
             return f"{x!r} is no statement of this bean (another bean's is written `<bean>#<id>`)" \
                 if isinstance(x, str) else "a statement is named by its id"
         if shape == 'position':
@@ -387,12 +403,19 @@ class Judge:
                     return f"someone is reached at a being or a place; {at!r} is neither"
             kind = x['someone']
         elif isinstance(x, str):
+            m = self.stored(x)
             if x in self.L.crown:
                 kind = None
             elif x == 'self' or x in self.G.beans:
                 kind = self.kind_of(x, b)
+            elif m and not m[2]:               # a being kept only in a store: its kind is the pointer's
+                why = self._stored_kind(m)
+                if why:
+                    return why
+                kind = m[0]
             else:
-                return f"{x!r} is no bean of this garden, nor `self`, nor the crown"
+                return f"{x!r} is no bean of this garden, nor `self`, nor the crown, nor a being kept in a store " \
+                       f"(`store:<kind>:<id>`)" if not m else f"{x!r} names a statement, not a being"
         else:
             return f"a being is named by its bean, not by a {type(x).__name__}"
         nat = self.nature(kind)
@@ -402,6 +425,15 @@ class Judge:
         if spec.get('rung') and nat == 'body' and (self.L.kinds.get(kind) or {}).get('rung') != spec['rung']:
             return f"a body fills this role only at {spec['rung']} (a person); {x if isinstance(x, str) else kind} is a " \
                    f"{kind}"
+        return ''
+
+    def _stored_kind(self, m):
+        """'' when a pointer's kind is a kind of the law, and the bean of its id, where it has one, is of that kind."""
+        kind, bid, _sid = m
+        if kind not in self.L.kinds:
+            return f"`store:{kind}:{bid}` — `{kind}` is no kind of the law"
+        if bid in self.G.beans and self.G.beans[bid].kind != kind:
+            return f"`store:{kind}:{bid}` — {bid} has a bean, a `{self.G.beans[bid].kind}`: a being keeps its kind"
         return ''
 
     def _quantity(self, x):

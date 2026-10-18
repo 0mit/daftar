@@ -406,6 +406,33 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   held by the gardener, by the person a record is of or concerns, or by an agreement over its own bean; a position on
   the permission square that forbids a grant refuses what it would open. `python3 bin/pass.py` reads them (`may`).
 
+## The store: what git cannot carry, kept as rows
+- **One universe.** A being has one id wherever it is kept: a bean, rows in a store, or both. Nothing makes a being a
+  bean or a row by its kind. Where a statement is kept is a choice of keeping, not a kind of fact: a being's statements
+  are the union of every keeping, as a set (MERGE.md: two statements are one when their forms are one, and under one id
+  two forms are a conflict a person settles), and two acts that know one statement are both kept.
+- **A store** keeps statements off git, as rows, on a host: what a tool reads off the world or makes, in numbers git
+  cannot carry. What a person says goes into a bean. A host keeps a store where its bean says,
+  `details.stores.<name>: { at, form, readers }` (core/law/layers.yaml `store_shape`); its file is kept in one of the
+  forms the law lists, each an occupant of the place (SQLite, today), none of them the store itself.
+- **Each row is a statement in the law's grammar**: one relation a verb, a column a role and a qualifier, the being
+  whose statement it is, its id, `while`, `why`, `note`, and the act or acts that know it. A row names its knowing act,
+  as a bean's act names what it knows (`of`): one act covers everything a run put. A row given no id is named from its
+  form, `<verb>-` and sixteen hexadecimal digits of the SHA-256 of its form, so the same statement twice is one row; a
+  statement of a bean that has no id is named from a store by the same digest. A name the world gives in bytes is
+  written `escaped`. A store keeps no sealed material. A statement leaves a store only with its removal recorded: who,
+  when and why.
+- **The pointer.** A bean names a being kept only in a store `store:<kind>:<id>`, and one of its statements
+  `store:<kind>:<id>#<id>`. The gate checks its shape, its kind, and the nature its role takes. It names no store: a
+  being keeps its id when it moves between stores, or gains a bean, whose kind it keeps.
+- **Statements move between keepings, never by retyping.** A bean's statements are kept in a store with the acts that
+  knew them (`keep`); a row exported into a bean is known there by a `derive` from the acts that knew it; a row copied
+  into a bean by hand is refused (core/law/flows.yaml). `python3 bin/store.py` keeps, reads, exports, imports and checks.
+- **The check of the union.** The rules that span keepings — `names`, `order`, `room`, `line`, and that each act a row
+  names is a knowing act — hold over git and every store a host keeps, and the store's check judges them where the
+  stores are, reading git as well: whole, by the engine's own rules, while the union is small; by queries when it is
+  large, naming what it did not judge. The gate never reads a store, so its verdict on git is the same on every host.
+
 ## Merging
 Two branches of one garden merge bean by bean. A bean's statements are a set: what both sides hold is kept once, and
 what either side added is kept, a disagreement side by side. The header and `details` merge three ways against their
