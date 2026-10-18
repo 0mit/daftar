@@ -249,14 +249,19 @@ class _RowJudge(engine.Judge):
 class Store:
     """One store's file: its relations, its beings, its acts."""
 
-    def __init__(self, path, *, root=ROOT, create=True, readers=None, name=None, law=None, garden=None):
+    def __init__(self, path, *, root=ROOT, create=True, readers=None, name=None, law=None, garden=None, readonly=False):
         self.path, self.root, self.name = path, root, name or os.path.splitext(os.path.basename(path))[0]
+        self.readonly = readonly
         new = not os.path.exists(path)
-        if new and not create:
+        if new and (not create or readonly):
             raise NotHere(f"no store at {path}")
         if new:
             os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-        self.db = sqlite3.connect(path, timeout=60, isolation_level=None)
+        if readonly:                       # a reader, maybe of another user: read permission alone, nothing written
+            self.db = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=60, isolation_level=None)
+            self.db.execute('PRAGMA query_only=ON')
+        else:
+            self.db = sqlite3.connect(path, timeout=60, isolation_level=None)
         self.db.execute('PRAGMA busy_timeout=60000')
         self.db.execute('PRAGMA foreign_keys=OFF')
         self._law, self._garden, self._judge = law, garden, None
@@ -264,7 +269,9 @@ class Store:
         self._cols = {}                    # verb -> {role: (has b_, ...)}
         self._acts = {}                    # ref -> n
         self._depth = 0
-        if new:
+        if readonly:
+            pass
+        elif new:
             shared = bool(readers) and any(r != _me() for r in listed(readers))
             self.db.execute('PRAGMA journal_mode=' + ('DELETE' if shared else 'WAL'))
             self._base()
@@ -349,9 +356,20 @@ class Store:
         return table[2:]
 
     def columns(self, verb):
-        """{role or qualifier: (being column or None, text column)} of the verb's relation, made at its first row."""
+        """{role or qualifier: (being column or None, text column)} of the verb's relation, made at its first row. A
+        reader reads them from the file itself, and needs no law: only a writer makes a relation, by its verb's row."""
         if verb in self._cols:
             return self._cols[verb]
+        if self.readonly:
+            have = [r[1] for r in self.db.execute(f"PRAGMA table_info({_q('v_' + _col(verb))})")]
+            cols = {}
+            for c in have:
+                if c[:2] in ('b_', 't_', 'q_'):
+                    k = c[2:]
+                    bc, tc = cols.get(k, (None, None))
+                    cols[k] = (c if c.startswith('b_') else bc, c if not c.startswith('b_') else tc)
+            self._cols[verb] = cols
+            return cols
         row = self.law.verbs.get(verb)
         if row is None:
             raise StoreError(f"`{verb}` is no verb of the law")
@@ -370,9 +388,12 @@ class Store:
                 defs.append(tc)
             defs += ['c_while', 'c_why', 'c_note', 'known INTEGER', 'UNIQUE (being, id)']
             self.db.execute(f"CREATE TABLE IF NOT EXISTS {_q(table)} ({', '.join(defs)})")
-            for k, (bc, _tc) in cols.items():
+            self.db.execute(f"CREATE INDEX IF NOT EXISTS {_q(table + '_id')} ON {_q(table)} (id)")   # a statement by id
+            for k, (bc, tc) in cols.items():
                 if bc:
                     self.db.execute(f"CREATE INDEX IF NOT EXISTS {_q(table + '_' + bc)} ON {_q(table)} ({bc})")
+                elif shapes_of((row.get('roles') or {}).get(k) or {}) == ['statement']:     # what names a statement
+                    self.db.execute(f"CREATE INDEX IF NOT EXISTS {_q(table + '_' + tc)} ON {_q(table)} ({tc})")
         else:
             for k, (bc, tc) in cols.items():     # a row of the law that grew a role since: its column added
                 for c in (bc, tc):

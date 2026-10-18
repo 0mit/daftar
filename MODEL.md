@@ -264,7 +264,10 @@ A name is a statement: the namespace gives it.
   back as statements (`python3 bin/daftar.py reckon`). A reading is declared by `reckon`, its steps in its `reading`;
   what rests on one is fixed by `pin`, the moment it was read at and the commit, `<garden>@<object id>`.
 - **Lines.** What a line held at each position is a series, `record`; a walk is a mapping's `step` statements, a case
-  on it a `be` as order, and where it stands is read from its `move`s (`python3 bin/daftar.py seq`). Each line's own
+  on it a `be` as order, and where it stands is read from its `move`s (`python3 bin/daftar.py seq`). A job a tool
+  starts is a run, a course of what it acts on along the standard walk `walk-run` (queued, starting, running,
+  stopping or paused, then done, failed, stopped or lost), held by its process's identity and kept in the store
+  `runs` (`python3 bin/daftar.py run`; `run setup` writes the walk into a garden). Each line's own
   structure is a value in a form of core/law/lines.yaml, and rule `line` judges it. A region of a line (`extent`) and a
   repetition along one (`recurrence`, each of its places `at` with a time of day where it names one, `5T17:45`) are
   forms of core/law/measures.yaml; how well a value is known is inside it (`u`,

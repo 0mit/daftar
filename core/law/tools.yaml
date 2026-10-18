@@ -14,6 +14,7 @@ families:
   - family: between
     meaning: "between gardens and places: proposals, merges, readings across, what passes where, what is held"
   - { family: launch, meaning: "daftar's own loop: a model called with every request logged" }
+  - { family: run, meaning: "the jobs a tool starts: each a course on the walk of a run, held by its identity, kept in the store `runs`" }
 tools:
   - { tool: rules, family: law }
   - { tool: why, family: law }
@@ -60,6 +61,7 @@ tools:
   - { tool: pass, family: between }
   - { tool: held, family: between }
   - { tool: store, family: between }
+  - { tool: run, family: run }
   - { tool: relay, family: between }
   - { tool: launch, family: launch }
 forms:

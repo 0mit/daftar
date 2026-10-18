@@ -40,6 +40,7 @@ bin/across.py
 bin/pass.py
 bin/held.py
 bin/store.py
+bin/run.py
 bin/rules.py
 bin/why.py
 bin/form.py

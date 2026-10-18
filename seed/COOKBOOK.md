@@ -1801,3 +1801,18 @@ and `python3 bin/store.py check` checks, where the store is, that it resolves â€
 stores. When a person speaks of a being a store keeps, `python3 bin/store.py export catalogue c-af13 --by <session>
 --write` gives it a bean of its rows, known there by one `derive` from the acts that knew them; `import` keeps a bean's
 statements in a store with their acts. A name that is no UTF-8 is written `escaped` (`%FF`), and read back to its bytes.
+
+## A job a tool runs
+
+A scan, a copy, a download, a server: each is a run, started through `bin/run.py` and held by its process's identity,
+never found again by a pattern. A garden takes the walk once, `python3 bin/run.py setup --by <session>` (it asks for the
+kind `procedure` first), and saves it. Then:
+
+    python3 bin/run.py start --name "scan vol-a" --of vol-a --key index:vol-a -- python3 scan.py vol-a
+    python3 bin/run.py list
+    python3 bin/run.py wait <run> --timeout 600
+    python3 bin/run.py stop <run> --why "replaced"
+
+A second start with the same key is refused while the first holds it. Each run is a course of what it acts on on
+`walk-run`, kept in the store `runs`; `python3 bin/run.py export <run>` prints its statements for that being's bean,
+where a run worth keeping goes.
