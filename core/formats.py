@@ -12,9 +12,8 @@ nested, a database's row by its columns. A field is named by its path (`subject.
 key where the key is written whole (`ExifIFD:SerialNumber`). A number is read as it is written, never as a binary float,
 and a name the world gives in bytes is written `escaped`.
 
-THE READERS (`READERS`) turn a format's records into a model's, where no mapping can say how: `file-tree` splits a path
-into its folders and its name and mints their ids as the catalogue does; `copies` reads a record of copies; `exiftool`
-reads a photograph's tags and finds the content its file's place holds. Each gives Records whose `model` is set.
+THE READERS, which turn a format's records into a model's where no mapping can say how, are core/readers.py's: every
+reader of the law's one table (core/law/formats.yaml `readers`) in one place.
 """
 import csv
 import hashlib
@@ -233,11 +232,17 @@ def _sqlite(source, spec):
         db.close()
 
 
+def undeclared(raw, what='a record'):
+    """The `xml` format's guard: a document that declares a document type or an entity is refused before it is parsed,
+    so nothing in it is expanded, run or fetched."""
+    if re.search(rb'<!(DOCTYPE|ENTITY)', raw if isinstance(raw, bytes) else str(raw).encode('utf-8'), re.I):
+        raise Refused(f"it declares a document type or an entity: {what} is data, refused before it is parsed")
+
+
 def _xml(source, spec):
     import xml.etree.ElementTree as ET
     raw = _bytes(source)
-    if re.search(rb'<!(DOCTYPE|ENTITY)', raw, re.I):
-        raise Refused("it declares a document type or an entity: a record is data, refused before it is parsed")
+    undeclared(raw)
     try:
         root = ET.fromstring(raw)
     except ET.ParseError as e:
@@ -295,9 +300,9 @@ def _dumps(node, indent=0):
     return json.dumps(node, ensure_ascii=False)
 
 
-def _cell(c):
+def cell(c):
     """A cell a spreadsheet would read as a formula (=, +, -, @, a tab or a return first) is written as text, a quote
-    before it; a number stays a number (the csv format's guard)."""
+    before it; a number stays a number (the csv format's guard, for every CSV daftar writes)."""
     s = '' if c is None else str(c)
     if s[:1] in ('=', '+', '-', '@', '\t', '\r') and not re.fullmatch(r'[-+]?\d+(\.\d+)?', s):
         return "'" + s
@@ -313,9 +318,61 @@ def _flat_fields(records, fields):
     return [c for c in cols if any(c in r for r in records)]
 
 
-def write(fmt, records, fields=None):
+def ics_escape(s):
+    return str(s).replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+
+
+def ics_time(at):
+    """A gregorian-civil position as an iCalendar DATE, or DATE-TIME — in UTC where its offset is written, floating where
+    none is: (its VALUE parameter, its text), or None where it is not one."""
+    import datetime
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?(Z|[+-]\d{2}:\d{2})?)?", str(at).strip())
+    if not m:
+        return None
+    y, mo, d, h, mi, se, off = m.groups()
+    if h is None:
+        return ("VALUE=DATE", y + mo + d)
+    if not off:
+        return ("", "%s%s%sT%s%s%s" % (y, mo, d, h, mi, se or "00"))
+    t = datetime.datetime.fromisoformat("%s-%s-%sT%s:%s:%s%s" % (y, mo, d, h, mi, se or "00", "+00:00" if off == "Z" else off))
+    return ("", t.astimezone(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
+
+
+def ics_duration(secs):
+    secs = int(secs)
+    d, r = divmod(secs, 86400)
+    h, r = divmod(r, 3600)
+    m, s = divmod(r, 60)
+    t = "".join(x for x in ("%dH" % h if h else "", "%dM" % m if m else "", "%dS" % s if s else "") if x)
+    return "P" + ("%dD" % d if d else "") + ("T" + t if t else ("" if d else "T0S"))
+
+
+def _ics(records, stamp=None):
+    """RFC 5545: one VEVENT a record {uid, start, summary, notice?}, a VALARM `notice` seconds before where one is
+    given; a record whose start is no position of the civil calendar is left out."""
+    import datetime
+    stamp = stamp or datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//daftar//view ics//EN", "CALSCALE:GREGORIAN"]
+    for r in records:
+        t = ics_time(r.get('start'))
+        if t is None:
+            continue
+        kind, when = t
+        lines += ["BEGIN:VEVENT", "UID:" + str(r.get('uid')), "DTSTAMP:" + stamp,
+                  "DTSTART%s:%s" % (";" + kind if kind else "", when), "SUMMARY:" + ics_escape(r.get('summary', ''))]
+        if r.get('notice'):
+            lines += ["BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + ics_escape(r.get('summary', '')),
+                      "TRIGGER:-" + ics_duration(r['notice']), "END:VALARM"]
+        lines.append("END:VEVENT")
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(lines) + "\r\n"
+
+
+def write(fmt, records, fields=None, **opts):
     """`records` written in the format `fmt`: text, or bytes for a database."""
     records = list(records)
+    if fmt == 'ics':
+        return _ics(records, stamp=opts.get('stamp'))
     if fmt == 'json':
         return _dumps(records) + '\n'
     if fmt == 'jsonl':
@@ -324,9 +381,9 @@ def write(fmt, records, fields=None):
         cols = _flat_fields(records, fields)
         buf = io.StringIO()
         w = csv.writer(buf, lineterminator='\n')
-        w.writerow([_cell(c) for c in cols])
+        w.writerow([cell(c) for c in cols])
         for r in records:
-            w.writerow([_cell(r.get(c)) for c in cols])
+            w.writerow([cell(r.get(c)) for c in cols])
         return buf.getvalue()
     if fmt == 'tsv':
         import parse as dmparse
@@ -352,7 +409,7 @@ def write(fmt, records, fields=None):
 
 
 READ = {'tsv': _tsv, 'csv': _csv, 'json': _json, 'jsonl': _jsonl, 'sqlite': _sqlite, 'xml': _xml}
-WRITE = ('tsv', 'csv', 'json', 'jsonl', 'sqlite')
+WRITE = ('tsv', 'csv', 'json', 'jsonl', 'sqlite', 'ics')
 EXTENSIONS = {'.tsv': 'tsv', '.csv': 'csv', '.json': 'json', '.jsonl': 'jsonl', '.ndjson': 'jsonl', '.sqlite': 'sqlite',
               '.sqlite3': 'sqlite', '.db': 'sqlite', '.xml': 'xml'}
 
@@ -416,7 +473,7 @@ def conversion(spec):
     return None, None, {}
 
 
-# ------------------------------------------------------------------------------------------------ the readers
+# ------------------------------------------------------------------------------------------------ conventions
 def folder_id(volume, path):
     """A folder's id, as the catalogue mints it: `d-` and 16 hexadecimal digits of the SHA-256 of the volume's id, a zero
     byte and its path (bytes)."""
@@ -433,37 +490,6 @@ def _path_bytes(p):
     return bytes(p) if isinstance(p, (bytes, bytearray, memoryview)) else os.fsencode(str(p))
 
 
-def file_tree(records, volume, carrier=None, **_):
-    """A listing of paths (path, type, size, hash) as the records of the volume, its folders, its files and its contents
-    (formats.yaml, reader `file-tree`). Each content once, after every file that holds it."""
-    if carrier:
-        yield Record({'id': volume, 'carrier': carrier}, at='the volume', model='volume')
-    contents = {}
-    for rec in records:
-        typ = rec.get('type')
-        if typ not in ('d', 'f'):
-            continue
-        path = _path_bytes(rec.get('path', b''))
-        if path in (b'', b'.'):
-            continue
-        parent, _, name = path.rpartition(b'/')
-        pid = folder_id(volume, parent) if parent else volume
-        if typ == 'd':
-            yield Record({'id': folder_id(volume, path), 'parent': pid, 'name': name}, at=rec.at, model='folder')
-            continue
-        h = rec.get('hash')
-        if h:
-            c = content_id(h)
-            if c not in contents:
-                contents[c] = (str(h), rec.get('size'))
-            yield Record({'folder': pid, 'content': c, 'name': name}, at=rec.at, model='file')
-        else:
-            yield Record({'folder': pid, 'content': 'unknown', 'name': name}, at=rec.at, model='file')
-    for c, (h, size) in contents.items():
-        yield Record({'id': c, 'blake3': h, 'size': '' if size is None else str(size)}, at=f"content {c}",
-                     model='content')
-
-
 def local_moment(t):
     """A count of seconds as the moment it was on this machine's clock, with its offset: how a copier writes when."""
     if t is None:
@@ -471,61 +497,3 @@ def local_moment(t):
     import time
     s = time.strftime('%Y-%m-%dT%H:%M:%S%z', time.localtime(float(t)))
     return s[:-2] + ':' + s[-2:]
-
-
-def copies(records, volume, known=None, ref=None, carrier=None, **_):
-    """A record of copies (archive.py's manifest) as the folders of each destination not met before and each copy, its
-    source the holding it was copied from (formats.yaml, reader `copies`), named by `ref` (verb, being, roles) as the
-    keeping names a statement. `known` is the set of folders met already, kept between calls (a copier's one record at a
-    time)."""
-    known = set() if known is None else known
-    if carrier and ('volume', volume) not in known:
-        known.add(('volume', volume))
-        yield Record({'id': volume, 'carrier': carrier}, at='the volume', model='volume')
-    for rec in records:
-        dest = _path_bytes(rec.get('dest', b''))
-        parent, _, name = dest.rpartition(b'/')
-        chain, p = [], parent
-        while p and p not in known:
-            chain.append(p)
-            p = p.rpartition(b'/')[0]
-        for p in reversed(chain):
-            up, _, nm = p.rpartition(b'/')
-            known.add(p)
-            yield Record({'id': folder_id(volume, p), 'parent': folder_id(volume, up) if up else volume, 'name': nm},
-                         at=rec.at, model='folder')
-        holder = folder_id(volume, parent) if parent else volume
-        c = content_id(rec.get('h'))
-        if ('content', c) not in known:                  # the content it holds, by its handle: a being of its kind
-            known.add(('content', c))
-            yield Record({'id': c}, at=rec.at, model='content')
-        src_vol, src_path = str(rec.get('src_vol') or ''), _path_bytes(rec.get('src_path', b''))
-        sp, _, sn = src_path.rpartition(b'/')
-        sfolder = folder_id(src_vol, sp) if sp else src_vol
-        source = ref('hold', sfolder, {'by': sfolder, 'of': c, 'as': escape(sn)}) if ref else None
-        yield Record({'folder': holder, 'content': c, 'name': name, 'source': source,
-                      'at': local_moment(rec.get('at')), 'note': f"archive.py copied it as {rec.get('class')}; its day "
-                                                   f"{rec.get('day')} ({rec.get('day_from')})"},
-                     at=rec.at, model='copy')
-
-
-def exiftool(records, volume, root, find=None, **_):
-    """exiftool's records, each file's tags and the content its place holds (formats.yaml, reader `exiftool`): `find`
-    (volume, folder id, name) -> the content held there, or None."""
-    root = os.path.abspath(root)
-    for rec in records:
-        src = str(rec.get('SourceFile', ''))
-        rel = os.path.relpath(os.path.abspath(src), root)
-        if rel.startswith('..'):
-            yield Record(rec, at=rec.at, model='image')
-            continue
-        parent, _, name = os.fsencode(rel).rpartition(b'/')
-        holder = folder_id(volume, parent) if parent else volume
-        out = Record(rec, at=rec.at, model='image')
-        c = find(holder, escape(name)) if find else None
-        if c:
-            out['content'] = c
-        yield out
-
-
-READERS = {'file-tree': file_tree, 'copies': copies, 'exiftool': exiftool}

@@ -439,8 +439,9 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
 ## Imports and exports: one machinery
 - **One way in and out.** Another system's records come in, and the garden's statements go out, through one
   machinery: a **format** turns bytes into records and back (core/law/formats.yaml `formats`: a container's syntax,
-  never a model of records); a **reader** gives the records of a model where a format alone cannot (`readers`: a path
-  split into its folders, an id minted by a convention, a provider's columns checked); a **crosswalk** says what each
+  never a model of records); a **reader** gives the records of a model where a format alone cannot (`readers`, one
+  table: a path split into its folders, an id minted by a convention, a provider's columns checked, a bank's
+  statement read by its profile's adapter); a **crosswalk** says what each
   field is in the law's grammar (core/law/crosswalks.yaml), read both ways; one **knowing act** knows what came in; a
   **keeping** holds it — a store, or a bean. `python3 bin/import.py` and `python3 bin/export.py` are its two doors.
 - **A crosswalk read both ways.** A row that names its `format` and its `act` is read into statements as well as out of
