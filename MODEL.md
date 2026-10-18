@@ -82,7 +82,9 @@ provenance). These four verbs are the knowing acts; each takes statements as its
   only the clock supplies it.
 - `say` is by a person (a body at reason) or a document (a sayable). `read` is by a body. `derive` is computed from
   what was given — a count, a digest, a merge, an inference — and names it, `from`: it holds nothing its inputs did not,
-  and is no better than they were. `make` is made here from nothing given: prose written, a name minted.
+  and is no better than they were. `make` is made here: prose written, a name minted — from nothing given, or out of
+  what it names `from`, `through` a tool: a copy is a holding (`hold`) made from the holding it copies, through the
+  copier. What is made from another is a new statement of its own, made, where a derived one is only known.
 - **An agent's act is its session's.** An act an agent made is `by` the session bean it ran in, the one whose start and
   stop hold the act's moment; an agent's reading is `derive`, since `read` takes a body. Where no session holds it, the
   act is `by: unknown`, the agent named in its `note`.
@@ -234,7 +236,7 @@ A name is a statement: the namespace gives it.
 ```
 
 - A namespace is a row: the standards' are the core's (`core/law/namespaces.yaml`: `dns`, `mail`, `e164`,
-  `ieee-eui48`, `uuid`, `sha-256`, `openpgp`, `ssh`, `wireguard`, `garden-id`, `garden`), and a garden adds its own
+  `ieee-eui48`, `uuid`, `sha-256`, `blake3`, `openpgp`, `ssh`, `wireguard`, `garden-id`, `garden`), and a garden adds its own
   in VOCAB.md — a maker's serials, an employer's numbers — named for whoever gives them.
 - A namespace's row says whether it gives a name **once**. A name given once names one being, and that is what
   establishes an identity: the gate refuses one name given once to two beings.

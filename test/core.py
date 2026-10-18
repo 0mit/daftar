@@ -129,7 +129,7 @@ again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true
 check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "
       f"garden gives…), each giving once but a mailbox and a line, which may be shared, and a garden that declares one "
       f"again is refused",
-      {'dns', 'mail', 'e164', 'ieee-eui48', 'uuid', 'sha-256', 'openpgp', 'ssh', 'passkey', 'wireguard', 'garden-id',
+      {'dns', 'mail', 'e164', 'ieee-eui48', 'uuid', 'sha-256', 'blake3', 'openpgp', 'ssh', 'passkey', 'wireguard', 'garden-id',
        'garden', 'ror', 'wikidata', 'orcid', 'ifc-guid', 'dicom-uid', 'gs1', 'tr-tckn', 'ir-national-code'} == set(ns)
       and sorted(n for n, r in ns.items() if r.get('once') != 'true') == ['e164', 'mail']
       and any('`dns` is declared already' in m for _r, _w, m in again),

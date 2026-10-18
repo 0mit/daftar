@@ -100,7 +100,7 @@ roles:as	als	als (as, from all-so: just so): in what capacity, or as what — al
 verbs:say	Sagen	sagen (to say): to give one's word — whose deed is gesagt (acts:said); Aussage (a statement)	proposed	agent (claude opus-5.5), by hand
 verbs:read	Ablesen	ablesen (to read off, as a dial is read): what a body read off a thing — whose deed is abgelesen (acts:read); lesen (to gather)	proposed	agent (claude opus-5.5), by hand
 verbs:derive	Ableiten	ableiten (to lead off, as a channel from a stream): to come to it from what was given — whose deed is abgeleitet (acts:derived)	proposed	agent (claude opus-5.5), by hand
-verbs:make	Machen	machen (to fit together, to make): made here from nothing given — whose deed is gemacht (acts:made)	proposed	agent (claude opus-5.5), by hand
+verbs:make	Machen	machen (to fit together, to make): made here — from nothing given, or out of what it copies — whose deed is gemacht (acts:made)	proposed	agent (claude opus-5.5), by hand
 verbs:be	Sein	sein (to be): where a being is — at a position, or at a being, and the way it is placed; befindet sich (term:located_at, which `be` replaces)	proposed	agent (claude opus-5.5), by hand
 verbs:stand	Stehen	stehen auf (to stand on): what a step stands on — made of it, or possible on it; Hartmann's strata, each carried by the one below	proposed	agent (claude opus-5.5), by hand
 verbs:part	Teilsein	Teil (a part) + sein: being a part of a whole; Teil von (term:part_of, which `part` replaces); das Ganze (the whole)	proposed	agent (claude opus-5.5), by hand

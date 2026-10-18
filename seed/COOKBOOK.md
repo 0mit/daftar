@@ -418,6 +418,13 @@ on macOS, and in PowerShell `(Get-FileHash -Algorithm SHA256 <file>).Hash.ToLowe
 On Windows the copy has a Windows path, in the `windows-filesystem` system. Write it in single quotes: inside double
 quotes YAML reads a backslash as the start of an escape.
 
+A storage tool that names contents by BLAKE3 (`b3sum <file>` prints it, in the same lowercase hexadecimal) writes that
+name beside the other, `name: { by: blake3, of: self, as: "<64 hex digits>" }`: one content may carry both, BLAKE3 where
+it is kept and compared, SHA-256 where it crosses to others. And a copy of the file is a holding of its own that a tool
+made: the disk a backup wrote it to holds it, `hold: { id: on-backup, by: backup-disk, of: self }`, and the backup is
+the act that knows it, `make: { by: <the backup's run>, of: [on-backup], from: [<the holding it copied>], through: <the
+tool>, at: now }` — made, neither said nor derived, from the very holding it copies.
+
 <!-- example-check: beans/card-statement-2026-09.md -->
 ```yaml
   - be:     { by: self, at: 'laptop:C:\Users\sam\Documents\card-statement-2026-09.pdf', as: location }

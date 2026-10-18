@@ -100,7 +100,7 @@ roles:as	come	quomodo (in what way): as — in what capacity, or as what; in qua
 verbs:say	dire	dicere (to say): to give one's word — whose deed is detto (acts:said)	proposed	agent (claude opus-5.5), by hand
 verbs:read	leggere	legere (to gather, to read): what a body read off a thing — whose deed is letto (acts:read); rilevare (to take a reading)	proposed	agent (claude opus-5.5), by hand
 verbs:derive	derivare	derivare (de + rivus: to draw off a stream) — whose deed is derivato (acts:derived)	proposed	agent (claude opus-5.5), by hand
-verbs:make	fare	facere (to make, to do): made here from nothing given — whose deed is fatto (acts:made)	proposed	agent (claude opus-5.5), by hand
+verbs:make	fare	facere (to make, to do): made here — from nothing given, or out of what it copies — whose deed is fatto (acts:made)	proposed	agent (claude opus-5.5), by hand
 verbs:be	essere	esse (to be): where a being is — at a position, or at a being, and the way it is placed; situato (term:located_at, which `be` replaces)	proposed	agent (claude opus-5.5), by hand
 verbs:stand	poggiare	podium (a raised base): poggiare su, to rest on — what a step stands on, made of it or possible on it	proposed	agent (claude opus-5.5), by hand
 verbs:part	far parte	pars (a part): far parte di, to be a part of a whole; parte di (term:part_of, which `part` replaces)	proposed	agent (claude opus-5.5), by hand

@@ -69,7 +69,7 @@ facets:technical	technical	τέχνη (craft): who runs and maintains a being �
 facets:experience	experience	experiri (to try, to go through): who answers for how people meet a being	proposed	agent (claude opus-5.5), by hand
 facets:financial	financial	finis (an end: a settlement that ends a debt): who pays for a being and is paid by it	proposed	agent (claude opus-5.5), by hand
 registry:acts	acts	actum (a thing done, from agere, to drive, to do): how a value came to be where it is	proposed	agent (claude opus-5.5), by hand
-acts:made	made	make (Old English macian: to fit together): made here, from nothing given	proposed	agent (claude opus-5.5), by hand
+acts:made	made	make (Old English macian: to fit together): made here — from nothing given, or out of what it copies	proposed	agent (claude opus-5.5), by hand
 acts:derived	derived	derivare (to lead water off a stream: de + rivus): it holds nothing its source did not	proposed	agent (claude opus-5.5), by hand
 acts:read	read	read (Old English rǣdan: to advise, to interpret, to read): read off the world or a clock	proposed	agent (claude opus-5.5), by hand
 acts:said	said	say (Old English secgan): said by someone, or stated in a document	proposed	agent (claude opus-5.5), by hand
@@ -100,7 +100,7 @@ roles:as	as	as (Old English ealswā: just so); Aristotle's ὡς: the way in whi
 verbs:say	say	say (Old English secgan): to give one's word	proposed	agent (claude opus-5.5), by hand
 verbs:read	read	read (Old English rǣdan: to advise, to interpret): what a body read off a thing	proposed	agent (claude opus-5.5), by hand
 verbs:derive	derive	derivare (to draw off a stream: de + rivus): to come to it from what was given	proposed	agent (claude opus-5.5), by hand
-verbs:make	make	make (Old English macian: to fashion): made here from nothing given	proposed	agent (claude opus-5.5), by hand
+verbs:make	make	make (Old English macian: to fashion): made here — from nothing given, or out of what it copies	proposed	agent (claude opus-5.5), by hand
 verbs:be	be	be (Old English bēon): where a being is — at a position, or at a being	proposed	agent (claude opus-5.5), by hand
 verbs:stand	stand	stand (Old English standan): what stands on what, on the ladder	proposed	agent (claude opus-5.5), by hand
 verbs:part	part	pars (a share, a piece): a part of a whole	proposed	agent (claude opus-5.5), by hand
