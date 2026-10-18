@@ -487,7 +487,7 @@ class Registry:
         self._where = {}
         if write:
             with self.tx():
-                self.S.being(HOST, 'host') if HOST not in self.S.garden.beans else self.S.being(HOST)
+                self.S.being(HOST, 'host') if not self.S.has_bean(HOST) else self.S.being(HOST)
 
     @contextlib.contextmanager
     def tx(self):
@@ -560,7 +560,7 @@ class Registry:
             if prev is not None and at <= prev['at']:
                 at = prev['at'] + 0.001
             roles = {'of': b, 'through': f'{b}#{rid}', 'at': [moment_ms(at), f'{WALK}#{step}']}
-            if by and (by in self.S.garden.beans or self.S.kind_of(by)):
+            if by and (self.S.has_bean(by) or self.S.kind_of(by)):
                 roles['by'] = by
             elif by:                                     # who asked, where the garden holds no being of them
                 why = f'by {by}' + (f': {why}' if why else '')

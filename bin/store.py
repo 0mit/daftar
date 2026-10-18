@@ -297,6 +297,25 @@ class Store:
             self._garden = engine.Garden.read(self.root)
         return self._garden
 
+    def bean(self, bid):
+        """The bean of `bid` in git, read alone from its file (beans/ or mappings/), or None: what a writer asks of a
+        being, without reading the whole garden."""
+        if self._garden is not None:
+            return self._garden.beans.get(bid)
+        cache = self.__dict__.setdefault('_beans_read', {})
+        if bid not in cache:
+            cache[bid] = None
+            if isinstance(bid, str) and ID.match(bid):
+                for space in ('beans', 'mappings'):
+                    p = os.path.join(self.root, space, bid + '.md')
+                    if os.path.isfile(p):
+                        cache[bid] = engine._bean(p, bid)
+                        break
+        return cache[bid]
+
+    def has_bean(self, bid):
+        return self.bean(bid) is not None
+
     @property
     def judge(self):
         if self._judge is None:
@@ -360,7 +379,7 @@ class Store:
         reader reads them from the file itself, and needs no law: only a writer makes a relation, by its verb's row."""
         if verb in self._cols:
             return self._cols[verb]
-        if self.readonly:
+        if self.readonly or (self._law is None and self._stored_shapes(verb) is not None):
             have = [r[1] for r in self.db.execute(f"PRAGMA table_info({_q('v_' + _col(verb))})")]
             cols = {}
             for c in have:
@@ -388,6 +407,9 @@ class Store:
                 defs.append(tc)
             defs += ['c_while', 'c_why', 'c_note', 'known INTEGER', 'UNIQUE (being, id)']
             self.db.execute(f"CREATE TABLE IF NOT EXISTS {_q(table)} ({', '.join(defs)})")
+            shapes = {k: shapes_of(spec) for k, spec in list((row.get('roles') or {}).items()) +
+                      list((row.get('qualifiers') or {}).items())}
+            self.db.execute("INSERT OR REPLACE INTO meta (k, v) VALUES (?, ?)", (f'shapes:{verb}', json.dumps(shapes)))
             self.db.execute(f"CREATE INDEX IF NOT EXISTS {_q(table + '_id')} ON {_q(table)} (id)")   # a statement by id
             for k, (bc, tc) in cols.items():
                 if bc:
@@ -419,7 +441,7 @@ class Store:
         r = self._being_row(bid)
         if r and r[1]:
             return r[1]
-        b = self.garden.beans.get(bid)
+        b = self.bean(bid)
         return b.kind if b is not None else None
 
     def being(self, bid, kind=None, title=None, summary=None):
@@ -428,7 +450,7 @@ class Store:
             raise StoreError(f"{bid!r}: a being's id is one word — `^[a-z0-9][a-z0-9_-]*$`")
         if kind is not None and kind not in self.law.kinds:
             raise StoreError(f"`{kind}` is no kind of the law")
-        bean = self.garden.beans.get(bid)
+        bean = self.bean(bid)
         if bean is not None and kind is not None and bean.kind != kind:
             raise StoreError(f"{bid} has a bean of the kind `{bean.kind}`: it is kept as that, not `{kind}`")
         hit = self._being_row(bid)
@@ -447,7 +469,7 @@ class Store:
         return cur.lastrowid
 
     def _known_being(self, x):
-        return isinstance(x, str) and (x in self.garden.beans or self.has_being(x))
+        return isinstance(x, str) and (self.has_bean(x) or self.has_being(x))
 
     def detail(self, bid, key, *value):
         """A being's detail `key` (its `details`, as a bean keeps them), read — or written, given a value (None takes it
@@ -469,18 +491,34 @@ class Store:
         return {k: json.loads(v) for k, v in self.db.execute('SELECT key, value FROM detail WHERE being=?', (r[0],))}
 
     # -------------------------------------------------------------------------------------------- fillers
+    def _stored_shapes(self, verb):
+        """{role: [shapes]} kept with the verb's relation when it was made, or None (a relation made before 2.11.3, or
+        none yet)."""
+        cache = self.__dict__.setdefault('_shapes', {})
+        if verb not in cache:
+            r = self.db.execute("SELECT v FROM meta WHERE k = ?", (f'shapes:{verb}',)).fetchone()
+            cache[verb] = json.loads(r[0]) if r else None
+        return cache[verb]
+
+    def shapes(self, verb):
+        """{role or qualifier: [shapes]} of a verb: kept with its relation, else read from the law."""
+        got = self._stored_shapes(verb)
+        if got is not None:
+            return got
+        spec = (self.law.verbs.get(verb) or {})
+        return {k: shapes_of(v) for k, v in list((spec.get('roles') or {}).items()) +
+                list((spec.get('qualifiers') or {}).items())}
+
     def normalize(self, being, verb, roles):
         """A statement's roles as a store keeps them: `self` the being, a statement of the being `<being>#<id>`, a
         pointer the plain id (its kind kept)."""
-        spec = (self.law.verbs.get(verb) or {})
-        allr = dict(spec.get('roles') or {}, **(spec.get('qualifiers') or {}))
+        allr = self.shapes(verb)
         out = {}
         for k, v in roles.items():
             if k in ('id',) + BESIDE:
                 out[k] = v
                 continue
-            shapes = shapes_of(allr.get(k) or {})
-            out[k] = self._norm(v, being, shapes)
+            out[k] = self._norm(v, being, allr.get(k) or [])
         return out
 
     def _norm(self, v, being, shapes):
@@ -511,9 +549,8 @@ class Store:
     def denormalize(self, being, verb, roles):
         """A row's roles as `being`'s bean writes them: the being `self`, its own statements by their id, a being with
         no bean in git a pointer."""
-        spec = (self.law.verbs.get(verb) or {})
-        allr = dict(spec.get('roles') or {}, **(spec.get('qualifiers') or {}))
-        return {k: (v if k in ('id',) + BESIDE else self._denorm(v, being, shapes_of(allr.get(k) or {})))
+        allr = self.shapes(verb)
+        return {k: (v if k in ('id',) + BESIDE else self._denorm(v, being, allr.get(k) or []))
                 for k, v in roles.items()}
 
     def _denorm(self, v, being, shapes):
@@ -528,10 +565,10 @@ class Store:
             b, sid = m.groups()
             if b == being:
                 return sid
-            if b not in self.garden.beans and self.has_being(b):
+            if not self.has_bean(b) and self.has_being(b):
                 return f"store:{self.kind_of(b)}:{b}#{sid}"
             return v
-        if 'being' in shapes and ID.match(v) and v not in self.garden.beans and self.has_being(v) and \
+        if 'being' in shapes and ID.match(v) and not self.has_bean(v) and self.has_being(v) and \
                 v not in self.law.crown and v != 'unknown':
             k = self.kind_of(v)
             return f"store:{k}:{v}" if k else v
@@ -547,6 +584,10 @@ class Store:
                 cols.append('c_' + k)
                 vals.append(v)
                 continue
+            if k not in spec and self._law is None and not self.readonly:   # read from the file: the law may have
+                self._cols.pop(verb, None)                                     # given the verb a role since — ask it
+                self.law
+                spec = self.columns(verb)
             if k not in spec:
                 raise StoreError(f"`{k}` is no role or qualifier `{verb}` takes")
             bc, tc = spec[k]
@@ -603,7 +644,7 @@ class Store:
         st = self.statement(b, sid)
         if st:
             return ('store',) + st
-        bean = self.garden.beans.get(b)
+        bean = self.bean(b)
         if bean is not None:
             for _i, verb, r in bean.items:
                 if r.get('id') == sid or (r.get('id') is None and mint(verb, self.normalize(b, verb, r)) == sid):
@@ -812,7 +853,7 @@ class Store:
         """The rows of `being` as statements for its bean, each known there by one act the export adds: `derive`, by
         `by`, from the acts that knew the rows, at the save's moment. What the bean holds already is left out. Returns
         ([statements as {verb: roles}], the act, or None when nothing is new)."""
-        bean = self.garden.beans.get(being) if into is None else into
+        bean = self.bean(being) if into is None else into
         have = set()
         if bean is not None:
             for _i, v, r in bean.items:
