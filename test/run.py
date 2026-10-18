@@ -171,11 +171,14 @@ try:
     grow.run(PY, '-c', prog, cwd=G, env=ENV)
     probe = (f"import sys, json; sys.path.insert(0, 'bin'); import run\nreg = run.Registry()\n"
              f"a = run.Run(reg.ids(\"name = 'a task'\")[0], reg); d = run.Run(reg.ids(\"name = 'a task that dies'\")[0], reg)\n"
-             f"print(json.dumps([a.step(), reg.last(a.id)['reason'], a.progress().get('done'), run.reconcile_one(d)]))")
+             f"print(json.dumps([a.step(), reg.last(a.id)['reason'], a.progress().get('done'), run.reconcile_one(d), "
+             f"len(reg.ids('name LIKE ?', ('A TASK%',))), len(reg.ids(\"name LIKE 'a_task'\"))]))")
     o = grow.run(PY, '-c', probe, cwd=G, env=ENV)
     got = json.loads(o.stdout.strip().splitlines()[-1]) if o.returncode == 0 and o.stdout.strip() else None
     check("tasks: a task that raises ends failed (raised), its progress kept; one whose process died is lost",
-          got == ['failed', 'raised', 5, 'lost'], (got, o.out[-600:]))
+          got and got[:4] == ['failed', 'raised', 5, 'lost'], (got, o.out[-600:]))
+    check("...the registry found by a name's pattern, as SQL's LIKE reads it (`%`, `_`, letters in either case)",
+          got and got[4:] == [2, 1], got)
     par = (f"import sys, time; sys.path.insert(0, 'bin'); import run\n"
            f"[run.start(['sleep', '60'], name=f'child {{i}}') for i in range(2)]\ntime.sleep(60)\n")
     p = rid(R('start', '--name', 'a parent', '--', PY, '-c', par))
