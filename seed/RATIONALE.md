@@ -5230,9 +5230,9 @@ than that, would ask the servers at every save or refuse it, for a truth nothing
 written before keeps the unit it was written at: a move written to the minute names its whole minute, and two moves are
 compared at the coarser of their units.
 
-## core/law/registries.yaml: fetch_shape
+## core/law/registries.yaml: knowledge_scheme_form.holding
 
-(core 2.0: and `knowledge_scheme_form.fetch`, `holding: fetched`)
+(core 2.0: `holding: fetched`, and its `fetch`; its readers in core/law/formats.yaml's one table since 2.13)
 
 DAFTAR SHIPS NO ONE ELSE'S TABLE WHERE ITS TERMS DO NOT LET IT. A scheme held `fetched` is downloaded by each machine
 from its provider, under the provider's terms, kept unchanged outside git under its SHA-256, and read by a named reader
@@ -5582,6 +5582,10 @@ formats no garden needs yet — a vCard, a mailbox, a Parquet table — are rows
 a garden that brings the first one finds its place.
 
 ## core/law/formats.yaml: readers
+
+ONE TABLE OF READERS (2.13). The readers of a provider's table were a list of their own (`fetch_shape.readers`), the
+bank statements' adapters another, inside their asset; a reader is a reader wherever it reads, so the law names each
+once, here, with the profile it is `home` to, and its code is in one place (core/readers.py; a profile's in its asset).
 
 WHERE A MAPPING CANNOT SAY IT. A path is one value to a listing and a chain of folders to the law; a folder's id is
 minted from its volume and its path by a convention every tool that reads the catalogue relies on; a provider's

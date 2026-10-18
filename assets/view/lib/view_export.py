@@ -14,6 +14,15 @@ sys.path.insert(0, HERE)
 import view_model as vm
 
 
+def _formats():
+    """The release's formats (core/formats.py): every CSV and calendar daftar writes, written by one writer with its
+    guard (2.13)."""
+    if vm.ROOT and vm.ROOT not in sys.path:
+        sys.path.insert(0, vm.ROOT)
+    from core import formats
+    return formats
+
+
 # ---------------------------------------------------------------------------------------------------------------------
 # a table, as CSV (N36)
 # ---------------------------------------------------------------------------------------------------------------------
@@ -29,12 +38,9 @@ def csv_text(table, keep=None):
 
 
 def text_cell(c):
-    """A cell a spreadsheet would read as a formula (=, +, -, @, a tab or a return first) is written as text, with a
-    quote before it (security audit 2026-10-10, 3.10); a number stays a number."""
-    s = str(c) if c is not None else ""
-    if s[:1] in ("=", "+", "-", "@", "\t", "\r") and not re.fullmatch(r"[-+]?\d+(\.\d+)?", s):
-        return "'" + s
-    return c
+    """A cell a spreadsheet would read as a formula is written as text: the `csv` format's guard (core/formats.py
+    `cell`), the one every CSV daftar writes keeps."""
+    return _formats().cell(c)
 
 
 def tables():
@@ -136,41 +142,12 @@ def document_bean_core(bid, title, digest, path, keeper, member, source):
 # ---------------------------------------------------------------------------------------------------------------------
 # a calendar of a reading's members (N40)
 # ---------------------------------------------------------------------------------------------------------------------
-def _ics_escape(s):
-    return str(s).replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
-
-
-def _ics_time(at):
-    """A gregorian-civil position as an iCalendar DATE, or DATE-TIME — in UTC where its offset is written, floating where
-    none is: None where it is not one."""
-    s = str(at).strip()
-    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?(Z|[+-]\d{2}:\d{2})?)?", s)
-    if not m:
-        return None
-    y, mo, d, h, mi, se, off = m.groups()
-    if h is None:
-        return ("VALUE=DATE", y + mo + d)
-    if not off:
-        return ("", "%s%s%sT%s%s%s" % (y, mo, d, h, mi, se or "00"))
-    t = datetime.datetime.fromisoformat("%s-%s-%sT%s:%s:%s%s" % (y, mo, d, h, mi, se or "00", "+00:00" if off == "Z" else off))
-    return ("", t.astimezone(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
-
-
 def _civil(p):
     """A position's gregorian-civil text in either of its forms (27.0): the short form as written; the long form's `at`
     where its system is the civil calendar, else None."""
     if isinstance(p, dict):
         return p.get("at") if p.get("system") == "gregorian-civil" else None
     return p
-
-
-def _duration(secs):
-    secs = int(secs)
-    d, r = divmod(secs, 86400)
-    h, r = divmod(r, 3600)
-    m, s = divmod(r, 60)
-    t = "".join(x for x in ("%dH" % h if h else "", "%dM" % m if m else "", "%dS" % s if s else "") if x)
-    return "P" + ("%dD" % d if d else "") + ("T" + t if t else ("" if d else "T0S"))
 
 
 def _presences(f):
@@ -199,28 +176,19 @@ def feed_events(key):
         for m in vm.members(e["selection"]):
             f = vm.fm(m)
             for name, t in sorted((f.get("timing") or {}).items()):
-                if isinstance(t, dict) and t.get("system") == "gregorian-civil" and _ics_time(t.get("at")):
+                if isinstance(t, dict) and t.get("system") == "gregorian-civil" and _formats().ics_time(t.get("at")):
                     out.append((m, name, t.get("at"), f.get("title") or m, notice))
             for name, at in _presences(f) if vm.CORE is not None else ():     # a garden of the core: `be` as presence
-                if _ics_time(at):
+                if _formats().ics_time(at):
                     out.append((m, name, at, f.get("title") or m, notice))
             for name, c in sorted((f.get("clauses") or {}).items()):         # a clause's `due` (its first, where it repeats)
-                if isinstance(c, dict) and c.get("state") not in ("met", "waived") and _ics_time(_civil(c.get("due"))):
+                if isinstance(c, dict) and c.get("state") not in ("met", "waived") and _formats().ics_time(_civil(c.get("due"))):
                     out.append((m, name, _civil(c["due"]), "%s: %s" % (f.get("title") or m, c.get("what") or name), notice))
     return out
 
 
 def ics_text(events, garden_id, stamp=None):
-    """RFC 5545: one VEVENT per event, its UID the garden's and the member's, a VALARM `notice` before where one is given."""
-    stamp = stamp or datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//daftar//view ics//EN", "CALSCALE:GREGORIAN"]
-    for m, name, at, title, notice in events:
-        kind, when = _ics_time(at)
-        lines += ["BEGIN:VEVENT", "UID:%s-%s@%s" % (m, name, garden_id), "DTSTAMP:" + stamp,
-                  "DTSTART%s:%s" % (";" + kind if kind else "", when), "SUMMARY:" + _ics_escape(title)]
-        if notice:
-            lines += ["BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + _ics_escape(title), "TRIGGER:-" + _duration(notice),
-                      "END:VALARM"]
-        lines.append("END:VEVENT")
-    lines.append("END:VCALENDAR")
-    return "\r\n".join(lines) + "\r\n"
+    """RFC 5545: one VEVENT per event, its UID the garden's and the member's, a VALARM `notice` before where one is given
+    — written by the `ics` format (core/formats.py)."""
+    return _formats().write("ics", [{"uid": "%s-%s@%s" % (m, name, garden_id), "start": at, "summary": title,
+                                     "notice": notice} for m, name, at, title, notice in events], stamp=stamp)

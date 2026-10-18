@@ -135,13 +135,16 @@ check("...and the release carries no today's law: seed/std-vocab.md is gone",
 # ------------------------------------------------------------------------------------------- a table fetched (Y7)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 import fetch as dmfetch  # noqa: E402
+_REGS = {str(r['registry']) for r in read.data(os.path.join(LAW_DIR, 'registries.yaml'))['registry_files']}
+FMT_READERS = [str(r['reader']) for r in read.data(os.path.join(LAW_DIR, 'formats.yaml'))['readers']
+               if not r.get('home') and set(map(str, r['models'])) <= _REGS]   # the law's readers of a registry (2.13)
 import knowledge as dmknowledge  # noqa: E402
 reg = read.data(os.path.join(LAW_DIR, 'registries.yaml'))
 isco = next(r for r in reg['knowledge_schemes'] if r['scheme'] == 'isco-08')
 check("ISCO-08 is held fetched: from the ILO's own download, read by a reader the law's shape lists and this release has",
       isco['holding'] == 'fetched' and isco['fetch']['from'].startswith('https://webapps.ilo.org/')
-      and isco['fetch']['reader'] in reg['fetch_shape']['readers'] and isco['fetch']['reader'] in dmfetch.READERS
-      and set(reg['fetch_shape']['readers']) <= set(dmfetch.READERS), isco.get('fetch'))
+      and isco['fetch']['reader'] in FMT_READERS and isco['fetch']['reader'] in dmfetch.READERS
+      and set(FMT_READERS) <= set(dmfetch.READERS), isco.get('fetch'))
 CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
 os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
 check("...and a machine that fetched none reads the release's copy meanwhile",
@@ -297,7 +300,7 @@ check("UNECE Recommendation 20 is held fetched from UN/CEFACT's own spreadsheet,
       "release has, and the release carries no copy of it: its registry names no file",
       rec['holding'] == 'fetched' and rec['fetch']['from'].startswith('https://unece.org/')
       and rec['fetch']['reader'] == 'unece-rec20-xlsx' and rec['fetch']['reader'] in dmfetch.READERS
-      and rec['fetch']['reader'] in reg['fetch_shape']['readers'] and rec['units'] == 'units-unece-rec20'
+      and rec['fetch']['reader'] in FMT_READERS and rec['units'] == 'units-unece-rec20'
       and not next(r for r in reg['registry_files'] if r['registry'] == 'unece-rec20').get('file'), rec)
 CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
 os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
@@ -529,7 +532,7 @@ check("LOINC is held fetched from loinc.org (a person signed in downloads it), r
       "release has, special-category as every health observation is, and crossed on its two axes, property and scale",
       lo['holding'] == 'fetched' and lo['fetch']['from'].startswith('https://loinc.org/')
       and lo['fetch']['reader'] == 'loinc-table-csv' and 'loinc-table-csv' in dmfetch.READERS
-      and 'loinc-table-csv' in reg['fetch_shape']['readers'] and lo['sensitive'] == 'special-category'
+      and 'loinc-table-csv' in FMT_READERS and lo['sensitive'] == 'special-category'
       and lo['units'] == 'units-loinc' and {a for a, _c in dmunits.crossing('loinc')} == {'property', 'scale'}
       and not next(r for r in reg['registry_files'] if r['registry'] == 'loinc').get('file'), lo)
 ax = dmunits.crossing('loinc')
@@ -629,7 +632,7 @@ check("IFC 4.3 is held fetched from buildingSMART's schema (CC BY-ND 4.0), read 
       "its measure types to kinds, its SI units (a prefix and a name) to UCUM",
       fc['holding'] == 'fetched' and fc['fetch']['from'].startswith('https://standards.buildingsmart.org/')
       and fc['fetch']['reader'] == 'ifc-express' and 'ifc-express' in dmfetch.READERS
-      and 'ifc-express' in reg['fetch_shape']['readers'] and fc['licence'] == 'CC-BY-ND-4.0'
+      and 'ifc-express' in FMT_READERS and fc['licence'] == 'CC-BY-ND-4.0'
       and dmunits.target(ic[('', 'IfcThermalTransmittanceMeasure')]) == {'quantity': 'thermal-transmittance'}
       and dmunits.target(ic[('', 'MILLI.METRE')]) == {'unit': 'mm'}
       and dmunits.target(ic[('', 'DEGREE_CELSIUS')]) == {'in': 'celsius-scale'}, fc)
@@ -704,7 +707,7 @@ eg = next(r for r in reg['knowledge_schemes'] if r['scheme'] == 'epsg-uom')
 check("EPSG's units of measure are held fetched from epsg.org's dataset (a person signed in downloads it), read by a "
       "reader the law lists, and crossed to UCUM",
       eg['holding'] == 'fetched' and eg['fetch']['from'].startswith('https://epsg.org/') and eg['fetch']['reader'] == 'epsg-sql'
-      and 'epsg-sql' in dmfetch.READERS and 'epsg-sql' in reg['fetch_shape']['readers'] and eg['units'] == 'units-epsg-uom'
+      and 'epsg-sql' in dmfetch.READERS and 'epsg-sql' in FMT_READERS and eg['units'] == 'units-epsg-uom'
       and dmunits.target(dmunits.crossing('epsg-uom')[('', '9003')]) == {'unit': '[ft_us]'}, eg)
 CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
 os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
@@ -792,7 +795,7 @@ gs = next(r for r in reg['knowledge_schemes'] if r['scheme'] == 'gs1-ai')
 check("GS1's application identifiers are held fetched from GS1's Barcode Syntax Dictionary, read by a "
       "reader the law lists, and crossed by family: 310n a net weight in kg, its last digit the decimal point's place",
       gs['holding'] == 'fetched' and 'gs1' in gs['fetch']['from'] and gs['fetch']['reader'] == 'gs1-syntax-dictionary'
-      and 'gs1-syntax-dictionary' in dmfetch.READERS and 'gs1-syntax-dictionary' in reg['fetch_shape']['readers']
+      and 'gs1-syntax-dictionary' in dmfetch.READERS and 'gs1-syntax-dictionary' in FMT_READERS
       and dmunits.crossing('gs1-ai')[('', '310n')].get('decimals') == 'n'
       and all(c.endswith('n') == bool(r.get('decimals')) for (a, c), r in dmunits.crossing('gs1-ai').items()), gs)
 CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
@@ -876,7 +879,7 @@ check("CLDR's unit names are shipped (Unicode-3.0, their licence lets them) and 
       "machine that fetched none reads the release's names: the law's m is `length-meter`, متر in Persian, metre in "
       "Turkish — and every code the crossing names is one of them",
       cl['holding'] == 'fetched' and cl['licence'] == 'Unicode-3.0' and cl['fetch']['reader'] == 'cldr-units-json'
-      and 'cldr-units-json' in dmfetch.READERS and 'cldr-units-json' in reg['fetch_shape']['readers']
+      and 'cldr-units-json' in dmfetch.READERS and 'cldr-units-json' in FMT_READERS
       and len(shipped) >= 200 and set(shipped[0]) == {'code', 'name_en', 'name_fa', 'name_tr'}
       and dmunits.name_of('cldr-units', {'unit': 'm'}, 'fa') == ('length-meter', 'متر')
       and dmunits.name_of('cldr-units', {'unit': 'm'}, 'tr') == ('length-meter', 'metre') and not missing, missing)
@@ -953,7 +956,7 @@ check("GeoNames is held fetched from its own daily export, a country at a time (
       and gn['fetch']['part'] == '^[A-Z]{2}$' and gn['licence'] == 'CC-BY-4.0' and gn['fetch']['reader'] == 'geonames-dump'
       and op.get('holding') == 'fetched' and '{part}' in op['fetch']['from'] and op['licence'] == 'ODbL-1.0'
       and op['fetch']['reader'] == 'photon-dump'
-      and {'geonames-dump', 'photon-dump'} <= set(reg['fetch_shape']['readers']) & set(dmfetch.READERS), (gn, op))
+      and {'geonames-dump', 'photon-dump'} <= set(FMT_READERS) & set(dmfetch.READERS), (gn, op))
 CACHE = tempfile.mkdtemp(prefix='core-standards-cache-')
 os.environ['DAFTAR_STANDARDS_CACHE'] = CACHE
 import zipfile  # noqa: E402

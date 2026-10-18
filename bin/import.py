@@ -6,6 +6,9 @@
     python3 bin/import.py <crosswalk> <source> --into bean --write # written into the beans, for your save
     python3 bin/import.py file-tree <index.sqlite> --volume <id> --carrier <disk> --into store:<name>   # a reader's rows
     python3 bin/import.py --list                                  # the crosswalks that say how their records come
+    python3 bin/import.py daftar <bean> ... --into store:<name>   # the garden's own statements: a bean into a store
+    python3 bin/import.py daftar rows.jsonl --into store:<name> --act <ref>   # a store's own rows (bin/store.py put)
+    python3 bin/import.py proposal <file> [--take [--as-test]]    # another garden's proposal: read, or taken
 
 (`python` on Windows.) Also `--format <format>` where a crosswalk takes several, `--from <layer>` (`world`, the
 default for a reading; `words` for a document a person gave), `--act '<json>'` for the roles of the act (`in`, the
@@ -25,6 +28,9 @@ statement it wrote is taken out by `gone`, its reason the statement that fills i
 
 THE ACCOUNT. Every value of every record is carried, or listed as not carried with why, and counted by its field when
 there are many: nothing is passed over in silence. A crosswalk marked `whole` fails on any value it lists.
+
+DAFTAR'S OWN FORMS need no crossing, and their own tools keep them: `daftar` (a bean's statements, a store's rows) is
+bin/store.py's import and put, `proposal` is bin/propose.py's read and take. This door hands each to its tool.
 """
 import collections
 import json
@@ -237,7 +243,8 @@ class Import:
                 rec.model = model
                 yield rec
             return
-        fn = formats.READERS.get(self.reader)
+        from core import readers
+        fn = readers.IMPORTED.get(self.reader)
         if fn is None:
             raise Refused(f"the reader `{self.reader}` is not in this release")
         takes = TAKES.get(self.reader)
@@ -530,6 +537,23 @@ def main(argv):
                 print(f"  {n:<22} {r.get('system')} {r.get('series')} {r.get('model'):<12} {', '.join(map(str, fm))}"
                       + (f" — reader {r['reader']}" if r.get('reader') else ''))
         return 0
+    if argv[0] == 'proposal':                                 # another garden's proposal: its own tool reads and takes it
+        import propose as dmpropose
+        rest = [a for a in argv[1:] if a not in ('--take',)]
+        return dmpropose.main((['take'] if '--take' in argv else ['read']) + rest)
+    if argv[0] == 'daftar':                                   # the garden's own statements, into a store: store.py's
+        import store as dmstore
+        into = _arg(argv, '--into', '')
+        if not into.startswith('store:'):
+            print("import: the garden's own statements go into a store: --into store:<name>", file=sys.stderr)
+            return 2
+        names = [a for i, a in enumerate(argv[1:], 1) if not a.startswith('--') and argv[i - 1] not in ('--into', '--act')]
+        if len(names) == 1 and names[0].endswith('.jsonl'):
+            with open(names[0], encoding='utf-8') as fh:
+                sys.stdin = fh
+                return dmstore.main(['put', into.split(':', 1)[1]] + (['--act', _arg(argv, '--act')] if _arg(argv, '--act')
+                                                                      else []))
+        return dmstore.main(['import', into.split(':', 1)[1]] + names)
     flags = {'--into', '--path', '--format', '--from', '--act', '--root', '--volume', '--carrier', '--judge-every',
              '--named'}
     pos, i = [], 0

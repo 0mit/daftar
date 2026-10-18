@@ -995,6 +995,25 @@ class Law:
                         out.append((at, "a postable account says what it is: its element, or an ancestor's"))
         return out
 
+    def formats_problems(self):
+        """[(where, message)]: the formats law held together (core/law/formats.yaml): each reader reads formats of the
+        table, and each scheme the law holds `fetched` names a reader of it that is no profile's."""
+        out = []
+        for name, r in self.readers.items():
+            for f in listed(r.get('format')):
+                if str(f) not in self.formats:
+                    out.append((f"core/law/formats.yaml readers {name!r}", f"reads {f!r}, which is no format of the law"))
+        reg = os.path.join(getattr(self, 'dir', None) or LAW_DIR, 'registries.yaml')
+        for row in listed((read.data(reg) if os.path.isfile(reg) else {}).get('knowledge_schemes')):
+            fetch = row.get('fetch') if isinstance(row, dict) else None
+            if isinstance(fetch, dict) and fetch.get('reader') is not None:
+                rd = self.readers.get(str(fetch['reader']))
+                if rd is None or rd.get('home'):
+                    out.append((f"core/law/registries.yaml knowledge_schemes {row.get('scheme')!r}",
+                                f"fetch.reader {fetch['reader']!r} is no reader of core/law/formats.yaml `readers` the "
+                                f"release reads with"))
+        return out
+
     def _carried_row_problems(self, where, r):
         """[(where, message)]: what a crosswalk says of how its records come and go (2.12, core/law/formats.yaml): its
         formats and reader, the act its statements are known by, where they are kept, the forms its parts compose."""
@@ -1411,6 +1430,8 @@ class Law:
         for where, msg in self.given_twice(dim_rows):
             bad(where, msg)
         for where, msg in self.crosswalk_problems():
+            bad(where, msg)
+        for where, msg in self.formats_problems():
             bad(where, msg)
         for where, msg in self.units_crosswalk_problems():
             bad(where, msg)

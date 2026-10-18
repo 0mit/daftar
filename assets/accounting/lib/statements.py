@@ -22,7 +22,21 @@ import csv
 import re
 import xml.etree.ElementTree as ET
 
-FORMATS = ('camt.053', 'camt.054', 'ofx', 'mt940', 'csv')
+FORMATS = ('camt.053', 'camt.054', 'ofx', 'mt940', 'csv')     # the readers of core/law/formats.yaml this asset is home to
+
+
+def _undeclared(raw):
+    """The `xml` format's own guard (core/formats.py `undeclared`), in this adapter's words."""
+    try:
+        from core.formats import undeclared, Refused
+    except ImportError:                      # the adapter read alone, outside a garden of the release
+        if re.search(rb'<!(DOCTYPE|ENTITY)', raw, re.I):
+            raise Unreadable("it declares a document type or an entity: a statement is data, refused before it is parsed")
+        return
+    try:
+        undeclared(raw, what='a statement')
+    except Refused as e:
+        raise Unreadable(str(e)) from None
 
 
 class Unreadable(Exception):
@@ -61,8 +75,7 @@ def read(path, fmt, mapping=None):
 def _camt(path, fmt):
     with open(path, 'rb') as fh:
         raw = fh.read()
-    if re.search(rb'<!(DOCTYPE|ENTITY)', raw, re.I):
-        raise Unreadable("it declares a document type or an entity: a statement is data, refused before it is parsed")
+    _undeclared(raw)
     try:
         root = ET.fromstring(raw)
     except ET.ParseError as e:

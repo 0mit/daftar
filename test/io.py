@@ -22,6 +22,11 @@ in it as a person or a tool would:
   flows     the flow law asked for every pass: what is sealed never reaches a store; a document's lines into a store
             are said by it (`store-stated`); a garden's statements are never exported to a public repository
   list      `import --list` names the crosswalks that say how their records come
+  readers   one table of readers in the law names every reader the release and its profiles have, and nothing else: a
+            provider's (bin/fetch.py), a model's (bin/import.py), a profile's (the bank statements' adapters)
+  ics       a calendar written by the `ics` format, its events in the civil calendar, an alarm before
+  own       the garden's own statements through the same doors: a bean into a store and back (bin/store.py's import
+            and export)
 
 Run: python3 test/io.py   (0 = green; about a minute)
 """
@@ -155,6 +160,26 @@ pa = [r for v, r, _a in S.get('c-' + sys.argv[4][:24]) if v == 'produce']
 pb = [r for v, r, _a in S.get('c-' + sys.argv[5][:24]) if v == 'produce']
 gone = S.db.execute("SELECT being, why FROM gone").fetchall()
 print(json.dumps({'a': pa, 'b': pb, 'gone': gone, 'lines': I.account.lines(each=False)}, default=str))
+'''
+
+READERS = r'''
+from core import readers
+from core.check import garden_law
+L = garden_law('.', '.')
+sys.path.insert(0, 'assets/accounting/lib') if os.path.isdir('assets/accounting/lib') else None
+law = {n: r for n, r in L.readers.items()}
+code = set(readers.IMPORTED) | set(readers.FETCHED)
+try:
+    import statements
+    home = set(statements.FORMATS)
+except ImportError:
+    home = None
+print(json.dumps({'law_release': sorted(n for n, r in law.items() if not r.get('home')), 'code': sorted(code),
+                  'law_accounting': sorted(n for n, r in law.items() if r.get('home') == 'accounting'),
+                  'asset': sorted(home) if home is not None else None,
+                  'ics': __import__('core.formats', fromlist=['x']).write('ics', [
+                      {'uid': 'u-1@g', 'start': '2026-10-19T09:30:00+03:00', 'summary': 'a visit, early', 'notice': 600},
+                      {'uid': 'u-2@g', 'start': 'no day', 'summary': 'none'}], stamp='20261019T000000Z')}))
 '''
 
 FLOWS = r'''
@@ -358,6 +383,33 @@ try:
                                           'decimalLatitude': '57.1203', 'decimalLongitude': '-6.1044',
                                           'coordinateUncertaintyInMeters': '30', 'locality': 'the north landing'}]
           and 'not carried' not in r.stderr, (rows, r.out[-800:]))
+
+    # ---- readers
+    j, r = py(READERS)
+    ok = j is not None
+    check("readers: one table in the law names every reader the release has — a provider's and a model's — and the "
+          "code has none it does not name", ok and j['law_release'] == j['code'] and len(j['code']) == 12,
+          (j and (j['law_release'], j['code']), r.out[-1200:]))
+    check("...and a profile's: the bank statements' adapters, each a reader the law names with its home",
+          ok and (j['asset'] is None or j['asset'] == j['law_accounting']) and len(j['law_accounting']) == 5, j)
+
+    # ---- ics
+    ics = (j or {}).get('ics', '')
+    check("ics: a calendar written by the `ics` format — an event at its moment in UTC, its summary escaped, an alarm "
+          "before; one at no day of the civil calendar left out",
+          'DTSTART:20261019T063000Z' in ics and 'SUMMARY:a visit\\, early' in ics and 'TRIGGER:-PT10M' in ics
+          and 'u-2@g' not in ics and ics.endswith('END:VCALENDAR\r\n'), ics)
+
+    # ---- the garden's own, through the same doors
+    write('beans/session-x.md', doc('session-x', 'session', 'make: { by: self, at: now }'))
+    write('beans/note-1.md', doc('note-1', 'document', 'say: { by: sam, at: now }', 'hold: { id: h1, by: nas, of: self }'))
+    r = save('a note and a session', '- action: wrote [[note-1]], [[session-x]]')
+    r = grow.run(PY, 'bin/daftar.py', 'import', 'daftar', 'note-1', '--into', 'store:cat', cwd=G)
+    r2 = grow.run(PY, 'bin/daftar.py', 'export', 'daftar', 'note-1', '--from', 'store:cat', '--by', 'session-x', cwd=G)
+    check("own: a bean's statements into a store through `daftar import daftar`, with the act that knows them, and its "
+          "bean holding every one of them already when exported back (bin/store.py's import and export)",
+          r.returncode == 0 and 'kept in cat' in r.out and r2.returncode == 0 and 'holds every statement' in r2.out,
+          r.out[-600:] + r2.out[-600:])
 
     # ---- flows
     j, r = py(FLOWS)

@@ -5,6 +5,8 @@
     python3 bin/export.py <crosswalk> <being> --ids <id>[,<id> ...]  # only the statements of those ids
     python3 bin/export.py <crosswalk> <being> --from store:<name>    # its statements in git and in that store, as one
     python3 bin/export.py <crosswalk> <being> --format csv --to <file>
+    python3 bin/export.py daftar <being> --from store:<name> --by <being> [--write]   # a store's rows into its bean
+    python3 bin/export.py proposal <bean> ... --to <garden> --under <agreement>       # to another garden
 
 (`python` on Windows.) The statements of a being are the union of its bean and every store named, as one set (MODEL.md,
 The store). Each is read back through the crosswalk (core/crosswalk.py `Carry.back`), written in the format, and what
@@ -14,6 +16,9 @@ WHERE IT MAY GO is the flow law's, asked before anything is written (core/law/fl
 or what is printed, is shown to whoever runs it (`composed-here`); a garden's own material never goes to a public
 repository (`kept-private`); another garden is given a proposal (bin/propose.py), never a file. A sealed statement is
 never read: it stays where it is held.
+
+DAFTAR'S OWN FORMS need no crossing, and their own tools keep them: `daftar` (a store's rows into a bean, known there
+by a `derive`) is bin/store.py's export; `proposal` is bin/propose.py's make. This door hands each to its tool.
 """
 import os
 import sys
@@ -123,6 +128,17 @@ def main(argv):
     if not argv or argv[0] in ('-h', '--help'):
         print(__doc__.strip())
         return 0 if argv else 2
+    if argv[0] == 'proposal':                                 # to another garden: a proposal, propose.py's
+        import propose as dmpropose
+        return dmpropose.main(['make'] + argv[1:])
+    if argv[0] == 'daftar':                                   # a store's rows into the being's bean: store.py's
+        import store as dmstore
+        frm = _arg(argv, '--from', '')
+        if not frm.startswith('store:'):
+            print("export: a garden's own statements come from a store: --from store:<name>", file=sys.stderr)
+            return 2
+        rest = [a for i, a in enumerate(argv[1:], 1) if argv[i - 1] != '--from' and a != '--from']
+        return dmstore.main(['export', frm.split(':', 1)[1]] + rest)
     flags = {'--from', '--format', '--to', '--ids', '--path'}
     pos, i = [], 0
     while i < len(argv):

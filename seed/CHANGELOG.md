@@ -251,6 +251,20 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.13** (2026-10-19, daftar v2.13.0, human-ratified rule-changes: the design of programme item 2b, its second
+  release — one table of readers, and the other ways in and out taken in) — **one reader a source, wherever it is
+  read.** MINOR: nothing a garden could write under core 2.12 is refused.
+  - core/law/formats.yaml `readers`: the nine readers of a provider's table (registries.yaml's `fetch_shape`, retired)
+    and the bank statements' five adapters (`home: accounting`) beside the three of 2.12; the format `text`, a
+    provider's own syntax. core/law.py holds each reader to the formats it reads, and each fetched scheme to a reader of
+    the table.
+  - core/readers.py: every reader's code in one place; bin/fetch.py fetches and keeps, its readers read there.
+  - core/formats.py: the `ics` writer (the view's calendars), the `csv` guard every CSV keeps (the view's tables), the
+    `xml` guard (the bank statements' camt adapters).
+  - `daftar import daftar` / `daftar export daftar` hand a bean's statements to a store and a store's rows to a bean
+    (bin/store.py's import and export); `daftar import proposal` / `daftar export proposal`, bin/propose.py's read,
+    take and make.
+  - test/io.py: the one table against the code; the calendar; the garden's own through the doors.
 - **core 2.12** (2026-10-19, daftar v2.12.0, human-ratified rule-changes: imports and exports, one machinery — the
   formats, one table of readers, the conversions; the crosswalks read both ways; the flows `store-stated` and
   `store-derived`; the tools `import` and `export`) — **every format in and out of daftar through one machinery.**
