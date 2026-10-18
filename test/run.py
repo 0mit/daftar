@@ -200,7 +200,13 @@ try:
     check("identity: a pid whose start ticks are not the run's names another process, and is refused (exit 5)",
           'refused 5' in o.stdout, o.out[-400:])
 
-    # ---- the store
+    # ---- the store (once every run of the tests above has ended, each supervisor's last move written)
+    for _ in range(100):
+        live = [d for d in json.loads(R('list', '--all', '--json').stdout or '[]') if d['step'] not in
+                ('done', 'failed', 'stopped', 'lost')]
+        if not live:
+            break
+        time.sleep(0.2)
     f = f'{REG}/store.sqlite'
     import sqlite3
     db = sqlite3.connect(f'file:{f}?mode=ro', uri=True)
@@ -238,6 +244,32 @@ try:
                  '  - derive: { by: session-t, from: unknown, at: now }\n' + x.stdout + '---\nAn export.\n')
     s = grow.run(PY, 'bin/save.py', 'sam', 'a run exported', '--body', '- action: wrote [[an-export]]', cwd=G)
     check("...a run exported into a bean passes the gate", x.returncode == 0 and s.returncode == 0, x.out + s.out[-800:])
+
+    # ---- a failing watcher's notices, one a window; the folders of old runs pruned, their statements kept
+    fake = os.path.join(T, 'fakebin')
+    os.makedirs(fake)
+    with open(f'{fake}/notify-send', 'w') as fh:
+        fh.write(f'#!/bin/sh\necho "$@" >> {T}/notices\n')
+    os.chmod(f'{fake}/notify-send', 0o755)
+    loud = {k: v for k, v in ENV.items() if k != 'DAFTAR_RUNS_QUIET'}
+    loud['PATH'] = fake + ':' + loud.get('PATH', '')
+    for i in range(3):
+        f3 = rid(R('start', '--name', 'a failing pass', '--', 'sh', '-c', 'exit 1', env=loud))
+        R('wait', f3 or '-', '--timeout', '20', env=loud)
+    told = open(f'{T}/notices').read().count('a failing pass: failed') if os.path.exists(f'{T}/notices') else 0
+    f4 = rid(R('start', '--name', 'a failing pass', '--', 'sh', '-c', 'exit 1', env=dict(loud, DAFTAR_RUNS_NOTICE_EVERY='0')))
+    R('wait', f4 or '-', '--timeout', '20', env=loud)
+    after = open(f'{T}/notices').read() if os.path.exists(f'{T}/notices') else ''
+    check("notices: a run name failing three times in a window tells the desktop once; the next notice after the window "
+          "says how many were held back", told == 1 and after.count('a failing pass: failed') == 2
+          and '2 more failed of a failing pass held back' in after, after)
+    before = sorted(d for d in os.listdir(REG) if d.startswith('run-'))
+    pr = R('prune', '--days', '0')
+    left = sorted(d for d in os.listdir(REG) if d.startswith('run-'))
+    listed = R('list', '--all', '--json')
+    check("prune: the folders of runs ended are taken out, the last run of each name keeps its own, and every run's "
+          "statements stay in the store", pr.returncode == 0 and len(left) < len(before) and f4 in left
+          and f3 not in left and len(json.loads(listed.stdout)) >= len(before) - 2, (pr.out, len(before), len(left)))
 
     # ---- many writers
     many = [rid(R('start', '--name', f'together {i}', '--', 'sh', '-c', 'sleep 0.3')) for i in range(8)]

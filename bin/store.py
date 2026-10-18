@@ -491,14 +491,22 @@ class Store:
         if v == 'self' and 'being' in shapes:
             return being
         m = POINTER.match(v)
-        if m:
+        if m:                                # the plain id; a writer declares the being first (`_declare`), a reader never
             kind, bid, sid = m.groups()
             if 'being' in shapes or 'statement' in shapes:
-                self.being(bid, kind)
                 return f"{bid}#{sid}" if sid else bid
         if 'statement' in shapes and '#' not in v and ID.match(v) and not self._known_being(v):
             return f"{being}#{v}"
         return v
+
+    def _declare(self, roles):
+        """Each being a pointer in `roles` names, kept here with the kind the pointer gives: what a writer does before
+        it normalizes a statement."""
+        for v in roles.values():
+            for x in (v if isinstance(v, list) else [v]):
+                m = POINTER.match(x) if isinstance(x, str) else None
+                if m:
+                    self.being(m.group(2), m.group(1))
 
     def denormalize(self, being, verb, roles):
         """A row's roles as `being`'s bean writes them: the being `self`, its own statements by their id, a being with
@@ -657,6 +665,7 @@ class Store:
         if 'at' in roles and roles['at'] == 'now':
             roles['at'] = now()
         self.being(being)
+        self._declare(roles)
         nr = self.normalize(being, verb, roles)
         sid = nr.pop('id', None)
         if sid is not None and (not isinstance(sid, str) or not ID.match(sid)):
@@ -932,8 +941,18 @@ def check(stores, *, root=ROOT, law=None, garden=None):
         law = core_check.garden_law(root, rel)
     for s in stores:
         s._law, s._garden = law, garden
+        if not s.db.in_transaction:          # one snapshot of each store: a writer at work is seen before or after, whole
+            s.db.execute('BEGIN')
+    try:
+        return _check(stores, garden, law)
+    finally:
+        for s in stores:
+            if s.db.in_transaction and s._depth == 0:
+                s.db.execute('ROLLBACK')     # nothing was written: the check only reads
+
+
+def _check(stores, garden, law):
     out = []
-    kept = {}                                # being -> [(store, verb, roles, acts)]
     for s in stores:
         for (bid, kind) in s.db.execute('SELECT id, kind FROM being'):
             bean = garden.beans.get(bid)
