@@ -14,6 +14,7 @@ prefix of a name, or a pattern that can match the shell that asks (core 2.11; `p
     python3 bin/run.py export <run> [--self]                     the run as statements: its course and its moves
     python3 bin/run.py progress [--done N] [--total N] [--unit U] [--phase P] [--note T]   a step of the run this is in
     python3 bin/run.py reconcile [--adopt]                       runs whose end nobody saw: moved to lost, or watched again
+    python3 bin/run.py prune [--days N] [--dry]                  the folders of runs ended N days ago (30), statements kept
     python3 bin/run.py setup                                     the walk `walk-run` written into this garden's mappings
 
 A <run> is its id (run-YYYYMMDD-HHMMSS-xxxx), or `--name N` / `--key K` naming exactly one run that has not ended.
@@ -73,7 +74,7 @@ The registry is $DAFTAR_RUNS, else ~/.local/state/daftar-runs (beside daftard's 
 private and holds its key); every command that lists says which. A supervisor writes its moves unjudged, their shapes
 fixed here; `python3 bin/store.py check` judges them where the store is kept, against the walk.
 """
-import argparse, contextlib, fcntl, hashlib, json, os, pwd, re, secrets, select, signal, socket, subprocess
+import argparse, contextlib, fcntl, hashlib, json, os, pwd, re, secrets, select, shutil, signal, socket, subprocess
 import sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -974,10 +975,48 @@ def supervise(reg, rid, p, flags, rp, lockfd):
     tell(reg.course(rid), step, why, reason)
 
 
+NOTICE_EVERY = float(os.environ.get('DAFTAR_RUNS_NOTICE_EVERY', 1800))   # seconds between two notices of one run name
+
+
+def throttled(c, step):
+    """None where a notice of this run's name and step may be told now; else how many were held back since the last.
+    A watcher whose pass fails every minute tells the desktop once in each window, not sixty times (`notices.json`
+    beside the registry: per name and step, when the last was told and how many have been held back since)."""
+    path = os.path.join(registry_path(), 'notices.json')
+    key = f"{c['name'] or c['key'] or c['id']}|{step}"
+    with contextlib.suppress(OSError), open(path, 'a+') as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        fh.seek(0)
+        try:
+            d = json.loads(fh.read() or '{}')
+        except ValueError:
+            d = {}
+        last = d.get(key) or {}
+        now = time.time()
+        if now - last.get('t', 0) < NOTICE_EVERY:
+            last['held'] = last.get('held', 0) + 1
+            d[key] = last
+            held = last['held']
+        else:
+            held = None
+            d[key] = {'t': now, 'held': 0, 'before': last.get('held', 0)}
+        fh.seek(0)
+        fh.truncate()
+        fh.write(json.dumps(d))
+        return held, (d[key].get('before') or 0)
+    return None, 0
+
+
 def tell(c, step, why, reason=None):
-    """A failure, a run lost, or an end asked for (`--notify`), told to the desktop; kept until dismissed."""
+    """A failure, a run lost, or an end asked for (`--notify`), told to the desktop; kept until dismissed. One notice
+    of a run's name and step in each window (NOTICE_EVERY), the next one saying how many were held back."""
     if os.environ.get('DAFTAR_RUNS_QUIET') or not (step in ('failed', 'lost') or reason == 'timeout' or c['notify']):
         return
+    held, before = throttled(c, step)
+    if held is not None:
+        return
+    if before:
+        why = f'{why}\n({before} more {step} of {c["name"] or c["id"]} held back since the last notice)'
     env = dict(os.environ)
     r = subprocess.run(['pgrep', '-u', str(os.getuid()), '-x', 'plasmashell'], capture_output=True, text=True, encoding='utf-8')
     for pid in r.stdout.split()[:1]:                      # the running desktop's bus, not an older session's
@@ -1276,6 +1315,32 @@ def sweep_cgroups(older=60):
     return out
 
 
+def prune(days=30, reg=None, dry=False):
+    """The folders of runs that ended more than `days` ago (their log, progress and script), taken out; each run's
+    statements stay in the store, and the last run of each name keeps its folder. Returns the folders taken out."""
+    reg = reg or Registry()
+    cut = time.time() - days * 86400
+    last_of = {}
+    out = []
+    rows = []
+    for i in reg.ids():
+        c = reg.course(i)
+        mv = reg.last(i)
+        rows.append((i, c, mv))
+        if c and c['name']:
+            last_of[c['name']] = i
+    for i, c, mv in rows:
+        if not c or not mv or mv['step'] not in FINAL or mv['at'] > cut or last_of.get(c['name']) == i:
+            continue
+        d = c['dir']
+        if d and os.path.isdir(d) and os.path.dirname(os.path.abspath(d)) == os.path.abspath(reg.path):
+            if not dry:
+                shutil.rmtree(d, ignore_errors=True)
+                reg.set(i, pruned=time.time())
+            out.append(d)
+    return out
+
+
 def reconcile(reg=None, readopt=False):
     reg = reg or Registry()
     sweep_cgroups()
@@ -1482,6 +1547,8 @@ def main(argv=None):
     x.add_argument('--unit'), x.add_argument('--phase'), x.add_argument('--note')
     x = sub.add_parser('reconcile')
     x.add_argument('--adopt', action='store_true')
+    x = sub.add_parser('prune')
+    x.add_argument('--days', type=float, default=30), x.add_argument('--dry', action='store_true')
     x = sub.add_parser('setup')
     x.add_argument('--by', help='who writes the walk: a session, or a person (default: the login)')
     x.add_argument('--owner', help="whose it is (default: the garden's gardener)")
@@ -1499,6 +1566,11 @@ def main(argv=None):
 def command(a):
     if a.cmd == '_shim':
         shim(a.run, a.lockfd, a.wait_key, a.watch)
+        return 0
+    if a.cmd == 'prune':
+        out = prune(a.days, dry=a.dry)
+        print(f"run prune: {len(out)} folder(s) of runs ended more than {a.days:g} day(s) ago "
+              f"{'would be ' if a.dry else ''}taken out; their statements stay in the store")
         return 0
     if a.cmd == 'setup':
         sys.path.insert(0, ROOT)
