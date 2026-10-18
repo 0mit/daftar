@@ -55,7 +55,8 @@ writes one for a being that has no bean.
 
 THE CHECK. `check` judges the union of git and every store this host keeps. A union small enough is judged by the
 core's own engine — every rule, over the beans and the stores' beings read as beans — and what it finds beyond git's own
-findings is the store's. A larger one is judged by queries: `names` (a name given once names one being), `order` (no
+findings is the store's; in a larger one, each store small enough is still judged so, beside git, alone. A large store
+is judged by queries, and the rules that span stores are judged by queries over them all: `names` (a name given once names one being), `order` (no
 cycle through own, part, be at, need), each act a row names (a knowing act, here or in git), each being's kind against
 its bean's, the overlaps (one `(being, id)`, one form), and every pointer in git. The relations those queries do not
 judge are named, never passed over in silence. The gate never reads a store: a gate that judged one machine's disk
@@ -120,6 +121,12 @@ def canonical(verb, roles):
 def mint(verb, roles):
     """The id a statement given none is named by: its verb and 16 hexadecimal digits of its form's SHA-256."""
     return f"{verb}-{hashlib.sha256(canonical(verb, roles).encode('utf-8')).hexdigest()[:16]}"
+
+
+def _uri(path, mode=None):
+    """A file's SQLite URI: `file:` and its path, `%`, `?` and `#` in it written `%XX`, so none is read as a parameter."""
+    p = os.path.abspath(path).replace('%', '%25').replace('?', '%3F').replace('#', '%23')
+    return 'file:' + p + (f'?mode={mode}' if mode else '')
 
 
 def _col(name):
@@ -228,8 +235,8 @@ class Store:
         if readonly:                       # a reader, maybe of another user: read permission alone, nothing written
             self.db = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=60, isolation_level=None)
             self.db.execute('PRAGMA query_only=ON')
-        else:
-            self.db = sqlite3.connect(path, timeout=60, isolation_level=None)
+        else:                              # by its URI, so a source can be attached to it read-only (bin/import.py)
+            self.db = sqlite3.connect(_uri(path), uri=True, timeout=60, isolation_level=None)
         self.db.execute('PRAGMA busy_timeout=60000')
         self.db.execute('PRAGMA foreign_keys=OFF')
         self._law, self._garden, self._judge = law, garden, None
@@ -249,6 +256,7 @@ class Store:
                 os.chmod(path, 0o644)
         else:
             self._base()
+            self._heal()
 
     # -------------------------------------------------------------------------------------------- the law and git
     @property
@@ -309,6 +317,49 @@ class Store:
 
     def close(self):
         self.db.close()
+
+    # -------------------------------------------------------------------------------------------- a load of many rows
+    @contextlib.contextmanager
+    def loading(self):
+        """For a load of many rows: each relation's secondary indexes are dropped at its first bulk inside this, and made
+        again when it ends — never the unique `(being, id)` a put is named by, nor the beings'. A load cut short leaves
+        what it dropped in `meta`, and the next writer to open the store makes them again."""
+        if getattr(self, '_loading', None) is not None:
+            yield self
+            return
+        self._loading = {}
+        try:
+            yield self
+        finally:
+            dropped, self._loading = self._loading, None
+            for table, sqls in dropped.items():
+                with self.batch():
+                    for sql in sqls:
+                        self.db.execute(sql.replace('CREATE INDEX ', 'CREATE INDEX IF NOT EXISTS ', 1))
+                    self.db.execute("DELETE FROM meta WHERE k = ?", (f'loading:{table}',))
+
+    def _unindex(self, table):
+        """Inside `loading`, drop the relation's secondary indexes once, keeping what made them."""
+        if getattr(self, '_loading', None) is None or table in self._loading:
+            return
+        sqls = [r[0] for r in self.db.execute("SELECT sql FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND "
+                                              "sql IS NOT NULL", (table,))]
+        self._loading[table] = sqls
+        if sqls:
+            with self.batch():
+                self.db.execute("INSERT OR REPLACE INTO meta (k, v) VALUES (?, ?)", (f'loading:{table}', json.dumps(sqls)))
+                for (name,) in self.db.execute("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND "
+                                               "sql IS NOT NULL", (table,)).fetchall():
+                    self.db.execute(f"DROP INDEX {_q(name)}")
+
+    def _heal(self):
+        """The indexes a load cut short dropped, made again."""
+        rows = self.db.execute("SELECT k, v FROM meta WHERE k LIKE 'loading:%'").fetchall()
+        for k, v in rows:
+            with self.batch():
+                for sql in json.loads(v):
+                    self.db.execute(sql.replace('CREATE INDEX ', 'CREATE INDEX IF NOT EXISTS ', 1))
+                self.db.execute("DELETE FROM meta WHERE k = ?", (k,))
 
     @contextlib.contextmanager
     def batch(self):
@@ -757,6 +808,7 @@ class Store:
             self._check_act(act)
         a = self._act(act) if act else None
         table = 'v_' + _col(verb)
+        self._unindex(table)
         before = self.db.execute(f"SELECT COUNT(*) FROM {_q(table)}").fetchone()[0]
         names = ['being', 'id']
         order = []
@@ -987,19 +1039,32 @@ def _check(stores, garden, law):
     out += _acts_resolve(stores)
     out += _overlaps(stores, garden, law)
     out += _pointers(stores, garden)
-    total = sum(s.count() + s.db.execute('SELECT COUNT(*) FROM being').fetchone()[0] for s in stores)
+    size = {s.name: s.count() + s.db.execute('SELECT COUNT(*) FROM being').fetchone()[0] for s in stores}
+    total = sum(size.values())
     if total <= UNION_ROWS:
         out += _union_judged(stores, garden, law)
-    else:
-        out += _names_once(stores, garden, law)
-        out += _cycles(stores, garden)
-        judged = {'hold', 'name', 'part', 'measure', 'own', 'need', 'be', 'derive', 'read', 'make', 'say'}
-        rest = sorted({v for s in stores for v in s.verbs()} - judged)
-        if rest:
-            out.append(('size', ', '.join(s.name for s in stores),
-                        f"{total} rows: judged by queries (names, order, acts, kinds, overlaps, pointers), each row "
-                        f"judged at its put; the rules of {', '.join(rest)} over the union are not judged at this size"))
-    return out
+        return out
+    # EACH STORE SMALL ENOUGH IS JUDGED WHOLE, beside git, alone: a large one beside it does not put the small one into
+    # the queries' mode; the rules that span stores are judged by queries over all of them
+    large = [s for s in stores if size[s.name] > UNION_ROWS]
+    for s in stores:
+        if s not in large:
+            out += _union_judged([s], garden, law)
+    out += _names_once(stores, garden, law)
+    out += _cycles(stores, garden)
+    judged = {'hold', 'name', 'part', 'measure', 'own', 'need', 'be', 'derive', 'read', 'make', 'say'}
+    rest = sorted({v for s in large for v in s.verbs()} - judged)
+    if rest:
+        out.append(('size', ', '.join(s.name for s in large),
+                    f"{sum(size[s.name] for s in large)} rows: judged by queries (names, order, acts, kinds, overlaps, "
+                    f"pointers), each row judged at its put; the rules of {', '.join(rest)} over the union are not judged "
+                    f"at this size"))
+    seen, kept = set(), []
+    for f in out:                                      # a finding the engine and a query both make is said once
+        if f not in seen:
+            seen.add(f)
+            kept.append(f)
+    return kept
 
 
 def _has_rows(s, bid):

@@ -37,13 +37,17 @@ merge: they meet by proposal (`MODEL.md`, Between gardens).
   that side added, and the merged bean would let it cover the other side's too: the merge writes its `of`, the ids of
   the statements it covered on its own side. A statement it covered that has no id cannot be named, and the merge is
   refused: give it an id on its branch, and merge again.
-- **The order.** The merged statements are base's in base's order, then those either side added, by their form.
+- **The order.** The merged statements are base's in base's order, then what each side added, in the order that side
+  wrote it, so a course's moves stay in the order they were made. Of two sides that both added, the one whose
+  additions' forms come first goes first, and a statement both added is kept once, where it first stands.
 
 ## 4. The header, `details` and the body
 - **The header** (`bean`, `kind`, `title`, `summary`) merges key by key, three ways: a key one side changed since base
   is that side's; both changed it alike, it is that; both changed it differently, a true conflict. `tags` merge as a
   set, as statements do.
 - **`details`** merges leaf by leaf in the same way: a list is one leaf, and a key one side removed stays removed.
+  Each of its keys keeps the text a side wrote it in; a key no side wrote is written anew, and where that would drop
+  a comment, the merge is refused.
 - **The body** merges as text, line by line, three ways; lines both sides changed differently are a true conflict.
 - **A bean both sides added** has an empty base: its statements are the union of both, and a header key or a body the
   two wrote differently is a true conflict.

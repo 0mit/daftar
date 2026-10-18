@@ -26,6 +26,12 @@ act of the second reading where it is another. A record a later reading does not
 knew them: "not seen since" is a reading, never stored. Where an import wrote `unknown` in a role it can fill now, the
 statement it wrote is taken out by `gone`, its reason the statement that fills it.
 
+SET-WISE, INSIDE THE STORE'S ENGINE. Where a reader has a set form (the `file-tree` reader's, over a listing kept as a
+database) and each crosswalk of its models compiles, the import is one INSERT … SELECT a statement, over the records
+as the store's own temporary tables: the same rows, named by the same form, known by the same act, as record by record
+— and many times faster, since only a digest and a name in bytes are left to Python. A large import into a store makes
+the relations' indexes once, after every row is in (`Store.loading`).
+
 THE ACCOUNT. Every value of every record is carried, or listed as not carried with why, and counted by its field when
 there are many: nothing is passed over in silence. A crosswalk marked `whole` fails on any value it lists.
 
@@ -35,6 +41,7 @@ bin/store.py's import and put, `proposal` is bin/propose.py's read and take. Thi
 import collections
 import json
 import os
+import re
 import sys
 import time
 
@@ -125,6 +132,7 @@ class Import:
         self.later = collections.OrderedDict()            # what a `derive` knows, kept once every reading is in
         self.already = []                                 # the sources imported already, each by its act
         self._takes_being = {}
+        self._later_tables = set()                        # the set-wise records a derive knows, kept at done()
 
     # -------------------------------------------------------------------------------------------- what the law says
     def _schemes(self):
@@ -293,6 +301,8 @@ class Import:
                     self.act(verb)
                     if len(self.already) > n:
                         return False
+            if self._setwise(path, fmt):                   # the crosswalk run set-wise, inside the store's engine
+                return True
             groups = collections.OrderedDict()             # (verb, act ref, being roles) -> [(being, roles)]
             beings = {}
             for rec in self.records_of(path, fmt):
@@ -302,6 +312,234 @@ class Import:
         finally:
             self.reader_args = saved
             self._source = None
+
+    # -------------------------------------------------------------------------------------------- set-wise
+    # A CROSSWALK RUN INSIDE THE STORE'S ENGINE. Where the reader has a set form (core/readers.py SETWISE) and each row
+    # of its models compiles — plain fields, `escaped`, a unit, `with`, filters, `self` — the rows are written by one
+    # INSERT … SELECT a statement of a row, over the reader's records as temporary tables: the same statements, named
+    # by the same form, known by the same act, as the record-by-record path writes; a record with an empty role goes
+    # that path. Python is called only for what SQL has not: a digest, a name in bytes written `escaped`.
+    def _compile(self, c):
+        """[group] of a row's statements, each {verb, filters, roles: {role: spec}}, or None where the row does not
+        compile. A spec is ('col', column, conversion), ('const', value), ('unit', column, conversion, unit)."""
+        from core import formats
+        if c.compose or c.given or c.row.get('self'):
+            return None
+        groups = {}
+        cols_of = {}
+        for fname, spec, kind, frm, _plain, deep in c._compiled():
+            conv = formats.conversion(spec.get('as'))[0]
+            if kind not in ('bean', 'role', 'path') or deep or conv not in (None, 'escaped') or spec.get('map') \
+                    or spec.get('drop') is not None:
+                return None
+            cols_of[fname] = conv
+        for fname, spec, kind, frm, _plain, _deep in c._compiled():
+            if kind == 'bean':
+                continue
+            conv = cols_of[fname]
+            val = ('unit', fname, conv, str(spec['unit'])) if spec.get('unit') is not None else ('col', fname, conv)
+            if kind == 'role':
+                if '.' in frm:
+                    return None
+                g = groups.setdefault((c.verb, tuple(sorted(c.filters.items()))), {'verb': c.verb, 'filters': dict(c.filters),
+                                                                                  'roles': {}})
+                g['roles'][frm] = val
+                continue
+            verb, key, one, role = c._paths[fname]
+            g = groups.setdefault(key, {'verb': verb, 'filters': dict(one), 'roles': {}})
+            g['roles'][role] = val
+            for r2, f2 in (spec.get('with') or {}).items():
+                if f2 not in cols_of:
+                    return None
+                g['roles'][r2] = ('col', f2, cols_of[f2])
+        return list(groups.values())
+
+    def _setwise(self, path, fmt=None):
+        from core import readers
+        S = self.store
+        form = readers.SETWISE.get(self.reader) if self.reader else None
+        if self.keep != 'store' or form is None or str(path).endswith(('.tsv', '.csv', '.jsonl')) or \
+                (fmt and fmt != 'sqlite'):
+            return False
+        plans = {m: self._compile(c) for m, c in self.carry.items()}
+        if any(p is None for p in plans.values()):
+            return False
+        db = S.db
+        db.create_function('io_esc', 1, lambda b: formats.escape(b) if b is not None else None, deterministic=True)
+        db.create_function('io_mint', 2, lambda verb, j: self._mint(verb, j), deterministic=True)
+        import store as dmstore
+        db.execute("ATTACH ? AS io_src", (dmstore._uri(path, 'ro'),))
+        try:
+            tables, missed = form(db, 'io_src', **self.reader_args)
+            for col, n in missed.items():
+                self.account.count[(col, 'not read by the reader')] += n
+            for model, table in tables.items():
+                c = self.carry.get(model)
+                if c is None:
+                    continue
+                verb = (c.row.get('act') or {}).get('verb')
+                if model == 'content' and verb == 'derive':
+                    self._later_tables.add((model, table))         # known once every reading is in (done)
+                    continue
+                self._write_table(c, plans[model], table, self.act(verb) if verb else None)
+        finally:
+            db.execute("DETACH io_src")
+        return True
+
+    def _mint(self, verb, j):
+        """A statement's id from its form as SQLite's json_object writes it, keys sorted: where nothing in it is escaped,
+        that is the canonical form byte for byte (MERGE.md 1); anything else is read back and written canonically."""
+        import hashlib
+        import store as dmstore
+        if '\\' not in j:
+            form = '{' + json.dumps(verb) + ':' + j + '}'
+            return f"{verb}-{hashlib.sha256(form.encode('utf-8')).hexdigest()[:16]}"
+        return dmstore.mint(verb, json.loads(j))
+
+    @staticmethod
+    def _raw(spec):
+        """(the SQL of a role's value as text, its arguments): a column of the records, read through its conversion, or a
+        value given."""
+        if spec[0] == 'const':
+            return '?', [spec[1]]
+        col = f't."{spec[1]}"'
+        return (f'io_esc({col})' if spec[2] == 'escaped' else col), []
+
+    def _write_table(self, c, groups, table, ref):
+        """Each group of a row's statements written from the table of its records: the beings first, then one
+        INSERT … SELECT a group, known by `ref`."""
+        S, db = self.store, self.store.db
+        bcol = c._bean_field
+        n = db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        self.account.records += n
+        if not n:
+            return
+        kind = c.row.get('kind')
+        with S.batch():                                     # the beings: each record's, of its kind; then the others
+            if kind:
+                db.execute(f'INSERT OR IGNORE INTO being (id, kind) SELECT DISTINCT t."{bcol}", ? FROM {table} t', (kind,))
+                db.execute(f'UPDATE being SET kind = ? WHERE kind IS NULL AND id IN (SELECT "{bcol}" FROM {table})', (kind,))
+            else:
+                db.execute(f'INSERT OR IGNORE INTO being (id) SELECT DISTINCT t."{bcol}" FROM {table} t')
+        S._beings.clear()
+        others = set()
+        for g in groups:
+            for role, spec in list(g['roles'].items()) + [(k, ('const', v)) for k, v in g['filters'].items()]:
+                if spec[0] == 'col' and 'being' in c._shapes(g['verb'], role):
+                    others |= {r[0] for r in db.execute(f'SELECT DISTINCT t."{spec[1]}" FROM {table} t WHERE t."{spec[1]}" '
+                                                        f"NOT IN (SELECT id FROM being) AND t.\"{spec[1]}\" != 'unknown'")}
+        if others:
+            self._declare({b: None for b in others}, [])
+        a = S._act(ref) if ref else None
+        have = [d[1] for d in db.execute(f"PRAGMA {table.split('.')[0]}.table_info({table.split('.')[1]})")]
+        for g in groups:                                    # a conversion read once a record, into its own column
+            for role, spec in list(g['roles'].items()):
+                if spec[0] in ('col', 'unit') and spec[2] == 'escaped':
+                    col = f"{spec[1]}__escaped"
+                    if col not in have:
+                        with S.batch():
+                            db.execute(f'ALTER TABLE {table} ADD COLUMN "{col}"')
+                            db.execute(f'UPDATE {table} SET "{col}" = io_esc("{spec[1]}")')
+                        have.append(col)
+                    g['roles'][role] = (spec[0], col, None) + tuple(spec[3:])
+        for g in groups:
+            self._insert_group(c, g, table, bcol, a, ref)
+
+    def _insert_group(self, c, g, table, bcol, a, ref):
+        S, db = self.store, self.store.db
+        verb = g['verb']
+        roles = dict(g['roles'])
+        for k, v in g['filters'].items():
+            roles[k] = ('const', v)
+        sr = c._self_role(verb, roles)
+        if sr:
+            roles[sr] = ('col', bcol, None)
+        cols = S.columns(verb)
+        rel = 'v_' + re.sub(r'[^a-z0-9_]', '_', verb)
+        S._unindex(rel)
+        before = db.execute(f'SELECT COUNT(*) FROM "{rel}"').fetchone()[0]
+        form_parts, form_args, names, exprs, args, need = [], [], ['being', 'id'], [], [], []
+        for role in sorted(roles):                          # the form: its keys sorted, as MERGE.md 1 compares it
+            spec = roles[role]
+            raw, a2 = self._raw(spec)
+            if spec[0] == 'unit':
+                form_parts.append(f"'{role}', json_object('count', {raw}, 'unit', ?)")
+                form_args += a2 + [spec[3]]
+            else:
+                form_parts.append(f"'{role}', {raw}")
+                form_args += a2
+            if spec[0] != 'const':
+                need += [f'{raw} IS NOT NULL', f"{raw} != ''"]
+        form = f"json_object({', '.join(form_parts)})"
+        for role, spec in roles.items():
+            bc, tc = cols[role]
+            raw, a2 = self._raw(spec)
+            being = self._being_role(verb, role, spec[1]) if spec[0] == 'const' else \
+                (spec[0] == 'col' and 'being' in c._shapes(verb, role))
+            if bc and being:
+                names += [bc, tc]
+                exprs += [f"CASE WHEN {raw} = 'unknown' THEN NULL ELSE (SELECT n FROM being WHERE id = {raw}) END",
+                          f"CASE WHEN {raw} = 'unknown' THEN 'unknown' END"]
+                args += a2 * 3
+            elif spec[0] == 'unit':                         # a quantity, kept as the store keeps a mapping: its JSON
+                if bc:
+                    names.append(bc)
+                    exprs.append('NULL')
+                names.append(tc)
+                exprs.append(f"CAST('{{\"count\": ' || json_quote({raw}) || ', \"unit\": ' || json_quote(?) || '}}' "
+                             f"AS BLOB)")
+                args += a2 + [spec[3]]
+            else:
+                if bc:
+                    names.append(bc)
+                    exprs.append('NULL')
+                names.append(tc)
+                exprs.append(raw)
+                args += a2
+        names.append('known')
+        exprs.append('?')
+        args.append(a)
+        where = ' AND '.join(need) or '1'
+        sel = (f'SELECT (SELECT n FROM being WHERE id = t."{bcol}"), io_mint(?, {form}), {", ".join(exprs)} '
+               f'FROM {table} t WHERE {where}')
+        with S.batch():
+            db.execute(f'INSERT OR IGNORE INTO "{rel}" ({", ".join(names)}) {sel}', [verb] + form_args + args)
+            if before and a is not None:                    # a second reading: its act on each row it read again
+                db.execute(f'INSERT OR IGNORE INTO known_also (verb, row, act) SELECT ?, v.n, ? FROM {table} t JOIN '
+                           f'"{rel}" v ON v.being = (SELECT n FROM being WHERE id = t."{bcol}") AND v.id = io_mint(?, '
+                           f'{form}) WHERE {where} AND v.known IS NOT ?', [verb, a, verb] + form_args + [a])
+            if any(spec[0] == 'col' for spec in roles.values()):   # a record with an empty role: the record's own path
+                rest = db.execute(f'SELECT * FROM {table} t WHERE NOT ({where})').fetchall()
+                if rest:
+                    names_t = [d[1] for d in db.execute(f"PRAGMA {table.split('.')[0]}.table_info({table.split('.')[1]})")]
+                    for row in rest:
+                        rec = formats.Record({k: v for k, v in zip(names_t, row) if v is not None})
+                        self._one_off(c, rec, ref)
+        self._judge_sample(c, g, table, bcol, roles)
+
+    def _one_off(self, c, rec, ref):
+        """A record the set-wise statement passed over, written by the record's own path, its other statements one row
+        each (the same form, so the rows are kept once), known by the same act."""
+        being, statements, listed, notes, act_roles, header = c.into(rec)
+        if being is None:
+            return
+        self._declare({being: c.row.get('kind')}, statements)
+        for v, r in statements:
+            self.store.put(being, v, r, act=ref, judge=False)
+
+    def _judge_sample(self, c, g, table, bcol, roles):
+        """Every `judge_every`th record's statement judged as a put judges one (`Store._judge_one`)."""
+        if not self.judge_every:
+            return
+        db = self.store.db
+        names_t = [d[1] for d in db.execute(f"PRAGMA {table.split('.')[0]}.table_info({table.split('.')[1]})")]
+        for row in db.execute(f'SELECT * FROM {table} WHERE rowid % ? = 1', (self.judge_every,)).fetchall():
+            rec = formats.Record({k: v for k, v in zip(names_t, row) if v is not None})
+            being, statements, *_ = c.into(rec)
+            for v, r in statements:
+                if v == g['verb']:
+                    r = {k: (being if x == 'self' else x) for k, x in r.items()}
+                    self.store._judge_one(being, v, dict(r, id=self._mint(v, json.dumps(r))))
 
     def record(self, model, rec, groups=None, beings=None):
         """Keep one record of `model`: alone (`groups` None: a copier's record, put at once), or gathered for a bulk."""
@@ -388,28 +626,35 @@ class Import:
         return value not in self.law.namespaces
 
     def _declare(self, beings, statements, c=None):
-        """Every being the statements name kept in the store before them, with the kind it is known by."""
+        """Every being the statements name kept in the store before them, with the kind it is known by: its record's,
+        or its bean's; a being met first where nothing said its kind takes the one known later."""
         out = dict(beings)
         for v, r in statements:
             for k, x in r.items():
                 if self._being_role(v, k, x) and x not in out:
                     out[x] = None
-        new, kinds = [], []
+        if not out:
+            return
+        beans = self._bean_ids()
+        rows = []
         for b, kind in out.items():
-            if self.store.has_being(b):
-                if kind is not None:
-                    kinds.append((kind, b))
-                continue
-            if kind is None and self.store.has_bean(b):
-                self.store.being(b)
-                continue
-            new.append((b, kind))
-        if new:
-            self.store.beings(new)
-        if kinds:                                    # a being met first where nothing said its kind takes the one known now
+            if kind is None and b in beans:
+                bean = self.store.bean(b)
+                kind = bean.kind if bean is not None else None
+            rows.append((b, kind))
+        self.store.beings(rows)                         # a being kept already keeps what it has
+        kinds = [(k, b) for b, k in rows if k is not None]
+        if kinds:
             with self.store.batch():
                 self.store.db.executemany("UPDATE being SET kind = ? WHERE id = ? AND kind IS NULL", kinds)
             self.store._beings.clear()
+
+    def _bean_ids(self):
+        """The ids of the garden's beans and mappings, read from their folders once."""
+        if getattr(self, '_beans', None) is None:
+            import garden as dmgarden                   # the one lister of a garden's documents
+            self._beans = {os.path.basename(p)[:-3] for p in dmgarden.paths(self.root, ('beans', 'mappings'))}
+        return self._beans
 
     def _flush(self, groups, beings):
         if self.keep != 'store' or not groups:
@@ -467,6 +712,12 @@ class Import:
 
     def done(self):
         """What a derive knows, kept now that every reading is in, by one act from them all. Returns the account."""
+        if self.keep == 'store' and self._later_tables:
+            ref = self.act('derive')
+            for model, table in sorted(self._later_tables):
+                self._write_table(self.carry[model], self._compile(self.carry[model]), table, ref)
+                self.store.db.execute(f"DROP TABLE IF EXISTS {table}")
+            self._later_tables.clear()
         if self.keep == 'store' and self.later:
             ref = self.act('derive')
             groups, beings = collections.OrderedDict(), {}
@@ -585,9 +836,15 @@ def main(argv):
                      fmt=_arg(argv, '--format'), source_layer=_arg(argv, '--from'),
                      judge_every=int(_arg(argv, '--judge-every', '10000')),
                      named=dict(x.split('=', 1) if '=' in x else ('*', x) for x in _arg(argv, '--named', many=True)))
-        for src in pos[1:]:
-            imp.source(src)
-        imp.done()
+        if S is not None:
+            with S.loading():                                 # its indexes made once, after every source is in
+                for src in pos[1:]:
+                    imp.source(src)
+                imp.done()
+        else:
+            for src in pos[1:]:
+                imp.source(src)
+            imp.done()
         if S is None:
             if '--write' in argv:
                 for p in imp.write_beans():

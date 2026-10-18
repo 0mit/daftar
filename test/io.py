@@ -10,6 +10,8 @@ in it as a person or a tool would:
   file-tree a listing of paths (a scan's index) into a store: the volume held by its carrier, each folder part of its
             parent and named by it, each file a holding, each content named by its BLAKE3 and measured, the ids the
             catalogue's; a name in bytes `escaped`; what the reader does not read counted; the holdings back out
+  set-wise  a listing kept as a database is imported inside the store's engine, one INSERT … SELECT a statement; the same
+            listing read record by record gives the same rows, relation by relation
   again     the same source, read by the same act, is imported already and writes nothing; a second reading keeps every
             row once and adds its act to each (`known_also`): "not seen since" is a reading of the acts
   copies    a manifest of copies: each copy a holding made from the holding it copies (`make` from, through), its source
@@ -130,6 +132,43 @@ print(json.dumps({'done': done, 'rows': S.count(), 'beings': q("SELECT kind, COU
   'vol': S.get('vol-1'), 'photos': S.get(folder_id('vol-1', b'Photos')), 'y': S.get(folder_id('vol-1', b'Photos/2026')),
   'c': S.get('c-' + sys.argv[4][:24]), 'also': q("SELECT COUNT(*) FROM known_also")[0][0],
   'lines': I.account.lines(each=False)}, default=str))
+'''
+
+BOTHWAYS = r'''
+imp = importlib.import_module('import')
+import store
+rows = [{'path': 'A', 'type': 'd'}, {'path': 'A/B', 'type': 'd'}, {'path': 'A/B/x.txt', 'type': 'f', 'size': 4,
+        'hash': 'a' * 64}, {'path': 'A/y.txt', 'type': 'f', 'size': 0, 'hash': 'c' * 64}, {'path': 'A/z', 'type': 'f'},
+        {'path': 'A/B/again.txt', 'type': 'f', 'size': 4, 'hash': 'a' * 64}, {'path': 'A/B/sz', 'type': 'f', 'hash': 'e' * 64}]
+d = sys.argv[1]
+db = sqlite3.connect(d + '/v2.sqlite')
+db.execute("CREATE TABLE entry (path BLOB, type TEXT, size INTEGER, hash TEXT)")
+db.executemany("INSERT INTO entry VALUES (?, ?, ?, ?)", [(r['path'].encode(), r['type'], r.get('size'), r.get('hash')) for r in rows])
+db.commit(); db.close()
+open(d + '/v2.jsonl', 'w').write(''.join(json.dumps(r) + '\n' for r in rows))
+def load(src, out):
+    S = store.Store(out, root='.')
+    I = imp.Import('.', 'file-tree', keep='store', store=S,
+                   acts={'derive': {'in': 'nas', 'by': 'nas', 'at': '2026-10-18T12:00:00+03:00'}})
+    with S.loading():
+        I.source(src, volume='vol-2', carrier='disk-1', act={'in': 'vol-2', 'id': 'scan', 'by': 'nas', 'from': 'vol-2',
+                 'at': '2026-10-18T11:00:00+03:00', 'through': 'scan (test)'})
+        I.done()
+    return S
+def dump(S):
+    ids = dict(S.db.execute("SELECT n, id FROM being")); acts = dict(S.db.execute("SELECT n, ref FROM act"))
+    out = {'being': sorted(S.db.execute("SELECT id, kind FROM being").fetchall())}
+    for v in S.verbs():
+        cur = S.db.execute(f'SELECT * FROM "v_{v}"'); cols = [c[0] for c in cur.description]
+        out[v] = sorted(json.dumps({c: (ids.get(x) if c == 'being' or (c.startswith('b_') and x is not None) else
+                                       acts.get(x) if c == 'known' else (x.decode() if isinstance(x, bytes) else x))
+                                    for c, x in zip(cols, r) if c != 'n'}, sort_keys=True) for r in cur)
+    return out
+a, b = load(d + '/v2.sqlite', d + '/set.sqlite'), load(d + '/v2.jsonl', d + '/each.sqlite')
+x, y = dump(a), dump(b)
+print(json.dumps({'same': x == y, 'rows': {k: len(v) for k, v in x.items()}, 'diff': [k for k in set(x) | set(y) if x.get(k) != y.get(k)],
+                  'indexes': a.db.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND sql IS NOT NULL").fetchone()[0]
+                             == b.db.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND sql IS NOT NULL").fetchone()[0]}))
 '''
 
 COPIES = r'''
@@ -290,6 +329,12 @@ try:
           ok and ['content', 3] in j['beings'] and ['folder', 2] in j['beings']
           and any('mtime_ns × 8' in ln for ln in j['lines']), j)
     rows1 = j['rows'] if ok else -1
+
+    # ---- set-wise against record by record
+    j, r = py(BOTHWAYS, T)
+    check("set-wise: a listing kept as a database is imported inside the store's engine, and the same listing read record "
+          "by record gives the same rows, relation by relation, and the same indexes made after the load",
+          j is not None and j['same'] and j['indexes'] and j['rows'].get('hold', 0) == 6 and j['rows'].get('measure') == 2, (j, r.out[-1500:]))
 
     # ---- again
     j, r = py(TREE, idx, 'scan', '2026-10-18T11:00:00+03:00', B3A)

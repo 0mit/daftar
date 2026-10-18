@@ -112,6 +112,51 @@ def exiftool(records, volume, root, find=None, **_):
 IMPORTED = {'file-tree': file_tree, 'copies': copies, 'exiftool': exiftool}
 
 
+def file_tree_sql(db, src, volume, carrier=None, **_):
+    """The `file-tree` reader set-wise, inside the store's own engine (bin/import.py): the records of each model as a
+    temporary table of the store's connection, read by SQL from the listing attached as `src` — the same records
+    `file_tree` gives one at a time, the same ids. Returns ({model: table}, {column not read: how many rows hold it})."""
+    import hashlib
+
+    def fid(p):
+        p = bytes(p) if p is not None else b''
+        return 'd-' + hashlib.sha256(volume.encode() + b'\0' + p).hexdigest()[:16] if p else volume
+    db.create_function('ft_fid', 1, fid, deterministic=True)
+    db.create_function('ft_parent', 1, lambda p: bytes(p).rpartition(b'/')[0], deterministic=True)
+    db.create_function('ft_name', 1, lambda p: bytes(p).rpartition(b'/')[2], deterministic=True)
+    db.create_function('ft_bytes', 1, lambda p: p if isinstance(p, bytes) else os.fsencode(str(p)), deterministic=True)
+    cols = [r[1] for r in db.execute(f'PRAGMA {src}.table_info(entry)')]
+    if not {'path', 'type'} <= set(cols):
+        raise Refused("the listing holds no table `entry` of paths and their types")
+    has = lambda c: c if c in cols else 'NULL'
+    for t in ('ft_volume', 'ft_folder', 'ft_file', 'ft_content_now'):
+        db.execute(f'DROP TABLE IF EXISTS temp.{t}')
+    db.execute("CREATE TABLE IF NOT EXISTS temp.ft_content (id TEXT PRIMARY KEY, blake3 TEXT, size TEXT)")
+    db.execute("CREATE TEMP TABLE ft_volume (id TEXT, carrier TEXT)")
+    if carrier:
+        db.execute("INSERT INTO temp.ft_volume VALUES (?, ?)", (volume, carrier))
+    sel = (f"SELECT ft_bytes(path) AS p, type, {has('size')} AS size, {has('hash')} AS hash FROM {src}.entry "
+           f"WHERE type IN ('d', 'f') AND path NOT IN (x'', '.', x'2e')")
+    db.execute(f"CREATE TEMP TABLE ft_folder AS SELECT ft_fid(p) AS id, ft_fid(ft_parent(p)) AS parent, ft_name(p) AS name "
+               f"FROM ({sel}) WHERE type = 'd'")
+    db.execute(f"CREATE TEMP TABLE ft_file AS SELECT ft_fid(ft_parent(p)) AS folder, CASE WHEN hash IS NULL OR hash = '' "
+               f"THEN 'unknown' ELSE 'c-' || substr(hash, 1, 24) END AS content, ft_name(p) AS name, hash, size "
+               f"FROM ({sel}) WHERE type = 'f'")
+    db.execute("INSERT OR IGNORE INTO temp.ft_content SELECT 'c-' || substr(hash, 1, 24), hash, "
+               "coalesce(CAST(size AS TEXT), '') FROM temp.ft_file WHERE hash IS NOT NULL AND hash != '' ORDER BY rowid")
+    missed = {}
+    for c in cols:
+        if c not in ('path', 'type', 'size', 'hash'):
+            n = db.execute(f'SELECT COUNT("{c}") FROM {src}.entry').fetchone()[0]
+            if n:
+                missed[c] = n
+    return {'volume': 'temp.ft_volume', 'folder': 'temp.ft_folder', 'file': 'temp.ft_file',
+            'content': 'temp.ft_content'}, missed
+
+
+SETWISE = {'file-tree': file_tree_sql}
+
+
 # ================================================================================================ a provider's table
 def _openpyxl():
     try:
