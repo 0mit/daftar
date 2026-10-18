@@ -1,6 +1,7 @@
 # The layers beside the face's own, and which files stand in which: rows of the flow law and of the layer map.
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
-flow_sources: [guide, estate, gate, words, work, instructions, world, clock, self, request, remote, public, other-garden, held]
+flow_sources: [guide, estate, gate, words, work, instructions, world, clock, self, request, remote, public, other-garden, held,
+               store]
 standing:
   - { layer: manifesto, holds: ["MANIFESTO.md"] }
   - { layer: law, holds: ["VOCAB.md", "GARDEN.md", "MODEL.md", "CHECKLIST.md", "MERGE.md", "seed/LANGUAGE", "seed/RELEASE-SIGNERS", "seed/PUBLIC-ALLOW", "seed/knowledge/*", "seed/LICENSE.md", "seed/LICENSE-*", "core/law/*.yaml"] }
@@ -12,3 +13,29 @@ standing:
   - { layer: guide, holds: ["README.md", "AGENTS.md", "seed/README.md", "seed/WELCOME.md", "seed/COOKBOOK.md", "seed/FORMS.md", "seed/*.template", "assets/*/README.md", "assets/*/templates/*"] }
   - { layer: estate, holds: ["beans/*", "mappings/*", "series/*", "extracts/*"] }
   - { layer: gate, holds: ["bin/*", "test/*", "seed/germinate.*", ".gitattributes", ".gitignore", "assets/*/bin/*", "assets/*/lib/*", "core/*.py"] }
+
+# A STORE: statements kept off git, as rows, on the host that keeps them (MODEL.md, The store). A being has one id
+# wherever it is kept, and its statements are the union of every keeping, as a set. `pointer` is the one form a bean
+# names a being kept only in a store by, and one of its statements; the gate checks its shape and its kind, and the
+# store's check, where the store is kept, whether it resolves. `forms` are what a store's file may be kept in, each an
+# occupant of the place, none of them the store. `declared` is what a host's bean says of each store it keeps, in
+# `details.stores.<name>`. `relation` is what a row holds beside its verb's roles and qualifiers. `escaped` is how a
+# name the world gives in bytes is written as text, in a store and in a bean alike.
+store_shape:
+  pointer:
+    pattern: '^store:([a-z][a-z0-9-]*):([a-z0-9][a-z0-9_-]*)(#[a-z0-9][a-z0-9_-]*)?$'
+    meaning: "`store:<kind>:<id>` names a being kept only in a store, by its kind and its id; `store:<kind>:<id>#<id>` one of its statements. It names no store: a being keeps its id when it moves between stores, or gains a bean"
+  forms:
+    - { form: sqlite, meaning: "SQLite 3: one file, a relation a verb, the beings and the acts by number" }
+  declared:
+    at: "where the store's file is: a position on the host, `root:<root>/<path>` or `<host>:<path>`"
+    form: "the form its file is kept in, one of `forms`"
+    readers: "who reads it beside its writer: a store another user reads is kept so that read permission alone reads it"
+  relation:
+    being: "the being whose statement the row is: the bean it would sit in, where `self` would name it"
+    id: "its name among the being's statements; given none, the verb and sixteen hexadecimal digits of the SHA-256 of its form (MERGE.md 1)"
+    known: "the knowing act or acts that know it, each `<being>#<id>`, kept in a store or in git"
+    while: "as a statement's"
+    why: "as a statement's"
+    note: "as a statement's"
+  escaped: "a name the world gives in bytes that need not be UTF-8 (a file's) is written UTF-8, and a byte that is no part of a well-formed UTF-8 sequence, a control character, and `%` itself as `%` and two uppercase hexadecimal digits"

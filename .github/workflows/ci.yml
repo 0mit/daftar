@@ -83,6 +83,9 @@ jobs:
       - name: "core_held: the garden held — read again, the same garden while nothing it was read from changed; a document changed, added or removed, GARDEN.md, the index, a racily written file and a worktree each seen; DAFTAR_HELD_CHECK names a reader that changes what is held"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_held.py
+      - name: "store: statements kept off git as rows, one universe with the beans — a row judged as the gate judges a statement, the pointer through the gate, the check over the union whole and by queries, the round trips between keepings, many writers, a snapshot, a removal recorded, a store found by its host's bean"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/store.py
       - name: "core_ported: where each of today's suites and each check of today's gate went in v1 — none waiting — and today's words read only from v0.49.0, held to the tree"
         run: python3 test/core_ported.py
       - name: "core_exact: a count is exact everywhere it is read — rates between currencies, and no float in the code"

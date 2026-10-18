@@ -1774,3 +1774,30 @@ A machine in it is at its slot: the rack is the being, and the slot a position o
 ```yaml
   - be:     { by: self, at: [rack-a, "rack-a#u17"], as: location, placed: { takes: [ { count: "2", unit: "{item}" } ] } }
 ```
+
+## A store: what git cannot carry
+
+A tool that reads thousands of things off the world — a disk's files, a machine's processes — keeps them in a store,
+off git, on the host, as daftar's own statements. The host's bean says where, beside its roots:
+
+```yaml
+details:
+  roots:
+    catalog: { system: unix-filesystem, at: "host-a:/srv/catalog" }
+  stores:
+    catalogue: { at: "root:catalog/store.sqlite", form: sqlite, readers: [user] }
+```
+
+Each row is a statement, known by the act that read or made it: one `read` for a whole scan. A file is a folder holding
+a content under its name; the content is named by its digest:
+
+    python3 bin/store.py put catalogue --act vol-a#scan-1 < rows.jsonl
+    {"being": "c-af13", "kind": "content"}
+    {"being": "c-af13", "verb": "name", "roles": {"by": "blake3", "of": "self", "as": "<64 hex digits>"}}
+    {"being": "d-1", "verb": "hold", "roles": {"by": "self", "of": "c-af13", "as": "IMG_0001.CR2"}}
+
+A bean names a being kept only in a store by its kind and id, `of: "store:content:c-af13"`; the gate checks the kind,
+and `python3 bin/store.py check` checks, where the store is, that it resolves — and every rule that spans git and the
+stores. When a person speaks of a being a store keeps, `python3 bin/store.py export catalogue c-af13 --by <session>
+--write` gives it a bean of its rows, known there by one `derive` from the acts that knew them; `import` keeps a bean's
+statements in a store with their acts. A name that is no UTF-8 is written `escaped` (`%FF`), and read back to its bytes.

@@ -17,3 +17,6 @@ kinds:
   - { kind: garden, nature: sayable }
   - { kind: document, nature: sayable }
   - { kind: event, nature: sayable }
+  - { kind: volume, nature: sayable, meaning: "a filesystem: a tree of names kept on a carrier, which holds it" }
+  - { kind: folder, nature: sayable, meaning: "a directory: it gives a name to each thing it holds, and is part of its parent, or of its volume" }
+  - { kind: content, nature: sayable, meaning: "an exact sequence of bytes, named by a digest of them (`blake3`, `sha-256`): what holds it holds it under a name" }

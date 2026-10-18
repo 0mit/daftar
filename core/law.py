@@ -222,6 +222,7 @@ class Law:
         self.added_forms = {}                               # core/law/forms.yaml: the forms part 12b adds, by name
         self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
         self.namespace_shape = {}                           # core/law/namespaces.yaml: its checks, where kept
+        self.store_shape = {}                               # core/law/layers.yaml: a store's pointer, forms, relation
         self.flows, self.flow_sources, self.standing, self.exclusive = [], [], [], []
         self.garden_flows = []                              # the rows of `flows` a garden added (VOCAB.md)
         self.methods, self.pass_metadata, self.flows_dropped = {}, {}, {}   # core/law/flows.yaml beside its rows
@@ -429,6 +430,9 @@ class Law:
                 continue
             if key == 'namespace_shape' and where != GARDEN:   # what a namespace may name beside its pattern
                 self.namespace_shape = val if isinstance(val, dict) else {}
+                continue
+            if key == 'store_shape' and where != GARDEN:       # a store: its pointer, its forms, a row (MODEL.md)
+                self.store_shape = val if isinstance(val, dict) else {}
                 continue
             if key == 'profiles' and where == GARDEN:     # THE PROFILES A GARDEN TAKES (v1 part 11): names, judged
                 self.taken_where = where                  # against the profiles the law offers once it is loaded
@@ -1105,6 +1109,25 @@ class Law:
             if kept is not None and str(kept) not in listed(shape.get('kept')):
                 bad(f"namespaces {name}", f"is kept `{kept}`, which is nowhere `namespace_shape.kept` names "
                                           f"({', '.join(listed(shape.get('kept')))})")
+        store = getattr(self, 'store_shape', None) or {}         # A STORE'S SHAPE: a pointer that reads, forms named
+        if store:
+            pat = (store.get('pointer') or {}).get('pattern')
+            try:
+                rx = re.compile(str(pat))
+                if rx.groups < 2 or not rx.match('store:content:c-0') or rx.match('root:x/y'):
+                    bad('core/law/layers.yaml store_shape.pointer', "reads `store:<kind>:<id>`, its kind and its id, and "
+                                                                    "nothing else")
+            except re.error as e:
+                bad('core/law/layers.yaml store_shape.pointer', f"its pattern is no regular expression: {e}")
+            forms = [f.get('form') for f in listed(store.get('forms')) if isinstance(f, dict)]
+            if not forms or len(forms) != len(set(forms)) or not all(isinstance(f, dict) and f.get('meaning')
+                                                                     for f in listed(store.get('forms'))):
+                bad('core/law/layers.yaml store_shape.forms', "names each form a store may be kept in once, with its "
+                                                              "meaning")
+            if 'store' in (self.systems or {}):
+                bad('core/law/layers.yaml store_shape.pointer', "`store` is the pointer's word, and a system takes it")
+            if 'store' not in self.flow_sources:
+                bad('core/law/layers.yaml store_shape', "a store is a source of the flow law: `flow_sources` names it")
         covers = listed(((self.std.tables or {}).get('system_shape') or {}).get('covers')) if self.std else []
         for name, row in (self.systems or {}).items():         # WHAT A POSITION COVERS: a point or an area, the room rule's
             c = row.get('covers') if isinstance(row, dict) else None   # question; a pair of patterns where it holds both

@@ -13,6 +13,7 @@ methods:
   - { method: record, meaning: "a tool writes what it read off the world, with the reading's moment" }
   - { method: capture, meaning: "a command's output kept as it came, its owner and its command named" }
   - { method: merge, meaning: "the merge engine joins two copies of one being, keeping each value's source" }
+  - { method: keep, meaning: "statements copied into another keeping of the garden with the acts that knew them: a bean's into a store, a store's into another" }
   - { method: forward, meaning: "what a garden holds from another, made for a third, the passing garden's id appended to its path" }
   - { method: adopt, meaning: "a release's files laid into a garden, by germination or an upgrade" }
   - { method: publish, meaning: "material pushed, or offered for merging, to a public repository" }
@@ -40,6 +41,12 @@ flows:
   - { flow: sealed, from: estate, to: held, through: hold, grant: granted, why: "material that must not sit in git is kept off it, where it can be erased per subject" }
   - { flow: unsealed, from: held, to: [estate, public, other-garden], through: [edit, make, publish], grant: refused, why: "sealed material comes back into git, or out of the garden, only as its pointer" }
   - { flow: sealed-read, from: held, to: request, through: [render, show], grant: ratified, why: "sealed material is read into a request only where the gardener grants it" }
+  - { flow: store-recorded, from: world, to: store, through: record, as: read, grant: granted, why: "a tool keeps what it read off the world in a store, with the reading's moment: one act for all a scan put" }
+  - { flow: store-made, from: [work, self], to: store, through: make, as: make, grant: granted, why: "a tool keeps what it made in a store: a copy's holding, a run's moves" }
+  - { flow: store-kept, from: estate, to: store, through: keep, grant: granted, why: "a bean's statements kept in a store keep the acts that knew them, and are one statement with the bean's" }
+  - { flow: store-taken, from: store, to: estate, through: derive, as: derive, grant: granted, why: "a row exported into a bean is known there by a `derive` from the acts that knew it" }
+  - { flow: store-retyped, from: store, to: estate, through: edit, grant: refused, why: "a row copied into a bean by hand is a copy nobody can trace: it comes through an export, which says where from" }
+  - { flow: sealed-not-stored, from: held, to: store, through: [keep, record, make, edit], grant: refused, why: "sealed material is kept per subject and erased per subject: a store keeps none of it" }
   - { flow: journalled, from: [work, instructions, self, history], to: journal, through: append, grant: granted, why: "what was done and why is appended, entry by entry, beside the commit that did it" }
   - { flow: journal-rewritten, from: [work, instructions, self, history, journal], to: journal, through: edit, grant: refused, why: "a journal is appended and never rewritten: an entry changed after the fact is a record nobody can trust" }
   - { flow: queued, from: [work, instructions, self], to: queue, through: edit, grant: granted, why: "what waits for a person is proposed, parked and settled in place" }
@@ -49,9 +56,9 @@ flows:
   - { flow: law-derived, from: law, to: guide, through: derive, grant: granted, why: "a form or a list is derived from the law by a tool, so it cannot disagree with it" }
   - { flow: released, from: public, to: [law, manifesto, reasoning, guide, gate, journal], through: adopt, grant: granted, why: "a release's files are laid into a garden whole, and the commit says RULE-CHANGE" }
   - { flow: release-in-estate, from: public, to: estate, through: adopt, grant: refused, why: "a release carries no garden's facts" }
-  - { flow: kept-private, from: [estate, words, work, instructions, journal, queue, history, self], to: public, through: publish, grant: refused, why: "a garden's own material never goes to a public repository" }
+  - { flow: kept-private, from: [estate, store, words, work, instructions, journal, queue, history, self], to: public, through: publish, grant: refused, why: "a garden's own material never goes to a public repository" }
   - { flow: release-public, from: [manifesto, law, reasoning, guide, gate], to: public, through: publish, grant: granted, keeper: release, why: "what the release keeps is public under its licences" }
-  - { flow: composed-here, from: [manifesto, law, reasoning, journal, history, queue, guide, estate, gate, words, work, instructions, self], to: request, through: [render, show], grant: granted, why: "a request composed on this host keeps what it holds on this host, the model's own earlier turns among it" }
+  - { flow: composed-here, from: [manifesto, law, reasoning, journal, history, queue, guide, estate, store, gate, words, work, instructions, self], to: request, through: [render, show], grant: granted, why: "a request composed on this host keeps what it holds on this host, the model's own earlier turns among it" }
   - { flow: sent-out, from: [request, estate], to: remote, through: send, grant: ratified, why: "a hosted or remote party is refused until the gardener grants that party, with the basis the gardener's own law asks for sending there" }
   - { flow: served, from: estate, to: remote, through: serve, grant: granted, why: "a page or an action is served only to a viewer a grant opens it to, asked before each one" }
   - { flow: refusal-detail-served, from: history, to: remote, through: serve, grant: granted, why: "a refusal's detail — what a tool's log kept of why it refused — is served only to a viewer whose grants reach what it is about, as far as they reach, by the machine that holds it, which judges the one who asks: it is never sent ahead" }

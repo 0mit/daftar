@@ -251,6 +251,23 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.10** (2026-10-18, daftar v2.10.0, human-ratified rule-changes: the store; the pointer `store:<kind>:<id>`;
+  the kinds `volume`, `folder`, `content`; `hold` takes `as`) — **what git cannot carry, kept as daftar's own
+  statements; one universe of beans and rows.** MINOR: nothing a garden could write under core 2.9 is refused.
+  - The store: statements kept off git as rows, on the host that keeps them (core/law/layers.yaml `store_shape`; MODEL.md,
+    The store). A being has one id wherever it is kept, and its statements are the union of every keeping, as a set. A
+    row is a statement in the law's grammar, one relation a verb, and names the act that knows it; given no id, it is
+    named from its form. A host declares each store in its bean, `details.stores`; SQLite is the one form today. A name
+    in bytes is written `escaped`. A store keeps no sealed material, and a statement leaves it with its removal recorded.
+  - The pointer: a bean names a being kept only in a store `store:<kind>:<id>`, one of its statements
+    `store:<kind>:<id>#<id>`; the gate checks its shape, kind and nature, and never reads a store.
+  - The flows: `store` is a source of the flow law; the method `keep`; a row exported into a bean is known by a `derive`,
+    and one copied by hand is refused.
+  - The kinds `volume`, `folder` and `content`, and `hold`'s `as`: a file is a folder holding a content under a name.
+  - `bin/store.py` (`daftar store`): list, open, get, query, check, export, import, put, gone, series — rows judged as
+    the gate judges a statement; the check over git and the stores whole by the engine while small, by queries when
+    large. test/store.py.
+  - The second of three releases of programme item 2; runs as daftar's own follow.
 - **core 2.9** (2026-10-18, daftar v2.9.0, human-ratified rule-changes: a `blake3` namespace beside `sha-256`; `make`
   gains `from` and `through`) — **a content named by the digest its tool computes; a copy made from what it copies.**
   MINOR: nothing a garden could write under core 2.8 is refused.
