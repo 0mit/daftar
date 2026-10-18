@@ -50,9 +50,36 @@
 # A GARDEN'S OWN ROWS stand in its VOCAB.md (`crosswalks`), in this form, read by the one reader beside these: never a
 # name of these, nor a model one of these crosses in its system and series. A row of the garden's is used where a bean
 # of its kind is, or says why it is vacant (`vacant: <why>`). A row that proves general is proposed here.
+# HOW A ROW'S RECORDS COME AND GO (2.12; MODEL.md, Imports and exports). A row that names its `format` (one of
+# core/law/formats.yaml, or a list) and its `act` is read both ways: an export reads each field from the statements, as
+# above, and an import writes each field into them, kept by the act:
+#   format: <format>, reader: <reader>   how its records are written, and the reader that gives a model's records where
+#                                       the format alone cannot (formats.yaml `readers`)
+#   records: { table, where, path }     which records of a source: a table and the values its columns hold, a path
+#   act: { verb: read | say | derive | make, per: import | record, <role>: <field> }   the knowing act its statements
+#                                       are known by: one for all an import keeps, or one a record (a copy's `make`),
+#                                       a role named by a field of the record; the rest given where the import runs
+#   keep: store | bean                  where an import keeps them, unless it is told otherwise
+#   whole: true                         every field of every record is carried, or dropped by a reason, or the import
+#                                       fails: nothing is passed over (the account)
+#   compose: { <path>: "<form>" }       a value made of parts, each a field read `part: <name>`
+#   given: { <path>: <value> }          a value every statement written has, and every one read back holds
+#   self: <role>                        the role `self` fills, where the verb leaves two
+# A FIELD READ BOTH WAYS. A path `<verb>[<role>=<value>,…].<role>` names a statement: an import writes it, its filters
+# as roles, the field's value in the role the path ends in, and `self` in the one required role of a being the verb
+# leaves; fields of one verb and the same filters write one statement. A row whose records are statements writes one
+# of its verb, each field into its own role (`from: <role>`, `<role>.<key>` a key of a mapping, `id` its id). A path
+# that runs through beans, a position, `stands`, `join`, `inverse` and `chain` are read one way only, and an import lists
+# such a field as not carried, never guessed. A field also says:
+#   as: <conversion>                    how its value is read into the role and back (formats.yaml `conversions`)
+#   with: { <role>: <field> }           the other roles of its statement, each from another field
+#   unit: <unit>                        the unit a count is in
+#   part: <name>                        the part of a composed value it is
+#   drop: "<why>"                       a field deliberately carried nowhere, and why
+# A field of the record no row names is listed by the account as not carried, counted by its name.
 forms:
-  crosswalk: { crosswalk: required, system: required, series: required, model: required, kind: optional, statements: optional, select: optional, fields: required, meaning: required, vacant: optional }
-  field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional, held: optional, many: optional, position: optional, stands: optional, map: optional, statements: optional, exists: optional }
+  crosswalk: { crosswalk: required, system: required, series: required, model: required, kind: optional, statements: optional, select: optional, fields: required, meaning: required, vacant: optional, format: optional, reader: optional, records: optional, act: optional, keep: optional, whole: optional, compose: optional, given: optional, self: optional }
+  field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional, held: optional, many: optional, position: optional, stands: optional, map: optional, statements: optional, exists: optional, as: optional, with: optional, unit: optional, part: optional, drop: optional }
   statements: { verb: required, with: optional, naming: optional, in_force_on: optional, ended_by: optional, standing: optional }
 crosswalks:
   - crosswalk: odoo-17.0-res.company
@@ -141,3 +168,129 @@ crosswalks:
       active: { value: true }
       active_employee: { value: true }
     meaning: "an employee's absences: each happening placed over an extent of days (`be … as: presence`) that uses an allowance of an employment (`use … of`, the employment's statement) — its days read from that extent, in the garden's zone; its employee the employment; its type the kind of time off that allowance holds (`hold … of`); its state where its course stands on its walk, by the walk's own form: before its first move to submit, at a step to approve, at a final step approved, at an exit refused"
+  - crosswalk: fhir-r5-observation
+    system: fhir
+    series: "R5"
+    model: Observation
+    statements: { verb: measure }
+    format: json
+    act: { verb: read }
+    keep: bean
+    fields:
+      resourceType: { value: Observation }
+      status: { value: final }
+      id: { from: id }
+      "subject.reference": { from: bean, as: { form: "Patient/{}" } }
+      "code.coding[0]": { from: as, as: coding }
+      "method.coding[0]": { from: method, as: coding }
+      "valueCodeableConcept.coding[0]": { from: result, as: coding }
+      "valueQuantity.value": { from: value.count, as: decimal }
+      "valueQuantity.system": { value: "http://unitsofmeasure.org" }
+      "valueQuantity.code": { from: value.unit }
+      effectiveDateTime: { from: at }
+      "performer[0].reference": { from: by, as: { form: "Practitioner/{}" } }
+      "note[0].text": { from: note }
+    meaning: "a FHIR R5 Observation is a reading: one `measure` of the bean its subject names (a Patient, by its id) — its code the property read, its first coding by the scheme whose url is the coding's system; a quantity in UCUM, a code its result; when it held, as written; who observed it; its first note. Only a final reading is carried as made (the others' status is listed); a subject or a performer of another resource type is not carried, and neither is a quantity whose unit is not the law's"
+  - crosswalk: dwc-occurrence
+    system: dwc
+    series: "terms"
+    model: Occurrence
+    statements: { verb: be, with: "as=location" }
+    format: csv
+    act: { verb: read }
+    keep: bean
+    compose: { at: "{crs};{lat},{lon}" }
+    given: { "placed.openness": elsewhere, "placed.accuracy.unit": m, "placed.accuracy.kind": bound }
+    fields:
+      occurrenceID: { from: bean }
+      eventDate: { from: placed.observed }
+      geodeticDatum: { from: at, part: crs }
+      decimalLatitude: { from: at, part: lat }
+      decimalLongitude: { from: at, part: lon }
+      coordinateUncertaintyInMeters: { from: placed.accuracy.count }
+      locality: { from: note }
+    meaning: "a Darwin Core occurrence is a being seen at a place: a `be` as location of the being its occurrenceID names — its coordinate in the one form of its system (`EPSG:4326;<lat>,<lon>`), the day it was seen there as written (an interval is not carried), the smallest circle that holds it as an accuracy of kind `bound` in metres, as Darwin Core defines the uncertainty, the place in words; seen in the field, so reachable, and not from the machine that records it"
+  - crosswalk: file-tree-volume
+    system: file-tree
+    series: "1"
+    model: volume
+    kind: volume
+    format: [sqlite, tsv, csv, jsonl]
+    reader: file-tree
+    act: { verb: read }
+    keep: store
+    fields:
+      id: { from: bean }
+      carrier: { from: hold.by }
+    meaning: "a volume read as a tree of names: the carrier it is kept on holds it"
+  - crosswalk: file-tree-folder
+    system: file-tree
+    series: "1"
+    model: folder
+    kind: folder
+    format: [sqlite, tsv, csv, jsonl]
+    reader: file-tree
+    act: { verb: read }
+    keep: store
+    fields:
+      id: { from: bean }
+      parent: { from: part.of }
+      name: { from: name.as, with: { by: parent }, as: escaped }
+    meaning: "a folder: part of its parent folder, or of its volume, which gives it its name"
+  - crosswalk: file-tree-file
+    system: file-tree
+    series: "1"
+    model: file
+    statements: { verb: hold }
+    format: [sqlite, tsv, csv, jsonl]
+    reader: file-tree
+    act: { verb: read }
+    keep: store
+    fields:
+      folder: { from: bean }
+      content: { from: of }
+      name: { from: as, as: escaped }
+    meaning: "a file is no being but a holding: its folder, or its volume, holds a content under the file's name, and a content nobody read is `unknown`. Each name is a holding, a hard link's second among them"
+  - crosswalk: file-tree-content
+    system: file-tree
+    series: "1"
+    model: content
+    kind: content
+    format: [sqlite, tsv, csv, jsonl]
+    reader: file-tree
+    act: { verb: derive }
+    keep: store
+    fields:
+      id: { from: bean }
+      blake3: { from: "name[by=blake3].as" }
+      size: { from: "measure[as=information].value", unit: By }
+    meaning: "a content, an exact sequence of bytes: named by its BLAKE3 and measured in bytes, derived from the readings of the volumes that hold it"
+  - crosswalk: file-tree-copy
+    system: file-tree
+    series: "1"
+    model: copy
+    statements: { verb: hold }
+    format: sqlite
+    reader: copies
+    act: { verb: make, per: record, from: source, at: at, note: note }
+    keep: store
+    fields:
+      folder: { from: bean }
+      content: { from: of }
+      name: { from: as, as: escaped }
+    meaning: "a copy is a holding made from the holding it copies: its folder holds the content under its name, known by a `make` from the source holding through the copier, at the moment it was copied"
+  - crosswalk: exif-image
+    system: exif
+    series: "3.0"
+    model: image
+    kind: content
+    format: json
+    reader: exiftool
+    act: { verb: read }
+    keep: store
+    fields:
+      content: { from: bean }
+      "Composite:SubSecDateTimeOriginal": { from: produce.at, as: { moment: exif } }
+      "ExifIFD:SerialNumber": { from: produce.by, as: { named: given, hint: ["IFD0:Make", "IFD0:Model"] } }
+      "ExifIFD:LensSerialNumber": { from: produce.through, as: { named: given, hint: ["ExifIFD:LensModel"], none: ["0000000000"] } }
+    meaning: "a photograph's content was produced by the camera whose serial the picture states, through the lens whose serial it states, at the moment the shutter was released: the original's clock with its fraction and offset where the picture has them, its day alone where it has no offset. the serial is looked up in the namespace the garden names its devices' serials in, which the import is told; a serial that names no being there leaves the camera `unknown`, and is listed with the camera's make and model for a person to name (class F); every other tag is counted, not carried"

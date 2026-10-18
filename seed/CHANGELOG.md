@@ -251,6 +251,22 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.12** (2026-10-19, daftar v2.12.0, human-ratified rule-changes: imports and exports, one machinery — the
+  formats, one table of readers, the conversions; the crosswalks read both ways; the flows `store-stated` and
+  `store-derived`; the tools `import` and `export`) — **every format in and out of daftar through one machinery.**
+  MINOR: nothing a garden could write under core 2.11 is refused.
+  - core/law/formats.yaml: `formats` (tsv, csv, json, jsonl, sqlite, xml, xlsx, yaml, ics, proposal; vcard, mbox and
+    parquet vacant), `readers` (`file-tree`, `copies`, `exiftool`), `conversions` (escaped, moment, decimal, form, part,
+    coding, named, prefix). core/formats.py reads and writes them, none privileged.
+  - core/law/crosswalks.yaml: a row that names its `format` and its `act` is read both ways (core/crosswalk.py
+    `Carry`); the rows `fhir-r5-observation` and `dwc-occurrence` (the tables seed/knowledge/crosswalk-fhir-r5-
+    observation.tsv and crosswalk-dwc.tsv, retired), `file-tree-volume`, `-folder`, `-file`, `-content`, `-copy`, and
+    `exif-image`.
+  - core/law/flows.yaml: `store-stated` (a document's lines into a store, said by it), `store-derived` (what a tool
+    derives, kept in a store).
+  - bin/import.py and bin/export.py (`daftar import`, `daftar export`); bin/crosswalk.py keeps its commands, through
+    them. bin/store.py: `bulk` adds its act to a row kept already; `escape` is core/formats.py's.
+  - test/io.py. The first of three releases of programme item 2b.
 - **core 2.11** (2026-10-18, daftar v2.11.0, human-ratified rule-changes: runs into daftar; the tool family `run`) —
   **every job a tool starts, a course on the standard walk, kept in the store `runs`.** MINOR: nothing a garden could
   write under core 2.10 is refused.

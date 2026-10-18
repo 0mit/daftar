@@ -47,6 +47,8 @@ flows:
   - { flow: store-taken, from: store, to: estate, through: derive, as: derive, grant: granted, why: "a row exported into a bean is known there by a `derive` from the acts that knew it" }
   - { flow: store-retyped, from: store, to: estate, through: edit, grant: refused, why: "a row copied into a bean by hand is a copy nobody can trace: it comes through an export, which says where from" }
   - { flow: sealed-not-stored, from: held, to: store, through: [keep, record, make, edit], grant: refused, why: "sealed material is kept per subject and erased per subject: a store keeps none of it" }
+  - { flow: store-stated, from: words, to: store, through: record, as: say, grant: granted, why: "a document a person gave, read into a store, is said by that document: its lines are known by its word, one act for all it states" }
+  - { flow: store-derived, from: [estate, store, world, words], to: store, through: derive, as: derive, grant: granted, why: "what a tool computes from statements it names, kept in a store, is as strong as its weakest input: a content's name derived from the readings of the volumes that hold it" }
   - { flow: journalled, from: [work, instructions, self, history], to: journal, through: append, grant: granted, why: "what was done and why is appended, entry by entry, beside the commit that did it" }
   - { flow: journal-rewritten, from: [work, instructions, self, history, journal], to: journal, through: edit, grant: refused, why: "a journal is appended and never rewritten: an entry changed after the fact is a record nobody can trust" }
   - { flow: queued, from: [work, instructions, self], to: queue, through: edit, grant: granted, why: "what waits for a person is proposed, parked and settled in place" }

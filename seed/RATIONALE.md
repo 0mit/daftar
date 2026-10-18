@@ -5553,6 +5553,80 @@ path reads a bean's first statement of a verb: an absence names its allowance to
 that holds only an amount has no type, as the garden says none.
 
 
+## core/law/crosswalks.yaml: forms.crosswalk.format
+
+(ratified by the operator, 2026-10-18: "daftar import export in general", and the design of programme item 2b, "Ratify
+as proposed")
+
+ONE WAY IN AND OUT. daftar had a way in or out for each thing it took or gave: a table of FHIR's and Darwin Core's fields
+read by one tool, Odoo's models read by another, a provider's spreadsheet by a third, a bank's statement by an asset's
+adapters, a scan's index by a script in an estate's kit, a page's table by the view. Each read its format, mapped its
+fields, named — or did not name — the act that knew what came in, and listed — or did not list — what it dropped. The
+crosswalk already said what a record is in the law's grammar, for the way out; a row that also says how its records
+come, and what act knows them, is read the other way by the same reader, so every way in and out is that one table and
+the one tool that reads it. A field's path names the statement it writes; what is read through beans, a position, a
+course's standing, cannot be written back from a field alone, and is said to be carried one way rather than guessed.
+
+THE ACCOUNT. digest.py's rule — every line of a source carried, pointed at, dropped with a reason, or the run fails — is
+the rule of every import: a value no field carries is listed, by its field and with how many records hold it, so the
+person who reads it can see what the crosswalk does not say, and argue with it.
+
+## core/law/formats.yaml: formats
+
+A FORMAT IS A SYNTAX, NEVER A MODEL. A CSV file, a JSON document, a database's table hold records; what the records mean
+is the crosswalk's, so one format serves every system that writes in it, and a new system needs a row of crosswalks.yaml,
+not a new reader. Each format's guard is kept with it, so every export has it: a cell a spreadsheet would run as a
+formula is written as text (found in the view's exports, 2026-10-10), an XML document that declares an entity is refused
+before it is parsed (the bank statements' adapters'), a database another process commits to is copied in steps. The
+formats no garden needs yet — a vCard, a mailbox, a Parquet table — are rows all the same, their vacancies declared, so
+a garden that brings the first one finds its place.
+
+## core/law/formats.yaml: readers
+
+WHERE A MAPPING CANNOT SAY IT. A path is one value to a listing and a chain of folders to the law; a folder's id is
+minted from its volume and its path by a convention every tool that reads the catalogue relies on; a provider's
+spreadsheet must have the columns it is read by. A reader is the code that says those things, named by the law so a
+crosswalk can say which one gives its records, and kept to what a mapping cannot say: the `file-tree` reader reads any
+listing of paths, so a disk's index, an archive's listing and an image's are one call.
+
+## core/law/formats.yaml: conversions
+
+A CLOSED TABLE. A field's value is read into a role and written back the same way: a moment as Exif writes it, a coding
+by its system's url, a value inside a form. Each conversion says how it is read back, or that it is not, so a round
+trip is proven or a field is honestly one-way. `named` finds the being a namespace names by a value — a camera by its
+serial — and leaves `unknown` where none is, listed for a person, who alone establishes an identity (class F); its
+namespace may be `given`, the one the import is told, because the namespace a garden names its devices' serials in is
+the garden's own, and the law cannot name it.
+
+## core/law/crosswalks.yaml: crosswalks[file-tree-folder]
+
+THE CATALOGUE'S SHAPE, AS LAW. The store's design ratified how a disk is daftar's statements (2026-10-18, "Ratify as
+proposed"): a volume held by its carrier, folders part of their parents and named by them, a file a holding of a
+content under its name, a content named by its BLAKE3 and measured. The four file-tree rows are that shape as the
+crosswalk of a listing, read by the `file-tree` reader; the catalogue's own importer, which wrote it by hand, is now a
+call of them, and its rows read back identical.
+
+## core/law/crosswalks.yaml: crosswalks[exif-image]
+
+(the operator chose photographs' metadata as the first foreign system, 2026-10-18: "Photos' EXIF")
+
+A PHOTOGRAPH'S CONTENT WAS PRODUCED BY A CAMERA. Exif says which camera, by its serial, through which lens, and when
+the shutter was released, with the fraction of a second and the offset where the camera wrote them; that is a
+`produce`, by the camera, of the content, through the lens, at the moment. A clock with no offset names no moment, so
+its day alone is kept. The hundreds of other tags are counted and not carried, until a garden needs one.
+
+## core/law/flows.yaml: flows[store-stated]
+
+A DOCUMENT'S LINES, KEPT IN A STORE. A bank's statement of a year holds tens of thousands of lines, each said by the
+bank's document; a bean can carry them (words-to-said) but not in those numbers, so a store keeps them, known by the
+document's word, one act for all it states.
+
+## core/law/flows.yaml: flows[store-derived]
+
+WHAT A TOOL DERIVES, KEPT IN A STORE. The catalogue's contents are named and measured from the scans that read them:
+a derive, kept in a store, as strong as its weakest reading. The first importer put it there with no row granting it;
+the import now asks the flow law before it writes, and this is the row it is granted by.
+
 ## core/law/profiles.yaml: orientations
 
 A DRAWING KEEPS THE FRAME OF WHAT IT DRAWS (2026-10-10, the direction design; the operator: "solve the right to left

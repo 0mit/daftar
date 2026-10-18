@@ -139,18 +139,6 @@ Commission." Modified or adapted versions must be marked as such.
   its `terms` stated (`mechanism_form`, `coefficient_form`). A garden adds its own through `registry_additions`.
 - **Licence:** the files are CC0 1.0; a row shipped later under other terms goes in a file of its own, one per licence.
 
-## crosswalk-fhir-r5-observation.tsv, crosswalk-dwc.tsv — another standard's records, carried into beans (step 11)
-
-- **Source:** the field names of HL7 FHIR R5's `Observation` resource (hl7.org/fhir/R5/observation.html; the
-  specification is published under CC0) and of Darwin Core's occurrence terms (dwc.tdwg.org/terms; CC BY 4.0,
-  Biodiversity Information Standards (TDWG)), and the UCUM codes of the units the law declares. Each row pairs one of
-  their fields with the entry path of `observations` or `located_at` that carries it; the pairings and the notes are
-  daftar's own.
-- **Licence:** the FHIR crosswalk is CC0, as FHIR is; the Darwin Core crosswalk is CC BY 4.0, as Darwin Core is, with
-  TDWG's attribution in NOTICE. The names they cite remain their publishers'.
-- **What the files are for:** `bin/crosswalk.py` reads them, and nothing else, to carry records in and back. A field
-  with no row is listed, never dropped; test/crosswalk.py proves a round trip equal field for field.
-
 ## units-<scheme>.tsv — a standard's codes of units, crossed into the law's units and kinds
 
 - **daftar's own.** Each row names one code of a standard's own list and the law's row it crosses to — a unit in UCUM,

@@ -41,6 +41,8 @@ bin/pass.py
 bin/held.py
 bin/store.py
 bin/run.py
+bin/import.py
+bin/export.py
 bin/rules.py
 bin/why.py
 bin/form.py

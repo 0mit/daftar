@@ -75,6 +75,8 @@ FORMS = 'forms.yaml'                                       # the forms part 12b 
                                                            # a settlement, a weighing, a channel
 VALUES = 'values.yaml'                                     # what a value is to a reader: the tree the widgets answer to
 CROSSWALKS = 'crosswalks.yaml'                             # a foreign system's records read from statements (P5.3)
+FORMATS_LAW = 'formats.yaml'                               # the formats statements come in and go out in, the readers
+                                                           # of a model's records, the conversions of a field (2.12)
 MEASURES = 'measures.yaml'                                 # the forms of a measure: a region, a repetition, a clause's
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
@@ -103,7 +105,8 @@ def shapes_of(spec):
 # line, a measure and the flow law under `columns` (their `forms` are the forms a qualifier holds).
 COLUMNED = (('systems.yaml', 'forms'), ('places.yaml', 'forms'), ('protocols.yaml', 'forms'), ('quantities.yaml', 'forms'),
             ('registries.yaml', 'forms'), (LINES, 'columns'), (MEASURES, 'columns'), ('flows.yaml', 'columns'),
-            (VALUES, 'columns'), (PROFILES, 'forms'))     # the profiles' tables (lenses, archetypes, orientations…) too
+            (VALUES, 'columns'), (PROFILES, 'forms'),     # the profiles' tables (lenses, archetypes, orientations…) too
+            (FORMATS_LAW, 'columns'))                     # the formats, the readers, the conversions
 
 
 def _columned(law_dir, std_dir):
@@ -228,6 +231,7 @@ class Law:
         self.methods, self.pass_metadata, self.flows_dropped = {}, {}, {}   # core/law/flows.yaml beside its rows
         self.garden_rows = []                               # (key, name, row) of each row a garden added (rule vacancy)
         self.garden_crosswalks = []                         # (where, row) of each crosswalk a garden's VOCAB.md adds
+        self.formats, self.readers, self.conversions = {}, {}, {}   # core/law/formats.yaml (2.12)
         self.families, self.tools = {}, {}                  # core/law/tools.yaml (v1 part 9)
         self.vacancy_reasons, self.vacancies, self.vacancies_dropped = [], [], []   # core/law/vacancies.yaml
         self.own = {}                                       # a garden's own systems, schemes and files (part 7)
@@ -291,6 +295,8 @@ class Law:
         law.crosswalks = {str(r['crosswalk']): r for r in listed(cw_law.get('crosswalks'))
                           if isinstance(r, dict) and 'crosswalk' in r}
         law.own_crosswalks()
+        fm = os.path.join(d, FORMATS_LAW) if os.path.isfile(os.path.join(d, FORMATS_LAW)) else os.path.join(LAW_DIR, FORMATS_LAW)
+        law._formats((read.data(fm) or {}) if os.path.isfile(fm) else {})
         for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies), (PROFILES, law._profiles)):
             put(read.data(os.path.join(d, name) if os.path.isfile(os.path.join(d, name)) else os.path.join(LAW_DIR, name)))
         return law
@@ -317,6 +323,16 @@ class Law:
                 continue
             self.crosswalks[name] = row
             self.garden_rows.append(('crosswalks', name, row))
+
+    def _formats(self, data):
+        """core/law/formats.yaml: each format, reader and conversion by its name, and each a table a vacancy or a role may
+        name (`table:formats`)."""
+        for table, key, into in (('formats', 'format', self.formats), ('readers', 'reader', self.readers),
+                                 ('conversions', 'conversion', self.conversions)):
+            for r in listed(data.get(table)):
+                if isinstance(r, dict) and r.get(key) is not None:
+                    into[str(r[key])] = r
+            self.tables[table] = list(into)
 
     def _tools(self, data):
         self.families = {str(f['family']): f for f in listed(data.get('families')) if isinstance(f, dict)}
@@ -811,10 +827,11 @@ class Law:
             verb, role = m.group(1), m.group(5)
             if verb not in self.verbs:
                 out.append((where, f"{p!r}: {verb} is no verb of the law"))
-            elif role not in roles and role not in ((self.verbs.get(verb) or {}).get('roles') or {}):
+            elif role not in roles and role not in verb_roles(verb) | {'while', 'why', 'note'}:
                 out.append((where, f"{p!r}: {role} is no role of {verb}"))
         for name, r in rows.items():
             where = f"crosswalk {name}"
+            out += self._carried_row_problems(where, r)
             for k in r:
                 if row_keys and k not in row_keys:
                     out.append((where, f"`{k}` is no key of a crosswalk ({', '.join(sorted(row_keys))})"))
@@ -863,16 +880,19 @@ class Law:
                 if 'exists' in spec and (spec['exists'] not in (True, 'true') or 'statements' not in spec
                                          or {'from', 'model'} & set(spec)):
                     out.append((fw, "`exists` is true, with `statements`, and reads nothing else: whether one is in force"))
-                bare = 'from' in spec and str(spec['from']) not in ('title', 'summary', 'bean') and '.' not in str(spec['from'])
+                frm = str(spec.get('from', ''))
+                own_role = record_verb is not None and 'from' in spec and frm not in ('title', 'summary', 'bean') and \
+                    '[' not in frm and '/' not in frm         # a role of the record's own statement, or a key inside it
                 if 'statements' in spec:
                     fverb = statements_ok(fw, spec['statements'], naming=True)
                     if fverb and 'from' in spec and str(spec['from']) not in verb_roles(fverb) | roles:
                         out.append((fw, f"`{spec['from']}` is no role of {fverb}"))
-                elif record_verb is not None and bare:
-                    if str(spec['from']) not in verb_roles(record_verb) | roles:
-                        out.append((fw, f"`{spec['from']}` is no role of {record_verb}"))
+                elif own_role:
+                    if frm.split('.')[0] not in verb_roles(record_verb) | roles | {'id', 'while', 'why', 'note'}:
+                        out.append((fw, f"`{frm}` is no role of {record_verb}"))
                 elif 'from' in spec:
                     path_ok(fw, spec['from'])
+                out += self._carried_field_problems(fw, r, fname, spec)
                 if 'model' in spec and str(spec['model']) not in same:
                     out.append((fw, f"names {spec['model']!r}, which no crosswalk of its series crosses"))
                 if ('inverse' in spec or 'chain' in spec) and 'model' not in spec:
@@ -973,6 +993,83 @@ class Law:
                         c = str(by[c].get('parent') or '')
                     if not (c in by and by[c].get('element')):
                         out.append((at, "a postable account says what it is: its element, or an ancestor's"))
+        return out
+
+    def _carried_row_problems(self, where, r):
+        """[(where, message)]: what a crosswalk says of how its records come and go (2.12, core/law/formats.yaml): its
+        formats and reader, the act its statements are known by, where they are kept, the forms its parts compose."""
+        out = []
+        fmts = [str(f) for f in listed(r.get('format'))]
+        for f in fmts:
+            if f not in self.formats:
+                out.append((where, f"`format`: {f!r} is no format of the law ({', '.join(self.formats)})"))
+        if r.get('reader') is not None:
+            rd = self.readers.get(str(r['reader']))
+            if rd is None:
+                out.append((where, f"`reader`: {r['reader']!r} is no reader of the law ({', '.join(self.readers)})"))
+            elif not fmts:
+                out.append((where, "a crosswalk read through a reader names the format its records come in"))
+            else:
+                for f in fmts:
+                    if f not in [str(x) for x in listed(rd.get('format'))]:
+                        out.append((where, f"the reader {r['reader']} reads no {f}"))
+        for k in ('records', 'act', 'compose', 'given'):
+            if r.get(k) is not None and not isinstance(r[k], dict):
+                out.append((where, f"`{k}` is a mapping"))
+        act = r.get('act')
+        if isinstance(act, dict):
+            if act.get('verb') not in self.knowing:
+                out.append((where, f"`act.verb` is a knowing act ({', '.join(self.knowing)}), not {act.get('verb')!r}"))
+            if act.get('per') is not None and act['per'] not in ('import', 'record'):
+                out.append((where, "`act.per` is `import` (one act for all it keeps) or `record` (an act a record)"))
+        if r.get('keep') is not None and r['keep'] not in ('store', 'bean'):
+            out.append((where, "`keep` is `store` or `bean`"))
+        if r.get('whole') is not None and str(r['whole']).lower() not in ('true', 'false'):
+            out.append((where, "`whole` is true or false"))
+        if r.get('self') is not None and r['self'] not in self.roles:
+            out.append((where, f"`self`: {r['self']!r} is no role"))
+        if (r.get('format') is None) != (r.get('act') is None):
+            out.append((where, "a crosswalk that says how its records come names both its `format` and its `act`"))
+        parts = {str(spec.get('part')) for spec in (r.get('fields') or {}).values()
+                 if isinstance(spec, dict) and spec.get('part') is not None}
+        for path, form in (r.get('compose') or {}).items():
+            want = set(re.findall(r'\{(\w+)\}', str(form)))
+            if not want:
+                out.append((f"{where} compose {path}", "a form names its parts in braces: `{crs};{lat},{lon}`"))
+            for w in sorted(want - parts):
+                out.append((f"{where} compose {path}", f"no field is the part `{w}`"))
+        return out
+
+    def _carried_field_problems(self, fw, r, fname, spec):
+        """[(where, message)]: a field's conversion, part, unit, the fields it takes roles from, its reason dropped."""
+        out = []
+        if 'as' in spec:
+            conv = spec['as']
+            names = [conv] if isinstance(conv, str) else [k for k in conv if k in self.conversions] \
+                if isinstance(conv, dict) else []
+            if len(names) != 1 or names[0] not in self.conversions:
+                out.append((fw, f"`as` names one conversion of the law ({', '.join(self.conversions)})"))
+            elif isinstance(conv, dict) and set(conv) - {names[0], 'hint', 'none'}:
+                out.append((fw, f"`as` holds its conversion and `hint`, `none`: not {', '.join(sorted(set(conv) - {names[0], 'hint', 'none'}))}"))
+        if 'part' in spec:
+            if str(spec.get('from')) not in {str(k) for k in (r.get('compose') or {})}:
+                out.append((fw, "a part is read into a value the row's `compose` gives the form of, by its `from`"))
+        if 'unit' in spec:
+            why = self.has('units', str(spec['unit']))
+            if why:
+                out.append((fw, f"`unit`: {why}"))
+        if 'with' in spec:
+            fields = r.get('fields') or {}
+            if not isinstance(spec['with'], dict) or not spec['with']:
+                out.append((fw, "`with` names, for each other role of the statement, the field that fills it"))
+            else:
+                for role, f in spec['with'].items():
+                    if role not in self.roles:
+                        out.append((fw, f"`with`: {role!r} is no role"))
+                    if str(f) not in fields:
+                        out.append((fw, f"`with`: {f!r} is no field of the row"))
+        if 'drop' in spec and ({'from', 'value'} & set(spec) or not str(spec['drop']).strip()):
+            out.append((fw, "a field dropped says why (`drop`), and is read into nothing"))
         return out
 
     def units_crosswalk_problems(self):

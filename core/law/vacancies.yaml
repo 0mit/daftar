@@ -268,6 +268,18 @@ vacancies:
     position: volt-scale
     reason: universal
     why: "a node's potential against its ground: the `potential` line's positions, held for the first circuit a garden reads node by node"
+  - at: "table:formats"
+    position: vcard
+    reason: universal
+    why: "an address book's cards, people and organisations with their names and ways to reach them: held for the first garden that takes its contacts in"
+  - at: "table:formats"
+    position: mbox
+    reason: universal
+    why: "a mailbox's messages, each a sender, recipients and a moment: held for the first garden that reads its mail as statements"
+  - at: "table:formats"
+    position: parquet
+    reason: universal
+    why: "the columnar table data tools exchange large ones in: held for the first store that gives its rows to one"
 dropped:
   - at: "owned_by.entry_one_of"
     position: contract
