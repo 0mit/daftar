@@ -442,6 +442,13 @@ class Carry:
                 verb, flt, role = parse_path(str(sp['from']))
                 one = {k: vs[0] for k, vs in flt.items()}
                 self._paths[f] = (verb, (verb, tuple(sorted(one.items()))), one, role)
+        self._named = {}                                   # a statement's group -> the roles fields of the row write in it
+        for f, (verb, key, one, role) in self._paths.items():
+            self._named.setdefault(key, set()).update({role} | set((self.fields[f].get('with') or {})))
+        if self.verb:
+            self._named[(self.verb, tuple(sorted(self.filters.items())))] = {
+                str(sp['from']).split('.')[0] for sp in self.fields.values() if isinstance(sp, dict) and 'from' in sp
+                and sp['from'] not in ('bean', 'title', 'summary')}
 
     # -------------------------------------------------------------------------------------------- the law's verbs
     def _row(self, verb):
@@ -643,6 +650,9 @@ class Carry:
                         del roles[role]
             if not any(k not in self.filters for k in roles):
                 continue
+            for role in (self._row(verb).get('required') or []):    # one a field writes, the record not holding it:
+                if role not in roles and role in self._named.get((verb, _f), ()):     # `unknown`, where nobody said
+                    roles[role] = 'unknown'
             sr = self._self_role(verb, roles)
             if sr:
                 roles[sr] = 'self'

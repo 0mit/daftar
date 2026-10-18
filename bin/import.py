@@ -371,6 +371,7 @@ class Import:
         db.execute("ATTACH ? AS io_src", (dmstore._uri(path, 'ro'),))
         try:
             tables, missed = form(db, 'io_src', **self.reader_args)
+            self._tables = tables
             for col, n in missed.items():
                 self.account.count[(col, 'not read by the reader')] += n
             for model, table in tables.items():
@@ -423,6 +424,17 @@ class Import:
                 db.execute(f'INSERT OR IGNORE INTO being (id) SELECT DISTINCT t."{bcol}" FROM {table} t')
         S._beings.clear()
         others = set()
+        for g in groups:                                    # a being another model's records hold: of that model's kind
+            for role, spec in g['roles'].items():
+                if spec[0] != 'col' or 'being' not in c._shapes(g['verb'], role):
+                    continue
+                for m2, t2 in (getattr(self, '_tables', None) or {}).items():
+                    c2 = self.carry.get(m2)
+                    if t2 == table or c2 is None or not c2.row.get('kind') or not c2._bean_field:
+                        continue
+                    with S.batch():
+                        db.execute(f'INSERT OR IGNORE INTO being (id, kind) SELECT DISTINCT t."{spec[1]}", ? FROM {table} t '
+                                   f'WHERE t."{spec[1]}" IN (SELECT "{c2._bean_field}" FROM {t2})', (c2.row['kind'],))
         for g in groups:
             for role, spec in list(g['roles'].items()) + [(k, ('const', v)) for k, v in g['filters'].items()]:
                 if spec[0] == 'col' and 'being' in c._shapes(g['verb'], role):
