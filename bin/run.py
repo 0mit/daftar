@@ -578,17 +578,28 @@ class Registry:
             self.S.detail(b, f'runs.{rid}', d)
 
     def ids(self, where='1', args=()):
-        """The runs whose columns match `where` — `1`, or `<column> = ?` joined by AND — oldest first."""
-        conds, it = [], iter(args)               # `<column> = ?` takes the next argument, `<column> = '<word>'` its word
+        """The runs whose columns match `where` — `1`, or conditions joined by AND, each `<column> = ?` or `<column> LIKE
+        ?` (as SQL's: `%` any run of characters, `_` one, ASCII letters in either case), `?` the next of `args` or a
+        `'<word>'` written in place — oldest first."""
+        conds, it = [], iter(args)
         for c in ([] if where.strip() == '1' else where.split(' AND ')):
-            col, _, val = c.strip().partition(' = ')
-            conds.append((col, next(it) if val == '?' else val.strip("'")))
+            m = re.match(r"^\s*(\w+)\s+(=|LIKE)\s+(\?|'[^']*')\s*$", c, re.I)
+            if not m:
+                raise Refused(f'no condition of the registry: {c!r} (`<column> = ?` or `<column> LIKE ?`)', 2)
+            col, op, val = m.group(1), m.group(2).upper(), m.group(3)
+            val = next(it) if val == '?' else val[1:-1]
+            if op == 'LIKE':
+                rx = re.compile('^' + ''.join('.*' if ch == '%' else '.' if ch == '_' else re.escape(ch)
+                                              for ch in str(val)) + '$', re.I | re.S)
+                conds.append((col, lambda x, rx=rx: x is not None and bool(rx.match(str(x)))))
+            else:
+                conds.append((col, lambda x, v=val: x == v))
         rows = []
         for being, key, value in self.S.db.execute("SELECT b.id, d.key, d.value FROM detail d JOIN being b ON "
                                                    "b.n = d.being WHERE d.key LIKE 'runs.%'"):
             d = json.loads(value)
             d['id'], d['being'] = key[5:], being
-            if all(d.get(c) == v for c, v in conds):
+            if all(ok(d.get(c)) for c, ok in conds):
                 rows.append(d)
         rows.sort(key=lambda d: (d.get('created') or 0, d['id']))
         for d in rows:
