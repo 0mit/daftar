@@ -251,6 +251,20 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.11** (2026-10-18, daftar v2.11.0, human-ratified rule-changes: runs into daftar; the tool family `run`) —
+  **every job a tool starts, a course on the standard walk, kept in the store `runs`.** MINOR: nothing a garden could
+  write under core 2.10 is refused.
+  - `bin/run.py` (`daftar run`): start, list, show, wait, stop, tail, adopt, find, export, progress, reconcile, setup;
+    a Python API (start, holder, task, begin, passes, Run). A run is held by (boot, pid, start ticks), in a freezer
+    cgroup of its own where there is one, stopped whole; one supervisor per run; keys as flocks; masking of secrets.
+  - Its registry is the store `runs` (core 2.10): a run's course a `be` on `walk-run`, each step a `move`, statements of
+    the being it acts on, known by the run's own `make`; what only the machine needs, that being's detail `runs.<run>`.
+    Kept with a rollback journal, readable by others: a page of another user reads it with read permission alone.
+  - `run setup` writes the walk `walk-run` into a garden's mappings (it asks first for the kind `procedure`), and checks
+    one already there against the standard's steps.
+  - bin/store.py: a store opened read-only (`readonly`), its relations' columns read from the file without the law; an
+    index on each relation's ids and on what names a statement, for a new relation.
+  - test/run.py. The third and last release of programme item 2.
 - **core 2.10** (2026-10-18, daftar v2.10.0, human-ratified rule-changes: the store; the pointer `store:<kind>:<id>`;
   the kinds `volume`, `folder`, `content`; `hold` takes `as`) — **what git cannot carry, kept as daftar's own
   statements; one universe of beans and rows.** MINOR: nothing a garden could write under core 2.9 is refused.

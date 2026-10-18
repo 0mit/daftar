@@ -5240,6 +5240,28 @@ into the rows its file holds; the save's entry says which copy the codes were re
 publisher states no terms of redistribution, and serves its structure as a spreadsheet anyone may fetch. A scheme
 whose provider publishes no machine-readable table (ISCED-F 2013, a PDF) stays shipped where its licence allows it.
 
+## core/law/tools.yaml: tools[run]
+
+(ratified by the operator, 2026-10-18: runs into daftar, "yes we move them to reduce the technical debt", the third of
+item 2's PRs; the run as a course on one walk, no new kind, his word of 2026-10-18 ~17:25)
+
+A JOB IS A COURSE. Nine faults came from tracking a tool's processes by hand: a wait on `pgrep -f` that matched its own
+shell, a `pkill -f` that killed the shell running it, a name matched by its beginning, a pid reused by another process,
+a scan started twice on one index. A run is held by its identity — boot, pid, start ticks — in a freezer cgroup of its
+own where the machine gives one, stopped whole and nothing else, keyed where it must be alone. And it needs no new kind:
+the law already says what a run is, a course — what it acts on placed on a walk, each step a move — so a run is that,
+on one walk every run shares. Its registry is a store, since a machine makes more runs than git should hold, and a
+notable run's statements go into its bean as they are.
+
+THE WALK IS THE TOOL'S, WRITTEN INTO EACH GARDEN. A release carries no garden's facts, so the walk's steps and reasons
+are the tool's own (`STEPS`), and `run setup` writes them as the garden's mapping, as the books' walks are written by
+theirs, and checks a mapping already there against them.
+
+## core/law/tools.yaml: families[run]
+
+(with tools[run]) The tools that start jobs are a family of their own: none reads the law, judges, writes the ledger by
+hand or reads it; they keep what runs, and where it stands.
+
 ## core/law/tools.yaml: tools[clock]
 
 (core 2.0)
