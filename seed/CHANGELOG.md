@@ -251,6 +251,19 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.14** (2026-10-19, daftar v2.14.0, human-ratified rule-change: the merge's order, "each side's order", the
+  carried fix of programme item 2b) — **a merge keeps a course's moves in the order they were made.** MINOR: nothing a
+  garden could write under core 2.13 is refused.
+  - MERGE.md §3: the merged statements are the base's in the base's order, then what each side added in the order that
+    side wrote it, the side whose additions' forms come first going first; a statement both added kept once. §4: each
+    key of a `details` both sides changed keeps the text a side wrote it in; a key written anew that would drop a
+    comment is refused (core/merge.py).
+  - bin/store.py: the check judges each store small enough whole, beside git, even beside a large one; the rules that
+    span stores by queries over them all. `Store.loading`: a large load makes its relations' indexes once, after the
+    rows are in, and a load cut short is healed when the store is next opened to write.
+  - bin/import.py: a crosswalk whose reader has a set form (the `file-tree` reader's, core/readers.py) runs inside the
+    store's engine, one INSERT … SELECT a statement — the same rows as record by record, many times faster.
+  - test/core_merge.py, test/store.py, test/io.py.
 - **core 2.13** (2026-10-19, daftar v2.13.0, human-ratified rule-changes: the design of programme item 2b, its second
   release — one table of readers, and the other ways in and out taken in) — **one reader a source, wherever it is
   read.** MINOR: nothing a garden could write under core 2.12 is refused.

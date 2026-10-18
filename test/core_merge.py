@@ -125,8 +125,21 @@ try:
     b = add(BASE, 'read: { by: cy, of: [y], at: "2026-09-21 09:30+03:30" }', 'pay: { id: y, by: cy, of: { count: "2", unit: XTS } }')
     out, _ = merge(BASE, a, b, 'order')
     s = stmts(out or '---\n---')
-    check("the order: the base's statements in the base's order, then what either side added, by its form",
-          s[:3] == stmts(BASE) and s[3:] == sorted(s[3:], key=lambda t: M.canon(read.loads(t)[0])), s)
+    first = sorted([['- say: { by: ben, of: [x], at: "2026-09-21 09:00+03:30" }', '- pay: { id: x, by: ben, of: { count: "1", unit: XTS } }'],
+                    ['- read: { by: cy, of: [y], at: "2026-09-21 09:30+03:30" }', '- pay: { id: y, by: cy, of: { count: "2", unit: XTS } }']],
+                   key=lambda blk: [M.canon(read.loads(t)[0]) for t in blk])
+    back, _ = merge(BASE, b, a, 'order-swapped')
+    check("the order: the base's statements in the base's order, then what each side added, in the order that side "
+          "wrote it — the side whose additions' forms come first going first, so the sides swapped give the same bytes",
+          s[:3] == stmts(BASE) and s[3:] == first[0] + first[1] and back == out, (s, back == out))
+    moves = ['move: { course: run-1, step: started, at: "2026-10-18T10:00:00+03:00" }',
+             'move: { course: run-1, step: running, at: "2026-10-18T10:00:01+03:00" }',
+             'move: { course: run-1, step: done, at: "2026-10-18T10:05:00+03:00" }']
+    a = add(BASE, *moves)
+    b = BASE.replace('note: kept', 'note: changed')
+    out, _ = merge(BASE, a, b, 'moves')
+    check("...a course's moves one side added stay in the order they were made, the other side changing only `details`",
+          out is not None and stmts(out)[3:] == ['- ' + m for m in moves] and 'note: changed' in out, out)
 
     # AN ID NAMES ONE STATEMENT
     a = BASE.replace('count: "10.00"', 'count: "11.00"').replace('\ndetails:', '\n  - say: { by: ada, of: [paid], at: "2026-09-22 10:00+03:30" }\ndetails:')
@@ -190,7 +203,11 @@ try:
           out is None and [p for p, *_ in said] == ['details.ledger.pages'], said)
     c = BASE.replace('  note: kept\n', '  note: kept   # said by ada\n')
     out, said = merge(c, c.replace('note: kept', 'note: changed'), c.replace('book: one', 'book: two'), 'details-comment')
-    check("...refused where `details` is written anew and a comment in it would be lost",
+    check("...each key of a `details` both sides changed keeps the text a side wrote it in: no comment is lost",
+          out is not None and 'note: changed   # said by ada' in out and 'book: two' in out, (out, said))
+    c = BASE.replace('  ledger: { book: one, pages: [1, 2] }\n', '  ledger: { book: one, pages: [1, 2] }   # by ada\n')
+    out, said = merge(c, c.replace('book: one', 'book: two'), c.replace('[1, 2]', '[1, 2, 3]'), 'details-comment-anew')
+    check("...refused where a key of `details` must be written anew and a comment in it would be lost",
           out is None and any('comment' in p for p, *_ in said), said)
 
     # THE BODY, LINE BY LINE

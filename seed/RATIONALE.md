@@ -4561,6 +4561,18 @@ out of the present tense, so it is not read as in force.
 The provenance/truth-status record and the guard that an `inferred` value may never auto-override an
 `asserted-by-human` one were **promoted into MODEL.md**, which is their owner. This section restated them.
 
+## doc:MERGE.md#4
+
+(ratified by the operator, 2026-10-19: "each side's order", with the `details` of a merge kept in its sides' own text)
+
+A COURSE IS AN ORDER, AND A SET HAS NONE. The statements merge as a set, and a set says nothing of order; the merge
+wrote what either side added sorted by form, which is deterministic and the same whichever side is ours, and it put a
+course's moves out of the order they were made — a move after the step it follows, a move after the run had stopped —
+so the gate refused the merged bean under rule `line` (2026-10-18, a session's close). Each side's additions keep the
+order that side wrote them in, and the two sides' additions are ordered by their own forms, so both invariants hold:
+the same bytes whichever side is ours, and the same bytes every time. The same merge wrote a `details` both sides
+changed anew at another width, hundreds of lines for a few dozen changed; each key now keeps the text a side wrote.
+
 ## doc:MERGE.md#6
 
 "JCS" WAS A CLAIM. The engine writes canonical JSON — sorted keys, no whitespace, normalised strings, dates and

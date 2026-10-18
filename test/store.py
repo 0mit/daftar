@@ -125,6 +125,21 @@ elif step == 'conflicts':
     store.UNION_ROWS = 0
     big = store.check([Store(path + '/cat.sqlite')])
     say(small=small, big=big)
+elif step == 'beside':
+    s = Store(path + '/cat.sqlite')
+    s.bulk('measure', [('c-1', {'of': 'c-1', 'as': 'mass', 'value': {'count': '3', 'unit': 'kg'}})], act='vol-a#scan-1',
+           beings=('of',), judge_every=0)          # a row no put would keep: only the engine's whole judging finds it
+    alone = store.check([s])
+    n = s.count() + s.db.execute('SELECT COUNT(*) FROM being').fetchone()[0]
+    b = Store(path + '/big.sqlite')
+    b.being('vol-b', 'volume')
+    b.put('vol-b', 'read', {'id': 'scan', 'by': 'nas', 'from': 'vol-b', 'at': '2026-10-18T10:00:00+03:00'})
+    b.beings([(f'd-b{i}', 'folder') for i in range(n + 5)])
+    b.bulk('part', [(f'd-b{i}', {'by': f'd-b{i}', 'of': 'vol-b'}) for i in range(n + 5)], act='vol-b#scan',
+           beings=('by', 'of'))
+    store.UNION_ROWS = n + 2
+    both = store.check([b, Store(path + '/cat.sqlite')])
+    say(alone=alone, both=both, n=n)
 elif step == 'export':
     s = Store(path + '/cat.sqlite')
     sts, act = s.export('d-1', by='session-t')
@@ -281,6 +296,13 @@ try:
                                                                          for r, w, m in f), f)
         check("...one id, two forms: a bean's statement and a row of its being", ok and any(
             r == 'form' and 'note-1#h1' in w for r, w, m in f), f)
+    j, r = probe('beside', S)
+    ok = j is not None
+    engine = [f for f in (j or {}).get('alone', []) if f[0] not in ('names', 'order', 'form', 'knowing', 'size')]
+    check("check beside a large store: a small one is still judged whole, beside git — what only the engine's own rules "
+          "find in it is found, and it is named in no note of what went unjudged",
+          ok and engine and all(f in [tuple(x) for x in j['both']] or list(f) in j['both'] for f in engine)
+          and not any(f[0] == 'size' and 'cat' in f[1] for f in j['both']), (j, r.out[-1500:]))
     grow.run('git', 'reset', '-q', '--hard', 'HEAD~2', cwd=G)
 
     # ---- between keepings

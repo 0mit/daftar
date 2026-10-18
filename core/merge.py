@@ -16,8 +16,10 @@ statements, a comment a rewritten key would drop — is refused: ours is left as
 person settles it.
 
 The result depends only on the three inputs: theirs merged into ours and ours into theirs give the same bytes, and a
-bean merged with itself is itself. Each kept statement, header key and body keeps its text as one side wrote it; the
-merged statements are the base's in the base's order, then those either side added, by their form.
+bean merged with itself is itself. Each kept statement, header key and body keeps its text as one side wrote it, and a
+`details` both sides changed keeps each of its keys as a side wrote it; the merged statements are the base's in the
+base's order, then what each side added, in the order that side wrote it — of two sides that both added, the one whose
+additions' forms come first goes first, and a statement both added is kept once, where it first stands.
 
     merge(base, ours, theirs, knowing) -> (text, report) | (None, [conflict])"""
 import collections
@@ -156,6 +158,7 @@ class Side:
             return
         if starts[0] > 1:                     # what stands above the first key travels with it
             starts[0] = 1
+        self.children = {}               # key -> {its child key: that child's text}, of a mapping written in a block
         for n, (k, v) in enumerate(pairs):
             lo, hi = starts[n], starts[n + 1] if n + 1 < len(pairs) else last
             text_k = '\n'.join(lines[lo:hi]) + '\n'
@@ -163,6 +166,19 @@ class Side:
             self.keys[k.value] = (fm[k.value], text_k)
             if k.value == 'statements':
                 self._statements(fm[k.value], v, lines, lo, hi, k.start_mark.line)
+            elif isinstance(v, yaml.MappingNode) and not v.flow_style and v.value:
+                kids, cs = {}, []
+                for ck, _cv in v.value:
+                    c = ck.start_mark.line
+                    while c - 1 > k.start_mark.line and self._loose(c - 1):
+                        c -= 1
+                    cs.append((ck.value, c))
+                for m, (ck, c) in enumerate(cs):
+                    e = cs[m + 1][1] if m + 1 < len(cs) else hi
+                    while e > c + 1 and not lines[e - 1].strip():
+                        e -= 1
+                    kids[ck] = '\n'.join(lines[c:e]) + '\n'
+                self.children[k.value] = kids
 
     def _statements(self, value, node, lines, lo, hi, key_line):
         values = value if isinstance(value, list) else []
@@ -196,6 +212,37 @@ class Side:
 
     def text(self, key):
         return self.keys[key][1] if key in self.keys else None
+
+    def child(self, key, sub):
+        """The text of one key of a mapping the header holds (`details`), as this side wrote it, or None."""
+        return (self.children.get(key) or {}).get(sub)
+
+
+def compose(key, val, sides):
+    """A mapping written key by key, each child in the text a side wrote it in where that side holds it so — the side
+    that changed it, else the least, as `pick` chooses — and only a child no side wrote written anew; None where the
+    text so made does not read back as the value."""
+    if not isinstance(val, dict) or not val:
+        return None
+    parts = [f"{key}:\n"]
+    for sub, v in val.items():
+        texts = []
+        for side, x in sides:
+            same = x is not MISSING and isinstance(x, dict) and sub in x and canon(x[sub]) == canon(v)
+            texts.append(side.child(key, sub) if same else None)
+        t = pick(*texts)
+        if t is None:
+            if any(has_comment(side.child(key, sub) or '') for side, _x in sides):
+                return None                                  # written anew, it would lose a comment: the caller refuses
+            t = ''.join('  ' + ln + '\n' if ln else '\n'
+                        for ln in _blocked({sub: v}, block).rstrip('\n').split('\n'))
+        parts.append(t)
+    text = ''.join(parts)
+    try:
+        back = read.loads(text, 'a key written again')
+    except read.Unread:
+        return None
+    return text if isinstance(back, dict) and canon(back.get(key)) == canon(val) else None
 
 
 def three(o, a, b):
@@ -362,6 +409,10 @@ def merge(base, ours, theirs, knowing):
             continue
         same = lambda x: x is not MISSING and canon(x) == canon(val)
         t = pick(O.text(key) if same(o) else None, A.text(key) if same(a) else None, B.text(key) if same(b) else None)
+        if t is None and key == 'details':                   # each key of it as a side wrote it, where one did
+            t = compose(key, val, ((O, o), (A, a), (B, b)))
+            if t is not None:
+                report['keys composed of the sides\' own text'] += 1
         if t is None:                                        # no side wrote this value: it is written anew
             if any(has_comment(s.text(key) or '') for s in (A, B)):
                 conflict(f"{key} (written anew, a comment in it would be lost)", A.text(key) or MISSING,
@@ -385,8 +436,20 @@ def merge(base, ours, theirs, knowing):
         n = seen[it.form]
         seen[it.form] += 1
         merged.append((it, pick(it.text, text_of(nth(A, it.form, n)), text_of(nth(B, it.form, n)))))
-    for f in sorted(f for f in add if add[f]):               # then what either side added, by its form
-        for n in range(cO[f], cO[f] + add[f]):
+    def additions(side):                                     # (form, which of its kind) of each a side added, in its order
+        out, cnt = [], collections.Counter()
+        for i in side.items:
+            cnt[i.form] += 1
+            if cnt[i.form] > cO[i.form]:
+                out.append((i.form, cnt[i.form] - 1))
+        return out
+    blocks = sorted((b for b in (additions(A), additions(B)) if b), key=lambda b: [f for f, _n in b])
+    placed = set()
+    for block_ in blocks:                                    # then what each side added, in the order it wrote it
+        for f, n in block_:
+            if (f, n) in placed:
+                continue
+            placed.add((f, n))
             a, b = nth(A, f, n), nth(B, f, n)
             merged.append((a or b, pick(None, text_of(a), text_of(b))))
     report['statements'] = len(merged)
