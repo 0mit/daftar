@@ -197,8 +197,9 @@ I.source(sys.argv[1], volume='vol-1', root=sys.argv[3])
 I.done()
 pa = [r for v, r, _a in S.get('c-' + sys.argv[4][:24]) if v == 'produce']
 pb = [r for v, r, _a in S.get('c-' + sys.argv[5][:24]) if v == 'produce']
+pn = [r for v, r, _a in S.get('c-' + 'd' * 24) if v == 'produce']
 gone = S.db.execute("SELECT being, why FROM gone").fetchall()
-print(json.dumps({'a': pa, 'b': pb, 'gone': gone, 'lines': I.account.lines(each=False)}, default=str))
+print(json.dumps({'a': pa, 'b': pb, 'n': pn, 'gone': gone, 'lines': I.account.lines(each=False)}, default=str))
 '''
 
 READERS = r'''
@@ -301,7 +302,8 @@ try:
     db.executemany("INSERT INTO entry VALUES (?, ?, ?, ?, ?)", [
         (b'Photos', 'd', None, 1, None), (b'Photos/2026', 'd', None, 1, None),
         (b'Photos/2026/a.cr2', 'f', 3, 1, B3A), (b'Photos/2026/IMG\xff.jpg', 'f', 0, 1, B3B),
-        (b'Photos/2026/b.jpg', 'f', 5, 1, B3C), (b'Photos/copy-of-a.cr2', 'f', 3, 1, B3A),
+        (b'Photos/2026/b.jpg', 'f', 5, 1, B3C), (b'Photos/2026/phone.jpg', 'f', 7, 1, 'd' * 64),
+        (b'Photos/copy-of-a.cr2', 'f', 3, 1, B3A),
         (b'notes.txt', 'f', 9, 1, None), (b'link', 'l', None, 1, None)])
     db.commit()
     db.close()
@@ -326,8 +328,8 @@ try:
                   for v, rr, a in j['c'])
           and len([1 for v, rr, _a in j['c'] if v == 'name']) == 1, j and j['c'])
     check("...a file whose content nobody read holds `unknown`; a link is no file; what the reader does not read counted",
-          ok and ['content', 3] in j['beings'] and ['folder', 2] in j['beings']
-          and any('mtime_ns × 8' in ln for ln in j['lines']), j)
+          ok and ['content', 4] in j['beings'] and ['folder', 2] in j['beings']
+          and any('mtime_ns × 9' in ln for ln in j['lines']), j)
     rows1 = j['rows'] if ok else -1
 
     # ---- set-wise against record by record
@@ -383,7 +385,10 @@ try:
                     "ExifIFD:ISO": 1600},
                    {"SourceFile": os.path.join(vroot, 'Photos/2026/b.jpg'), "IFD0:Make": "Maker",
                     "IFD0:Model": "Body Two", "ExifIFD:SerialNumber": "B200", "ExifIFD:LensSerialNumber": "0000000000",
-                    "Composite:SubSecDateTimeOriginal": "2025:01:02 03:04:05"}], fh)
+                    "Composite:SubSecDateTimeOriginal": "2025:01:02 03:04:05"},
+                   {"SourceFile": os.path.join(vroot, 'Photos/2026/phone.jpg'),
+                    "IFD0:Model": "a phone", "Composite:SubSecDateTimeOriginal": "2015:11:03 12:05:12+01:00"},
+                   {"SourceFile": os.path.join(vroot, 'notes.txt'), "File:FileType": "TXT"}], fh)
     j, r = py(EXIF, exif, '2026-10-18T13:00:00+03:00', vroot, B3A, B3C)
     ok = j is not None
     check("exif: a photograph's content produced by the camera its serial names, through its lens, at the moment the "
@@ -396,6 +401,8 @@ try:
           and any('B200' in ln and 'Body Two' in ln for ln in j['lines'])
           and any('kept to its day' in ln for ln in j['lines']), j)
     check("...every other tag counted as not carried", ok and any('ExifIFD:ISO × 1' in ln for ln in j['lines']), j)
+    check("...a picture that states no camera is produced by `unknown`, at its moment; a file of no picture says nothing",
+          ok and [(r2.get('by'), r2.get('at')) for r2 in j['n']] == [('unknown', '2015-11-03T12:05:12+01:00')], j)
     write('beans/camera-2.md', doc('camera-2', 'host', 'say: { by: sam, at: now }',
                                    'name: { by: device-serial, of: self, as: "B200" }'))
     r = save('a second camera, named by its serial', '- action: wrote [[camera-2]]')
