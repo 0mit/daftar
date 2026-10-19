@@ -220,6 +220,56 @@ def runs_of(L, C, folder, hold=None):
     return gs
 
 
+def classes_of(L, C, n, said=None):
+    """[(scheme, code, source, through)] of one being of the store (a folder or a content), for each class scheme the
+    garden holds: said of it; else inherited from its nearest whole up `part` — for a content, through each folder
+    that holds it — unless a nearer code is said or a whole on the way is set apart by a pattern its name fits; else
+    suggested by the patterns its own name or names fit. Read, never written."""
+    said = said_codes() if said is None else said
+    name, parent, _kids = C.tree()
+    kind = C.db.execute('SELECT kind FROM being WHERE n = ?', (n,)).fetchone()
+    kind = kind[0] if kind else None
+    names = [name.get(n, '')] if kind in ('folder', 'volume') else \
+        [text(nm) for (nm,) in C.db.execute("SELECT t_as FROM v_hold WHERE b_of = ? AND t_as IS NOT NULL", (n,))]
+    starts = [n] if kind in ('folder', 'volume') else \
+        [by for (by,) in C.db.execute("SELECT b_by FROM v_hold WHERE b_of = ? AND t_as IS NOT NULL", (n,))]
+    out = []
+    reads = 'name.as' if kind in ('folder', 'volume') else 'as'
+    sugg = [c for nm in names for r in [L.fits(nm, reads=reads)[0]] if r for c in r.suggests]
+    apart_own = [c for c in sugg if c in L.apart]
+    for scheme in sorted(L.classes):
+        own = [c for c in said.get(C.id_of(n)) or [] if c.split(':', 1)[0] == scheme]
+        if own:
+            out += [(scheme, c, 'said', C.id_of(n)) for c in own]
+            continue
+        if apart_own and scheme != apart_own[0].split(':', 1)[0]:
+            out.append((scheme, None, f"set apart: {', '.join(apart_own)}", C.id_of(n)))
+            continue
+        got = []
+        for f in starts if kind not in ('folder', 'volume') else [parent.get(n)]:
+            hops = 0
+            while f is not None and hops < 4096:
+                hops += 1
+                bid = C.id_of(f)
+                codes = [c for c in said.get(bid) or [] if c.split(':', 1)[0] == scheme]
+                if codes:
+                    got += [(scheme, c, 'inherited', bid) for c in codes]
+                    break
+                r = L.fits(name.get(f, ''), reads='name.as')[0]
+                if r and any(c in L.apart for c in r.suggests):
+                    got.append((scheme, None, f"set apart: inside {name.get(f, '?')} ({', '.join(r.suggests)})", bid))
+                    break
+                f = parent.get(f)
+        got = [g for g in got if g[1]] or got
+        if got:
+            out += sorted(set(got), key=str)
+            continue
+        mine = [c for c in sugg if c.split(':', 1)[0] == scheme]
+        if mine:
+            out += [(scheme, c, 'suggested', C.id_of(n)) for c in sorted(set(mine))]
+    return out
+
+
 def cmd_of(L, C, bid):
     """A folder's runs of names, each in its line; a content's places, and the run it is one of in each."""
     n = C.n_of(bid)
@@ -231,11 +281,15 @@ def cmd_of(L, C, bid):
         gs = runs_of(L, C, n)
         W = Writers(C, C.made({c for g in gs for c in g['contents'] if c}))
         print(f"{bid} ({kind}): {sum(len(g['members']) for g in gs):,} files in {len(gs):,} groups")
+        for scheme, code, source, through in classes_of(L, C, n):
+            print(f"  class {scheme}: {code or '—'} ({source}{'' if through == bid else ' from ' + str(through)})")
         for g in sorted(gs, key=lambda g: -len(g['members'])):
             print(f"  {groupings.line(g, fields, W.table())}" + (f"   [{g['code']}]" if g['code'] else ''))
         return 0
     rows = C.db.execute("SELECT h.b_by, h.t_as FROM v_hold h WHERE h.b_of = ? AND h.t_as IS NOT NULL", (n,)).fetchall()
     print(f"{bid} ({kind}): held under {len(rows):,} names")
+    for scheme, code, source, through in classes_of(L, C, n):
+        print(f"  class {scheme}: {code or '—'} ({source}{'' if through == bid else ' from ' + str(through)})")
     name, parent, _kids = C.tree()
     for by, nm in rows[:20]:
         gs = runs_of(L, C, by)

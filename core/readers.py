@@ -90,19 +90,21 @@ def copies(records, volume, known=None, ref=None, carrier=None, **_):
                      at=rec.at, model='copy')
 
 
-def exiftool(records, volume, root, find=None, **_):
+def exiftool(records, volume, root, find=None, model='image', **_):
     """exiftool's records, each file's tags and the content its place holds (formats.yaml, reader `exiftool`): `find`
-    (volume, folder id, name) -> the content held there, or None."""
+    (volume, folder id, name) -> the content held there, or None. Each record is of the crosswalk's model (`image`, or
+    `movie` for a video's header); `SourceFile`, which it is found by, is the reader's own and no field of it."""
     root = os.path.abspath(root)
     for rec in records:
         src = str(rec.get('SourceFile', ''))
         rel = os.path.relpath(os.path.abspath(src), root)
+        out = Record({k: v for k, v in rec.items() if k != 'SourceFile'}, at=rec.at, model=model)
         if rel.startswith('..'):
-            yield Record(rec, at=rec.at, model='image')
+            out['SourceFile'] = src                     # outside the root: kept, and listed as not carried
+            yield out
             continue
         parent, _, name = os.fsencode(rel).rpartition(b'/')
         holder = folder_id(volume, parent) if parent else volume
-        out = Record(rec, at=rec.at, model='image')
         c = find(holder, escape(name)) if find else None
         if c:
             out['content'] = c

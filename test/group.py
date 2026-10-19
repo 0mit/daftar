@@ -392,6 +392,44 @@ print('built')
     check("group: `line` — any list of names in the lines of the grouping `names`, what the gate's replies print",
           rc == 0 and 'hold-0001–0007 · 4 · 3 missing' in out, out[-600:])
     write('extracts/names.tsv', keep)
+
+    # ---- accounting: a statement's lines grouped by the pattern of their words (the grouping `moves`)
+    G2 = os.path.join(T, 'books')
+    r = grow.garden(rel, G2, 'sam', '--profile', 'accounting', '--profile', 'knowledge')
+    check("moves: a garden that keeps accounts, grown", r.returncode == 0, r.out[-600:])
+    G1, G = G, G2
+    write('VOCAB.md', """---
+profiles: [accounting, knowledge]
+schemes:
+  - { scheme: merchants, classifies: "the words a bank writes for a merchant", holding: extract, licence: CC0-1.0, publisher: the gardener, url: "https://example.org/merchants", levels: [ { level: pattern } ], neighbours: none, sources: extracts/merchants.tsv, form: pattern }
+  - { scheme: home, classifies: "where Sam's money goes", holding: extract, licence: CC0-1.0, publisher: the gardener, url: "https://example.org/home", levels: [ { level: plan }, { level: account } ], neighbours: none, sources: extracts/home.tsv }
+files:
+  - { registry: merchants, file: extracts/merchants.tsv, key: code }
+  - { registry: home, file: extracts/home.tsv, key: code }
+---
+# the garden's own rows
+""")
+    write('extracts/merchants.tsv', 'code\tlevel\tname\ttemplate\treads\tsuggests\tgrouping\n'
+                                    'migros\tpattern\ta supermarket\'s branch\tMIGROS {number:4} {word}\tnote\thome:food\tmoves\n'
+                                    'fuel\tpattern\ta fuel station\tSHELL {counter:4}\tnote\thome:car\tmoves\n')
+    write('extracts/home.tsv', 'code\tlevel\tparent\tname\nspend\tplan\t\twhere it goes\nfood\taccount\tspend\tfood\n'
+                               'car\taccount\tspend\tthe car\n')
+    lines = [('MIGROS 1234 ISTANBUL', '12.50'), ('MIGROS 5678 ANKARA', '30.00'), ('SHELL 0001', '900.00'),
+             ('SHELL 0002', '850.00'), ('NETFLIX.COM', '199.99'), ('MIGROS 1234 ISTANBUL', '7.25')]
+    bean('statement-sept', 'document', 'a bank statement, September', 'read: { by: sam, at: now }',
+         *[f'pay: {{ id: line-{i:03d}, by: sam, of: {{ count: "{amt}", unit: TRY }}, at: "2026-09-{i:02d}", note: "{w}" }}'
+           for i, (w, amt) in enumerate(lines, 1)])
+    found = gate()
+    check("moves: a statement's lines and a scheme of merchants' words pass the gate", not found, found[:4])
+    rc, out = reading('moves', 'what: "the lines of one merchant"\nsteps:\n'
+                               '  - { id: statements, op: select, kind: document }\n'
+                               '  - { id: lines, op: select, of: statements, entries: pay }\n'
+                               '  - { id: merchants, op: fit, of: lines, path: note }\n')
+    check("moves: accounting's category of moves as a grouping — a supermarket's lines in one group (its branches' "
+          "words a slot), a fuel station's in another with its counter, the rest each by its shape",
+          rc == 0 and 'MIGROS {number:4} {word}: 3' in out and 'SHELL 0001–0002: 2' in out and 'NETFLIX.COM: 1' in out,
+          out[-1200:])
+    G = G1
 finally:
     shutil.rmtree(T, ignore_errors=True)
 
