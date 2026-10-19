@@ -21,7 +21,7 @@ Ask the person only for what you cannot know:
 Requires Python 3 and PyYAML (`pip install PyYAML`). Nothing else — but where a garden writes a name of a namespace
 whose check python-stdnum makes (`ror`, `orcid`, `gs1`, `tr-tckn`): then `pip install python-stdnum` too, or the gate
 refuses that name as one it cannot check here; `pip install blake3` where a garden takes the storage profile and has no `b3sum` (a dataset is named by its manifest's
-BLAKE3); and `pip install openpyxl` where `bin/fetch.py` reads a provider's
+BLAKE3), and `pip install libarchive-c blake3` to read its archives as volumes; and `pip install openpyxl` where `bin/fetch.py` reads a provider's
 spreadsheet (ISCO-08, from the ILO). Nothing here contacts any service but the ones you ask it to: `bin/fetch.py`
 the provider of a table, `bin/clock.py` your machine's time servers.
 

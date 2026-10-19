@@ -251,6 +251,12 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v2.20.2** (2026-10-20, code alone, core 2.20) — assets/storage/bin/container.py: an archive or a cabinet
+  read as a volume — its members listed and hashed by BLAKE3 as they stream, never unpacked, into an index of a scan's
+  shape that `file-tree` reads with the container's content as its carrier; a passphrase on standard input from a
+  pipe, never an argument; an encrypted member waits for it (exit 3); a path that climbs out kept by its name and said.
+  Through python-libarchive-c (zip with ZipCrypto and AES, tar, 7z, rar 4, cab, iso 9660). test/storage.py.
+
 - **daftar v2.20.1** (2026-10-20, code alone, core 2.20) — assets/storage/bin/storage.py `keepings`: a folder's name
   lends its tree only a code that sets apart (a program's tree), as `inherit` reads it; a media class is read of a
   file's own name. A folder named `camera` made a security camera's recordings a phone's captured video.

@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install PyYAML reuse python-stdnum openpyxl blake3
+      - run: pip install PyYAML reuse python-stdnum openpyxl blake3 libarchive-c
       - run: git config --global user.name ci && git config --global user.email ci@localhost
       - name: every document parses
         run: python3 bin/safe.py

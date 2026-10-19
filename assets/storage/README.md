@@ -53,5 +53,16 @@ or stopped), of the being it fills, needing the dataset it is to hold and meetin
 whole there. Its work is done by runs (`daftar run`); the course outlives them, and a page shows its step and how far
 it has come.
 
-Dependencies: none beyond the release's. A container's reader (an archive or an image read as a volume) needs
-`python-libarchive-c` and, for encrypted 7z and rar5, 7-Zip; it is not in this release yet.
+## Containers
+
+    python3 assets/storage/bin/container.py list <archive> --index <out.sqlite> [--passphrase-stdin]
+
+An archive or a cabinet (zip, with ZipCrypto and AES; tar and its compressions; 7z; rar 4; cab; iso 9660) is read as
+a volume: its members listed and each hashed by BLAKE3 as it streams, never unpacked to disk, into an index of the
+shape a scan writes, which `daftar import file-tree` reads with the container's content as the volume's carrier. A
+passphrase comes on standard input from a pipe — a wallet's query — never on a command line or in a file; a member
+that needs one none was given for is listed without its digest, and the exit code 3 says so. A path that climbs out of
+the container is kept by its name alone, and said.
+
+Dependencies: none beyond the release's for the readings; `python-libarchive-c` and `blake3` (pip) for a container,
+and 7-Zip for an encrypted 7z or a rar 5.
