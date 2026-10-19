@@ -122,6 +122,40 @@ out['tidy'] = [(r.model, r.get('id'), r.get('folder'), formats.escape(r.get('nam
                if r.model in ('folder', 'copy')]
 out['tidy_want'] = [['folder', formats.folder_id('arch', b'Edited'), None, 'Edited'],
                     ['copy', None, formats.folder_id('arch', b'Edited'), 'x.mp4']]
+files = [(b'b/x.jpg', 'a' * 64, 3), (b'a\xff%.txt', None, 0), (b'b/c/y.cr2', 'c' * 64, 7)]
+man = formats.manifest(files)
+out['sums'] = man.decode()
+out['sums_back'] = [(r['type'], formats.escape(r['path']), r.get('hash')) for r in formats.read('checksums', man)]
+out['sums_same'] = formats.manifest(reversed(files)) == man
+def sums_refused(text):
+    try:
+        list(formats.read('checksums', text.encode()))
+    except formats.Refused as e:
+        return str(e)
+out['sums_b3esc'] = sums_refused('\\' + 'a' * 64 + '  x\\ny\n')
+out['sums_up'] = sums_refused('a' * 64 + '  ../x\n')
+out['sums_nohash'] = (lambda: formats.write('checksums', [{'path': b'x', 'size': 3}]))
+try:
+    out['sums_nohash']()
+    out['sums_nohash'] = None
+except formats.Refused as e:
+    out['sums_nohash'] = str(e)
+import shutil, subprocess
+if shutil.which('b3sum'):                       # a manifest checked by b3sum itself, and its name its BLAKE3
+    d = sys.argv[1] + '/tree'
+    os.makedirs(d + '/sub', exist_ok=True)
+    for p, data in (('one.txt', b'abc'), ('sub/two.txt', b''), ('sub/three.bin', b'\x00' * 9)):
+        open(os.path.join(d, p), 'wb').write(data)
+    got = {}
+    for p in ('one.txt', 'sub/two.txt', 'sub/three.bin'):
+        got[p] = subprocess.run(['b3sum', '--no-names', p], cwd=d, capture_output=True, text=True).stdout.strip()
+    m = formats.manifest([(p.encode(), h, os.path.getsize(os.path.join(d, p))) for p, h in got.items()])
+    open(sys.argv[1] + '/tree.sums', 'wb').write(m)
+    chk = subprocess.run(['b3sum', '--check', sys.argv[1] + '/tree.sums'], cwd=d, capture_output=True, text=True)
+    name = subprocess.run(['b3sum', '--no-names', sys.argv[1] + '/tree.sums'], capture_output=True, text=True).stdout.strip()
+    out['b3sum'] = [chk.returncode, chk.stdout.count(': OK'), formats.blake3_hex(m) == name]
+else:
+    out['b3sum'] = 'none here'
 print(json.dumps(out, default=str))
 '''
 
@@ -157,12 +191,12 @@ db.commit(); db.close()
 open(d + '/v2.jsonl', 'w').write(''.join(json.dumps(r) + '\n' for r in rows))
 open(d + '/v2.csv', 'w').write('path,type,size,hash\n' + ''.join(
     f"{r['path']},{r['type']},{r.get('size', '')},{r.get('hash', '')}\n" for r in rows))
-def load(src, out, setwise=True):
+def load(src, out, setwise=True, fmt=None):
     S = store.Store(out, root='.')
     I = imp.Import('.', 'file-tree', keep='store', store=S, setwise=setwise,
                    acts={'derive': {'in': 'nas', 'by': 'nas', 'at': '2026-10-18T12:00:00+03:00'}})
     with S.loading():
-        I.source(src, volume='vol-2', carrier='disk-1', act={'in': 'vol-2', 'id': 'scan', 'by': 'nas', 'from': 'vol-2',
+        I.source(src, fmt=fmt, volume='vol-2', carrier='disk-1', act={'in': 'vol-2', 'id': 'scan', 'by': 'nas', 'from': 'vol-2',
                  'at': '2026-10-18T11:00:00+03:00', 'through': 'scan (test)'})
         I.done()
     return S
@@ -178,7 +212,16 @@ def dump(S):
 a, b = load(d + '/v2.sqlite', d + '/set.sqlite'), load(d + '/v2.jsonl', d + '/each.sqlite', setwise=False)
 c, e = load(d + '/v2.jsonl', d + '/set-jsonl.sqlite'), load(d + '/v2.csv', d + '/set-csv.sqlite')
 x, y, z, t = dump(a), dump(b), dump(c), dump(e)
+from core import formats
+rows3 = [r for r in rows if r['type'] == 'd' or r.get('hash')]
+db = sqlite3.connect(d + '/v3.sqlite')
+db.execute("CREATE TABLE entry (path BLOB, type TEXT, size INTEGER, hash TEXT)")
+db.executemany("INSERT INTO entry VALUES (?, ?, ?, ?)", [(r['path'].encode(), r['type'], r.get('size'), r.get('hash')) for r in rows3])
+db.commit(); db.close()
+open(d + '/v3.sums', 'wb').write(formats.manifest([(r['path'], r['hash'], r.get('size')) for r in rows3 if r['type'] == 'f']))
+u, w = dump(load(d + '/v3.sqlite', d + '/sq3.sqlite')), dump(load(d + '/v3.sums', d + '/sums3.sqlite', setwise=False, fmt='checksums'))
 print(json.dumps({'same': x == y, 'text': z == x and t == x, 'rows': {k: len(v) for k, v in x.items()},
+                  'sums': bool(w.get('hold')) and all(u.get(k) == w.get(k) for k in ('hold', 'part', 'name', 'being')),
                   'diff': [k for k in set(x) | set(y) | set(z) | set(t) if not (x.get(k) == y.get(k) == z.get(k) == t.get(k))],
                   'indexes': a.db.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND sql IS NOT NULL").fetchone()[0]
                              == b.db.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND sql IS NOT NULL").fetchone()[0]}))
@@ -324,6 +367,21 @@ try:
     check("copies: a destination written with a `.` folder is the folder it names (`Edited/./x.mp4` is held by `Edited`)",
           ok and [list(x) for x in j['tidy']] == j['tidy_want'], j and (j.get('tidy'), j.get('tidy_want')))
 
+    check("checksums: a manifest's lines sorted by their paths as written, byte by byte, a name in bytes `escaped`, the "
+          "digest of empty bytes for an empty file; the same files in any order give the same bytes",
+          ok and j['sums'] == (B3B + '  a%FF%25.txt\n' + 'c' * 64 + '  b/c/y.cr2\n' + 'a' * 64 + '  b/x.jpg\n')
+          and j['sums_same'], j and j.get('sums'))
+    check("...read back as a whole tree: each file with its digest, the folders of its path before it, each once",
+          ok and [tuple(x) for x in j['sums_back']] == [('f', 'a%FF%25.txt', B3B), ('d', 'b', None),
+                                                       ('d', 'b/c', None), ('f', 'b/c/y.cr2', 'c' * 64),
+                                                       ('f', 'b/x.jpg', 'a' * 64)], j and j.get('sums_back'))
+    check("...a line of b3sum's own escaping, a path that climbs, and a file with no digest are refused, never guessed",
+          ok and j['sums_b3esc'] and 'no checksum line' in j['sums_b3esc'] and j['sums_up'] and 'relative' in j['sums_up']
+          and j['sums_nohash'] and 'no digest' in j['sums_nohash'], j)
+    check("...a tree's manifest is checked by b3sum itself, file by file, and its BLAKE3 — the dataset's name — is "
+          "b3sum's of the manifest's bytes", ok and (j['b3sum'] == 'none here' or j['b3sum'] == [0, 3, True]),
+          j and j.get('b3sum'))
+
     # ---- file-tree
     idx = os.path.join(T, 'vol-1.sqlite')
     db = sqlite3.connect(idx)
@@ -368,6 +426,8 @@ try:
           j is not None and j['same'] and j['indexes'] and j['rows'].get('hold', 0) == 6 and j['rows'].get('measure') == 2, (j, r.out[-1500:]))
     check("...and the same listing in text — JSON lines, a CSV — read once into a table and imported set-wise gives the "
           "same rows again", j is not None and j['text'], j and j.get('diff'))
+    check("...and a tree's manifest (`checksums`) imported through `file-tree` is the tree its index is: the same "
+          "beings, folders, names and holdings", j is not None and j['sums'], j)
 
     # ---- again
     j, r = py(TREE, idx, 'scan', '2026-10-18T11:00:00+03:00', B3A)
