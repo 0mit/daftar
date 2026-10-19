@@ -195,12 +195,21 @@ elif step == 'here':
     s = store.open_store('t', root='.')
     s.being('c-1', 'content')
     s.put('c-1', 'make', {'id': 'm', 'by': 'nas', 'at': '2026-10-18T12:00:00+03:00'})
-    say(kept={k: [v[0], v[2]] for k, v in kept.items()}, path=s.path)
+    s.being('vol-t', 'volume', 'the second disk')
+    s.being('vol-u', 'volume')
+    open('reading.yaml', 'w').write('what: "the volume titled the second disk"\nsteps:\n'
+                                    '  - { id: v, op: select, kind: volume, store: t, where: [ { path: title, "=": "the second disk" } ] }\n')
+    titled = subprocess.run([sys.executable, 'bin/reckon.py', '--ad-hoc', 'reading.yaml'], capture_output=True, text=True).stdout
+    sys.path.insert(0, sys.argv[3])
+    import view_model as vm
+    vm.ROOT = os.path.abspath('.')
+    say(kept={k: [v[0], v[2]] for k, v in kept.items()}, path=s.path, titled=titled, fm=vm.stored_fm('vol-t'),
+        none=vm.stored_fm('vol-nowhere'), made=vm.stored_fm('c-1'))
 '''
 
 
 def probe(step, path, env=None):
-    r = grow.run(PY, '-c', PROGRAM, step, path, cwd=G, env=env)
+    r = grow.run(PY, '-c', PROGRAM, step, path, os.path.join(ROOT, 'assets', 'view', 'lib'), cwd=G, env=env)
     lines = [l for l in r.stdout.splitlines() if l.startswith('{')]
     if r.returncode or not lines:
         return None, r
@@ -362,6 +371,13 @@ try:
     check("here: the store a host's bean declares is found on that host by its name, and opened there",
           j and j['kept'].get('t', [None])[0] == os.path.join(S, 't.sqlite') and j['path'] == os.path.join(S, 't.sqlite'),
           (j, r.out[-800:]))
+    check("...a reading of it reads what the store says of each being: its kind and title, a `where` on the title "
+          "selects the volume titled so and not the other", j and 'vol-t' in j['titled'] and 'vol-u' not in j['titled'],
+          j and j.get('titled'))
+    check("...and a page reads a being kept only in it as its bean would hold it — kind, title, statements — so a "
+          "table of a store's reading has its cells; a being no store keeps reads as none",
+          j and j['fm'] == {'bean': 'vol-t', 'kind': 'volume', 'title': 'the second disk', 'statements': []}
+          and j['none'] == {} and j['made'].get('statements') and 'make' in j['made']['statements'][0], j and j.get('fm'))
     r = grow.run(PY, 'bin/store.py', 'check', 't', cwd=G)
     check("...and `store.py check` judges it over git", 'store check: 1 store(s)' in r.out, r.out[-600:])
     shutil.rmtree(S)

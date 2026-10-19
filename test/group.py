@@ -90,6 +90,12 @@ try:
           know.get('forms') == ['pattern', 'class'] and 'cursor' in [a['archetype'] for a in P['archetypes']]
           and [a['aspect'] for a in P['aspects']][:6] == ['holds', 'carried-by', 'copies', 'in-backup', 'its-series',
                                                           'its-class'], know)
+    from core.check import garden_law
+    LW = garden_law(ROOT)
+    check("law: a drawing's `aspect` is a row of the table `aspects`, which the gate reads as it reads the archetypes — "
+          "a board saved on its cursor in `its-series` passes, an aspect no profile has is refused by name",
+          LW.has('aspects', 'its-series') == '' and 'not a row of `aspects`' in LW.has('aspects', 'nope'),
+          (LW.has('aspects', 'its-series'), LW.has('aspects', 'nope')))
     F = read.data(os.path.join(LAW, 'formats.yaml'))
     check("law: the clock epochs a device's clock counts from, each a published one",
           [e['epoch'] for e in F['clock_epochs']] == ['zero', 'quicktime', 'unix', 'fat', 'gps', 'year-00'])
