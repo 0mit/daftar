@@ -251,6 +251,10 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v2.20.3** (2026-10-20, code alone, core 2.20) — assets/storage/bin/storage.py `keepings`: a volume read in
+  a container finds its container's disks by a query of its own; it shared the temporary table of the contents asked
+  for, and a reading `--of` a container's volume stopped after the first two.
+
 - **daftar v2.20.2** (2026-10-20, code alone, core 2.20) — assets/storage/bin/container.py: an archive or a cabinet
   read as a volume — its members listed and hashed by BLAKE3 as they stream, never unpacked, into an index of a scan's
   shape that `file-tree` reads with the container's content as its carrier; a passphrase on standard input from a
