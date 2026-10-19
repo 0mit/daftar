@@ -80,10 +80,12 @@ try:
     check("law: nine slots, and `fit`, `inherit`, `shared` among the operations",
           list(SLOTS) == ['counter', 'number', 'date', 'time', 'hex', 'alnum', 'word', 'text', 'extension']
           and {'fit', 'inherit', 'shared'} <= {r['op'] for r in LINES['operations']}, list(SLOTS))
-    check("law: the groupings — name-series, day, root, names, passes at home in the core, moves in accounting",
+    check("law: the groupings — name-series, day, root, names, passes at home in the core, moves in accounting; events, "
+          "datasets and keepings in storage",
           [(g['grouping'], g['home']) for g in LINES['groupings']] == [
               ('name-series', 'core'), ('day', 'core'), ('root', 'core'), ('names', 'core'), ('passes', 'core'),
-              ('moves', 'accounting')], LINES['groupings'])
+              ('moves', 'accounting'), ('events', 'storage'), ('datasets', 'storage'), ('keepings', 'storage')],
+          LINES['groupings'])
     P = read.data(os.path.join(LAW, 'profiles.yaml'))
     know = next(p for p in P['profiles'] if p['profile'] == 'knowledge')
     check("law: the knowledge profile brings the forms `pattern` and `class`; the view the aspects and the cursor",

@@ -307,13 +307,14 @@ A name is a statement: the namespace gives it.
   profiles it takes, by their names (`profiles`). A row
   never takes a name the law has: one name, one row. **Every row the garden adds is used** by a statement or a bean, or
   says why it is vacant (`vacant: <why>`), the manifesto's `whole`: a row is added with the first bean that uses it.
-- **Profiles** — network, domain, accounting, view, knowledge, code — stand on the core (`core/law/profiles.yaml`):
+- **Profiles** — network, domain, accounting, storage, view, knowledge, code — stand on the core (`core/law/profiles.yaml`):
   their verbs are rows of `core/law/verbs.yaml` marked with their `home`, their tables, forms and words their own, and
   what one adds to a form of the core (the code profile's attributes of a placement) is named. A garden **takes** a
   profile by its name in `VOCAB.md`'s `profiles`, a RULE-CHANGE, and uses none of a profile it does not take (rule
   `profile`). A profile may bring an **asset**, `assets/<profile>/`, which a garden receives while it takes the profile
   and which opens no concept of its own: the `view` profile's draws a page whose drawings are its `draw` statements,
-  and the `accounting` profile's reads an entity's books from its `book` and `match` statements, never storing them.
+  the `accounting` profile's reads an entity's books from its `book` and `match` statements, never storing them, and
+  the `storage` profile's reads what each content's keepings leave open from its holdings, never storing it.
 - A garden's row that proves general is **promoted** to the standard by a pull request to the daftar repository
   (manifesto: learn-once). A mechanism that is universal may come complete before anything occupies it (manifesto: whole).
 
@@ -467,6 +468,27 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
 - **Where an export goes is the flow law's.** Printed or written on this host, statements are shown to whoever runs it;
   a garden's own material never goes to a public repository; another garden is given a proposal (bin/propose.py),
   never a file; a sealed statement is never read.
+
+## Storage: keepings, risks, datasets and transfers
+- **What is kept, read.** The storage profile reads where each content is kept: every holding of it, through
+  `through` once, on the volume that holds the folder, on the carriers that hold the volume — a disk, or a content that
+  carries it. Data is not conserved as a stock is, so nothing is booked from one keeping to another; whether a content
+  is safe is a reading (`keepings`), never written.
+- **Risks and policy as data.** A risk is a row of a garden's `risks` (VOCAB.md): what may happen, and the ways a
+  content is safe against it, each a map of keeping properties (core/law/profiles.yaml `keeping_properties`: distinct
+  disks, volumes and places, a keeping offline, found whole within a time, its key held twice; an array and an
+  immutable keeping vacant) to the least count of keepings that hold each. A policy is a code of a scheme of the form
+  `keep` — the risks its members must be safe against, how recently a keeping must be found whole — said of a root by
+  a person (`classify`) and inherited down `part`, or read for a code a content holds (`for`). What is open is said
+  with what would close it: "disk-fault: 1 more keeping on another disk".
+- **Datasets.** The folders whose trees are one manifest hold one dataset (`datasets`): equal trees found by a
+  fingerprint, named by the BLAKE3 of their manifest (formats.yaml `checksums`).
+- **Events.** The contents of a tree by their moments, a new event after a gap (`group … gap`, the grouping
+  `events`): a `produce.at`, else a date in a name or in a folder's name.
+- **Transfers.** A copy, a move or a verification is a course on the profile's walk `walk-transfer` (queued, copying,
+  verifying, done; paused; failed, stopped), of the being it fills, needing the dataset it is to hold and meeting the
+  need when every content is found whole; its work is done by runs. `assets/storage/bin/storage.py` and `transfer.py`
+  read and keep them at a store's scale.
 
 ## Groupings: patterns, classes and their previews
 - **One engine.** A name's pattern, a class and a preview are one thing seen three ways: a **grouping** gathers members

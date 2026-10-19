@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install PyYAML reuse python-stdnum openpyxl
+      - run: pip install PyYAML reuse python-stdnum openpyxl blake3
       - run: git config --global user.name ci && git config --global user.email ci@localhost
       - name: every document parses
         run: python3 bin/safe.py
@@ -94,6 +94,8 @@ jobs:
         run: python3 test/io.py
       - name: "group: groupings, one engine — the slots, the operations fit, inherit and shared, the groupings read as readings of the law, a template parsed and matched with its date checked, mining a counter's gaps and a Persian date, inheritance with what is set apart, an unset clock, a field's else, shared-mime-info read, a garden's pattern and class schemes held to their forms"
         run: python3 test/group.py
+      - name: "storage: what each content's keepings leave open, which folders hold one dataset, the events of a tree, a transfer as a course"
+        run: python3 test/storage.py
       - name: "core_ported: where each of today's suites and each check of today's gate went in v1 — none waiting — and today's words read only from v0.49.0, held to the tree"
         run: python3 test/core_ported.py
       - name: "core_exact: a count is exact everywhere it is read — rates between currencies, and no float in the code"

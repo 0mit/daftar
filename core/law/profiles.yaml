@@ -20,6 +20,21 @@ profiles:
         position: tax
         reason: universal
         why: "a tax owed or claimable is held in an account of this role, and the clause form already says a tax — an `obligatory` payment to the authority occurring `each` time a sale is made, its `amount` a share of the sale's; no tool computes tax lines yet, and a jurisdiction's codes and return grids are a scheme a garden takes, none privileged"
+  - profile: storage
+    meaning: "for a garden that keeps data on carriers: where each content is kept, which risks its keepings leave open and what would close each, which folders hold one dataset, and what each transfer still has to do. A content is one being, named by its digest, whatever holds it; a copy is a holding made from the holding it copies; a tree is a dataset, the content of its manifest (core/law/formats.yaml `checksums`). Data is not conserved as a stock is — a copy leaves its source whole — so nothing is booked from one keeping to another: what is kept is read from the holdings, never stored. A risk is a row of `risks`, the properties of keepings that resolve it; what a content must be safe against is a code of a scheme of the form `keep`, read by `inherit`. The profile's asset, `assets/storage/`, reads them at a store's scale and carries transfers as courses on its walk `walk-transfer`"
+    tables: [keeping_properties, risks]
+    forms: [keep]
+    asset: "assets/storage"
+    went: {}
+    vacancies:
+      - at: "table:keeping_properties"
+        position: array
+        reason: universal
+        why: "a volume whose carriers survive the loss of one — a mirror, RAID 1, 5, 6 or 10, a pool with redundancy — resolves a carrier's fault alone; no reading of an array's members is built yet"
+      - at: "table:keeping_properties"
+        position: immutable
+        reason: universal
+        why: "a keeping no account of a host that reaches it can write — write-once media, an object lock, a snapshot only another host can remove — resolves malice; no reading of one is built yet"
   - profile: code
     meaning: "for a garden that manages source code: where its trees are and how an agent treats each, and the repository identity of a code bean"
     adds:
@@ -388,6 +403,20 @@ account_roles:
   - { role: unsaid, meaning: "where a payment whose means is not said, or has no account in the chart, is held until it is; absent, the account `awaiting`" }
   - { role: earnings, meaning: "where a period's result is carried: income less expense, kept" }
   - { role: tax, meaning: "where a tax owed to an authority, or claimable from one, is held" }
+keeping_properties:
+  - { property: disk, meaning: "the distinct physical carriers a content is kept on: a disk by its own being, two volumes of one disk one, a volume read in a content on the carriers of the content's keepings, a disk held for its health none" }
+  - { property: array, meaning: "a keeping on a volume whose carriers survive the loss of any one of them" }
+  - { property: volume, meaning: "the distinct volumes a content is kept on, each a keeping a write to another does not reach; volumes a sync keeps alike, carrying each removal from one to the other, are one" }
+  - { property: place, meaning: "the distinct places its carriers are at (`be … as: location`); a carrier whose place nobody said is at none" }
+  - { property: offline, meaning: "a keeping whose carrier is attached to no running host: a disk that is part of none and that no running course of `walk-run` holds" }
+  - { property: immutable, meaning: "a keeping no account of a host that reaches it can write" }
+  - { property: verified, meaning: "a keeping whose content's bytes were read and found whole — a scan that hashed them, a copy checked by its digest, a check of a manifest — within the policy's `within`" }
+  - { property: key, meaning: "a keeping none of whose carriers needs a key, or each of whose needed keys two holders hold: a carrier needs a key it is said to need (`need … of` the key, a being), and a holder holds it (`hold … of` the key: that it is held, never what it is)" }
+risks: []
+risk_form:
+  risk: "the risk's name, a kebab word: what may happen to a content's keepings"
+  meaning: "what happens, said for a reader"
+  resolved_by: "the ways a content is safe against it, a list, any one of which resolves it: each a map of keeping properties (`keeping_properties`) to the least count of the content's keepings that hold each — `{ disk: 2 }`, two keepings on two disks; `{ offline: 1 }`, one keeping offline; `{ verified: 2 }`, two keepings each found whole within the policy's `within`"
 planes:
   - { plane: data, meaning: "the traffic the being exists to carry or to serve" }
   - plane: control
@@ -443,6 +472,18 @@ forms:
       apart:
         in: ["true"]
         meaning: "`true`: a member of this code inherits no code from its wholes, and its parts inherit from it alone — a program's tree, a system's dropping, another's code placed there"
+  keep:
+    meaning: "what a code of a policy scheme asks of its members' keepings, on the rows of a scheme that names this form (`form: keep`) beside its code, level, parent and name: the risks each member must be safe against, how recently a keeping must have been found whole, and the codes of other schemes it is read for. A content's code is read by `inherit` — what a person classed it, or its nearest whole, as — else it is the code whose `for` names a code the content holds; a content of no code is read for what its keepings resolve, and judged against nothing"
+    attrs:
+      covers:
+        in: { registry: risks, take: risk }
+        meaning: "the risks a member must be safe against, a list of rows of `risks`"
+      within:
+        in: { quantity: duration }
+        meaning: "how recently each keeping's bytes must have been read and found whole for the property `verified`: a count and a unit of time, `365 d`"
+      for:
+        in: { type: coding }
+        meaning: "codes of other class schemes, a list: a member holding one, and classed by nothing nearer, is read under this code"
   chart:
     meaning: "what each account of a chart of accounts is, on the rows of a scheme that names this form (`form: chart`) beside its code, level, parent and name: a booking names a postable account — a code no other code has for its parent"
     attrs:
@@ -912,6 +953,8 @@ forms:
   orientations: { order: required, of: required, axis: required, sense: required, follows: required, commands: optional, meaning: required }
   aspects: { aspect: required, home: required, follows: required, points: required, order: required, of: required, meaning: required }
   planes: { plane: required, meaning: required }
+  keeping_properties: { property: required, meaning: required }
+  risks: { risk: required, meaning: required, resolved_by: required }
   elements: { element: required, sense: required, meaning: required }
   account_roles: { role: required, meaning: required }
   date_styles: { style: required, meaning: required }
