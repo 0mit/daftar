@@ -388,3 +388,7 @@ date	suite	seconds	passed	failed
 2026-10-19	test/view_timeline_hours.py	0.7	11	0
 2026-10-19	test/viewcap.py	10.3	37	0
 2026-10-19	test/widgets.py	0.3	2	0
+2026-10-19	test/core_guides.py	43.9	14	0
+2026-10-19	test/docs.py	0.4	62	0
+2026-10-19	test/group.py	5.2	44	0
+2026-10-19	test/io.py	7.9	33	0
