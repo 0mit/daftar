@@ -15,7 +15,7 @@ when the course is done.
 
 Run: python3 test/storage.py   (0 = green)
 """
-import json, os, shutil, subprocess, sys, tempfile
+import json, os, shutil, sqlite3, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -264,6 +264,44 @@ try:
     check("asset: `manifest` — a folder's tree as checksum lines, sorted, the day folder's path before each name",
           rc == 0 and out.startswith(B3['a'] + '  2026-10-01/IMG_0001.JPG\n' + B3['b'] + '  2026-10-01/IMG_0002.JPG\n'),
           out[-600:])
+
+    # ---- a container read as a volume
+    try:
+        import libarchive, blake3  # noqa: F401
+        have_ct = True
+    except ImportError:
+        have_ct = False
+    if have_ct:
+        import zipfile
+        sys.path.insert(0, os.path.join(ROOT, 'assets', 'storage', 'bin'))
+        import container as CT
+        zp = os.path.join(T, 'c.zip')
+        with zipfile.ZipFile(zp, 'w') as z:
+            z.writestr('one.txt', 'abc')
+            z.writestr('sub/empty.bin', '')
+            z.writestr('../out.txt', 'x')
+        idx = os.path.join(T, 'ct.sqlite')
+        code, said = CT.read(zp, idx)
+        rows = sqlite3.connect(idx).execute('SELECT path, type, hash, err FROM entry ORDER BY path').fetchall()
+        check("container: a zip read as a volume's index — each member hashed by BLAKE3 as it streams, its folders "
+              "listed once, a path that climbs out kept by its name alone and said",
+              code == 0 and (b'one.txt', 'f', '6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85', None)
+              in rows and (b'sub', 'd', None, None) in rows
+              and any(r[0] == b'out.txt' and 'climbs out' in (r[3] or '') for r in rows), rows)
+        nz = os.path.join(T, 'n.zip')
+        open(nz, 'wb').write(b'not a container at all')
+        check("...a file that is no container is said so, not guessed", CT.read(nz, os.path.join(T, 'n.sqlite'))[0] == 2,
+              'exit')
+        if shutil.which('zip'):                         # Info-ZIP's zip writes an encrypted member (ZipCrypto)
+            with open(os.path.join(T, 'one.txt'), 'w') as fh:
+                fh.write('abc')
+            subprocess.run(['zip', '-q', '-P', 'a-test-pass', 'l.zip', 'one.txt'], cwd=T, capture_output=True)
+            c1, _ = CT.read(os.path.join(T, 'l.zip'), os.path.join(T, 'l1.sqlite'))
+            c2, _ = CT.read(os.path.join(T, 'l.zip'), os.path.join(T, 'l2.sqlite'), 'a-test-pass')
+            got = sqlite3.connect(os.path.join(T, 'l2.sqlite')).execute("SELECT hash FROM entry WHERE path = ?",
+                                                                        (b'one.txt',)).fetchone()
+            check("...an encrypted member waits for its passphrase (exit 3), and is read whole once given it",
+                  c1 == 3 and c2 == 0 and got and got[0].startswith('6437b3ac'), (c1, c2, got))
 
     TR = os.path.join('assets', 'storage', 'bin', 'transfer.py')
     rc, out = run(PY, TR, 'setup', '--by', 'sam')
