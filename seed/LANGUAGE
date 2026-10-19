@@ -42,6 +42,7 @@ bin/held.py
 bin/store.py
 bin/run.py
 bin/import.py
+bin/group.py
 bin/export.py
 bin/rules.py
 bin/why.py

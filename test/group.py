@@ -326,6 +326,66 @@ files:
                                  '  - { id: both, op: shared, of: three, aspect: carried-by }\n')
     check("reckon: `shared` — the folder that carries all three", rc == 0 and 'd-sub' in out.split('= groups')[-1],
           out[-800:])
+
+    # ---- the gate's replies: one line for one refusal in many places
+    for i in (1, 2, 3, 4, 5, 7):
+        bean(f'x-{i:04d}', 'content', f'x {i}', 'read: { by: sam, at: now }', 'part: { by: self }')
+    found = gate()
+    one = [f for f in found if '(× 6)' in f]
+    check("gate: one rule saying one thing of six beans is one line, its places shown as their group's line",
+          len(one) == 1 and 'x-0001–0007' in one[0] and '1 missing' in one[0], found)
+    for i in (1, 2, 3, 4, 5, 7):
+        os.remove(os.path.join(G, 'beans', f'x-{i:04d}.md'))
+
+    # ---- bin/group.py over a store
+    prog = r"""
+import sys
+sys.path.insert(0, 'bin'); sys.path.insert(0, '.')
+from store import Store
+s = Store(sys.argv[1])
+s.being('vol-a', 'volume', 'a volume, invented')
+for b in ('d-top', 'd-day', 'd-nm', 'd-docs'):
+    s.being(b, 'folder')
+for i in range(1, 12):
+    s.being(f'c-{i}', 'content')
+A = 'vol-a#' + s.put('vol-a', 'read', {'id': 'scan-1', 'by': 'sam', 'from': 'vol-a', 'at': '2026-10-18T10:00:00+03:00'})
+for b, whole, name in (('d-top', 'vol-a', 'top'), ('d-day', 'd-top', '2015-11-20'), ('d-nm', 'd-top', 'node_modules'),
+                       ('d-docs', 'd-top', 'docs')):
+    s.put(b, 'part', {'by': 'self', 'of': whole}, act=A)
+    s.put(b, 'name', {'by': whole, 'of': 'self', 'as': name}, act=A)
+files = [('d-day', 'IMG_7475.CR2', 1), ('d-day', 'IMG_7476.CR2', 2), ('d-day', 'IMG_7479.CR2', 3), ('d-day', 'Thumbs.db', 4),
+         ('d-nm', 'index.js', 5), ('d-nm', 'package.json', 6), ('d-docs', 'report.pdf', 7), ('d-docs', 'IMG_7480.CR2', 8)]
+for folder, name, i in files:
+    s.put(f'c-{i}', 'measure', {'of': 'self', 'as': 'information', 'value': {'count': str(1000000 * (9 - i)), 'unit': 'By'}}, act=A)
+    s.put(folder, 'hold', {'by': 'self', 'of': f'c-{i}', 'as': name}, act=A)
+print('built')
+"""
+    write('build_store.py', prog)
+    store_file = os.path.join(T, 'cat.sqlite')
+    rc, out = run(PY, 'build_store.py', store_file)
+    check("group: a small store built — a volume, its folders and files, each content's size", rc == 0 and 'built' in out,
+          out[-1800:])
+    os.remove(os.path.join(G, 'build_store.py'))
+    write('extracts/names.tsv', keep + 'nm\tpattern\ta package manager\'s tree\tnode_modules\tname.as\troles:generated\t\t\t\n')
+    rc, out = run(PY, 'bin/group.py', 'of', 'd-day', '--path', store_file)
+    check("group: `of` a folder — its runs of names in their lines, the registry first (the garden's own camera row), the rest by "
+          "their shape", rc == 0 and 'IMG_7475–7479.CR2 · 3 · 2 missing' in out and 'Thumbs.db · 1' in out, out[-800:])
+    rc, out = run(PY, 'bin/group.py', 'root', 'd-top', '--code', 'work:orchard', '--path', store_file)
+    check("group: `root` — a code read as said of a folder holds beneath it; a dropping and a package manager's tree "
+          "are set apart by their `apart` codes, with why",
+          rc == 0 and 'work:orchard' in out and 'names:thumbs → roles:dropping' in out
+          and 'folder names:nm → roles:generated' in out, out[-1200:])
+    rc, out = run(PY, 'bin/group.py', 'measure', '--path', store_file, '-j', '2')
+    check("group: `measure` — every name of the store fitted, spread over processes",
+          rc == 0 and '8 names in 3 folders' in out, out[-800:])
+    rc, out = run(PY, 'bin/group.py', 'mine', '--path', store_file, '--top', '10', '--min', '2', '--json')
+    got = json.loads(out[out.index('{'):]) if rc == 0 and '{' in out else {}
+    check("group: `mine` — the largest folders' names fitted, the registry's counted, the rest's templates ranked",
+          rc == 0 and got.get('known', {}).get('names:cam') == 4, out[-800:])
+    rc, out = run(PY, 'bin/group.py', 'line', 'hold-0001', 'hold-0002', 'hold-0003', 'hold-0007', 'notes.txt')
+    check("group: `line` — any list of names in the lines of the grouping `names`, what the gate's replies print",
+          rc == 0 and 'hold-0001–0007 · 4 · 3 missing' in out, out[-600:])
+    write('extracts/names.tsv', keep)
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

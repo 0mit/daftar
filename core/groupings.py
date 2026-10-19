@@ -272,10 +272,43 @@ def mine(names, systems, fill=0.5):
         keys.add(tuple((k, x.casefold()) if k in 'LS' else (k, len(x)) for k, x in t))
         toks.append(t)
         exts.add(ext)
+    loose = False
     if len(keys) != 1:
-        return None
-    key = next(iter(keys))
+        # A COUNTER OUTGROWS ITS WIDTH (ngc99, ngc100, ngc1000): names alike but in a digit run's width are one run,
+        # where the run's values are a counter; a date or a time keeps its width, and is never read so
+        lk = {tuple((k, None) if k == 'D' else (k, x) for k, x in key) for key in keys}
+        if len(lk) != 1:
+            return None
+        key, loose = next(iter(lk)), True
+    else:
+        key = next(iter(keys))
     cols = [[t[i][1] for t in toks] for i in range(len(key))]
+    if loose:
+        parts, slots = [], []
+        for i, (kind, x) in enumerate(key):
+            col = cols[i]
+            if kind != 'D':
+                if kind == 'X':
+                    parts.append(f'{{hex:{x}}}')
+                    slots.append({'slot': 'hex', 'width': x})
+                elif len({c.casefold() for c in col}) == 1:
+                    parts.append(_lit(col[0]))
+                else:
+                    parts.append('{word}')
+                    slots.append({'slot': 'word', 'values': sorted(set(col))})
+                continue
+            if len(set(col)) == 1:
+                parts.append(col[0])
+                continue
+            nums = sorted({int(c) for c in col})
+            if len(nums) == len(col) and len(nums) >= 2 and len(nums) / (nums[-1] - nums[0] + 1) >= fill:
+                parts.append('{counter}')
+                slots.append(counted('counter', None, nums))
+            else:
+                parts.append('{number}')
+                slots.append({'slot': 'number', 'width': None})
+        text = ''.join(parts) + ('.{extension}' if exts - {''} else '')
+        return {'template': text, 'slots': slots, 'extensions': sorted(e for e in exts if e), 'count': len(names)}
     parts, slots, i = [], [], 0
     while i < len(key):
         kind = key[i][0]
@@ -420,13 +453,64 @@ def fit(items, rows, systems, reads=None, holds=None, beside=None, mine_rest=Tru
         else:
             rest.setdefault((shape(text), container), []).append((key, text))
     out = [_summed(g) for _, g in sorted(groups.items(), key=lambda kv: (str(kv[0][1]), kv[0][0]))]
-    for (shp, container), kts in sorted(rest.items(), key=lambda kv: (str(kv[0][1]), str(kv[0][0]))):
-        texts = [t for _, t in kts]
-        m = mine(texts, systems) if mine_rest and len(texts) > 1 else None
-        out.append({'template': m['template'] if m else _lit(texts[0]), 'code': None, 'container': container,
-                    'members': [k for k, _ in kts], 'texts': texts, 'slots': m['slots'] if m else [],
-                    'suggests': [], 'grouping': None})
+    loose = {}                        # shapes alike but in a digit run's width: mined together, a counter's one run
+    for (shp, container), kts in rest.items():
+        lk = (tuple((k, None) if k == 'D' else (k, x) for k, x in shp[0]), shp[1])
+        loose.setdefault((lk, container), []).append(((shp, container), kts))
+    for (lk, container), parts in sorted(loose.items(), key=lambda kv: (str(kv[0][1]), str(kv[0][0]))):
+        together = [kt for _p, kts in parts for kt in kts]
+        m = mine([t for _, t in together], systems) if mine_rest and len(parts) > 1 and len(together) > 1 else None
+        if m and any(s_.get('slot') == 'counter' for s_ in m['slots']):
+            out.append({'template': m['template'], 'code': None, 'container': container, 'members': [k for k, _ in together],
+                        'texts': [t for _, t in together], 'slots': m['slots'], 'suggests': [], 'grouping': None})
+            continue
+        for _p, kts in sorted(parts, key=lambda pk: str(pk[0][0])):
+            texts = [t for _, t in kts]
+            m = mine(texts, systems) if mine_rest and len(texts) > 1 else None
+            out.append({'template': m['template'] if m else _lit(texts[0]), 'code': None, 'container': container,
+                        'members': [k for k, _ in kts], 'texts': texts, 'slots': m['slots'] if m else [],
+                        'suggests': [], 'grouping': None})
     return out
+
+
+class Media:
+    """A file's media type and its family, from the rows of the scheme `media-types` (shared-mime-info: each type's
+    globs and family): a whole name a glob names (`Makefile`), else its longest extension a glob names (`.tar.gz` before
+    `.gz`); of two types one glob names, the first in the code's order. A name no glob names is
+    `application/octet-stream`, as the database calls an unknown file, of the family `application-x-generic`."""
+
+    UNKNOWN = ('application/octet-stream', 'application-x-generic')
+
+    def __init__(self, rows):
+        self.ext, self.full, self.family = {}, {}, {}
+        for r in sorted(rows, key=lambda r: str(r.get('code'))):
+            code = str(r.get('code') or '')
+            if r.get('level') != 'type':
+                continue
+            self.family[code] = str(r.get('family') or code.split('/', 1)[0] + '-x-generic')
+            for g in str(r.get('globs') or '').split():
+                if g.startswith('*.') and not any(c in g[2:] for c in '*?['):
+                    self.ext.setdefault(g[2:].lower(), code)
+                elif not any(c in g for c in '*?['):
+                    self.full.setdefault(g.lower(), code)
+        self._seen = {}
+
+    def of(self, name):
+        """(type, family) of a file's name."""
+        low = name.lower()
+        hit = self._seen.get(low)
+        if hit is not None:
+            return hit
+        code = self.full.get(low)
+        if code is None:
+            i = low.find('.', 1)
+            while i != -1 and code is None:
+                code = self.ext.get(low[i + 1:])
+                i = low.find('.', i + 1)
+        got = (code, self.family.get(code, code.split('/', 1)[0] + '-x-generic')) if code else self.UNKNOWN
+        if len(self._seen) < 200000:
+            self._seen[low] = got
+        return got
 
 
 def _summed(g):
@@ -457,12 +541,14 @@ def ranged(group):
     t = group['template']
     for s in group.get('slots') or []:
         if s['slot'] == 'counter' and 'first' in s:
-            w = s.get('width') or 1
+            w = s.get('width') or 1                     # a counter that outgrew its width is written bare
             span = f"{s['first']:0{w}d}" if s['first'] == s['last'] else f"{s['first']:0{w}d}–{s['last']:0{w}d}"
             t = re.sub(r'\{counter(?::\d+)?\}', span, t, count=1)
         elif s['slot'] == 'date' and s.get('values'):
             v = sorted(s['values'])
             t = re.sub(r'\{date:[^}]+\}', v[0] if v[0] == v[-1] else f"{v[0]}–{v[-1]}", t, count=1)
+        elif s['slot'] in ('alnum', 'word') and len(s.get('values') or []) == 1:     # what every member writes there
+            t = re.sub(r'\{%s(?::\d+)?\}' % s['slot'], s['values'][0].replace('\\', '\\\\'), t, count=1)
 
     if '{extension}' in t:                 # as the members write it, where they agree without case
         seen = {}

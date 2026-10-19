@@ -483,6 +483,8 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   a profile brings — a run of names, a day, a root's class, any list of names, a watcher's passes, accounting's lines
   of one merchant — and a garden adds its own (VOCAB.md `groupings`). The view's `aspects` are the board's frames
   through a cursor (archetype `cursor`); `shared` reads what several cursors reach by one.
+  `python3 bin/group.py` reads them over a store at its scale: `match`, `line`, `of` a being, `mine` the largest
+  folders, `root` a code said of a folder, `measure` the whole store.
 - **The world's names and clocks.** A name's digits of any script are read as ASCII digits where it enters; a media
   type and its family come from freedesktop.org's shared-mime-info, fetched (`media-types`), or read where the machine
   installed it; a moment a device wrote on the epoch its clock counts from (formats.yaml `clock_epochs`) is a clock
