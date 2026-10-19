@@ -306,7 +306,8 @@ crosswalks:
     reader: exiftool
     act: { verb: read }
     keep: store
-    given: { produce.by: unknown }
+    given: { by: unknown }
+    self: of
     fields:
       content: { from: bean }
       "QuickTime:CreateDate": { from: produce.at, as: { moment: quicktime } }

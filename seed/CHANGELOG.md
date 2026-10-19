@@ -251,6 +251,18 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.16** (2026-10-19, daftar v2.16.0, human-ratified rule-change: a correction of the row `quicktime-movie` as
+  ratified for core 2.15, "Fold both into v2.15.0") — **a video's moment imported.** MINOR: nothing a garden could write
+  under core 2.15 is refused.
+  - crosswalks.yaml `quicktime-movie`: `given` names the role it fills inside the statement (`by: unknown`), as every
+    row's `given` does, and `self: of`, since a `produce` with no field naming its maker leaves two required roles; as
+    released in 2.15 the row could write no statement.
+  - Code: the exiftool reader gives each record its crosswalk's model (`movie` for a video's header) and keeps
+    `SourceFile`, which it finds each content by, as its own and no field; an account names a serial read as a number
+    as written; bin/group.py `classes_of` (a being's codes in each class scheme, and whence), printed by `group of`.
+    test/group.py: accounting's category of moves as a grouping, in a garden that keeps accounts; test/io.py: a
+    video's header imported, a header of zeros a clock never set.
+
 - **core 2.15** (2026-10-19, daftar v2.15.0, human-ratified rule-changes: the design of programme item 3, groupings —
   the registry in both places, a member read and never written, `groupings`, the board's findings 2–4, media types
   fetched from shared-mime-info; and three found on the way: an older Canon's serial in its maker notes with a

@@ -525,9 +525,9 @@ class Carry:
             arg = ns
             hit = self.names(str(arg), str(v)) if self.names else None
             if hit is None:
-                hints = ', '.join(f"{h} {formats.get(rec, h)!r}" for h in (opts.get('hint') or [])
+                hints = ', '.join(f"{h} {str(formats.get(rec, h))!r}" for h in (opts.get('hint') or [])
                                   if formats.get(rec, h) is not None)
-                notes.append((fname, f"no being {arg} names {v!r}" + (f" ({hints})" if hints else '')))
+                notes.append((fname, f"no being {arg} names {str(v)!r}" + (f" ({hints})" if hints else '')))
                 return 'unknown', None
             return hit, None
         if conv == 'prefix':

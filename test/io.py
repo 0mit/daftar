@@ -202,6 +202,18 @@ gone = S.db.execute("SELECT being, why FROM gone").fetchall()
 print(json.dumps({'a': pa, 'b': pb, 'n': pn, 'gone': gone, 'lines': I.account.lines(each=False)}, default=str))
 '''
 
+QT = r'''
+imp = importlib.import_module('import')
+import store
+S = store.open_store('cat')
+I = imp.Import('.', 'quicktime-movie', keep='store', store=S,
+               acts={'read': {'in': 'vol-1', 'by': 'nas', 'from': 'vol-1', 'through': 'exiftool (test)', 'at': sys.argv[2]}})
+I.source(sys.argv[1], volume='vol-1', root=sys.argv[3])
+I.done()
+pa = [r for v, r, _a in S.get('c-' + sys.argv[4][:24]) if v == 'produce']
+print(json.dumps({'a': pa, 'lines': I.account.lines(each=False)}, default=str))
+'''
+
 READERS = r'''
 from core import readers
 from core.check import garden_law
@@ -412,6 +424,18 @@ try:
           "that held `unknown` is taken out by `gone`, its reason recorded",
           ok and [r2.get('by') for r2 in j['b']] == ['camera-2'] and any('filled' in w for _b, w in j['gone']),
           (j, r.out[-1500:]))
+    check("...and `SourceFile`, by which the reader finds each content, is the reader's own: never listed as not carried",
+          ok and not any('SourceFile' in ln for ln in j['lines']), j['lines'] if ok else r.out[-800:])
+    qt = os.path.join(T, 'quicktime.json')
+    with open(qt, 'w', encoding='utf-8') as fh:
+        json.dump([{"SourceFile": os.path.join(vroot, 'Photos/2026/a.cr2'), "QuickTime:CreateDate": "2026:10:15 21:36:46"},
+                   {"SourceFile": os.path.join(vroot, 'Photos/2026/b.jpg'), "QuickTime:CreateDate": "0000:00:00 00:00:00"}], fh)
+    j, r = py(QT, qt, '2026-10-19T14:00:00+03:00', vroot, B3A)
+    ok = j is not None
+    check("quicktime: a video's content made at the moment its movie header states, read as UTC as the format says; a "
+          "header of zeros a clock never set, listed with its epoch and carrying no moment",
+          ok and any(r2.get('at') == '2026-10-15T21:36:46+00:00' and r2.get('by') == 'unknown' for r2 in j['a'])
+          and any('never set' in ln and 'zero' in ln for ln in j['lines']), (j, r.out[-1500:]))
 
     # ---- dwc, into a bean and back
     occ = os.path.join(T, 'occ.csv')

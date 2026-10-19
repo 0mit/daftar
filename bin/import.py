@@ -264,6 +264,7 @@ class Import:
             args.setdefault('ref', self._ref)
         if self.reader == 'exiftool':
             args.setdefault('find', self._find)
+            args.setdefault('model', next(iter(self.carry)))      # the crosswalk's model: an image, or a movie
         yield from fn(raw, **args)
 
     def _counted(self, raw, takes):
