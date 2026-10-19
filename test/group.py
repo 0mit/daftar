@@ -15,7 +15,7 @@ its document type set aside, an entity refused; the host's copy read where nothi
 
 Run: python3 test/group.py   (0 = green)
 """
-import json, os, shutil, subprocess, sys, tempfile
+import collections, json, os, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -168,6 +168,25 @@ try:
           "would take are mined into their own series",
           not any(g['code'] == 'mine:any-img' for g in gs) and any(g['code'] is None and sorted(g['members']) == ['b', 'c']
                                                                     for g in gs), gs)
+    md = groupings.Media([
+        {'code': 'text/x-gettext-translation', 'level': 'type', 'family': 'text-x-generic', 'globs': '*.po'},
+        {'code': 'application/vnd.ms-powerpoint', 'level': 'type', 'family': 'x-office-presentation', 'globs': '*.pot *.ppt'},
+        {'code': 'text/x-gettext-translation-template', 'level': 'type', 'family': 'text-x-generic', 'globs': ''},
+        {'code': 'audio/vnd.dts', 'level': 'type', 'family': 'audio-x-generic', 'globs': '*.dts'},
+        {'code': 'text/x-devicetree-source', 'level': 'type', 'family': 'text-x-generic', 'globs': ''}])
+    trows = groupings.rows_of([('mine', [
+        {'code': 'pot', 'template': '{text}.{extension}', 'extensions': 'pot', 'only': 'suggests',
+         'beside': 'media-types:text/x-gettext-translation', 'suggests': 'media-types:text/x-gettext-translation-template'},
+        {'code': 'dts', 'template': '{text}.{extension}', 'extensions': 'dts', 'only': 'suggests', 'within': 'roles:code-tree',
+         'suggests': 'media-types:text/x-devicetree-source'}])], SLOTS, SYSTEMS)
+    po = collections.Counter(md.of(n)[0] for n in ('a.po', 'b.po', 'c.po', 'x.pot'))
+    ppt = collections.Counter(md.of(n)[0] for n in ('a.ppt', 'b.ppt', 'deck.pot'))
+    check("engine: a file's type where a pattern row says it — a `.pot` beside `.po` files a gettext template, beside "
+          "slides the database's; a `.dts` in a code tree a device-tree source, elsewhere the database's",
+          md.among('x.pot', trows, po) == ('text/x-gettext-translation-template', 'text-x-generic')
+          and md.among('deck.pot', trows, ppt)[0] == 'application/vnd.ms-powerpoint'
+          and md.among('board.dts', trows, None, within=('roles:code-tree',))[0] == 'text/x-devicetree-source'
+          and md.among('film.dts', trows, None)[0] == 'audio/vnd.dts')
     ln = groupings.line(cam, ['range', 'count', 'missing'])
     check("engine: a group's one line — its range, how many, how many missing", ln == 'IMG_7378–9000.CR2 · 4 · 1,619 missing',
           ln)

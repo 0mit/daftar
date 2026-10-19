@@ -494,6 +494,8 @@ class Carry:
             if str(v) not in inv:
                 return None, f"{v!r} is a value the crosswalk does not map"
             v = inv[str(v)]
+        if conv != 'escaped' and formats.held_bytes(v):        # read from a source that is not UTF-8 (formats.py)
+            return None, "not UTF-8 text: bytes no part of UTF-8, carried only by a field written `escaped`"
         if conv is None:
             return (str(v) if not isinstance(v, (dict, list)) else v), None
         if conv == 'escaped':

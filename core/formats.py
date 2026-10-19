@@ -173,9 +173,20 @@ def _at_path(data, path):
     return data
 
 
+def held_bytes(v):
+    """Whether a text read by `_named_text` holds a byte that is no part of UTF-8 (U+DC80–U+DCFF, surrogateescape)."""
+    return isinstance(v, str) and any('\udc80' <= ch <= '\udcff' for ch in v)
+
+
+def _named_text(source):
+    """A JSON source's text: UTF-8, and a byte that is no part of UTF-8 kept as the byte it is (surrogateescape) — a
+    tool such as exiftool writes a file's name in the bytes the name has, which the reader gives back as those bytes."""
+    return _bytes(source).decode('utf-8-sig', 'surrogateescape')
+
+
 def _json(source, spec):
     try:
-        data = _number_json(_text(source))
+        data = _number_json(_named_text(source))
     except ValueError as e:
         raise Refused(f"not JSON: {e}") from None
     data = _at_path(data, (spec or {}).get('path'))
@@ -186,7 +197,7 @@ def _json(source, spec):
 
 
 def _jsonl(source, spec):
-    for n, line in enumerate(_text(source).split('\n'), 1):
+    for n, line in enumerate(_named_text(source).split('\n'), 1):
         if line.strip():
             try:
                 item = _number_json(line)

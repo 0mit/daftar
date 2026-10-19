@@ -322,6 +322,35 @@ def weigh(L, C, root_n, scheme, code=None):
         media = groupings.Media(dmknowledge.Knowledge(ROOT).rows('media-types'))
     except KeyError:
         media = groupings.Media([])
+    order = {root_n: 0}
+    for f in sub:
+        for k in kids.get(f, ()):
+            order[k] = order.get(f, 0) + 1
+    # A TREE OF CODE is marked by a file a build or a package manager keeps (a row that `marks` the folder holding
+    # it); beneath one, the rows that apply only `within` a code tree are tried (a `bin`, a `debug`)
+    marked = set()
+    for f in sub:
+        for nm, _of, _sz in hold.get(f) or []:
+            for r in L.rows:
+                if r.marks == 'by' and r.template.match(nm) is not None:
+                    marked.update({f} if any(c.endswith(':code-tree') for c in r.suggests) else set())
+                    break
+            if f in marked:
+                break
+    in_code = {}
+    for f in sorted(sub, key=lambda x: order.get(x, 0)):
+        in_code[f] = f in marked or in_code.get(parent.get(f), False)
+    code_codes = {c for r in L.rows if r.marks == 'by' for c in r.suggests if c.endswith(':code-tree')}
+    # A FILE'S KIND: its media type, where a pattern row says one (`.pot` beside `.po` files a gettext template, `.dts`
+    # in a code tree a device-tree source) that row's, else the type its name's extension gives
+    trows = [r for r in L.rows if any(c.startswith('media-types:') for c in r.suggests)]
+    kinds = {}
+    for f in sub:
+        names = [nm for nm, _of, _sz in hold.get(f) or []]
+        types = collections.Counter(media.of(nm)[0] for nm in names) if trows else None
+        within = code_codes if in_code.get(f) else ()
+        for nm in names:
+            kinds[(f, nm)] = media.among(nm, trows, types, within)[1] if trows else media.of(nm)[1]
     w = (L.groupings.get('root') or {}).get('weighs') or {}
     kind_w = w.get('kind') or {}
     share_b, share_f = float(kind_w.get('bytes') or 0.02), float(kind_w.get('files') or 0.05)
@@ -331,7 +360,7 @@ def weigh(L, C, root_n, scheme, code=None):
     total_b = total_f = 0
     for f in sub:
         for nm, of, sz in hold.get(f) or []:
-            fam = media.of(nm)[1]
+            fam = kinds[(f, nm)]
             fam_b[fam] += sz
             fam_f[fam] += 1
             total_b += sz
@@ -346,8 +375,7 @@ def weigh(L, C, root_n, scheme, code=None):
         said = dict(said)
         said[rid] = [code]
 
-    def fits_kind(nm):
-        fam = media.of(nm)[1]
+    def fits_kind(fam):
         return fam in top or fam_b[fam] >= share_b * max(total_b, 1) or fam_f[fam] >= share_f * max(total_f, 1)
 
     def fits_day(of):
@@ -364,10 +392,6 @@ def weigh(L, C, root_n, scheme, code=None):
     out = {'root': rid, 'code': (said.get(rid) or [None])[0], 'files': total_f, 'bytes': total_b,
            'families': fam_b.most_common(5), 'members': 0, 'held': 0, 'apart': collections.defaultdict(list),
            'apart_files': 0, 'apart_bytes': 0}
-    order = {root_n: 0}
-    for f in sub:
-        for k in kids.get(f, ()):
-            order[k] = order.get(f, 0) + 1
     tally = {}                                         # each folder's files and bytes at any depth, bottom up
     for f in sorted(sub, key=lambda x: -order.get(x, 0)):
         nf = len(hold.get(f) or [])
@@ -375,21 +399,6 @@ def weigh(L, C, root_n, scheme, code=None):
         for k in kids.get(f, ()):
             nf, nb = nf + tally.get(k, (0, 0))[0], nb + tally.get(k, (0, 0))[1]
         tally[f] = (nf, nb)
-    # A TREE OF CODE is marked by a file a build or a package manager keeps (a row that `marks` the folder holding
-    # it); beneath one, the rows that apply only `within` a code tree are tried (a `bin`, a `debug`)
-    marked = set()
-    for f in sub:
-        for nm, _of, _sz in hold.get(f) or []:
-            for r in L.rows:
-                if r.marks == 'by' and r.template.match(nm) is not None:
-                    marked.update({f} if any(c.endswith(':code-tree') for c in r.suggests) else set())
-                    break
-            if f in marked:
-                break
-    in_code = {}
-    for f in sorted(sub, key=lambda x: order.get(x, 0)):
-        in_code[f] = f in marked or in_code.get(parent.get(f), False)
-    code_codes = {c for r in L.rows if r.marks == 'by' for c in r.suggests if c.endswith(':code-tree')}
     kept_apart = set()
 
     def put_apart(why, f):
@@ -423,14 +432,14 @@ def weigh(L, C, root_n, scheme, code=None):
                 out['apart_bytes'] += sz
                 continue
             misfit = []
-            if not fits_kind(nm):
+            if not fits_kind(kinds[(f, nm)]):
                 misfit.append('kind')
             if not fits_day(of):
                 misfit.append('day')
             if len(rows) >= 10 and most[1] >= 0.8 * len(rows) and groupings.shape(nm)[0] != most[0]:
                 misfit.append('shape')
             if len(misfit) >= need:
-                out['apart'][f"not fitting by {' and '.join(misfit)} ({media.of(nm)[1]})"].append((nm, sz, 1))
+                out['apart'][f"not fitting by {' and '.join(misfit)} ({kinds[(f, nm)]})"].append((nm, sz, 1))
                 out['apart_files'] += 1
                 out['apart_bytes'] += sz
                 continue
