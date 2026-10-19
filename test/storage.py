@@ -247,6 +247,17 @@ try:
     for f in ('d-s2', 'd-s5'):
         S.put(f, 'hold', {'by': f, 'of': 'c-s1', 'as': 'IMG_0001.JPG'}, act=A)
         S.put(f, 'hold', {'by': f, 'of': 'c-s2', 'as': 'IMG_0002.JPG'}, act=A)
+    S.being('c-zip', 'content')                       # a container on the disk, read as a volume of its own
+    S.put('c-zip', 'name', {'by': 'blake3', 'of': 'c-zip', 'as': 'f' * 64}, act=A)
+    S.being('d-s6', 'folder')
+    S.put('d-s6', 'part', {'by': 'd-s6', 'of': 'vol-s'}, act=A)
+    S.put('d-s6', 'name', {'by': 'vol-s', 'of': 'd-s6', 'as': 'Archives'}, act=A)
+    S.put('d-s6', 'hold', {'by': 'd-s6', 'of': 'c-zip', 'as': 'old.zip'}, act=A)
+    S.being('ct-zip', 'volume')
+    S.put('ct-zip', 'hold', {'by': 'c-zip', 'of': 'ct-zip'}, act=A, judge=False)
+    for i, c in enumerate(('c-m1', 'c-m2', 'c-m3')):
+        S.being(c, 'content')
+        S.put('ct-zip', 'hold', {'by': 'ct-zip', 'of': c, 'as': f'member{i}.txt'}, act=A)
     S.close()
     ST = os.path.join('assets', 'storage', 'bin', 'storage.py')
     rc, out = run(PY, ST, 'datasets', '--store', sp, '--same', '--json')
@@ -256,10 +267,15 @@ try:
           and any(set(r['folders']) == {'d-s1', 'd-s4'} for r in rows), out[-1200:])
     rc, out = run(PY, ST, 'events', '--store', sp, '--of', 'vol-s', '--gap', '36 h')
     check("asset: `events` over a store — a content with no moment of its own takes the day its folder's name holds",
-          rc == 0 and '2026-10-01 00:00Z–2026-10-01 23:59Z · 2' in out and '0 contents with no moment' in out, out[-800:])
+          rc == 0 and '2026-10-01 00:00Z–2026-10-01 23:59Z · 2' in out and '1 contents with no moment' in out, out[-800:])
     rc, out = run(PY, ST, 'keepings', '--store', sp, '--scheme', 'keep', '--of', 'vol-s')
-    check("asset: `keepings` over a store — two contents kept twice on one attached disk: one keeping each by disk, "
-          "malice open; no policy said of them", rc == 0 and 'no policy · 2 contents' in out, out[-800:])
+    check("asset: `keepings` over a store — two contents kept twice and a container once, on one attached disk; no "
+          "policy said of them", rc == 0 and 'no policy · 3 contents' in out, out[-800:])
+    rc, out = run(PY, ST, 'keepings', '--store', sp, '--of', 'ct-zip', '--json')
+    j = json.loads(out[:out.rindex('}') + 1]) if rc == 0 and '}' in out else {}
+    check("asset: `keepings` of a container's volume — each member, kept on the disk its container is kept on",
+          rc == 0 and len(j.get('contents') or []) == 3
+          and all(k['disks'] == ['disk-a'] for c in j['contents'] for k in c['keepings']), out[-800:])
     rc, out = run(PY, ST, 'manifest', 'd-s1', '--store', sp)
     check("asset: `manifest` — a folder's tree as checksum lines, sorted, the day folder's path before each name",
           rc == 0 and out.startswith(B3['a'] + '  2026-10-01/IMG_0001.JPG\n' + B3['b'] + '  2026-10-01/IMG_0002.JPG\n'),

@@ -200,7 +200,7 @@ class Store:
         self.db.executemany('INSERT OR IGNORE INTO temp.kc VALUES (?)', ((n,) for n in contents))
         yield from self.db.execute(f"SELECT h.b_of, h.b_by, {th.replace('t_', 'h.t_') if th != 'NULL' else th}, "
                                    f"h.known{', h.t_as' if names else ''} FROM temp.kc JOIN v_hold h ON "
-                                   "h.b_of = temp.kc.n WHERE h.t_as IS NOT NULL ORDER BY h.b_of")
+                                   "h.b_of = temp.kc.n WHERE h.t_as IS NOT NULL ORDER BY h.b_of").fetchall()
 
     def _has(self, table, col):
         return col in {r[1] for r in self.db.execute(f'PRAGMA table_info({table})')}
@@ -287,7 +287,7 @@ def keepings(S, W, scheme=None, of=None, now=None, each=None):
             if cid in hosts or S.kinds.get(c) == 'host':
                 out.add(cid)
             elif c not in seen:                    # a content that carries the volume: its keepings' disks
-                for _c, f, _t, _a in S.holdings([c]):
+                for (f,) in S.db.execute('SELECT b_by FROM v_hold WHERE b_of = ? AND t_as IS NOT NULL', (c,)).fetchall():
                     out |= disks(S.volume_of(f), seen + (c,))
         return out
     vdisks = {}
