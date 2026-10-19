@@ -31,6 +31,7 @@ Every value is a string (core/read.py): a flag is the string `true`."""
 import os
 import re
 import sys
+from decimal import Decimal
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -48,7 +49,7 @@ GRANTS = ('granted', 'refused', 'ratified')
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
             'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit', 'exclusive': 'verb',
             'systems': 'system', 'schemes': 'scheme', 'files': 'registry', 'crosswalks': 'crosswalk',
-            'groupings': 'grouping'}
+            'groupings': 'grouping', 'risks': 'risk'}
 NAME_IN = re.compile(r'^name_[a-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$')    # a code's name in a language: `name_fa`, `name_pt-BR`
 ROW_FIELDS = {
     'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning', 'vacant'},
@@ -68,6 +69,7 @@ ROW_FIELDS = {
                 'file', 'key', 'format', 'meaning', 'units', 'form', 'vacant'},
     'files': {'registry', 'file', 'key', 'format'},
     'groupings': {'grouping', 'home', 'meaning', 'steps', 'line', 'inputs', 'weighs', 'vacant'},
+    'risks': {'risk', 'meaning', 'resolved_by', 'vacant'},
     'exclusive': {'verb', 'why'},
 }
 LINES = 'lines.yaml'                                       # the forms of a line and a reading's grammar (v1 part 6)
@@ -352,9 +354,11 @@ class Law:
         self.profiles = {str(p['profile']): p for p in listed(data.get('profiles')) if isinstance(p, dict)}
         keys = {'lenses': 'lens', 'archetypes': 'archetype', 'planes': 'plane', 'orientations': 'order',
                 'elements': 'element', 'account_roles': 'role', 'date_styles': 'style', 'currency_displays': 'display',
-                'aspects': 'aspect'}
+                'aspects': 'aspect', 'keeping_properties': 'property', 'risks': 'risk'}
         for t, key in keys.items():
             rows = [r for r in listed(data.get(t)) if isinstance(r, dict)]
+            if t == 'risks':                          # the law's own, then a garden's (VOCAB.md `risks`), read first
+                rows += [{k: v for k, v in r.items() if k != 'at'} for r in listed((self.own or {}).get('risks'))]
             self.profile_tables[t] = rows
             self.tables[t] = [str(r.get(key)) for r in rows]
         for name, f in (data.get('forms') or {}).items():
@@ -525,6 +529,10 @@ class Law:
                     self.exclusive.append(row)
                 elif key == 'groupings':                  # a garden's own standard readings, beside the law's: a
                     self.own.setdefault(key, []).append(dict(row, at=at))   # reading, not a word (rule vacancy)
+                elif key == 'risks':                      # a garden's own risks: rows of the storage profile's table
+                    self.own.setdefault(key, []).append(dict(row, at=at))
+                    self.profile_tables.setdefault(key, []).append(row)
+                    self.tables[key] = list(self.tables.get(key) or []) + [str(row['risk'])]
                 elif key in ('systems', 'schemes', 'files'):    # read by the standards, beside theirs (part 7)
                     if key == 'systems' and str(row['system']) in self.std_systems():
                         self.found.append(('law', at, f"`{row['system']}` is a system of the standards already: a "
@@ -989,7 +997,8 @@ class Law:
                 if odd:
                     out.append((f"scheme {scheme} {code or '(no code)'}",
                                 f"{', '.join(odd)}: no column of a {form} ({', '.join(sorted(cols))})"))
-            judge = {'chart': self._chart_rows, 'pattern': self._pattern_rows, 'class': self._class_rows}.get(str(form))
+            judge = {'chart': self._chart_rows, 'pattern': self._pattern_rows, 'class': self._class_rows,
+                     'keep': self._keep_rows}.get(str(form))
             if judge:
                 out += judge(scheme, rows)
         return out
@@ -1077,6 +1086,24 @@ class Law:
                     out.append((at, f"suggests: {self.std.code(c)}"))
         return out
 
+    def _keep_rows(self, scheme, rows):
+        """A policy scheme's rows (the storage profile's form `keep`): what each covers a list of rows of `risks`, its
+        `within` a length of time, its `for` codes of schemes the garden reads."""
+        out = []
+        for r in rows:
+            at = f"scheme {scheme} {r.get('code') or '(no code)'}"
+            for risk in str(r.get('covers') or '').split():
+                if self.has('risks', risk):
+                    out.append((at, f"covers: {risk!r} is no row of `risks` (the garden's own, VOCAB.md `risks`)"))
+            if r.get('within') not in (None, ''):
+                _q, why = self.duration(r['within'])
+                if why:
+                    out.append((at, f"within: {why}"))
+            for c in str(r.get('for') or '').split():
+                if self.std.code(c):
+                    out.append((at, f"for: {self.std.code(c)}"))
+        return out
+
     def _class_rows(self, scheme, rows):
         from core import groupings
         out, stands = [], {}
@@ -1093,6 +1120,47 @@ class Law:
         loop = groupings.cycle({str(r.get('code')): [str(r['parent'])] for r in rows if r.get('parent')})
         if loop:
             out.append((f"scheme {scheme}", f"its codes' parents run in a cycle: {' → '.join(loop)}"))
+        return out
+
+    def duration(self, text):
+        """(count, unit) of a length of time written `<count> <unit>` (`365 d`), its unit one of the law's of duration;
+        or (None, why not)."""
+        m = re.fullmatch(r'(\d+(?:\.\d+)?) (\S+)', str(text or '').strip())
+        if not m:
+            return None, f"{text!r} is no length of time: a count and a unit, `365 d`"
+        row = self.units.get(m.group(2))
+        if not isinstance(row, dict) or row.get('quantity') != 'duration' or Decimal(m.group(1)) <= 0:
+            return None, f"{text!r}: a positive count of a unit of duration (s, min, h, d …)"
+        return (m.group(1), m.group(2)), None
+
+    def risk_problems(self):
+        """[(where, message)]: each risk a garden adds (VOCAB.md `risks`, the storage profile's table) in its form —
+        named, said for a reader, resolved by a list of ways, each a map of keeping properties to a least count — and
+        only where the garden takes the storage profile."""
+        out = []
+        props = set(self.tables.get('keeping_properties') or [])
+        for r in listed(self.own.get('risks')):
+            where = str(r.get('at') or 'VOCAB.md risks')
+            if self.taken_where is not None and 'storage' not in self.taken:
+                out.append((where, "`risks` are the storage profile's, which this garden does not take"))
+                continue
+            if not str(r.get('meaning') or '').strip():
+                out.append((where, f"risk {r.get('risk')}: say what happens, in `meaning`"))
+            ways = r.get('resolved_by')
+            if not isinstance(ways, list) or not ways:
+                out.append((where, f"risk {r.get('risk')}: `resolved_by` is a list of ways, each a map of keeping "
+                                   f"properties to a least count: `[ {{ disk: 2 }}, {{ array: 1 }} ]`"))
+                continue
+            for way in ways:
+                if not isinstance(way, dict) or not way:
+                    out.append((where, f"risk {r.get('risk')}: {way!r} is no map of keeping properties to counts"))
+                    continue
+                for k, v in way.items():
+                    if str(k) not in props:
+                        out.append((where, f"risk {r.get('risk')}: `{k}` is no keeping property: one of "
+                                           f"{', '.join(sorted(props))}"))
+                    if not re.fullmatch(r'[1-9]\d*', str(v)):
+                        out.append((where, f"risk {r.get('risk')}: {k}: {v!r} is a least count, a whole number from 1"))
         return out
 
     def grouping_problems(self):
@@ -1120,12 +1188,12 @@ class Law:
                 out.append((where, f"home: {g.get('home')!r} is `core` or a profile: {', '.join(sorted(homes - {'core'}))}"))
             for f in listed(g.get('line')):
                 head, _, path = str(f).partition(':')
-                if head in ('cells', 'agree', 'sum'):
+                if head in ('cells', 'agree', 'each', 'sum'):
                     if not path:
                         out.append((where, f"line: `{head}` names a path, `{head}:<path>`"))
                 elif head not in fields:
                     out.append((where, f"line: `{f}` is no field of a line: {', '.join(sorted(fields))}, or "
-                                       f"cells:/agree:/sum: a path"))
+                                       f"cells:/agree:/each:/sum: a path"))
             if core_lines is not None:                # read in the garden's zone (GARDEN.md `zone`): the reader gives it
                 out += core_lines.reading_problems(where, dict(g, zone=g.get('zone') or 'Etc/UTC'), view, self.verbs)
         for name, row in sorted(self.slots.items()):
@@ -1595,6 +1663,8 @@ class Law:
         for where, msg in self.form_problems():
             bad(where, msg)
         for where, msg in self.grouping_problems():
+            bad(where, msg)
+        for where, msg in self.risk_problems():
             bad(where, msg)
         names = {}
         for u, row in self.units.items():

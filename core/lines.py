@@ -308,7 +308,9 @@ def law_view(L, root=None):
            'mechanism_form': (getattr(L, 'measure_law', None) or {}).get('mechanism_form'),
            'coefficient_form': (getattr(L, 'measure_law', None) or {}).get('coefficient_form'),
            'kinds': [dict(r, kind=k) for k, r in L.kinds.items()],
-           'aspects': L.tables.get('aspects') or []}   # the view's aspects (core 2.15); the lines' old name stays the line reader's
+           'aspects': L.tables.get('aspects') or [],   # the view's aspects (core 2.15); the lines' old name stays the line reader's
+           'risks': (getattr(L, 'profile_tables', None) or {}).get('risks') or [],   # the storage profile's, a garden's own
+           'keeping_properties': (getattr(L, 'profile_tables', None) or {}).get('keeping_properties') or []}
 
     def registry(name):
         if own.get(name) is not None:

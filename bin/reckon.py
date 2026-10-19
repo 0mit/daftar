@@ -495,6 +495,24 @@ def _pos(x, zone, notes):
         return None
 
 
+def _duration_seconds(q):
+    """Seconds in a quantity of duration `{count, unit}` (core/law/units.yaml, its factor to the second), or None."""
+    if not isinstance(q, dict):
+        return None
+    secs = {'ms': 0.001, 's': 1, 'min': 60, 'h': 3600, 'd': 86400, 'wk': 604800}.get(str(q.get('unit')))
+    try:
+        return float(q.get('count')) * secs if secs else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _shown_secs(t):
+    """A count of seconds since the calendar's day 0 as a UTC moment, to the second."""
+    import datetime
+    d = datetime.datetime(1, 1, 1, tzinfo=datetime.timezone.utc) + datetime.timedelta(seconds=t - dmcal.DAY_MS / 1000)
+    return d.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
 def _local_day(ms, zone, instant):
     off = dmcal.offset(zone, instant) if zone else 0
     return (ms + off * 60000) // dmcal.DAY_MS
@@ -1156,6 +1174,8 @@ class Reckoner:
         return [m for _v, m in keyed]
 
     def op_group(self, s):
+        if s.get('gap') is not None:
+            return self._gap_groups(s)
         out = {}
         for m in self.arg(s, 'of', 'set'):
             found = walk(self.g, m.node, s['path'], at=m.bean)
@@ -1165,6 +1185,47 @@ class Reckoner:
             label = self._cell(x, s) if s.get('level') else (x.get('bean') if isinstance(x, dict) and 'bean' in x else str(x))
             out.setdefault(label, []).append(m)
         return dict(sorted(out.items()))
+
+    def _span(self, x):
+        """(start, end) in seconds of a position: a moment its instant; a day the whole of it, in the reading's zone
+        (UTC where it states none)."""
+        p = _pos(x, self.zone, self.notes)
+        if p is None:
+            return None
+        if p[0] == 'ms':
+            return p[1] / 1000, p[1] / 1000
+        off = dmcal.offset(self.zone, f"{dmcal.shown(x)}T12:00:00+00:00") if self.zone else 0
+        start = (p[1] * dmcal.DAY_MS - off * 60000) / 1000
+        return start, start + 86400 - 0.001
+
+    def _gap_groups(self, s):
+        """`group` with `gap`: the members in the order of the moment at the path, a new group after a longer gap."""
+        from core import storage
+        gap = self._value(s, 'gap')
+        q = gap if isinstance(gap, dict) else None
+        if q is None and isinstance(gap, str):
+            m = re.fullmatch(r'\s*(\d+(?:\.\d+)?) (\S+)\s*', gap)
+            q = {'count': m.group(1), 'unit': m.group(2)} if m else None
+        secs = _duration_seconds(q)
+        if secs is None:
+            raise Refused(f"step {s['id']}: `gap` is a length of time, a count and a unit of duration: {gap!r}")
+        spans, none = [], []
+        for m in self.arg(s, 'of', 'set'):
+            found = walk(self.g, m.node, s['path'], at=m.bean)
+            sp = self._span(found[0][0]) if len(found) == 1 else None
+            if sp is None:
+                none.append(m)
+            else:
+                spans.append((sp[0], sp[1], m))
+        out = {}
+        for g in storage.gap_groups([(a, b, m) for a, b, m in spans], secs):
+            first = min(self._span(walk(self.g, m.node, s['path'], at=m.bean)[0][0])[0] for m in g)
+            last = max(self._span(walk(self.g, m.node, s['path'], at=m.bean)[0][0])[1] for m in g)
+            out[f"{_shown_secs(first)}–{_shown_secs(last)}"] = g
+        if none:
+            self.notes.append(f"step {s['id']}: {len(none)} member(s) hold no moment at `{s['path']}`, in no group: "
+                              + ', '.join(m.id for m in none[:8]) + ('…' if len(none) > 8 else ''))
+        return out
 
     def _cell(self, x, s):
         """The cell of a calendar level a moment or a day falls in, read in the reading's zone. `system` is a row of the
@@ -2163,6 +2224,151 @@ class Reckoner:
                 out.setdefault(key, []).append(m)
         self.found_classes[s['id']] = detail
         return dict(out)
+
+    def _statements(self, verb):
+        """(being, roles) of every `verb` statement the garden's beans and the stores a step read keep."""
+        for b, fm in self.g.fm.items():
+            for x, _w in _flatten(walk(self.g, fm, verb, at=b)):
+                if isinstance(x, dict):
+                    yield b, {k: (_own(v, b) if k in ('by', 'of', 'at') and isinstance(v, str) else v)
+                              for k, v in x.items()}
+        for st in getattr(self, '_opened', {}).values():
+            if st is None or verb not in st.verbs():
+                continue
+            for being, _sid, roles in st.statements_of(verb):
+                yield being, {k: (_ref_bean(v) or v if k in ('by', 'of', 'at') and isinstance(v, str) else v)
+                              for k, v in roles.items()}
+
+    def op_keepings(self, s):
+        """Each content by its policy code and the risks it leaves open (core/storage.py `judge`)."""
+        from core import storage
+        G = self._grouping_law()
+        risks = {str(r.get('risk')): [w for w in (r.get('resolved_by') or []) if isinstance(w, dict)]
+                 for r in (self.reg('risks') or []) if isinstance(r, dict)}
+        scheme = self._value(s, 'scheme') if s.get('scheme') is not None else None
+        policy, said, wholes = {}, collections.defaultdict(list), collections.defaultdict(list)
+        if scheme:
+            try:
+                policy = {str(r.get('code')): r for r in G['knowledge'].rows(str(scheme))}
+            except (KeyError, OSError) as e:
+                raise Refused(f"step {s['id']}: the scheme {scheme} cannot be read here: {e}")
+        holders = collections.defaultdict(list)          # content -> [(folder, holding)]
+        carried = collections.defaultdict(list)          # volume or folder -> its carriers or wholes
+        for b, r in self._statements('classify'):
+            sch, _c = dmparse.split_coding(str(r.get('as') or ''))
+            if r.get('of'):
+                said[str(r['of'])].append(str(r['as']))
+        for b, r in self._statements('part'):
+            if r.get('of'):
+                wholes[str(r.get('by') or b)].append(str(r['of']))
+        for b, r in self._statements('hold'):
+            by, of = str(r.get('by') or b), r.get('of')
+            if isinstance(of, str):
+                if r.get('as') is not None or r.get('through'):
+                    holders[of].append((by, r))
+                else:
+                    carried[of].append(by)
+        places = collections.defaultdict(set)
+        for b, r in self._statements('be'):
+            if r.get('as') == 'location' and r.get('at'):
+                places[str(r.get('by') or b)].add(str(r['at']))
+        needs, keepers = collections.defaultdict(set), collections.defaultdict(set)
+        for b, r in self._statements('need'):
+            for k in (r.get('of') if isinstance(r.get('of'), list) else [r.get('of')]):
+                if k:
+                    needs[str(r.get('by') or b)].add(str(k))
+        for k, holds in list(carried.items()):
+            keepers[k] |= set(holds)
+        hosts = {b for b, k in self.g.kind.items() if k == 'beans' and (self.g.fm.get(b) or {}).get('kind') == 'host'}
+
+        def volume_of(f, seen=()):
+            if f in carried or f in seen:
+                return f
+            ws = wholes.get(f) or []
+            return volume_of(ws[0], seen + (f,)) if ws else f
+
+        def disks_of(v, seen=()):
+            """The disks a volume is on: each carrier that is a host; a content that carries it (a container), on
+            the disks of every keeping of that content."""
+            out = set()
+            for c in carried.get(v) or []:
+                if c in seen:
+                    continue
+                if c in hosts:
+                    out.add(c)
+                for folder, _h in holders.get(c, []):
+                    out |= disks_of(volume_of(folder), seen + (v, c))
+            return out
+
+        within = None
+        now = _pos(self.now or _now(), None, [])
+        now = now[1] / 1000 if now and now[0] == 'ms' else None
+        out = {}
+        for m in self.arg(s, 'of', 'set'):
+            keeps, seen = [], set()
+            for folder, h in holders.get(m.id, []):
+                if h.get('through'):
+                    if h['through'] in seen:
+                        continue
+                    seen.add(h['through'])
+                v = volume_of(folder)
+                ds = disks_of(v)
+                ks = set().union(*[needs.get(x, set()) for x in ds | {v}]) if (ds or v) else set()
+                key_ok = all(len(keepers.get(k, ())) >= 2 for k in ks)
+                offline = bool(ds) and not any(d in wholes and any(w in hosts for w in wholes[d]) for d in ds)
+                keeps.append(storage.Keeping(v, ds, set().union(*[places.get(d, set()) for d in ds]) if ds else (),
+                                             offline=offline, key=key_ok))
+            codes = [c for c in said.get(m.id, []) if scheme and c.startswith(f"{scheme}:")]
+            for folder, _h in holders.get(m.id, []) if scheme and not codes else []:
+                f, path = folder, set()                   # the nearest whole a person classed, up `part`
+                while f and f not in path and not codes:
+                    path.add(f)
+                    codes = [c for c in said.get(f, []) if c.startswith(f"{scheme}:")]
+                    f = (wholes.get(f) or [None])[0]
+            if not codes and scheme:
+                mine = said.get(m.id, [])
+                codes = [f"{scheme}:{c}" for c, r in policy.items() if set(str(r.get('for') or '').split()) & set(mine)]
+            code = codes[0] if codes else None
+            row = policy.get(code.split(':', 1)[1]) if code else None
+            covers = str(row.get('covers') or '').split() if row else None
+            if row and row.get('within'):
+                n, u = str(row['within']).split()
+                within = _duration_seconds({'count': n, 'unit': u})
+            j = storage.judge(keeps, risks, covers, within, now)
+            label = (code or 'no policy') + ' · ' + ('safe' if covers is not None and not j['open'] else
+                                                    '; '.join(storage.lacking(e) for e in j['open'])
+                                                    if j['open'] else 'resolves ' + (', '.join(j['resolved']) or 'nothing'))
+            out.setdefault(label, []).append(m)
+        return dict(sorted(out.items()))
+
+    def op_datasets(self, s):
+        """The folders by the dataset their tree is (core/storage.py `Trees`): a dataset the BLAKE3 of the manifest."""
+        from core import formats, storage
+        parent, names, files = {}, {}, []
+        for b, r in self._statements('part'):
+            if r.get('of'):
+                parent[str(r.get('by') or b)] = str(r['of'])
+        for b, r in self._statements('name'):
+            if r.get('as') is not None and r.get('of'):
+                names.setdefault(str(r['of']), formats.unescape(str(r['as'])))
+        blake = {}
+        for b, r in self._statements('name'):
+            if r.get('by') == 'blake3' and r.get('of'):
+                blake[str(r['of'])] = str(r['as'])
+        for b, r in self._statements('hold'):
+            by, of = str(r.get('by') or b), r.get('of')
+            if isinstance(of, str) and r.get('as') is not None:
+                parent.setdefault(by, None)
+                files.append((by, formats.unescape(str(r['as'])), blake.get(of), None))
+        T = storage.Trees(parent, files, names)
+        out = {}
+        for m in self.arg(s, 'of', 'set'):
+            man = T.manifest(m.id)
+            if man is None:
+                self.notes.append(f"step {s['id']}: {m.id} holds a file whose content nobody read, or none: no dataset")
+                continue
+            out.setdefault(formats.blake3_hex(man), []).append(m)
+        return dict(sorted(out.items()))
 
     def op_shared(self, s):
         aspect = next((r for r in (self.reg('aspects') or []) if isinstance(r, dict) and r.get('aspect') == s['aspect']),

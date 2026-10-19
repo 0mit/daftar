@@ -251,6 +251,19 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.19** (2026-10-19, daftar v2.19.0, human-ratified rule-change) — **the storage profile: keepings,
+  risks, datasets, events, transfers.** MINOR: nothing a garden could write under core 2.18 is refused.
+  - profiles.yaml: the profile `storage` (asset `assets/storage`), its table `keeping_properties` (disk, array, volume,
+    place, offline, immutable, verified, key; array and immutable vacant), its table `risks` (none in the release: a
+    garden's own, VOCAB.md `risks`, each `resolved_by` ways of keeping properties to a least count; `risk_form`), and
+    the form `keep` (`covers`, `within`, `for`).
+  - lines.yaml: `group` takes `gap` (a new group after a longer gap, a day spanning the whole of it); the operations
+    `keepings` and `datasets`; a line's field `each:<path>`; the groupings `events`, `datasets` and `keepings`.
+  - core/storage.py (the readings, pure); bin/reckon.py (the operations over a garden's statements and its stores);
+    core/law.py (a garden's risks, a policy scheme's rows); assets/storage (README, bin/storage.py at a store's scale,
+    bin/transfer.py and the walk `walk-transfer`).
+  - MODEL.md (Storage), CHECKLIST.md, INSTALL.md (`blake3`), test/storage.py.
+
 - **core 2.18** (2026-10-19, daftar v2.18.0, human-ratified rule-change) — **two names of one inode, a tree's
   manifest, a volume in a content.** MINOR: nothing a garden could write under core 2.17 is refused.
   - verbs.yaml: `hold` takes `through` (a statement): the holding a name holds its content through — each name of an

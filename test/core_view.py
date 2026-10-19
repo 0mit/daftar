@@ -124,9 +124,10 @@ try:
     L = Law.load()
     P = read.data(os.path.join(ROOT, 'core', 'law', 'profiles.yaml'))
     homed = {p: sorted(v for v in L.verbs if L.home(v) == p) for p in L.profiles}
-    check(f"law: the {len(L.profiles)} profiles are today's, each with the verbs whose home it is "
-          f"({', '.join(f'{p} {len(v)}' for p, v in homed.items())})",
-          sorted(L.profiles) == sorted(LAW['profiles'])
+    SINCE = {'storage'}                       # a profile the core offers since today's law (core 2.19)
+    check(f"law: the {len(L.profiles)} profiles are today's, each with the verbs whose home it is, beside those offered "
+          f"since, {', '.join(sorted(SINCE))} ({', '.join(f'{p} {len(v)}' for p, v in homed.items())})",
+          sorted(set(L.profiles) - SINCE) == sorted(LAW['profiles'])
           and all(sorted(r.get('verbs') or []) == homed[r['profile']] for r in P['profiles']), homed)
     went = {r['profile']: set(r['went']) for r in P['profiles']}
     today = {p: {t['term'] for t in r.get('terms') or []} | {o['term'] for o in r.get('overlays') or []}
@@ -137,10 +138,11 @@ try:
     engraved = [v for r in P['profiles'] for v in r.get('vacancies') or [] if v.get('at') == 'table:archetypes'
                 and v.get('position') in ('queue', 'timeline', 'flows', 'sheet', 'cursor')]   # declared whole since today's law
     books = [v for r in P['profiles'] for v in r.get('vacancies') or [] if v.get('at') == 'table:account_roles']
+    since = [v for r in P['profiles'] if r['profile'] in SINCE for v in r.get('vacancies') or []]
     check(f"law: each of a profile's {vac} vacancies is placed in the core or dropped with why — none lost — beside the "
           f"four archetypes engraved, the board's cursor and the books' tax role, declared since; and the law holds "
           f"together with them",
-          vac - len(engraved) - len(books) == sum(len(r.get('vacancies') or []) for r in LAW['profiles'].values())
+          vac - len(engraved) - len(books) - len(since) == sum(len(r.get('vacancies') or []) for r in LAW['profiles'].values())
           and len(engraved) == 5 and [v.get('position') for v in books] == ['tax'] and not L.problems(), L.problems()[:3])
     check("law: the lenses, archetypes and planes are the profiles' tables; a drawing's form holds its values, each "
           "one of the three kinds of live value",

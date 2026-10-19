@@ -61,7 +61,8 @@ operations:
       path: { required: "true", in: { type: field_path } }
       level: { in: { type: kebab } }
       system: { in: { registry: systems, take: system, where: { dimension: [time] } } }
-    meaning: "the members grouped by the value at the path — or, with `level` and `system`, by the cell of that level the moment at the path falls in, read in the reading's `zone`"
+      gap: { in: { quantity: duration } }
+    meaning: "the members grouped by the value at the path — or, with `level` and `system`, by the cell of that level the moment at the path falls in, read in the reading's `zone`; or, with `gap`, in the order of the moment at the path, a new group wherever the time from one member to the next is longer than the gap, a member with no moment at the path in none and named"
   - op: some
     gives: truth
     takes: { of: { required: "true", in: { type: kebab } }, where: { in: any } }
@@ -357,6 +358,21 @@ operations:
       scheme: { required: "true", in: { registry: knowledge_schemes, take: scheme }, meaning: "the class scheme whose codes are read" }
       weighs: { in: { registry: groupings, take: grouping }, meaning: "the grouping whose `weighs` say what does not fit its whole; absent, nothing is set apart by kind, day or shape" }
     meaning: "each member's codes of a class scheme, with where each came from: those said of it (a `classify` in a bean); else those said of its nearest whole up `part`, and of each folder that holds it (`hold`), unless a code of the scheme is said nearer, between, or a pattern its name fits suggests a code that sets apart (the form `class`, `apart`), or it fits the whole it would inherit from by none of two of kind, day and shape (the grouping's `weighs`): set apart, with why; else those the patterns its name fits suggest. Two codes said of one being both stand. The codes are read, never written: what is said stands above what is read. `part` is free of cycles by rule `order`; a cycle among a scheme's own `parent` and `part-of` is refused, naming it"
+  - op: keepings
+    gives: groups
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the contents" }
+      scheme: { in: { registry: knowledge_schemes, take: scheme }, meaning: "the policy scheme, of the form `keep`, whose codes say what each content must be safe against; absent, every content is read for what its keepings resolve and judged against nothing" }
+    meaning: "each content by its policy code and the risks of that code its keepings leave open: its keepings (every holding of it, through `through` once), the properties each holds (core/law/profiles.yaml `keeping_properties`), and for each risk left open, the alternative of its `resolved_by` nearest to met and what it lacks — a keeping on another disk, at another place, offline, found whole since. A carrier a later reading took out keeps nothing; a keeping whose property nothing says lacks it"
+  - op: datasets
+    gives: groups
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the folders" }
+    meaning: "the folders by the dataset their tree is — the content of their tree's manifest (core/law/formats.yaml `checksums`), named by its BLAKE3 — each group one dataset and the folders that hold it alike; a tree holding a file whose content nobody read is no dataset, and named"
   - op: shared
     gives: groups
     exact: "true"
@@ -499,13 +515,38 @@ groupings:
       - { id: lines, op: select, of: statements, entries: pay }
       - { id: merchants, op: fit, of: lines, path: note }
     line: [range, count, "sum:of", extent]
+  - grouping: events
+    home: storage
+    meaning: "the contents made within one stretch of time, a new event wherever the time from one content's moment to the next is longer than the gap, each event by the cameras and devices that made it (`produce.by`). A content's moment is its `produce.at`, else the day a pattern its name fits reads in it (a `date` slot), else the day the nearest of its folders' names holds; a day alone stands for the whole of it. A content whose moment is a clock never set is placed in the event of its camera's dated neighbours in its series of names, where both are in one; a content with no moment is in no event, and named"
+    inputs:
+      - { name: gap, origin: { act: say }, quantity: duration }
+    steps:
+      - { id: made, op: select, kind: content, store: any, entries: produce }
+      - { id: events, op: group, of: made, path: at, gap: { input: gap } }
+    line: [extent, count, "each:by"]
+  - grouping: datasets
+    home: storage
+    meaning: "the folders whose trees are one dataset, each group a dataset and the folders that hold it alike"
+    steps:
+      - { id: folders, op: select, kind: folder, store: any }
+      - { id: trees, op: datasets, of: folders }
+    line: [code, count]
+  - grouping: keepings
+    home: storage
+    meaning: "the contents by their policy code and the risks their keepings leave open, each group with what would close each risk"
+    inputs:
+      - { name: scheme, origin: { act: say }, type: kebab }
+    steps:
+      - { id: contents, op: select, kind: content, store: any }
+      - { id: open, op: keepings, of: contents, scheme: { input: scheme } }
+    line: [code, count, "sum:measure.value", missing]
 
 selection_form:
   inputs: "optional: values a reading takes from outside what the garden holds, one entry each, named, each with its `origin` (`schema_language.origin`). Read by the reader (`{act: read, nature: soma, by: reader}`) — the moment of the reading, from the clock; said by another garden (`{act: said, nature: lekton, by: garden}`) — a value read from it at a commit it published and granted (`garden`, `path`); any other — a value the ASKER gives, in the form `type` or `quantity` states, and the reading's line records it as the asker's, said. Who is asking is such a value until a guard signs the asker in. A step names an input `{input: <name>}`; a reading with an input is read only where the input is given"
   steps: "the reading, in order: each step applies ONE operation of `operations`, to what earlier steps gave and to the beans the garden holds, with what that operation's row `takes`; the last step's result is the reading's. A step names earlier steps by `id`, or an input by its `name`, and never a later step, so a reading never loops. No formula is written and no string is evaluated"
   zone: "optional: the civil time zone, a row of `time-zones`, in which a step that groups or compares by a calendar level reads a moment. A step that needs one refuses without it"
   result: "what the last step gives, by its operation's row: a set (of beans, entries or values), a truth (true, false or NOT KNOWN), a value with its u, an order, or groups. Where a truth is asked — a clause's `when`, a checklist's `met_by`, a grant's audience — a set holds when it is not empty, and NOT KNOWN does not hold"
-  line: "a group's one line: what the gate's replies, the pages and the runs page show of a group in place of its members — its fields in the order its grouping's `line` names, each written by its value's own writer (a count, a position in the reader's calendar, a being by its title), the members' own text never repeated. A field is one of: `range` (the group's template with its counter's first and last, or its date's extent, in place of the slot), `count` (how many members), `missing` (the positions between a counter's first and last nobody holds, counted), `extent` (a date's or a time's first and last), `values` (a word slot's values, the first few), `code` (the code a group of `inherit` holds, and where it came from), `apart` (how many were set apart, and why, by reason), `cells:<path>` (the cells of the level the grouping names the members' positions at the path fall in), `agree:<path>` (the value every member holds at the path, shown only where all agree), `sum:<path>` (the quantities at the path added)"
+  line: "a group's one line: what the gate's replies, the pages and the runs page show of a group in place of its members — its fields in the order its grouping's `line` names, each written by its value's own writer (a count, a position in the reader's calendar, a being by its title), the members' own text never repeated. A field is one of: `range` (the group's template with its counter's first and last, or its date's extent, in place of the slot), `count` (how many members), `missing` (the positions between a counter's first and last nobody holds, counted), `extent` (a date's or a time's first and last), `values` (a word slot's values, the first few), `code` (the code a group of `inherit` holds, and where it came from), `apart` (how many were set apart, and why, by reason), `cells:<path>` (the cells of the level the grouping names the members' positions at the path fall in), `agree:<path>` (the value every member holds at the path, shown only where all agree), `each:<path>` (the values the members hold at the path, each with how many, the most first), `sum:<path>` (the quantities at the path added)"
   read: "READ each time it is asked, by bin/reckon.py, and never written back as a fact. An act that fixes a reading — an invoice, a period closed, a verdict — records the commit and the moment it was read at (`pin_form`)"
 pin_form:
   commit: "the commit a reading was read at: an object id of the garden (7 to 40 hex digits), an ancestor of the commit that records the pin"

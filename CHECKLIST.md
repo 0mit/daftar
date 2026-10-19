@@ -143,7 +143,10 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       codes of the schemes the garden reads, what it reads a field path, its calendar a system of time, its grouping a
       row of `groupings`, `marks` only `by`, `match` `whole`, `part` or `word`, `only` `suggests`; a scheme of classes (`form: class`) has one code a being and `apart` only
       `true`, and no cycle among its codes' parents. A garden's own grouping (VOCAB.md `groupings`) takes a name the
-      law's do not, and is judged as a reading of the law's closed list, each field of its line one a line has.
+      law's do not, and is judged as a reading of the law's closed list, each field of its line one a line has. A
+      garden's own risk (VOCAB.md `risks`, the storage profile's) is resolved by ways each of keeping properties of the
+      law (`keeping_properties`) to a least count, and is held only where the garden takes the profile; a policy scheme
+      (`form: keep`) covers risks the garden has, within a length of time, for codes of schemes it reads.
 
 **The commit's own rules**, which only a commit can show:
 - [ ] Every bean the commit changes is named in the journal entry it adds (`[[<bean>]]`), and that entry's heading is
