@@ -220,7 +220,20 @@ db.executemany("INSERT INTO entry VALUES (?, ?, ?, ?)", [(r['path'].encode(), r[
 db.commit(); db.close()
 open(d + '/v3.sums', 'wb').write(formats.manifest([(r['path'], r['hash'], r.get('size')) for r in rows3 if r['type'] == 'f']))
 u, w = dump(load(d + '/v3.sqlite', d + '/sq3.sqlite')), dump(load(d + '/v3.sums', d + '/sums3.sqlite', setwise=False, fmt='checksums'))
+rows4 = [{'path': 'A', 'type': 'd'}, {'path': 'A/one.jpg', 'type': 'f', 'size': 4, 'hash': 'a' * 64, 'ino': 7, 'nlink': 2},
+         {'path': 'A/two.jpg', 'type': 'f', 'size': 4, 'hash': 'a' * 64, 'ino': 7, 'nlink': 2},
+         {'path': 'A/solo.txt', 'type': 'f', 'size': 4, 'hash': 'b' * 64, 'ino': 8, 'nlink': 1}]
+db = sqlite3.connect(d + '/v4.sqlite')
+db.execute("CREATE TABLE entry (path BLOB, type TEXT, size INTEGER, hash TEXT, ino INTEGER, nlink INTEGER)")
+db.executemany("INSERT INTO entry VALUES (?, ?, ?, ?, ?, ?)", [(r['path'].encode(), r['type'], r.get('size'), r.get('hash'),
+               r.get('ino'), r.get('nlink')) for r in rows4])
+db.commit(); db.close()
+open(d + '/v4.jsonl', 'w').write(''.join(json.dumps(r) + '\n' for r in rows4))
+l4s, l4e = load(d + '/v4.sqlite', d + '/l4set.sqlite'), load(d + '/v4.jsonl', d + '/l4each.sqlite', setwise=False)
+holds = sorted((r.get('by'), r.get('as'), r.get('through'), i) for b in ('vol-2', 'd-' + __import__('hashlib').sha256(b'vol-2\0A').hexdigest()[:16])
+               for v, r, _a in l4s.get(b) for i in [r.get('id') if r.get('id', '').startswith('i') else None] if v == 'hold')
 print(json.dumps({'same': x == y, 'text': z == x and t == x, 'rows': {k: len(v) for k, v in x.items()},
+                  'links': holds, 'links_same': dump(l4s) == dump(l4e),
                   'sums': bool(w.get('hold')) and all(u.get(k) == w.get(k) for k in ('hold', 'part', 'name', 'being')),
                   'diff': [k for k in set(x) | set(y) | set(z) | set(t) if not (x.get(k) == y.get(k) == z.get(k) == t.get(k))],
                   'indexes': a.db.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND sql IS NOT NULL").fetchone()[0]
@@ -428,6 +441,11 @@ try:
           "same rows again", j is not None and j['text'], j and j.get('diff'))
     check("...and a tree's manifest (`checksums`) imported through `file-tree` is the tree its index is: the same "
           "beings, folders, names and holdings", j is not None and j['sums'], j)
+    check("...and a listing that says each file's inode and names: two names of one inode held through the volume's one "
+          "holding of it (`i7`), a file of one name as before; set-wise and record by record alike",
+          j is not None and j['links_same'] and ['vol-2', None, None, 'i7'] in j['links']
+          and sum(1 for h in j['links'] if h[2] == 'vol-2#i7') == 2
+          and any(h[1] == 'solo.txt' and h[2] is None for h in j['links']), j and j.get('links'))
 
     # ---- again
     j, r = py(TREE, idx, 'scan', '2026-10-18T11:00:00+03:00', B3A)

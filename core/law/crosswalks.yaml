@@ -253,7 +253,36 @@ crosswalks:
       folder: { from: bean }
       content: { from: of }
       name: { from: as, as: escaped }
-    meaning: "a file is no being but a holding: its folder, or its volume, holds a content under the file's name, and a content nobody read is `unknown`. Each name is a holding, a hard link's second among them"
+    meaning: "a file is no being but a holding: its folder, or its volume, holds a content under the file's name, and a content nobody read is `unknown`"
+  - crosswalk: file-tree-inode
+    system: file-tree
+    series: "1"
+    model: inode
+    statements: { verb: hold }
+    format: [sqlite, tsv, csv, jsonl]
+    reader: file-tree
+    act: { verb: read }
+    keep: store
+    fields:
+      volume: { from: bean }
+      id: { from: id }
+      content: { from: of }
+    meaning: "an inode of more than one name: the volume holds its content once, the room it takes"
+  - crosswalk: file-tree-link
+    system: file-tree
+    series: "1"
+    model: link
+    statements: { verb: hold }
+    format: [sqlite, tsv, csv, jsonl]
+    reader: file-tree
+    act: { verb: read }
+    keep: store
+    fields:
+      folder: { from: bean }
+      content: { from: of }
+      name: { from: as, as: escaped }
+      through: { from: through }
+    meaning: "a name of an inode of more than one name: its folder holds the content under it through the volume's one holding of the inode"
   - crosswalk: file-tree-content
     system: file-tree
     series: "1"

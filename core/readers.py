@@ -24,11 +24,13 @@ from core.formats import Record, Refused, escape, folder_id, content_id, local_m
 
 # ================================================================================================ a model's records
 def file_tree(records, volume, carrier=None, **_):
-    """A listing of paths (path, type, size, hash) as the records of the volume, its folders, its files and its contents
-    (formats.yaml, reader `file-tree`). Each content once, after every file that holds it."""
+    """A listing of paths (path, type, size, hash, and where it says them ino and nlink) as the records of the volume,
+    its folders, its files and its contents (formats.yaml, reader `file-tree`): a file of an inode of more than one name
+    a `link`, held through the volume's one holding of the inode, an `inode`, given once. Each content once, after every
+    file that holds it."""
     if carrier:
         yield Record({'id': volume, 'carrier': carrier}, at='the volume', model='volume')
-    contents = {}
+    contents, inodes = {}, set()
     for rec in records:
         typ = rec.get('type')
         if typ not in ('d', 'f'):
@@ -42,13 +44,19 @@ def file_tree(records, volume, carrier=None, **_):
             yield Record({'id': folder_id(volume, path), 'parent': pid, 'name': name}, at=rec.at, model='folder')
             continue
         h = rec.get('hash')
-        if h:
-            c = content_id(h)
-            if c not in contents:
-                contents[c] = (str(h), rec.get('size'))
-            yield Record({'folder': pid, 'content': c, 'name': name}, at=rec.at, model='file')
-        else:
-            yield Record({'folder': pid, 'content': 'unknown', 'name': name}, at=rec.at, model='file')
+        c = content_id(h) if h else 'unknown'
+        if h and c not in contents:
+            contents[c] = (str(h), rec.get('size'))
+        ino, nlink = rec.get('ino'), rec.get('nlink')
+        if h and ino not in (None, '') and str(nlink or '').isdigit() and int(nlink) > 1:
+            iid = f"i{int(ino)}"
+            if iid not in inodes:
+                inodes.add(iid)
+                yield Record({'volume': volume, 'id': iid, 'content': c}, at=rec.at, model='inode')
+            yield Record({'folder': pid, 'content': c, 'name': name, 'through': f"{volume}#{iid}"}, at=rec.at,
+                         model='link')
+            continue
+        yield Record({'folder': pid, 'content': c, 'name': name}, at=rec.at, model='file')
     for c, (h, size) in contents.items():
         yield Record({'id': c, 'blake3': h, 'size': '' if size is None else str(size)}, at=f"content {c}",
                      model='content')
@@ -136,29 +144,37 @@ def file_tree_sql(db, src, volume, carrier=None, **_):
     if not {'path', 'type'} <= set(cols):
         raise Refused("the listing holds no table `entry` of paths and their types")
     has = lambda c: c if c in cols else 'NULL'
-    for t in ('ft_volume', 'ft_folder', 'ft_file', 'ft_content_now'):
+    for t in ('ft_volume', 'ft_folder', 'ft_file', 'ft_link', 'ft_inode', 'ft_content_now'):
         db.execute(f'DROP TABLE IF EXISTS temp.{t}')
     db.execute("CREATE TABLE IF NOT EXISTS temp.ft_content (id TEXT PRIMARY KEY, blake3 TEXT, size TEXT)")
     db.execute("CREATE TEMP TABLE ft_volume (id TEXT, carrier TEXT)")
     if carrier:
         db.execute("INSERT INTO temp.ft_volume VALUES (?, ?)", (volume, carrier))
-    sel = (f"SELECT ft_bytes(path) AS p, type, {has('size')} AS size, {has('hash')} AS hash FROM {src}.entry "
-           f"WHERE type IN ('d', 'f') AND path NOT IN (x'', '.', x'2e')")
+    sel = (f"SELECT ft_bytes(path) AS p, type, {has('size')} AS size, {has('hash')} AS hash, {has('ino')} AS ino, "
+           f"{has('nlink')} AS nlink FROM {src}.entry WHERE type IN ('d', 'f') AND path NOT IN (x'', '.', x'2e')")
+    linked = "(hash IS NOT NULL AND hash != '' AND ino IS NOT NULL AND CAST(nlink AS INTEGER) > 1)"
     db.execute(f"CREATE TEMP TABLE ft_folder AS SELECT ft_fid(p) AS id, ft_fid(ft_parent(p)) AS parent, ft_name(p) AS name "
                f"FROM ({sel}) WHERE type = 'd'")
     db.execute(f"CREATE TEMP TABLE ft_file AS SELECT ft_fid(ft_parent(p)) AS folder, CASE WHEN hash IS NULL OR hash = '' "
                f"THEN 'unknown' ELSE 'c-' || substr(hash, 1, 24) END AS content, ft_name(p) AS name, hash, size "
-               f"FROM ({sel}) WHERE type = 'f'")
-    db.execute("INSERT OR IGNORE INTO temp.ft_content SELECT 'c-' || substr(hash, 1, 24), hash, "
-               "coalesce(CAST(size AS TEXT), '') FROM temp.ft_file WHERE hash IS NOT NULL AND hash != '' ORDER BY rowid")
+               f"FROM ({sel}) WHERE type = 'f' AND NOT {linked}")
+    db.execute(f"CREATE TEMP TABLE ft_link AS SELECT ft_fid(ft_parent(p)) AS folder, 'c-' || substr(hash, 1, 24) AS content, "
+               f"ft_name(p) AS name, ? || '#i' || CAST(ino AS INTEGER) AS through, hash, size FROM ({sel}) "
+               f"WHERE type = 'f' AND {linked}", (volume,))
+    db.execute(f"CREATE TEMP TABLE ft_inode AS SELECT ? AS volume, 'i' || CAST(ino AS INTEGER) AS id, "
+               f"min('c-' || substr(hash, 1, 24)) AS content FROM ({sel}) WHERE type = 'f' AND {linked} "
+               f"GROUP BY CAST(ino AS INTEGER)", (volume,))
+    for t in ('ft_file', 'ft_link'):
+        db.execute(f"INSERT OR IGNORE INTO temp.ft_content SELECT 'c-' || substr(hash, 1, 24), hash, "
+                   f"coalesce(CAST(size AS TEXT), '') FROM temp.{t} WHERE hash IS NOT NULL AND hash != '' ORDER BY rowid")
     missed = {}
     for c in cols:
-        if c not in ('path', 'type', 'size', 'hash'):
+        if c not in ('path', 'type', 'size', 'hash', 'ino', 'nlink'):
             n = db.execute(f'SELECT COUNT("{c}") FROM {src}.entry').fetchone()[0]
             if n:
                 missed[c] = n
-    return {'volume': 'temp.ft_volume', 'folder': 'temp.ft_folder', 'file': 'temp.ft_file',
-            'content': 'temp.ft_content'}, missed
+    return {'volume': 'temp.ft_volume', 'folder': 'temp.ft_folder', 'file': 'temp.ft_file', 'inode': 'temp.ft_inode',
+            'link': 'temp.ft_link', 'content': 'temp.ft_content'}, missed
 
 
 SETWISE = {'file-tree': file_tree_sql}

@@ -427,7 +427,9 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   written `escaped`. A store keeps no sealed material. A statement leaves a store only with its removal recorded: who,
   when and why.
 - **Names, inodes and trees.** A file is a folder holding a content under its name (`hold … as`). Two names of one
-  inode hold it through the volume's one holding of it (`hold … through`), which is the room it takes, counted once.
+  inode hold it through the volume's one holding of it (`hold … through`), which is the room it takes, counted once:
+  a listing that says each file's inode and how many names it has gives them so (the `file-tree` reader's `link` and
+  `inode`).
   A volume's carrier is a disk, or a content that holds it — an archive, an image — read as a volume like any other.
   A tree's **manifest** is the checksum lines of its files (formats.yaml `checksums`), sorted by path; a **dataset** is
   the content of a tree's manifest, named by its BLAKE3: what two folders hold alike is one dataset, read and never

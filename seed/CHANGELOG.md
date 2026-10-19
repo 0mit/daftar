@@ -251,6 +251,18 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.20** (2026-10-20, daftar v2.20.0, human-ratified rule-change) — **a listing's inodes.** MINOR: nothing a
+  garden could write under core 2.19 is refused.
+  - formats.yaml: the reader `file-tree` reads a listing's `ino` and `nlink` where it says them: a name of an inode
+    of more than one name is a `link`, held through the volume's one holding of the inode, an `inode`, given once.
+  - crosswalks.yaml: `file-tree-inode` (the volume holds the inode's content once, its id `i` and its number) and
+    `file-tree-link` (each name held `through` it); `file-tree-file` a file of one name.
+  - core/readers.py (record by record and set-wise); bin/import.py (a statement whose row gives its id, set-wise).
+  - assets/storage/bin/storage.py: `keepings` reads a content's policy code for a code a pattern suggests — a folder's
+    name (a program's tree), the content's own name where it is a picture, a video or a sound (its media class, by
+    `media-types`) — each name fitted once.
+  - test/io.py.
+
 - **core 2.19** (2026-10-19, daftar v2.19.0, human-ratified rule-change) — **the storage profile: keepings,
   risks, datasets, events, transfers.** MINOR: nothing a garden could write under core 2.18 is refused.
   - profiles.yaml: the profile `storage` (asset `assets/storage`), its table `keeping_properties` (disk, array, volume,
