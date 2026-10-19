@@ -15,7 +15,10 @@ operations:
       where:
         in: any
         meaning: "conditions, each `{path: <field_path>, <comparator>: <operand>}`; a member is selected when it meets every one (`comparators`)"
-    meaning: "the beans, or their entries, that meet every condition"
+      store:
+        in: { type: kebab }
+        meaning: "the beings of the kind kept in a store as well: one the host declares by its name (`details.stores.<name>`), or `any`, every store it declares — each read in one snapshot. A reading that names one is read only where a host keeps it; the gate, which reads no store, never reads it"
+    meaning: "the beans, or their entries, that meet every condition — and, with `store`, the beings and statements a store keeps, one universe with the beans"
   - op: intersect
     gives: set
     takes: { of: { required: "true", in: { type: kebab } }, with: { required: "true", in: { type: kebab } } }
@@ -335,6 +338,33 @@ operations:
       walk: { required: "true", in: { type: field_path }, meaning: "a path to a walk's `steps`" }
       scheme: { required: "true", in: { registry: knowledge_schemes, take: scheme } }
     meaning: "whether each step's `takes` and `gives` conserve every element and the charge, exactly; a substance with no formula is refused"
+  - op: fit
+    gives: groups
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the members: an earlier step's set, or an input naming a list of texts" }
+      path: { in: { type: field_path }, meaning: "the text each member is read by — a holding's name (`as`), a folder's name, a payment's words (`note`); absent, the member itself, a text" }
+      scheme: { in: { registry: knowledge_schemes, take: scheme }, meaning: "the scheme of the form `pattern` read first; absent, every scheme of that form the garden reads, the garden's own before the release's" }
+      by: { in: { type: kebab }, meaning: "the role of a member whose being a group stays inside: `by`, the folder that holds a file — a run of names is a run in one folder" }
+    meaning: "the members grouped by the pattern their text fits — the most specific row first (more literal characters, then fewer slots, then the code's order), its `within` and `beside` met — or, fitting none, by the shape mined from the text (its runs of letters, of decimal digits of any script, of hexadecimal digits, each other character); each group with its template and what its slots hold: a counter's first and last, how many members and the positions between them nobody holds, a date's and a time's extent in the calendar the pattern names, a word's values. A date is a day its calendar has, checked by that calendar; where two calendars fit a mined date, both are said and none is chosen. Read each time, offline, the same answer each time"
+  - op: inherit
+    gives: groups
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the members: beings of a set" }
+      scheme: { required: "true", in: { registry: knowledge_schemes, take: scheme }, meaning: "the class scheme whose codes are read" }
+      weighs: { in: { registry: groupings, take: grouping }, meaning: "the grouping whose `weighs` say what does not fit its whole; absent, nothing is set apart by kind, day or shape" }
+    meaning: "each member's codes of a class scheme, with where each came from: those said of it (a `classify` in a bean); else those said of its nearest whole up `part`, and of each folder that holds it (`hold`), unless a code of the scheme is said nearer, between, or a pattern its name fits suggests a code that sets apart (the form `class`, `apart`), or it fits the whole it would inherit from by none of two of kind, day and shape (the grouping's `weighs`): set apart, with why; else those the patterns its name fits suggest. Two codes said of one being both stand. The codes are read, never written: what is said stands above what is read. `part` is free of cycles by rule `order`; a cycle among a scheme's own `parent` and `part-of` is refused, naming it"
+  - op: shared
+    gives: groups
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the cursors: a set of beings" }
+      aspect: { required: "true", in: { registry: aspects, take: aspect }, meaning: "the aspect whose relation is followed (the view profile's `aspects`)" }
+    meaning: "what every member of the set reaches by the aspect's relation, and how many reach each, grouped by where they are reached — the contents two disks both hold, by the pair of folders they sit in: a computation of its own for each relation, never a set operation on each member's neighbours"
 comparisons:
   - comparator: is
     sign: "="
@@ -413,11 +443,69 @@ ordering_keys:
       - { name: importance, origin: { act: say }, quantity: ratio }
       - { name: uncertainty, origin: { act: say }, quantity: ratio }
     steps: [{ id: key, op: multiply, of: importance, with: uncertainty }]
+# THE GROUPINGS: one row a standard reading a profile brings (`home`; `core` for every garden), the kind of group it
+# makes and what its one line shows (`selection_form.line`). A garden adds its own in VOCAB.md (`groupings`), read the
+# same way. Each is read each time and never written: what a person says of a member — a `classify` of it — stands above
+# it. A grouping that reads moments reads them in the garden's zone (GARDEN.md `zone`) unless the asker gives one.
+# These rows are the law itself: a change to them is a RULE-CHANGE, made here.
+groupings:
+  - grouping: name-series
+    home: core
+    meaning: "a run of names in one folder: the files that fit one pattern, its counter's runs and the positions between them nobody holds, the days their contents were made on and the camera, where every member agrees. A content whose moment is a clock never set (core/law/formats.yaml `clock_epochs`) is placed between the dated neighbours of its camera's counter, after the one and before the other (`event-anchored`), where the series holds any"
+    steps:
+      - { id: folders, op: select, kind: folder, store: any }
+      - { id: files, op: select, of: folders, entries: hold }
+      - { id: runs, op: fit, of: files, path: as, by: by }
+    line: [range, count, missing, "cells:of>produce.at", "agree:of>produce.by"]
+  - grouping: day
+    home: core
+    meaning: "the contents made on one day, by the day cell their `produce.at` falls in, in the calendar the asker reads in — none is the one a day is grouped in, and every calendar whose day begins at midnight gives the same cells"
+    inputs:
+      - { name: calendar, origin: { act: say }, type: kebab }
+    steps:
+      - { id: made, op: select, kind: content, store: any, entries: produce }
+      - { id: days, op: group, of: made, path: at, level: day, system: { input: calendar } }
+    line: [range, count, "agree:by"]
+  - grouping: root
+    home: core
+    meaning: "what a code said of a whole holds by inheritance — a folder of an organisation's, a job's, a person's — with what is set apart beneath it: by kind (a media type's family under 2 % of the whole's bytes and 5 % of its files, and none of its two largest), by day (more than 365 days from the nearest of the whole's days), by shape (fitting none of its siblings' patterns while four in five of them fit one); two of the three set a member apart"
+    inputs:
+      - { name: scheme, origin: { act: say }, type: kebab }
+    steps:
+      - { id: beings, op: select, kind: folder, store: any }
+      - { id: classed, op: inherit, of: beings, scheme: { input: scheme }, weighs: root }
+    line: [code, count, "sum:of>measure.value", apart]
+    weighs: { kind: { bytes: "0.02", files: "0.05", largest: 2 }, day: { measure: { count: 365, unit: d } }, shape: { most: "0.8" }, of: 2 }
+  - grouping: names
+    home: core
+    meaning: "any list of names — bean ids, statement ids, paths — by the patterns they fit: what the gate's replies show in place of a thousand names, needing no store"
+    inputs:
+      - { name: names, origin: { act: say }, type: text }
+    steps:
+      - { id: shapes, op: fit, of: { input: names } }
+    line: [range, count, missing]
+  - grouping: passes
+    home: core
+    meaning: "the runs of one name — a watcher's passes, a scan per volume — each a course on `walk-run`, by the pattern of its name"
+    steps:
+      - { id: courses, op: select, kind: host, store: any, entries: be, where: [ { path: at, "=": walk-run } ] }
+      - { id: names, op: fit, of: courses, path: note }
+    line: [range, count, extent]
+  - grouping: moves
+    home: accounting
+    meaning: "a bank's lines by the pattern of their words — the lines of one merchant — each group suggesting the code of a plan its pattern names, which a person books it to (`book … to`)"
+    steps:
+      - { id: statements, op: select, kind: document, store: any }
+      - { id: lines, op: select, of: statements, entries: pay }
+      - { id: merchants, op: fit, of: lines, path: note }
+    line: [range, count, "sum:of", extent]
+
 selection_form:
   inputs: "optional: values a reading takes from outside what the garden holds, one entry each, named, each with its `origin` (`schema_language.origin`). Read by the reader (`{act: read, nature: soma, by: reader}`) — the moment of the reading, from the clock; said by another garden (`{act: said, nature: lekton, by: garden}`) — a value read from it at a commit it published and granted (`garden`, `path`); any other — a value the ASKER gives, in the form `type` or `quantity` states, and the reading's line records it as the asker's, said. Who is asking is such a value until a guard signs the asker in. A step names an input `{input: <name>}`; a reading with an input is read only where the input is given"
   steps: "the reading, in order: each step applies ONE operation of `operations`, to what earlier steps gave and to the beans the garden holds, with what that operation's row `takes`; the last step's result is the reading's. A step names earlier steps by `id`, or an input by its `name`, and never a later step, so a reading never loops. No formula is written and no string is evaluated"
   zone: "optional: the civil time zone, a row of `time-zones`, in which a step that groups or compares by a calendar level reads a moment. A step that needs one refuses without it"
   result: "what the last step gives, by its operation's row: a set (of beans, entries or values), a truth (true, false or NOT KNOWN), a value with its u, an order, or groups. Where a truth is asked — a clause's `when`, a checklist's `met_by`, a grant's audience — a set holds when it is not empty, and NOT KNOWN does not hold"
+  line: "a group's one line: what the gate's replies, the pages and the runs page show of a group in place of its members — its fields in the order its grouping's `line` names, each written by its value's own writer (a count, a position in the reader's calendar, a being by its title), the members' own text never repeated. A field is one of: `range` (the group's template with its counter's first and last, or its date's extent, in place of the slot), `count` (how many members), `missing` (the positions between a counter's first and last nobody holds, counted), `extent` (a date's or a time's first and last), `values` (a word slot's values, the first few), `code` (the code a group of `inherit` holds, and where it came from), `apart` (how many were set apart, and why, by reason), `cells:<path>` (the cells of the level the grouping names the members' positions at the path fall in), `agree:<path>` (the value every member holds at the path, shown only where all agree), `sum:<path>` (the quantities at the path added)"
   read: "READ each time it is asked, by bin/reckon.py, and never written back as a fact. An act that fixes a reading — an invoice, a period closed, a verdict — records the commit and the moment it was read at (`pin_form`)"
 pin_form:
   commit: "the commit a reading was read at: an object id of the garden (7 to 40 hex digits), an ancestor of the commit that records the pin"
@@ -614,6 +702,22 @@ forms:
         meaning: "the operations, in order, each `{id, op, ...}` with what its row of `operations` takes — judged against that row by bin/reckon.py's check, called by the gate"
 
 
+# The slots of a name's template (the knowledge profile's form `pattern`): what its varying part may be, each with what it
+# matches and how it is read. A template is literal text and slots, `{<slot>}` or `{<slot>:<width or form>}`; nothing in
+# it is evaluated. A name the world gives is read with its digits of any script as ASCII digits (normalised at the
+# boundary, where it enters: a ledger's own value is never read so); a date and a time are checked, never guessed.
+# These rows are the law itself: a change to them is a RULE-CHANGE, made here.
+slots:
+  - { slot: counter, matches: '[0-9]+', width: allowed, meaning: "decimal digits: a position on the ordinal line the pattern counts in one container (a folder's names, a run's name); members in order make runs, and a position between a run's first and last that nobody holds is a gap. With a width, exactly that many digits" }
+  - { slot: number, matches: '[0-9]+', width: allowed, meaning: "decimal digits that are no counter — a version, a size, a resolution: never ranged" }
+  - { slot: date, forms: [yyyymmdd, yymmdd, yyyy-mm-dd, yyyy_mm_dd, yyyy.mm.dd], meaning: "a day, in one of ISO 8601's basic and extended forms or the separators names use: a day of the calendar the pattern names (`calendar`), checked by that calendar — a day it does not have is no date" }
+  - { slot: time, forms: [hhmmss, hhmm, hh-mm-ss, hh.mm.ss, hh_mm_ss], meaning: "a time of day in one of ISO 8601's basic forms or the separators names use, checked: hours below 24, minutes below 60, seconds below 61" }
+  - { slot: hex, matches: '[0-9A-Fa-f]+', width: required, meaning: "hexadecimal digits of a width, either case: a digest or a minted id, never ranged and never a date" }
+  - { slot: alnum, matches: '[A-Za-z0-9_]+', width: allowed, meaning: "letters, digits and underscores: a maker's own prefix — DCF's four free characters" }
+  - { slot: word, width: allowed, meaning: "letters of any script (Unicode's general category L), read by the engine, not by an ASCII pattern of the law: a word that varies between members" }
+  - { slot: text, matches: '.+?', meaning: "any run, the shortest that lets the rest fit: at most one a template, so that a template still says what is fixed around it" }
+  - { slot: extension, meaning: "what follows a name's last dot, one to eight letters or digits of any script, compared without case: the row's `extensions` lists those it allows" }
+
 # The forms a value is written in, which a line's form names (`type`), each with its pattern or what it holds, and
 # the refusal of a value out of it; and the gaps a series' cell holds where it holds no value, each by its token.
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
@@ -692,6 +796,8 @@ columns:
   comparisons: { comparator: required, sign: optional, monotone: required, meaning: required }
   aggregates: { aggregate: required, meaning: required }
   ordering_keys: { key: required, meaning: required, inputs: required, steps: required }
+  groupings: { grouping: required, home: required, meaning: required, steps: required, line: required, inputs: optional, weighs: optional }
+  slots: { slot: required, meaning: required, matches: optional, width: optional, forms: optional }
   types:
     type: required
     system: optional

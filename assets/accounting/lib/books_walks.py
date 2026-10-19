@@ -899,7 +899,7 @@ def chart(B, I, today, run=(None, None)):
     or one above it, is not moved — its parent, level and element stay: close it (`closed`), and add another; its name,
     the being it stands for, its parties, its role and the day it closed may change. A parent the books used gets no
     account beneath it, and an account closes on or after the day of the last line the books read in it. The rows written are
-    held to the chart's form by the gate's own reading (core/law.py `chart_problems`) before the plan is shown."""
+    held to the chart's form by the gate's own reading (core/law.py `form_problems`) before the plan is shown."""
     import csv
     import io
     from core import check as dmcheck
@@ -1043,7 +1043,7 @@ def chart(B, I, today, run=(None, None)):
     if plain(rows) != plain(read(before)):
         refuse(f"{rel}: the other accounts would not read back as they are")
     K._rows[C.scheme] = rows
-    found = [(w, m) for w, m in L.chart_problems() if w.split()[:2] == ['scheme', C.scheme]]
+    found = [(w, m) for w, m in L.form_problems() if w.split()[:2] == ['scheme', C.scheme]]
     if found:
         refuse('; '.join(f"{w}: {m}" for w, m in found[:4]))
     sf = new.get('stands_for')

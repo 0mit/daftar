@@ -325,7 +325,7 @@ def domain_why(J, b, M, where, v, dom):
         return [(where, f"{s!r} is no signal the catalogue publishes (seed/knowledge/signals.tsv)")]
     if reg == 'lines' and s not in M.lines:
         return [(where, f"{s!r} is no line a drawing can run along: one of {', '.join(sorted(M.lines))}")]
-    if reg in ('lenses', 'archetypes', 'planes', 'date_styles', 'currency_displays') and L.has(reg, s):
+    if reg in ('lenses', 'archetypes', 'aspects', 'planes', 'date_styles', 'currency_displays') and L.has(reg, s):
         return [(where, L.has(reg, s))]
     if dom.get('type') == 'locale_tag':        # A READER'S WAY OF READING: one tag, as the law's type writes it
         row = next((t for t in (getattr(L, 'line_law', {}) or {}).get('types') or []

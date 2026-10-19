@@ -307,7 +307,8 @@ def law_view(L, root=None):
            'compatibility': _typed_compat((getattr(L, 'measure_law', None) or {}).get('compatibility')),
            'mechanism_form': (getattr(L, 'measure_law', None) or {}).get('mechanism_form'),
            'coefficient_form': (getattr(L, 'measure_law', None) or {}).get('coefficient_form'),
-           'kinds': [dict(r, kind=k) for k, r in L.kinds.items()]}
+           'kinds': [dict(r, kind=k) for k, r in L.kinds.items()],
+           'aspects': L.tables.get('aspects') or []}   # the view's aspects (core 2.15); the lines' old name stays the line reader's
 
     def registry(name):
         if own.get(name) is not None:
@@ -480,9 +481,10 @@ def reading_problems(where, reading, law, verbs=None):
     for s in reading.get('steps') or [] if isinstance(reading.get('steps'), list) else []:
         if not isinstance(s, dict):
             continue
-        member = 'statement' if s.get('entries') or reads.get(s.get('of')) == 'statement' else 'bean'
+        of = s.get('of') if isinstance(s.get('of'), str) else None      # an input names no earlier step
+        member = 'statement' if s.get('entries') or reads.get(of) == 'statement' else 'bean'
         if isinstance(s.get('id'), str):
-            reads[s['id']] = 'statement' if s.get('entries') else reads.get(s.get('of'), 'bean')
+            reads[s['id']] = 'statement' if s.get('entries') else reads.get(of, 'bean')
         top = keys if member == 'statement' else None
         for c in s.get('where') or [] if isinstance(s.get('where'), list) else []:
             if not isinstance(c, dict):

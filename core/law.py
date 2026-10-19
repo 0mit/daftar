@@ -47,7 +47,8 @@ FLOW_LAW = ('methods', 'metadata', 'dropped')              # what core/law/flows
 GRANTS = ('granted', 'refused', 'ratified')
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
             'standing': 'layer', 'verbs': 'verb', 'tables': None, 'units': 'unit', 'exclusive': 'verb',
-            'systems': 'system', 'schemes': 'scheme', 'files': 'registry', 'crosswalks': 'crosswalk'}
+            'systems': 'system', 'schemes': 'scheme', 'files': 'registry', 'crosswalks': 'crosswalk',
+            'groupings': 'grouping'}
 NAME_IN = re.compile(r'^name_[a-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$')    # a code's name in a language: `name_fa`, `name_pt-BR`
 ROW_FIELDS = {
     'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning', 'vacant'},
@@ -66,6 +67,7 @@ ROW_FIELDS = {
                 'release', 'sensitive', 'code_pattern', 'relations', 'labels', 'crosswalk', 'same_ground_as', 'within',
                 'file', 'key', 'format', 'meaning', 'units', 'form', 'vacant'},
     'files': {'registry', 'file', 'key', 'format'},
+    'groupings': {'grouping', 'home', 'meaning', 'steps', 'line', 'inputs', 'weighs', 'vacant'},
     'exclusive': {'verb', 'why'},
 }
 LINES = 'lines.yaml'                                       # the forms of a line and a reading's grammar (v1 part 6)
@@ -520,6 +522,8 @@ class Law:
                     self.standing.append(row)
                 elif key == 'exclusive':
                     self.exclusive.append(row)
+                elif key == 'groupings':                  # a garden's own standard readings, beside the law's: a
+                    self.own.setdefault(key, []).append(dict(row, at=at))   # reading, not a word (rule vacancy)
                 elif key in ('systems', 'schemes', 'files'):    # read by the standards, beside theirs (part 7)
                     if key == 'systems' and str(row['system']) in self.std_systems():
                         self.found.append(('law', at, f"`{row['system']}` is a system of the standards already: a "
@@ -620,6 +624,23 @@ class Law:
             return f"a name {namespace} gives is checked by {chk}, which cannot run here: {e}"
         return '' if ok else (f"{shown} is not a name {namespace} gives: it is in its form, and fails its check ({chk}) "
                               f"— {row.get('meaning', '')}")
+
+    @property
+    def slots(self):
+        """The slots of a name's template (core/law/lines.yaml `slots`), by name."""
+        return {str(r['slot']): r for r in listed(getattr(self, 'line_law', {}).get('slots'))
+                if isinstance(r, dict) and 'slot' in r}
+
+    @property
+    def groupings(self):
+        """The groupings: the law's (core/law/lines.yaml `groupings`) and the garden's own (VOCAB.md `groupings`), by
+        name, the garden's never one of the law's names."""
+        out = {str(r['grouping']): r for r in listed(getattr(self, 'line_law', {}).get('groupings'))
+               if isinstance(r, dict) and 'grouping' in r}
+        for r in listed(self.own.get('groupings')):
+            if isinstance(r, dict) and r.get('grouping') and str(r['grouping']) not in out:
+                out[str(r['grouping'])] = {k: v for k, v in r.items() if k != 'at'}
+        return out
 
     def table(self, name):
         """The rows of a table the law keeps (None for a standard's, which `has` asks)."""
@@ -923,17 +944,22 @@ class Law:
                                         "no `model`, `value` or `join`"))
         return out
 
-    def chart_problems(self):
-        """[(where, message)]: each scheme that names a form of a profile (`form`, registries.yaml) — a chart of accounts
-        names the accounting profile's `chart` — its rows held to it: the form a profile's, and one the garden takes;
-        its columns the scheme's own (code, level, parent, name, a name in a language `name_<lang>`) and the form's; an element, a role, a kind of the law;
-        a postable account (a code no other code has for its parent) saying what it is, itself or by an ancestor; one
-        account of a chart standing for a being, and one taking each role. That the being is one the garden holds is
-        the garden's to say (core/profiles.py `charts`)."""
+    def form_problems(self):
+        """[(where, message)]: each scheme that names a form of a profile (`form`, registries.yaml) held to it: the form
+        a profile's, and one the garden takes — a scheme the release carries is held to it in every garden; its columns
+        the scheme's own (code, level, parent, name, a name in a language `name_<lang>`) and the form's. Then each form
+        by its own: a CHART (the accounting profile's) — an element, a role, a kind of the law; a postable account (a
+        code no other code has for its parent) saying what it is, itself or by an ancestor; one account standing for a
+        being and one taking each role; that the being is one the garden holds is the garden's to say
+        (core/profiles.py `charts`). A PATTERN (the knowledge profile's) — its template in the slots of
+        core/law/lines.yaml, what it suggests codes of the schemes the garden reads, what it reads a field path, its
+        calendar a system of time, its grouping a row of `groupings`, its `within` and `beside` codes. A CLASS — a
+        being it stands for once, `apart` true or absent, and no cycle among its codes' parents."""
         out = []
         if not self.std:
             return out
         K = self.std.knowledge
+        released = {str(r.get('scheme')) for r in self.std.tables.get('knowledge_schemes') or [] if isinstance(r, dict)}
         brought = sorted(f for p in self.profiles.values() for f in listed(p.get('forms')))
         for scheme, srow in sorted(K.schemes.items()):
             form = srow.get('form') if isinstance(srow, dict) else None
@@ -945,7 +971,7 @@ class Law:
             if not owner or not isinstance(spec, dict):
                 out.append((where, f"`{form}` is no form a profile brings: one of {', '.join(brought)}"))
                 continue
-            if self.taken_where is not None and owner not in self.taken:
+            if self.taken_where is not None and owner not in self.taken and scheme not in released:
                 out.append((where, f"`{form}` is the {owner} profile's, which this garden does not take"))
                 continue
             try:
@@ -955,44 +981,170 @@ class Law:
                 continue
             attrs = spec.get('attrs') or {}
             cols = {'code', 'level', 'parent', 'name'} | set(attrs)
-            by = {str(r.get('code') or ''): r for r in rows}
-            parents = {str(r.get('parent') or '') for r in rows}
-            stands, roles = {}, {}
             for r in rows:
                 code = str(r.get('code') or '')
-                at = f"scheme {scheme} {code or '(no code)'}"
                 odd = sorted(k for k, v in r.items() if k not in cols and v not in (None, '')
                              and not NAME_IN.match(str(k)))          # its name in a language (bin/knowledge.py `label`)
                 if odd:
-                    out.append((at, f"{', '.join(odd)}: no column of a {form} ({', '.join(sorted(cols))})"))
-                el = str(r.get('element') or '')
-                if el and self.has('elements', el):
-                    out.append((at, f"element: {self.has('elements', el)}"))
-                ro = str(r.get('role') or '')
-                if ro and self.has('account_roles', ro):
-                    out.append((at, f"role: {self.has('account_roles', ro)}"))
-                elif ro and ro in roles:
-                    out.append((at, f"takes the role {ro}, which {roles[ro]} takes: one account a role"))
-                elif ro:
-                    roles[ro] = code
-                for k in str(r.get('parties') or '').split():
-                    if k not in self.kinds:
-                        out.append((at, f"parties: {k!r} is no kind of the law"))
-                sf = str(r.get('stands_for') or '')
-                if sf and sf in stands:
-                    out.append((at, f"stands for {sf}, as {stands[sf]} does: one account of a chart a being"))
-                elif sf:
-                    stands[sf] = code
-                cl = str(r.get('closed') or '')
-                if cl and not re.match(r'^\d{4}-\d{2}-\d{2}$', cl):
-                    out.append((at, f"closed: {cl!r} is no day, `YYYY-MM-DD`"))
-                if code and code not in parents:
-                    c, seen = code, set()
-                    while c in by and c not in seen and not by[c].get('element'):
-                        seen.add(c)
-                        c = str(by[c].get('parent') or '')
-                    if not (c in by and by[c].get('element')):
-                        out.append((at, "a postable account says what it is: its element, or an ancestor's"))
+                    out.append((f"scheme {scheme} {code or '(no code)'}",
+                                f"{', '.join(odd)}: no column of a {form} ({', '.join(sorted(cols))})"))
+            judge = {'chart': self._chart_rows, 'pattern': self._pattern_rows, 'class': self._class_rows}.get(str(form))
+            if judge:
+                out += judge(scheme, rows)
+        return out
+
+    def _chart_rows(self, scheme, rows):
+        out = []
+        by = {str(r.get('code') or ''): r for r in rows}
+        parents = {str(r.get('parent') or '') for r in rows}
+        stands, roles = {}, {}
+        for r in rows:
+            code = str(r.get('code') or '')
+            at = f"scheme {scheme} {code or '(no code)'}"
+            el = str(r.get('element') or '')
+            if el and self.has('elements', el):
+                out.append((at, f"element: {self.has('elements', el)}"))
+            ro = str(r.get('role') or '')
+            if ro and self.has('account_roles', ro):
+                out.append((at, f"role: {self.has('account_roles', ro)}"))
+            elif ro and ro in roles:
+                out.append((at, f"takes the role {ro}, which {roles[ro]} takes: one account a role"))
+            elif ro:
+                roles[ro] = code
+            for k in str(r.get('parties') or '').split():
+                if k not in self.kinds:
+                    out.append((at, f"parties: {k!r} is no kind of the law"))
+            sf = str(r.get('stands_for') or '')
+            if sf and sf in stands:
+                out.append((at, f"stands for {sf}, as {stands[sf]} does: one account of a chart a being"))
+            elif sf:
+                stands[sf] = code
+            cl = str(r.get('closed') or '')
+            if cl and not re.match(r'^\d{4}-\d{2}-\d{2}$', cl):
+                out.append((at, f"closed: {cl!r} is no day, `YYYY-MM-DD`"))
+            if code and code not in parents:
+                c, seen = code, set()
+                while c in by and c not in seen and not by[c].get('element'):
+                    seen.add(c)
+                    c = str(by[c].get('parent') or '')
+                if not (c in by and by[c].get('element')):
+                    out.append((at, "a postable account says what it is: its element, or an ancestor's"))
+        return out
+
+    def _pattern_rows(self, scheme, rows):
+        from core import groupings
+        import parse as dmparse                         # the one matcher of a pattern of the law
+        out = []
+        slots = self.slots
+        times = {k for k, r in self.systems.items() if isinstance(r, dict) and r.get('dimension') == 'time'}
+        names = set(self.groupings)
+        fpath = next((t.get('pattern') for t in listed(self.line_law.get('types'))
+                      if isinstance(t, dict) and t.get('type') == 'field_path'), None)
+        for r in rows:
+            code = str(r.get('code') or '')
+            at = f"scheme {scheme} {code or '(no code)'}"
+            t = r.get('template')
+            if not t:
+                if code and any(str(x.get('parent') or '') == code for x in rows):
+                    continue                                  # a heading of patterns beneath it, a convention
+                out.append((at, "holds no `template`: a pattern row is its template"))
+                continue
+            try:
+                groupings.parse(str(t), slots)
+            except groupings.TemplateError as e:
+                out.append((at, f"template: {e}"))
+            rd = r.get('reads')
+            if rd and fpath and not dmparse.law_match(fpath, str(rd)):
+                out.append((at, f"reads: {rd!r} is no field path"))
+            if r.get('case') and r['case'] not in ('exact', 'any'):
+                out.append((at, f"case: {r['case']!r} is `exact` or `any`"))
+            if r.get('calendar') and r['calendar'] not in times:
+                out.append((at, f"calendar: {r['calendar']!r} is no system of time"))
+            if r.get('grouping') and r['grouping'] not in names:
+                out.append((at, f"grouping: {r['grouping']!r} is no row of `groupings`"))
+            if r.get('marks') and r['marks'] != 'by':
+                out.append((at, f"marks: {r['marks']!r} — `by`, the folder that holds a file of this name, or absent"))
+            for k in ('within', 'beside'):
+                if r.get(k) and self.std.code(str(r[k])):
+                    out.append((at, f"{k}: {self.std.code(str(r[k]))}"))
+            for c in str(r.get('suggests') or '').split():
+                if self.std.code(c):
+                    out.append((at, f"suggests: {self.std.code(c)}"))
+        return out
+
+    def _class_rows(self, scheme, rows):
+        from core import groupings
+        out, stands = [], {}
+        for r in rows:
+            code = str(r.get('code') or '')
+            at = f"scheme {scheme} {code or '(no code)'}"
+            sf = str(r.get('stands_for') or '')
+            if sf and sf in stands:
+                out.append((at, f"stands for {sf}, as {stands[sf]} does: one code a being"))
+            elif sf:
+                stands[sf] = code
+            if r.get('apart') not in (None, '', 'true'):
+                out.append((at, f"apart: {r['apart']!r} is `true`, or absent"))
+        loop = groupings.cycle({str(r.get('code')): [str(r['parent'])] for r in rows if r.get('parent')})
+        if loop:
+            out.append((f"scheme {scheme}", f"its codes' parents run in a cycle: {' → '.join(loop)}"))
+        return out
+
+    def grouping_problems(self):
+        """[(where, message)]: each grouping (core/law/lines.yaml `groupings`, and a garden's own) a reading of the law's
+        closed list (bin/reckon.py's check), its `home` core or a profile, each field of its `line` one a line has; each
+        slot in its form; each aspect of the view following a verb or a grouping, laid out by a row of `orientations`,
+        of kinds of the law, at home in core or a profile."""
+        out = []
+        homes = {'core'} | set(self.profiles)
+        fields = {'range', 'count', 'missing', 'extent', 'values', 'code', 'apart'}
+        try:
+            from core import lines as core_lines
+            view = core_lines.law_view(self)
+        except Exception:          # noqa: BLE001 — a release without the reckoner judges the rest
+            core_lines = view = None
+        law_names = {str(r.get('grouping')) for r in listed(getattr(self, 'line_law', {}).get('groupings'))
+                     if isinstance(r, dict)}
+        for r in listed(self.own.get('groupings')):
+            if isinstance(r, dict) and str(r.get('grouping')) in law_names:
+                out.append((r.get('at') or 'VOCAB.md groupings', f"`{r['grouping']}` is a grouping of the law already: a "
+                                                                 f"garden's own grouping takes a name of its own"))
+        for name, g in sorted(self.groupings.items()):
+            where = f"grouping {name}"
+            if str(g.get('home')) not in homes:
+                out.append((where, f"home: {g.get('home')!r} is `core` or a profile: {', '.join(sorted(homes - {'core'}))}"))
+            for f in listed(g.get('line')):
+                head, _, path = str(f).partition(':')
+                if head in ('cells', 'agree', 'sum'):
+                    if not path:
+                        out.append((where, f"line: `{head}` names a path, `{head}:<path>`"))
+                elif head not in fields:
+                    out.append((where, f"line: `{f}` is no field of a line: {', '.join(sorted(fields))}, or "
+                                       f"cells:/agree:/sum: a path"))
+            if core_lines is not None:                # read in the garden's zone (GARDEN.md `zone`): the reader gives it
+                out += core_lines.reading_problems(where, dict(g, zone=g.get('zone') or 'Etc/UTC'), view, self.verbs)
+        for name, row in sorted(self.slots.items()):
+            if row.get('width') not in (None, 'allowed', 'required'):
+                out.append((f"slot {name}", f"width: {row['width']!r} is `allowed` or `required`"))
+            if row.get('matches') is not None and not self._compiles(row['matches'], f"slot {name}"):
+                out.append((f"slot {name}", "matches: a pattern that compiles"))
+        orders = {str(r.get('order')) for r in self.table('orientations') or [] if isinstance(r, dict)}
+        for row in listed(self.table('aspects')):
+            if not isinstance(row, dict):
+                continue
+            where = f"aspect {row.get('aspect')}"
+            if str(row.get('home')) not in homes:
+                out.append((where, f"home: {row.get('home')!r} is `core` or a profile"))
+            f = str(row.get('follows'))
+            if f not in self.verbs and f not in self.groupings:
+                out.append((where, f"follows: {f!r} is neither a verb nor a grouping"))
+            if str(row.get('order')) not in orders:
+                out.append((where, f"order: {row.get('order')!r} is no row of `orientations`"))
+            if row.get('points') not in ('by', 'of', 'from', 'to', 'through', 'at'):
+                out.append((where, f"points: {row.get('points')!r} is the role the cursor fills"))
+            for k in listed(row.get('of')):
+                if str(k) not in self.kinds:
+                    out.append((where, f"of: {k!r} is no kind of the law"))
         return out
 
     def formats_problems(self):
@@ -1435,7 +1587,9 @@ class Law:
             bad(where, msg)
         for where, msg in self.units_crosswalk_problems():
             bad(where, msg)
-        for where, msg in self.chart_problems():
+        for where, msg in self.form_problems():
+            bad(where, msg)
+        for where, msg in self.grouping_problems():
             bad(where, msg)
         names = {}
         for u, row in self.units.items():

@@ -66,7 +66,7 @@ quantities:
     meaning: "an angle in a plane: dimensionless and its own kind, as `ratio` and `level` are"
   - quantity: temperature-difference
     of: { temperature: 1 }
-    meaning: "how much hotter: the measure of a region of the `temperature` aspect, as a duration is of `time`. A temperature READING is a position on that aspect, never this"
+    meaning: "how much hotter: the measure of a region of the `temperature` line, as a duration is of `time`. A temperature READING is a position on that line, never this"
   - quantity: number
     of: {}
     meaning: "how many things, counted: seats, stems, units of stock. Dimensionless and its own kind, apart from `ratio`, which is a share"

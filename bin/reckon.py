@@ -306,6 +306,13 @@ def _ref_bean(v):
     return None
 
 
+def _own(v, bean):
+    """The being a role names, `self` (or nothing) read as the bean the statement is in."""
+    if v in (None, 'self'):
+        return bean
+    return _ref_bean(v) or bean
+
+
 def walk(garden, node, text, at=None):
     """[(value, where)] at a field path from `node` (the front matter or an entry of bean `at`) — `where` the path to
     each value as `<bean>:<keys>`, so a member of a set can be named."""
@@ -543,6 +550,11 @@ def _takes_check(where, step, row, env, law_):
         if k not in step:
             continue
         v, dom = step[k], decl.get('in')
+        if isinstance(v, dict) and set(v) == {'input'}:  # a value the asker gives: judged when the reading is read
+            if v['input'] not in env:
+                out.append(('error', f"{where}: `{k}: {{input: {v['input']}}}` names no input of the reading — "
+                                     f"{sorted(env) or 'it declares none'}"))
+            continue
         if isinstance(dom, dict) and dom.get('type') == 'kebab' and k in ('of', 'with', 'series'):
             if not isinstance(v, str) or v not in env:
                 out.append(('error', f"{where}: `{k}: {v}` names no earlier step and no input — a step reads what "
@@ -890,10 +902,64 @@ class Reckoner:
         if s.get('entries'):
             out = []
             for m in base:
+                if m.bean in self._kept:
+                    continue                       # a being of a store: its statements are read there, below
                 for x, w in _flatten(walk(self.g, m.node, s['entries'], at=m.bean)):
                     out.append(Member(w, x, m.bean))
             base = out
+        if s.get('store') and 'of' not in s:      # ONE UNIVERSE: the beings and statements a store keeps, beside beans
+            base = base + self._stored(s)
+        elif s.get('store') and s.get('entries'):
+            base = base + self._stored(s, of=[m.bean for m in self.arg(s, 'of', 'set') if m.bean in self._kept])
         return [m for m in base if self.meets(m, s.get('where') or [])]
+
+    @property
+    def _kept(self):
+        return getattr(self, '_store_beings', set())
+
+    def _stores(self, name):
+        """The stores a step names — one this host declares, or `any`, each — opened read-only once a reading."""
+        if not hasattr(self, '_opened'):
+            self._opened = {}
+        import store as dmstore
+        names = sorted(dmstore.kept_here(self.g.root)) if name == 'any' else [name]
+        out = []
+        for n in names:
+            if n not in self._opened:
+                try:
+                    self._opened[n] = dmstore.open_store(n, root=self.g.root, create=False)
+                except Exception as e:          # noqa: BLE001 — a store not kept here is said, and read as empty
+                    self.notes.append(f"the store {n} is not read here: {e}")
+                    self._opened[n] = None
+            if self._opened[n] is not None:
+                out.append(self._opened[n])
+        if name != 'any' and not out:
+            raise Refused(f"the store `{name}` is not kept on this host: a reading that names it is read where it is")
+        return out
+
+    def _stored(self, s, of=None):
+        """Members from the stores `s` names: its beings of the kind, or — with `entries`, a verb — their statements of
+        that verb, each a member `<being>#<id>` whose node is its roles, as a bean's entry is."""
+        out = []
+        self._store_beings = set(self._kept)
+        for st in self._stores(str(s['store'])):
+            if of is None:
+                q = "SELECT id FROM being" + (" WHERE kind = ?" if s.get('kind') else "")
+                ids = [r[0] for r in st.db.execute(q, (s['kind'],) if s.get('kind') else ())]
+            else:
+                ids = list(of)
+            self._store_beings |= set(ids)
+            verb = s.get('entries')
+            if not verb:
+                out += [Member(i, {'bean': i}, i) for i in ids]
+                continue
+            if verb not in st.verbs():
+                continue
+            want = set(ids)
+            for being, sid, roles in st.statements_of(verb):
+                if being in want:
+                    out.append(Member(f"{being}#{sid}", roles, being))
+        return out
 
     def meets(self, m, conds):
         for c in conds:
@@ -1946,6 +2012,189 @@ class Reckoner:
                 self.lines.append(f"  step {name}: every element and the charge conserved — " + ', '.join(
                     f"{el} {dmseq.show(v)}" for el, v in sorted(tally['takes'].items()) if v))
         return ok
+
+    # groupings (core 2.15): patterns, classes and what several cursors share — core/groupings.py is their engine
+    def _value(self, s, key):
+        """What a step takes at `key`: as written, or the input it names, given by the asker."""
+        v = s.get(key)
+        if isinstance(v, dict) and set(v) == {'input'}:
+            got = self.env.get(v['input'])
+            if got is None:
+                raise Refused(f"step {s['id']}: `{key}` names the input {v['input']!r}, and none was given")
+            return got.v if isinstance(got, V) else got
+        return v
+
+    def _grouping_law(self):
+        if not hasattr(self, '_gl'):
+            from core import groupings, read as core_read
+            law_dir = os.path.join(self.g.root, 'core', 'law')
+            if not os.path.isfile(os.path.join(law_dir, 'lines.yaml')):
+                law_dir = os.path.join(ROOT, 'core', 'law')
+            lines = core_read.data(os.path.join(law_dir, 'lines.yaml')) or {}
+            systems = core_read.data(os.path.join(law_dir, 'systems.yaml')) or {}
+            self._gl = {'slots': {str(r['slot']): r for r in lines.get('slots') or [] if isinstance(r, dict)},
+                        'systems': {str(r['system']): r for r in systems.get('systems') or []
+                                    if isinstance(r, dict) and r.get('dimension') == 'time'
+                                    and r.get('reckoning') == 'arithmetic'},
+                        'groupings': {str(r['grouping']): r for r in lines.get('groupings') or [] if isinstance(r, dict)}}
+            import knowledge as dmknowledge
+            K = dmknowledge.Knowledge(self.g.root)
+            mine, theirs = [], []
+            released = {str(r.get('scheme')) for r in (core_read.data(os.path.join(law_dir, 'registries.yaml')) or {})
+                        .get('knowledge_schemes') or [] if isinstance(r, dict)}
+            for name, row in sorted(K.schemes.items()):
+                if isinstance(row, dict) and row.get('form') == 'pattern':
+                    try:
+                        (theirs if name in released else mine).append((name, K.rows(name)))
+                    except (KeyError, OSError):
+                        continue
+            self._gl['schemes'] = mine + theirs          # the garden's own first, then the release's
+            self._gl['knowledge'] = K
+            self._gl['rows'] = groupings.rows_of(self._gl['schemes'], self._gl['slots'], self._gl['systems'])
+        return self._gl
+
+    def op_fit(self, s):
+        from core import groupings
+        G = self._grouping_law()
+        of = s.get('of')
+        if isinstance(of, dict) and set(of) == {'input'}:
+            given = self._value(s, 'of')
+            given = given if isinstance(given, list) else re.split(r'[\n,]\s*', str(given).strip())
+            items = [(t, t, None) for t in given if str(t).strip()]
+        else:
+            items = []
+            for m in self.arg(s, 'of', 'set'):
+                found = walk(self.g, m.node, s['path'], at=m.bean) if s.get('path') else [(m.id, None)]
+                text = next((x for x, _w in found if isinstance(x, (str, int))), None)
+                if text is None:
+                    continue
+                cont = _own(m.node.get(s['by']), m.bean) if s.get('by') and isinstance(m.node, dict) else None
+                items.append((m, str(text), cont))
+        rows = [r for r in G['rows'] if not s.get('scheme') or r.scheme == self._value(s, 'scheme')]
+        groups = groupings.fit(items, rows, G['systems'], reads=s.get('path') or None)
+        self.found_groups = getattr(self, 'found_groups', {})
+        self.found_groups[s['id']] = groups
+        out = {}
+        for g in groups:
+            label = groupings.ranged(g) + (f" in {g['container']}" if g.get('container') else '')
+            out[label] = list(g['members'])
+        return out
+
+    def op_inherit(self, s):
+        from core import groupings
+        G = self._grouping_law()
+        scheme = str(self._value(s, 'scheme'))
+        K = G['knowledge']
+        try:
+            rows = {str(r.get('code')): r for r in K.rows(scheme)}
+        except (KeyError, OSError) as e:
+            raise Refused(f"step {s['id']}: the scheme {scheme} cannot be read here: {e}")
+        loop = groupings.cycle({c: [str(r['parent'])] for c, r in rows.items() if r.get('parent')})
+        if loop:
+            raise Refused(f"step {s['id']}: the codes of {scheme} run in a cycle: {' → '.join(loop)}")
+        said, wholes, names = collections.defaultdict(list), collections.defaultdict(list), collections.defaultdict(list)
+        held_as = collections.defaultdict(list)
+        for b, fm in self.g.fm.items():
+            if self.g.kind.get(b) != 'beans':
+                continue
+            for x, _w in _flatten(walk(self.g, fm, 'classify', at=b)):
+                code = str(x.get('as') or '') if isinstance(x, dict) else ''
+                sch, c = dmparse.split_coding(code)
+                if sch == scheme:
+                    said[_own(x.get('of'), b)].append(code)
+            for x, _w in _flatten(walk(self.g, fm, 'part', at=b)):
+                if isinstance(x, dict) and _own(x.get('of'), None):
+                    wholes[_own(x.get('by'), b)].append(_own(x['of'], b))
+            for x, _w in _flatten(walk(self.g, fm, 'hold', at=b)):
+                if isinstance(x, dict) and _own(x.get('of'), None):
+                    wholes[_own(x['of'], b)].append(_own(x.get('by'), b))
+                    if x.get('as') is not None:
+                        held_as[_own(x['of'], b)].append(str(x['as']))
+            for x, _w in _flatten(walk(self.g, fm, 'name', at=b)):
+                if isinstance(x, dict) and x.get('as') is not None:
+                    names[_own(x.get('of'), b)].append(str(x['as']))
+        for st in getattr(self, '_opened', {}).values():     # what the stores a step read keep of these beings
+            if st is None:
+                continue
+            for verb, store_to in (('part', wholes), ('hold', wholes)):
+                if verb not in st.verbs():
+                    continue
+                for being, _sid, roles in st.statements_of(verb):
+                    by, of = _ref_bean(roles.get('by')), _ref_bean(roles.get('of'))
+                    if verb == 'part' and of:
+                        wholes[by or being].append(of)
+                    elif verb == 'hold' and of and by:
+                        wholes[of].append(by)
+                        if roles.get('as') is not None:
+                            held_as[of].append(str(roles['as']))
+        apart = set()                                         # the codes that set apart, of every class scheme
+        for name, row in K.schemes.items():
+            if isinstance(row, dict) and row.get('form') == 'class':
+                try:
+                    apart |= {f"{name}:{r.get('code')}" for r in K.rows(name) if str(r.get('apart') or '') == 'true'}
+                except (KeyError, OSError):
+                    continue
+
+        def suggested(b):
+            got = []
+            for n in names.get(b) or []:
+                hit = next((r for r in G['rows'] if (r.reads or 'as') == 'name.as' and r.template.match(n) is not None), None)
+                if hit:
+                    got += hit.suggests
+            for x in held_as.get(b) or []:                   # a content by the names its folders hold it by
+                hit = next((r for r in G['rows'] if (r.reads or 'as') == 'as' and not r.marks and r.template.match(x) is not None),
+                           None)
+                if hit:
+                    got += hit.suggests
+            return got
+
+        out = collections.OrderedDict()
+        self.found_classes = getattr(self, 'found_classes', {})
+        detail = {}
+        for m in self.arg(s, 'of', 'set'):
+            got = groupings.inherit(m.bean, lambda b: said.get(b), lambda b: wholes.get(b), suggested,
+                                    lambda c: c in apart, scheme=scheme)
+            detail[m.id] = got
+            for code, source, through in got or [(None, 'nothing said, inherited or suggested', None)]:
+                key = f"{code} ({source}{' from ' + through if through and through != m.bean else ''})" if code \
+                    else f"(none: {source})"
+                out.setdefault(key, []).append(m)
+        self.found_classes[s['id']] = detail
+        return dict(out)
+
+    def op_shared(self, s):
+        aspect = next((r for r in (self.reg('aspects') or []) if isinstance(r, dict) and r.get('aspect') == s['aspect']),
+                      None)
+        if aspect is None:
+            from core import read as core_read
+            P = core_read.data(os.path.join(ROOT, 'core', 'law', 'profiles.yaml')) or {}
+            aspect = next((r for r in P.get('aspects') or [] if r.get('aspect') == s['aspect']), None)
+        if aspect is None:
+            raise Refused(f"step {s['id']}: `{s['aspect']}` is no aspect of the view's `aspects`")
+        verb, role = str(aspect['follows']), str(aspect['points'])
+        if verb in self._grouping_law()['groupings']:
+            raise Refused(f"step {s['id']}: the aspect {s['aspect']} follows the grouping {verb}: what several cursors "
+                          f"share by a grouping is read by bin/group.py, over its groups")
+        other = {'by': 'of', 'of': 'by', 'from': 'of', 'to': 'by'}.get(role, 'of')
+        cursors = self.arg(s, 'of', 'set')
+        reach = collections.defaultdict(set)
+        ids = {m.bean for m in cursors}
+        for b, fm in self.g.fm.items():
+            for x, _w in _flatten(walk(self.g, fm, verb, at=b)):
+                if not isinstance(x, dict):
+                    continue
+                here, there = _own(x.get(role), b), _own(x.get(other), b)
+                if here in ids and there:
+                    reach[there].add(here)
+        for st in getattr(self, '_opened', {}).values():
+            if st is None or verb not in st.verbs():
+                continue
+            for being, _sid, roles in st.statements_of(verb):
+                here = _ref_bean(roles.get(role)) or being
+                there = _ref_bean(roles.get(other)) or being
+                if here in ids and there:
+                    reach[there].add(here)
+        return {t: [m for m in cursors] for t, c in sorted(reach.items()) if c == ids}
 
     def op_choose(self, s):
         mechs = [r for r in (self.reg('mechanisms') or []) if isinstance(r, dict)

@@ -51,6 +51,27 @@ or derived from recorded evidence, and each file says which.
 - **daftar's own.** A row says a technology is `spoken` only where its adapter is a file of the release and the suite it
   names passes; `planned` otherwise, a position held for it. CC BY 4.0, with daftar's law.
 
+## name-patterns.tsv — the names a published convention gives files and folders
+
+- **Curated by daftar**, each row a convention its publisher documents: DCF, the Design rule for Camera File system
+  (JEITA CP-3461, CIPA DC-009), which names a camera's files with four free characters and a number from 0001 to
+  9999, and its folders with a number from 100 to 999 and five free characters. The templates are daftar's writing of
+  the rule in the slots of core/law/lines.yaml; no text of the standard is copied. A maker's own prefix, and a
+  garden's own patterns, are each garden's extract, not the release's. CC BY 4.0, with daftar's law.
+
+## media-types — the media types and their families, from shared-mime-info (fetched)
+
+- **Not shipped.** Each machine fetches freedesktop.org's shared-mime-info with `python3 bin/fetch.py media-types`
+  (`https://gitlab.freedesktop.org/xdg/shared-mime-info/-/archive/2.4/shared-mime-info-2.4.tar.gz`, 7,852,841 bytes,
+  sha-256 531291d0387eb94e16e775d7e73788d06d2b2fdd8cd2ac6b6b15287593b6a2de, read 2026-10-19), and the reader
+  `shared-mime-info` reads its `data/freedesktop.org.xml.in`: 908 media types, each with its English comment, its
+  generic icon (one of the nineteen its document type names: image-x-generic, x-office-document, package-x-generic,
+  application-x-executable, text-x-script …), its globs and what it is a subclass of. A host that installs the database
+  keeps the same file in /usr/share/mime/packages/freedesktop.org.xml, and the reader reads it there where no fetch was
+  made. Its top-level types are RFC 6838's.
+- **Its licence** is the GNU General Public License, version 2 or later (the licence core/law/registries.yaml names): the
+  release carries none of it, and what a garden reads of it stays on the machine that fetched it.
+
 ## crosswalk-isco-08-isced-f-2013.tsv — which fields an occupation draws on
 
 - **Derived, not official** (no official ISCO-08 ↔ ISCED-F 2013 crosswalk exists). Each row counts, for one

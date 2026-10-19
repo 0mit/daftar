@@ -53,6 +53,7 @@ parts, changes).
    python3 test/store.py
    python3 test/run.py
    python3 test/io.py
+   python3 test/group.py
    python3 test/core_translate.py
    python3 test/core_standards.py
    python3 test/core_rehearse.py

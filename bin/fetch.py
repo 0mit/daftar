@@ -137,6 +137,16 @@ def keep(scheme, data, source, *, part=None, root=ROOT, now=None):
     return sha, rows, d
 
 
+def read_host(scheme, path, root=ROOT):
+    """The rows of a scheme read from the provider's file where this machine installed it (`fetch.host`), by the
+    scheme's reader, kept nowhere: what a fetch would keep, read in place while nothing was fetched."""
+    row, _cols = scheme_row(scheme, root)
+    with open(path, 'rb') as fh:
+        got = READERS[row['fetch']['reader']](fh.read())
+    return [{k: ('' if v is None else str(v)) for k, v in r.items()}
+            for r in (got['rows'] if isinstance(got, dict) else got)]
+
+
 def download(url):
     import urllib.request
     req = urllib.request.Request(url, headers={'User-Agent': 'daftar-fetch (a standard\'s table, for its reader)'})

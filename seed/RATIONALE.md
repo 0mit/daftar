@@ -6109,3 +6109,107 @@ there (a share, a payment, what is owed back, what a clause asks), as data the p
 a party owes is read twice — from the books, and from the agreements by bin/ledger.py — and where the two differ the
 table says so, under it: one truth of who owes whom, or a difference shown.
 
+
+## core/law/lines.yaml: operations[fit]
+
+PATTERNS, CLASSES AND PREVIEWS ARE ONE THING (2026-10-19, programme item 3, the operator's note: a pattern module that
+"bears the weight of the other systems grouping in general"). A name's pattern, a class and a preview are a grouping
+seen three ways — the rule, its members with what is set apart, its one line — so each is a reading: derived, read each
+time, never written ("Read each time", 2026-10-19), and what a person says of a member stands above it. `fit` is the
+rule that groups by a name's shape. It reads the registry first ("keep a list to handle existing patterns and actively
+add to it") and mines what the registry does not know, offline, deterministic, without a model: a run of digits is a
+date only where its calendar has every day it names, and where two calendars have them both are said and none chosen.
+The operation is `fit`, not `shape`, because `shape` is the core's word for what fills a role.
+
+## core/law/lines.yaml: operations[inherit]
+
+"A DIRECTORY POSITION AS AN ORG/COMPANY/JOB RELATED GOES RECURSIVE" (the operator, 2026-10-18). A code said of a whole
+holds for its parts down `part` and for the contents its folders hold, as a verb's default holds where nothing is said
+(rule `placeholder`): read, never written, so a million files need no million statements. A nearer word stops it — an
+exception is a `classify` of the part — and so does a member that does not fit ("machinery to exclude unrelated 'just
+placed there' data from that root"): by kind, day and shape, two of the three, as the grouping weighs them. A content in
+two folders of two codes holds both ("multiple relations for possible concepts should not create infinite loops"):
+`part` is acyclic by rule `order`, a content is held and never holds back, and a scheme's own cycle is refused by name.
+
+## core/law/lines.yaml: operations[shared]
+
+WHAT SEVERAL CURSORS SHARE IS A COMPUTATION OF ITS OWN (the board's finding 4, ratified 2026-10-19): the contents two
+disks both hold, by the pair of folders they sit in, is not the intersection of each disk's neighbours on the board but a
+reading per relation, which the aspect names.
+
+## core/law/lines.yaml: slots
+
+A TEMPLATE IS DATA, NEVER A FORMULA. Its varying parts are a closed list, each with what it matches and how it is read,
+so a pattern row evaluates nothing: a counter is a position on an ordinal line whose gaps are positions nobody holds
+(the `ordinal` line, 28.0), a date a day of a named calendar, a digest a digest. The law's patterns are ASCII, as every
+pattern of the law is; a world's names are read with their digits of any script as ASCII digits at the boundary, and the
+two slots that read letters of any script say so in words.
+
+## core/law/lines.yaml: groupings
+
+"WE WILL HANDLE THE ARCHETYPES USING PROFILES" (the operator, 2026-10-18), named `groupings` (2026-10-19) because the
+view's `archetypes` already means the shapes a drawing takes, and the law keeps one sense per name. Each row is a
+standard reading a profile brings, as `ordering_keys` carry theirs: a camera's run of names, a photo day, a root's
+class, any list of names for the gate's replies, a watcher's passes, and accounting's lines of one merchant — "a
+category of the accounting moves are also similar entities". A garden adds its own in VOCAB.md; the law judges each as
+a reading of its closed list. A day is grouped in the asker's calendar, none privileged.
+
+## core/law/lines.yaml: selection_form.line
+
+"PREVIEW MODULE TO PROVIDE IN VIEW AND GATE REPLIES" (the operator, 2026-10-18). A group shown in one line in place of
+its members — `IMG_7378–7395.CR2 · 18 · 2 missing · 2013-05-10 · 5D Mark IV` — its fields named by its grouping, each
+written by its value's own writer, so a refusal naming a thousand beans names their groups.
+
+## core/law/profiles.yaml: forms.pattern
+
+THE REGISTRY IN BOTH PLACES (2026-10-19, "Both"). A scheme of the form `pattern` holds templates beside its codes, as a
+chart holds accounts: the release ships only conventions their publishers document (DCF's), and a garden extracts its
+own, each accepted pattern a journalled write, never a RULE-CHANGE (F9). `suggests` ties a name's syntax to classes, its
+meaning; `marks` lets a file's name speak for the folder that holds it (a `package.json` marks a code tree); `within` and
+`beside` keep a word that means two things in two places to its place (`bin` is a build's only inside a code tree;
+`.pot` is a gettext template beside `.po` files).
+
+## core/law/profiles.yaml: forms.class
+
+A CLASS CODE MAY STAND FOR A BEING, as a chart's account does, so a folder classed `work:orchard` and a payment booked to
+`work:orchard` are one grouping seen from two profiles. `apart` marks the codes whose members inherit nothing — a
+program's tree, a system's dropping, another's code placed there — as the operator's review of the first roots decided
+(2026-10-19).
+
+## core/law/profiles.yaml: aspects
+
+"ASPECT IS GOOD" (the operator, 2026-10-18): the board's frames, each a relation through the cursor laid out by an order,
+became a table of the view per profile (finding 3, 2026-10-19), so the board reads them from the law rather than from
+its own file. The law's older prose said "aspect" for a kind of line; it says "line" since this release, so the word has
+one sense (2026-10-19).
+
+## core/law/profiles.yaml: archetypes[cursor]
+
+A SAVED BOARD IS A PAGE (finding 2, 2026-10-19): a `draw` whose drawing is a cursor and the aspect it shows first, saved
+by the sheet's one Save; the trail of cursors stays the reader's history, which is no fact.
+
+## core/law/registries.yaml: knowledge_schemes[media-types]
+
+A FOLDER IS WEIGHED BY THE FAMILIES OF ITS MEDIA (the operator, "weighting the directory for the daftar's known types of
+the media"), and the list is fetched from its publisher (2026-10-19, "Fetched shared-mime-info"): freedesktop.org's
+database names every type with its globs and its generic icon, and the generic icons are the published families. It is
+GPL-licensed, so the release carries none of it; a machine that installed it reads its copy where nothing was fetched.
+
+## core/law/formats.yaml: clock_epochs
+
+A CAMERA THAT NEVER SET ITS CLOCK WRITES THE EPOCH IT COUNTS FROM (the operator, 2026-10-19: "handle the min date time on
+a camera without datetime set"): one archive held 357 pictures filed under 1978–2002 — compact cameras at 1980-01-01
+00:00 and the seconds since they were switched on, a phone at GPS's 1980-01-06, a phone at a two-digit year's 2000. Each epoch is a
+published one, and a moment within a month after one is no moment: the picture's day is read from its neighbours on its
+camera's counter, where they have days.
+
+## core/law/crosswalks.yaml: forms.field.else
+
+AN OLDER BODY WRITES ITS SERIAL ELSEWHERE (2026-10-19): some twenty thousand pictures of one older Canon body state no
+Exif serial and state it in Canon's maker notes, every one of a sample of forty. A field may read a second tag where the
+first holds nothing, the same way, into the same role — the form had no "or".
+
+## core/law/crosswalks.yaml: crosswalks[quicktime-movie]
+
+A VIDEO STATES ITS MOMENT IN ITS MOVIE HEADER, in UTC as the format says, which exif-image did not read; a header of
+zeros, or one on the 1904 epoch, is a clock never set.

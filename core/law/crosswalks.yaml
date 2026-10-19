@@ -76,10 +76,13 @@
 #   unit: <unit>                        the unit a count is in
 #   part: <name>                        the part of a composed value it is
 #   drop: "<why>"                       a field deliberately carried nowhere, and why
+#   else: <field>                       where the record holds no value at this field, the value of the field named,
+#                                       read the same way into the same role (an older body's serial in its maker notes
+#                                       where the Exif has none); the field named is carried by this one, never twice
 # A field of the record no row names is listed by the account as not carried, counted by its name.
 forms:
   crosswalk: { crosswalk: required, system: required, series: required, model: required, kind: optional, statements: optional, select: optional, fields: required, meaning: required, vacant: optional, format: optional, reader: optional, records: optional, act: optional, keep: optional, whole: optional, compose: optional, given: optional, self: optional }
-  field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional, held: optional, many: optional, position: optional, stands: optional, map: optional, statements: optional, exists: optional, as: optional, with: optional, unit: optional, part: optional, drop: optional }
+  field: { from: optional, value: optional, model: optional, inverse: optional, chain: optional, along: optional, join: optional, held: optional, many: optional, position: optional, stands: optional, map: optional, statements: optional, exists: optional, as: optional, with: optional, unit: optional, part: optional, drop: optional, else: optional }
   statements: { verb: required, with: optional, naming: optional, in_force_on: optional, ended_by: optional, standing: optional }
 crosswalks:
   - crosswalk: odoo-17.0-res.company
@@ -291,6 +294,20 @@ crosswalks:
     fields:
       content: { from: bean }
       "Composite:SubSecDateTimeOriginal": { from: produce.at, as: { moment: exif } }
-      "ExifIFD:SerialNumber": { from: produce.by, as: { named: given, hint: ["IFD0:Make", "IFD0:Model"] } }
+      "ExifIFD:SerialNumber": { from: produce.by, as: { named: given, hint: ["IFD0:Make", "IFD0:Model"] }, else: "Canon:SerialNumber" }
       "ExifIFD:LensSerialNumber": { from: produce.through, as: { named: given, hint: ["ExifIFD:LensModel"], none: ["0000000000"] } }
-    meaning: "a photograph's content was produced by the camera whose serial the picture states, through the lens whose serial it states, at the moment the shutter was released: the original's clock with its fraction and offset where the picture has them, its day alone where it has no offset. the serial is looked up in the namespace the garden names its devices' serials in, which the import is told; a serial that names no being there leaves the camera `unknown`, and is listed with the camera's make and model for a person to name (class F); every other tag is counted, not carried"
+    meaning: "a photograph's content was produced by the camera whose serial the picture states, through the lens whose serial it states, at the moment the shutter was released: the original's clock with its fraction and offset where the picture has them, its day alone where it has no offset. the serial is the Exif's, or where it has none the maker notes' (an older Canon body writes it only there), looked up in the namespace the garden names its devices' serials in, which the import is told; a serial that names no being there leaves the camera `unknown`, and is listed with the camera's make and model for a person to name (class F); every other tag is counted, not carried"
+  - crosswalk: quicktime-movie
+    system: quicktime
+    series: "ISO/IEC 14496-12"
+    model: movie
+    kind: content
+    format: json
+    reader: exiftool
+    act: { verb: read }
+    keep: store
+    given: { produce.by: unknown }
+    fields:
+      content: { from: bean }
+      "QuickTime:CreateDate": { from: produce.at, as: { moment: quicktime } }
+    meaning: "a video's content was made at the moment its movie header states, in UTC as the format says (QuickTime and the ISO base media file format count it from 1904-01-01T00:00Z); a moment at that epoch, or within a month of one of `clock_epochs`, is a clock never set and carries no moment. The camera is not stated by the movie header, so `produce.by` is `unknown`, filled where a person or another record names it; every other tag is counted, not carried"

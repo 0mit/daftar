@@ -123,8 +123,14 @@ class Knowledge:
             if (self.schemes.get(registry) or {}).get("holding") == "fetched":     # this machine's newest copy of the
                 import fetch as dmfetch                                            # provider's own — of each part, for a
                 got = dmfetch.current(registry)                                    # scheme in parts — else the release's
+                host = ((self.schemes.get(registry) or {}).get("fetch") or {}).get("host")
                 if got:
                     paths = got
+                elif (not path or not os.path.isfile(path)) and host and os.path.isfile(host):
+                    # THE PROVIDER'S FILE AS THE MACHINE INSTALLED IT (`fetch.host`): read by the scheme's reader,
+                    # unchanged and kept nowhere, where this machine has fetched none
+                    self._rows[registry] = dmfetch.read_host(registry, host)
+                    return self._rows[registry]
                 elif not path or not os.path.isfile(path):
                     raise KeyError("%s is fetched from its provider, and this machine has fetched none: python3 "
                                    "bin/fetch.py %s" % (registry, registry))

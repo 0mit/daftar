@@ -251,6 +251,36 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.15** (2026-10-19, daftar v2.15.0, human-ratified rule-changes: the design of programme item 3, groupings —
+  the registry in both places, a member read and never written, `groupings`, the board's findings 2–4, media types
+  fetched from shared-mime-info; and three found on the way: an older Canon's serial in its maker notes with a
+  QuickTime row, a camera's unset clock, and one sense of "aspect") — **patterns, classes and their previews, one
+  engine.** MINOR: nothing a garden could write under core 2.14 is refused.
+  - lines.yaml: the table `slots` (counter, number, date, time, hex, alnum, word, text, extension — what a name's
+    template may vary in, a date checked by its calendar); the operations `fit` (members grouped by the pattern their
+    text fits, the most specific row first, else by the shape mined from it; a counter's runs and gaps), `inherit` (a
+    class scheme's codes: said, else inherited down `part` and through the folders that hold a content, unless a
+    nearer word, an `apart` code or a misfit sets the member apart, else suggested) and `shared` (what several cursors
+    reach by an aspect's relation); `select` reads a store's beings (`store: <name> | any`); a step may take an input
+    for any value; the table `groupings` (name-series, day, root, names, passes; accounting's moves), each a reading of
+    the law, judged as one; a result's `line`.
+  - profiles.yaml: the knowledge profile's forms `pattern` (template, reads, case, extensions, calendar, suggests,
+    grouping, marks, within, beside) and `class` (stands_for, apart); the view's table `aspects` (holds, carried-by,
+    copies, in-backup, its-series, its-class; accounting's its-moves, its-category), the archetype `cursor`, a drawing's
+    `aspect` and `cursor`. A garden's VOCAB.md may hold `groupings` of its own.
+  - registries.yaml: the shipped scheme `name-patterns` (DCF's file and folder names, seed/knowledge/name-patterns.tsv);
+    the fetched scheme `media-types` (freedesktop.org's shared-mime-info 2.4, never shipped; `fetch.host`, the provider's
+    file where a machine installed it, read where none was fetched). formats.yaml: the reader `shared-mime-info`; the
+    table `clock_epochs` (zero, QuickTime, Unix, FAT, GPS, a two-digit year's 00) and the conversion `moment` reading a
+    moment within a month after one as a clock never set, `quicktime` beside `exif`. crosswalks.yaml: a field's `else`;
+    exif-image reads `Canon:SerialNumber` where the Exif has none; the row `quicktime-movie`.
+  - The law's older prose says "line" where it meant a line ("the time line", "the SEQUENCE line a repetition runs
+    along"), so that "aspect" has one sense, the view's; the `dropped` record of today's `aspect:feasibility` names a
+    place of the old law and stays as written.
+  - core/groupings.py, the engine (templates, mining, fitting, lines, inheritance, clocks); bin/reckon.py applies the
+    three operations; core/law.py judges a scheme's form by its own (`form_problems`), the groupings and aspects;
+    test/group.py.
+
 - **core 2.14** (2026-10-19, daftar v2.14.0, human-ratified rule-change: the merge's order, "each side's order", the
   carried fix of programme item 2b) — **a merge keeps a course's moves in the order they were made.** MINOR: nothing a
   garden could write under core 2.13 is refused.

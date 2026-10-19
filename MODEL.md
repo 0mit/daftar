@@ -462,6 +462,32 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   a garden's own material never goes to a public repository; another garden is given a proposal (bin/propose.py),
   never a file; a sealed statement is never read.
 
+## Groupings: patterns, classes and their previews
+- **One engine.** A name's pattern, a class and a preview are one thing seen three ways: a **grouping** gathers members
+  by a rule, its **members** stand with what is set apart from it, and its **line** shows it in place of its members.
+  Each is a **reading** (`reckon`): read each time, offline, the same each time, never written back. What a person says
+  of a member — a `classify` of it — stands above what is read (core/groupings.py; core/law/lines.yaml `groupings`).
+- **Patterns.** A name fits a **template** of literal text and slots (lines.yaml `slots`: a counter, a date a calendar
+  has, a time, a digest …), a row of a scheme of the knowledge profile's form `pattern`: the release ships the
+  conventions their publishers document (`name-patterns`, DCF's), a garden extracts its own, each accepted row a
+  journalled write. `fit` groups members by the most specific row their text fits, and mines what no row knows: a
+  counter's runs and the positions nobody holds, a date in every calendar whose days it names. A row `suggests` classes,
+  `marks` the folder a file's name speaks for, and applies only `within` a whole or `beside` siblings of a code.
+- **Classes.** A scheme of the form `class` holds codes that may stand for a being (`work:<org>`), some `apart`.
+  `inherit` reads a member's codes: those said of it; else those said of its nearest whole up `part` and of each
+  folder that holds it — unless a nearer word, an `apart` code its name suggests, or not fitting its whole by kind, day
+  and shape sets it apart, with why; else those its patterns suggest. Two codes of one scheme both stand; `part` is
+  acyclic (rule `order`), and a scheme's own cycle is refused.
+- **Lines and groupings.** A group's line (`selection_form.line`) names its range, count, gaps, cells and the value its
+  members agree on: what the gate's replies, the pages and the runs page show. The groupings are the standard readings
+  a profile brings — a run of names, a day, a root's class, any list of names, a watcher's passes, accounting's lines
+  of one merchant — and a garden adds its own (VOCAB.md `groupings`). The view's `aspects` are the board's frames
+  through a cursor (archetype `cursor`); `shared` reads what several cursors reach by one.
+- **The world's names and clocks.** A name's digits of any script are read as ASCII digits where it enters; a media
+  type and its family come from freedesktop.org's shared-mime-info, fetched (`media-types`), or read where the machine
+  installed it; a moment a device wrote on the epoch its clock counts from (formats.yaml `clock_epochs`) is a clock
+  never set, and carries no moment.
+
 ## Merging
 Two branches of one garden merge bean by bean. A bean's statements are a set: what both sides hold is kept once, and
 what either side added is kept, a disagreement side by side. The header and `details` merge three ways against their

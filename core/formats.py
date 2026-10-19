@@ -426,13 +426,34 @@ def format_of(path, allowed):
 
 
 # ------------------------------------------------------------------------------------------------ the conversions
+_EPOCHS = []
+
+
+def clock_epochs():
+    """The epochs a device's clock starts from (core/law/formats.yaml `clock_epochs`), read once."""
+    if not _EPOCHS:
+        from core import read
+        law = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'law', 'formats.yaml')
+        _EPOCHS.extend(r for r in (read.data(law) or {}).get('clock_epochs') or [] if isinstance(r, dict))
+    return _EPOCHS
+
+
 def moment_in(value, how):
-    """(the law's position, a note or None) of a moment as a system writes it; (None, why) where it is none."""
+    """(the law's position, a note or None) of a moment as a system writes it; (None, why) where it is none — and none
+    where the device that wrote it never set its clock: a moment on, or within a month after, an epoch of
+    `clock_epochs` (a PowerShot writes 1980-01-01 00:00 and the seconds since it was switched on)."""
     s = str(value).strip()
-    if how == 'exif':
+    if how in ('exif', 'quicktime', 'iso'):
+        from core import groupings
+        ep = groupings.unset_clock(s, clock_epochs())
+        if ep:
+            return None, f"{s!r} is a clock never set: it sits on the {ep} epoch (clock_epochs)"
+    if how in ('exif', 'quicktime'):
         m = re.match(r'^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})?$', s)
         if not m or m.group(1) == '0000':
-            return None, f"{s!r} is no moment as Exif writes one"
+            return None, f"{s!r} is no moment as {'Exif' if how == 'exif' else 'QuickTime'} writes one"
+        if how == 'quicktime' and not m.group(8):           # its header's time is UTC, as the format says
+            return f"{m.group(1)}-{m.group(2)}-{m.group(3)}T{m.group(4)}:{m.group(5)}:{m.group(6)}+00:00", None
         day = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
         if not m.group(8):
             return day, "a clock with no offset: kept to its day"
@@ -444,10 +465,14 @@ def moment_in(value, how):
             t = datetime.datetime.fromtimestamp(float(s), datetime.timezone.utc)
         except (ValueError, OverflowError, OSError):
             return None, f"{s!r} is no count of seconds"
+        from core import groupings
+        ep = groupings.unset_clock(t.strftime('%Y-%m-%dT%H:%M:%S'), clock_epochs())
+        if ep:
+            return None, f"{s!r} is a clock never set: it sits on the {ep} epoch (clock_epochs)"
         return t.strftime('%Y-%m-%dT%H:%M:%S+00:00'), None
     if how == 'iso':
         return s, None
-    return None, f"{how!r} is no way a moment is written here (exif, epoch, iso)"
+    return None, f"{how!r} is no way a moment is written here (exif, quicktime, epoch, iso)"
 
 
 def moment_out(value, how):
