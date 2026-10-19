@@ -708,7 +708,7 @@ forms:
 # boundary, where it enters: a ledger's own value is never read so); a date and a time are checked, never guessed.
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 slots:
-  - { slot: counter, matches: '[0-9]+', width: allowed, meaning: "decimal digits: a position on the ordinal line the pattern counts in one container (a folder's names, a run's name); members in order make runs, and a position between a run's first and last that nobody holds is a gap. With a width, exactly that many digits" }
+  - { slot: counter, matches: '[0-9]+', width: allowed, meaning: "decimal digits: a position on the ordinal line the pattern counts in one container (a folder's names, a run's name); members in order make runs, and a position between a run's first and last that nobody holds is a gap. With a width, exactly that many digits; with a width and `+`, at least that many — a counter padded to a width it outgrows" }
   - { slot: number, matches: '[0-9]+', width: allowed, meaning: "decimal digits that are no counter — a version, a size, a resolution: never ranged" }
   - { slot: date, forms: [yyyymmdd, yymmdd, yyyy-mm-dd, yyyy_mm_dd, yyyy.mm.dd], meaning: "a day, in one of ISO 8601's basic and extended forms or the separators names use: a day of the calendar the pattern names (`calendar`), checked by that calendar — a day it does not have is no date" }
   - { slot: time, forms: [hhmmss, hhmm, hh-mm-ss, hh.mm.ss, hh_mm_ss], meaning: "a time of day in one of ISO 8601's basic forms or the separators names use, checked: hours below 24, minutes below 60, seconds below 61" }

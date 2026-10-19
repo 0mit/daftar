@@ -119,6 +119,7 @@ knowledge_schemes:
       latest: "freedesktop.org publishes each release of shared-mime-info at gitlab.freedesktop.org/xdg/shared-mime-info/-/releases, its database in data/freedesktop.org.xml.in; a host that installs it keeps the database in /usr/share/mime/packages/freedesktop.org.xml, which the reader reads where no fetch was made"
     licence: GPL-2.0-or-later
     release: "shared-mime-info 2.4"
+    code_pattern: "^[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,126}/[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,126}$"
     publisher: "freedesktop.org (the shared-mime-info project)"
     url: "https://specifications.freedesktop.org/shared-mime-info-spec/latest/"
     levels: [{ level: top }, { level: type }]
@@ -260,7 +261,7 @@ knowledge_scheme_form:
   licence: "the SPDX identifier of the terms its rows are under — `LicenseRef-<name>` where the publisher's terms have none"
   release: "the publisher's release the rows are from"
   sensitive: "special-category — every code of it is special-category material wherever it is written (a diagnosis, a procedure; F3); absent, not"
-  code_pattern: "with `at-authority`: the form a code must take, a regular expression"
+  code_pattern: "the form a code must take, a regular expression: with `at-authority`, all that is checked of a code; with `fetched`, what is checked of a code where this machine holds no copy of the scheme"
   relations: "a registry of relations between its own codes, rows {from, to, rel}, `rel` one of part-of, requires, adjacent (N23); resolved by the `registry_links` rows the garden declares for it"
   labels: "[{language, registry, attribution?}] — its labels in another language: a registry of {code, name} rows, and the words its publisher asks to be printed with them, verbatim (N25)"
   units: "a registry of rows in the form `units_crosswalk_form` — its codes crossed into the law's units and kinds, one row a code, so a value written with one of its codes is read as the law's, and the law's written back with its code (bin/units.py)"

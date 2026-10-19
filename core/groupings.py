@@ -7,8 +7,9 @@ LINE, one line in place of a thousand names. This module is the engine the readi
 answer every time — no clock, no randomness, no order but the sort.
 
   Templates   parse(text, slots) and Template(text, …).match(name): a template is literal text and slots,
-              `{<slot>}` or `{<slot>:<width or form>}`, each slot a row of core/law/lines.yaml `slots`; nothing in it is
-              evaluated. A name the world gives is read with its digits of any script as ASCII digits, normalised here,
+              `{<slot>}` or `{<slot>:<width or form>}` (`4` exactly four, `4+` four or more), each slot a row of
+              core/law/lines.yaml `slots`; nothing in it is evaluated. It takes the whole name, a part of it, or a
+              word in it (the form's `match`). A name the world gives is read with its digits of any script as ASCII digits, normalised here,
               at the boundary; a date is a day its calendar has, asked of bin/cal.py, never guessed.
   Mining      shape(name), mine(names): a name the registry does not know is cut into runs — a hexadecimal run of
               twelve or more holding a letter and a digit, decimal digits, letters of any script, each other character —
@@ -32,7 +33,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 import cal  # noqa: E402 — daftar's calendars, converted through the day
 
-SLOT = re.compile(r'\{([a-z]+)(?::([A-Za-z0-9._-]+))?\}')
+SLOT = re.compile(r'\{([a-z]+)(?::([A-Za-z0-9._+-]+))?\}')
 EXT = re.compile(r'\.([^\W_]{1,8})$')
 HEXRUN = re.compile(r'[0-9A-Fa-f]{12,}')
 TOKEN = re.compile(r'(\d+)|([^\W\d_]+)|(.)', re.S)
@@ -133,8 +134,10 @@ def parse(text, slots):
         elif arg is not None:
             if row.get('width') not in ('allowed', 'required'):
                 raise TemplateError(f"{text!r}: a {name} slot takes no width")
-            if not arg.isdigit() or arg.startswith('0'):
-                raise TemplateError(f"{text!r}: a width is a whole number, `{{{name}:4}}`")
+            w = arg[:-1] if arg.endswith('+') else arg
+            if not w.isdigit() or w.startswith('0'):
+                raise TemplateError(f"{text!r}: a width is a whole number, `{{{name}:4}}`, or one and `+` for at "
+                                    f"least that many, `{{{name}:4+}}`")
         elif row.get('width') == 'required':
             raise TemplateError(f"{text!r}: a {name} slot names its width, `{{{name}:16}}`")
         if name == 'text':
@@ -157,9 +160,10 @@ def parse(text, slots):
 
 class Template:
     """A template compiled for matching. `match(text)` gives {slot: value} — a second slot of one name as `<slot>2`
-    — or None; a date is kept only where its calendar has the day."""
+    — or None; a date is kept only where its calendar has the day. `take`: `whole` (the text is the template), `part`
+    (a run anywhere in it) or `word` (a run no letter or digit touches)."""
 
-    def __init__(self, text, slots, case='any', calendar=None, extensions=None, systems=None):
+    def __init__(self, text, slots, case='any', calendar=None, extensions=None, systems=None, take='whole'):
         self.text, self.calendar, self.systems = text, calendar, systems or {}
         self.parts = parse(text, slots)
         self.extensions = {e.lower() for e in extensions or []}
@@ -177,21 +181,28 @@ class Template:
                 pat = TIME_FORMS[arg]
             else:
                 pat = ENGINE.get(name) or str(slots[name].get('matches'))
+                n = (arg[:-1] + ',') if arg and arg.endswith('+') else arg       # `4+`: four or more
                 if arg and name in ('counter', 'number'):
-                    pat = r'\d{%s}' % arg
+                    pat = r'\d{%s}' % n
                 elif arg and name == 'hex':
-                    pat = r'[0-9A-Fa-f]{%s}' % arg
+                    pat = r'[0-9A-Fa-f]{%s}' % n
                 elif arg and name == 'alnum':
-                    pat = r'[A-Za-z0-9_]{%s}' % arg
+                    pat = r'[A-Za-z0-9_]{%s}' % n
                 elif arg and name == 'word':
-                    pat = r'[^\W\d_]{%s}' % arg
+                    pat = r'[^\W\d_]{%s}' % n
             rx.append(f'(?P<{gid}>{pat})')
-        self.rx = re.compile('^' + ''.join(rx) + '$', 0 if case == 'exact' else re.I)
+        body = ''.join(rx)
+        if take == 'whole':
+            body = '^' + body + '$'
+        elif take == 'word':                                # no letter or digit of any script on either side
+            body = r'(?<![^\W_])' + body + r'(?![^\W_])'
+        self.take = take
+        self.rx = re.compile(body, 0 if case == 'exact' else re.I)
         self.literal = sum(len(p[1]) for p in self.parts if p[0] == 'lit')
         self.width = len(self.slots)
 
     def match(self, text):
-        m = self.rx.match(ascii_digits(text))
+        m = self.rx.search(ascii_digits(text))
         if not m:
             return None
         out = {}
@@ -388,13 +399,15 @@ class Row:
         self.scheme, self.code, self.order = scheme, str(row.get('code')), order
         self.template = Template(str(row['template']), slots, case=row.get('case') or 'any',
                                  calendar=row.get('calendar') or None,
-                                 extensions=str(row.get('extensions') or '').split(), systems=systems)
+                                 extensions=str(row.get('extensions') or '').split(), systems=systems,
+                                 take=row.get('match') or 'whole')
         self.reads = row.get('reads') or None
         self.suggests = str(row.get('suggests') or '').split()
         self.grouping = row.get('grouping') or None
         self.marks = row.get('marks') or None
         self.within = row.get('within') or None
         self.beside = row.get('beside') or None
+        self.only = row.get('only') or None              # `suggests`: evidence alone, never a group of `fit`
 
     @property
     def coding(self):
@@ -431,7 +444,7 @@ def fit(items, rows, systems, reads=None, holds=None, beside=None, mine_rest=Tru
         text = str(text)
         hit = None
         for r in rows:
-            if reads is not None and (r.reads or 'as') != reads:
+            if r.only == 'suggests' or (reads is not None and (r.reads or 'as') != reads):
                 continue
             if r.within and not (holds and holds(key, r.within)):
                 continue

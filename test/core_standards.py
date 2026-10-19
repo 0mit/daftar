@@ -1101,6 +1101,19 @@ for name, data, says in (("a file whose first object is no dump's header", DUMP.
         refused = str(e)
     check(f"fetch: OpenStreetMap's places — {name} — is refused, and nothing more is kept",
           says in refused and len(dmfetch.fetched('osm-places')) == (2 if zst else 1), refused)
+
+# A fetched scheme this machine holds no copy of is checked by the form its row states (`code_pattern`), where it states one
+os.environ['DAFTAR_STANDARDS_CACHE'] = tempfile.mkdtemp(prefix='core-standards-none-')
+bare = standards.Standards(ROOT)
+mt = bare.knowledge.schemes['media-types']
+mt['fetch'] = dict(mt.get('fetch') or {}, host=os.path.join(CACHE, 'no-such-host-copy.xml'))
+check("a fetched scheme none fetched here is checked by its form: a media type in it passes, a word that is none "
+      "refused, and a scheme with no `code_pattern` still cannot be read here",
+      mt.get('code_pattern') and bare.code('media-types:text/x-devicetree-source') == ''
+      and 'not in the form' in bare.code('media-types:devicetree source')
+      and 'cannot be read here' in bare.code('unece-rec20:KGM'),
+      (bare.code('media-types:text/x-devicetree-source'), bare.code('media-types:devicetree source'),
+       bare.code('unece-rec20:KGM')))
 shutil.rmtree(CACHE, ignore_errors=True)
 
 print(f"\ncore_standards: {len(FAILS)} failed")
