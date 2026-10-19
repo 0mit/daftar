@@ -190,6 +190,28 @@ elif step == 'gone':
     rec = s.db.execute('SELECT verb, being, id, by, why FROM gone').fetchall()
     free = s.put('d-1', 'hold', {'id': sid, 'by': 'self', 'of': 'c-1', 'as': 'moved.CR2'}, act='vol-a#scan-1')
     say(rec=rec, free=free, why_needed=refused(lambda: s.gone('d-1', sid, by='session-t', why='')))
+elif step == 'through':
+    old = Store(path + '/before.sqlite')                    # a store kept before `hold` took `through` (core 2.18)
+    old.db.execute("CREATE TABLE v_hold (n INTEGER PRIMARY KEY, being INTEGER NOT NULL, id TEXT NOT NULL, b_by INTEGER, "
+                   "t_by, b_of INTEGER, t_of, t_as, c_while, c_why, c_note, known INTEGER, UNIQUE (being, id))")
+    old.db.execute("INSERT OR REPLACE INTO meta (k, v) VALUES ('shapes:hold', ?)",
+                   (json.dumps({'by': ['being'], 'of': ['quantity', 'being'], 'as': ['text']}),))
+    old.db.commit()
+    s = Store(path + '/before.sqlite')
+    s.being('vol-i', 'volume'); s.being('d-i', 'folder'); s.being('c-i', 'content')
+    s.put('vol-i', 'read', {'id': 'scan', 'by': 'nas', 'from': 'vol-i', 'at': '2026-10-19T10:00:00+03:00'})
+    A = 'vol-i#scan'
+    s.put('vol-i', 'hold', {'id': 'i42', 'by': 'self', 'of': 'c-i'}, act=A)
+    names = [s.put('d-i', 'hold', {'by': 'self', 'of': 'c-i', 'as': n, 'through': 'vol-i#i42'}, act=A)
+             for n in ('a.jpg', 'b.jpg')]
+    cols = [r[1] for r in s.db.execute('PRAGMA table_info(v_hold)')]
+    idx = [r[1] for r in s.db.execute("PRAGMA index_list(v_hold)")]
+    shapes = json.loads(dict(s.db.execute('SELECT k, v FROM meta'))['shapes:hold'])
+    once = s.db.execute("SELECT COUNT(DISTINCT t_through) FROM v_hold WHERE t_through IS NOT NULL").fetchone()[0]
+    say(cols=cols, idx=idx, shapes=shapes, names=names, once=once, d=s.get('d-i'),
+        nowhere=refused(lambda: s.put('d-i', 'hold', {'by': 'self', 'of': 'c-i', 'as': 'c.jpg', 'through': 'vol-i#i99'},
+                                      act=A)),
+        check=[f for f in store.check([s]) if any(b in str(f) for b in ('vol-i', 'd-i', 'c-i'))])
 elif step == 'here':
     kept = store.kept_here('.')
     s = store.open_store('t', root='.')
@@ -365,6 +387,18 @@ try:
     check("gone: a statement leaves a store with who, when and why recorded, and its id is free for another form",
           j and j['rec'] and j['rec'][0][3] == 'session-t' and j['rec'][0][4] == 'the file was moved' and j['free']
           and 'reason' in (j['why_needed'] or ''), (j, r.out[-800:]))
+
+    # ---- through
+    j, r = probe('through', S)
+    ok = j is not None
+    check("through: two names of one inode each hold their content through the volume's one holding of it, the room "
+          "it takes, counted once", ok and len(set(j['names'])) == 2 and j['once'] == 1
+          and all(rr.get('through') == 'vol-i#i42' for v, rr, a in j['d'] if v == 'hold'), (j, r.out[-1200:]))
+    check("...a store kept before `hold` took `through` grows the column, its index and the shape a reader with no law "
+          "reads", ok and 't_through' in j['cols'] and 'v_hold_t_through' in j['idx']
+          and j['shapes'].get('through') == ['statement'], j)
+    check("...a `through` that names no statement kept is refused, and the store's check finds nothing of them",
+          ok and j['nowhere'] and j['check'] == [], j)
 
     # ---- here
     j, r = probe('here', S)

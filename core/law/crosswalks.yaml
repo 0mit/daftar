@@ -218,7 +218,7 @@ crosswalks:
     series: "1"
     model: volume
     kind: volume
-    format: [sqlite, tsv, csv, jsonl]
+    format: [sqlite, tsv, csv, jsonl, checksums]
     reader: file-tree
     act: { verb: read }
     keep: store
@@ -231,7 +231,7 @@ crosswalks:
     series: "1"
     model: folder
     kind: folder
-    format: [sqlite, tsv, csv, jsonl]
+    format: [sqlite, tsv, csv, jsonl, checksums]
     reader: file-tree
     act: { verb: read }
     keep: store
@@ -245,7 +245,7 @@ crosswalks:
     series: "1"
     model: file
     statements: { verb: hold }
-    format: [sqlite, tsv, csv, jsonl]
+    format: [sqlite, tsv, csv, jsonl, checksums]
     reader: file-tree
     act: { verb: read }
     keep: store
@@ -259,7 +259,7 @@ crosswalks:
     series: "1"
     model: content
     kind: content
-    format: [sqlite, tsv, csv, jsonl]
+    format: [sqlite, tsv, csv, jsonl, checksums]
     reader: file-tree
     act: { verb: derive }
     keep: store

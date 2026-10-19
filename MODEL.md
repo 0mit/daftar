@@ -425,6 +425,12 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   statement of a bean that has no id is named from a store by the same digest. A name the world gives in bytes is
   written `escaped`. A store keeps no sealed material. A statement leaves a store only with its removal recorded: who,
   when and why.
+- **Names, inodes and trees.** A file is a folder holding a content under its name (`hold … as`). Two names of one
+  inode hold it through the volume's one holding of it (`hold … through`), which is the room it takes, counted once.
+  A volume's carrier is a disk, or a content that holds it — an archive, an image — read as a volume like any other.
+  A tree's **manifest** is the checksum lines of its files (formats.yaml `checksums`), sorted by path; a **dataset** is
+  the content of a tree's manifest, named by its BLAKE3: what two folders hold alike is one dataset, read and never
+  written, and its manifest is kept as a file only where it must outlive the trees.
 - **The pointer.** A bean names a being kept only in a store `store:<kind>:<id>`, and one of its statements
   `store:<kind>:<id>#<id>`. The gate checks its shape, its kind, and the nature its role takes. It names no store: a
   being keeps its id when it moves between stores, or gains a bean, whose kind it keeps.

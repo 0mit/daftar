@@ -251,6 +251,19 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.18** (2026-10-19, daftar v2.18.0, human-ratified rule-change) — **two names of one inode, a tree's
+  manifest, a volume in a content.** MINOR: nothing a garden could write under core 2.17 is refused.
+  - verbs.yaml: `hold` takes `through` (a statement): the holding a name holds its content through — each name of an
+    inode through its volume's one holding of that inode, the room it takes, counted once.
+  - formats.yaml: the format `checksums` (the checksum lines of `b3sum --check`, as RFC 8493 writes a BagIt manifest),
+    read and written, read by the reader `file-tree` and the crosswalks file-tree-volume, -folder, -file and -content;
+    a tree's manifest is its files' lines sorted by path, and a dataset the content of a tree's manifest, named by its
+    BLAKE3 (core/formats.py `manifest`, `blake3_hex`).
+  - kinds.yaml: a `volume`'s carrier may be a content — an archive, an image.
+  - bin/store.py: a relation that grows a role adds its column, its index where the role names a statement or a
+    being, and its shapes for a reader with no law.
+  - test/io.py, test/store.py, test/core-cases.yaml.
+
 - **core 2.17** (2026-10-19, daftar v2.17.0, human-ratified rule-change) — **a pattern takes a part of a name, a row
   suggests alone, a counter outgrows its width.** MINOR: nothing a garden could write under core 2.16 is refused.
   - profiles.yaml, the form `pattern`: `match` (`whole`, `part`, `word`: how much of the text the template takes) and

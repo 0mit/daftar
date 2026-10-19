@@ -436,10 +436,20 @@ class Store:
                 elif shapes_of((row.get('roles') or {}).get(k) or {}) == ['statement']:     # what names a statement
                     self.db.execute(f"CREATE INDEX IF NOT EXISTS {_q(table + '_' + tc)} ON {_q(table)} ({tc})")
         else:
+            grew = False
             for k, (bc, tc) in cols.items():     # a row of the law that grew a role since: its column added
                 for c in (bc, tc):
                     if c and c not in have:
                         self.db.execute(f"ALTER TABLE {_q(table)} ADD COLUMN {c}")
+                        grew = True
+                        if c == bc:
+                            self.db.execute(f"CREATE INDEX IF NOT EXISTS {_q(table + '_' + bc)} ON {_q(table)} ({bc})")
+                        elif not bc and shapes_of((row.get('roles') or {}).get(k) or {}) == ['statement']:
+                            self.db.execute(f"CREATE INDEX IF NOT EXISTS {_q(table + '_' + tc)} ON {_q(table)} ({tc})")
+            if grew:                             # its shapes as the law now says them, for a reader with no law
+                shapes = {k: shapes_of(spec) for k, spec in list((row.get('roles') or {}).items()) +
+                          list((row.get('qualifiers') or {}).items())}
+                self.db.execute("INSERT OR REPLACE INTO meta (k, v) VALUES (?, ?)", (f'shapes:{verb}', json.dumps(shapes)))
         self._cols[verb] = cols
         return cols
 

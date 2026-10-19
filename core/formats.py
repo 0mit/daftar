@@ -207,6 +207,71 @@ def _jsonl(source, spec):
                 yield Record(item, at=f"line {n}")
 
 
+# ------------------------------------------------------------------------------------------------ a manifest
+EMPTY_BLAKE3 = 'af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262'    # BLAKE3 of no bytes
+_SUM = re.compile(r'^([0-9a-f]{64})  (.+)$')
+
+
+def _checksums(source, spec):
+    """Checksum lines (`checksums`): a digest, two spaces, a path `escaped`. Each file a record (`path` in bytes, `type`
+    f, `hash`), the folders of its path before it, each once (`type` d), so the listing is a whole tree. A line of
+    another shape — b3sum's own escaping begins one with a backslash — is refused, never read as another name."""
+    seen = set()
+    for n, line in enumerate(_text(source).split('\n'), 1):
+        if not line:
+            continue
+        m = _SUM.match(line)
+        if not m:
+            raise Refused(f"line {n} is no checksum line: 64 lowercase hexadecimal digits, two spaces, a path escaped")
+        path = unescape(m.group(2))
+        if path.startswith(b'/') or b'' in path.split(b'/') or {b'.', b'..'} & set(path.split(b'/')):
+            raise Refused(f"line {n}: a path in a manifest is relative and plain, with no empty, `.` or `..` part")
+        parts = path.split(b'/')
+        for i in range(1, len(parts)):
+            d = b'/'.join(parts[:i])
+            if d not in seen:
+                seen.add(d)
+                yield Record({'path': d, 'type': 'd'}, at=f"line {n}")
+        yield Record({'path': path, 'type': 'f', 'hash': m.group(1)}, at=f"line {n}")
+
+
+def _checksums_write(records):
+    """Checksum lines for records holding `path` (bytes or text) and `hash`, a file of size 0 the digest of empty bytes,
+    sorted by the path as written, byte by byte: a tree's manifest when the records are its files."""
+    lines = []
+    for r in records:
+        if r.get('type', 'f') != 'f':
+            continue
+        h = r.get('hash') or (EMPTY_BLAKE3 if str(r.get('size')) == '0' else None)
+        if not h or not re.fullmatch(r'[0-9a-f]{64}', str(h)):
+            raise Refused(f"{escape(_path_bytes(r.get('path', b'')))}: no digest of 64 lowercase hexadecimal digits")
+        lines.append((escape(_path_bytes(r['path'])).encode('utf-8'), str(h)))
+    lines.sort()
+    return ''.join(f"{h}  {p.decode('utf-8')}\n" for p, h in lines)
+
+
+def manifest(files):
+    """A tree's manifest, as bytes: `files` is (path, BLAKE3 or None, size) for every file beneath its root, the path
+    relative to it. Its BLAKE3 is the name of the dataset the tree is (formats.yaml `checksums`)."""
+    return _checksums_write({'path': p, 'hash': h, 'size': s} for p, h, s in files).encode('utf-8')
+
+
+def blake3_hex(data):
+    """The BLAKE3 of bytes in lowercase hexadecimal: the `blake3` module where it is installed, else b3sum's."""
+    try:
+        import blake3
+        return blake3.blake3(data).hexdigest()
+    except ImportError:
+        pass
+    import shutil
+    import subprocess
+    b3 = shutil.which('b3sum')
+    if not b3:
+        raise Refused("BLAKE3 needs the `blake3` module (pip install blake3) or b3sum")
+    out = subprocess.run([b3, '--no-names'], input=data, capture_output=True, check=True).stdout
+    return out.decode().strip()
+
+
 def snapshot(path, pages=256, sleep=0.01):
     """A database another process commits to, copied into memory in steps: no long read holds up its writer."""
     src = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=60)
@@ -384,6 +449,8 @@ def write(fmt, records, fields=None, **opts):
     records = list(records)
     if fmt == 'ics':
         return _ics(records, stamp=opts.get('stamp'))
+    if fmt == 'checksums':
+        return _checksums_write(records)
     if fmt == 'json':
         return _dumps(records) + '\n'
     if fmt == 'jsonl':
@@ -419,8 +486,8 @@ def write(fmt, records, fields=None, **opts):
     raise Refused(f"the format {fmt!r} is written by none of this release's writers ({', '.join(WRITE)})")
 
 
-READ = {'tsv': _tsv, 'csv': _csv, 'json': _json, 'jsonl': _jsonl, 'sqlite': _sqlite, 'xml': _xml}
-WRITE = ('tsv', 'csv', 'json', 'jsonl', 'sqlite', 'ics')
+READ = {'tsv': _tsv, 'csv': _csv, 'json': _json, 'jsonl': _jsonl, 'sqlite': _sqlite, 'xml': _xml, 'checksums': _checksums}
+WRITE = ('tsv', 'csv', 'json', 'jsonl', 'sqlite', 'ics', 'checksums')
 EXTENSIONS = {'.tsv': 'tsv', '.csv': 'csv', '.json': 'json', '.jsonl': 'jsonl', '.ndjson': 'jsonl', '.sqlite': 'sqlite',
               '.sqlite3': 'sqlite', '.db': 'sqlite', '.xml': 'xml'}
 
