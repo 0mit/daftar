@@ -344,19 +344,21 @@ sys.path.insert(0, 'bin'); sys.path.insert(0, '.')
 from store import Store
 s = Store(sys.argv[1])
 s.being('vol-a', 'volume', 'a volume, invented')
-for b in ('d-top', 'd-day', 'd-nm', 'd-docs'):
+for b in ('d-top', 'd-day', 'd-nm', 'd-docs', 'd-app', 'd-app-bin', 'd-bin'):
     s.being(b, 'folder')
 for i in range(1, 12):
     s.being(f'c-{i}', 'content')
 A = 'vol-a#' + s.put('vol-a', 'read', {'id': 'scan-1', 'by': 'sam', 'from': 'vol-a', 'at': '2026-10-18T10:00:00+03:00'})
 for b, whole, name in (('d-top', 'vol-a', 'top'), ('d-day', 'd-top', '2015-11-20'), ('d-nm', 'd-top', 'node_modules'),
-                       ('d-docs', 'd-top', 'docs')):
+                       ('d-docs', 'd-top', 'docs'), ('d-app', 'd-top', 'app'), ('d-app-bin', 'd-app', 'bin'),
+                       ('d-bin', 'd-top', 'bin')):
     s.put(b, 'part', {'by': 'self', 'of': whole}, act=A)
     s.put(b, 'name', {'by': whole, 'of': 'self', 'as': name}, act=A)
 files = [('d-day', 'IMG_7475.CR2', 1), ('d-day', 'IMG_7476.CR2', 2), ('d-day', 'IMG_7479.CR2', 3), ('d-day', 'Thumbs.db', 4),
-         ('d-nm', 'index.js', 5), ('d-nm', 'package.json', 6), ('d-docs', 'report.pdf', 7), ('d-docs', 'IMG_7480.CR2', 8)]
+         ('d-nm', 'index.js', 5), ('d-nm', 'package.json', 6), ('d-docs', 'report.pdf', 7), ('d-docs', 'IMG_7480.CR2', 8),
+         ('d-app', 'package.json', 9), ('d-app-bin', 'app.exe', 10), ('d-bin', 'tool.sh', 11)]
 for folder, name, i in files:
-    s.put(f'c-{i}', 'measure', {'of': 'self', 'as': 'information', 'value': {'count': str(1000000 * (9 - i)), 'unit': 'By'}}, act=A)
+    s.put(f'c-{i}', 'measure', {'of': 'self', 'as': 'information', 'value': {'count': str(1000000 * (12 - i)), 'unit': 'By'}}, act=A)
     s.put(folder, 'hold', {'by': 'self', 'of': f'c-{i}', 'as': name}, act=A)
 print('built')
 """
@@ -375,9 +377,13 @@ print('built')
           "are set apart by their `apart` codes, with why",
           rc == 0 and 'work:orchard' in out and 'names:thumbs → roles:dropping' in out
           and 'folder names:nm → roles:generated' in out, out[-1200:])
+    check("group: `root` — a `bin` inside a tree a package.json marks as code is a build's output, set apart (a row that "
+          "applies `within` a code tree); a `bin` elsewhere is its root's own",
+          rc == 0 and 'folder names:bin → roles:generated' in out and 'set apart' in out
+          and out.count('roles:generated') == 2, out[-1200:])
     rc, out = run(PY, 'bin/group.py', 'measure', '--path', store_file, '-j', '2')
     check("group: `measure` — every name of the store fitted, spread over processes",
-          rc == 0 and '8 names in 3 folders' in out, out[-800:])
+          rc == 0 and '11 names in 6 folders' in out, out[-800:])
     rc, out = run(PY, 'bin/group.py', 'mine', '--path', store_file, '--top', '10', '--min', '2', '--json')
     got = json.loads(out[out.index('{'):]) if rc == 0 and '{' in out else {}
     check("group: `mine` — the largest folders' names fitted, the registry's counted, the rest's templates ranked",
