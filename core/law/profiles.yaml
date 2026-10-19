@@ -400,7 +400,7 @@ forms:
       template:
         required: "true"
         in: { type: text }
-        meaning: "literal text and slots, `{<slot>}` or `{<slot>:<width or form>}`, each slot a row of `slots` (core/law/lines.yaml); `{{` and `}}` a brace. Nothing in it is evaluated"
+        meaning: "literal text and slots, `{<slot>}` or `{<slot>:<width or form>}` — a width `4` exactly four, `4+` four or more — each slot a row of `slots` (core/law/lines.yaml); `{{` and `}}` a brace. Nothing in it is evaluated"
       reads:
         in: { type: field_path }
         meaning: "the text the template is matched against: `as` of a holding (a file's name), of a `name` (a folder's), a statement's `note` (a bank line's words); absent, a holding's name"
@@ -428,6 +428,12 @@ forms:
       beside:
         in: { type: coding }
         meaning: "the row applies only where most of the member's siblings hold this code: a `.pot` file is a gettext template beside `.po` files"
+      match:
+        in: [whole, part, word]
+        meaning: "how much of the text the template takes: `whole`, all of it; `part`, a run anywhere in it; `word`, a run anywhere in it that no letter or digit touches on either side; absent, `whole`"
+      only:
+        in: [suggests]
+        meaning: "`suggests`: the row is read for what it suggests alone — `fit` makes no group of a text it takes, which goes on to the next row, or to mining; absent, its members group as `grouping` says"
   class:
     meaning: "what a code of a class scheme is, on the rows of a scheme that names this form (`form: class`), beside its code, level, parent and name: the being it stands for, and whether its members are set apart from their wholes' codes. Its codes are what `inherit` reads"
     attrs:

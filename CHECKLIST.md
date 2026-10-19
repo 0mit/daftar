@@ -141,7 +141,7 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       A scheme of names' templates (the knowledge profile's `form: pattern`) holds each row to its form: its template
       in the slots of core/law/lines.yaml (`counter`, `date` with its form, `hex` with its width …), what it suggests
       codes of the schemes the garden reads, what it reads a field path, its calendar a system of time, its grouping a
-      row of `groupings`, `marks` only `by`; a scheme of classes (`form: class`) has one code a being and `apart` only
+      row of `groupings`, `marks` only `by`, `match` `whole`, `part` or `word`, `only` `suggests`; a scheme of classes (`form: class`) has one code a being and `apart` only
       `true`, and no cycle among its codes' parents. A garden's own grouping (VOCAB.md `groupings`) takes a name the
       law's do not, and is judged as a reading of the law's closed list, each field of its line one a line has.
 

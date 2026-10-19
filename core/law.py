@@ -1064,6 +1064,10 @@ class Law:
                 out.append((at, f"grouping: {r['grouping']!r} is no row of `groupings`"))
             if r.get('marks') and r['marks'] != 'by':
                 out.append((at, f"marks: {r['marks']!r} — `by`, the folder that holds a file of this name, or absent"))
+            if r.get('match') and r['match'] not in ('whole', 'part', 'word'):
+                out.append((at, f"match: {r['match']!r} is `whole`, `part` or `word`"))
+            if r.get('only') and r['only'] != 'suggests':
+                out.append((at, f"only: {r['only']!r} — `suggests`, a row read for what it suggests alone, or absent"))
             for k in ('within', 'beside'):
                 if r.get(k) and self.std.code(str(r[k])):
                     out.append((at, f"{k}: {self.std.code(str(r[k]))}"))

@@ -113,6 +113,18 @@ try:
     check("engine: a template not in its form is refused by name — an unknown slot, a width it needs, a width that is no "
           "number, two `text`, an extension not at the end, a form the slot lacks, an open brace",
           len(bad) == 7 and 'no slot' in bad['{nope}'] and 'names its width' in bad['{hex}'], bad)
+    t4 = groupings.Template('IMG_{counter:4+}.{extension}', SLOTS, systems=SYSTEMS)
+    check("engine: a least width (`4+`) takes a counter padded to four that outgrew it, and not one shorter",
+          t4.match('IMG_0042.jpg') == {'counter': '0042', 'extension': 'jpg'}
+          and t4.match('IMG_10762.jpg') == {'counter': '10762', 'extension': 'jpg'} and t4.match('IMG_42.jpg') is None
+          and t.match('IMG_10762.jpg') is None)
+    part = groupings.Template('screenshot', SLOTS, take='part')
+    word = groupings.Template('set', SLOTS, take='word')
+    check("engine: a template takes a part of a name (`part`), or a word in it that no letter or digit of any script "
+          "touches (`word`)",
+          part.match('My Screenshot 2020.png') == {} and part.match('photo.jpg') is None
+          and word.match('dj set 2019.mp4') == {} and word.match('set_01.mp4') == {} and word.match('sunset.jpg') is None
+          and word.match('setتار.mp4') is None)
 
     # ---- THE ENGINE: mining
     m = groupings.mine(['IMG_7378.CR2', 'IMG_7379.CR2', 'IMG_7381.CR2', 'IMG_7382.CR2', 'IMG_7385.CR2'], SYSTEMS)
@@ -147,6 +159,15 @@ try:
           sorted(cam.get('members', [])) == ['h0', 'h1', 'h2', 'h5'] and ('mine:cam', 'f2') in by
           and by.get(('mine:thumbs', 'f1'), {}).get('suggests') == ['roles:dropping']
           and any(g['code'] is None and g['members'] == ['h4'] for g in gs), gs)
+    loose = groupings.rows_of([('mine', [{'code': 'cam', 'template': 'IMG_{counter:4}.{extension}'},
+                                         {'code': 'any-img', 'template': 'IMG_{text}', 'only': 'suggests',
+                                          'suggests': 'media:captured-photo'}])], SLOTS, SYSTEMS)
+    gs = groupings.fit([('a', 'IMG_0001.JPG', 'f'), ('b', 'IMG_0001 (2).JPG', 'f'), ('c', 'IMG_0002 (2).JPG', 'f')],
+                       loose, SYSTEMS)
+    check("engine: a row read for what it suggests alone (`only: suggests`) makes no group of `fit` — the names it "
+          "would take are mined into their own series",
+          not any(g['code'] == 'mine:any-img' for g in gs) and any(g['code'] is None and sorted(g['members']) == ['b', 'c']
+                                                                    for g in gs), gs)
     ln = groupings.line(cam, ['range', 'count', 'missing'])
     check("engine: a group's one line — its range, how many, how many missing", ln == 'IMG_7378–9000.CR2 · 4 · 1,619 missing',
           ln)
@@ -283,6 +304,15 @@ files:
           "row is, a `marks` that is not `by`",
           any('template' in f and 'no slot' in f for f in found) and any('suggests' in f for f in found)
           and any('grouping' in f for f in found) and any('marks' in f for f in found), found)
+    lines = keep.rstrip('\n').split('\n')
+    wide = '\n'.join([lines[0] + '\tmatch\tonly'] + [ln + '\t\t' for ln in lines[1:]]) + '\n'
+    write('extracts/names.tsv', wide + 'shot\tpattern\ta screenshot\tscreenshot\t\t\t\t\t\tword\tsuggests\n')
+    found = gate()
+    check("gate: a row that takes a word of a name and is read for what it suggests alone passes", not found, found[:4])
+    write('extracts/names.tsv', wide + 'odd2\tpattern\tbroken\tscreenshot\t\t\t\t\t\tsomewhere\tmaybe\n')
+    found = gate()
+    check("gate: a `match` that is not `whole`, `part` or `word`, and an `only` that is not `suggests`, refused by name",
+          any('match:' in f for f in found) and any('only:' in f for f in found), found)
     write('extracts/names.tsv', keep)
     keepw = open(os.path.join(G, 'extracts/work.tsv'), encoding='utf-8').read()
     write('extracts/work.tsv', keepw + 'orchard2\tcode\tthe orchard again\torchard\tmaybe\n')

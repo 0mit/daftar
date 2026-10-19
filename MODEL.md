@@ -472,7 +472,9 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   conventions their publishers document (`name-patterns`, DCF's), a garden extracts its own, each accepted row a
   journalled write. `fit` groups members by the most specific row their text fits, and mines what no row knows: a
   counter's runs and the positions nobody holds, a date in every calendar whose days it names. A row `suggests` classes,
-  `marks` the folder a file's name speaks for, and applies only `within` a whole or `beside` siblings of a code.
+  `marks` the folder a file's name speaks for, and applies only `within` a whole or `beside` siblings of a code. It
+  takes the whole text, a `part` of it or a `word` in it (`match`), and may be read for what it suggests alone (`only`),
+  making no group; a width `4+` is a least width, a counter padded to a width it outgrows.
 - **Classes.** A scheme of the form `class` holds codes that may stand for a being (`work:<org>`), some `apart`.
   `inherit` reads a member's codes: those said of it; else those said of its nearest whole up `part` and of each
   folder that holds it — unless a nearer word, an `apart` code its name suggests, or not fitting its whole by kind, day

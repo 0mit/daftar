@@ -251,6 +251,16 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.17** (2026-10-19, daftar v2.17.0, human-ratified rule-change) — **a pattern takes a part of a name, a row
+  suggests alone, a counter outgrows its width.** MINOR: nothing a garden could write under core 2.16 is refused.
+  - profiles.yaml, the form `pattern`: `match` (`whole`, `part`, `word`: how much of the text the template takes) and
+    `only` (`suggests`: a row read for what it suggests alone, of which `fit` makes no group); lines.yaml: a width
+    written `4+` is a least width.
+  - registries.yaml: `code_pattern` checks a code of a `fetched` scheme where the machine holds no copy of it;
+    `media-types` states its form (RFC 6838's names).
+  - tools.yaml: `group`, the verb of bin/group.py (`daftar group`).
+  - test/group.py, test/core_standards.py.
+
 - **core 2.16** (2026-10-19, daftar v2.16.0, human-ratified rule-change: a correction of the row `quicktime-movie` as
   ratified for core 2.15, "Fold both into v2.15.0") — **a video's moment imported.** MINOR: nothing a garden could write
   under core 2.15 is refused.
