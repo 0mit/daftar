@@ -113,7 +113,16 @@ try:
 except formats.Refused as e:
     out['vacant'] = str(e)
 out['bytes'] = formats.escape(b'IMG\xff%\n.CR2')
-print(json.dumps(out))
+named = list(formats.read('json', b'[{"SourceFile": "/v/caf\xe9.jpg", "IFD0:Model": "X\xff"}]'))[0]
+out['named'] = [formats.escape(os.fsencode(named['SourceFile']).rpartition(b'/')[2]), formats.held_bytes(named['IFD0:Model'])]
+from core import readers
+cp = list(readers.copies([formats.Record({'h': 'a' * 64, 'dest': b'Edited/./x.mp4', 'src_vol': 'v', 'src_path': b'./x.mp4',
+                                          'class': 'edited', 'at': 1760600000.0})], 'arch'))
+out['tidy'] = [(r.model, r.get('id'), r.get('folder'), formats.escape(r.get('name') or b'')) for r in cp
+               if r.model in ('folder', 'copy')]
+out['tidy_want'] = [['folder', formats.folder_id('arch', b'Edited'), None, 'Edited'],
+                    ['copy', None, formats.folder_id('arch', b'Edited'), 'x.mp4']]
+print(json.dumps(out, default=str))
 '''
 
 TREE = r'''
@@ -146,9 +155,11 @@ db.execute("CREATE TABLE entry (path BLOB, type TEXT, size INTEGER, hash TEXT)")
 db.executemany("INSERT INTO entry VALUES (?, ?, ?, ?)", [(r['path'].encode(), r['type'], r.get('size'), r.get('hash')) for r in rows])
 db.commit(); db.close()
 open(d + '/v2.jsonl', 'w').write(''.join(json.dumps(r) + '\n' for r in rows))
-def load(src, out):
+open(d + '/v2.csv', 'w').write('path,type,size,hash\n' + ''.join(
+    f"{r['path']},{r['type']},{r.get('size', '')},{r.get('hash', '')}\n" for r in rows))
+def load(src, out, setwise=True):
     S = store.Store(out, root='.')
-    I = imp.Import('.', 'file-tree', keep='store', store=S,
+    I = imp.Import('.', 'file-tree', keep='store', store=S, setwise=setwise,
                    acts={'derive': {'in': 'nas', 'by': 'nas', 'at': '2026-10-18T12:00:00+03:00'}})
     with S.loading():
         I.source(src, volume='vol-2', carrier='disk-1', act={'in': 'vol-2', 'id': 'scan', 'by': 'nas', 'from': 'vol-2',
@@ -164,9 +175,11 @@ def dump(S):
                                        acts.get(x) if c == 'known' else (x.decode() if isinstance(x, bytes) else x))
                                     for c, x in zip(cols, r) if c != 'n'}, sort_keys=True) for r in cur)
     return out
-a, b = load(d + '/v2.sqlite', d + '/set.sqlite'), load(d + '/v2.jsonl', d + '/each.sqlite')
-x, y = dump(a), dump(b)
-print(json.dumps({'same': x == y, 'rows': {k: len(v) for k, v in x.items()}, 'diff': [k for k in set(x) | set(y) if x.get(k) != y.get(k)],
+a, b = load(d + '/v2.sqlite', d + '/set.sqlite'), load(d + '/v2.jsonl', d + '/each.sqlite', setwise=False)
+c, e = load(d + '/v2.jsonl', d + '/set-jsonl.sqlite'), load(d + '/v2.csv', d + '/set-csv.sqlite')
+x, y, z, t = dump(a), dump(b), dump(c), dump(e)
+print(json.dumps({'same': x == y, 'text': z == x and t == x, 'rows': {k: len(v) for k, v in x.items()},
+                  'diff': [k for k in set(x) | set(y) | set(z) | set(t) if not (x.get(k) == y.get(k) == z.get(k) == t.get(k))],
                   'indexes': a.db.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND sql IS NOT NULL").fetchone()[0]
                              == b.db.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND sql IS NOT NULL").fetchone()[0]}))
 '''
@@ -306,6 +319,10 @@ try:
           and j['xml'][0]['Amt'] == {'@Ccy': 'EUR', '#text': '9.50'}, j)
     check("...a format the release reads none of is refused by name; a name in bytes is written `escaped`",
           ok and j['vacant'] and 'vcard' in j['vacant'] and j['bytes'] == 'IMG%FF%25%0A.CR2', j)
+    check("...a JSON source with a name in bytes no part of UTF-8 is read, the name given back as its bytes; a text "
+          "value holding such bytes is known as one", ok and j['named'] == ['caf%E9.jpg', True], j and j.get('named'))
+    check("copies: a destination written with a `.` folder is the folder it names (`Edited/./x.mp4` is held by `Edited`)",
+          ok and [list(x) for x in j['tidy']] == j['tidy_want'], j and (j.get('tidy'), j.get('tidy_want')))
 
     # ---- file-tree
     idx = os.path.join(T, 'vol-1.sqlite')
@@ -349,6 +366,8 @@ try:
     check("set-wise: a listing kept as a database is imported inside the store's engine, and the same listing read record "
           "by record gives the same rows, relation by relation, and the same indexes made after the load",
           j is not None and j['same'] and j['indexes'] and j['rows'].get('hold', 0) == 6 and j['rows'].get('measure') == 2, (j, r.out[-1500:]))
+    check("...and the same listing in text — JSON lines, a CSV — read once into a table and imported set-wise gives the "
+          "same rows again", j is not None and j['text'], j and j.get('diff'))
 
     # ---- again
     j, r = py(TREE, idx, 'scan', '2026-10-18T11:00:00+03:00', B3A)

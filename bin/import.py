@@ -39,6 +39,7 @@ DAFTAR'S OWN FORMS need no crossing, and their own tools keep them: `daftar` (a 
 bin/store.py's import and put, `proposal` is bin/propose.py's read and take. This door hands each to its tool.
 """
 import collections
+from decimal import Decimal
 import json
 import os
 import re
@@ -94,7 +95,7 @@ class Import:
     then `.done()`; `.record(model, rec)` keeps one record (a copier's, one at a time)."""
 
     def __init__(self, root=ROOT, crosswalk=None, *, keep=None, store=None, acts=None, reader_args=None, fmt=None,
-                 source_layer=None, judge_every=10000, law=None, write=False, named=None):
+                 source_layer=None, judge_every=10000, law=None, write=False, named=None, setwise=True):
         from core.check import garden_law
         self.root = root
         self.law = law or garden_law(root, root if os.path.isfile(os.path.join(root, 'core', 'law', 'core.yaml')) else None)
@@ -121,6 +122,7 @@ class Import:
         self.acts, self.made = dict(acts or {}), {}       # verb -> roles given; (verb, source) -> the act's ref
         self.layer = source_layer
         self.judge_every = judge_every
+        self.setwise = setwise                            # False: every record by the record's own path
         self.account = Account()
         self.beans_out = collections.OrderedDict()       # being -> [statements], for a bean
         self.reads = []                                   # the reading acts of this import, a derive's `from`
@@ -302,11 +304,12 @@ class Import:
                     self.act(verb)
                     if len(self.already) > n:
                         return False
-            if self._setwise(path, fmt):                   # the crosswalk run set-wise, inside the store's engine
+            done = self._setwise(path, fmt)                # the crosswalk run set-wise, inside the store's engine
+            if done is True:
                 return True
             groups = collections.OrderedDict()             # (verb, act ref, being roles) -> [(being, roles)]
             beings = {}
-            for rec in self.records_of(path, fmt):
+            for rec in (done if isinstance(done, list) else self.records_of(path, fmt)):
                 self.record(rec.model, rec, groups=groups, beings=beings)
             self._flush(groups, beings)
             return True
@@ -355,12 +358,52 @@ class Import:
                 g['roles'][r2] = ('col', f2, cols_of[f2])
         return list(groups.values())
 
+    def _plain(self, path, fmt=None):
+        """The format a source is read in where it is no database (tsv, csv, json, jsonl), else None."""
+        rows = list(self.carry.values())
+        allowed = sorted({str(f) for c in rows for f in (c.row.get('format') if isinstance(c.row.get('format'), list)
+                                                          else [c.row.get('format')]) if f})
+        try:
+            got = fmt or self.fmt or formats.format_of(path, allowed)
+        except Refused:
+            return None
+        return got if got in ('tsv', 'csv', 'json', 'jsonl') else None
+
+    @staticmethod
+    def _cells(records):
+        """(columns, rows) of records as a table, or None where a value is no cell (a mapping, a list): a number read as
+        written is its text, an empty cell none."""
+        cols, seen = [], set()
+        for r in records:
+            for k in r:
+                if k not in seen:
+                    if '"' in str(k):
+                        return None
+                    seen.add(k)
+                    cols.append(k)
+        rows = []
+        for r in records:
+            row = []
+            for k in cols:
+                v = r.get(k)
+                if isinstance(v, (dict, list, bool)):
+                    return None
+                row.append(None if v == '' else str(v) if isinstance(v, (Decimal, int, float)) else v)
+            rows.append(row)
+        return cols, rows
+
     def _setwise(self, path, fmt=None):
+        """True where the source was imported set-wise; [records] where they were read for that and go the record's
+        own path; False where it was not tried."""
         from core import readers
         S = self.store
-        form = readers.SETWISE.get(self.reader) if self.reader else None
-        if self.keep != 'store' or form is None or str(path).endswith(('.tsv', '.csv', '.jsonl')) or \
-                (fmt and fmt != 'sqlite'):
+        if self.keep != 'store' or not self.setwise:
+            return False
+        plain = self._plain(path, fmt)
+        if not self.reader:
+            return self._setwise_records(path, fmt)
+        form = readers.SETWISE.get(self.reader)
+        if form is None or (plain is None and (fmt and fmt != 'sqlite')):
             return False
         plans = {m: self._compile(c) for m, c in self.carry.items()}
         if any(p is None for p in plans.values()):
@@ -369,7 +412,17 @@ class Import:
         db.create_function('io_esc', 1, lambda b: formats.escape(b) if b is not None else None, deterministic=True)
         db.create_function('io_mint', 2, lambda verb, j: self._mint(verb, j), deterministic=True)
         import store as dmstore
-        db.execute("ATTACH ? AS io_src", (dmstore._uri(path, 'ro'),))
+        if plain:                                          # A LISTING IN TEXT: its records as the table a set form reads
+            spec = next((c.row.get('records') for c in self.carry.values() if c.row.get('records')), None)
+            table = self._cells(list(formats.read(plain, path, spec)))
+            if table is None:
+                return False
+            cols, rows = table
+            db.execute("ATTACH ':memory:' AS io_src")
+            db.execute(f'CREATE TABLE io_src.entry ({", ".join(chr(34) + c + chr(34) for c in cols)})')
+            db.executemany(f'INSERT INTO io_src.entry VALUES ({", ".join("?" * len(cols))})', rows)
+        else:
+            db.execute("ATTACH ? AS io_src", (dmstore._uri(path, 'ro'),))
         try:
             tables, missed = form(db, 'io_src', **self.reader_args)
             self._tables = tables
@@ -386,6 +439,54 @@ class Import:
                 self._write_table(c, plans[model], table, self.act(verb) if verb else None)
         finally:
             db.execute("DETACH io_src")
+        return True
+
+    def _setwise_records(self, path, fmt=None):
+        """A crosswalk with no reader, its source in any format, run set-wise: the records as a temporary table of the
+        store's connection and each statement one INSERT … SELECT, as a reader's set form is. True where it was; else
+        the records read, for the record's own path."""
+        if len(self.carry) != 1:
+            return False
+        model, c = next(iter(self.carry.items()))
+        verb = (c.row.get('act') or {}).get('verb')
+        plan = self._compile(c)
+        if plan is None or verb == 'derive' or str((c.row.get('act') or {}).get('per')) == 'record' \
+                or isinstance(self.acts.get(model), str) or self._fills(c) or not c._bean_field \
+                or str(c.row.get('whole', '')).lower() == 'true':
+            return False
+        recs = list(self.records_of(path, fmt))
+        if any(getattr(r, 'model', model) != model for r in recs):
+            return recs
+        table = self._cells(recs)
+        if table is None:
+            return recs
+        cols, rows = table
+        reads = {fname for fname, *_x in c._compiled()}
+        named = []
+        for rec in recs:                                   # what the record's own path lists, listed the same
+            at = getattr(rec, 'at', None) or f"record {self.account.records + 1}"
+            if rec.get(c._bean_field) in (None, ''):
+                self.account.missed(at, 'the whole record', 'it names no being')
+                continue
+            for k, v in rec.items():
+                if k not in reads and v not in (None, ''):
+                    self.account.missed(at, k, 'no field of the crosswalk reads it')
+            named.append(rec)
+        if len(named) != len(recs):
+            cols, rows = self._cells(named) or (cols, [])
+        db = self.store.db
+        db.create_function('io_esc', 1, lambda b: formats.escape(b) if b is not None else None, deterministic=True)
+        db.create_function('io_mint', 2, lambda verb_, j: self._mint(verb_, j), deterministic=True)
+        db.execute('DROP TABLE IF EXISTS temp.io_records')
+        db.execute(f'CREATE TEMP TABLE io_records ({", ".join(chr(34) + k + chr(34) for k in cols)})')
+        db.executemany(f'INSERT INTO temp.io_records VALUES ({", ".join("?" * len(cols))})', rows)
+        try:
+            self._tables = {model: 'temp.io_records'}
+            before = self.store.count()
+            self._write_table(c, plan, 'temp.io_records', self.act(verb) if verb else None)
+            self.account.carried += self.store.count() - before
+        finally:
+            db.execute('DROP TABLE IF EXISTS temp.io_records')
         return True
 
     def _mint(self, verb, j):

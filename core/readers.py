@@ -54,6 +54,11 @@ def file_tree(records, volume, carrier=None, **_):
                      model='content')
 
 
+def _tidy(path):
+    """A path as a tree names it: no `.` folder and no empty one (`Edited/./a.mp4` is `Edited/a.mp4`); `..` is kept."""
+    return b'/'.join(p for p in path.split(b'/') if p not in (b'', b'.'))
+
+
 def copies(records, volume, known=None, ref=None, carrier=None, **_):
     """A record of copies (archive.py's manifest) as the folders of each destination not met before and each copy, its
     source the holding it was copied from (formats.yaml, reader `copies`), named by `ref` (verb, being, roles) as the
@@ -64,7 +69,7 @@ def copies(records, volume, known=None, ref=None, carrier=None, **_):
         known.add(('volume', volume))
         yield Record({'id': volume, 'carrier': carrier}, at='the volume', model='volume')
     for rec in records:
-        dest = _path_bytes(rec.get('dest', b''))
+        dest = _tidy(_path_bytes(rec.get('dest', b'')))
         parent, _, name = dest.rpartition(b'/')
         chain, p = [], parent
         while p and p not in known:
@@ -80,7 +85,7 @@ def copies(records, volume, known=None, ref=None, carrier=None, **_):
         if ('content', c) not in known:                  # the content it holds, by its handle: a being of its kind
             known.add(('content', c))
             yield Record({'id': c}, at=rec.at, model='content')
-        src_vol, src_path = str(rec.get('src_vol') or ''), _path_bytes(rec.get('src_path', b''))
+        src_vol, src_path = str(rec.get('src_vol') or ''), _tidy(_path_bytes(rec.get('src_path', b'')))
         sp, _, sn = src_path.rpartition(b'/')
         sfolder = folder_id(src_vol, sp) if sp else src_vol
         source = ref('hold', sfolder, {'by': sfolder, 'of': c, 'as': escape(sn)}) if ref else None

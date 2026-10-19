@@ -525,6 +525,26 @@ class Media:
             self._seen[low] = got
         return got
 
+    def among(self, name, rows, types=None, within=()):
+        """(type, family) of a file's name where a pattern row says its type: the first of `rows` that suggests a
+        media type and whose template the name fits, applying `within` a whole of a code `within` holds and `beside`
+        siblings most of which are of the type it names (`types`: a Counter of the types of the files beside it, itself
+        among them); else `of`."""
+        own = self.of(name)
+        for r in rows:
+            codes = [c.split(':', 1)[1] for c in r.suggests if c.startswith('media-types:')]
+            if not codes or (r.reads or 'as') != 'as' or (r.within and r.within not in within):
+                continue
+            if r.template.match(name) is None:
+                continue
+            if r.beside:
+                want = r.beside.split(':', 1)[1] if r.beside.startswith('media-types:') else None
+                n = sum((types or {}).values()) - 1
+                if not want or n <= 0 or ((types or {}).get(want, 0) - (own[0] == want)) * 2 <= n:
+                    continue
+            return codes[0], self.family.get(codes[0], codes[0].split('/', 1)[0] + '-x-generic')
+        return own
+
 
 def _summed(g):
     """A matched group's slots summed over its members: a counter's run and gaps, a date's or time's extent, a word's
