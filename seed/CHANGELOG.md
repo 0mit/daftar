@@ -251,6 +251,10 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v2.20.1** (2026-10-20, code alone, core 2.20) — assets/storage/bin/storage.py `keepings`: a folder's name
+  lends its tree only a code that sets apart (a program's tree), as `inherit` reads it; a media class is read of a
+  file's own name. A folder named `camera` made a security camera's recordings a phone's captured video.
+
 - **core 2.20** (2026-10-20, daftar v2.20.0, human-ratified rule-change) — **a listing's inodes.** MINOR: nothing a
   garden could write under core 2.19 is refused.
   - formats.yaml: the reader `file-tree` reads a listing's `ino` and `nlink` where it says them: a name of an inode

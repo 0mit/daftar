@@ -251,8 +251,9 @@ def store_path(name, root):
 def keepings(S, W, scheme=None, of=None, now=None, each=None):
     """{(code, open line): [contents, bytes]}, and with `each` the judgement of every content of `of`. A content's code
     is the nearest said of it or of a folder that holds it, up its parents — a code of the policy scheme, or the code
-    whose `for` names a code said there, or one a pattern its name fits suggests (a folder's name: a program's tree);
-    else the code whose `for` names a code a pattern a name of the content fits suggests (its media class)."""
+    whose `for` names a code said there, or an `apart` code a pattern the folder's name fits suggests (a program's
+    tree), as `inherit` reads them; else the code whose `for` names a code a pattern a name of the content fits
+    suggests (its media class)."""
     policy = W.policy(scheme)
     forcode = {c: f"{scheme}:{k}" for k, r in policy.items() for c in str(r.get('for') or '').split()}
     L = media = None
@@ -303,8 +304,9 @@ def keepings(S, W, scheme=None, of=None, now=None, each=None):
                 break
             other = W.said.get(fid, [])
             hit = [forcode[c] for c in other if c in forcode]
-            if not hit and L is not None and f in P:
-                hit = [forcode[c] for c in suggests(dmgroup_text(P[f][1]), 'name.as') if c in forcode]
+            if not hit and L is not None and f in P:         # a folder's name sets its tree apart (a program's tree);
+                hit = [forcode[c] for c in suggests(dmgroup_text(P[f][1]), 'name.as')   # a class is a file's own
+                       if c in forcode and c in L.apart]
             if hit:
                 code_of[f] = hit[0]
                 break
