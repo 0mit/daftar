@@ -568,6 +568,7 @@ class Import:
         sr = c._self_role(verb, roles)
         if sr:
             roles[sr] = ('col', bcol, None)
+        given_id = roles.pop('id', None)                    # a statement's own id, where its row gives one (`id`)
         cols = S.columns(verb)
         rel = 'v_' + re.sub(r'[^a-z0-9_]', '_', verb)
         S._unindex(rel)
@@ -585,6 +586,9 @@ class Import:
             if spec[0] != 'const':
                 need += [f'{raw} IS NOT NULL', f"{raw} != ''"]
         form = f"json_object({', '.join(form_parts)})"
+        if given_id is not None:
+            id_raw, id_args = self._raw(given_id)
+            need += [f'{id_raw} IS NOT NULL']
         for role, spec in roles.items():
             bc, tc = cols[role]
             raw, a2 = self._raw(spec)
@@ -614,14 +618,18 @@ class Import:
         exprs.append('?')
         args.append(a)
         where = ' AND '.join(need) or '1'
-        sel = (f'SELECT (SELECT n FROM being WHERE id = t."{bcol}"), io_mint(?, {form}), {", ".join(exprs)} '
+        if given_id is not None:
+            id_expr, id_pre = id_raw, id_args
+        else:
+            id_expr, id_pre = f'io_mint(?, {form})', [verb] + form_args
+        sel = (f'SELECT (SELECT n FROM being WHERE id = t."{bcol}"), {id_expr}, {", ".join(exprs)} '
                f'FROM {table} t WHERE {where}')
         with S.batch():
-            db.execute(f'INSERT OR IGNORE INTO "{rel}" ({", ".join(names)}) {sel}', [verb] + form_args + args)
+            db.execute(f'INSERT OR IGNORE INTO "{rel}" ({", ".join(names)}) {sel}', id_pre + args)
             if before and a is not None:                    # a second reading: its act on each row it read again
                 db.execute(f'INSERT OR IGNORE INTO known_also (verb, row, act) SELECT ?, v.n, ? FROM {table} t JOIN '
-                           f'"{rel}" v ON v.being = (SELECT n FROM being WHERE id = t."{bcol}") AND v.id = io_mint(?, '
-                           f'{form}) WHERE {where} AND v.known IS NOT ?', [verb, a, verb] + form_args + [a])
+                           f'"{rel}" v ON v.being = (SELECT n FROM being WHERE id = t."{bcol}") AND v.id = {id_expr} '
+                           f'WHERE {where} AND v.known IS NOT ?', [verb, a] + id_pre + [a])
             if any(spec[0] == 'col' for spec in roles.values()):   # a record with an empty role: the record's own path
                 rest = db.execute(f'SELECT * FROM {table} t WHERE NOT ({where})').fetchall()
                 if rest:
@@ -653,7 +661,7 @@ class Import:
             for v, r in statements:
                 if v == g['verb']:
                     r = {k: (being if x == 'self' else x) for k, x in r.items()}
-                    self.store._judge_one(being, v, dict(r, id=self._mint(v, json.dumps(r))))
+                    self.store._judge_one(being, v, dict(r, id=r.get('id') or self._mint(v, json.dumps(r))))
 
     def record(self, model, rec, groups=None, beings=None):
         """Keep one record of `model`: alone (`groups` None: a copier's record, put at once), or gathered for a bulk."""

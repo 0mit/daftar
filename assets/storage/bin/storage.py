@@ -188,18 +188,18 @@ class Store:
             out[n] = secs(at)
         return out
 
-    def holdings(self, contents=None):
-        """(content n, folder n, through, act n) of every holding under a name, content by content."""
+    def holdings(self, contents=None, names=False):
+        """(content n, folder n, through, act n[, name]) of every holding under a name, content by content."""
+        th = "t_through" if self._has('v_hold', 't_through') else "NULL"
         if contents is None:
-            yield from self.db.execute("SELECT b_of, b_by, " + ("t_through" if self._has('v_hold', 't_through') else
-                                                               "NULL") + ", known FROM v_hold WHERE t_as IS NOT NULL "
-                                       "AND b_of IS NOT NULL ORDER BY b_of")
+            yield from self.db.execute(f"SELECT b_of, b_by, {th}, known{', t_as' if names else ''} FROM v_hold "
+                                       "WHERE t_as IS NOT NULL AND b_of IS NOT NULL ORDER BY b_of")
             return
         self.db.execute('CREATE TEMP TABLE IF NOT EXISTS kc (n INTEGER PRIMARY KEY)')
         self.db.execute('DELETE FROM temp.kc')
         self.db.executemany('INSERT OR IGNORE INTO temp.kc VALUES (?)', ((n,) for n in contents))
-        yield from self.db.execute("SELECT h.b_of, h.b_by, " + ("h.t_through" if self._has('v_hold', 't_through') else
-                                                                "NULL") + ", h.known FROM temp.kc JOIN v_hold h ON "
+        yield from self.db.execute(f"SELECT h.b_of, h.b_by, {th.replace('t_', 'h.t_') if th != 'NULL' else th}, "
+                                   f"h.known{', h.t_as' if names else ''} FROM temp.kc JOIN v_hold h ON "
                                    "h.b_of = temp.kc.n WHERE h.t_as IS NOT NULL ORDER BY h.b_of")
 
     def _has(self, table, col):
@@ -225,6 +225,11 @@ class Store:
         return out
 
 
+def dmgroup_text(name):
+    """A name the store keeps `escaped`, as the text a pattern reads."""
+    return formats.unescape(name).decode('utf-8', 'replace') if '%' in name else name
+
+
 def store_path(name, root):
     if name and os.path.sep in name:
         return name
@@ -245,8 +250,31 @@ def store_path(name, root):
 # ------------------------------------------------------------------------------------------------ keepings
 def keepings(S, W, scheme=None, of=None, now=None, each=None):
     """{(code, open line): [contents, bytes]}, and with `each` the judgement of every content of `of`. A content's code
-    is the nearest said of it or of a folder that holds it, up its parents; else a `for` row's of a code so said."""
+    is the nearest said of it or of a folder that holds it, up its parents — a code of the policy scheme, or the code
+    whose `for` names a code said there, or one a pattern its name fits suggests (a folder's name: a program's tree);
+    else the code whose `for` names a code a pattern a name of the content fits suggests (its media class)."""
     policy = W.policy(scheme)
+    forcode = {c: f"{scheme}:{k}" for k, r in policy.items() for c in str(r.get('for') or '').split()}
+    L = media = None
+    fitted = {}
+    if scheme:
+        import group as dmgroup                    # the garden's pattern rows, its own first (bin/group.py)
+        from core import groupings
+        L = dmgroup.Law(GARDEN)
+        try:                                       # a file's media type, by shared-mime-info's rows (`media-types`)
+            media = groupings.Media(L.K.rows('media-types'))
+        except (KeyError, OSError):
+            media = groupings.Media([])
+
+    def suggests(text, reads='as'):
+        """The codes the first pattern row a name fits suggests, each name fitted once."""
+        key = (text, reads)
+        if key not in fitted:
+            r = L.fits(text, reads=reads)[0]
+            fitted[key] = r.suggests if r else ()
+            if len(fitted) > 2_000_000:
+                fitted.clear()
+        return fitted[key]
     hosts, P = W.hosts(), S.parent()
     carriers, scanned, made = S.carriers(), S.scanned(), S.made_at()
     now = time.time() if now is None else now
@@ -274,7 +302,9 @@ def keepings(S, W, scheme=None, of=None, now=None, each=None):
                 code_of[f] = mine[0]
                 break
             other = W.said.get(fid, [])
-            hit = [f"{scheme}:{c}" for c, r in policy.items() if set(str(r.get('for') or '').split()) & set(other)]
+            hit = [forcode[c] for c in other if c in forcode]
+            if not hit and L is not None and f in P:
+                hit = [forcode[c] for c in suggests(dmgroup_text(P[f][1]), 'name.as') if c in forcode]
             if hit:
                 code_of[f] = hit[0]
                 break
@@ -295,6 +325,16 @@ def keepings(S, W, scheme=None, of=None, now=None, each=None):
             if code is None and scheme:
                 codes = [folder_code(f) for f in keeps_['folders']]
                 code = next((x for x in codes if x), None)
+            if code is None and L is not None:
+                for nm in keeps_['names']:              # a media class is read of a picture, a video or a sound
+                    t = dmgroup_text(nm)
+                    if media.of(t)[1].split('-')[0] not in ('image', 'video', 'audio') and \
+                            media.of(t)[0].split('/')[0] not in ('image', 'video', 'audio'):
+                        continue
+                    hit = [forcode[c] for c in suggests(t) if c in forcode]
+                    if hit:
+                        code = hit[0]
+                        break
             row = policy.get(code.split(':', 1)[1]) if code else None
             covers = str(row.get('covers') or '').split() if row else None
             within = duration(row['within']) if row and row.get('within') else None
@@ -326,14 +366,15 @@ def keepings(S, W, scheme=None, of=None, now=None, each=None):
             contents = [r[0] for r in S.db.execute("SELECT DISTINCT h.b_of FROM temp.kf JOIN v_hold h ON h.b_by = "
                                                    "temp.kf.n WHERE h.t_as IS NOT NULL AND h.b_of IS NOT NULL")]
     cur, keeps, seen = None, None, set()
-    for c, f, through, act in S.holdings(contents):
+    for c, f, through, act, nm in S.holdings(contents, names=True):
         if c != cur:
             if cur is not None:
                 batch.append((cur, keeps))
                 if len(batch) >= 5000:
                     flush()
-            cur, keeps, seen = c, {'keeps': [], 'folders': []}, set()
+            cur, keeps, seen = c, {'keeps': [], 'folders': [], 'names': []}, set()
         keeps['folders'].append(f)
+        keeps['names'].append(nm)
         if through:
             if through in seen:
                 continue
