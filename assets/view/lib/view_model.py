@@ -94,13 +94,51 @@ def fm_path(path):
 
 
 def fm(bid, folder="beans"):
-    """A bean's (or a mapping's) front matter; {} when it does not exist. Read once a run."""
+    """A bean's (or a mapping's) front matter; {} when it does not exist; a being kept in a store and in no bean, as
+    its bean would hold it (`stored_fm`). Read once a run."""
     k = (folder, bid)
     if k not in _FM and CORE is not None:
         _FM[k] = CORE.today(bid, folder)
     if k not in _FM:
         _FM[k] = fm_path(os.path.join(ROOT, folder, "%s.md" % bid)) if isinstance(bid, str) and bid else {}
+    if not _FM[k] and folder == "beans" and isinstance(bid, str) and bid:
+        _FM[k] = stored_fm(bid)
     return _FM[k]
+
+
+_STORES = None
+
+
+def _stores():
+    """The stores this host keeps, each opened to be read and never written: what a being in no bean is read from."""
+    global _STORES
+    if _STORES is None:
+        _STORES = []
+        try:
+            import store as dmstore
+            for name, (path, _row, _why) in sorted(dmstore.kept_here(ROOT).items()):
+                if path and os.path.isfile(path):
+                    try:
+                        _STORES.append(dmstore.Store(path, root=ROOT, create=False, readonly=True, name=name))
+                    except Exception:           # noqa: BLE001 — a store not read here keeps no being for the page
+                        pass
+        except Exception:                       # noqa: BLE001 — a garden that keeps no store
+            pass
+    return _STORES
+
+
+def stored_fm(bid):
+    """A being kept in a store this host keeps and in no bean, as its bean would hold it: its kind, title and summary,
+    and its statements verb by verb, read from the store. {} where no store keeps it."""
+    for S in _stores():
+        cur = S.db.execute("SELECT * FROM being WHERE id = ?", (bid,))
+        r = cur.fetchone()
+        if r:                                   # the store's own columns, named as the core names a bean's keys
+            out = {"bean": bid}
+            out.update({d[0]: v for d, v in zip(cur.description, r) if d[0] not in ("n", "id") and v})
+            out["statements"] = [{verb: roles} for verb, roles, _acts in S.get(bid)]
+            return out
+    return {}
 
 
 def bean_ids(folder="beans"):

@@ -943,15 +943,17 @@ class Reckoner:
         out = []
         self._store_beings = set(self._kept)
         for st in self._stores(str(s['store'])):
-            if of is None:
-                q = "SELECT id FROM being" + (" WHERE kind = ?" if s.get('kind') else "")
-                ids = [r[0] for r in st.db.execute(q, (s['kind'],) if s.get('kind') else ())]
+            if of is None:                       # each being with what the store says of it: its kind, title, summary
+                q = "SELECT id, kind, title, summary FROM being" + (" WHERE kind = ?" if s.get('kind') else "")
+                rows = st.db.execute(q, (s['kind'],) if s.get('kind') else ()).fetchall()
             else:
-                ids = list(of)
+                rows = [(i, None, None, None) for i in of]
+            ids = [r[0] for r in rows]
             self._store_beings |= set(ids)
             verb = s.get('entries')
             if not verb:
-                out += [Member(i, {'bean': i}, i) for i in ids]
+                out += [Member(i, {k: v for k, v in (('bean', i), ('kind', kd), ('title', t), ('summary', sm)) if v}, i)
+                        for i, kd, t, sm in rows]
                 continue
             if verb not in st.verbs():
                 continue
