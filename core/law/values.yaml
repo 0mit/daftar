@@ -52,7 +52,7 @@ values:
     rests_on: [ "core.yaml shapes: position", "lines.yaml types: position (any calendar)",
                 "systems.yaml systems: gregorian-civil, persian-calendar, …", "registries.yaml time-zones" ]
     written: position
-    meaning: "a position on the time aspect: a day, or a day and a time with its offset. Shown in a calendar the
+    meaning: "a position on the time line: a day, or a day and a time with its offset. Shown in a calendar the
       reader chooses (systems.yaml: gregorian-civil, persian-calendar, …) and in the garden's zone unless another is
       named; the written form never changes with the showing"
   - { value: day, is: moment, rests_on: [ "systems.yaml system: gregorian-civil" ], meaning: "a whole civil day, no time of day" }

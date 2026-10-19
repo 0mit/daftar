@@ -138,6 +138,12 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       a postable account to another of one chart, open on its day, or names one side of a payment, the other read from
       it, or books a move in the reverse sense (`sense: "-1"`) from a day it says; under one plan its amounts add up
       to the entity's part, and to one side of a chart to no more; a `match` names payments that agree, each once.
+      A scheme of names' templates (the knowledge profile's `form: pattern`) holds each row to its form: its template
+      in the slots of core/law/lines.yaml (`counter`, `date` with its form, `hex` with its width …), what it suggests
+      codes of the schemes the garden reads, what it reads a field path, its calendar a system of time, its grouping a
+      row of `groupings`, `marks` only `by`; a scheme of classes (`form: class`) has one code a being and `apart` only
+      `true`, and no cycle among its codes' parents. A garden's own grouping (VOCAB.md `groupings`) takes a name the
+      law's do not, and is judged as a reading of the law's closed list, each field of its line one a line has.
 
 **The commit's own rules**, which only a commit can show:
 - [ ] Every bean the commit changes is named in the journal entry it adds (`[[<bean>]]`), and that entry's heading is

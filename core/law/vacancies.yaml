@@ -135,7 +135,7 @@ vacancies:
   - at: "table:units"
     position: K
     reason: universal
-    why: "a step on the temperature line: the measure of a region of the `temperature` aspect, never a reading of it (24.0, step 3). Declared whole with the three scales a reading is written on"
+    why: "a step on the temperature line: the measure of a region of the `temperature` line, never a reading of it (24.0, step 3). Declared whole with the three scales a reading is written on"
   - at: "table:units"
     position: a_j
     reason: universal

@@ -41,7 +41,7 @@ protocols:
     layer: application
     transport: tcp
     default_ports: [25, 465, 587]
-    meaning: "mail transfer. One protocol on three ports: 25 relay, 465 implicit TLS, 587 submission — the port is a fact about the endpoint and the protection is an aspect position, so none of the three needs its own row."
+    meaning: "mail transfer. One protocol on three ports: 25 relay, 465 implicit TLS, 587 submission — the port is a fact about the endpoint and the protection is a position on the confidentiality line, so none of the three needs its own row."
   - protocol: pop3
     technology: pop3
     layer: application

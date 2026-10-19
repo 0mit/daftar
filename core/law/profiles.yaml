@@ -165,11 +165,12 @@ profiles:
   - profile: knowledge
     meaning: "for a garden that says what things ARE in the world's shared terms: the field of knowledge a skill or a technology draws on (ISCED-F 2013), the occupation a role or a person's work is (ISCO-08), and the established technology a program, instance or host runs (with its official documentation). The codes are UNIVERSAL: the same in every garden, so knowledge merges across gardens that never met — and a being that IS one of them (an occupation, a field, a technology) is identified by it, `identifier: isco-08:2522`, a coding."
     verbs: [classify]
+    forms: [pattern, class]
     went: { knowledge: "the verbs `classify` (`classified_as`) and `use` (`uses`, `draws_on`)" }
   - profile: view
     meaning: "for a garden that draws what it keeps: a page of drawings, each of a mapping or a bean the garden holds, read at four lenses, with live values beside the drawing and actions a host may run. Its asset is `assets/view/`, which a garden receives only while it extends this profile. A garden that draws nothing should inherit none of it."
     verbs: [draw]
-    tables: [lenses, archetypes, orientations, date_styles, currency_displays]
+    tables: [lenses, archetypes, orientations, aspects, date_styles, currency_displays]
     forms: [page, drawing, reader_preferences]
     asset: "assets/view"
     went:
@@ -214,6 +215,10 @@ profiles:
         position: table
         reason: universal
         why: "the operate shapes the asset draws, declared whole; a garden takes the ones its drawings need"
+      - at: "table:archetypes"
+        position: cursor
+        reason: universal
+        why: "the board a garden's readers move through, its cursor kept while the aspect turns; declared whole, taken by a page that draws one"
       - at: "table:archetypes"
         position: health-chain
         reason: universal
@@ -321,6 +326,9 @@ archetypes:
   - archetype: sheet
     meaning: "one being as it stands: its title and summary, its statements verb by verb — each with the statements that take it as their `of` beneath it, a payment with its shares and the clauses that ask it — and its held values, marked as kept on the machine that holds them; the facts its page's `fields` names for its kind. For a reader who may write it, the one place it is changed: one Edit turns each fact they may write into its widget, and one Save is one commit with one journal entry. Engraved from the being: no drawing module draws it"
     when: "the question is what one being is, or a change to it"
+  - archetype: cursor
+    meaning: "one being or several, the cursor, kept still while the aspect around it turns: what the aspect follows through the cursor, laid out by its order, each group of it in its line (a series with its gaps, a class with what is set apart); a cursor on a member turns to its group, and the next cursor is a click on what is shown. The trail of cursors is the reader's history; a saved board is a page whose drawing is this, saved by the sheet's one Save"
+    when: "the question is what this one is among its siblings — its copies, its series, its class, what carries it — and the reader moves from one to the next"
   - archetype: health-chain
     meaning: "tiles in flow order with value, limit and trend, and the blind spots"
     when: "no shape native to what is drawn is designed yet"
@@ -340,6 +348,20 @@ orientations:
   - { order: magnitude, of: "line:temperature", axis: vertical, sense: "-1", follows: "false", commands: [up, down], meaning: "a metered line's value — a temperature, a potential, a measure: more is up" }
   - { order: place, of: "line:place", axis: map, sense: "1", follows: "false", meaning: "a map: north up and east right, whatever the reader's script; a tree of places is the walk" }
   - { order: depth, of: "way:made-of", axis: z, sense: "1", follows: "false", commands: [in, out], meaning: "made-of read inward: in shows a being's parts, out its whole" }
+# THE ASPECTS OF A BOARD (the archetype `cursor`): each a frame of relations through the cursor — the verb it follows
+# (or a grouping it reads), the role the cursor fills in it, the order it is laid out by. A profile brings its own
+# (`home`); the board turns from one to the next about the cursor, which stays where it is. Named by the operator's
+# word, "aspect" (2026-10-18), beside the view's `lenses`, which are readings by the reader's depth.
+# These rows are the law itself: a change to them is a RULE-CHANGE, made here.
+aspects:
+  - { aspect: holds, home: core, follows: hold, points: by, order: walk, of: [host, volume, folder], meaning: "what the cursor carries, folders first; between several, what they hold in common" }
+  - { aspect: carried-by, home: core, follows: hold, points: of, order: walk, of: [content, folder, volume, host], meaning: "what carries the cursor: the folders and volumes that hold a content, the folder and volume a folder is in, the machine a disk is part of" }
+  - { aspect: copies, home: core, follows: make, points: from, order: flow, of: [content], meaning: "every holding of one content, and every copy made of it, from its source to where it was copied" }
+  - { aspect: in-backup, home: core, follows: make, points: of, order: flow, of: [content, folder, volume], meaning: "the place a content was copied into, and that place's other members, by the volume each came from" }
+  - { aspect: its-series, home: core, follows: name-series, points: of, order: ordinal, of: [content, folder], meaning: "the run of names the cursor's file is one of: its counter's runs and gaps, the days and the camera" }
+  - { aspect: its-class, home: core, follows: root, points: of, order: walk, of: [content, folder, volume], meaning: "the codes the cursor holds, where each came from — said, inherited from a whole, suggested by a pattern — and, at a root, what it holds and what is set apart" }
+  - { aspect: its-moves, home: accounting, follows: pay, points: by, order: time, of: [person, org, account], meaning: "the payments the cursor made and received, in time" }
+  - { aspect: its-category, home: accounting, follows: moves, points: of, order: walk, of: [document], meaning: "the merchant's moves a bank's line is one of, and the code of the plan they are booked to" }
 # THE ACCOUNTING PROFILE'S TABLES: what an account of a chart is (its element), and the roles an account plays in the
 # books' readings. The elements are the IFRS Conceptual Framework's five (§4.2): a published list no jurisdiction's
 # chart owns. Each is read in a SENSE, as each order of the view is (`orientations`): value is a charge that moves — it
@@ -372,6 +394,49 @@ planes:
     meaning: "how the being decides where traffic goes: routing adjacencies, discovery, redundancy election"
   - { plane: management, meaning: "how an operator reaches the being to configure or observe it" }
 forms:
+  pattern:
+    meaning: "a name's template, on the rows of a scheme that names this form (`form: pattern`), beside its code, level, parent and name: what a name fits, what text it is read from, what it suggests and where it applies. A row is read by the operation `fit`, the most specific first"
+    attrs:
+      template:
+        required: "true"
+        in: { type: text }
+        meaning: "literal text and slots, `{<slot>}` or `{<slot>:<width or form>}`, each slot a row of `slots` (core/law/lines.yaml); `{{` and `}}` a brace. Nothing in it is evaluated"
+      reads:
+        in: { type: field_path }
+        meaning: "the text the template is matched against: `as` of a holding (a file's name), of a `name` (a folder's), a statement's `note` (a bank line's words); absent, a holding's name"
+      case:
+        in: [exact, any]
+        meaning: "whether literal letters are compared with their case; absent, without"
+      extensions:
+        in: { type: kebab }
+        meaning: "the extensions its `extension` slot allows, a list, compared without case"
+      calendar:
+        in: { registry: systems, take: system, where: { dimension: [time] } }
+        meaning: "with a `date` slot, the calendar its day is read and checked in"
+      suggests:
+        in: { type: coding }
+        meaning: "the codes of class schemes a name that fits is evidence for, a list: `media:captured-raw`, `roles:dropping`"
+      grouping:
+        in: { registry: groupings, take: grouping }
+        meaning: "the grouping its members make (`name-series`); absent, any"
+      marks:
+        in: [by]
+        meaning: "`by`: what it suggests is for the folder that holds a file of this name, not the file's content — a `package.json` marks a code tree; absent, for the being the text names"
+      within:
+        in: { type: coding }
+        meaning: "the row applies only to a member one of whose wholes holds this code, or a code beneath it: a folder named `bin` is a build's only inside a code tree"
+      beside:
+        in: { type: coding }
+        meaning: "the row applies only where most of the member's siblings hold this code: a `.pot` file is a gettext template beside `.po` files"
+  class:
+    meaning: "what a code of a class scheme is, on the rows of a scheme that names this form (`form: class`), beside its code, level, parent and name: the being it stands for, and whether its members are set apart from their wholes' codes. Its codes are what `inherit` reads"
+    attrs:
+      stands_for:
+        in: being
+        meaning: "the being the code stands for: `work:orchard` stands for the orchard co-op. One code a being, as a chart's account stands for one"
+      apart:
+        in: ["true"]
+        meaning: "`true`: a member of this code inherits no code from its wholes, and its parts inherit from it alone — a program's tree, a system's dropping, another's code placed there"
   chart:
     meaning: "what each account of a chart of accounts is, on the rows of a scheme that names this form (`form: chart`) beside its code, level, parent and name: a booking names a postable account — a code no other code has for its parent"
     attrs:
@@ -543,9 +608,15 @@ forms:
         required: "true"
         in: { registry: archetypes, take: archetype }
         meaning: "operate: the shape its vital sign is drawn in. The facts propose one (`view_archetypes` `frame` and `reads`); the page may choose another"
+      aspect:
+        in: { registry: aspects, take: aspect }
+        meaning: "cursor: the aspect the board shows first, a row of `aspects` of a profile the garden takes; absent, the first its cursor's kind is shown in"
+      cursor:
+        in: being
+        meaning: "cursor: the being or beings it is kept on, a list; a being kept only in a store by its pointer (`store:<kind>:<id>`)"
       frame:
-        in: { registry: lines, take: aspect, where: { figure: [sequence] } }
-        meaning: "the aspect the drawing is laid out along — place (a map, a room, a rack), time (a timeline), routine or walk (its steps, a course), ordinal (a line) — and so what stands where in it; absent, placed by hand"
+        in: { registry: lines, take: line, where: { figure: [sequence] } }
+        meaning: "the line the drawing is laid out along — place (a map, a room, a rack), time (a timeline), routine or walk (its steps, a course), ordinal (a line) — and so what stands where in it; absent, placed by hand"
       axes:
         meaning: "where each order runs on the drawing, written as one mapping, `{ inline: time }`: per axis of the drawing, the order that runs along it, a row of `orientations` that runs on that axis — so an order is never laid on an axis its row does not take (a magnitude runs up, never along the reader's line). widgets/direction.js lays the drawing out from it. Absent, its archetype's own (`archetypes` `axes`)"
         in:
@@ -833,6 +904,7 @@ forms:
   lenses: { lens: required, depth: required, form: required, max: required, meaning: required }
   archetypes: { archetype: required, meaning: required, when: required, frame: optional, reads: optional, axes: optional }
   orientations: { order: required, of: required, axis: required, sense: required, follows: required, commands: optional, meaning: required }
+  aspects: { aspect: required, home: required, follows: required, points: required, order: required, of: required, meaning: required }
   planes: { plane: required, meaning: required }
   elements: { element: required, sense: required, meaning: required }
   account_roles: { role: required, meaning: required }

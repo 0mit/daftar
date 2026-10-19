@@ -92,6 +92,8 @@ jobs:
       - name: "io: imports and exports, one machinery — every format gives back what it wrote and keeps its guard, a scan's index and an archive's copies into a store as the law's crosswalks say, the same source again writing nothing and a second reading adding its act, a photograph's camera named and filled since, a record into a bean and back, the flow law asked for every pass"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/io.py
+      - name: "group: groupings, one engine — the slots, the operations fit, inherit and shared, the groupings read as readings of the law, a template parsed and matched with its date checked, mining a counter's gaps and a Persian date, inheritance with what is set apart, an unset clock, a field's else, shared-mime-info read, a garden's pattern and class schemes held to their forms"
+        run: python3 test/group.py
       - name: "core_ported: where each of today's suites and each check of today's gate went in v1 — none waiting — and today's words read only from v0.49.0, held to the tree"
         run: python3 test/core_ported.py
       - name: "core_exact: a count is exact everywhere it is read — rates between currencies, and no float in the code"

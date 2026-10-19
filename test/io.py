@@ -440,7 +440,7 @@ try:
     j, r = py(READERS)
     ok = j is not None
     check("readers: one table in the law names every reader the release has — a provider's and a model's — and the "
-          "code has none it does not name", ok and j['law_release'] == j['code'] and len(j['code']) == 12,
+          "code has none it does not name", ok and j['law_release'] == j['code'] and len(j['code']) == 13,
           (j and (j['law_release'], j['code']), r.out[-1200:]))
     check("...and a profile's: the bank statements' adapters, each a reader the law names with its home",
           ok and (j['asset'] is None or j['asset'] == j['law_accounting']) and len(j['law_accounting']) == 5, j)

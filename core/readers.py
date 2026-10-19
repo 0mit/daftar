@@ -600,7 +600,63 @@ def photon_dump(data):
     return {'rows': out, 'release': release}
 
 
+SMI = '{http://www.freedesktop.org/standards/shared-mime-info}'
+
+
+def shared_mime_info(data):
+    """freedesktop.org's shared-mime-info database: the release's tarball (its data/freedesktop.org.xml.in) or a host's
+    installed copy (/usr/share/mime/packages/freedesktop.org.xml). Its document type declares the elements in an
+    internal subset; one that declares an entity is refused, and the subset is set aside before the rest is read as
+    XML, so nothing is expanded. Each top-level type once (code, level `top`, name_en), then each type: code, level
+    `type`, parent its top-level type, name_en its comment in English, family its generic icon — or, where it gives
+    none, its top-level type and `-x-generic`, as the specification makes one —, globs, sub_class_of and aliases, each
+    a list written with spaces."""
+    import tarfile
+    import xml.etree.ElementTree as ET
+    release = None
+    if data[:2] == b'\x1f\x8b' or data[257:262] == b'ustar':
+        try:
+            tf = tarfile.open(fileobj=io.BytesIO(data), mode='r:*')
+            names = [m.name for m in tf.getmembers() if m.isfile()]
+        except tarfile.TarError as e:
+            raise Refused(f"shared-mime-info's file is no tar it can be read in: {e}") from None
+        hit = [n for n in names if re.search(r'(^|/)data/freedesktop\.org\.xml(\.in)?$', n)]
+        if len(hit) != 1:
+            raise Refused(f"the tarball holds {len(hit)} data/freedesktop.org.xml.in, and one is read")
+        m = re.match(r'^shared-mime-info-([0-9][0-9.]*)/', hit[0])
+        release = f"shared-mime-info {m.group(1)}" if m else None
+        data = tf.extractfile(hit[0]).read()
+    if re.search(rb'<!ENTITY', data):
+        raise Refused("the database declares an entity: it is data, refused before it is read")
+    body = re.sub(rb'<!DOCTYPE\s+mime-info\s*\[.*?\]\s*>', b'', data, count=1, flags=re.S)
+    if re.search(rb'<!DOCTYPE', body):
+        raise Refused("the database declares a document type other than shared-mime-info's own")
+    try:
+        root = ET.fromstring(body)
+    except ET.ParseError as e:
+        raise Refused(f"the database is not XML it can be read in: {e}") from None
+    lang = '{http://www.w3.org/XML/1998/namespace}lang'
+    tops, types = {}, []
+    for t in root.iter(SMI + 'mime-type'):
+        code = t.get('type') or ''
+        if '/' not in code:
+            continue
+        top = code.split('/', 1)[0]
+        comment = next((c.text for c in t.findall(SMI + 'comment') if c.get(lang) is None and c.text), '')
+        icon = t.find(SMI + 'generic-icon')
+        types.append({'code': code, 'level': 'type', 'parent': top, 'name_en': (comment or '').strip(),
+                      'family': icon.get('name') if icon is not None else f"{top}-x-generic",
+                      'globs': ' '.join(g.get('pattern') for g in t.findall(SMI + 'glob') if g.get('pattern')),
+                      'sub_class_of': ' '.join(x.get('type') for x in t.findall(SMI + 'sub-class-of') if x.get('type')),
+                      'aliases': ' '.join(x.get('type') for x in t.findall(SMI + 'alias') if x.get('type'))})
+        tops.setdefault(top, {'code': top, 'level': 'top', 'parent': '', 'name_en': top, 'family': '', 'globs': '',
+                              'sub_class_of': '', 'aliases': ''})
+    if not types:
+        raise Refused("the database names no media type")
+    return {'rows': [tops[k] for k in sorted(tops)] + sorted(types, key=lambda r: r['code']), 'release': release}
+
+
 FETCHED = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx,
            'loinc-table-csv': loinc_table_csv, 'ifc-express': ifc_express, 'epsg-sql': epsg_sql,
            'gs1-syntax-dictionary': gs1_syntax_dictionary, 'cldr-units-json': cldr_units_json,
-           'geonames-dump': geonames_dump, 'photon-dump': photon_dump}
+           'geonames-dump': geonames_dump, 'photon-dump': photon_dump, 'shared-mime-info': shared_mime_info}

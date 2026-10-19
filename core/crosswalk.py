@@ -562,6 +562,12 @@ class Carry:
         listed, notes, used, vals, parts = [], [], set(), {}, {}
         for fname, spec, kind, frm, plain, deep in self._compiled():
             raw = formats.get(rec, fname) if deep else rec.get(fname)
+            alt = str(spec['else']) if spec.get('else') else None   # the field it reads where this one holds nothing
+            if alt is not None:
+                if raw is None:
+                    raw = formats.get(rec, alt)
+                elif formats.get(rec, alt) is not None:
+                    used.add(alt)                                   # this field's, set aside: it holds a value itself
             if raw is None:
                 continue
             if kind == 'drop':
@@ -579,7 +585,7 @@ class Carry:
                     listed.append((fname, why))
                     continue
             if why is None:
-                used.add(fname)
+                used.add(fname if formats.get(rec, fname) is not None or alt is None else alt)
             else:
                 used |= why
             if kind == 'part':

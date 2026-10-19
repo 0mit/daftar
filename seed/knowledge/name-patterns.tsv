@@ -1,0 +1,4 @@
+code	level	parent	name	template	reads	extensions	grouping
+dcf	convention		DCF, the Design rule for Camera File system (JEITA CP-3461): how a camera names its files and folders on a card				
+dcf-file	pattern	dcf	a DCF file: four free characters (letters, digits, underscores) and a number from 0001 to 9999, then the extension	{alnum:4}{counter:4}.{extension}			name-series
+dcf-folder	pattern	dcf	a DCF folder: a number from 100 to 999, then five free characters (letters, digits, underscores)	{counter:3}{alnum:5}	name.as		

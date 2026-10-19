@@ -710,6 +710,17 @@ class Store:
                 out.append((verb, dict(roles, id=sid), acts))
         return out
 
+    def statements_of(self, verb):
+        """(being, id, roles) of every statement of `verb` this store keeps, in the order they were put: what a reading
+        selects as entries (bin/reckon.py `select … store`). A verb the store keeps none of gives none."""
+        if verb not in self.verbs():
+            return
+        cur = self.db.execute(f"SELECT * FROM {_q('v_' + _col(verb))} ORDER BY n")
+        names = [d[0] for d in cur.description]
+        for row in cur:
+            sid, roles, _known, _n, being = self._decode(verb, row, names)
+            yield being, sid, roles
+
     def count(self):
         return sum(self.db.execute(f"SELECT COUNT(*) FROM {_q('v_' + _col(v))}").fetchone()[0] for v in self.verbs())
 

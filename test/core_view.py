@@ -135,16 +135,17 @@ try:
           all({w.split('.')[0] for w in went[p]} >= today[p] for p in today), (went, today))
     vac = sum(len(r.get('vacancies') or []) + len(r.get('dropped') or []) for r in P['profiles'])
     engraved = [v for r in P['profiles'] for v in r.get('vacancies') or [] if v.get('at') == 'table:archetypes'
-                and v.get('position') in ('queue', 'timeline', 'flows', 'sheet')]     # declared whole since today's law
+                and v.get('position') in ('queue', 'timeline', 'flows', 'sheet', 'cursor')]   # declared whole since today's law
     books = [v for r in P['profiles'] for v in r.get('vacancies') or [] if v.get('at') == 'table:account_roles']
     check(f"law: each of a profile's {vac} vacancies is placed in the core or dropped with why — none lost — beside the "
-          f"four archetypes engraved and the books' tax role, declared since; and the law holds together with them",
+          f"four archetypes engraved, the board's cursor and the books' tax role, declared since; and the law holds "
+          f"together with them",
           vac - len(engraved) - len(books) == sum(len(r.get('vacancies') or []) for r in LAW['profiles'].values())
-          and len(engraved) == 4 and [v.get('position') for v in books] == ['tax'] and not L.problems(), L.problems()[:3])
+          and len(engraved) == 5 and [v.get('position') for v in books] == ['tax'] and not L.problems(), L.problems()[:3])
     check("law: the lenses, archetypes and planes are the profiles' tables; a drawing's form holds its values, each "
           "one of the three kinds of live value",
           L.tables['lenses'] == [r['lens'] for r in LAW['view_lenses']]
-          and [a for a in L.tables['archetypes'] if a not in ('queue', 'timeline', 'flows', 'sheet')]   # today's, in its
+          and [a for a in L.tables['archetypes'] if a not in ('queue', 'timeline', 'flows', 'sheet', 'cursor')]   # today's
           == [r['archetype'] for r in LAW['view_archetypes']]                    # order, beside the four engraved since
           and L.tables['planes'] == ['data', 'control', 'management']
           and L.form_attr('drawing', 'values.live') and 'live-series' in L.form_attr('drawing', 'values.live')['in'])
