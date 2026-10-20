@@ -2072,8 +2072,9 @@ class Reckoner:
         possible = {(b, ref(b, r.get('of'))) for b, r in stmts['possible']}
 
         def held(b, r):
-            got = F.holds(b, r)
-            return got is not False
+            """True where the need holds now, False where it does not, None where its `while` cannot be read: a blocking
+            need not read still blocks, and one not read needs nothing now (core/courses.py)."""
+            return F.holds(b, r)
 
         def need(b, r):
             of = r.get('of') if isinstance(r.get('of'), list) else [r.get('of')]

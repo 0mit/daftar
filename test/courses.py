@@ -149,7 +149,8 @@ statements:
 Another option.
 ''')
     ups = open(os.path.join(G, 'beans/ups-1.md'), encoding='utf-8').read()
-    write(G, 'beans/ups-1.md', ups.replace('---\nThe UPS.', '  - need:    { id: renewed, by: self, of: [battery-change] }\n---\nThe UPS.'))
+    write(G, 'beans/ups-1.md', ups.replace('---\nThe UPS.', '  - need:    { id: renewed, by: self, of: [battery-change] }\n'
+                                           '  - need:    { id: later, by: self, of: [battery-change-later], while: runtime-read }\n---\nThe UPS.'))
     g = subprocess.run([PY, 'core/check.py'], cwd=G, capture_output=True, text=True, encoding='utf-8', errors='replace')
     check("...and every bean of it passes the gate as written", g.returncode == 0, (g.stdout + g.stderr)[-1500:])
     j = None
@@ -196,10 +197,12 @@ Another option.
     check("axes: each option on feasibility, efficiency and necessity with its evidence — the change feasible (its "
           "blocking needs met or with a provider), needed now (the UPS's need of it, unmet), its cost its price over one "
           "more than the risk it makes possible; the later one half feasible (a window nobody provides) and needed by "
-          "nothing — weighed by the judge: the change `optimum here, now`, the later one `wasteful weight`",
+          "nothing known now (a need of it under a reading not read needs nothing yet) — weighed by the judge: the "
+          "change `optimum here, now`, the later one `wasteful weight`",
           r.returncode == 0 and 'battery-change: feasibility 1, efficiency 0.5 (yield 1 × cost 0.5), necessity 1' in out
-          and 'battery-change-later: feasibility 0.5, efficiency 0 (yield 0 × cost 10/11), necessity 0' in out and 'necessity 0' in out
-          and 'optimum here, now' in out and 'wasteful weight' in out and '4000 XTS' in out, out[-2500:])
+          and 'battery-change-later: feasibility 0.5, efficiency 5/11 (yield 0.5 × cost 10/11), necessity 0' in out and 'necessity 0' in out
+          and 'optimum here, now' in out and 'wasteful weight' in out and '4000 XTS' in out
+          and "'needed by, not read': ['ups-1#later']" in out, out[-2500:])
     import importlib
     sys.path[:0] = [os.path.join(G, 'bin'), G]
     seq = importlib.import_module('seq')
