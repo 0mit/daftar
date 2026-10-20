@@ -42,8 +42,8 @@ def axes(members, weights=None):
             feas = Fraction(sum(1 for n in blocking if n.get('met') or n.get('meetable')), len(blocking))
         else:
             feas = Fraction(1)
-        need_now = sum((strength(n) for n in m.get('needed_by') or []
-                        if n.get('in_force', True) is not False and not n.get('met')), Fraction(0))
+        need_now = sum((strength(n) for n in m.get('needed_by') or []      # known to hold now: one not read needs
+                        if n.get('in_force', True) is True and not n.get('met')), Fraction(0))   # nothing yet
         yields = sum((strength(n) for n in m.get('needed_by') or []), Fraction(0)) + Fraction(m.get('repairs') or 0)
         amounts = {}
         for n in m.get('needs') or []:
@@ -58,7 +58,9 @@ def axes(members, weights=None):
                                   'met or meetable': sum(1 for n in blocking if n.get('met') or n.get('meetable')),
                                   'impossible': sum(1 for n in blocking if n.get('impossible')),
                                   'needed by, now': [f"{n['bean']}#{n['id']}" for n in m.get('needed_by') or []
-                                                     if n.get('in_force', True) is not False and not n.get('met')],
+                                                     if n.get('in_force', True) is True and not n.get('met')],
+                                  'needed by, not read': [f"{n['bean']}#{n['id']}" for n in m.get('needed_by') or []
+                                                          if n.get('in_force', True) is None],
                                   'needed by': [f"{n['bean']}#{n['id']}" for n in m.get('needed_by') or []],
                                   'repairs': int(m.get('repairs') or 0), 'risks it makes possible': int(m.get('risks') or 0)}})
     most_need = max((r['need_now'] for r in rows), default=Fraction(0))
