@@ -41,6 +41,21 @@ person says: a disk's place (`be … as: location`), that it is part of a host (
 (`need … of`) and who holds them (`hold … of`, never the key itself). `keepings` prints, per policy code, how many
 contents and bytes leave which risks open and what would close each — "disk-fault: 1 more keeping on another disk".
 
+## Schemas, boxes and the storage watcher
+
+    python3 assets/storage/bin/storage.py layout --of <folder> --scheme <schemas> [--plan <file>]   how it stands
+    python3 assets/storage/bin/box.py plan --of <volume> --scheme <schemas> --out <plan.jsonl>     what a box lacks
+    python3 assets/storage/bin/box.py link --plan <plan.jsonl> --root <dir> [--store S --of <volume>] [--dry]
+    python3 assets/storage/bin/box.py verify --root <dir>
+    python3 assets/storage/bin/watch.py pass --before <index> --after <index> --root <dir> --history <box> [--prune]
+
+A schema is a person's word about a directory (`classify` of its folder as a code of a scheme of the form `schema`);
+its nodes say where each member belongs by its facts (core/law/profiles.yaml `layout_slots`). In a box (`links:
+true`) every content is kept once as a read-only blob, `.blobs/<BLAKE3>`, and each node's names are hard links to it:
+`box.py link` makes them from a plan, never copies a byte, never overwrites or removes a name, and keeps each in the
+store held through the volume's one holding of the blob's inode. A live directory is never linked: `watch.py` reads
+two of its readings and keeps each content first seen in the schema's history box, its versions capped.
+
 ## Transfers
 
     python3 assets/storage/bin/transfer.py setup --by <being>     # mappings/walk-transfer.md, the walk

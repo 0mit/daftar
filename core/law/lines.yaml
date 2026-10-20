@@ -373,6 +373,14 @@ operations:
     takes:
       of: { required: "true", in: { type: kebab }, meaning: "the folders" }
     meaning: "the folders by the dataset their tree is — the content of their tree's manifest (core/law/formats.yaml `checksums`), named by its BLAKE3 — each group one dataset and the folders that hold it alike; a tree holding a file whose content nobody read is no dataset, and named"
+  - op: layout
+    gives: groups
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the folders" }
+      scheme: { required: "true", in: { registry: knowledge_schemes, take: scheme }, meaning: "the scheme of the form `schema` whose schemas are said of folders" }
+    meaning: "each member beneath a folder a schema of the scheme is said of (`classify` of the folder), by the node it belongs at — the first whose `matches` it holds — and how it stands: in place, where its path is the one the node's template gives its facts; out of place, with that path; at no node. And each name whose content changed since the reading before, with the earlier contents its schema's history keeps"
   - op: shared
     gives: groups
     exact: "true"
@@ -540,6 +548,15 @@ groupings:
       - { id: contents, op: select, kind: content, store: any }
       - { id: open, op: keepings, of: contents, scheme: { input: scheme } }
     line: [code, count, "sum:measure.value", missing]
+  - grouping: schemas
+    home: storage
+    meaning: "the members of each directory a schema is said of, by how each stands against its schema: in place, out of place, at no node, changed"
+    inputs:
+      - { name: scheme, origin: { act: say }, type: kebab }
+    steps:
+      - { id: folders, op: select, kind: folder, store: any }
+      - { id: placed, op: layout, of: folders, scheme: { input: scheme } }
+    line: [code, count, "sum:measure.value"]
 
 selection_form:
   inputs: "optional: values a reading takes from outside what the garden holds, one entry each, named, each with its `origin` (`schema_language.origin`). Read by the reader (`{act: read, nature: soma, by: reader}`) — the moment of the reading, from the clock; said by another garden (`{act: said, nature: lekton, by: garden}`) — a value read from it at a commit it published and granted (`garden`, `path`); any other — a value the ASKER gives, in the form `type` or `quantity` states, and the reading's line records it as the asker's, said. Who is asking is such a value until a guard signs the asker in. A step names an input `{input: <name>}`; a reading with an input is read only where the input is given"

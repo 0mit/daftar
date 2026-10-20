@@ -485,6 +485,169 @@ def events(S, of, gap, zone=None):
     return out, sorted(set(none))
 
 
+# ------------------------------------------------------------------------------------------------ schemas
+DAY = re.compile(r'(?<!\d)((?:19|20)\d\d)[-_.]?(0[1-9]|1[0-2])[-_.]?(0[1-9]|[12]\d|3[01])(?!\d)')
+BLOBS_DIR = b'.blobs'
+
+
+def layout(S, W, scheme, of, schema=None, sample=8):
+    """How the members beneath a folder stand against the schema said of it (core 2.21, the operation `layout`):
+    {node: {'in place': n, 'to link': n, 'out of place': n, 'samples': {...}}, '(no node)': ..., 'names out of place'}
+    and the plan of a box: the names its nodes give that are not held yet (`to link`), each with the content's blob."""
+    rows = [dict(r) for r in W.K.rows(scheme)]
+    n = S.n_of(of)
+    if n is None:
+        raise SystemExit(f"storage: {of!r} is kept in no store here")
+    if schema is None:
+        said = [c.split(':', 1)[1] for c in W.said.get(of, []) if c.startswith(scheme + ':')]
+        if not said:
+            raise SystemExit(f"storage: no schema of {scheme} is said of {of} (`classify` of it)")
+        schema = said[0]
+    nodes = storage.nodes_of(rows, schema)
+    box = any(str(r.get('links') or '') == 'true' for _c, _l, r in nodes)
+    P = S.parent()
+    fs = S.beneath(n)
+    rel = {n: b''}
+    for f in fs:                                       # each folder's path from the schema's directory
+        if f in rel:
+            continue
+        chain, x = [], f
+        while x not in rel and x in P:
+            chain.append(x)
+            x = P[x][0]
+        base = rel.get(x, b'')
+        for y in reversed(chain):
+            nm = formats.unescape(P[y][1])
+            base = base + b'/' + nm if base else nm
+            rel[y] = base
+    S.db.execute('CREATE TEMP TABLE IF NOT EXISTS lf (n INTEGER PRIMARY KEY)')
+    S.db.execute('DELETE FROM temp.lf')
+    S.db.executemany('INSERT OR IGNORE INTO temp.lf VALUES (?)', ((x,) for x in fs))
+    members = S.db.execute(
+        "SELECT h.b_by, h.t_as, h.b_of, h.known, nb.t_as FROM temp.lf JOIN v_hold h ON h.b_by = temp.lf.n "
+        "LEFT JOIN v_name nb ON nb.being = h.b_of AND nb.t_by = 'blake3' WHERE h.t_as IS NOT NULL").fetchall()
+    contents = {m[2] for m in members}
+    made = {}
+    if 'v_produce' in S.tables:
+        S.db.execute('CREATE TEMP TABLE IF NOT EXISTS lc (n INTEGER PRIMARY KEY)')
+        S.db.execute('DELETE FROM temp.lc')
+        S.db.executemany('INSERT OR IGNORE INTO temp.lc VALUES (?)', ((c,) for c in contents if c))
+        for c, at, by in S.db.execute("SELECT p.b_of, p.t_at, coalesce(b.id, p.t_by) FROM temp.lc JOIN v_produce p "
+                                      "ON p.b_of = temp.lc.n LEFT JOIN being b ON b.n = p.b_by"):
+            made[c] = (at, by)
+    acts = {m[3] for m in members if m[3]}
+    source = {}                                        # the act a copy is known by -> the holding it was made from
+    if acts and 'v_make' in S.tables:
+        for an in acts:
+            ref = S.db.execute('SELECT ref FROM act WHERE n = ?', (an,)).fetchone()
+            if not ref or '#' not in ref[0]:
+                continue
+            mb, mid = ref[0].split('#', 1)
+            row = S.db.execute("SELECT m.t_from FROM v_make m JOIN being b ON b.n = m.being WHERE b.id = ? AND m.id = ?",
+                               (mb, mid)).fetchone()
+            try:
+                frm = json.loads(row[0]) if row and row[0] and str(row[0]).startswith('[') else [row[0]] if row else []
+            except ValueError:
+                frm = []
+            if frm and '#' in str(frm[0]):
+                sb, sid = str(frm[0]).split('#', 1)
+                r = S.db.execute("SELECT h.b_by FROM v_hold h JOIN being b ON b.n = h.being WHERE b.id = ? AND h.id = ?",
+                                 (sb, sid)).fetchone()
+                if r:
+                    source[an] = r[0]
+    import group as dmgroup
+    L = dmgroup.Law(GARDEN)
+    fitted = {}
+
+    def suggests(text):
+        if text not in fitted:
+            r = L.fits(text)[0]
+            fitted[text] = tuple(r.suggests) if r else ()
+        return fitted[text]
+
+    def chain_of(f):
+        """[(folder n, its name)] from a folder up to its volume."""
+        out = []
+        while f in P:
+            out.append((f, formats.unescape(P[f][1])))
+            f = P[f][0]
+        return out
+
+    def day_of(folders, name):
+        m = DAY.search(name.decode('utf-8', 'replace'))
+        if m:
+            return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+        for _f, nm in folders:
+            m = DAY.search(nm.decode('utf-8', 'replace'))
+            if m:
+                return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+        return None
+    held = collections.defaultdict(dict)               # path -> the BLAKE3 it holds there
+    for f, nm, c, _a, b3 in members:
+        held[(rel.get(f, b'') + b'/' if rel.get(f) else b'') + formats.unescape(nm)] = b3
+    out = collections.defaultdict(lambda: {'in place': 0, 'to link': 0, 'out of place': 0, 'samples': []})
+    expected_names = set()
+    plan = []
+    if box:                                            # a box's member is a content, read once: by its names but its blob
+        by_content = collections.OrderedDict()
+        for m in sorted(members, key=lambda m: (rel.get(m[0], b''), m[1])):
+            if rel.get(m[0], b'') == BLOBS_DIR:
+                by_content.setdefault(m[2], [])
+                continue
+            by_content.setdefault(m[2], []).append(m)
+        blob_of = {m[2]: m for m in members if rel.get(m[0], b'') == BLOBS_DIR}
+        members = [ms[0] if ms else blob_of[c] for c, ms in by_content.items()]
+    for f, nm, c, act, b3 in members:
+        name = formats.unescape(nm)
+        actual = (rel.get(f, b'') + b'/' if rel.get(f) else b'') + name
+        mine = chain_of(f)
+        src = source.get(act)
+        srcchain = chain_of(src) if src else []
+        codes = set(W.said.get(S.id_of(c), [])) if c else set()
+        for x, _nm in mine + srcchain:
+            codes |= set(W.said.get(S.id_of(x), []))
+        codes |= set(suggests(name.decode('utf-8', 'replace')))
+        at, by = made.get(c, (None, None))
+        day = str(at)[:10] if at else (day_of(mine, name) or day_of(srcchain, b''))
+        found = b'/'.join(nm2 for _x, nm2 in reversed(srcchain)) if srcchain else None
+        facts = {'day': day, 'maker': by or 'unknown', 'found': found, 'name': name, 'blake3': b3}
+        hits = storage.belongs(nodes, codes, box)
+        if not hits:
+            g = out['(no node)']
+            g['out of place'] += 1
+            if len(g['samples']) < sample:
+                g['samples'].append(actual.decode('utf-8', 'replace'))
+            continue
+        for code, lay, row in hits:
+            want = [x for x in str(row.get('matches') or '').split()]
+            within = None
+            for i, (x, _nm) in enumerate(srcchain or mine):
+                if set(W.said.get(S.id_of(x), [])) & set(want):
+                    within = b'/'.join(nm2 for _y, nm2 in reversed((srcchain or mine)[:i + 1]))
+                    break
+            p = lay.path(dict(facts, within=within))
+            g = out[code]
+            if p is None:
+                g['out of place'] += 1
+                if len(g['samples']) < sample:
+                    g['samples'].append(f"{actual.decode('utf-8', 'replace')} (a fact its template needs is missing)")
+                continue
+            expected_names.add(p)
+            if held.get(p) == b3:
+                g['in place'] += 1
+            elif box:
+                g['to link'] += 1
+                plan.append((p, b3, actual))
+            else:
+                g['out of place'] += 1
+                if len(g['samples']) < sample:
+                    g['samples'].append(f"{actual.decode('utf-8', 'replace')} -> {p.decode('utf-8', 'replace')}")
+    stray = [p for p in held if p not in expected_names]
+    out['(names no node gives)'] = {'in place': 0, 'to link': 0, 'out of place': len(stray),
+                                    'samples': [p.decode('utf-8', 'replace') for p in stray[:sample]]}
+    return schema, box, dict(out), plan
+
+
 def shown(t):
     return time.strftime('%Y-%m-%d %H:%M', time.gmtime(t)) + 'Z'
 
@@ -492,7 +655,7 @@ def shown(t):
 def main(argv):
     ap = argparse.ArgumentParser(prog='storage.py', description=__doc__.split('\n')[0])
     sub = ap.add_subparsers(dest='cmd', required=True)
-    for name in ('keepings', 'datasets', 'events', 'manifest'):
+    for name in ('keepings', 'datasets', 'events', 'manifest', 'layout'):
         x = sub.add_parser(name)
         x.add_argument('--store')
         x.add_argument('--json', action='store_true')
@@ -506,6 +669,11 @@ def main(argv):
         elif name == 'events':
             x.add_argument('--of', required=True)
             x.add_argument('--gap', required=True)
+        elif name == 'layout':
+            x.add_argument('--of', required=True)
+            x.add_argument('--scheme', required=True)
+            x.add_argument('--schema')
+            x.add_argument('--plan', help='write the plan of a box (path, blob, from) as JSON lines to this file')
         else:
             x.add_argument('folder')
     a = ap.parse_args(argv)
@@ -554,6 +722,23 @@ def main(argv):
                 each = ', '.join(f"{b or 'no maker said'} {n:,}" for b, n in collections.Counter(b for _c, b in g).most_common(4))
                 print(f"{shown(f)}–{shown(l)} · {len(g):,} · {each}")
             print(f"{len(evs):,} events; {len(none):,} contents with no moment, in none")
+    elif a.cmd == 'layout':
+        W = Words(GARDEN)
+        schema, box, res, plan = layout(S, W, a.scheme, a.of, a.schema)
+        if a.plan:
+            with open(a.plan, 'w', encoding='utf-8') as fh:
+                for p, b3, frm in plan:
+                    fh.write(json.dumps({'path': formats.escape(p), 'blob': b3, 'from': formats.escape(frm)}) + '\n')
+        if a.json:
+            print(json.dumps({'schema': schema, 'box': box, 'nodes': res, 'to link': len(plan)}, ensure_ascii=False,
+                             indent=1))
+        else:
+            print(f"{a.of}: the schema {a.scheme}:{schema}{' (a box)' if box else ''}")
+            for node, g in res.items():
+                print(f"  {node:24} in place {g['in place']:>8,}  to link {g['to link']:>8,}  out of place "
+                      f"{g['out of place']:>8,}")
+                for s_ in g['samples'][:4]:
+                    print(f"      {s_}")
     else:
         T, _fs = trees(S, a.folder)
         man = T.manifest(S.n_of(a.folder))

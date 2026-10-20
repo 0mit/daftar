@@ -2370,6 +2370,67 @@ class Reckoner:
             out.setdefault(formats.blake3_hex(man), []).append(m)
         return dict(sorted(out.items()))
 
+    def op_layout(self, s):
+        """Each member beneath a folder a schema is said of, by the node it belongs at and how it stands there
+        (core/storage.py `Layout`, `belongs`): over the garden's statements and the stores a step read."""
+        from core import formats, storage
+        G = self._grouping_law()
+        scheme = str(self._value(s, 'scheme'))
+        try:
+            rows = [dict(r) for r in G['knowledge'].rows(scheme)]
+        except (KeyError, OSError) as e:
+            raise Refused(f"step {s['id']}: the scheme {scheme} cannot be read here: {e}")
+        said, parent, names, holds, blake, made = (collections.defaultdict(list), {}, {}, collections.defaultdict(list),
+                                                   {}, {})
+        for b, r in self._statements('classify'):
+            if r.get('of'):
+                said[str(r['of']).split(':', 2)[-1].split('#')[0] if str(r['of']).startswith('store:') else str(r['of'])
+                     ].append(str(r.get('as')))
+        for b, r in self._statements('part'):
+            if r.get('of'):
+                parent[str(r.get('by') or b)] = str(r['of'])
+        for b, r in self._statements('name'):
+            if r.get('of') and r.get('as') is not None:
+                if r.get('by') == 'blake3':
+                    blake[str(r['of'])] = str(r['as'])
+                else:
+                    names.setdefault(str(r['of']), formats.unescape(str(r['as'])))
+        for b, r in self._statements('hold'):
+            if isinstance(r.get('of'), str) and r.get('as') is not None:
+                holds[str(r.get('by') or b)].append((formats.unescape(str(r['as'])), str(r['of'])))
+        for b, r in self._statements('produce'):
+            if r.get('of'):
+                made[str(r['of'])] = (r.get('at'), r.get('by'))
+        out = {}
+        for m in self.arg(s, 'of', 'set'):
+            codes = [c.split(':', 1)[1] for c in said.get(m.id, []) if c.startswith(scheme + ':')]
+            if not codes:
+                continue
+            nodes = storage.nodes_of(rows, codes[0])
+            box = any(str(r.get('links') or '') == 'true' for _c, _l, r in nodes)
+            kids = collections.defaultdict(list)
+            for f, p in parent.items():
+                kids[p].append(f)
+            rel, stack = {m.id: b''}, [m.id]
+            while stack:
+                x = stack.pop()
+                for k in kids.get(x, ()):
+                    rel[k] = rel[x] + b'/' + names.get(k, b'') if rel[x] else names.get(k, b'')
+                    stack.append(k)
+            held = {(rel[f] + b'/' if rel[f] else b'') + nm: c for f in rel for nm, c in holds.get(f, ())}
+            for path, c in sorted(held.items()):
+                name = path.rpartition(b'/')[2]
+                at, by = made.get(c, (None, None))
+                dm = re.search(r'(?<!\d)((?:19|20)\d\d)-(\d\d)-(\d\d)(?!\d)', path.decode('utf-8', 'replace'))
+                facts = {'day': str(at)[:10] if at else (dm.group(0) if dm else None), 'maker': by or 'unknown',
+                         'name': name, 'blake3': blake.get(c)}
+                for code, lay, row in storage.belongs(nodes, said.get(c, []), box):
+                    want = lay.path(facts)
+                    how = 'in place' if want == path or (box and held.get(want) == c) else \
+                        'to link' if box and want else 'out of place'
+                    out.setdefault(f"{m.id} · {code} · {how}", []).append(m)
+        return dict(sorted(out.items()))
+
     def op_shared(self, s):
         aspect = next((r for r in (self.reg('aspects') or []) if isinstance(r, dict) and r.get('aspect') == s['aspect']),
                       None)
