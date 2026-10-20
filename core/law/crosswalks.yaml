@@ -240,6 +240,20 @@ crosswalks:
       parent: { from: part.of }
       name: { from: name.as, with: { by: parent }, as: escaped }
     meaning: "a folder: part of its parent folder, or of its volume, which gives it its name"
+  - crosswalk: file-tree-path
+    system: file-tree
+    series: "1"
+    model: path
+    statements: { verb: name }
+    format: [sqlite, tsv, csv, jsonl, checksums]
+    reader: file-tree
+    act: { verb: read }
+    keep: store
+    fields:
+      folder: { from: bean }
+      volume: { from: by }
+      path: { from: as, as: escaped }
+    meaning: "a folder's path beneath its volume: the volume names the folder by it, once, as the folder's id is minted from it; a file's path is its folder's joined to its own name"
   - crosswalk: file-tree-file
     system: file-tree
     series: "1"

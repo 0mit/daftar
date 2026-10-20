@@ -1179,6 +1179,153 @@ def where(root, bean, course, now=None):
             'usually': u, 'overdue': over, 'final': st.get('final') is True, 'moves': len(mv), 'walk': wid}
 
 
+CLAUSE_STEPS = [{'id': 'ahead', 'as': 'not yet due'}, {'id': 'due', 'as': 'due, and not yet met'},
+                {'id': 'met', 'as': 'met: paid, or done', 'final': True},
+                {'id': 'waived', 'as': 'released by the party it is owed to', 'exit': True, 'final': True},
+                {'id': 'broken', 'as': 'not kept', 'exit': True, 'final': True},
+                {'id': 'disputed', 'as': 'the parties disagree that it holds', 'resumes': True}]
+NEED_STEPS = [{'id': 'holds', 'as': 'its reading holds'},
+              {'id': 'crossed', 'as': 'its reading stopped holding: a failure is open', 'resumes': True}]
+FIGURE = ('obligatory', 'permitted', 'forbidden', 'omissible')
+
+
+def walk_steps(root, walk):
+    """[{id, as, by, final, exit, resumes, usually}] of a walk, in its order (a bean of the core, or a mapping)."""
+    wfm = (core_view(walk, root) if runs_core(root or ROOT) else None) or \
+        _front(os.path.join(root or ROOT, 'mappings', f"{walk}.md")) or {}
+    out = []
+    for s in wfm.get('steps') or []:
+        if isinstance(s, dict) and s.get('id'):
+            out.append({k: s.get(k) for k in ('id', 'as', 'by', 'usually') if s.get(k) is not None} |
+                       {k: True for k in ('final', 'exit', 'resumes') if s.get(k) is True})
+    return out
+
+
+def courses(root, bean, now=None):
+    """Every course of a being in the one shape the archetype `course` draws (core 2.22) — read each time, never
+    stored: [{source, id, walk, steps, step, at, since, by, party, overdue, final, needs, amounts, words}].
+      course   a course written: the being placed on a walk (`be` as order) and its moves (`where` above)
+      clause   a clause's occurrence, read as a course on the clause's states: `ahead` before its day, `due` from it,
+               `met` where a payment `settles` it (by its number or its day) or the clause says so, `waived`, `broken`
+      need     a standing need a reading meets (bin/routines.py), read as a course: `holds`, or `crossed` since the
+               `fail` through a `measure` of it that no `repair` answers
+    The needs a course states (its being's, for a written course) come with it: each met or not (a `meet` of it
+    stands), blocking or not (`contingent` of it: not blocking), and its amount where it needs one."""
+    root = root or ROOT
+    out = []
+    try:
+        fm = _doc(root, bean)
+    except ValueError:
+        return out
+    b = core(root)[1].beans.get(bean) if runs_core(root) else None
+    items = list(b.items) if b is not None else []
+    needs = needs_of(items)
+    for cid, tr in sorted((fm.get('courses') or {}).items()) if isinstance(fm.get('courses'), dict) else []:
+        try:
+            w = where(root, bean, cid, now)
+        except ValueError:
+            continue
+        wid = w.get('walk') or (tr.get('walk') if isinstance(tr.get('walk'), str) else None)
+        out.append({'source': 'course', 'id': cid, 'walk': wid, 'steps': walk_steps(root, wid) if wid else [],
+                    'step': w.get('step'), 'at': w.get('at'), 'since': w.get('since'), 'by': w.get('by'),
+                    'party': w.get('party'), 'overdue': w.get('overdue'), 'final': w.get('final'), 'needs': needs,
+                    'words': tr.get('note') if isinstance(tr, dict) else None})
+    out += clause_courses(root, bean, items, now)
+    out += need_courses(items)
+    return out
+
+
+def needs_of(items):
+    """[{id, of, from, while, amount, met, blocking}] of a bean's `need` statements: met where a `meet` of it stands,
+    not blocking where a `contingent` of it does (core 2.22, `need`'s strength on the necessity square)."""
+    met = {str(r.get('of')).split('#')[-1] for _i, v, r in items if v == 'meet' and 'held' not in r}
+    soft = {str(r.get('of')).split('#')[-1] for _i, v, r in items if v == 'contingent' and 'held' not in r}
+    never = {str(r.get('of')).split('#')[-1] for _i, v, r in items if v == 'impossible' and 'held' not in r}
+    out = []
+    for _i, v, r in items:
+        if v != 'need' or 'held' in r or not r.get('id'):
+            continue
+        of = r.get('of')
+        amount = next((x for x in (of if isinstance(of, list) else [of]) if isinstance(x, dict) and 'count' in x), None)
+        out.append({'id': r['id'], 'of': of, 'from': r.get('from'), 'while': r.get('while'), 'amount': amount,
+                    'met': r['id'] in met, 'blocking': r['id'] not in soft, 'impossible': r['id'] in never})
+    return out
+
+
+def clause_courses(root, bean, items, now=None):
+    """Each occurrence of each clause of a bean that falls due on a day — up to today and the next — read as a course
+    on the clause's states (CLAUSE_STEPS)."""
+    import importlib
+    try:
+        dmstale = importlib.import_module('stale')
+    except ImportError:
+        return []
+    today = dmcal.moment(now).ms // dmcal.DAY_MS if now else _now_ms() // dmcal.DAY_MS
+    settled = {}
+    for _i, v, r in items:
+        if v == 'pay' and 'held' not in r:
+            for x in r.get('settles') or []:
+                if isinstance(x, dict) and x.get('clause'):
+                    settled.setdefault(str(x['clause']).split('#')[-1], set()).add(str(x.get('occurrence')))
+    out = []
+    for _i, v, r in items:
+        if v not in FIGURE or 'held' in r or not isinstance(r.get('clause'), dict) or not r.get('id'):
+            continue
+        cl = r['clause']
+        if cl.get('due') is None:
+            continue
+        try:
+            first = dmstale.day_of(cl['due'])
+            days = [first]
+            if isinstance(cl.get('every'), dict):
+                days = []
+                for n in dmstale.occurrences(first, cl['every']):
+                    days.append(n)
+                    if n > today or len(days) >= 600:
+                        break
+        except Exception:      # noqa: BLE001 — a repetition not walked by arithmetic is said, never guessed
+            out.append({'source': 'clause', 'id': r['id'], 'walk': None, 'steps': CLAUSE_STEPS, 'step': None,
+                        'words': 'its occurrences cannot be walked here'})
+            continue
+        state = cl.get('state')
+        for k, n in enumerate(days, 1):
+            day = dmstale.show_day(n)
+            done = {str(k), str(day)} & settled.get(r['id'], set())
+            step = state if state in ('met', 'waived', 'broken', 'disputed') else \
+                'met' if done else 'due' if n <= today else 'ahead'
+            out.append({'source': 'clause', 'id': f"{r['id']}:{k}", 'clause': r['id'], 'of': r.get('of'),
+                        'walk': None, 'steps': CLAUSE_STEPS, 'step': step, 'at': day, 'due': day,
+                        'since': (today - n) * dmcal.DAY_MS if n <= today else None, 'by': None, 'party': None,
+                        'overdue': step == 'due' and n < today, 'final': step in ('met', 'waived', 'broken'),
+                        'words': r.get('note')})
+    return out
+
+
+def need_courses(items):
+    """Each standing need of a bean a reading meets (bin/routines.py), read as a course: holding, or crossed since the
+    open `fail` through a `measure` of it (its crossing)."""
+    readings = {r.get('id') for _i, v, r in items if v == 'reckon'}
+    met_by = {}
+    for _i, v, r in items:
+        if v == 'meet' and 'held' not in r:
+            met_by.setdefault(str(r.get('of')).split('#')[-1], []).append(str(r.get('by')))
+    repaired = {str(r.get('of')) for _i, v, r in items if v == 'repair'}
+    out = []
+    for _i, v, r in items:
+        if v != 'need' or 'held' in r or not r.get('id'):
+            continue
+        if not any(m in readings for m in met_by.get(r['id'], [])):
+            continue
+        fails = [f for _j, vv, f in items if vv == 'fail' and str(f.get('id', '')).startswith(f"{r['id']}-")
+                 and str(f.get('id')) not in repaired and f.get('through')]
+        f = fails[-1] if fails else None
+        out.append({'source': 'need', 'id': r['id'], 'of': r.get('of'), 'walk': None, 'steps': NEED_STEPS,
+                    'step': 'crossed' if f else 'holds', 'at': dmcal.shown(f.get('at')) if f and f.get('at') else None,
+                    'since': None, 'by': None, 'party': None, 'overdue': None, 'final': False,
+                    'words': f.get('as') if f else None})
+    return out
+
+
 def _now_ms():
     import datetime
     t = datetime.datetime.now().astimezone()

@@ -109,7 +109,7 @@ class Catalogue:
         """({folder n: name}, {folder n: parent n}, {parent n: [children]}) of every folder, read once."""
         if self._tree is None:
             name, parent, kids = {}, {}, collections.defaultdict(list)
-            for of, by, nm in self.db.execute("SELECT b_of, b_by, t_as FROM v_name WHERE t_by IS NULL AND b_by IS NOT NULL"):
+            for of, by, nm in self.db.execute(f"SELECT b_of, b_by, t_as FROM v_name WHERE {formats.OWN_NAME}"):
                 name[of], parent[of] = text(nm), by
                 kids[by].append(of)
             self._tree = (name, parent, kids)

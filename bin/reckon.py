@@ -2156,7 +2156,7 @@ class Reckoner:
         if loop:
             raise Refused(f"step {s['id']}: the codes of {scheme} run in a cycle: {' → '.join(loop)}")
         said, wholes, names = collections.defaultdict(list), collections.defaultdict(list), collections.defaultdict(list)
-        held_as = collections.defaultdict(list)
+        held_as, held_in = collections.defaultdict(list), collections.defaultdict(list)
         for b, fm in self.g.fm.items():
             if self.g.kind.get(b) != 'beans':
                 continue
@@ -2173,9 +2173,10 @@ class Reckoner:
                     wholes[_own(x['of'], b)].append(_own(x.get('by'), b))
                     if x.get('as') is not None:
                         held_as[_own(x['of'], b)].append(str(x['as']))
+                        held_in[_own(x['of'], b)].append((_own(x.get('by'), b), str(x['as'])))
             for x, _w in _flatten(walk(self.g, fm, 'name', at=b)):
                 if isinstance(x, dict) and x.get('as') is not None:
-                    names[_own(x.get('of'), b)].append(str(x['as']))
+                    names[_own(x.get('of'), b)].append((_own(x.get('by'), b), str(x['as'])))
         for st in getattr(self, '_opened', {}).values():     # what the stores a step read keep of these beings
             if st is None:
                 continue
@@ -2190,6 +2191,29 @@ class Reckoner:
                         wholes[of].append(by)
                         if roles.get('as') is not None:
                             held_as[of].append(str(roles['as']))
+                            held_in[of].append((by, str(roles['as'])))
+            if 'name' in st.verbs():
+                for being, _sid, roles in st.statements_of('name'):
+                    if roles.get('as') is not None:
+                        names[_ref_bean(roles.get('of')) or being].append((_ref_bean(roles.get('by')), str(roles['as'])))
+
+        def top(b):
+            """The volume a folder is beneath: its last whole up `part`."""
+            seen = {b}
+            while wholes.get(b) and wholes[b][0] not in seen:
+                b = wholes[b][0]
+                seen.add(b)
+            return b
+
+        def path_of(f):
+            """A folder's path beneath its volume: the name its volume gives it (`reads: path`)."""
+            v = top(f)
+            return next((a for by, a in names.get(f) or [] if by == v and v != f), None)
+
+        def own_names(b):
+            """A being's names but its path: a name given by the volume above its whole is its path, read apart."""
+            v = top(b)
+            return [a for by, a in names.get(b) or [] if not (by == v and v not in (wholes.get(b) or []))]
         apart = set()                                         # the codes that set apart, of every class scheme
         for name, row in K.schemes.items():
             if isinstance(row, dict) and row.get('form') == 'class':
@@ -2200,7 +2224,7 @@ class Reckoner:
 
         def suggested(b):
             got = []
-            for n in names.get(b) or []:
+            for n in own_names(b):
                 hit = next((r for r in G['rows'] if (r.reads or 'as') == 'name.as' and r.template.match(n) is not None), None)
                 if hit:
                     got += hit.suggests
@@ -2209,6 +2233,10 @@ class Reckoner:
                            None)
                 if hit:
                     got += hit.suggests
+            for f, x in held_in.get(b) or []:                # ...and by each holding's path beneath its volume
+                p = path_of(f)
+                if f == top(f) or p is not None:
+                    got += [c for c in groupings.path_codes(G['rows'], f"{p}/{x}" if p else x) if c not in got]
             return got
 
         out = collections.OrderedDict()

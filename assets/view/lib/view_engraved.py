@@ -32,7 +32,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import view_model as vm  # noqa: E402
 
-ENGRAVED = ('queue', 'timeline', 'flows', 'sheet')
+ENGRAVED = ('queue', 'timeline', 'flows', 'sheet', 'course')
 KNOWING = ('say', 'read', 'derive', 'make')
 LEAD_ORDER = ('decision', 'case', 'obligation', 'health', 'session')
 HEADER = ('title', 'summary', 'tags')
@@ -363,11 +363,13 @@ def table(v, may):
     at its column's path AS THEY ARE (a day, an amount, a being, text; a step a move reached by its walk's own words),
     for the line's widgets to show in the reader's calendar and digits, and each line opening its being's sheet. A table of a series is drawn by its module."""
     import reckon as dmreckon
-    cols = [{'label': str(c.get('label') or c.get('path')), 'path': str(c.get('path'))}
-            for c in v.get('columns') or [] if isinstance(c, dict) and c.get('path')]
+    cols = [{'label': str(c.get('label') or c.get('path') or c.get('stands')), 'path': str(c['path'])} if c.get('path')
+            else {'label': str(c.get('label') or c.get('stands')), 'stands': str(c['stands'])}
+            for c in v.get('columns') or [] if isinstance(c, dict) and (c.get('path') or c.get('stands'))]
     if v.get('chart') is not None:
         return chart_table(v, may, cols)
-    reads = sorted({re.split(r"[.\[>]", c['path'])[0] for c in cols if c['path'] not in ('at', 'position')})
+    reads = sorted({re.split(r"[.\[>]", c['path'])[0] for c in cols if c.get('path') and c['path'] not in ('at', 'position')}
+                   | ({'be', 'move'} if any(c.get('stands') for c in cols) else set()))
     out = {'columns': cols, 'rows': [], 'notes': []}
     try:
         members = vm.members(v['selection']) if v.get('selection') else []
@@ -376,8 +378,11 @@ def table(v, may):
     for m in members:
         if _bean(m) is None or not (may('read', m) or (reads and may('read', m, reads))):
             continue
+        stood = stands_of(m, may) if any(c.get('stands') for c in cols) else []
         out['rows'].append({'bean': m, 'title': title_of(m),
-                            'cells': [_steps_said(dmreckon.path_values(vm.fm(m), c['path'], root=vm.ROOT)) for c in cols]})
+                            'cells': [_steps_said(dmreckon.path_values(vm.fm(m), c['path'], root=vm.ROOT)) if c.get('path')
+                                      else {'course': next((x for x in stood if x.get('walk') == c['stands']), None)}
+                                      for c in cols]})
     return out
 
 
@@ -805,6 +810,25 @@ def said_refs(b, values):
     return out
 
 
+def stands_of(bid, may=None):
+    """Every course of a being in the one shape the archetype `course` draws (bin/seq.py `courses`, core 2.22): a course
+    written, a clause's occurrence, a standing need — each with its steps, where it stands, since when, who acts and
+    whether it is overdue; a party or a walk the reader may not read is not named."""
+    import seq as dmseq
+    try:
+        got = dmseq.courses(vm.ROOT, bid)
+    except Exception:                                # noqa: BLE001 — a being the reader of courses cannot read: none
+        return []
+    for c in got:
+        c['since'] = None if c.get('since') is None else int(c['since'])
+        if c.get('walk'):
+            c['walk_title'] = title_of(c['walk']) if may is None or may('read', c['walk']) else None
+        if c.get('party') and may is not None:
+            c['party'] = ', '.join(p.strip() for p in str(c['party']).split(',') if may('read', p.strip())) or None
+        c['needs'] = [{k: n.get(k) for k in ('id', 'met', 'blocking', 'impossible', 'amount')} for n in c.get('needs') or []]
+    return got
+
+
 def courses_of(b):
     """{course id: {walk, steps: [{ref, says}]}} — each walk the being is on (`be { id, at: <walk>, as: order }`), its
     steps in their order, each by its own words: what a move of it may reach."""
@@ -938,7 +962,7 @@ def sheet(bid, may, held=None, records=None):
             'labels': labels_shown(b.kind),
             'said': said_refs(b, [s.get('roles') for r in rows for s in r['statements']]
                               + [d.get('roles') for r in rows for s in r['statements'] for d in s['dependents']]),
-            'courses': courses_of(b),
+            'courses': courses_of(b), 'stands': stands_of(bid, may),
             'rows': rows, 'verbs': {v: verb_row(v) for v in verbs}, 'may_write': whole_write,
             'statements': sorted(by_id), 'new': False}
 
@@ -1117,6 +1141,11 @@ def problems(key, v):
     if v.get('archetype') == 'timeline' and isinstance(v.get('span'), dict) and not vm.seconds(v['span']):
         errs.append("%s: a timeline's span is a length on time (`measure`, in a unit of duration): the repetitions are "
                     "walked within it" % key)
+    for c in v.get('columns') or [] if v.get('archetype') == 'table' else []:
+        w = c.get('stands') if isinstance(c, dict) else None
+        if w is not None and not any(vv == 'step' for _i, vv, _r in (_bean(str(w)).items if _bean(str(w)) else [])):
+            errs.append("%s: a column stands on %r, which is no walk of the garden (a being whose `step`s are its steps)"
+                        % (key, w))
     if v.get('archetype') == 'table':
         given = [k for k in ('selection', 'series', 'chart') if v.get(k) is not None]
         if len(given) > 1:
@@ -1165,6 +1194,10 @@ def data(key, v, may, reader):
         return flows(v, may)
     if a == 'table':
         return table(v, may)
+    if a == 'course':
+        kk, target, _f = vm.draws_of(v)
+        return {'bean': target if kk == 'bean' and may('read', target) else None,
+                'courses': stands_of(target, may) if kk == 'bean' else []}
     kk, target, _f = vm.draws_of(v)
     return {'bean': target if kk == 'bean' and may('read', target) else None}
 
