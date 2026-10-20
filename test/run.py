@@ -287,5 +287,22 @@ finally:
     subprocess.run([PY, 'bin/run.py', 'reconcile'], cwd=G, env=ENV, capture_output=True) if os.path.isdir(G) else None
     shutil.rmtree(T, ignore_errors=True)
 
+# ---- an adopted process of another user: its name alone is kept (an argument can hold a secret under any flag)
+sys.path.insert(0, os.path.join(ROOT, 'bin'))
+import importlib
+R = importlib.import_module('run')
+saved = (R.uid_of, R.comm_of, R.cmdline)
+try:
+    R.cmdline, R.comm_of = (lambda pid: ['odoo', '-w', 'not-a-real-one', '--db_password=x']), (lambda pid: 'odoo')
+    R.uid_of = lambda pid: os.getuid() + 1
+    other = R.shown_argv(4242)
+    R.uid_of = lambda pid: os.getuid()
+    own = R.shown_argv(4242)
+finally:
+    R.uid_of, R.comm_of, R.cmdline = saved
+check("adopt: another user's process is kept by its name alone — `-w <password>` is no flag a mask knows; one's own "
+      "is kept masked where a flag's name says secret", other == ['odoo'] and own == ['odoo', '-w', 'not-a-real-one',
+                                                                                      '--db_password=***'], (other, own))
+
 print(f"\nrun: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)

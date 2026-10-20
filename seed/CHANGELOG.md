@@ -251,6 +251,10 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v2.23.1** (2026-10-20, code alone, core 2.23) — bin/run.py `adopt`: a process of another user is kept by its
+  name alone, never its arguments, which are not ours to keep and can hold a secret under a flag no mask knows (`-w
+  <password>`); one's own is kept masked as before. test/run.py.
+
 - **core 2.23** (2026-10-20, daftar v2.23.0, human-ratified rule-change) — **plans on three axes: a need's strength,
   an amount needed, a step the machine acts at, and another's material kept to its node.** MINOR: nothing a garden
   could write under core 2.22 is refused.
