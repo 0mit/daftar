@@ -318,6 +318,14 @@ def mask_argv(argv, secret_idx=()):
     return out
 
 
+def shown_argv(pid):
+    """The command of an adopted process as it is kept: masked where it is this user's own; of another user's process,
+    its name alone — its arguments are not ours to keep, and a secret can stand in them under any flag (`-w <password>`)."""
+    if uid_of(pid) != os.getuid():
+        return [comm_of(pid) or '?']
+    return mask_argv(cmdline(pid) or [])
+
+
 def mask_env(env):
     return {k: ('***' if SECRET_NAME.search(k) else v) for k, v in env.items()}
 
@@ -1232,7 +1240,7 @@ def adopt(pid=None, *, match=None, name=None, of=None, key=None, by=None, check=
                     subprocess.run(['sudo', '-n', 'sh', '-c', 'echo "$1" > "$2"', 'sh', str(x), f'{cg}/cgroup.procs'],
                                    capture_output=True, timeout=30)
         reg.add(**dict(zip(('id', 'walk', 'being', 'host', 'name', 'key', 'parent', 'asked_by', 'mode', 'argv', 'cwd', 'env', 'user', 'login', 'dir', 'log', 'progress', 'check_cmd', 'needs', 'grace', 'boot', 'pid', 'ticks', 'comm', 'cgroup', 'created'),
-            (rid, WALK, of or HOST, HOST, name, key, None, by, 'adopted', json.dumps(mask_argv(cmdline(pid) or [])),
+            (rid, WALK, of or HOST, HOST, name, key, None, by, 'adopted', json.dumps(shown_argv(pid)),
              None, None, user, LOGIN, d, None, f'{d}/progress.json', check, json.dumps(list(needs)), 10, BOOT, pid,
              t, comm_of(pid), cg, time.time()))))
         reg.move(rid, 'running', by, why=f"adopted: pid {pid} ({comm_of(pid)}, {user}) running since "
