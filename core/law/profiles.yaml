@@ -22,8 +22,8 @@ profiles:
         why: "a tax owed or claimable is held in an account of this role, and the clause form already says a tax — an `obligatory` payment to the authority occurring `each` time a sale is made, its `amount` a share of the sale's; no tool computes tax lines yet, and a jurisdiction's codes and return grids are a scheme a garden takes, none privileged"
   - profile: storage
     meaning: "for a garden that keeps data on carriers: where each content is kept, which risks its keepings leave open and what would close each, which folders hold one dataset, and what each transfer still has to do. A content is one being, named by its digest, whatever holds it; a copy is a holding made from the holding it copies; a tree is a dataset, the content of its manifest (core/law/formats.yaml `checksums`). Data is not conserved as a stock is — a copy leaves its source whole — so nothing is booked from one keeping to another: what is kept is read from the holdings, never stored. A risk is a row of `risks`, the properties of keepings that resolve it; what a content must be safe against is a code of a scheme of the form `keep`, read by `inherit`. The profile's asset, `assets/storage/`, reads them at a store's scale and carries transfers as courses on its walk `walk-transfer`"
-    tables: [keeping_properties, risks]
-    forms: [keep]
+    tables: [keeping_properties, risks, layout_slots]
+    forms: [keep, schema]
     asset: "assets/storage"
     went: {}
     vacancies:
@@ -412,6 +412,14 @@ keeping_properties:
   - { property: immutable, meaning: "a keeping no account of a host that reaches it can write" }
   - { property: verified, meaning: "a keeping whose content's bytes were read and found whole — a scan that hashed them, a copy checked by its digest, a check of a manifest — within the policy's `within`" }
   - { property: key, meaning: "a keeping none of whose carriers needs a key, or each of whose needed keys two holders hold: a carrier needs a key it is said to need (`need … of` the key, a being), and a holder holds it (`hold … of` the key: that it is held, never what it is)" }
+layout_slots:
+  - { slot: day, forms: [yyyy, yyyy-mm, yyyy-mm-dd], meaning: "the day a member's content was made — its `produce.at`, else the day a pattern its name fits reads, else the day the nearest of its folders' names holds — in the form the slot names, in the garden's calendar" }
+  - { slot: event, meaning: "the event its content is in, by the grouping `events` and the gap its schema names: its first day, and `…` and its last where they differ, `yyyy-mm-dd`" }
+  - { slot: maker, meaning: "the being that made its content (`produce.by`), by its id; `unknown` where nobody said" }
+  - { slot: found, meaning: "the path of the folder it was found under, from the root of the volume its source was read on (the holding it is made from, `make … from`)" }
+  - { slot: within, meaning: "the path of its folder from the nearest folder a code it matches by is said of, that folder's name first: another's media kept as it was found beneath the folder it was found under" }
+  - { slot: name, meaning: "the member's own name; where another content is held under it at that place already, its name with `-` and the first eight digits of its content's BLAKE3 before its extension" }
+  - { slot: blake3, meaning: "its content's BLAKE3, the 64 hexadecimal digits that name it: a blob's name in a box" }
 risks: []
 risk_form:
   risk: "the risk's name, a kebab word: what may happen to a content's keepings"
@@ -484,6 +492,30 @@ forms:
       for:
         in: { type: coding }
         meaning: "codes of other class schemes, a list: a member holding one, and classed by nothing nearer, is read under this code"
+  schema:
+    meaning: "a directory's schema, on the rows of a scheme that names this form (`form: schema`) beside its code, level, parent and name: a schema (a code with no parent), said of a directory by a person (`classify` of the folder), and its nodes (codes whose parent is the schema), each the place beneath the directory its members belong at by their facts. A member belongs at the first node whose `matches` it holds — in a box (`links`), at every such node, each a name linked to its one blob: one content under several schemas. It is in place where its path is the one the node's template gives its facts, out of place where it is not, and at no node where it holds no node's `matches`; a name whose content changed since the reading before is a change. Nothing is moved by a reading"
+    attrs:
+      template:
+        in: { type: text }
+        meaning: "a node's path beneath the directory: literal text, `/` between folders, and slots of the storage profile's `layout_slots` — `{day:yyyy}/{day:yyyy-mm-dd}/{name}`, `.blobs/{blake3}`; nothing in it is evaluated"
+      matches:
+        in: { type: coding }
+        meaning: "the codes a member must hold for a node, a list, any one of which does: a class of the garden's (`media:captured-raw`), a role; absent, every member"
+      links:
+        in: ["true"]
+        meaning: "`true`: a node of a box — its names may be hard links to the blobs of the box, one inode a content (the node `.blobs/{blake3}`), and so nothing beneath it is changed in place; absent, its names are files of their own, edited in place, and never linked"
+      versions:
+        in: { type: count }
+        meaning: "how many earlier contents of a name that changed are kept, the latest first"
+      age:
+        in: { quantity: duration }
+        meaning: "how long an earlier content is kept, whichever of `versions` and `age` comes first"
+      history:
+        in: being
+        meaning: "a schema's: the box, on another disk, that keeps the earlier contents of its changed names, each a blob"
+      gap:
+        in: { quantity: duration }
+        meaning: "a schema's: the gap after which a new event begins, for the slot `event`"
   chart:
     meaning: "what each account of a chart of accounts is, on the rows of a scheme that names this form (`form: chart`) beside its code, level, parent and name: a booking names a postable account — a code no other code has for its parent"
     attrs:
@@ -954,6 +986,7 @@ forms:
   aspects: { aspect: required, home: required, follows: required, points: required, order: required, of: required, meaning: required }
   planes: { plane: required, meaning: required }
   keeping_properties: { property: required, meaning: required }
+  layout_slots: { slot: required, meaning: required, forms: optional }
   risks: { risk: required, meaning: required, resolved_by: required }
   elements: { element: required, sense: required, meaning: required }
   account_roles: { role: required, meaning: required }

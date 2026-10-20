@@ -354,7 +354,7 @@ class Law:
         self.profiles = {str(p['profile']): p for p in listed(data.get('profiles')) if isinstance(p, dict)}
         keys = {'lenses': 'lens', 'archetypes': 'archetype', 'planes': 'plane', 'orientations': 'order',
                 'elements': 'element', 'account_roles': 'role', 'date_styles': 'style', 'currency_displays': 'display',
-                'aspects': 'aspect', 'keeping_properties': 'property', 'risks': 'risk'}
+                'aspects': 'aspect', 'keeping_properties': 'property', 'risks': 'risk', 'layout_slots': 'slot'}
         for t, key in keys.items():
             rows = [r for r in listed(data.get(t)) if isinstance(r, dict)]
             if t == 'risks':                          # the law's own, then a garden's (VOCAB.md `risks`), read first
@@ -998,7 +998,7 @@ class Law:
                     out.append((f"scheme {scheme} {code or '(no code)'}",
                                 f"{', '.join(odd)}: no column of a {form} ({', '.join(sorted(cols))})"))
             judge = {'chart': self._chart_rows, 'pattern': self._pattern_rows, 'class': self._class_rows,
-                     'keep': self._keep_rows}.get(str(form))
+                     'keep': self._keep_rows, 'schema': self._schema_rows}.get(str(form))
             if judge:
                 out += judge(scheme, rows)
         return out
@@ -1102,6 +1102,51 @@ class Law:
             for c in str(r.get('for') or '').split():
                 if self.std.code(c):
                     out.append((at, f"for: {self.std.code(c)}"))
+        return out
+
+    def _schema_rows(self, scheme, rows):
+        """A directory's schema (the storage profile's form `schema`): each node a child of a schema, its template's slots
+        rows of `layout_slots` in a form they have, what it matches codes the garden reads, `links` only `true`, its cap
+        a count and a length of time; a schema's history a being, its gap a length of time."""
+        out = []
+        codes = {str(r.get('code') or ''): r for r in rows}
+        slots = {str(r.get('slot')): r for r in listed(self.profile_tables.get('layout_slots'))}
+        for r in rows:
+            code = str(r.get('code') or '')
+            at = f"scheme {scheme} {code or '(no code)'}"
+            parent = str(r.get('parent') or '')
+            if parent and (parent not in codes or codes[parent].get('parent')):
+                out.append((at, f"parent: {parent!r} is no schema of {scheme} (a node's parent is a code with no parent)"))
+            t = str(r.get('template') or '')
+            if t and not parent:
+                out.append((at, "template: a node's, beneath a schema; a schema holds none"))
+            if parent and not t:
+                out.append((at, "template: a node says where its members belong, `{day:yyyy}/{name}`"))
+            for m in re.finditer(r'\{([^{}]*)\}', t):
+                name, _, form = m.group(1).partition(':')
+                if name not in slots:
+                    out.append((at, f"template: {{{m.group(1)}}} names no slot of `layout_slots`: {', '.join(slots)}"))
+                elif form and form not in listed(slots[name].get('forms')):
+                    out.append((at, f"template: {{{m.group(1)}}}: `{name}` is written in {', '.join(listed(slots[name].get('forms'))) or 'no form'}"))
+                elif not form and slots[name].get('forms'):
+                    out.append((at, f"template: {{{name}}} names a form: {', '.join(listed(slots[name].get('forms')))}"))
+            if re.sub(r'\{[^{}]*\}', '', t).count('{') or re.sub(r'\{[^{}]*\}', '', t).count('}'):
+                out.append((at, "template: a brace stands alone"))
+            for c in str(r.get('matches') or '').split():
+                if self.std.code(c):
+                    out.append((at, f"matches: {self.std.code(c)}"))
+            if r.get('links') not in (None, '') and str(r['links']) != 'true':
+                out.append((at, f"links: {r['links']!r} is `true`, or absent"))
+            if r.get('versions') not in (None, '') and not re.fullmatch(r'[0-9]+', str(r['versions'])):
+                out.append((at, f"versions: {r['versions']!r} is a count"))
+            for k in ('age', 'gap'):
+                if r.get(k) not in (None, ''):
+                    _q, why = self.duration(r[k])
+                    if why:
+                        out.append((at, f"{k}: {why}"))
+            for k in ('history', 'gap'):
+                if r.get(k) not in (None, '') and parent:
+                    out.append((at, f"{k}: a schema's, not a node's"))
         return out
 
     def _class_rows(self, scheme, rows):

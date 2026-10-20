@@ -78,12 +78,18 @@ risks:
 schemes:
   - { scheme: keep, classifies: "what a content must be safe against", holding: extract, licence: CC0-1.0, publisher: the gardener, url: "https://example.org/keep", levels: [ { level: code } ], neighbours: none, sources: extracts/keep.tsv, form: keep }
   - { scheme: media, classifies: "what a picture is", holding: extract, licence: CC0-1.0, publisher: the gardener, url: "https://example.org/media", levels: [ { level: class } ], neighbours: none, sources: extracts/media.tsv, form: class }
+  - { scheme: schemas, classifies: "where the members of a directory belong", holding: extract, licence: CC0-1.0, publisher: the gardener, url: "https://example.org/schemas", levels: [ { level: schema }, { level: node } ], neighbours: none, sources: extracts/schemas.tsv, form: schema }
 files:
   - { registry: keep, file: extracts/keep.tsv, key: code }
   - { registry: media, file: extracts/media.tsv, key: code }
+  - { registry: schemas, file: extracts/schemas.tsv, key: code }
 ---
 # the garden's own rows
 """
+SCHEMAS = ('code\tlevel\tparent\tname\ttemplate\tmatches\tlinks\tversions\tage\tgap\n'
+           'bx\tschema\t\ta box\t\t\t\t\t\t36 h\n'
+           'blobs\tnode\tbx\tevery content once\t.blobs/{blake3}\t\ttrue\t\t\t\n'
+           'days\tnode\tbx\tby the day it was made\tDays/{day:yyyy-mm-dd}/{name}\t\ttrue\t\t\t\n')
 KEEP = ('code\tlevel\tname\tcovers\twithin\tfor\n'
         'precious\tcode\tkept against all\tdisk-fault site-loss malice decay key-loss\t365 d\tmedia:raw\n'
         'replaceable\tcode\tnone needed\t\t\t\n')
@@ -132,6 +138,7 @@ try:
     write('VOCAB.md', VOCAB)
     write('extracts/keep.tsv', KEEP)
     write('extracts/media.tsv', 'code\tlevel\tname\nraw\tclass\ta camera\'s raw file\n')
+    write('extracts/schemas.tsv', SCHEMAS)
     def gate():                                     # the walk's kind is used once the walk is written, below
         _rc, out = run(PY, 'core/check.py', '.')
         return [ln for ln in out.splitlines() if ln and not ln.startswith('core check') and '`procedure`' not in ln]
@@ -148,8 +155,17 @@ try:
           any("'flood' is no row of `risks`" in f for f in found) and any('no length of time' in f for f in found),
           found)
     write('extracts/keep.tsv', KEEP)
+    write('extracts/schemas.tsv', SCHEMAS.replace('Days/{day:yyyy-mm-dd}/{name}', 'Days/{day:yy}/{place}')
+          + 'stray\tnode\tnobody\tno schema\tX/{name}\t\tmaybe\t\t\t\n')
+    found = gate()
+    check("gate: a schema's node whose slot is no row of `layout_slots`, or in no form its slot has, a node of no "
+          "schema, and `links` that is not `true` are refused by name",
+          any("{place} names no slot" in f for f in found) and any("`day` is written in" in f for f in found)
+          and any("parent: 'nobody'" in f for f in found) and any("links: 'maybe'" in f for f in found), found)
+    write('extracts/schemas.tsv', SCHEMAS)
     write('VOCAB.md', VOCAB.replace('profiles: [storage, knowledge]', 'profiles: [knowledge]')
-          .replace('form: keep', 'form: class').replace('  - { registry: keep, file: extracts/keep.tsv, key: code }\n', ''))
+          .replace('form: keep', 'form: class').replace('form: schema', 'form: class')
+          .replace('  - { registry: keep, file: extracts/keep.tsv, key: code }\n', ''))
     found = gate()
     check("gate: a garden that does not take the storage profile has no risks of its own",
           any("storage profile's, which this garden does not take" in f for f in found), found)
@@ -226,6 +242,19 @@ try:
     check("reckon: `group` with a gap — two pictures 23 hours apart are one event, a third three days on another",
           rc == 0 and '2026-10-01T10:00:00Z–2026-10-02T09:00:00Z' in out and '2026-10-05T09:00:00Z' in out, out[-1200:])
 
+    bean('d-a', 'folder', 'part: { by: self, of: vol-a }', 'hold: { by: self, of: c-1, as: "IMG_1.CR2" }',
+         'hold: { by: self, of: c-2, as: "IMG_2.CR2", through: "vol-a#i1" }',
+         'hold: { by: self, of: c-2, as: "IMG_2 copy.CR2", through: "vol-a#i1" }',
+         'classify: { of: self, as: "schemas:bx" }')
+    rc, out = reading('layout', 'what: "the folder against its schema"\ninputs:\n'
+                                '  - { name: scheme, origin: { act: say }, type: kebab }\nsteps:\n'
+                                '  - { id: folders, op: select, kind: folder, where: [ { path: bean, "=": d-a } ] }\n'
+                                '  - { id: placed, op: layout, of: folders, scheme: { input: scheme } }\n',
+                      '--input', 'scheme=schemas')
+    check("reckon: `layout` — a folder a box's schema is said of: each content's blob and its day's name to link, read "
+          "from the garden's statements", rc == 0 and 'd-a · blobs · to link' in out and 'd-a · days · to link' in out,
+          out[-1200:])
+
     # ---- THE ASSET over a store
     import store as dmstore
     sp = os.path.join(T, 'cat.sqlite')
@@ -280,6 +309,105 @@ try:
     check("asset: `manifest` — a folder's tree as checksum lines, sorted, the day folder's path before each name",
           rc == 0 and out.startswith(B3['a'] + '  2026-10-01/IMG_0001.JPG\n' + B3['b'] + '  2026-10-01/IMG_0002.JPG\n'),
           out[-600:])
+
+    # ---- a box: one flat folder of blobs, and a schema of links to them, read from the store and made
+    box = os.path.join(T, 'box')
+    os.makedirs(os.path.join(box, 'Photos', '2026-10-01'))
+    S = dmstore.Store(sp, root=G)
+    S.being('vol-box', 'volume')
+    S.put('vol-box', 'read', {'id': 'scan', 'by': 'nas', 'from': 'vol-box', 'at': '2026-10-18T10:00:00+03:00'})
+    AB = 'vol-box#scan'
+    db1, db2 = formats.folder_id('vol-box', b'Photos'), formats.folder_id('vol-box', b'Photos/2026-10-01')
+    for f, parent, name in ((db1, 'vol-box', 'Photos'), (db2, db1, '2026-10-01')):
+        S.being(f, 'folder')
+        S.put(f, 'part', {'by': f, 'of': parent}, act=AB)
+        S.put(f, 'name', {'by': parent, 'of': f, 'as': name}, act=AB)
+    hs = {}
+    for nm, data in (('IMG_0001.JPG', b'abc'), ('IMG_0002.JPG', b'abcd')):
+        with open(os.path.join(box, 'Photos', '2026-10-01', nm), 'wb') as fh:
+            fh.write(data)
+        h = hs[nm] = formats.blake3_hex(data)
+        c = formats.content_id(h)
+        if not S.kind_of(c):
+            S.being(c, 'content')
+        S.put(c, 'name', {'by': 'blake3', 'of': c, 'as': h}, act=AB)
+        S.put(db2, 'hold', {'by': db2, 'of': c, 'as': nm}, act=AB)
+    S.close()
+    bean('box-schemas', 'document', 'classify: { of: "store:volume:vol-box", as: "schemas:bx" }')
+    BX = os.path.join('assets', 'storage', 'bin', 'box.py')
+    rc, out = run(PY, ST, 'layout', '--store', sp, '--of', 'vol-box', '--scheme', 'schemas', '--json')
+    j = json.loads(out[:out.rindex('}') + 1]) if rc == 0 and '}' in out else {}
+    check("box: `layout` of a box against the schema said of it — each content's blob and its day's name to link, the "
+          "names it holds now given by no node of it",
+          rc == 0 and j.get('box') and j['nodes'].get('blobs', {}).get('to link') == 2
+          and j['nodes'].get('days', {}).get('to link') == 2
+          and j['nodes'].get('(names no node gives)', {}).get('out of place') == 2, out[-1200:])
+    plan = os.path.join(T, 'plan.jsonl')
+    rc1, _ = run(PY, BX, 'plan', '--store', sp, '--of', 'vol-box', '--scheme', 'schemas', '--out', plan)
+    rc2, out2 = run(PY, BX, 'link', '--plan', plan, '--root', box, '--store', sp, '--of', 'vol-box')
+    blob = os.path.join(box, '.blobs', hs['IMG_0001.JPG'])
+    day = os.path.join(box, 'Days', '2026-10-01', 'IMG_0001.JPG')
+    first = os.path.join(box, 'Photos', '2026-10-01', 'IMG_0001.JPG')
+    check("box: `link` makes each blob of a name that holds it and each name the schema gives, all one inode — no "
+          "byte copied — and the blob read-only",
+          rc1 == 0 and rc2 == 0 and os.path.isfile(blob) and os.path.samefile(blob, day) and os.path.samefile(blob, first)
+          and not (os.stat(blob).st_mode & 0o222), out2[-800:])
+    rc, out = run(PY, BX, 'verify', '--root', box)
+    check("box: `verify` reads every blob's bytes against its name", rc == 0 and '2 blobs read: 0 not' in out, out[-400:])
+    rc, out = run(PY, ST, 'layout', '--store', sp, '--of', 'vol-box', '--scheme', 'schemas', '--json')
+    j = json.loads(out[:out.rindex('}') + 1]) if rc == 0 and '}' in out else {}
+    S = dmstore.Store(sp, root=G)
+    thr = S.db.execute("SELECT count(*) FROM v_hold WHERE t_through LIKE 'vol-box#i%'").fetchone()[0]
+    S.close()
+    check("box: read again, each blob and each day's name is in place, the names it held before stay, and every name "
+          "of one inode is held through the volume's one holding of it",
+          rc == 0 and j['nodes']['blobs']['in place'] == 2 and j['nodes']['days']['in place'] == 2
+          and j['nodes']['(names no node gives)']['out of place'] == 2 and thr == 6, (thr, out[-1000:]))
+    rc, out = run(PY, BX, 'link', '--plan', plan, '--root', box)
+    check("box: the same plan again makes nothing, and refuses nothing", rc == 0 and '"blobs": 0, "names": 0, "refused": 0'
+          in out, out[-400:])
+
+    # ---- the storage watcher: a live directory, its history in a box on another disk
+    sys.path.insert(0, os.path.join(ROOT, 'assets', 'storage', 'bin'))
+    import watch as WT
+    live, hist = os.path.join(T, 'live'), os.path.join(T, 'history')
+    os.makedirs(live)
+
+    def index(name):
+        p = os.path.join(T, name + '.sqlite')
+        db = sqlite3.connect(p)
+        db.execute('CREATE TABLE entry (path BLOB, type TEXT, size INTEGER, hash TEXT)')
+        for fn in sorted(os.listdir(live)):
+            data = open(os.path.join(live, fn), 'rb').read()
+            db.execute('INSERT INTO entry VALUES (?, ?, ?, ?)', (fn.encode(), 'f', len(data), formats.blake3_hex(data)))
+        db.commit()
+        db.close()
+        return p
+    empty = index('w0')
+    for fn, data in (('a.txt', b'one'), ('b.txt', b'b')):
+        open(os.path.join(live, fn), 'wb').write(data)
+    w1 = index('w1')
+    o1 = WT.pass_(empty, w1, live, hist, now=1_800_000_000)
+    open(os.path.join(live, 'a.txt'), 'wb').write(b'two')
+    w2 = index('w2')
+    o2 = WT.pass_(w1, w2, live, hist, now=1_800_000_100)
+    open(os.path.join(live, 'a.txt'), 'wb').write(b'three')
+    os.remove(os.path.join(live, 'b.txt'))
+    w3 = index('w3')
+    o3 = WT.pass_(w2, w3, live, hist, versions=2, now=1_800_000_200)
+    vers = sorted(os.listdir(os.path.join(hist, 'Versions', 'a.txt')))
+    check("watch: a pass says what was added, what changed under its name and what is gone, and keeps each content the "
+          "first time it is seen as a read-only blob of the history box",
+          len(o1['added']) == 2 and o1['kept'] == 2 and o2['changed'] == [b'a.txt'] and o2['kept'] == 1
+          and o3['gone'] == [b'b.txt'] and len(vers) == 3, (o1, o2, o3, vers))
+    check("...each name's versions are links to their blobs, and those past the cap are listed, never removed unasked",
+          len(o3['past the cap']) == 1 and o3['pruned'] == 0, o3)
+    o4 = WT.pass_(w3, w3, live, hist, versions=2, prune=True, now=1_800_000_300)
+    one = formats.blake3_hex(b'one')
+    check("...and with `prune` the version past the cap goes, and its blob with it, its last name gone; nothing else",
+          o4['pruned'] == 1 and not os.path.exists(os.path.join(hist, '.blobs', one))
+          and len(os.listdir(os.path.join(hist, 'Versions', 'a.txt'))) == 2
+          and os.path.exists(os.path.join(hist, '.blobs', formats.blake3_hex(b'b'))), o4)
 
     # ---- a container read as a volume
     try:

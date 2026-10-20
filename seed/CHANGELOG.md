@@ -251,6 +251,17 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.21** (2026-10-20, daftar v2.21.0, human-ratified rule-change) — **schemas, boxes and the storage
+  watcher.** MINOR: nothing a garden could write under core 2.20 is refused.
+  - profiles.yaml: the storage profile's table `layout_slots` (day, event, maker, found, within, name, blake3) and the
+    form `schema` (a schema said of a directory, its nodes: `template`, `matches`, `links`, `versions`, `age`; a
+    schema's `history` and `gap`).
+  - lines.yaml: the operation `layout` and the grouping `schemas`.
+  - core/storage.py (`Layout`, `belongs`, `unique_name`); bin/reckon.py (`layout`); core/law.py (a schema's rows);
+    assets/storage: `storage.py layout`, `box.py` (plan, link, verify), `watch.py` (a pass: added, changed, gone; the
+    history kept, capped, pruned at a word).
+  - MODEL.md (Storage), CHECKLIST.md, test/storage.py.
+
 - **daftar v2.20.3** (2026-10-20, code alone, core 2.20) — assets/storage/bin/storage.py `keepings`: a volume read in
   a container finds its container's disks by a query of its own; it shared the temporary table of the contents asked
   for, and a reading `--of` a container's volume stopped after the first two.

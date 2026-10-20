@@ -169,3 +169,85 @@ class Trees:
         if self.fingerprint(folder) is None:
             return None
         return formats.manifest((p, h, None) for p, h in self.walk(folder))
+
+
+# ------------------------------------------------------------------------------------------------ schemas
+import re as _re
+
+_SLOT = _re.compile(r'\{([a-z0-9]+)(?::([a-z-]+))?\}')
+
+
+class Layout:
+    """A node's template (the form `schema`): literal text and slots of `layout_slots`, read into the path a member's
+    facts give it. `facts` holds `day` (a `yyyy-mm-dd`), `event` (its first and last day), `maker`, `found` and
+    `within` (paths, bytes), `name` (bytes) and `blake3`; a slot whose fact is missing gives no path."""
+
+    def __init__(self, template):
+        self.template = str(template)
+        self.parts = []
+        pos = 0
+        for m in _SLOT.finditer(self.template):
+            if m.start() > pos:
+                self.parts.append(('lit', self.template[pos:m.start()].encode('utf-8')))
+            self.parts.append(('slot', m.group(1), m.group(2)))
+            pos = m.end()
+        if pos < len(self.template):
+            self.parts.append(('lit', self.template[pos:].encode('utf-8')))
+
+    def path(self, facts):
+        out = []
+        for p in self.parts:
+            if p[0] == 'lit':
+                out.append(p[1])
+                continue
+            _k, slot, form = p
+            v = facts.get(slot)
+            if v in (None, b'', ''):
+                return None
+            if slot == 'day':
+                d = str(v)
+                v = {'yyyy': d[:4], 'yyyy-mm': d[:7], 'yyyy-mm-dd': d[:10]}.get(form or 'yyyy-mm-dd', d)
+            elif slot == 'event':
+                first, last = v
+                v = first if first == last else f"{first}…{last}"
+            out.append(v if isinstance(v, bytes) else str(v).encode('utf-8'))
+        return b''.join(out)
+
+    @property
+    def folder(self):
+        """The literal start of the template, up to its first slot: where its members are kept (`Captured/`)."""
+        lit = b''
+        for p in self.parts:
+            if p[0] != 'lit':
+                break
+            lit += p[1]
+        return lit.rpartition(b'/')[0]
+
+
+def unique_name(name, blake3, taken):
+    """A member's name at its place: its own, else its name with `-` and eight digits of its BLAKE3 before its
+    extension, where another content holds it there already (`taken`: the names held there, by their contents)."""
+    other = taken.get(name)
+    if other is None or other == blake3:
+        return name
+    stem, dot, ext = name.rpartition(b'.')
+    return (stem + b'-' + blake3[:8].encode() + dot + ext) if dot and stem else name + b'-' + blake3[:8].encode()
+
+
+def nodes_of(rows, schema):
+    """[(code, Layout, row)] of a schema's nodes, in the scheme's order, from its rows."""
+    return [(str(r['code']), Layout(r['template']), r) for r in rows
+            if str(r.get('parent') or '') == schema and r.get('template')]
+
+
+def belongs(nodes, codes, box):
+    """The nodes a member belongs at: every node whose `matches` it holds in a box (`box`), else the first; a node with
+    no `matches` holds every member."""
+    out = []
+    for code, lay, row in nodes:
+        want = str(row.get('matches') or '').split()
+        if not want or set(want) & set(codes):
+            out.append((code, lay, row))
+            if not box:
+                break
+    return out

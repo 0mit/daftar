@@ -487,6 +487,14 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   fingerprint, named by the BLAKE3 of their manifest (formats.yaml `checksums`).
 - **Events.** The contents of a tree by their moments, a new event after a gap (`group … gap`, the grouping
   `events`): a `produce.at`, else a date in a name or in a folder's name.
+- **Schemas and boxes.** A directory's schema is a person's word (`classify` of the folder as a schema of a scheme
+  of the form `schema`): its nodes say where a member belongs by its facts — `{day:yyyy}/{day:yyyy-mm-dd}/{name}`,
+  `Apart/{within}/{name}` — the first node whose `matches` it holds. A box is a directory whose nodes are `links`: one
+  flat folder of blobs, each content once under its BLAKE3 (`.blobs/{blake3}`), and every node a schema of names, each
+  a hard link to its blob, so a schema takes no room and changing one moves no byte. A reading (`layout`) says what is
+  in place, what is out of place, and what a box still has to link; nothing is moved by it. A live directory, edited in
+  place, is never linked: the storage watcher reads it, says what was added, changed and gone, and keeps each content
+  the first time it is seen in a box on another disk, each name's earlier contents as its versions, capped.
 - **Transfers.** A copy, a move or a verification is a course on the profile's walk `walk-transfer` (queued, copying,
   verifying, done; paused; failed, stopped), of the being it fills, needing the dataset it is to hold and meeting the
   need when every content is found whole; its work is done by runs. `assets/storage/bin/storage.py` and `transfer.py`
