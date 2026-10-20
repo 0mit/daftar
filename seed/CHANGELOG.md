@@ -251,6 +251,12 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v2.21.1** (2026-10-20, code alone, core 2.21) — a course kept in a store is read as a bean's is (one
+  universe): bin/seq.py `where` reads it from the store a host keeps where no bean holds it (`stored_view`), and
+  bin/leads.py lists such a course at a step that is not final as a case for the gardener — a transfer waiting for its
+  disks on daftard's leads — but a run on `walk-run`, which the machine keeps, as it keeps a routine's clause.
+  test/storage.py.
+
 - **core 2.21** (2026-10-20, daftar v2.21.0, human-ratified rule-change) — **schemas, boxes and the storage
   watcher.** MINOR: nothing a garden could write under core 2.20 is refused.
   - profiles.yaml: the storage profile's table `layout_slots` (day, event, maker, found, within, name, blake3) and the
