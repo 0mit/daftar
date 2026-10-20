@@ -251,6 +251,9 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v2.23.2** (2026-10-20, code alone, core 2.23) — bin/run.py `adopt` and `find`: a process whose user the
+  machine names none (a container's, its uid only) is kept by the uid's number, where adopting it raised. test/run.py.
+
 - **daftar v2.23.1** (2026-10-20, code alone, core 2.23) — bin/run.py `adopt`: a process of another user is kept by its
   name alone, never its arguments, which are not ours to keep and can hold a secret under a flag no mask knows (`-w
   <password>`); one's own is kept masked as before. test/run.py.

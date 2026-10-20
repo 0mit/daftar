@@ -300,6 +300,8 @@ try:
     own = R.shown_argv(4242)
 finally:
     R.uid_of, R.comm_of, R.cmdline = saved
+check("adopt: a process whose user the machine names none (a container's) is kept by the user's number",
+      R.user_name(os.getuid()) == R.LOGIN and R.user_name(2 ** 31 - 7) == str(2 ** 31 - 7), R.user_name(2 ** 31 - 7))
 check("adopt: another user's process is kept by its name alone — `-w <password>` is no flag a mask knows; one's own "
       "is kept masked where a flag's name says secret", other == ['odoo'] and own == ['odoo', '-w', 'not-a-real-one',
                                                                                       '--db_password=***'], (other, own))

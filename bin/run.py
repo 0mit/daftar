@@ -318,6 +318,14 @@ def mask_argv(argv, secret_idx=()):
     return out
 
 
+def user_name(uid):
+    """A user's name, or its number where the machine names none (a container's own users)."""
+    try:
+        return pwd.getpwuid(uid).pw_name
+    except KeyError:
+        return str(uid)
+
+
 def shown_argv(pid):
     """The command of an adopted process as it is kept: masked where it is this user's own; of another user's process,
     its name alone — its arguments are not ours to keep, and a secret can stand in them under any flag (`-w <password>`)."""
@@ -1217,7 +1225,7 @@ def adopt(pid=None, *, match=None, name=None, of=None, key=None, by=None, check=
     rid = mint()
     d = f'{reg.path}/{rid}'
     by = by or os.environ.get('DAFTAR_BY') or LOGIN
-    user = pwd.getpwuid(uid_of(pid)).pw_name
+    user = user_name(uid_of(pid))
     cgr = cgroup_root()
     cg = f'{cgr}/{rid}' if cgr else None
     fd = None
@@ -1286,7 +1294,7 @@ def find(rx, show_args=False):
             if t is None:
                 continue
             u = uid_of(p)
-            out.append({'pid': p, 'ticks': t, 'user': pwd.getpwuid(u).pw_name if u is not None else '?', 'comm': cm,
+            out.append({'pid': p, 'ticks': t, 'user': user_name(u) if u is not None else '?', 'comm': cm,
                         'age': age(started_at(t)), **({'args': ' '.join(mask_argv(a))} if show_args else {})})
     return out
 
