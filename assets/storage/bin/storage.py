@@ -283,10 +283,15 @@ def keepings(S, W, scheme=None, of=None, now=None, each=None):
         """The codes the rows that read a path suggest for a name its folder `f` holds."""
         if f not in paths:
             p = formats.path_of(S.db, f)
-            paths[f] = dmgroup_text(p) if p is not None else None
+            if p is None and f in P:                 # a store read before core 2.22: the path walked up the parents
+                chain, x = [], f
+                while x in P:
+                    chain.append(P[x][1])
+                    x = P[x][0]
+                p = '/'.join(reversed(chain))
             if len(paths) > 500_000:
                 paths.clear()
-                paths[f] = dmgroup_text(p) if p is not None else None
+            paths[f] = dmgroup_text(p) if p is not None else None
         p = paths[f]
         return groupings.path_codes(path_rows, f"{p}/{name}" if p else name)
     hosts, P = W.hosts(), S.parent()

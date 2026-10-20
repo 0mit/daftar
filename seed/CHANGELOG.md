@@ -251,6 +251,11 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v2.22.1** (2026-10-20, code alone, core 2.22) — `bin/import.py --models <model>`: a source imported already
+  is read again for the models named alone, its rows known by the reading kept — a store imported before core 2.22
+  gains each folder's path without a second reading of everything else; assets/storage `keepings` walks a folder's
+  path up its parents where a store holds none. test/io.py.
+
 - **core 2.22** (2026-10-20, daftar v2.22.0, human-ratified rule-change) — **the design's loose ends: the full path,
   where a course stands, a dataset and a content's safety on the board.** MINOR: nothing a garden could write under
   core 2.21 is refused.

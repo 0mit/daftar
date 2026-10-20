@@ -177,6 +177,28 @@ print(json.dumps({'done': done, 'rows': S.count(), 'beings': q("SELECT kind, COU
   'lines': I.account.lines(each=False)}, default=str))
 '''
 
+MODELS = r'''
+imp = importlib.import_module('import')
+import store
+S = store.open_store('cat')
+paths = lambda: S.db.execute("SELECT COUNT(*) FROM v_name nm JOIN being v ON v.n = nm.b_by AND v.kind = 'volume' "
+                             "WHERE instr(nm.t_as, '/') > 0").fetchone()[0]
+others = lambda: [S.db.execute(f'SELECT COUNT(*) FROM "v_{v}"').fetchone()[0] for v in S.verbs() if v != 'name'] + \
+    [S.db.execute("SELECT COUNT(*) FROM v_name WHERE instr(t_as, '/') = 0").fetchone()[0]]
+before, others_before = paths(), others()
+gone = S.db.execute("DELETE FROM v_name WHERE instr(t_as, '/') > 0 AND b_by IN (SELECT n FROM being WHERE kind = 'volume')").rowcount
+S.db.commit()
+act = {'in': 'vol-1', 'id': 'scan', 'by': 'nas', 'from': 'vol-1', 'at': '2026-10-18T11:00:00+03:00', 'through': 'scan (test)'}
+skipped = imp.Import('.', 'file-tree', keep='store', store=S).source(sys.argv[1], volume='vol-1', carrier='disk-1', act=act)
+I = imp.Import('.', 'file-tree', keep='store', store=S, only=sys.argv[3:] or ['path'])
+done = I.source(sys.argv[1], volume='vol-1', carrier='disk-1', act=act)
+I.done()
+known = sorted({S.db.execute("SELECT ref FROM act WHERE n = ?", (k,)).fetchone()[0] for (k,) in S.db.execute(
+    "SELECT nm.known FROM v_name nm JOIN being v ON v.n = nm.b_by AND v.kind = 'volume' WHERE instr(nm.t_as, '/') > 0")})
+print(json.dumps({'before': before, 'gone': gone, 'back': paths(), 'others_before': others_before, 'others': others(),
+                  'done': done, 'skipped': skipped, 'known': known}, default=str))
+'''
+
 BOTHWAYS = r'''
 imp = importlib.import_module('import')
 import store
@@ -461,6 +483,17 @@ try:
     check("...a second reading keeps every row once, and its act is added to each it read: when it was last seen is "
           "read from the acts, never stored", j is not None and j['done'] is True and j['rows'] == rows1 + 2
           and j['also'] >= 7 and all(len(a) == 2 for _v, _r, a in j['c']), (j, r.out[-800:]))
+
+    # ---- a newer reader's model, read again from a source imported already (`--models`)
+    j, r = py(MODELS, idx, B3A)
+    check("models: a store imported before its reader gave each folder's path — the path rows taken out — is read again "
+          "for the model `path` alone: the paths are back, known by the reading kept, and nothing else changes; read "
+          "again whole, the source is imported already and skipped",
+          j is not None and j['gone'] >= 1 and j['back'] == j['before'] and j['others'] == j['others_before']
+          and j['done'] is True and j['skipped'] is False and j['known'] == ['vol-1#scan'], (j, r.out[-1200:]))
+    j, r = py(MODELS, idx, B3A, 'nope')
+    check("...a model the reader does not give is refused by name", j is None and 'gives no model nope' in r.out,
+          r.out[-600:])
 
     # ---- export: the holdings back out
     r = grow.run(PY, 'bin/daftar.py', 'export', 'file-tree-file', Y, '--from', 'store:cat', '--format', 'csv', cwd=G)
