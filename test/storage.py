@@ -15,7 +15,7 @@ when the course is done.
 
 Run: python3 test/storage.py   (0 = green)
 """
-import json, os, shutil, sqlite3, subprocess, sys, tempfile
+import json, os, shutil, socket, sqlite3, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -172,7 +172,11 @@ try:
     write('VOCAB.md', VOCAB)
 
     # ---- the garden's statements: three disks, two places, a key held twice, two names of one inode
-    bean('nas', 'host')
+    me = socket.gethostname().lower().split('.')[0]
+    write('beans/nas.md', f"---\nbean: nas\nkind: host\ntitle: \"nas\"\nsummary: \"nas, invented.\"\nstatements:\n"
+                          f"  - say: {{ by: sam, at: now }}\n  - name: {{ by: dns, of: self, as: \"{me}.example.org\" }}\n"
+                          f"details:\n  roots:\n    test:\n      system: unix-filesystem\n      at: \"{me}:{T}\"\n"
+                          f"  stores:\n    cat:\n      at: \"root:test/cat.sqlite\"\n      form: sqlite\n---\nnas, invented.\n")
     bean('disk-a', 'host', 'part: { by: self, of: nas }', 'be: { by: self, at: "geohash:tnke13", as: location }',
          'hold: { by: self, of: vol-a }')
     bean('disk-b', 'host', 'be: { by: self, at: "geohash:tnke13", as: location }', 'hold: { by: self, of: vol-b }')
@@ -475,6 +479,14 @@ try:
           and need and need[0].get('from') == 'disk-a', (cid, rcs, j))
     check("...a move the walk does not offer is refused, as is any after a final step",
           rc_bad == 2 and 'goes on to' in out_bad and rc_after == 2 and 'has ended' in out_after, (out_bad, out_after))
+    rc, waiting = run(PY, TR, 'start', '--store', sp, '--to', 'vol-s', '--dataset', 'b' * 64, '--note', 'waits')
+    waiting = waiting.strip().splitlines()[-1]
+    rc, out = run(PY, 'bin/leads.py', '--json')
+    got = [x for x in (json.loads(out) if rc == 0 and out.strip().startswith('[') else []) if x.get('course') == waiting]
+    check("leads: a transfer kept in a store this host keeps, at a step that is not final, is a case for the gardener — "
+          "and the course that is done is none", got and got[0]['step'] == 'queued' and got[0]['for'] == 'sam'
+          and 'walk-transfer' in got[0]['why'] and not any(x.get('course') == cid for x in json.loads(out)),
+          out[-1200:])
     check("...and when it is done its need is met, and how far it came is its whole", rc_done == 0 and met
           and met[0].get('of') == f'vol-s#{cid}-need' and j[0].get('done') == 6, (met, j))
 finally:

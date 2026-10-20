@@ -50,6 +50,29 @@ import seq as dmseq  # noqa: E402 — where a course stands, read from its moves
 HEAD = re.compile(r'^## (.+?)(?: · |$)')
 
 
+
+def stored_courses(root):
+    """(being, course) of each course a store this host keeps holds of a being in no bean, on any walk but `walk-run`."""
+    out = []
+    try:
+        import store as dmstore
+        kept = dmstore.kept_here(root)
+    except Exception:   # noqa: BLE001 — a garden that keeps no store
+        return out
+    for name, (path, _row, _why) in sorted(kept.items()):
+        if not path or not os.path.isfile(path):
+            continue
+        try:
+            S = dmstore.Store(path, root=root, create=False, readonly=True, name=name)
+        except Exception:   # noqa: BLE001
+            continue
+        if 'be' not in S.verbs():
+            continue
+        for being, sid, roles in S.statements_of('be'):
+            if roles.get('as') == 'order' and roles.get('at') not in (None, 'walk-run'):
+                out.append((being, sid))
+    return out
+
 def pending(root):
     """[(id, class, status)] of log/pending.md's entries, as each writes them: `## <id> · …`, `- class: X …`,
     `- status: …`. What a fenced block holds is the file's own example of an entry (the seed's "Entry shape"), never an
@@ -137,6 +160,23 @@ def read(root=ROOT):
             elif gardener:
                 leads.append(dict(base, **{'for': gardener, 'why': f"{bid} waits at {w['step']}, whose part "
                                                                    f"({w.get('by') or 'unsaid'}) nobody took{late}"}))
+
+    # CASES KEPT IN A STORE: a course of a being kept only in a store this host keeps (a transfer on walk-transfer),
+    # read the same way; a run (a course on `walk-run`) is the machine's, as a routine's clause is, and is no lead
+    for bid, course in stored_courses(root):
+        if any(x.get('about') == bid and x.get('course') == course for x in leads):
+            continue
+        try:
+            w = dmseq.where(root, bid, course)
+        except Exception:   # noqa: BLE001
+            continue
+        if not w.get('step') or w.get('final'):
+            continue
+        late = ', past its usual time' if w.get('overdue') is True else ''
+        if gardener:
+            leads.append({'kind': 'case', 'about': bid, 'course': course, 'step': w['step'], 'walk': w.get('walk'),
+                          'since': w.get('at'), 'overdue': w.get('overdue') is True, 'for': gardener,
+                          'why': f"{bid} waits at {w['step']} of {w.get('walk')}{late}"})
 
     # OBLIGATIONS: what falls due within its notice, read by bin/stale.py (the one reader of what falls due); bound
     # on the party who makes the payment the clause asks

@@ -1040,9 +1040,35 @@ def core_view(bean, root=None):
     return lines.view(b, G) if b is not None and not b.unread else None
 
 
+def stored_view(bean, root=None):
+    """A being kept in a store this host keeps and in no bean, read as its bean would be (core/lines.py `view`): its
+    courses and their moves among its lines. None where no store here keeps it (one universe: MODEL.md, The store)."""
+    from core import engine, lines
+    _L, G = core(root)
+    try:
+        import store as dmstore
+        kept = dmstore.kept_here(root or ROOT)
+    except Exception:                                  # noqa: BLE001 — a garden that keeps no store
+        return None
+    for name, (path, _row, _why) in sorted(kept.items()):
+        if not path or not os.path.isfile(path):
+            continue
+        try:
+            S = dmstore.Store(path, root=root or ROOT, create=False, readonly=True, name=name)
+        except Exception:                              # noqa: BLE001 — a store not read here keeps nothing for it
+            continue
+        row = S.db.execute('SELECT kind, title FROM being WHERE id = ?', (bean,)).fetchone()
+        if row:                                        # its own statement named as a bean names it: by its id
+            own = lambda v: v.split('#', 1)[1] if isinstance(v, str) and v.startswith(bean + '#') else v
+            st = [{verb: {k: own(v) for k, v in roles.items()}} for verb, roles, _acts in S.get(bean)]
+            b = engine.Bean(bean, header={'kind': row[0], 'title': row[1] or bean, 'statements': st})
+            return lines.view(b, G)
+    return None
+
+
 def _doc(root, bean):
     if runs_core(root):
-        fm = core_view(bean, root)
+        fm = core_view(bean, root) or stored_view(bean, root)
         if fm is None:
             raise ValueError(f"no bean '{bean}' here")
         return fm
@@ -1107,6 +1133,11 @@ def where(root, bean, course, now=None):
     'moves'} — read from its moves and its walk, never stored."""
     fm = _doc(root or ROOT, bean)
     tr = (fm.get('courses') or {}).get(course) if isinstance(fm.get('courses'), dict) else None
+    if not isinstance(tr, dict) and runs_core(root or ROOT):   # a course a store keeps of a being its bean holds too
+        sv = stored_view(bean, root or ROOT) or {}
+        tr = (sv.get('courses') or {}).get(course) if isinstance(sv.get('courses'), dict) else None
+        if isinstance(tr, dict):
+            fm = sv
     if not isinstance(tr, dict):
         raise ValueError(f"bean '{bean}' has no course '{course}'")
     ref = tr.get('walk') or {}
