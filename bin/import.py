@@ -13,7 +13,9 @@
 (`python` on Windows.) Also `--format <format>` where a crosswalk takes several, `--from <layer>` (`world`, the
 default for a reading; `words` for a document a person gave), `--act '<json>'` for the roles of the act (`in`, the
 being it is kept in; `id`; and the verb's own roles), `--root <dir>` with `--volume` for the files `exiftool` read, and
-`--named [<field>=]<namespace>` for a field read `named: given`: the namespace of the garden's own to look it up in.
+`--named [<field>=]<namespace>` for a field read `named: given`: the namespace of the garden's own to look it up in,
+and `--models <model>[,<model>]` for only those models of a reader — a source imported already is read again for them,
+its rows known by the reading kept (the `path` of each folder, which core 2.22's `file-tree` gives).
 
 ONE MACHINERY (MODEL.md, Imports and exports). A source is read in its FORMAT (core/law/formats.yaml), its records given
 by a READER where the format alone cannot say them, each record written into the statements its CROSSWALK says
@@ -95,7 +97,7 @@ class Import:
     then `.done()`; `.record(model, rec)` keeps one record (a copier's, one at a time)."""
 
     def __init__(self, root=ROOT, crosswalk=None, *, keep=None, store=None, acts=None, reader_args=None, fmt=None,
-                 source_layer=None, judge_every=10000, law=None, write=False, named=None, setwise=True):
+                 source_layer=None, judge_every=10000, law=None, write=False, named=None, setwise=True, only=None):
         from core.check import garden_law
         self.root = root
         self.law = law or garden_law(root, root if os.path.isfile(os.path.join(root, 'core', 'law', 'core.yaml')) else None)
@@ -118,6 +120,12 @@ class Import:
         for n in names:
             c = Carry(self.law, n, names=self.named, named_as=None, schemes=schemes, given_names=named)
             self.carry[str(c.row.get('model'))] = c
+        self.only = [str(m) for m in only or []]         # only these models: a source kept already read again for them
+        if self.only:
+            odd = [m for m in self.only if m not in self.carry]
+            if odd:
+                raise Refused(f"`{crosswalk}` gives no model {', '.join(odd)}: it gives {', '.join(sorted(self.carry))}")
+            self.carry = {m: c for m, c in self.carry.items() if m in self.only}
         self.fmt, self.reader_args = fmt, dict(reader_args or {})
         self.acts, self.made = dict(acts or {}), {}       # verb -> roles given; (verb, source) -> the act's ref
         self.layer = source_layer
@@ -292,7 +300,9 @@ class Import:
     # -------------------------------------------------------------------------------------------- keeping
     def source(self, path, fmt=None, act=None, **reader_args):
         """Import one source whole: `act` the roles of its reading (its `in`, `id`, `from`, `through`, `at`), else the
-        import's. A source whose reading is kept already, in the same form, was imported: it is said, and skipped."""
+        import's. A source whose reading is kept already, in the same form, was imported: it is said, and skipped — but
+        where the import carries only some models (`only`), which a newer law gives (a folder's `path`): those are read
+        from it again, known by the reading kept, and nothing else is written."""
         saved = dict(self.reader_args)
         self.reader_args.update(reader_args)
         self._source = (path, act)
@@ -302,7 +312,7 @@ class Import:
                 for verb in verbs:
                     n = len(self.already)
                     self.act(verb)
-                    if len(self.already) > n:
+                    if len(self.already) > n and not self.only:
                         return False
             done = self._setwise(path, fmt)                # the crosswalk run set-wise, inside the store's engine
             if done is True:
@@ -928,7 +938,7 @@ def main(argv):
                                                                       else []))
         return dmstore.main(['import', into.split(':', 1)[1]] + names)
     flags = {'--into', '--path', '--format', '--from', '--act', '--root', '--volume', '--carrier', '--judge-every',
-             '--named'}
+             '--named', '--models'}
     pos, i = [], 0
     while i < len(argv):
         if argv[i] in flags:
@@ -957,7 +967,8 @@ def main(argv):
         imp = Import(ROOT, pos[0], keep='store' if S else 'bean', store=S, acts=acts, reader_args=rargs,
                      fmt=_arg(argv, '--format'), source_layer=_arg(argv, '--from'),
                      judge_every=int(_arg(argv, '--judge-every', '10000')),
-                     named=dict(x.split('=', 1) if '=' in x else ('*', x) for x in _arg(argv, '--named', many=True)))
+                     named=dict(x.split('=', 1) if '=' in x else ('*', x) for x in _arg(argv, '--named', many=True)),
+                     only=[m for x in _arg(argv, '--models', many=True) for m in x.split(',') if m])
         if S is not None:
             with S.loading():                                 # its indexes made once, after every source is in
                 for src in pos[1:]:
