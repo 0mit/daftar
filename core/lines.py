@@ -36,7 +36,7 @@ sys.path.insert(0, os.path.join(ROOT, 'bin'))
 import parse as dmparse  # noqa: E402 — the one reader of a coding
 
 KEBAB = re.compile(r'^[a-z0-9]+(-[a-z0-9]+)*$')
-FLAGS = ('exit', 'resumes', 'final', 'digits', 'back', 'convention')   # what a form writes `true`, a tool reads True
+FLAGS = ('exit', 'resumes', 'final', 'machine', 'digits', 'back', 'convention')   # what a form writes `true`, a tool reads True
 HEADER_PATHS = ('kind', 'bean', 'title', 'summary', 'tags', 'details')   # a reading's path starts here, or at a verb
 DERIVED_KEYS = ('book',)          # what the view reads beside a statement, never written: a payment's bookings (part 12b)
 SIGNS = {'=': 'is', '∈': 'in', '≥': 'at_least', '≤': 'at_most', '∃': 'exists', '∄': 'absent'}    # the core's sign

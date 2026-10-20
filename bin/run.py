@@ -84,16 +84,16 @@ sys.path.insert(0, HERE)
 import store as dmstore  # noqa: E402  the registry is the store `runs`
 WALK = 'walk-run'
 STEPS = {   # the walk, as mappings/walk-run.md says it
-    'queued': {'to': ['starting']},
-    'starting': {'to': ['running']},
-    'running': {'to': ['stopping', 'done']},
-    'stopping': {'to': ['stopped', 'done']},
+    'queued': {'to': ['starting'], 'machine': True},
+    'starting': {'to': ['running'], 'machine': True},
+    'running': {'to': ['stopping', 'done'], 'machine': True},
+    'stopping': {'to': ['stopped', 'done'], 'machine': True},
     'paused': {'resumes': True, 'reasons': ['asked']},
     'done': {'final': True},
     'failed': {'exit': True, 'final': True,
                'reasons': ['start-failed', 'exit-code', 'signal', 'check-failed', 'resource-gone', 'raised']},
     'stopped': {'exit': True, 'final': True, 'reasons': ['asked', 'timeout']},
-    'lost': {'exit': True, 'reasons': ['supervisor-gone', 'reboot', 'exit-unseen']},
+    'lost': {'exit': True, 'machine': True, 'reasons': ['supervisor-gone', 'reboot', 'exit-unseen']},
 }
 STEP_SAYS = {   # what is done at each step, as the walk's mapping says it
     'queued': 'asked for: it waits for its key while another run holds it, or to be started',
@@ -160,7 +160,7 @@ def setup(root, by, owner):
         w = r.get('walk') or {}
         if list(r.get('to') or []) != d.get('to', []):
             differ.append(f"{st}: leads to {r.get('to')}, the standard to {d.get('to', [])}")
-        for k in ('final', 'exit', 'resumes'):
+        for k in ('final', 'exit', 'resumes', 'machine'):
             if (str(w.get(k)) == 'true') != bool(d.get(k)):
                 differ.append(f'{st}: {k}')
         if list(w.get('reasons') or []) != d.get('reasons', []):

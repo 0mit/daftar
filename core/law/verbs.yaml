@@ -89,10 +89,10 @@ verbs:
 
   # ---------------------------------------------------------------- what a being needs, does and holds
   - verb: need
-    meaning: "to require something to function: how badly is a position on the necessity square. An item of a checklist is one (v1 part 12b): what is asked for (`of`, in words where no being says it), who provides it (`from`, a being or the word for a party), needed `while` a reading holds (absent, always), met by what `meet`s it; the needs of one bean that share an `as` are alternatives, any one of which meets it"
+    meaning: "to require something to function: how badly is a position on the necessity square — said of none, it blocks: what needs it waits until it is met; `contingent` of it, it does not block; `impossible` of it, it cannot be met. An item of a checklist is one (v1 part 12b): what is asked for (`of`, in words where no being says it, or an amount of what its provider gives: a price, hours, a window's length), who provides it (`from`, a being or the word for a party), needed `while` a reading or a clause holds (absent, always), met by what `meet`s it; the needs of one bean that share an `as` are alternatives, any one of which meets it"
     roles:
       by:      { shape: being }
-      of:      { shape: [being, statement, text], many: true }
+      of:      { shape: [being, statement, text, quantity], many: true }
       from:    { shape: [being, text] }
       through: { shape: row, table: protocols }
       as:      { shape: text }

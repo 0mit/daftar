@@ -251,6 +251,22 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.23** (2026-10-20, daftar v2.23.0, human-ratified rule-change) — **plans on three axes: a need's strength,
+  an amount needed, a step the machine acts at, and another's material kept to its node.** MINOR: nothing a garden
+  could write under core 2.22 is refused.
+  - verbs.yaml: `need`'s strength on the necessity square (said of none it blocks; `contingent` of it, it does not;
+    `impossible` of it, it cannot be met); `need … of` an amount, from its provider, `while` a reading or a clause.
+  - lines.yaml: the operation `axes` (feasibility, efficiency, necessity; a judge's weighing; the marks `optimum here,
+    now` and `wasteful weight`); the step form's `machine`.
+  - profiles.yaml: the form `schema` — in a box, a member holding a code that sets apart only at the nodes that match
+    such a code.
+  - core/courses.py (the axes, pure), bin/reckon.py (`axes`), core/lines.py, bin/seq.py and bin/leads.py (a machine's
+    step no lead within its usual time; a run's walk marks its machine's steps in place of leads naming `walk-run`),
+    bin/run.py and assets/storage transfer.py (their walks' machine steps), core/storage.py (`belongs`), assets/storage
+    (`layout`: a copy's source read from its `make`, kept as bytes by the store — every copy's source was missed
+    before).
+  - MODEL.md, test/courses.py, test/leads.py, test/storage.py.
+
 - **daftar v2.22.1** (2026-10-20, code alone, core 2.22) — `bin/import.py --models <model>`: a source imported already
   is read again for the models named alone, its rows known by the reading kept — a store imported before core 2.22
   gains each folder's path without a second reading of everything else; assets/storage `keepings` walks a folder's

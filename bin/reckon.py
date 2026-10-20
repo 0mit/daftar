@@ -2039,6 +2039,72 @@ class Reckoner:
         self.lines.append(f"  λmax ≈ {dmseq.rounded(lam, 4)}, CI ≈ {dmseq.rounded(ci, 4)}, CR ≈ {dmseq.rounded(cr, 3)}")
         return {a: V(w[a], 'one', None, True) for a in crit}
 
+    def op_axes(self, s):
+        """Each member on the three axes (core/courses.py): its needs, what needs it, what it remedies and the failures it
+        makes possible, read from the garden's statements at the moment asked; with a weighing, its sum and its mark."""
+        from core import courses
+        from core.inforce import InForce
+        members = [m.bean for m in self.arg(s, 'of', 'set')]
+        weights_ = None
+        if s.get('weighing'):
+            ref = s['weighing']
+            bean, key = (ref.split(':', 1) if ':' in ref else (self.bean, ref))
+            entry = (self.g.bean(bean).get('weighings') or {}).get(key)
+            if not isinstance(entry, dict):
+                raise Refused(f"step {s['id']}: no weighing '{ref}'")
+            crit, w, _lam, _ci, cr = weights(entry)
+            missing = [c for c in courses.CRITERIA if c not in crit]
+            if missing:
+                raise Refused(f"step {s['id']}: the weighing {ref} weighs no {', '.join(missing)}: the axes are "
+                              f"{', '.join(courses.CRITERIA)}")
+            weights_ = {c: float(w[c]) for c in crit}
+        F = InForce(self.g.root)
+        stmts = {v: list(self._statements(v)) for v in ('need', 'meet', 'contingent', 'impossible', 'repair', 'fail',
+                                                        'possible')}
+
+        def ref(b, x):
+            return x.split('#')[-1] if isinstance(x, str) and ('#' not in x or x.split('#')[0] == b) else x
+
+        met = {(b, str(r.get('of')).split('#')[-1]) if '#' not in str(r.get('of')) else
+               tuple(str(r.get('of')).split('#', 1)) for b, r in stmts['meet']}
+        soft = {(b, ref(b, r.get('of'))) for b, r in stmts['contingent']}
+        never = {(b, ref(b, r.get('of'))) for b, r in stmts['impossible']}
+        possible = {(b, ref(b, r.get('of'))) for b, r in stmts['possible']}
+
+        def held(b, r):
+            got = F.holds(b, r)
+            return got is not False
+
+        def need(b, r):
+            of = r.get('of') if isinstance(r.get('of'), list) else [r.get('of')]
+            amount = next((x for x in of if isinstance(x, dict) and 'count' in x), None)
+            return {'id': r.get('id'), 'bean': b, 'blocking': (b, r.get('id')) not in soft,
+                    'met': (b, r.get('id')) in met, 'impossible': (b, r.get('id')) in never,
+                    'meetable': r.get('from') not in (None, 'unknown') and (b, r.get('id')) not in never,
+                    'in_force': held(b, r), 'amount': amount}
+        facts = []
+        for m in members:
+            own = [need(b, r) for b, r in stmts['need'] if b == m and r.get('id')]
+            by = [need(b, r) for b, r in stmts['need'] if b != m and r.get('id')
+                  and m in [x for x in (r.get('of') if isinstance(r.get('of'), list) else [r.get('of')]) if isinstance(x, str)]]
+            repairs = sum(1 for b, r in stmts['repair'] if str(r.get('by')) == m)
+            risks = sum(1 for b, r in stmts['fail'] if str(r.get('through')) == m and (b, r.get('id')) in possible)
+            facts.append({'id': m, 'needs': own, 'needed_by': by, 'repairs': repairs, 'risks': risks})
+        rows = courses.axes(facts, weights_)
+        out = {}
+        for r in rows:
+            amounts = ', '.join(f"{dmseq.show(a)} {u}" for u, a in sorted(r['amounts'].items())) or 'none'
+            self.lines.append(f"  {r['id']}: feasibility {dmseq.show(r['feasibility'])}, efficiency "
+                              f"{dmseq.show(r['efficiency'])} (yield {dmseq.show(r['yield'])} × cost "
+                              f"{dmseq.show(r['cost'])}), necessity {dmseq.show(r['necessity'])}"
+                              + (f", sum {r['sum']:.3f}" if r['sum'] is not None else '')
+                              + f" · amounts {amounts} · {r['evidence']}")
+            out.setdefault(r['mark'] or ('unmarked' if weights_ else 'no weighing: no mark'), []).append(
+                next(x for x in self.arg(s, 'of', 'set') if x.bean == r['id']))
+        self.found_axes = getattr(self, 'found_axes', {})
+        self.found_axes[s['id']] = rows
+        return out
+
     def op_conservation(self, s):
         found = _flatten(walk(self.g, None, s['walk']))
         steps = [x for x, _w in found if isinstance(x, dict)]
@@ -2421,7 +2487,7 @@ class Reckoner:
             if r.get('of') and r.get('as') is not None:
                 if r.get('by') == 'blake3':
                     blake[str(r['of'])] = str(r['as'])
-                else:
+                elif '/' not in str(r['as']):              # a folder's own name: its volume's name of it is its path
                     names.setdefault(str(r['of']), formats.unescape(str(r['as'])))
         for b, r in self._statements('hold'):
             if isinstance(r.get('of'), str) and r.get('as') is not None:
@@ -2436,6 +2502,14 @@ class Reckoner:
                 continue
             nodes = storage.nodes_of(rows, codes[0])
             box = any(str(r.get('links') or '') == 'true' for _c, _l, r in nodes)
+            apart = set()                                 # the codes that set apart, of every class scheme (`class`)
+            for name, srow in G['knowledge'].schemes.items():
+                if isinstance(srow, dict) and srow.get('form') == 'class':
+                    try:
+                        apart |= {f"{name}:{x.get('code')}" for x in G['knowledge'].rows(name)
+                                  if str(x.get('apart') or '') == 'true'}
+                    except (KeyError, OSError):
+                        continue
             kids = collections.defaultdict(list)
             for f, p in parent.items():
                 kids[p].append(f)
@@ -2452,7 +2526,7 @@ class Reckoner:
                 dm = re.search(r'(?<!\d)((?:19|20)\d\d)-(\d\d)-(\d\d)(?!\d)', path.decode('utf-8', 'replace'))
                 facts = {'day': str(at)[:10] if at else (dm.group(0) if dm else None), 'maker': by or 'unknown',
                          'name': name, 'blake3': blake.get(c)}
-                for code, lay, row in storage.belongs(nodes, said.get(c, []), box):
+                for code, lay, row in storage.belongs(nodes, said.get(c, []), box, apart):
                     want = lay.path(facts)
                     how = 'in place' if want == path or (box and held.get(want) == c) else \
                         'to link' if box and want else 'out of place'

@@ -1176,7 +1176,8 @@ def where(root, bean, course, now=None):
         if f is not None and exact(u['measure'].get('count')) is not None and law.quantity_of(u['measure'].get('unit')) == 'duration':
             over = Fraction(since, 1000) > exact(u['measure']['count']) * f
     return {'step': last.get('step'), 'at': dmcal.shown(last.get('at')), 'since': since, 'by': st.get('by'), 'party': party,
-            'usually': u, 'overdue': over, 'final': st.get('final') is True, 'moves': len(mv), 'walk': wid}
+            'usually': u, 'overdue': over, 'final': st.get('final') is True, 'machine': st.get('machine') is True,
+            'moves': len(mv), 'walk': wid}
 
 
 CLAUSE_STEPS = [{'id': 'ahead', 'as': 'not yet due'}, {'id': 'due', 'as': 'due, and not yet met'},
@@ -1197,7 +1198,7 @@ def walk_steps(root, walk):
     for s in wfm.get('steps') or []:
         if isinstance(s, dict) and s.get('id'):
             out.append({k: s.get(k) for k in ('id', 'as', 'by', 'usually') if s.get(k) is not None} |
-                       {k: True for k in ('final', 'exit', 'resumes') if s.get(k) is True})
+                       {k: True for k in ('final', 'exit', 'resumes', 'machine') if s.get(k) is True})
     return out
 
 
@@ -1228,7 +1229,8 @@ def courses(root, bean, now=None):
         wid = w.get('walk') or (tr.get('walk') if isinstance(tr.get('walk'), str) else None)
         out.append({'source': 'course', 'id': cid, 'walk': wid, 'steps': walk_steps(root, wid) if wid else [],
                     'step': w.get('step'), 'at': w.get('at'), 'since': w.get('since'), 'by': w.get('by'),
-                    'party': w.get('party'), 'overdue': w.get('overdue'), 'final': w.get('final'), 'needs': needs,
+                    'party': w.get('party'), 'overdue': w.get('overdue'), 'final': w.get('final'),
+                    'machine': w.get('machine'), 'needs': needs,
                     'words': tr.get('note') if isinstance(tr, dict) else None})
     out += clause_courses(root, bean, items, now)
     out += need_courses(items)

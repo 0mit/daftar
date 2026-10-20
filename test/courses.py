@@ -127,9 +127,29 @@ statements:
   - need:       { id: a-window, by: self, of: "an hour with the office's load off" }
   - contingent: { of: a-window }
   - meet:       { by: ali, of: batteries }
+  - need:       { id: price, by: self, of: { count: "4000", unit: XTS }, from: ali }
+  - repair:     { id: fixes, by: self, of: "ups-1#runtime-2026101012" }
+  - fail:       { id: load-drop, by: ups-1, as: "the load dropped during the swap", through: battery-change }
+  - possible:   { of: load-drop }
+  - weigh:      { id: weights, by: sam, to: "the UPS's options", weighing: { criteria: [ { name: feasibility, what: "it can be done" }, { name: efficiency, what: "it yields more than it costs" }, { name: necessity, what: "something needs it now" } ], pairwise: [ { a: necessity, b: feasibility, judged: "3" }, { a: necessity, b: efficiency, judged: "3" }, { a: feasibility, b: efficiency, judged: "1" } ] } }
+  - reckon:     { id: options, reading: { what: "the UPS's options read on the three axes", steps: [ { id: m, op: select, kind: design }, { id: ax, op: axes, of: m, weighing: weights } ] } }
 ---
 A task.
 ''')
+    write(G, 'beans/battery-change-later.md', '''---
+bean: battery-change-later
+kind: design
+title: "battery-change-later — the same, next year"
+statements:
+  - say:        { by: sam, at: now }
+  - own:        { by: sam, of: self }
+  - need:       { id: a-window, by: self, of: "a weekend with the office closed" }
+  - need:       { id: price, by: self, of: { count: "4400", unit: XTS }, from: ali }
+---
+Another option.
+''')
+    ups = open(os.path.join(G, 'beans/ups-1.md'), encoding='utf-8').read()
+    write(G, 'beans/ups-1.md', ups.replace('---\nThe UPS.', '  - need:    { id: renewed, by: self, of: [battery-change] }\n---\nThe UPS.'))
     g = subprocess.run([PY, 'core/check.py'], cwd=G, capture_output=True, text=True, encoding='utf-8', errors='replace')
     check("...and every bean of it passes the gate as written", g.returncode == 0, (g.stdout + g.stderr)[-1500:])
     j = None
@@ -168,7 +188,18 @@ A task.
     check("...and holding again once a `repair` answers the failure", len(ups) == 1 and ups[0].get('step') == 'holds',
           (ups, p.stderr[-600:]))
     task = (j.get('battery-change') or [])
-    check("needs alone are no course: a being with needs and no walk, clause or standing need has none", task == [], task)
+    check("needs alone are no course: a being with needs and no walk, clause or standing need has none",
+          all(c.get('source') != 'course' for c in task), task)
+    r = subprocess.run([PY, 'bin/reckon.py', 'battery-change:options'], cwd=G, capture_output=True, text=True,
+                       encoding='utf-8', errors='replace')
+    out = r.stdout + r.stderr
+    check("axes: each option on feasibility, efficiency and necessity with its evidence — the change feasible (its "
+          "blocking needs met or with a provider), needed now (the UPS's need of it, unmet), its cost its price over one "
+          "more than the risk it makes possible; the later one half feasible (a window nobody provides) and needed by "
+          "nothing — weighed by the judge: the change `optimum here, now`, the later one `wasteful weight`",
+          r.returncode == 0 and 'battery-change: feasibility 1, efficiency 0.5 (yield 1 × cost 0.5), necessity 1' in out
+          and 'battery-change-later: feasibility 0.5, efficiency 0 (yield 0 × cost 10/11), necessity 0' in out and 'necessity 0' in out
+          and 'optimum here, now' in out and 'wasteful weight' in out and '4000 XTS' in out, out[-2500:])
     import importlib
     sys.path[:0] = [os.path.join(G, 'bin'), G]
     seq = importlib.import_module('seq')

@@ -321,6 +321,14 @@ operations:
     u_rule: none
     takes: { weighing: { required: "true", in: { key_of: weighings } } }
     meaning: "the weights of a weighing's criteria (the principal eigenvector) and its consistency ratio"
+  - op: axes
+    gives: groups
+    exact: "false"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the members: beings, each read with what it needs, what needs it and what it meets" }
+      weighing: { in: { key_of: weighings }, meaning: "the judge's weighing of the three axes, its criteria `feasibility`, `efficiency` and `necessity`; absent, each axis is said alone and no member is marked" }
+    meaning: "each member read on three axes, each a score from 0 to 1 beside the evidence it rests on, read at the moment asked. FEASIBILITY: the share of its blocking needs met or meetable — a `meet` of it stands, or a provider is said and nothing says it `impossible` — and 0 where one is impossible. NECESSITY: what needs it now — the needs of others whose `of` is it, in force (`while`) and unmet at that moment, a blocking one 1 and another ½ — as a share of the most any member has. EFFICIENCY: what it yields against what it costs — its yield (those needs, in force or not, by the same counts, and each failure it is said to remedy, a `repair` of it by the member, 1) as a share of the most any member yields, times its cost: in each unit its needs ask an amount in, the least amount of the members that ask one over its own, the mean of those, and that over one more than the failures it makes possible (`possible` of a `fail` through it) — never two units added without a rate someone measured, and each amount shown beside. With the weighing, each member's weighted sum, and its mark: `optimum here, now` for the member with the greatest sum whose feasibility is 1 and whose necessity is more than 0, and `wasteful weight` for one whose necessity is 0, or whose yield is 0 while it costs something. Read each time, never stored: a mark orders what is shown, and never decides"
   - op: used-within
     gives: value
     exact: "true"
@@ -703,6 +711,9 @@ forms:
       final:
         in: ["true"]
         meaning: "an end nothing follows: a move after it is refused. An end that is not final may be left, and the case taken up again"
+      machine:
+        in: ["true"]
+        meaning: "the machine that keeps the course acts at this step, not a person's hands: nobody is told while the step is within its `usually`, and past it, whoever keeps the being"
       reasons:
         in: any
         meaning: "the reasons a move into this step may cite, as a list of kebab words, each once. Its form is the walk's to judge"

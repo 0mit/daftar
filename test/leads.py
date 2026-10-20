@@ -11,7 +11,7 @@ says, and `--for` reads one person's alone.
 
 Run: python3 test/leads.py   (0 = green)
 """
-import json, os, shutil, sys, tempfile
+import datetime, json, os, shutil, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'test'))
@@ -173,12 +173,38 @@ A machine.
         '  - measure: { id: clock-offset, of: self, as: duration, value: { count: "45", unit: s }, at: 2026-10-01 }\n'
         '  - fail:    { id: clock-drift, by: self, as: "the clock ran slow", through: clock-offset, at: 2026-10-01 }\n'
         '  - repair:  { by: sam, of: clock-drift }\n')))
+    write(G, 'mappings/walk-print.md', '''---
+bean: walk-print
+kind: procedure
+title: "walk-print — how a print job goes"
+statements:
+  - say:  { by: sam, at: now }
+  - step: { id: printing, as: "the printer prints", to: [printed], walk: { machine: "true", usually: { of: time, measure: { count: "1", unit: h } } } }
+  - step: { id: printed, as: "the pages are out", walk: { final: "true" } }
+---
+The steps of a print job.
+''')
+    recent = (datetime.datetime.now().astimezone() - datetime.timedelta(minutes=5)).isoformat(timespec='seconds')
+    for bid, at in (('print-slow', '2026-10-01T10:00:00+03:00'), ('print-now', recent)):
+        write(G, f'beans/{bid}.md', f'''---
+bean: {bid}
+kind: design
+title: "{bid} — a print job"
+statements:
+  - say:    {{ by: sam, at: now }}
+  - own:    {{ by: sam, of: self }}
+  - answer: {{ by: p-1a2b3c4d, of: self, as: keeping }}
+  - be:     {{ id: job, by: self, at: walk-print, as: order }}
+  - move:   {{ by: sam, of: self, through: job, at: ["{at}", "walk-print#printing"] }}
+---
+A print job.
+''')
     write(G, 'beans/box-finding.md', host.format(bean='box-finding', more=(
         '  - fail:    { id: no-firewall, by: self, as: "no firewall is active", at: 2026-09-11 }\n')))
     r = grow.run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: a repair walk, three repairs, a ratify grant and an open session',
                  '--body', '- action: RULE-CHANGE — VOCAB.md adds the kind procedure; wrote [[p-1a2b3c4d]], [[walk-repair]], '
                  '[[repair-waiting]], [[repair-nobody]], [[repair-done]], [[sam]], [[session-open]], [[session-closed]], [[flat-lease]], '
-                 '[[box-slow]], [[box-mended]] and [[box-finding]]', '- ratified_by: sam', cwd=G)
+                 '[[box-slow]], [[box-mended]], [[box-finding]], [[walk-print]], [[print-slow]] and [[print-now]]', '- ratified_by: sam', cwd=G)
     check("the garden holds them, through its gate", r.returncode == 0, r.out[-900:])
 
     grow.run('git', 'worktree', 'add', '-q', '-b', 'session/open-work', os.path.join(T, 'open-work'), cwd=G)
@@ -215,6 +241,9 @@ A machine.
           sorted((x['for'], x.get('clause'), x.get('side'), x.get('owed_by')) for x in o) ==
           [('p-1a2b3c4d', 'rent-due', 'pays', None), ('sam', 'rent-due', 'owed', ['p-1a2b3c4d'])]
           and all(x.get('due') == soon for x in o), o)
+    check("leads: a step the machine acts at (`machine`) is nobody's within its usual time, and past it the keeper's",
+          not by('case', 'print-now') and [x['for'] for x in by('case', 'print-slow')] == ['p-1a2b3c4d']
+          and by('case', 'print-slow')[0]['overdue'] is True, (by('case', 'print-now'), by('case', 'print-slow')))
     hl = [x for x in leads if x.get('kind') == 'health']
     check("leads: a failure a reading shows, not yet repaired, is the keeper's — and one repaired, or a finding with no "
           "reading behind it, is nobody's", [(x['for'], x['about'], x['fail']) for x in hl] == [('p-1a2b3c4d', 'box-slow', 'clock-drift')]
