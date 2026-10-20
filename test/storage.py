@@ -371,6 +371,43 @@ try:
     check("box: the same plan again makes nothing, and refuses nothing", rc == 0 and '"blobs": 0, "names": 0, "refused": 0'
           in out, out[-400:])
 
+    # ---- the full path beneath a volume (core 2.22): imported, then read by a pattern row over the whole path
+    vocab_paths = VOCAB.replace("files:\n", "  - { scheme: names, classifies: \"what a name says\", holding: extract, licence: "
+                                "CC0-1.0, publisher: the gardener, url: \"https://example.org/names\", levels: [ { level: "
+                                "pattern } ], neighbours: none, sources: extracts/names.tsv, form: pattern }\nfiles:\n  - { "
+                                "registry: names, file: extracts/names.tsv, key: code }\n")
+    write('VOCAB.md', vocab_paths)
+    write('extracts/names.tsv', 'code\tlevel\tparent\tname\ttemplate\treads\tsuggests\tmatch\n'
+                                'dcim\tpattern\t\ta camera\'s folder, anywhere above\tDCIM\tpath\tmedia:raw\tword\n')
+    lst = os.path.join(T, 'vol-p.jsonl')
+    with open(lst, 'w', encoding='utf-8') as fh:
+        for rec in ({'path': 'Shoot', 'type': 'd'}, {'path': 'Shoot/DCIM', 'type': 'd'},
+                    {'path': 'Shoot/DCIM/100X', 'type': 'd'},
+                    {'path': 'Shoot/DCIM/100X/frame.jpg', 'type': 'f', 'size': 3, 'hash': B3['e']},
+                    {'path': 'Shoot/other.jpg', 'type': 'f', 'size': 3, 'hash': B3['f']}):
+            fh.write(json.dumps(rec) + '\n')
+    rc, out = run(PY, 'bin/import.py', 'file-tree', lst, '--volume', 'vol-p', '--carrier', 'disk-a', '--into', 'store:cat',
+                  '--path', sp, '--act', json.dumps({'in': 'vol-p', 'id': 'scan', 'by': 'nas', 'from': 'vol-p',
+                                                     'at': '2026-10-20T10:00:00+03:00', 'through': 'scan (test)'}))
+    S = dmstore.Store(sp, root=G)
+    deep = formats.folder_id('vol-p', b'Shoot/DCIM/100X')
+    got = formats.path_of(S.db, S.db.execute('SELECT n FROM being WHERE id = ?', (deep,)).fetchone()[0]) \
+        if S.kind_of(deep) else None
+    own = S.db.execute(f"SELECT count(*) FROM v_name WHERE {formats.OWN_NAME}").fetchone()[0]
+    S.close()
+    check("path: a listing imported keeps each folder's path beneath its volume, the volume's name of it "
+          "(`Shoot/DCIM/100X`), beside the name its parent gives it", rc == 0 and got == 'Shoot/DCIM/100X' and own >= 3,
+          (got, own, out[-1200:]))
+    rc, out = run(PY, ST, 'keepings', '--store', sp, '--scheme', 'keep', '--of', 'vol-p', '--json')
+    j = json.loads(out[:out.rindex('}') + 1]) if rc == 0 and '}' in out else {}
+    codes = {c['content']: c['code'] for c in j.get('contents') or []}
+    check("path: a pattern row that reads the path suggests a class for a file whose folder's word is anywhere above it "
+          "(`DCIM`, two folders up), read again by the store each time; a file beside it, under no such word, none",
+          codes.get(formats.content_id(B3['e'])) == 'keep:precious' and codes.get(formats.content_id(B3['f'])) is None,
+          (codes, out[-1200:]))
+    write('VOCAB.md', VOCAB)
+    os.remove(os.path.join(G, 'extracts', 'names.tsv'))
+
     # ---- the storage watcher: a live directory, its history in a box on another disk
     sys.path.insert(0, os.path.join(ROOT, 'assets', 'storage', 'bin'))
     import watch as WT

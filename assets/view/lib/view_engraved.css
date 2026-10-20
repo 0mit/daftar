@@ -118,3 +118,18 @@ th[aria-sort=descending] .eg-sort::after{content:" ▼";font-size:.7em}
 .eg-account{margin-block:.3em .7em}
 .eg-account-says{font-weight:600;margin-block:.2em .3em}
 .eg-link{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline dotted}
+/* the archetype `course` (view_course.js): one course in one line — its steps along the reader's line, the one it stands
+   at marked, the ways out and pauses apart after them */
+.eg-courses{list-style:none;margin:0;padding:0}
+.eg-courses>li{margin-block-end:6px}
+.eg-course{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:4px 8px;border-inline-start:3px solid var(--line,#cfd8e2)}
+.eg-course.eg-late{border-inline-start-color:#f85149}
+.eg-course.eg-done{opacity:.75}
+.eg-course-what{font-weight:600}
+.eg-steps{display:flex;flex-wrap:wrap;gap:2px;list-style:none;margin:0;padding:0}
+.eg-steps-off{padding-inline-start:6px;border-inline-start:1px dashed var(--line,#cfd8e2)}
+.eg-step{font-size:.8em;padding:1px 6px;border:1px solid var(--line,#cfd8e2);border-radius:9px;color:var(--muted,#5a6a7b)}
+.eg-step.eg-here{background:var(--accent,#2f6fdf);border-color:var(--accent,#2f6fdf);color:#fff;font-weight:600}
+.eg-step.eg-exit{border-style:dotted}
+.eg-course-when,.eg-course-who,.eg-course-needs,.eg-course-none{font-size:.88em;color:var(--muted,#5a6a7b)}
+.eg-course-words{font-size:.88em}

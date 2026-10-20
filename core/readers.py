@@ -25,9 +25,9 @@ from core.formats import Record, Refused, escape, folder_id, content_id, local_m
 # ================================================================================================ a model's records
 def file_tree(records, volume, carrier=None, **_):
     """A listing of paths (path, type, size, hash, and where it says them ino and nlink) as the records of the volume,
-    its folders, its files and its contents (formats.yaml, reader `file-tree`): a file of an inode of more than one name
-    a `link`, held through the volume's one holding of the inode, an `inode`, given once. Each content once, after every
-    file that holds it."""
+    its folders, each folder's path beneath the volume, its files and its contents (formats.yaml, reader `file-tree`): a
+    file of an inode of more than one name a `link`, held through the volume's one holding of the inode, an `inode`,
+    given once. Each content once, after every file that holds it."""
     if carrier:
         yield Record({'id': volume, 'carrier': carrier}, at='the volume', model='volume')
     contents, inodes = {}, set()
@@ -41,7 +41,9 @@ def file_tree(records, volume, carrier=None, **_):
         parent, _, name = path.rpartition(b'/')
         pid = folder_id(volume, parent) if parent else volume
         if typ == 'd':
-            yield Record({'id': folder_id(volume, path), 'parent': pid, 'name': name}, at=rec.at, model='folder')
+            fid = folder_id(volume, path)
+            yield Record({'id': fid, 'parent': pid, 'name': name}, at=rec.at, model='folder')
+            yield Record({'folder': fid, 'volume': volume, 'path': path}, at=rec.at, model='path')
             continue
         h = rec.get('hash')
         c = content_id(h) if h else 'unknown'
@@ -88,6 +90,7 @@ def copies(records, volume, known=None, ref=None, carrier=None, **_):
             known.add(p)
             yield Record({'id': folder_id(volume, p), 'parent': folder_id(volume, up) if up else volume, 'name': nm},
                          at=rec.at, model='folder')
+            yield Record({'folder': folder_id(volume, p), 'volume': volume, 'path': p}, at=rec.at, model='path')
         holder = folder_id(volume, parent) if parent else volume
         c = content_id(rec.get('h'))
         if ('content', c) not in known:                  # the content it holds, by its handle: a being of its kind
@@ -144,7 +147,7 @@ def file_tree_sql(db, src, volume, carrier=None, **_):
     if not {'path', 'type'} <= set(cols):
         raise Refused("the listing holds no table `entry` of paths and their types")
     has = lambda c: c if c in cols else 'NULL'
-    for t in ('ft_volume', 'ft_folder', 'ft_file', 'ft_link', 'ft_inode', 'ft_content_now'):
+    for t in ('ft_volume', 'ft_folder', 'ft_path', 'ft_file', 'ft_link', 'ft_inode', 'ft_content_now'):
         db.execute(f'DROP TABLE IF EXISTS temp.{t}')
     db.execute("CREATE TABLE IF NOT EXISTS temp.ft_content (id TEXT PRIMARY KEY, blake3 TEXT, size TEXT)")
     db.execute("CREATE TEMP TABLE ft_volume (id TEXT, carrier TEXT)")
@@ -155,6 +158,8 @@ def file_tree_sql(db, src, volume, carrier=None, **_):
     linked = "(hash IS NOT NULL AND hash != '' AND ino IS NOT NULL AND CAST(nlink AS INTEGER) > 1)"
     db.execute(f"CREATE TEMP TABLE ft_folder AS SELECT ft_fid(p) AS id, ft_fid(ft_parent(p)) AS parent, ft_name(p) AS name "
                f"FROM ({sel}) WHERE type = 'd'")
+    db.execute(f"CREATE TEMP TABLE ft_path AS SELECT ft_fid(p) AS folder, ? AS volume, p AS path FROM ({sel}) "
+               f"WHERE type = 'd'", (volume,))
     db.execute(f"CREATE TEMP TABLE ft_file AS SELECT ft_fid(ft_parent(p)) AS folder, CASE WHEN hash IS NULL OR hash = '' "
                f"THEN 'unknown' ELSE 'c-' || substr(hash, 1, 24) END AS content, ft_name(p) AS name, hash, size "
                f"FROM ({sel}) WHERE type = 'f' AND NOT {linked}")
@@ -173,7 +178,8 @@ def file_tree_sql(db, src, volume, carrier=None, **_):
             n = db.execute(f'SELECT COUNT("{c}") FROM {src}.entry').fetchone()[0]
             if n:
                 missed[c] = n
-    return {'volume': 'temp.ft_volume', 'folder': 'temp.ft_folder', 'file': 'temp.ft_file', 'inode': 'temp.ft_inode',
+    return {'volume': 'temp.ft_volume', 'folder': 'temp.ft_folder', 'path': 'temp.ft_path', 'file': 'temp.ft_file',
+            'inode': 'temp.ft_inode',
             'link': 'temp.ft_link', 'content': 'temp.ft_content'}, missed
 
 

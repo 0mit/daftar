@@ -13,6 +13,9 @@ ups         # an uninterruptible power supply: the device's ordinary word, which
 walk-run    # the language's own walk of a run (bin/run.py `setup` writes it into a garden's mappings, core 2.11): a
             # garden's mapping of that name took it from the tool — the standard walk by the operator's word, 2026-10-18
             # ("yes we move them", runs into daftar)
+walk-transfer  # the language's own walk of a transfer (assets/storage transfer.py `setup` writes it into a garden's
+               # mappings, core 2.19): a garden's mapping of that name took it from the tool, as `walk-run` — the
+               # operator's word, 2026-10-20 ("Allow `walk-transfer`"), as the guard asked
 runs        # an ordinary word, and the language's own tool's (programme item 2 makes runs daftar's `bin/run.py`, its
             # registry the store `runs`): a garden that names a being after the tool took the word from it — the
             # operator's word, 2026-10-18 ("Allow `runs`"), as the guard asked

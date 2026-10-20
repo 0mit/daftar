@@ -267,7 +267,11 @@ A name is a statement: the namespace gives it.
   on it a `be` as order, and where it stands is read from its `move`s (`python3 bin/daftar.py seq`). A job a tool
   starts is a run, a course of what it acts on along the standard walk `walk-run` (queued, starting, running,
   stopping or paused, then done, failed, stopped or lost), held by its process's identity and kept in the store
-  `runs` (`python3 bin/daftar.py run`; `run setup` writes the walk into a garden). Each line's own
+  `runs` (`python3 bin/daftar.py run`; `run setup` writes the walk into a garden). **A course is drawn one way**
+  wherever a page draws one (the view's archetype `course`): its walk's steps in their order, the one it stands at,
+  since when, who acts, overdue, its needs met or not and blocking or not — a course written, a clause's occurrence
+  (due on its day, met when a payment `settles` it) and a standing need (holding, or crossed while a `fail` of it has
+  no `repair`), each read as a course by bin/seq.py `courses` and never written as moves. Each line's own
   structure is a value in a form of core/law/lines.yaml, and rule `line` judges it. A region of a line (`extent`) and a
   repetition along one (`recurrence`, each of its places `at` with a time of day where it names one, `5T17:45`) are
   forms of core/law/measures.yaml; how well a value is known is inside it (`u`,
@@ -429,7 +433,9 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
 - **Names, inodes and trees.** A file is a folder holding a content under its name (`hold … as`). Two names of one
   inode hold it through the volume's one holding of it (`hold … through`), which is the room it takes, counted once:
   a listing that says each file's inode and how many names it has gives them so (the `file-tree` reader's `link` and
-  `inode`).
+  `inode`). A folder's **path** beneath its volume is the volume's name of it (`name: { by: <volume>, of: <folder>,
+  as: <path> }`), one statement a folder, the path its id is minted from; a file's path is its folder's joined to its
+  own name, read without walking up `part`.
   A volume's carrier is a disk, or a content that holds it — an archive, an image — read as a volume like any other.
   A tree's **manifest** is the checksum lines of its files (formats.yaml `checksums`), sorted by path; a **dataset** is
   the content of a tree's manifest, named by its BLAKE3: what two folders hold alike is one dataset, read and never
@@ -511,7 +517,9 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   journalled write. `fit` groups members by the most specific row their text fits, and mines what no row knows: a
   counter's runs and the positions nobody holds, a date in every calendar whose days it names. A row `suggests` classes,
   `marks` the folder a file's name speaks for, and applies only `within` a whole or `beside` siblings of a code. It
-  takes the whole text, a `part` of it or a `word` in it (`match`), and may be read for what it suggests alone (`only`),
+  takes the whole text, a `part` of it or a `word` in it (`match`) — a holding's name, a folder's, a note, or its
+  `path` beneath its volume, so a folder's word anywhere above a file suggests its class, read again by the store
+  each time its rows change — and may be read for what it suggests alone (`only`),
   making no group; a width `4+` is a least width, a counter padded to a width it outgrows.
 - **Classes.** A scheme of the form `class` holds codes that may stand for a being (`work:<org>`), some `apart`.
   `inherit` reads a member's codes: those said of it; else those said of its nearest whole up `part` and of each

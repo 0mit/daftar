@@ -538,6 +538,14 @@
     function tagsOf(tags) {
       return tags && (tags.value || []).length ? h`<p class="eg-tags" data-fact="header:tags">${t.join(tags.value.map(function (x) { return h`<span class="eg-tag">${w.text.show(x)}</span>`; }), ' ')}</p>` : '';
     }
+    // WHERE IT STANDS: each course of the being — a course written, a clause's occurrence, a standing need — drawn by the
+    // archetype `course` (view_course.js), the one way a course is drawn
+    function stands() {
+      var cs = data.stands || [];
+      if (!cs.length || !root.daftarCourse) return '';
+      return h`<section class="eg-row eg-stands"><h4>${t.say('sheet-stands')}</h4><ol class="eg-courses">${
+        cs.map(function (c) { return h`<li>${root.daftarCourse.line(t, c)}</li>`; })}</ol></section>`;
+    }
     function draw() {
       n = 0;
       var hd = data.header || {}, title = hd.title || {}, summary = hd.summary, tags = hd.tags;
@@ -546,7 +554,7 @@
         ? h`<div class="eg-sheet-head">${title.may ? h`<label class="eg-field" data-fact="header:title"><span class="eg-role-name">${labels.title || word('header', 'title')}</span> ${w.text.edit('header.title', title.value === data.bean ? '' : (title.value || ''), {placeholder: data.title})}<span class="eg-err" data-err-fact="header:title"></span></label>` : h`<h3>${w.text.show(named)}</h3>`}
             ${tags ? (tags.may ? h`<label class="eg-field" data-fact="header:tags"><span class="eg-role-name">${labels.tags || word('header', 'tags')}</span> ${w.text.edit('header.tags', (tags.value || []).join(t.say('sheet-tags-sep')))}<span class="eg-err" data-err-fact="header:tags"></span></label>` : tagsOf(tags)) : ''}
             ${summary ? (summary.may ? h`<label class="eg-field" data-fact="header:summary"><span class="eg-role-name">${labels.summary || word('header', 'summary')}</span> ${w.text.edit('header.summary', summary.value || '', {lines: true})}<span class="eg-err" data-err-fact="header:summary"></span></label>` : h`<p class="eg-summary">${w.text.show(summary.value)}</p>`) : ''}</div>${details()}${heldEdit()}`
-        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}${tagsOf(tags)}</div>${contact()}${details()}${readings()}`;
+        : h`<div class="eg-sheet-head"><h3 data-fact="header:title">${w.text.show(named)}</h3>${summary && summary.value ? h`<p class="eg-summary" data-fact="header:summary">${w.text.show(summary.value)}</p>` : ''}${tagsOf(tags)}</div>${contact()}${details()}${stands()}${readings()}`;
       // a verb whose statements are each shown beneath the one they are `of` (a clause beneath what it asks) has no row of
       // its own: it is added there
       var ownRows = data.rows.filter(function (r) {

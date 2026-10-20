@@ -251,6 +251,19 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.22** (2026-10-20, daftar v2.22.0, human-ratified rule-change) — **the design's loose ends: the full path,
+  where a course stands, a dataset and a content's safety on the board.** MINOR: nothing a garden could write under
+  core 2.21 is refused.
+  - formats.yaml, crosswalks.yaml: the readers `file-tree` and `copies` give each folder's path beneath its volume (the
+    model `path`), written as the volume's name of the folder (`file-tree-path`).
+  - profiles.yaml: the pattern's `reads: path`; the archetype `course`, the one way a course is drawn, and a table
+    column's `stands: <walk>`; the storage profile's aspects `its-dataset` and `its-safety`.
+  - core/readers.py, core/formats.py (`OWN_NAME`, `path_of`), core/groupings.py (`path_codes`), bin/reckon.py
+    (`inherit` by a holding's path), bin/group.py and assets/storage (a folder's own name; the path read by `layout`
+    and `keepings`), bin/seq.py (`courses`: a course written, a clause's occurrences, a standing need), assets/view
+    (view_course.js; the table's column, the sheet's courses).
+  - MODEL.md, CONTRIBUTING.md, test/courses.py, test/io.py, test/storage.py.
+
 - **daftar v2.21.1** (2026-10-20, code alone, core 2.21) — a course kept in a store is read as a bean's is (one
   universe): bin/seq.py `where` reads it from the store a host keeps where no bean holds it (`stored_view`), and
   bin/leads.py lists such a course at a step that is not final as a case for the gardener — a transfer waiting for its

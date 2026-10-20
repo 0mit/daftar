@@ -232,7 +232,9 @@ open(d + '/v4.jsonl', 'w').write(''.join(json.dumps(r) + '\n' for r in rows4))
 l4s, l4e = load(d + '/v4.sqlite', d + '/l4set.sqlite'), load(d + '/v4.jsonl', d + '/l4each.sqlite', setwise=False)
 holds = sorted((r.get('by'), r.get('as'), r.get('through'), i) for b in ('vol-2', 'd-' + __import__('hashlib').sha256(b'vol-2\0A').hexdigest()[:16])
                for v, r, _a in l4s.get(b) for i in [r.get('id') if r.get('id', '').startswith('i') else None] if v == 'hold')
-print(json.dumps({'same': x == y, 'text': z == x and t == x, 'rows': {k: len(v) for k, v in x.items()},
+paths = sorted((ids_b, r[1]) for r in a.db.execute("SELECT b_of, t_as FROM v_name WHERE b_by = (SELECT n FROM being "
+                 "WHERE id = 'vol-2')") for ids_b in [a.db.execute("SELECT id FROM being WHERE n = ?", (r[0],)).fetchone()[0]])
+print(json.dumps({'same': x == y, 'text': z == x and t == x, 'rows': {k: len(v) for k, v in x.items()}, 'paths': paths,
                   'links': holds, 'links_same': dump(l4s) == dump(l4e),
                   'sums': bool(w.get('hold')) and all(u.get(k) == w.get(k) for k in ('hold', 'part', 'name', 'being')),
                   'diff': [k for k in set(x) | set(y) | set(z) | set(t) if not (x.get(k) == y.get(k) == z.get(k) == t.get(k))],
@@ -439,6 +441,10 @@ try:
           j is not None and j['same'] and j['indexes'] and j['rows'].get('hold', 0) == 6 and j['rows'].get('measure') == 2, (j, r.out[-1500:]))
     check("...and the same listing in text — JSON lines, a CSV — read once into a table and imported set-wise gives the "
           "same rows again", j is not None and j['text'], j and j.get('diff'))
+    check("...each folder named by its volume with its path beneath it (`A/B`), one statement a folder; a folder at the "
+          "volume's top named once, its path its name; set-wise and record by record alike",
+          j is not None and j['paths'] == sorted([[folder_id('vol-2', b'A'), 'A'], [folder_id('vol-2', b'A/B'), 'A/B']]),
+          j and j.get('paths'))
     check("...and a tree's manifest (`checksums`) imported through `file-tree` is the tree its index is: the same "
           "beings, folders, names and holdings", j is not None and j['sums'], j)
     check("...and a listing that says each file's inode and names: two names of one inode held through the volume's one "

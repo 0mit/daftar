@@ -633,6 +633,16 @@ def line(group, fields, writers=None):
 
 
 # ------------------------------------------------------------------------------------------------ classes
+def path_codes(rows, path):
+    """The codes a holding's path suggests (the form `pattern`, `reads: path`): those of every row reading the path whose
+    template it fits, each row once — a folder's word anywhere above a file is evidence, as each folder's name is."""
+    out = []
+    for r in rows:
+        if r.reads == 'path' and r.suggests and r.template.match(path) is not None:
+            out += [c for c in r.suggests if c not in out]
+    return out
+
+
 def inherit(being, said, wholes, suggested=None, apart=None, fits=None, scheme=None, limit=4096):
     """[(code, where it came from, through)] of `being` in one class scheme:
       said(b)       -> the codes said of b (a `classify` in a bean)

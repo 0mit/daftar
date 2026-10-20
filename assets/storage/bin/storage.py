@@ -29,7 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 GARDEN = os.environ.get('DAFTAR_GARDEN') or os.getcwd()
 sys.path[:0] = [ROOT, os.path.join(ROOT, 'bin')]
 import parse as dmparse  # noqa: E402,F401 — UTF-8 on stdout and stderr
-from core import formats, storage  # noqa: E402
+from core import formats, groupings, storage  # noqa: E402
 
 SIZE = "CAST(json_extract(CAST(m.q_value AS TEXT), '$.count') AS INTEGER)"
 
@@ -145,7 +145,7 @@ class Store:
         """{folder n: (parent n, name)}: every folder named by the folder or the volume it is part of."""
         if self._parent is None:
             self._parent = {of: (by, nm) for of, by, nm in self.db.execute(
-                "SELECT b_of, b_by, t_as FROM v_name WHERE t_by IS NULL AND b_by IS NOT NULL")}
+                f"SELECT b_of, b_by, t_as FROM v_name WHERE {formats.OWN_NAME}")}
         return self._parent
 
     def volume_of(self, f):
@@ -276,6 +276,19 @@ def keepings(S, W, scheme=None, of=None, now=None, each=None):
             if len(fitted) > 2_000_000:
                 fitted.clear()
         return fitted[key]
+    path_rows = [r for r in L.rows if r.reads == 'path'] if L is not None else []
+    paths = {}
+
+    def path_suggests(f, name):
+        """The codes the rows that read a path suggest for a name its folder `f` holds."""
+        if f not in paths:
+            p = formats.path_of(S.db, f)
+            paths[f] = dmgroup_text(p) if p is not None else None
+            if len(paths) > 500_000:
+                paths.clear()
+                paths[f] = dmgroup_text(p) if p is not None else None
+        p = paths[f]
+        return groupings.path_codes(path_rows, f"{p}/{name}" if p else name)
     hosts, P = W.hosts(), S.parent()
     carriers, scanned, made = S.carriers(), S.scanned(), S.made_at()
     now = time.time() if now is None else now
@@ -334,6 +347,9 @@ def keepings(S, W, scheme=None, of=None, now=None, each=None):
                             media.of(t)[0].split('/')[0] not in ('image', 'video', 'audio'):
                         continue
                     hit = [forcode[c] for c in suggests(t) if c in forcode]
+                    if not hit and path_rows:            # ...or by its path beneath its volume (`reads: path`)
+                        hit = [forcode[c] for c in path_suggests(keeps_['folders'][keeps_['names'].index(nm)], t)
+                               if c in forcode]
                     if hit:
                         code = hit[0]
                         break
@@ -564,6 +580,10 @@ def layout(S, W, scheme, of, schema=None, sample=8):
             r = L.fits(text)[0]
             fitted[text] = tuple(r.suggests) if r else ()
         return fitted[text]
+    path_rows = [r for r in L.rows if r.reads == 'path']
+
+    def path_suggests(path):
+        return groupings.path_codes(path_rows, path.decode('utf-8', 'replace')) if path_rows else ()
 
     def chain_of(f):
         """[(folder n, its name)] from a folder up to its volume."""
@@ -607,6 +627,9 @@ def layout(S, W, scheme, of, schema=None, sample=8):
         for x, _nm in mine + srcchain:
             codes |= set(W.said.get(S.id_of(x), []))
         codes |= set(suggests(name.decode('utf-8', 'replace')))
+        for chain in (mine, srcchain):                 # its path beneath its volume, and its source's (`reads: path`)
+            if chain or chain is mine:
+                codes |= set(path_suggests(b'/'.join([nm2 for _x, nm2 in reversed(chain)] + [name])))
         at, by = made.get(c, (None, None))
         day = str(at)[:10] if at else (day_of(mine, name) or day_of(srcchain, b''))
         found = b'/'.join(nm2 for _x, nm2 in reversed(srcchain)) if srcchain else None

@@ -254,6 +254,10 @@ profiles:
         position: sheet
         reason: universal
         why: "the shapes engraved from readings, declared whole; a garden takes the ones its pages need"
+      - at: "table:archetypes"
+        position: course
+        reason: universal
+        why: "the one way a course is drawn, wherever a page draws one: declared whole, taken by a page whose drawings show a course"
       - at: "form:drawing.values.live"
         position: live-state
         reason: universal
@@ -338,6 +342,11 @@ archetypes:
     axes: { inline: flow }
     meaning: "who owes whom, and what went between gardens: parties as nodes and, per currency, an arrow from the one who owes to the one owed, netted as bin/ledger.py nets it, its amount exact; or gardens as nodes, an arrow for what went from one to the other. The arrowhead is the glyph of `next` in the reader's script. Engraved from the reading: no drawing module draws it"
     when: "the question is who owes whom, or what crossed between gardens"
+  - archetype: course
+    frame: [walk, time]
+    reads: [be, move]
+    meaning: "one course as it stands, the one way a course is drawn — a line of a table (a column's `stands`), beneath its being on a sheet, a run on a host's page: its walk's steps in their order with the step it stands at marked and the ways out and pauses apart, since when, who acts there, overdue where the step's `usually` has passed; the needs it states, each met or not and blocking or not; the amounts it needs. A course is a being placed on a walk (`be` as order) and its moves; a clause's occurrence (due on its day, met when a payment `settles` it) and a standing need (holding, or crossed where a `fail` through a `measure` of it has no `repair`) are read as courses the same way, never written as moves. Engraved from the reading (bin/seq.py): no drawing module draws it"
+    when: "the question is where something stands on its way, and who acts next"
   - archetype: sheet
     meaning: "one being as it stands: its title and summary, its statements verb by verb — each with the statements that take it as their `of` beneath it, a payment with its shares and the clauses that ask it — and its held values, marked as kept on the machine that holds them; the facts its page's `fields` names for its kind. For a reader who may write it, the one place it is changed: one Edit turns each fact they may write into its widget, and one Save is one commit with one journal entry. Engraved from the being: no drawing module draws it"
     when: "the question is what one being is, or a change to it"
@@ -377,6 +386,8 @@ aspects:
   - { aspect: its-class, home: core, follows: root, points: of, order: walk, of: [content, folder, volume], meaning: "the codes the cursor holds, where each came from — said, inherited from a whole, suggested by a pattern — and, at a root, what it holds and what is set apart" }
   - { aspect: its-moves, home: accounting, follows: pay, points: by, order: time, of: [person, org, account], meaning: "the payments the cursor made and received, in time" }
   - { aspect: its-category, home: accounting, follows: moves, points: of, order: walk, of: [document], meaning: "the merchant's moves a bank's line is one of, and the code of the plan they are booked to" }
+  - { aspect: its-dataset, home: storage, follows: datasets, points: of, order: walk, of: [content, folder], meaning: "the dataset the cursor is one tree of: its manifest's content, and every folder that holds that tree, by the volume each is on" }
+  - { aspect: its-safety, home: storage, follows: keepings, points: of, order: walk, of: [content, folder, volume], meaning: "the cursor's keepings by risk: for each risk its policy asks it to be safe against, the keepings that resolve it and what is missing" }
 # THE ACCOUNTING PROFILE'S TABLES: what an account of a chart is (its element), and the roles an account plays in the
 # books' readings. The elements are the IFRS Conceptual Framework's five (§4.2): a published list no jurisdiction's
 # chart owns. Each is read in a SENSE, as each order of the view is (`orientations`): value is a charge that moves — it
@@ -440,7 +451,7 @@ forms:
         meaning: "literal text and slots, `{<slot>}` or `{<slot>:<width or form>}` — a width `4` exactly four, `4+` four or more — each slot a row of `slots` (core/law/lines.yaml); `{{` and `}}` a brace. Nothing in it is evaluated"
       reads:
         in: { type: field_path }
-        meaning: "the text the template is matched against: `as` of a holding (a file's name), of a `name` (a folder's), a statement's `note` (a bank line's words); absent, a holding's name"
+        meaning: "the text the template is matched against: `as` of a holding (a file's name), of a `name` (a folder's), a statement's `note` (a bank line's words), or `path`, a holding's path beneath its volume — its folder's name by the volume, `/`, its own name — or a folder's; absent, a holding's name"
       case:
         in: [exact, any]
         meaning: "whether literal letters are compared with their case; absent, without"
@@ -839,10 +850,13 @@ forms:
           entries:
             label: { required: "true", in: prose }
             path:
-              required: "true"
               in: { type: field_path }
               meaning: "a path in each member, or a channel of the series, or a figure of an account of the chart: `code`, `name`, `element`, `opening`, `debit`, `credit`, `balance`"
-        meaning: "table: a column per path"
+            stands:
+              in: bean_id
+              meaning: "instead of `path`: a walk, a being of the garden whose `step`s are its steps — the member's course on it, drawn by the archetype `course` in one line"
+          one_of: [path, stands]
+        meaning: "table: a column per path, or per walk a course of each member is on"
       writes:
         in:
           entries:

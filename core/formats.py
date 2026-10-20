@@ -589,6 +589,21 @@ def content_id(blake3):
     return 'c-' + str(blake3)[:24]
 
 
+# A folder's own name in a store, as SQL over `v_name`: the name the folder or volume it is part of gives it. Its volume
+# also names it by its path beneath it (`file-tree-path`); a name is what follows a path's last `/`, so a folder's own
+# name holds none, and a path holds one wherever it is not the name of a folder at the volume's top (one statement).
+OWN_NAME = "t_by IS NULL AND b_by IS NOT NULL AND instr(t_as, '/') = 0"
+
+
+def path_of(db, folder):
+    """A folder's path beneath its volume (`escaped`) as a store keeps it — the name its volume gives it — or None where
+    the store holds none (imported before core 2.22)."""
+    for (p,) in db.execute("SELECT nm.t_as FROM v_name nm JOIN being v ON v.n = nm.b_by AND v.kind = 'volume' "
+                           "WHERE nm.b_of = ? AND nm.t_by IS NULL", (folder,)):
+        return p
+    return None
+
+
 def _path_bytes(p):
     return bytes(p) if isinstance(p, (bytes, bytearray, memoryview)) else os.fsencode(str(p))
 

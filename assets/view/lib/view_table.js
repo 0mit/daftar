@@ -3,7 +3,8 @@
    line one the reader may read). Every cell is shown by the widget of what it holds — a day in the reader's calendar, an
    amount at its currency's places, a being by its title — never as the text a path happened to give, and each line
    opens its being's sheet. Its lines run down the page and its columns along the reader's line (`axes: { inline:
-   taxis, block: ordinal }`), so a right-to-left reader reads the first column at the right.
+   taxis, block: ordinal }`), so a right-to-left reader reads the first column at the right. A column's `stands` draws
+   each line's course on its walk by the archetype `course` (view_course.js), the one way a course is drawn.
    OR A CHART'S CODES (the drawing's `chart`, `view_engraved.py` `chart_table`): per currency, a line for each account of
    the entity's books in the chart's order, each column a figure of it — its opening, debit, credit, balance — the totals
    beneath, and the ledger of each account that posts, opened from its line, each ledger line with its running balance
@@ -24,6 +25,9 @@
       return;
     }
     function cell(vals) {
+      if (vals && !Array.isArray(vals) && typeof vals === 'object' && 'course' in vals) {   // a column's `stands`: its course
+        return root.daftarCourse ? root.daftarCourse.line(t, vals.course, {bare: true}) : h`<span class="w-none">—</span>`;
+      }
       var list = Array.isArray(vals) ? vals : [vals];
       return list.length ? t.join(list.map(function (v) { return root.daftarEngraved.show(t, v, ANY); }), ', ') : h`<span class="w-none">—</span>`;
     }
@@ -49,6 +53,7 @@
   function keyOf(v, r, titled, i, w) {
     if (titled && i === 0) return ['words', r.title || r.bean || ''];
     var x = Array.isArray(v) ? v[0] : v;
+    if (x && typeof x === 'object' && 'course' in x) return x.course ? ['words', String(x.course.step || '')] : null;
     if (x === undefined || x === null || x === '') return null;
     if (typeof x === 'object' && x.count !== undefined) { var e = w.exact.of(x.count); return e ? ['amount', e] : null; }
     if (typeof x === 'object') return ['words', String(x.title || x.name || x.value || x.bean || '')];
