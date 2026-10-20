@@ -260,6 +260,14 @@ A name is a statement: the namespace gives it.
   `<scheme>:<code>` — `isco-08:2522`, `isced-f-2013:0612`, `technology:samba`. **`use`** says what it rests on: a
   technology, a field. Every code is checked against its scheme; an invented code is refused. The schemes are kept
   whole in `seed/knowledge/`, each under its own licence, and read by today's `python3 bin/knowledge.py`.
+- **Needs and plans.** A `need` blocks what needs it until it is met, unless `contingent` is said of it; `impossible`
+  of it, it cannot be met; `while` makes it hold only while a reading or a clause does. What a need asks may be an
+  amount — a price, hours, a window's length — from its provider: a task's cost, applied while its condition holds. A
+  plan is read on three axes (the operation `axes`): feasibility (its blocking needs met or meetable), efficiency (what
+  it yields, against what it costs, per unit, never adding two units) and necessity (what needs it now), each with its
+  evidence, weighed by a person's `weigh` into a sum and a mark — `optimum here, now`, `wasteful weight` — read each
+  time; a mark orders what a person is shown and decides nothing. A walk's step the machine acts at (`machine`) is
+  nobody's lead until its usual time has passed.
 - **Readings** — how many, whether any, which first, how much — are asked of the garden each time and never written
   back as statements (`python3 bin/daftar.py reckon`). A reading is declared by `reckon`, its steps in its `reading`;
   what rests on one is fixed by `pin`, the moment it was read at and the commit, `<garden>@<object id>`.
@@ -497,7 +505,8 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   of the form `schema`): its nodes say where a member belongs by its facts — `{day:yyyy}/{day:yyyy-mm-dd}/{name}`,
   `Apart/{within}/{name}` — the first node whose `matches` it holds. A box is a directory whose nodes are `links`: one
   flat folder of blobs, each content once under its BLAKE3 (`.blobs/{blake3}`), and every node a schema of names, each
-  a hard link to its blob, so a schema takes no room and changing one moves no byte. A reading (`layout`) says what is
+  a hard link to its blob, so a schema takes no room and changing one moves no byte. A member holding a code that sets
+  apart — another's material — is linked only at the nodes that match such a code, and spread nowhere else. A reading (`layout`) says what is
   in place, what is out of place, and what a box still has to link; nothing is moved by it. A live directory, edited in
   place, is never linked: the storage watcher reads it, says what was added, changed and gone, and keeps each content
   the first time it is seen in a box on another disk, each name's earlier contents as its versions, capped.

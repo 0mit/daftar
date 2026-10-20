@@ -52,8 +52,11 @@ HEAD = re.compile(r'^## (.+?)(?: · |$)')
 
 
 def stored_courses(root):
-    """(being, course) of each course a store this host keeps holds of a being in no bean, on any walk but `walk-run`."""
+    """(being, course) of each course a store this host keeps holds of a being in no bean that may wait for a person: at
+    a step that is not final, and not one the machine acts at (`machine`) unless the step has a usual time to pass —
+    read from each store's moves at once, the walk's own steps saying which (a run's walk marks its machine's steps)."""
     out = []
+    steps_of = {}
     try:
         import store as dmstore
         kept = dmstore.kept_here(root)
@@ -68,9 +71,25 @@ def stored_courses(root):
             continue
         if 'be' not in S.verbs():
             continue
+        last = {}                                        # (being, course) -> (moment, step) of its last move
+        for being, _sid, roles in (S.statements_of('move') if 'move' in S.verbs() else []):
+            at = roles.get('at')
+            at = at if isinstance(at, list) else [at]
+            step = next((str(x).split('#', 1)[1] for x in at if isinstance(x, str) and '#' in x), None)
+            when = next((str(x) for x in at if isinstance(x, str) and '#' not in x), '')
+            key = (being, str(roles.get('through') or '').split('#')[-1])
+            if step and (key not in last or when >= last[key][0]):
+                last[key] = (when, step)
         for being, sid, roles in S.statements_of('be'):
-            if roles.get('as') == 'order' and roles.get('at') not in (None, 'walk-run'):
-                out.append((being, sid))
+            walk = roles.get('at')
+            if roles.get('as') != 'order' or not isinstance(walk, str):
+                continue
+            if walk not in steps_of:
+                steps_of[walk] = {s['id']: s for s in dmseq.walk_steps(root, walk)}
+            st = steps_of[walk].get((last.get((being, sid)) or (None, None))[1])
+            if st is None or st.get('final') or (st.get('machine') and not st.get('usually')):
+                continue
+            out.append((being, sid))
     return out
 
 def pending(root):
@@ -144,9 +163,9 @@ def read(root=ROOT):
                 w = dmseq.where(root, bid, course)
             except Exception:   # noqa: BLE001 — a course this reader cannot place is the gate's to judge, not a lead
                 continue
-            if not w.get('step') or w.get('final'):
-                continue
-            parties = [p.strip() for p in str(w.get('party') or '').split(',') if p.strip()]
+            if not w.get('step') or w.get('final') or (w.get('machine') and w.get('overdue') is not True):
+                continue                                 # the machine's step, within its usual time: nobody's yet
+            parties = [] if w.get('machine') else [p.strip() for p in str(w.get('party') or '').split(',') if p.strip()]
             base = {'kind': 'case', 'about': bid, 'course': course, 'step': w['step'], 'walk': w.get('walk'),
                     'since': w.get('at'), 'overdue': w.get('overdue') is True}
             late = ', past its usual time' if base['overdue'] else ''
@@ -162,7 +181,7 @@ def read(root=ROOT):
                                                                    f"({w.get('by') or 'unsaid'}) nobody took{late}"}))
 
     # CASES KEPT IN A STORE: a course of a being kept only in a store this host keeps (a transfer on walk-transfer),
-    # read the same way; a run (a course on `walk-run`) is the machine's, as a routine's clause is, and is no lead
+    # read the same way; a step the machine acts at is no lead while within its usual time, past it whoever keeps it
     for bid, course in stored_courses(root):
         if any(x.get('about') == bid and x.get('course') == course for x in leads):
             continue
@@ -170,7 +189,7 @@ def read(root=ROOT):
             w = dmseq.where(root, bid, course)
         except Exception:   # noqa: BLE001
             continue
-        if not w.get('step') or w.get('final'):
+        if not w.get('step') or w.get('final') or (w.get('machine') and w.get('overdue') is not True):
             continue
         late = ', past its usual time' if w.get('overdue') is True else ''
         if gardener:

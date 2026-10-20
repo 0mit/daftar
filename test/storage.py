@@ -130,6 +130,22 @@ try:
           tr.fingerprint('x') == tr.fingerprint('y') and tr.fingerprint('x') and tr.fingerprint('z') is None
           and tr.manifest('x') == (B3['a'] + '  a.txt\n' + B3['b'] + '  sub/b.txt\n').encode(), tr.manifest('x'))
 
+    nodes = [('blobs', None, {}), ('captured', None, {'matches': 'media:raw'}), ('apart', None, {'matches': 'roles:placed'})]
+    ap = {'roles:placed'}
+    check("engine: in a box a member is at every node it matches — but one holding a code that sets apart only at the "
+          "nodes that match such a code, and at a node every member is at (core 2.23)",
+          [n for n, _l, _r in storage.belongs(nodes, ['media:raw'], True, ap)] == ['blobs', 'captured']
+          and [n for n, _l, _r in storage.belongs(nodes, ['media:raw', 'roles:placed'], True, ap)] == ['blobs', 'apart']
+          and [n for n, _l, _r in storage.belongs(nodes, ['media:raw', 'roles:placed'], True)] == ['blobs', 'captured', 'apart'],
+          storage.belongs(nodes, ['media:raw', 'roles:placed'], True, ap))
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('storage_asset', os.path.join(ROOT, 'assets', 'storage', 'bin', 'storage.py'))
+    SA = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(SA)
+    check("asset: a copy's source read from its `make`'s `from`, a list kept as JSON the store may hand back as bytes",
+          SA.made_from(b'["d-1#hold-2"]') == ['d-1#hold-2'] and SA.made_from('["d-1#hold-2"]') == ['d-1#hold-2']
+          and SA.made_from('d-1#hold-2') == ['d-1#hold-2'] and SA.made_from(None) == [], SA.made_from(b'["d-1#hold-2"]'))
+
     # ---- A GARDEN: the gate
     rel = grow.release(os.path.join(T, 'release'))
     r = grow.garden(rel, G, 'sam', '--profile', 'storage', '--profile', 'knowledge')

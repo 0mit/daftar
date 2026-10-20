@@ -225,6 +225,17 @@ class Store:
         return out
 
 
+def made_from(v):
+    """The holdings a `make` names in its `from`: a list kept as JSON, which the store may hand back as bytes, or one."""
+    t = v.decode('utf-8', 'replace') if isinstance(v, (bytes, bytearray, memoryview)) else v
+    if not t:
+        return []
+    try:
+        return json.loads(t) if str(t).startswith('[') else [t]
+    except ValueError:
+        return []
+
+
 def dmgroup_text(name):
     """A name the store keeps `escaped`, as the text a pattern reads."""
     return formats.unescape(name).decode('utf-8', 'replace') if '%' in name else name
@@ -566,10 +577,7 @@ def layout(S, W, scheme, of, schema=None, sample=8):
             mb, mid = ref[0].split('#', 1)
             row = S.db.execute("SELECT m.t_from FROM v_make m JOIN being b ON b.n = m.being WHERE b.id = ? AND m.id = ?",
                                (mb, mid)).fetchone()
-            try:
-                frm = json.loads(row[0]) if row and row[0] and str(row[0]).startswith('[') else [row[0]] if row else []
-            except ValueError:
-                frm = []
+            frm = made_from(row[0] if row else None)
             if frm and '#' in str(frm[0]):
                 sb, sid = str(frm[0]).split('#', 1)
                 r = S.db.execute("SELECT h.b_by FROM v_hold h JOIN being b ON b.n = h.being WHERE b.id = ? AND h.id = ?",
@@ -639,7 +647,7 @@ def layout(S, W, scheme, of, schema=None, sample=8):
         day = str(at)[:10] if at else (day_of(mine, name) or day_of(srcchain, b''))
         found = b'/'.join(nm2 for _x, nm2 in reversed(srcchain)) if srcchain else None
         facts = {'day': day, 'maker': by or 'unknown', 'found': found, 'name': name, 'blake3': b3}
-        hits = storage.belongs(nodes, codes, box)
+        hits = storage.belongs(nodes, codes, box, L.apart)
         if not hits:
             g = out['(no node)']
             g['out of place'] += 1

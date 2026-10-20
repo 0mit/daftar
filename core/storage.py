@@ -240,12 +240,16 @@ def nodes_of(rows, schema):
             if str(r.get('parent') or '') == schema and r.get('template')]
 
 
-def belongs(nodes, codes, box):
+def belongs(nodes, codes, box, apart=()):
     """The nodes a member belongs at: every node whose `matches` it holds in a box (`box`), else the first; a node with
-    no `matches` holds every member."""
+    no `matches` holds every member. A member holding a code that sets apart (`apart`: of a scheme of the form `class`)
+    belongs only at the nodes whose `matches` hold such a code: another's material is spread nowhere else (core 2.23)."""
     out = []
+    kept = set(codes) & set(apart)
     for code, lay, row in nodes:
         want = str(row.get('matches') or '').split()
+        if kept and want and not set(want) & kept:
+            continue
         if not want or set(want) & set(codes):
             out.append((code, lay, row))
             if not box:

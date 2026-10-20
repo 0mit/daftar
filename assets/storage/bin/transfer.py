@@ -43,8 +43,8 @@ import store as dmstore  # noqa: E402
 WALK = 'walk-transfer'
 STEPS = {   # the walk, as mappings/walk-transfer.md says it
     'queued': {'to': ['copying']},
-    'copying': {'to': ['verifying', 'paused', 'failed', 'stopped']},
-    'verifying': {'to': ['done', 'copying', 'failed']},
+    'copying': {'to': ['verifying', 'paused', 'failed', 'stopped'], 'machine': True},
+    'verifying': {'to': ['done', 'copying', 'failed'], 'machine': True},
     'paused': {'resumes': True, 'reasons': ['asked', 'source-gone', 'target-gone']},
     'done': {'final': True},
     'failed': {'exit': True, 'final': True, 'reasons': ['mismatch', 'target-full', 'raised']},
