@@ -50,7 +50,11 @@ line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` w
       statement through one source are refused; subcontraries may both stand. One observer gives one verdict on one
       statement (`respond` with an `as`: confirms, disputes, abstains), and a `rule` on statements is given only once
       every speaker of them — the observer of each — has responded.
-- [ ] **weight** — A mass is a body's: a sayable measured `as` mass is refused.
+- [ ] **bearer** — A quantity is stated only of what its dimensions and its kind hold for (`holds_for`): a nature, or a
+      level the being is or is made of — through `made-of` alone, never `possible-on`. A mass is a body's (the
+      foundation `weight`), a temperature an ensemble's; information and money are what is carried — a document's, an
+      agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a mass of its own, a
+      single molecule a temperature, a machine its bytes or a body money of its own is refused.
 - [ ] **frame** — A position is in a system the law declares, in that system's one form, and finds its other half
       by its complement: a day reckoned in the garden's `zone`. A day its calendar does not have (`2026-02-30`), a
       spelling two systems read (`445`), and a spelling no system reads (`next tuesday`) are refused. `now` is written

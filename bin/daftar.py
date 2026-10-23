@@ -79,7 +79,9 @@ def main(argv):
         argv = [argv[1], '--help']
     verb, rest = argv[0], argv[1:]
     if verb not in known:
-        near = sorted(known, key=lambda k: (k[:1] != verb[:1], abs(len(k) - len(verb)), k))[:3]
+        sys.path.insert(0, HERE)
+        import parse as dmparse
+        near = dmparse.nearest(verb, known)
         print(f"daftar: `{verb}` is no verb of the law (`verbs`) — the nearest: {', '.join(near)}; "
               f"`daftar` lists them all", file=sys.stderr)
         return 2

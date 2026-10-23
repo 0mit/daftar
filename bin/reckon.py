@@ -1548,13 +1548,16 @@ class Reckoner:
 
     def _ancestor(self, scheme, code, level):
         """The code's ancestor at `level` in its scheme (the code itself where it is at that level), by `parent` — or None."""
+        sys.path.insert(0, ROOT)
+        from core import reach
         rows = {str(r.get('code', r.get('unit'))): r for r in (self.reg(scheme) or []) if isinstance(r, dict)}
-        c, seen = str(code), set()
-        while c in rows and c not in seen:
-            seen.add(c)
+        up = [str(code)] + [c for c, _via in reach.Reach(str(code), lambda c: [str(rows[c].get('parent') or '')]
+                                                         if c in rows else [])]
+        for c in up:
+            if c not in rows:
+                return None
             if level in (rows[c].get('level'), rows[c].get('rank')):
                 return c
-            c = str(rows[c].get('parent') or '')
         return None
 
     def op_books(self, s):

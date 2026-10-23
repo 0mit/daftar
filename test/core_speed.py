@@ -232,8 +232,8 @@ def counted(path):
     reads[path] += 1
     return data(path)
 read.data = counted
-from core.check import garden_law
-found = engine.judge(garden_law('.'), engine.Garden.read('.'))
+from core.judge import Scope, garden_law, judge
+found = judge(garden_law('.'), Scope.tree('.'))
 law = {p: n for p, n in reads.items() if '/core/law/' in p.replace('\\', '/')}
 print(json.dumps({'found': [list(f) for f in found], 'twice': sorted(p for p, n in law.items() if n > 1), 'files': len(law)}))"""
     kept = os.path.join(G, '.git', 'daftar', 'law-checked')

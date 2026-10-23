@@ -660,13 +660,11 @@ def inherit(being, said, wholes, suggested=None, apart=None, fits=None, scheme=N
     sugg = list(suggested(being) or []) if suggested else []
     if apart and any(apart(c) for c in sugg):           # a program's tree, a dropping, another's code: of any scheme
         return [(None, f"set apart: {', '.join(c for c in sugg if apart(c))}", being)]
-    out, seen, todo, hops = [], {being}, [(w, being) for w in wholes(being) or []], 0
-    while todo and hops < limit:
-        hops += 1
-        w, child = todo.pop(0)
-        if w in seen:
-            continue
-        seen.add(w)
+    from core import reach
+    out, stops = [], set()                              # the wholes the walk does not go on from
+    for hops, (w, _child) in enumerate(reach.Reach(being, lambda b: wholes(b) or [], further=lambda w: w not in stops)):
+        if hops >= limit:
+            break
         codes = list(said(w) or [])
         if codes:
             why = fits(being, w) if fits else None
@@ -674,11 +672,10 @@ def inherit(being, said, wholes, suggested=None, apart=None, fits=None, scheme=N
                 out.append((None, f'set apart: {why}', w))
             else:
                 out.extend((c, 'inherited', w) for c in codes)
-            continue
-        if apart and suggested and any(apart(c) for c in suggested(w) or []):
+            stops.add(w)
+        elif apart and suggested and any(apart(c) for c in suggested(w) or []):
             out.append((None, 'set apart: inside a whole that keeps its own', w))
-            continue
-        todo.extend((x, w) for x in wholes(w) or [])
+            stops.add(w)
     got = [x for x in out if x[0] is not None]
     if got:
         return got
@@ -689,27 +686,17 @@ def inherit(being, said, wholes, suggested=None, apart=None, fits=None, scheme=N
 
 
 def cycle(edges):
-    """A cycle among a scheme's own relations — {code: [codes it is part of]} — as a list of codes, or None."""
-    state = {}
+    """A cycle among a scheme's own relations — {code: [the code it is part of]} — as a list of codes, or None: from the
+    first code (in order) whose parents run back to one already on its way, the codes from that one round to it again."""
+    from core import reach
+    done = set()
     for start in sorted(edges):
-        if state.get(start):
+        if start in done:
             continue
-        stack = [(start, iter(edges.get(start) or []))]
-        path, state[start] = [start], 1
-        while stack:
-            node, it = stack[-1]
-            nxt = next(it, None)
-            if nxt is None:
-                stack.pop()
-                path.pop()
-                state[node] = 2
-                continue
-            if state.get(nxt) == 1:
-                return path[path.index(nxt):] + [nxt]
-            if not state.get(nxt):
-                state[nxt] = 1
-                path.append(nxt)
-                stack.append((nxt, iter(edges.get(nxt) or [])))
+        on, back = reach.chain(start, lambda c: [p for p in edges.get(c) or [] if p not in done])
+        done.update(on)
+        if back is not None:
+            return on[on.index(back):] + [back]
     return None
 
 

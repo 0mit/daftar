@@ -102,6 +102,9 @@ jobs:
         run: python3 test/core_ported.py
       - name: "core_exact: a count is exact everywhere it is read — rates between currencies, and no float in the code"
         run: python3 test/core_exact.py
+      - name: "core_conformance: one verdict at every door — every clause of every rule broken by a case, each judged by the save, --again, the staged scope, the tree, a proposal's read, the store's union and a hub's checkout, alike"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/core_conformance.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py

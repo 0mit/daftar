@@ -280,6 +280,14 @@ try:
            bean('mark: { by: sam, at: now, note: "\\u0633\\u0644\\u0627\\u0645\\u200f 12" }',
                 'name: { by: sam, of: sam, as: "\\u0645\\u06cc\\u200c\\u062e\\u0648\\u0627\\u0647\\u0645" }'))
 
+    # ---- ONE MATCHER OF A PATTERN OF THE LAW (core 2.24, D15): a name is held to its namespace's pattern as
+    # bin/parse.py's law_match reads it, in ASCII, at the gate as everywhere — `\s` is a space, a tab or a line end, and
+    # not U+00A0, which the gate's own Unicode reading of `\s` refused while every other reader took it
+    refused("a mail name holding a space is not a name mail gives",
+            bean('name: { by: mail, of: sam, as: "sam smith@example.org" }'), 'not a name mail gives', rule='names')
+    passes("...and one holding a no-break space is, read as the law's one matcher reads it (ASCII): every reader agrees",
+           bean('name: { by: mail, of: sam, as: "sam\\u00a0smith@example.org" }'))
+
     # ---- encodings
     raw = (B % '').encode('utf-8')
     passes("a bean saved with a byte-order mark and CRLF line ends passes: a line end is no control character in text",

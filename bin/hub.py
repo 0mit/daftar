@@ -58,6 +58,7 @@ import importlib
 dmpass = importlib.import_module('pass')    # noqa: E402 — bin/pass.py (`pass` is a keyword of Python)
 
 HERE = os.path.abspath(__file__)
+ROOT = os.path.dirname(os.path.dirname(HERE))
 ZERO = '0' * 40
 KEY_TERMS = ('ssh_key_fingerprint', 'openpgp_fingerprint')
 KEY_NAMESPACES = {'ssh_key_fingerprint': 'ssh', 'openpgp_fingerprint': 'openpgp'}   # the core's namespace of each key
@@ -297,29 +298,17 @@ def rights(writer, commit, parent, env, tmp, others=()):
 
 
 def gate(commit, env, tmp):
-    """The gate, run in a checkout of `commit`: a fresh repository that borrows the hub's objects — the pushed ones
-    still in quarantine among them — so no ref of the hub is touched while the push is judged."""
-    where = os.path.join(tmp, 'tip-' + commit[:10])
-    objs = [os.path.abspath(env.get('GIT_OBJECT_DIRECTORY') or os.path.join(env.get('GIT_DIR') or '.', 'objects'))]
-    objs += [os.path.abspath(p) for p in (env.get('GIT_ALTERNATE_OBJECT_DIRECTORIES') or '').split(os.pathsep) if p]
-    objs.append(os.path.abspath(os.path.join(env.get('GIT_DIR') or '.', 'objects')))
-    c, own, _e = git('rev-parse', '--git-path', 'objects', env=env)   # a working clone's are under .git/ (`receive`)
-    if c == 0 and own.strip():
-        objs.append(os.path.abspath(own.strip()))
-    _e = {k: v for k, v in env.items() if not k.startswith(('GIT_DIR', 'GIT_QUARANTINE', 'GIT_OBJECT_DIRECTORY',
-                                                            'GIT_ALTERNATE', 'GIT_WORK_TREE', 'GIT_INDEX'))}
-    _e['GIT_ALTERNATE_OBJECT_DIRECTORIES'] = os.pathsep.join(dict.fromkeys(objs))
-    for step in (('init', '-q', where), ('-C', where, 'update-ref', 'refs/heads/judged', commit),
-                 ('-C', where, 'symbolic-ref', 'HEAD', 'refs/heads/judged'), ('-C', where, 'reset', '-q', '--hard')):
-        c, _o, err = git(*step, env=_e)
-        if c != 0:
-            raise Refused(f"the hub could not check out {commit[:10]}: {err.strip()[:200]}")
-    gate = next((g for g in ('check.py', 'dmcheck.py') if os.path.isfile(os.path.join(where, 'bin', g))), 'dmcheck.py')   # a commit of a garden in today's words is judged by its own gate
-    r = subprocess.run([sys.executable, os.path.join(where, 'bin', gate), '--all'], capture_output=True,
-                       cwd=where, env=_e)
-    out = (r.stdout + r.stderr).decode('utf-8', 'replace')
-    if r.returncode != 0 or ' 0 error(s)' not in out:
-        raise Refused("the garden it leaves does not pass the gate:\n" + out.strip()[-1500:])
+    """The gate on `commit`: the one judge's scope `commits` (core/judge.py) — the commit checked out in a fresh
+    repository that borrows the hub's objects, the pushed ones still in quarantine among them, so no ref of the hub is
+    touched, and judged there by the gate it carries."""
+    sys.path.insert(0, ROOT)
+    from core import judge as dmjudge
+    scope = dmjudge.Scope.commits([commit], env)
+    if dmjudge.judge(None, scope):
+        said = scope.said.get(commit, '')
+        if said.startswith('could not check out'):
+            raise Refused(f"the hub {said}")
+        raise Refused("the garden it leaves does not pass the gate:\n" + said.strip()[-1500:])
 
 
 def judge(old, new, only=None, each=False, env=None, known=('--exclude=refs/daftar/custom/*', '--all')):

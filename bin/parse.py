@@ -200,6 +200,12 @@ def law_match(pattern, value):
     return m
 
 
+def nearest(word, names, n=3):
+    """The `n` names nearest to `word`, which is none of them — the one hint every refusal of an unknown name gives: those
+    that begin with its letter first, then those nearest its length, then in their own order."""
+    return sorted(names, key=lambda k: (k[:1] != word[:1], abs(len(k) - len(word)), k))[:n]
+
+
 # Unicode's binary property Bidi_Control (PropList.txt; these twelve since Unicode 6.3): the characters that change how
 # the text around them is ordered, Trojan Source's tool (CVE-2021-42574). Python's unicodedata gives no binary property,
 # so its characters are quoted here from the standard, and test/core_law.py holds them to what unicodedata does give:

@@ -621,12 +621,12 @@ class Law:
         if not pat:
             return ''
         shown = 'the name' if row.get('kept') == 'held' else repr(value)
-        if not (isinstance(value, str) and re.fullmatch(pat, value)):
+        import parse as dmparse                         # the one matcher of a pattern of the law
+        if not (isinstance(value, str) and dmparse.law_match(pat, value)):
             return f"{shown} is not a name {namespace} gives: its form is `{pat}` — {row.get('meaning', '')}"
         chk = row.get('checked_by')
         if not chk:
             return ''
-        import parse as dmparse
         try:
             ok = dmparse.FORM_CHECKS[chk](value)
         except dmparse.CheckUnavailable as e:
@@ -702,14 +702,12 @@ class Law:
         return listed((self.lines.get(line) or {}).get('holds'))
 
     def below(self, level, ways=('made-of', 'possible-on')):
-        """Every level `level` stands on, through any number of steps, by the ways given."""
-        out, todo = set(), [level]
-        while todo:
-            for s in listed((self.levels.get(todo.pop()) or {}).get('stands')):
-                if isinstance(s, dict) and s.get('as') in ways and s.get('at') not in out:
-                    out.add(s.get('at'))
-                    todo.append(s.get('at'))
-        return out
+        """Every level `level` stands on, through any number of steps, by the ways given: itself among them where the
+        ladder leads back to it."""
+        from core import reach
+        r = reach.Reach(level, lambda lv: [s.get('at') for s in listed((self.levels.get(lv) or {}).get('stands'))
+                                           if isinstance(s, dict) and s.get('as') in ways])
+        return {x for x, _via in r} | {x for x, _via in r.again if x == level}
 
     def given_twice(self, dim_rows):
         """ONE PATH, ONE STATEMENT: [(where, message)] for a stand that another of the row's stands already gives through

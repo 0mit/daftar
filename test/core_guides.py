@@ -208,7 +208,8 @@ try:
         h = dict(b.header)
         h['statements'] = list(b.statements) + list(read.loads(text) or [])
         garden.beans[bid] = engine.Bean(bid, b.path, h)
-        return [f for f in engine.judge(core_check.garden_law(G), garden) if f[1].split('[')[0] == bid]
+        from core import judge as dmjudge
+        return [f for f in dmjudge.judge(core_check.garden_law(G), dmjudge.Scope.tree(G, garden)) if f[1].split('[')[0] == bid]
 
     def save(what, blocks):
         """The blocks of one section, saved in one commit through bin/save.py and the core's gate."""

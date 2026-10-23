@@ -1461,15 +1461,16 @@ def main(argv):
                          and isinstance(w['usually'].get('measure'), dict) else ''))
             return 0
         if cmd == 'check' and runs_core():
-            from core import engine, lines
+            from core import judge as dmjudge
             L, G = core()
-            J = engine.Judge(L, G)
             want = set(rest) or set(G.beans)
+            mine = {}
+            for rule, where_, what in dmjudge.judge(L, dmjudge.Scope.tree(garden=G)):     # the one judge's rule `line`
+                if rule == 'line' and str(where_).split(':', 1)[0] in want:
+                    mine.setdefault(str(where_).split(':', 1)[0], []).append((where_, what))
             n = 0
             for b in sorted(want):
-                if b not in G.beans or G.beans[b].unread:
-                    continue
-                for where_, what in lines.problems(J, G.beans[b]):
+                for where_, what in mine.get(b, []):
                     print(dmparse.said(f"ERROR {where_} — {what}"))
                     n += 1
             print(f"seq check: {n} error(s) in the lines of {len(want)} bean(s) — rule `line`, as the core's gate judges "
