@@ -47,6 +47,7 @@ machine.ensure()      # its time source and standards cache, not the machine's
 # `mapping`), `kind`, `title`, `summary`, `tags`, `details`, `statements` — and nothing else at its head: one of today's
 # terms there (each went somewhere in the core: core/law/terms.yaml) teaches a refusal.
 from core.engine import HEADER  # noqa: E402
+import rules as dmrules  # noqa: E402 — the rules as the documents list them, written from the law
 from core import read as _read  # noqa: E402
 _today = {str(r["term"]) for r in _read.data(os.path.join(ROOT, "core", "law", "terms.yaml"))["terms"]}
 assert len(_today) >= 50, "today's terms were not read"
@@ -136,7 +137,8 @@ check("MODEL.md names exactly the profiles the law offers", _named == _offered a
 # THE COUNTS AND THE LIST OF THE RULES ARE THE LAW'S (core 2.24, C8). MODEL.md and CHECKLIST.md say how many verbs and
 # rules the law has, and which; a number typed by hand is a second statement, and it drifted (MODEL.md's 38 rows and
 # core.yaml's 34 against verbs.yaml's 43, CHECKLIST's `weight` against core.yaml's `bearer`). Each is read from the law
-# here, and a count, a list or a name that disagrees fails by what it says.
+# here, and a count, a list or a name that disagrees fails by what it says. The rules' list itself is written from the
+# law between its marks in both documents (bin/rules.py `--write`), and held to what the law writes, byte for byte.
 _WORDS = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
           "seventeen eighteen nineteen twenty").split()
 
@@ -179,28 +181,24 @@ def law_counts(model, checklist, agents, core, verbs):
     if sorted(tabled) != sorted(rows):
         out.append(f"MODEL.md's table of verbs.yaml's rows: only there {sorted(set(tabled) - set(rows))}, missing "
                    f"{sorted(set(rows) - set(tabled))}, twice {sorted({v for v in tabled if tabled.count(v) > 1})}")
-    m = re.search(r"Its (\S+) rules are strict.*?lists them: the core's (\S+), (\S+) that today's gate held — (.*?) — and "
-                  r"(\S+) that judge forms — (.*?)\.", " ".join(model.split()))
-    if not m:
-        out.append("MODEL.md, the gate's rules: not found")
-    else:
-        total, core_n, held_n, held, forms_n, forms = m.groups()
-        held_l, forms_l = re.findall(r"`([a-z]+)`", held), re.findall(r"`([a-z]+)`", forms)
-        if _number(total) != len(rules):
-            out.append(f"MODEL.md says the gate has {total} rules; core.yaml has {len(rules)}")
-        if (_number(core_n), _number(held_n), _number(forms_n)) != (len(rules) - len(held_l) - len(forms_l),
-                                                                    len(held_l), len(forms_l)) \
-                or rules[-len(held_l) - len(forms_l):] != held_l + forms_l:
-            out.append(f"MODEL.md counts the rules {core_n}, {held_n} ({held_l}) and {forms_n} ({forms_l}); core.yaml "
-                       f"lists {rules}")
+    n = said(model, r"Its (\S+) rules are strict", "MODEL.md, the gate's rules")
+    if n is not None and n != len(rules):
+        out.append(f"MODEL.md says the gate has {n} rules; core.yaml has {len(rules)}")
     part_a = checklist.split("## Part A", 1)[-1].split("\n## ", 1)[0]
     n = said(part_a, r"\n(\S+) rules, each strict", "CHECKLIST.md Part A, the rules")
     if n is not None and n != len(rules):
         out.append(f"CHECKLIST.md Part A says {n} rules; core.yaml has {len(rules)}")
-    m = re.search(r"The first (\S+) are the core's own; the next (\S+),", part_a)
-    if not m or _number(m.group(1)) + _number(m.group(2)) + 3 != len(rules):
-        out.append(f"CHECKLIST.md Part A's first and next do not add up to core.yaml's {len(rules)} rules with the "
-                   f"three that judge forms")
+    # THE RULES THE DOCUMENTS LIST ARE WRITTEN FROM THE LAW (core 3.1, D5): MODEL.md's gate and CHECKLIST.md's Part A
+    # hold, between their marks, what bin/rules.py writes from core.yaml — each rule's name and `says`, and which are
+    # readings — byte for byte; so neither can say what the law does not.
+    for doc, d_text in (("MODEL.md", model), ("CHECKLIST.md", checklist)):
+        begin, end = dmrules.WRITTEN[doc]
+        a, b = d_text.find(begin), d_text.find(end)
+        if a < 0 or b < a:
+            out.append(f"{doc}: the rules written from the law are not between their marks")
+        elif d_text[a:b + len(end)] != dmrules.written(doc, core["rules"]):
+            out.append(f"{doc}: the rules between its marks are not what the law says (`python3 bin/rules.py --write` "
+                       f"writes them)")
     items = [i for i in re.findall(r"(?m)^- \[ \] \*\*([a-z][a-z, ]*)\*\*", part_a) if not i.endswith(", too")]
     if items != rules:
         out.append(f"CHECKLIST.md Part A lists {items}; core.yaml's rules are {rules}")
@@ -218,7 +216,11 @@ check("MODEL.md, CHECKLIST.md and AGENTS.md count the verbs and the rules as the
       not _wrong, _wrong)
 _planted = {"a count of rows": (text["MODEL.md"].replace("**The 43 rows**", "**The 44 rows**"), text["CHECKLIST.md"]),
             "a count of rules": (text["MODEL.md"], text["CHECKLIST.md"].replace("Twenty-one rules, each", "Twenty rules, each")),
-            "a rule's name": (text["MODEL.md"], text["CHECKLIST.md"].replace("**bearer** —", "**weight** —"))}
+            "a rule's name": (text["MODEL.md"], text["CHECKLIST.md"].replace("**bearer** —", "**weight** —")),
+            "a rule's words typed by hand": (text["MODEL.md"], text["CHECKLIST.md"].replace(
+                "Nothing stands on itself", "Nothing ever stands on itself", 1)),
+            "the gate's list in MODEL.md": (text["MODEL.md"].replace("`squares`, `bearer`", "`bearer`, `squares`", 1),
+                                            text["CHECKLIST.md"])}
 _missed = [k for k, (m, c) in _planted.items() if not law_counts(m, c, text["AGENTS.md"], _core, _verbs)]
 check("...and each wrong count or name planted in them is found: " + ", ".join(_planted), not _missed, _missed)
 

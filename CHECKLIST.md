@@ -17,143 +17,124 @@ judges the working tree, and `python3 core/check.py --staged` what a commit woul
 `<rule>  <where>: <what>`; it names what to write in its place.
 
 ## Part A — what the gate checks (a commit is refused on any failure)
-Twenty-one rules, each strict: a breach is an error. The first thirteen are the core's own; the next five, and parts of
-`form`, `order`, `names` and `ratify`, are what today's gate held, taken over by the core; `line` judges the forms of a
-line (v1 part 6), `measured` the forms of a measure (v1 part 7), and `profile` what a profile gives (v1 part 11).
+<!-- the rules as the law states them, written by `python3 bin/rules.py --write` from core/law/core.yaml: change the law, never these lines -->
+Twenty-one rules, each strict: a breach is an error. Each is written here as the law states it, its `says` in
+`core/law/core.yaml`. Three of them are readings of the law (`order`, `life` and `necessity`), read by the one reckoner,
+and each of their refusals names the statements and the law's rows it rests on (`python3 bin/why.py <rule> <place>`);
+the other eighteen are applied by the core's code: core/engine.py's, and core/commit.py's for what only a commit can
+show.
 
-- [ ] **form** — A bean's front matter is its header (`bean`, `kind`, `title`, `summary`, `tags`, `details`) and its
-      `statements`, nothing else; `bean` is the file's name, and `kind` a kind of the law. A statement is one verb of
-      the law, written `- <verb>: { <role>: <filler>, … }`, with roles from the seven, the qualifiers its verb's row
-      declares, and `id`, `while`, `why`, `note` (and `held`, sealed); nothing else. An `id` is one word, used once in
-      its bean. A `while` names a condition or a statement. Everything is read as a string, and text holds no control
-      character but a tab — a line feed only in a block scalar (`|`, `>`). `GARDEN.md` holds the manifest's keys alone
-      (`core/law/core.yaml`, `manifest`), each in its form, and pins the law's own version, `core@<version>`; once the
-      garden holds a bean, it names its gardener, a person or an organisation it holds a bean for. A `grant` is `to` a
-      being or to every member of a reading (a `reckon`), and its `cover` names parts a bean has: a key of its header,
-      `body`, a verb's statements (`measure`), or a verb's narrowed by their `as` (`be.location`).
-- [ ] **valency** — Each role its verb requires is filled, `unknown` where nobody said; no role is filled that the verb
-      does not take; each filler has the shape its role takes — a being of the garden (or `self`, the crown,
-      `{ someone: <kind>, at: … }`), a statement's id, a position, a quantity `{ count, unit }`, a row of the table its
-      role names, or text — and the nature and rung it asks (`say` is by a person or a document, `read` by a body). A
-      role takes a list only where its row says `many`. `unknown` fills a required role, never an optional one.
-- [ ] **knowing** — Every statement is the `of` of a knowing act in its bean (`say`, `read`, `derive`, `make`), or is
-      covered by one with no `of`. A knowing act's `at` is `now` until the save writes the moment in its place; a
-      moment typed there is refused.
-- [ ] **placeholder** — A statement the law derives is never written: an `answer` `as: law` by the owner, a `bear` by
-      whoever paid, alone.
+- [ ] **form** — A statement is one verb of the verb row, with roles from the seven, the qualifiers its row declares,
+      and id, while, why, note (and held, sealed); nothing else. Text holds no control character but a tab, and a line
+      feed only in a block scalar. GARDEN.md holds the manifest's keys alone, each in its form, and pins this law's
+      version; once the garden holds a bean, it names its gardener, a person or an organisation it holds a bean for. A
+      grant is to a being or to every member of a reading, and its cover names parts a bean has — a key of its header,
+      `body`, a verb's statements, or a verb's narrowed by their `as`.
+- [ ] **valency** — Each required role is filled, each filler has the shape and nature its role takes, and no role is
+      filled that the verb does not take.
+- [ ] **knowing** — Every statement of a bean is the `of` of a knowing act in it; a knowing act's `at` is `now` until
+      the save writes the moment, and a moment typed there is refused — but where the act was known in another garden:
+      its `at` then holds that garden's bean beside the moment it was known at there, and the commit that brings it
+      takes it from that garden (`take`). A row of a store names the act or acts that know it instead, each a knowing
+      act kept in git or a store, and the store's check judges it where the store is kept.
+- [ ] **placeholder** — A statement the engine derives (a verb's default) is never written: written, it is refused.
 - [ ] **order** — Nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or
-      needs itself through others; a part never stands above what its whole is made of.
-- [ ] **life** — A living being comes through the living; a made or said one through hands (a being at reason) or a
-      tool whose own coming goes on; no chain of `come` returns to where it began.
-- [ ] **necessity** — A `necessary` statement names what it is necessary `through`, except of the crown.
-- [ ] **squares** — Two positions of a square that cannot both stand — contraries, or contradictories — on one
-      statement through one source are refused; subcontraries may both stand. One observer gives one verdict on one
-      statement (`respond` with an `as`: confirms, disputes, abstains), and a `rule` on statements is given only once
-      every speaker of them — the observer of each — has responded.
+      needs itself through others; a part never stands above what its whole is made of. Its reading:
+      `core/law/core.yaml` `rules[order].reading`.
+- [ ] **life** — A living being comes through the living; a made or said being comes through hands, a being at reason,
+      or through tools whose own coming goes on; every chain ends at the crown, and none is demanded. Its reading:
+      `core/law/core.yaml` `rules[life].reading`.
+- [ ] **necessity** — A `necessary` statement names what it is necessary through — except of the crown, necessary by
+      itself (thesis 12). Its reading: `core/law/core.yaml` `rules[necessity].reading`.
+- [ ] **squares** — Two positions that cannot both stand — contraries or contradictories — on one statement through one
+      source are refused; subcontraries may both stand. One observer gives one verdict on one statement (`respond` with
+      an `as`), and a `rule` on statements is given once every speaker of them has responded.
 - [ ] **bearer** — A quantity is stated only of what its dimensions and its kind hold for (`holds_for`): a nature, or a
       level the being is or is made of — through `made-of` alone, never `possible-on`. A mass is a body's (the
       foundation `weight`), a temperature an ensemble's; information and money are what is carried — a document's, an
       agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a mass of its own, a
       single molecule a temperature, a machine its bytes or a body money of its own is refused.
-- [ ] **frame** — A position is in a system the law declares, in that system's one form, and finds its other half
-      by its complement: a day reckoned in the garden's `zone`. A day its calendar does not have (`2026-02-30`), a
-      spelling two systems read (`445`), and a spelling no system reads (`next tuesday`) are refused. `now` is written
-      at `at` alone.
-- [ ] **names** — A name its namespace gives once names one being: two beans given one such name are refused. A
-      garden's id (`garden-id`) is twelve hexadecimal digits, and never this garden's own. A name qualified to cross
-      (`garden`) is `<garden_id>/<kind>:<name>`, by this garden or one a `garden` bean here is named by; an identifier
-      someone else assigned is never qualified.
-- [ ] **layers** — A file stands in one layer, and a `pass` stands only where a row of the flow table grants it. A
-      session's pass log (`captures/passes/<slug>.jsonl`, named by its bean's `details.pass_log`) only grows, and a
-      commit that stages it claims the session: each pass it gains, `{from, to, through, as?, metadata}`, is granted,
-      each said value the commit adds has a granted pass into it, and a `say` by a person it adds has one from `words`
-      or `instructions` into its bean.
-- [ ] **ratify** — A change to the law (`core/law/`, `VOCAB.md`, `GARDEN.md`, a file the release keeps or one in the
-      `law` or `manifesto` layer) has a journal entry that says RULE-CHANGE, for the person who ratifies it. A `grant`
-      `as: ratify` is the gardener's own act: on the gardener's bean, `by` the gardener, said by the gardener.
-- [ ] **consent** — A person who is not the gardener, and not written under an opaque id (`p-<8 hexadecimal digits>`,
-      its title the id), is kept by name only on their own word: an `agree` of theirs, not declined, to an agreement
-      this garden holds, or the garden they keep, met here (a `garden` bean they `own`). And a commit places no such
-      person somewhere in the future: a happening wholly after the commit's moment, attended by one, keeps its location
-      sealed. A `decline` is the word of the one the statement it declines names (the party of an `agree`, the one a
-      booking would hold); one who `represent`s another never represents only itself, and in an agreement acts for a
-      party of it.
-- [ ] **harm** — A private-key block is refused in any file a commit stages. A code of a scheme the garden marks
-      special-category is written only sealed. A sealed statement keeps its verb and carries only `held` (its pointer,
-      `root:<root>/<32 hexadecimal digits>`), `id`, `while`, `why` and `note`, and where its bean concerns a person who
-      is not the gardener it is held `while` a statement — their word — holds. A commit that seals or unseals one says
-      so in its entry, one line, `- held: <bean> <id> added` or `erased`. A sensitivity rated below the one its bean
-      derives is a person's own word: the `rate` is said by a person, never derived.
-- [ ] **room** — Two bodies are not in one room at once: two `be … as: location` at one position that names a point
-      (its system's `covers`; an area holds many), neither part of nor at the other — a sayable takes no room; two
-      `serve` at one port on one address; one being attending two happenings whose times, to the moment, overlap. A
-      verb the garden declares exclusive (`VOCAB.md`, `exclusive`) holds one being once over any extent of its `at`;
-      what was declined holds nothing.
-- [ ] **vacancy** — Every row the garden adds to the law — a kind, a level, a verb, a namespace, a unit, a row of a
-      table — is used by a statement or a bean (`details` too), or says why it is vacant (`vacant: <why>`). Add a row
-      with the first bean that uses it.
-- [ ] **kept** — The journal is appended to, never rewritten, and a line a commit adds to it holds no character a reader
-      takes for a line break and no template's `(fill in`. A part under `series/`, once written, stays as it is. A
-      commit that takes a header key or a statement out of a bean names it in its entry — the key, the statement's
-      id, or its verb — empties none it keeps, and leaves every bean it writes a body: a bean reads on paper. What an
-      entity's closed books read — a `pin` of a reading whose step is `books`, at a commit: a payment it paid, received,
-      bears or booked, a booking or a match of its own, in its bean at that commit and on a day on or before the closed
-      one — is not taken out or changed: a correction is the move's reverse, after the day.
-- [ ] **line** — What holds a line holds its form (core/law/lines.yaml). A series (`record`, named by its `id`) is read
-      by its channels: each row one cell a channel, each cell in its channel's form, nothing in it the form does not
-      hold. A walk's steps (`step`, each named) lead on (`to`) only to steps of the walk, and none leads on from a final
-      step or a pause. A course is the being placed on a walk (`be` as order); each `move` goes `through` it, its `at`
-      the moment and one step of that walk (`<walk>#<step>`), by a way on or saying `why`, never after a final step and
-      never back in time, citing (`as`) only a reason the step lists. A reading (`reckon`, named) is steps of the closed
-      list, each taking what its row takes and naming only what came before it, its paths starting at the header or a
-      verb, its comparisons written by their signs. A `pin` holds its moment and a commit this garden has,
-      `<garden>@<object id>`, and rests on readings.
-- [ ] **measured** — What is measured is in its form (core/law/measures.yaml). A quantity says how well it is known
-      inside it, by one of `u` (a positive count, in a unit of its own quantity or of ratio) and `accuracy` (as its
-      maker stated it, with a kind of `accuracy_kinds`). A region (`extent`) lies on a line that has regions, bounded
-      at an end or by its length — a `measure` in the unit the line meters, or `level` and `count`, cells of a level of
-      the system named — never both. A repetition (`recurrence`) strides by one rule: `every` N neighbours or units, or
-      `each` cell of a level of the system named; where it starts and ends, and its closures, are positions of that
-      system, days its calendar has. A clause (`can`'s `clause`) falls due on its `at`, or relative to a path
-      (`falls_due`, by `after` or `before`) — not both; an allowance's `amount` is counted `within` a window; what it
-      occurs for (`each`), what uses it (`used_by`) and what brings it into force (`when`) are readings of the garden.
-      What a placement takes of its host (`be`'s `placed.takes`) is a quantity, of a placement that takes something;
-      and what is placed as room in a host never takes more than it holds (`hold`).
-- [ ] **measured, too** — A payment `charged` in another currency is charged in another unit of the same quantity, never
-      in its own; what it `settles` names a clause of the garden and an occurrence of it, once each. A weighing judges
-      every pair of its criteria once, its consistency ratio at most 0.10 or `why_inconsistent` saying why it stands. A
-      `mark` fixes the base of a cell its system's table lists as marked, in this being where the table names one, and a
-      table that names a being of the garden is marked by it. A clause's `by_role` is a role some party agreed `as`. A
-      clause's `guard` is a row of the guards table (core/law/guards.yaml), the clause the guard's `stance` or its
-      contradictory, and its `operand` what the guard `takes`. A grant's `window` is a repetition each of whose occurrences lasts a length of time (`lasts: { measure }`), in cells
-      of a day or more of a calendar reckoned by rule whose day begins at midnight, each place `at` names written as a
-      place of its cell, with its time of day `hh:mm` where it names one (`5T08:30`; in a day, `T22:00`), and counted from
-      its `from` where it strides (`every`, by a length of time) or counts its `times`.
-- [ ] **profile** — What a profile gives (core/law/profiles.yaml) is used only where the garden takes the profile, by
-      its name in `VOCAB.md`'s `profiles`: a verb whose `home` it is (`serve`, `classify`, `draw`…), and an attribute it
-      adds to a form of the core (the code profile's `role` and `scan_policy` on a placement). A page (the `view`
-      profile) is the bean whose `draw` holds the form `page`, naming its drawings in the order it shows them — each
-      once, and every one; each drawing is a `draw` of what it draws holding the form `drawing`, its live values among it
-      (`values`), each named once on its page; what a drawing names is there — a value of its own, a drawing of its page,
-      a reading of its bean — and each attribute is in its domain: a unit of the law, a technology of the catalogue, a
-      signal it publishes, a threshold's quantity, a deadline and a repetition in their forms, a frame that is a line.
-      A listening surface's or a link's `channel` (the network profile's) holds its form. A chart of accounts (the
-      accounting profile's: a scheme naming `form: chart`) holds its rows to the form — each postable account says
-      its element, one account a being, one a role, each being one the garden holds; a `book`ing moves an amount from
-      a postable account to another of one chart, open on its day, or names one side of a payment, the other read from
-      it, or books a move in the reverse sense (`sense: "-1"`) from a day it says; under one plan its amounts add up
-      to the entity's part, and to one side of a chart to no more; a `match` names payments that agree, each once.
-      A scheme of names' templates (the knowledge profile's `form: pattern`) holds each row to its form: its template
-      in the slots of core/law/lines.yaml (`counter`, `date` with its form, `hex` with its width …), what it suggests
-      codes of the schemes the garden reads, what it reads a field path, its calendar a system of time, its grouping a
-      row of `groupings`, `marks` only `by`, `match` `whole`, `part` or `word`, `only` `suggests`; a scheme of classes (`form: class`) has one code a being and `apart` only
-      `true`, and no cycle among its codes' parents. A garden's own grouping (VOCAB.md `groupings`) takes a name the
-      law's do not, and is judged as a reading of the law's closed list, each field of its line one a line has. A
-      garden's own risk (VOCAB.md `risks`, the storage profile's) is resolved by ways each of keeping properties of the
-      law (`keeping_properties`) to a least count, and is held only where the garden takes the profile; a policy scheme
-      (`form: keep`) covers risks the garden has, within a length of time, for codes of schemes it reads. A schema
-      scheme (`form: schema`) has nodes beneath a schema, each a template in the slots of `layout_slots` and their
-      forms, codes it matches the garden reads, `links` only `true`, its cap a count and a length of time.
+- [ ] **frame** — A position is in a declared system, in its one form, and finds its other half by its complement.
+- [ ] **names** — A name its namespace gives once names one being. A garden's id is twelve hexadecimal digits, and never
+      this garden's own: a `garden` bean is another garden. A name a garden gave, qualified to cross, is
+      `<garden_id>/<kind>:<name>`, by this garden or one a `garden` bean here is named by; an identifier someone else
+      assigned is never qualified. A name a namespace gives holds no bidi control character (Unicode's Bidi_Control),
+      which would make it read as another.
+- [ ] **layers** — A file stands in one layer; a `pass` from a layer to a layer through a method stands only where the
+      flow table grants it: of the rows that hold it the nearest decide, by the keys and the tie of their use
+      (core/law/lines.yaml `nearest`, `flows`) — one that names the act what it carries is known by there (`as`) is
+      nearer than one that names only layers, and rows as near stand together, one that refuses refusing it; `ratified`
+      is granted only to the party a garden's own row names, with the basis it grants on (core/law/flows.yaml); a
+      session's pass log, which its bean names in `details`, only grows, and a commit that stages one claims the
+      session: each pass the log gains, `{from, to, through, as?, metadata}`, stands where the table grants it, each
+      said value the commit adds has a granted pass into it, and a `say` by a person it adds has one from `words` or
+      `instructions` into its bean.
+- [ ] **ratify** — A change to the core, to a verb's row, a kind, a namespace or a flow is a RULE-CHANGE: a person
+      ratifies it. A grant to ratify is the gardener's own act: on the gardener's bean, said by the gardener.
+- [ ] **consent** — Another person is kept here by name only on their own word: a person who is not the gardener, and
+      not written under an opaque id (`p-<8 hexadecimal digits>`, its title the id), agrees to an agreement this garden
+      holds, or owns a `garden` bean here, the garden they keep, met here. A commit places no such person somewhere in
+      the future, in git: a happening wholly ahead of the commit that one attends and that is at a location seals that
+      location. A `decline` is the word of the one the statement it declines names, of nobody else; one who `represent`s
+      another acts for someone else — never only itself — and in an agreement for a party of it.
+- [ ] **harm** — What harm can come of is kept out of git: a private-key block is refused in any file a commit stages; a
+      code of a scheme marked special-category is written only sealed, and so is a name a namespace keeps `held` (a
+      government number); a sealed statement holds a pointer and nothing of what it said, has an id, and is held `while`
+      a statement holds where its bean concerns a person who is not the gardener, opened to whom a grant names it, and
+      to the person it is held of to read, and to nobody a grant of the whole bean alone opens it to; a commit that
+      seals or unseals one says so in its entry, `- held: <bean> <id> added` or `erased`; and a sensitivity rated below
+      the one its bean derives is a person's own word, said by a person.
+- [ ] **room** — Two bodies are not in one room at once: two at one position as a location, where the position names a
+      point — its system `covers` one; an area holds many — neither part of nor at the other (a sayable takes no room);
+      two listening at one port on one address; and one being attending two happenings whose times, to the moment,
+      overlap — save an attendance that does not take its hours (`transparency: transparent`). What a garden declares
+      exclusive (VOCAB.md `exclusive`) holds one being once over any extent: a statement declined holds nothing, nor an
+      attendance that does not take its hours.
+- [ ] **vacancy** — Every row a garden adds to the law — a kind, a level, a verb, a namespace, a unit, a row of a table
+      — is used by a statement or a bean, or says why it is vacant (`vacant:`).
+- [ ] **kept** — What is kept is not damaged: the journal is appended to, never rewritten, and a line a commit adds to
+      it holds no character a reader takes for a line break, and no template's `(fill in`; a series' part, once written,
+      stays as it is; a commit that takes a header key or a statement out of a bean names it in its entry (the key, the
+      statement's id, or its verb), empties none it keeps, and leaves every bean it writes a body; and what an entity's
+      closed books read (a `pin` of a reading whose step is `books`, at a commit) — a payment, a booking or a match
+      there at that commit, on a day on or before the closed one — is not taken out or changed.
+- [ ] **line** — What holds a line holds its form: a series' rows are read by its channels, and nothing else is in it; a
+      walk's ways on lead to steps of the walk, and none leads on from a final step or a pause; a course is a being
+      placed on a walk (`be` as order), and each move reaches a step of that walk at a moment, by a way on or saying
+      why, never after a final step and never back in time, citing only a reason the step lists; a reading's steps are
+      each one operation of the closed list, taking what its row takes and naming only what came before it, its paths
+      read over statements; a pin names a commit this garden has, at a moment not still to come.
+- [ ] **measured** — What is measured is in its form: a quantity's uncertainty is one of `u` (a positive count in a unit
+      of its own quantity, or of ratio) and `accuracy` (with a kind of the table); a region lies on a line that has
+      regions, bounded at an end or by its length — a length in the unit its line meters, or cells of a level of the
+      system named, never both; a repetition strides by one rule, every N neighbours or units or each cell of a level of
+      the system named, where it starts and ends and its closures positions of that system, a day its calendar has; a
+      clause (a `can`, or a position on the permission square) holds its form — it falls due on a day or relative to a
+      path, by after or before, never both; an allowance's window and amount together; what it occurs for, and what
+      brings it into force, a reading of its bean; and what a placement takes, each a quantity, never more room than its
+      host holds; a clause's `by_role` a role some party agreed `as`; a clause's `guard` a row of the guards table, the
+      clause the guard's stance or its contradictory, and its `operand` what the guard takes. A payment `charged` in
+      another currency is charged in another unit of the same quantity, and what it `settles` names a clause and an
+      occurrence of it, once each; a weighing judges every pair of its criteria once, consistently or saying why it
+      stands; a mark fixes the base of a cell its system's table lists as marked — in this being, where the table names
+      one — and a table that names a being of the garden is marked by it; a grant's window is a repetition each of whose
+      occurrences lasts a length of time, in cells of a day or more of a calendar reckoned by rule whose day begins at
+      midnight, each of its places written as a place of its cell, with its time of day `hh:mm` where it names one, and
+      counted from its `from` where it strides, by a length of time, or counts its times.
+- [ ] **profile** — What a profile gives is used only where the garden takes the profile (VOCAB.md `profiles`): a verb
+      whose home it is, and an attribute it adds to a form of the core; and what its forms hold is in its form — a page
+      draws the drawings of its bean, each once and all of them, a drawing's values are named once on its page, and what
+      a drawing or a value names is there: a value of its drawing, a drawing of its page, a reading of its bean; and
+      each attribute in its domain — a unit of the law, a technology of the catalogue, a signal it publishes, a quantity
+      of the kind asked, an extent and a repetition in their forms, a frame that is a line, an order on an axis its row
+      of `orientations` runs on, a verb of the law and only roles it takes; and a sheet, and a being of each kind a
+      drawing makes, shows the facts its page's `fields` names for its kind. A channel (the network profile's) holds its
+      form; a booking (the accounting profile's) rests on what moved, is asked or was measured, and names postable
+      accounts of one chart open on the day it is booked on, or a code of a plan it is booked to, or no side and a day,
+      booking a move in the reverse sense; under one plan its amounts add up to the entity's part of a payment, and to
+      one side of a chart to no more; each being a chart's account stands for is one the garden holds; and a match names
+      payments whose amounts agree, each matched once in an entity's books.
+<!-- the end of the rules written from the law -->
 
 **The commit's own rules**, which only a commit can show:
 - [ ] Every bean the commit changes is named in the journal entry it adds (`[[<bean>]]`), and that entry's heading is
