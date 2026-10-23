@@ -29,7 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 GARDEN = os.environ.get('DAFTAR_GARDEN') or os.getcwd()
 sys.path[:0] = [ROOT, os.path.join(ROOT, 'bin')]
 import parse as dmparse  # noqa: E402,F401 — UTF-8 on stdout and stderr
-from core import formats, groupings, storage  # noqa: E402
+from core import formats, groupings, reach, storage  # noqa: E402
 
 SIZE = "CAST(json_extract(CAST(m.q_value AS TEXT), '$.count') AS INTEGER)"
 
@@ -600,11 +600,8 @@ def layout(S, W, scheme, of, schema=None, sample=8):
 
     def chain_of(f):
         """[(folder n, its name)] from a folder up to its volume."""
-        out = []
-        while f in P:
-            out.append((f, formats.unescape(P[f][1])))
-            f = P[f][0]
-        return out
+        on, _loop = reach.chain(f, lambda n: [P[n][0]] if n in P else [])
+        return [(n, formats.unescape(P[n][1])) for n in on[:next((i for i, n in enumerate(on) if n not in P), len(on))]]
 
     def day_of(folders, name):
         m = DAY.search(name.decode('utf-8', 'replace'))

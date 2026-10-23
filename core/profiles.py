@@ -30,6 +30,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'bin'))
+import parse as dmparse  # noqa: E402 — the one matcher of a pattern of the law
 
 
 def _listed(x):
@@ -330,7 +332,7 @@ def domain_why(J, b, M, where, v, dom):
     if dom.get('type') == 'locale_tag':        # A READER'S WAY OF READING: one tag, as the law's type writes it
         row = next((t for t in (getattr(L, 'line_law', {}) or {}).get('types') or []
                     if isinstance(t, dict) and t.get('type') == 'locale_tag'), {})
-        if row.get('pattern') and not (isinstance(v, str) and re.fullmatch(row['pattern'], v)):
+        if row.get('pattern') and not (isinstance(v, str) and dmparse.law_match(row['pattern'], v)):
             return [(where, f"{v!r} {row.get('refusal') or 'is no locale_tag'}")]
     if reg == 'orientations':                  # AN ORDER RUNS ON ITS OWN AXIS (the drawing's `axes`): its row says which
         row = next((r for r in L.profile_tables.get('orientations') or [] if str(r.get('order')) == s), None)

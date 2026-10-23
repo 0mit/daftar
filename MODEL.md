@@ -110,15 +110,15 @@ and the default it derives where it has one.
 - **The face's 21 verbs** (`core/law/core.yaml`): the knowing acts `say` `read` `derive` `make`; the order `be` (where
   a being is), `stand`, `part`, `name`; the four questions `come` `own` `answer` `acquire`; the layers' `pass`; and
   the two squares' eight positions.
-- **The 38 rows** (`core/law/verbs.yaml`):
+- **The 43 rows** (`core/law/verbs.yaml`):
 
   | Group | Verbs |
   |---|---|
   | agreements, money, permission | `agree` `decline` `pay` `bear` `grant` `can` `represent` |
-  | what a being needs, does and holds | `need` `meet` `use` `do` `hold` `run` `open` `move` `attend` `produce` |
-  | knowing about a being | `measure` `classify` `concern` `rate` `weigh` |
+  | what a being needs, does and holds | `need` `meet` `use` `do` `hold` `run` `open` `move` `step` `attend` `produce` |
+  | knowing about a being | `measure` `record` `reckon` `pin` `classify` `concern` `rate` `weigh` |
   | failure and remedy, disagreement | `fail` `repair` `respond` `rule` |
-  | between gardens | `propose` `take` |
+  | between gardens | `propose` `take` `rehearse` |
   | the network profile | `serve` `carry` `route` `translate` `filter` |
   | the other profiles | `book` `match` (accounting), `renew` (domain), `mark`, `draw` (view) |
 
@@ -368,8 +368,11 @@ This table is the one statement of who may decide what (manifesto: parts).
 
 The person who ratifies in a garden is its gardener — for an organisation, a person who answers for it — or, for a class
 the gardener delegates for named beans, the person a `grant` names (`as: ratify`, `class: <letter>`). Nothing is
-delegated by default. When the class is unclear, an agent proposes and a person ratifies. An agent that meets something
-it may not decide parks it in `log/pending.md` as `status: proposed`, does everything safe around it, and carries on.
+delegated by default. A person's ratification (C to G, and J) is a commit that person signs with their ratifying key, or
+one a grant `as: ratify` of that class names; a hub refuses a change of those classes that no such commit brings, and
+where no hub judges, the ratification is the entry's word alone, and says so. When the class is unclear, an agent
+proposes and a person ratifies. An agent that meets something it may not decide parks it in `log/pending.md` as
+`status: proposed`, does everything safe around it, and carries on.
 
 ## The journal and the gate
 - **Each change carries its journal entry**, in `log/journal.md` and in the same commit: who, what and why
@@ -377,7 +380,8 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   written by the clock (`bin/journal.py`, which `bin/save.py` calls), never typed.
 - **The gate** is `core/check.py`, run at every commit by the pre-commit hook `bin/hooks/pre-commit` on the staged
   files. Its twenty-one rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
-  lists them: the core's thirteen, and five that today's gate held — `consent`, `harm`, `room`, `vacancy`, `kept`.
+  lists them: the core's thirteen, five that today's gate held — `consent`, `harm`, `room`, `vacancy`, `kept` — and
+  three that judge forms — `line`, `measured`, `profile`.
 - **The commit's own rules**: every bean a commit changes is named by the journal entry it adds; a statement it adds is
   known by an act it adds, at that entry's moment; a change to the law says RULE-CHANGE. Only the commit that adopts
   the core in a garden, a RULE-CHANGE, carries the moments its history recorded: `bin/dmupgrade.py <a release of the
@@ -387,7 +391,8 @@ it may not decide parks it in `log/pending.md` as `status: proposed`, does every
   header key or statement it takes out of a bean, empties none it keeps, and leaves every bean a body.
 - These rules confirm that the words are there and well formed, not that they are true; honesty is still the writer's
   (manifesto: checked).
-- Each person and each agent session commits under its own git identity, so the log's "who" is real.
+- Each writer signs its commits with a key its bean names: a person with a key only their presence opens, an agent with
+  the key of the machine it runs on; the hub reads the writer from the signature, and the entry names the session.
 - A garden with more than one writer has a hub that judges every push again (`bin/hub.py`): each commit signed
   by a key a writer's bean names (`name: { by: ssh, … }` or `openpgp`), what it changes within that writer's grants,
   and the whole garden by the gate.

@@ -5,7 +5,7 @@
 
 # The law's version. A garden that runs this law pins it in GARDEN.md, `extends: core@<version>`, and the gate holds the
 # pin to it; it moves with a change to the law, a RULE-CHANGE.
-version: "2.23"
+version: "2.24"
 
 # ---------------------------------------------------------------------------------------------------------------- roles
 # The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ὡς.
@@ -97,7 +97,7 @@ layers: [manifesto, law, reasoning, journal, history, queue, names]   # the law'
 
 # ---------------------------------------------------------------------------------------------------------------- verbs
 # The face's verbs, with their valency: which roles each takes, what fills them, and which are required. Every other
-# verb is a row of the same form, proposed and ratified as the law is: verbs.yaml holds the 34 written so far.
+# verb is a row of the same form, proposed and ratified as the law is: verbs.yaml holds those written so far.
 verbs:
   # knowing: how a statement came to be in the ledger. Each takes statements as `of`; with no `of`, it covers every
   # statement of its bean that no other knowing act covers.

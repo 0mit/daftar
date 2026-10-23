@@ -4,6 +4,7 @@
     python3 core/check.py [<garden>]      # every bean of the garden at <garden> (here, if none is named)
     python3 core/check.py --staged        # what a commit would hold: the INDEX, and the commit's own rules
     python3 core/check.py --law           # the law alone: the face, the verbs' rows and the levels, proved together
+    python3 core/check.py ... --json      # the same verdict as one JSON document: {found, printed}
 
 (`python` on Windows.) The beans are `beans/**/*.md`, the zone the days are reckoned in is GARDEN.md's `zone`, and the
 garden's own rows — kinds, levels, namespaces, flows, the layers' standing, verbs, rows added to a table — are VOCAB.md's
@@ -14,27 +15,16 @@ them, and the exit status is 1 when there is one.
 is copied out of the index into a temporary directory and judged there, with the law the commit stages, so what is
 judged is what is committed; then the commit's own rules (core/commit.py): each changed bean named by the entry the
 commit adds, its new statements known at that entry's moment, and a change to the law said to be a RULE-CHANGE. This
-command is the gate bin/check.py runs."""
+command is the gate bin/check.py runs. Every verdict is the one judge's (core/judge.py): this file only prints it."""
+import json
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-from core import commit, engine, read, standards  # noqa: E402
-from core.law import Law       # noqa: E402
-
-
-def garden_law(root, release=None):
-    """The law of the release at `release` (this one, if none), extended by the rows of the garden at `root` (its
-    VOCAB.md, where it has one). The standards are the garden's where it carries a law (`standards.carried`): a scheme of
-    codes it holds as its own is read there, as knowledge reads it."""
-    p = os.path.join(root, 'VOCAB.md')
-    ext = (('VOCAB.md', read.document(p)[0]),) if os.path.exists(p) else ()
-    std = standards.here(root) if standards.carried(root) else None
-    return Law.load(*ext, root=release, std=std)
+from core import read  # noqa: E402
+from core.judge import Scope, garden_law, judge  # noqa: E402,F401 — garden_law: every tool reads a garden's law here
 
 
 GROUPED = 5          # findings of one rule saying one thing in this many places or more are printed as one line
@@ -79,50 +69,56 @@ def grouped(found):
     return out
 
 
-def staged(root):
-    """The index, judged as the commit would hold it."""
-    snap = tempfile.mkdtemp(prefix='daftar-core-staged-')
-    try:
-        r = subprocess.run(['git', '-C', root, 'checkout-index', '--all', '--prefix=' + snap.replace(os.sep, '/') + '/'],
-                           capture_output=True, text=True)
-        if r.returncode != 0:
-            print(f"form        index: the index could not be read — {r.stderr.strip()}")
-            return 1
-        release = snap if os.path.isfile(os.path.join(snap, 'core', 'law', 'core.yaml')) else None
-        try:
-            law = garden_law(snap, release)
-        except read.Unread as e:
-            return report([('form', 'VOCAB.md', str(e))], "core check --staged")
-        garden = engine.Garden.read(snap)
-        try:                       # THE GARDEN'S ID is its clone's: the copy of the index has no history to read it from
-            garden.gid = engine.dmparse.garden_id(root)
-        except Exception:
-            garden.gid = None
-        found = engine.judge(law, garden) + commit.findings(root, law, garden=garden)
-        n = sum(len(b.statements) for b in garden.beans.values())
-        return report(found, f"core check --staged: {len(garden.beans)} beans, {n} statements")
-    finally:
-        shutil.rmtree(snap, ignore_errors=True)
+def staged(root, as_json=False):
+    """The index, judged as the commit would hold it (core/judge.py, the scope `staged`)."""
+    scope = Scope.staged(root)
+    found = judge(None, scope)
+    if scope.unread is not None:
+        print(f"form        index: {scope.unread}")
+        return 1
+    g = scope.garden
+    line = "core check --staged" + (f": {len(g.beans)} beans, {sum(len(b.statements) for b in g.beans.values())} "
+                                    f"statements" if g is not None else '')
+    return verdict(found, line, as_json)
+
+
+def verdict(found, line, as_json):
+    """The verdict as the gate prints it (`report`), or with --json as one document: the findings and those words."""
+    if not as_json:
+        return report(found, line)
+    import contextlib
+    import io
+    words = io.StringIO()
+    with contextlib.redirect_stdout(words):
+        code = report(found, line)
+    print(json.dumps({'found': [list(f) for f in found], 'printed': words.getvalue()}, ensure_ascii=False))
+    return code
 
 
 def main(argv):
     if argv[:1] in (['-h'], ['--help']):
         print(__doc__.strip())
         return 0
+    as_json = '--json' in argv
+    argv = [a for a in argv if a != '--json']
     if argv[:1] == ['--law']:
+        from core.law import Law
         law = Law.load()
-        return report(law.problems(), f"core law: {len(law.verbs)} verbs, {len(law.levels)} levels, {len(law.rules)} rules")
+        return verdict(law.problems(), f"core law: {len(law.verbs)} verbs, {len(law.levels)} levels, {len(law.rules)} "
+                                       f"rules", as_json)
     if argv[:1] == ['--staged']:
         top = subprocess.run(['git', 'rev-parse', '--show-toplevel'], capture_output=True, text=True)
-        return staged(top.stdout.strip() if top.returncode == 0 else os.getcwd())
+        return staged(top.stdout.strip() if top.returncode == 0 else os.getcwd(), as_json)
     root = os.path.abspath(argv[0] if argv else '.')
     try:
         law = garden_law(root)
     except read.Unread as e:
-        return report([('form', 'VOCAB.md', str(e))], "core check")
-    garden = engine.Garden.read(root)
-    n = sum(len(b.statements) for b in garden.beans.values())
-    return report(engine.judge(law, garden), f"core check: {os.path.basename(root)}: {len(garden.beans)} beans, {n} statements")
+        return verdict([('form', 'VOCAB.md', str(e))], "core check", as_json)
+    scope = Scope.tree(root)
+    found = judge(law, scope)
+    n = sum(len(b.statements) for b in scope.garden.beans.values())
+    return verdict(found, f"core check: {os.path.basename(root)}: {len(scope.garden.beans)} beans, {n} statements",
+                   as_json)
 
 
 if __name__ == '__main__':

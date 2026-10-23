@@ -251,6 +251,27 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.24** (2026-10-23, daftar v2.24.0, human-ratified rule-change) — **the record made true, and one judge
+  behind every door.** The words: MODEL.md's journal and gate say that each writer signs its commits with a key its
+  bean names — a person with a key only their presence opens, an agent with the key of the machine it runs on — and
+  that the hub reads the writer from the signature; the Contract of Parts says that a person's ratification is a commit
+  that person signs, which a hub requires, and where no hub judges it is the entry's word alone and says so. The counts
+  are the law's: verbs.yaml holds 43 rows (MODEL.md said 38, and its table lacked `step`, `record`, `reckon`, `pin` and
+  `rehearse`; core.yaml's comment said 34 and now types none), and the twenty-one rules are thirteen, five and three.
+  CHECKLIST Part A's `weight` is core.yaml's `bearer`, in its words. test/docs.py holds every count and the list of the
+  rules to the law. The code, which changes no verdict but one: core/judge.py's `judge(law, scope)` is the one judge,
+  its scope the tree, the index (staged), a push's commits or the union of git and a host's stores, and every door asks
+  it — core/check.py (with `--json`), bin/check.py, the pre-commit hook and so the save and its --again, bin/hub.py,
+  bin/store.py's check (now git's findings and then what the stores add) and bin/propose.py's read; engine.judge is
+  gone. core/reach.py is the one walk of what a relation reaches, under the gate's order, life and room, the law's
+  ladder, a scheme's parents, the groupings' wholes, the layers' chain, the cursor, a crosswalk, a reading's ancestor
+  and a volume's folders. The nearest-name hint is written once (bin/parse.py `nearest`), and the law's patterns are
+  matched by one matcher, `law_match`, in ASCII, at a namespace's name, the manifest's forms and a locale tag: a `mail`
+  name holding a no-break space, which the gate alone refused, is taken as every other reader takes it. A garden's
+  documents are read in an order written down (a folder's own documents by name, then its folders by name), and a
+  `names` refusal is told at the last place a name is given in it. test/core_conformance.py judges every clause of
+  every rule, broken by a case, at every door, and finds one verdict.
+
 - **daftar v2.23.3** (2026-10-20, code alone, core 2.23) — the operation `axes`: a need whose `while` cannot be read
   needs nothing now — necessity counts what is known to hold, and lists the rest as not read — while a blocking need of
   the member not read still blocks. test/courses.py.

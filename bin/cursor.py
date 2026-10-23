@@ -131,15 +131,9 @@ def targets(fm, term, sch):
 def chain(bean, term, sch):
     """Walk one relation from `bean`. Acyclicity is the vocabulary's guarantee, so a seen-set is only
     belt-and-braces against a document the gate has not yet seen."""
-    out, seen, frontier = [], {bean}, [bean]
-    while frontier:
-        nxt = []
-        for b in frontier:
-            for t in targets(BEANS.get(b, {}), term, sch):
-                if t not in seen and t in BEANS:
-                    seen.add(t); out.append(t); nxt.append(t)
-        frontier = nxt
-    return out
+    sys.path.insert(0, ROOT)
+    from core import reach
+    return [t for t, _via in reach.Reach(bean, lambda b: [t for t in targets(BEANS.get(b, {}), term, sch) if t in BEANS])]
 
 
 # ==== A GARDEN OF THE CORE (v1 part 5) ============================================================================

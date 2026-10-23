@@ -73,6 +73,7 @@ parts, changes).
    python3 test/core_gaps.py
    python3 test/core_ported.py
    python3 test/core_exact.py
+   python3 test/core_conformance.py
    python3 test/save.py
    python3 test/converge.py
    python3 test/calendars.py

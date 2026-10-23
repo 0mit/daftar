@@ -7,7 +7,8 @@ and what is read is the row of `read`, and no rule here names it. The rules name
 acts and their `now`, a row's default, the stand of the order, the line life is given along, the crown and `necessary`,
 the figures, the foundation and its property, the frame, a namespace that gives once, and the flow table.
 
-    judge(law, garden) -> [(rule, where, message)]       each one an error: the law is strict
+    Judge(law, garden).run() -> [(rule, where, message)]   each one an error: the law is strict; every door asks it
+                                                          through the one judge, core/judge.py
 
 `ratify` is a rule of the commit (a change to the law is a RULE-CHANGE a person ratifies), applied by the save; its
 other half — a grant to ratify is the gardener's own act — is judged here. So are the rules today's gate held that the
@@ -26,7 +27,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
-from core import frame, read  # noqa: E402
+from core import frame, reach, read  # noqa: E402
 import cal as dmcal  # noqa: E402 — a day's length, to reckon a day's span beside a moment's
 from core.law import listed, shapes_of, TRUE  # noqa: E402
 import importlib
@@ -131,9 +132,13 @@ class Garden:
 
 
 def _documents(root):
-    """(path, bean id) of each document of the garden, in the order Garden.read has always read them."""
+    """(path, bean id) of each document of the garden, in the order Garden.read reads them, which is the garden's order:
+    beans/ then mappings/, and in each folder its own documents by name, then its folders by name. (The folders were
+    taken in the order the file system lists them, and a refusal that names the last of several places named the one
+    the disk happened to list last.)"""
     for d in DOCUMENTS:
-        for dirpath, _dirs, names in os.walk(os.path.join(root, d)):
+        for dirpath, dirs, names in os.walk(os.path.join(root, d)):
+            dirs.sort()
             for n in sorted(names):
                 if n.endswith('.md'):
                     yield os.path.join(dirpath, n), n[:-3]
@@ -494,7 +499,7 @@ class Judge:
             self.sealed(b, where, r)
             return
         if v is None:
-            near = sorted(self.L.verbs, key=lambda n: (n[:1] != verb[:1], abs(len(n) - len(verb)), n))[:3]
+            near = dmparse.nearest(verb, self.L.verbs)
             self.err('form', where, f"`{verb}` is no verb of the law (nearest: {', '.join(near)}); a new verb is a row, "
                                     f"proposed and ratified")
             return
@@ -660,7 +665,7 @@ class Judge:
                         graph.setdefault(a, set()).add(c)
                         edges.append((a, c, f"{b.id}[{i}] stand"))
         for a, c, where in edges:
-            path = [a] if a == c else self._path(graph, c, a)
+            path = [a] if a == c else reach.way(c, a, lambda n: sorted(graph.get(n, ())))
             if path:
                 self.err('order', where, f"{a} stands at {' → '.join([c] + path[:-1]) if path[:-1] else c}, which stands "
                                          f"on {a}: nothing stands on itself through others")
@@ -673,36 +678,6 @@ class Judge:
                 if lp and lw and lp != lw and lp not in self.L.below(lw, ways=('made-of',)):
                     self.err('order', f"{b.id}[{i}] part", f"a part never stands above its whole: {lp} is not {lw} and "
                                                            f"not a level {lw} is made of")
-
-    @staticmethod
-    def _path(graph, start, target):
-        """The steps from `start` to `target` through `graph`, ending at `target` — [] where there is no way."""
-        back, todo = {start: None}, [start]
-        while todo:
-            n = todo.pop(0)
-            for m in sorted(graph.get(n, ())):
-                if m == target:
-                    steps = [n]
-                    while back[steps[-1]] is not None:
-                        steps.append(back[steps[-1]])
-                    return list(reversed(steps))[1:] + [m]
-                if m not in back:
-                    back[m] = n
-                    todo.append(m)
-        return []
-
-    @staticmethod
-    def _reaches(graph, start, target):
-        seen, todo = set(), [start]
-        while todo:
-            n = todo.pop()
-            for m in graph.get(n, ()):
-                if m == target:
-                    return True
-                if m not in seen:
-                    seen.add(m)
-                    todo.append(m)
-        return False
 
     def life(self):
         comes = {}
@@ -733,7 +708,7 @@ class Judge:
         graph = {w: {self.norm(t, b) for b, _i, r in sts for t in listed(r.get('through')) if isinstance(t, str)}
                  for w, sts in comes.items()}
         for w, sts in comes.items():
-            if self._reaches(graph, w, w):
+            if reach.reaches(w, w, lambda n: graph.get(n, ())):
                 self.err('life', f"{sts[0][0].id}[{sts[0][1]}] come", f"{w} comes through itself: every chain ends at "
                                                                       f"the crown, and a circle never ends")
 
@@ -909,7 +884,7 @@ class Judge:
                         self.err('bearer', f"{b.id}[{i}] {verb}", f"{what} is stated of {self.norm(r['of'], b)}: {why}")
 
     def names(self):
-        given = {}
+        given, order = {}, {bid: n for n, bid in enumerate(self.G.beans)}
         for b in self.G.beans.values():
             for i, verb, r in b.items:
                 pat = (self.L.namespaces.get(r.get('by')) or {}).get('pattern') if verb == 'name' and \
@@ -923,11 +898,13 @@ class Judge:
                     self.err('names', f"{b.id}[{i}] name", why)
                 if verb == 'name' and isinstance(r.get('by'), str) and r.get('as') != 'unknown' \
                         and (self.L.namespaces.get(r['by']) or {}).get('once') == TRUE:     # a name nobody said names nobody
-                    given.setdefault((r['by'], r.get('as')), []).append((self.norm(r.get('of'), b), f"{b.id}[{i}] name"))
+                    given.setdefault((r['by'], r.get('as')), []).append((self.norm(r.get('of'), b), f"{b.id}[{i}] name",
+                                                                         (order[b.id], i)))
         for (ns, nm), hits in given.items():
             beings = sorted({str(h[0]) for h in hits})
-            if len(beings) > 1:
-                self.err('names', hits[-1][1], f"{ns} gives {nm!r} once, and it names {', '.join(beings)}")
+            if len(beings) > 1:               # TOLD AT THE LAST PLACE IT IS GIVEN, in the garden's order (Garden.read)
+                self.err('names', max(hits, key=lambda h: h[2])[1], f"{ns} gives {nm!r} once, and it names "
+                                                                    f"{', '.join(beings)}")
 
     def layers(self):
         for b in self.G.beans.values():
@@ -978,7 +955,8 @@ class Judge:
     def _related(self, a, c):
         """Whether one being is part of, or at, the other, through any number of steps."""
         up = self._part_at()
-        return self._reaches(up, a, c) or self._reaches(up, c, a)
+        step = lambda n: up.get(n, ())                   # noqa: E731
+        return reach.reaches(a, c, step) or reach.reaches(c, a, step)
 
     def _part_at(self):
         """{being: the beings it is part of, or at}: one step of each `part` and `be … at`, read once per judge — the
@@ -1103,7 +1081,7 @@ class Judge:
                 continue
             form = row.get('form')
             if form in forms:
-                if not (isinstance(v, str) and re.fullmatch(forms[form]['pattern'], v)):
+                if not (isinstance(v, str) and dmparse.law_match(forms[form]['pattern'], v)):
                     self.err('form', 'GARDEN.md', f"`{k}: {v}` — {forms[form].get('says')}")
             elif form == 'pin':
                 want = f"core@{self.L.version}"
@@ -1132,7 +1110,7 @@ class Judge:
                             graph.setdefault(a, set()).add(c)
                             first.setdefault((a, c), f"{b.id}[{i}] {verb}")
             for (a, c), where in sorted(first.items()):
-                path = [a] if a == c else self._path(graph, c, a)
+                path = [a] if a == c else reach.way(c, a, lambda n: sorted(graph.get(n, ())))
                 if path:
                     self.err('order', where, f"{' → '.join([a, c] + path[:-1] + ([a] if a != c else []))}: nothing "
                                              f"{says} itself through others")
@@ -1472,7 +1450,3 @@ class Judge:
                 for where, msg in lines.problems(self, b):
                     self.err('line', where, msg)
 
-
-def judge(law, garden):
-    """[(rule, where, message)] for `garden` under `law`: the law's own problems first, then the garden's."""
-    return list(law.problems()) + Judge(law, garden).run()

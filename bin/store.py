@@ -53,7 +53,8 @@ THE POINTER. In git a bean names a being kept only in a store `store:<kind>:<id>
 that keeps the store. In a store every being is its plain id: `import` reads a pointer back as the id, and `export`
 writes one for a being that has no bean.
 
-THE CHECK. `check` judges the union of git and every store this host keeps. A union small enough is judged by the
+THE CHECK. `check` judges the union of git and every store this host keeps, by the one judge every door asks
+(core/judge.py, the scope `union`): git's own findings first, then what the stores add. A union small enough is judged by the
 core's own engine — every rule, over the beans and the stores' beings read as beans — and what it finds beyond git's own
 findings is the store's; in a larger one, each store small enough is still judged so, beside git, alone. A large store
 is judged by queries, and the rules that span stores are judged by queries over them all: `names` (a name given once names one being), `order` (no
@@ -1030,25 +1031,27 @@ def _me():
 
 # ------------------------------------------------------------------------------------------------ the check
 def check(stores, *, root=ROOT, law=None, garden=None):
-    """[(rule, where, message)] of the union of git and `stores`: what the store adds to git's own findings."""
+    """[(rule, where, message)] of the union of git and `stores`, by the one judge (core/judge.py, the scope `union`):
+    git's own findings, then what the stores add to them."""
+    from core import judge as dmjudge
     garden = garden or engine.Garden.read(root)
     if law is None:
-        from core import check as core_check
-        rel = root if os.path.isfile(os.path.join(root, 'core', 'law', 'core.yaml')) else None
-        law = core_check.garden_law(root, rel)
+        law = dmjudge.garden_law(root, dmjudge.carried(root))
     for s in stores:
         s._law, s._garden = law, garden
         if not s.db.in_transaction:          # one snapshot of each store: a writer at work is seen before or after, whole
             s.db.execute('BEGIN')
     try:
-        return _check(stores, garden, law)
+        return dmjudge.judge(law, dmjudge.Scope.union(garden, lambda law, garden, base: _check(stores, garden, law, base),
+                                                      root=root))
     finally:
         for s in stores:
             if s.db.in_transaction and s._depth == 0:
                 s.db.execute('ROLLBACK')     # nothing was written: the check only reads
 
 
-def _check(stores, garden, law):
+def _check(stores, garden, law, base):
+    """What the stores add to git's own findings (`base`)."""
     out = []
     for s in stores:
         for (bid, kind) in s.db.execute('SELECT id, kind FROM being'):
@@ -1063,14 +1066,14 @@ def _check(stores, garden, law):
     size = {s.name: s.count() + s.db.execute('SELECT COUNT(*) FROM being').fetchone()[0] for s in stores}
     total = sum(size.values())
     if total <= UNION_ROWS:
-        out += _union_judged(stores, garden, law)
+        out += _union_judged(stores, garden, law, base)
         return out
     # EACH STORE SMALL ENOUGH IS JUDGED WHOLE, beside git, alone: a large one beside it does not put the small one into
     # the queries' mode; the rules that span stores are judged by queries over all of them
     large = [s for s in stores if size[s.name] > UNION_ROWS]
     for s in stores:
         if s not in large:
-            out += _union_judged([s], garden, law)
+            out += _union_judged([s], garden, law, base)
     out += _names_once(stores, garden, law)
     out += _cycles(stores, garden)
     judged = {'hold', 'name', 'part', 'measure', 'own', 'need', 'be', 'derive', 'read', 'make', 'say'}
@@ -1175,7 +1178,7 @@ def _plain_statements(statements):
             for st in statements if isinstance(st, dict) and len(st) == 1 for v, r in st.items()]
 
 
-def _union_judged(stores, garden, law):
+def _union_judged(stores, garden, law, base):
     """The union of git and the stores, judged whole by the core's engine: every finding git alone does not have, and
     none of `knowing` at a store's row (a row names its act; `_acts_resolve` judges it). In the union every being is a
     bean, so every filler is its plain id."""
@@ -1212,9 +1215,10 @@ def _union_judged(stores, garden, law):
             G.beans[bid] = nb
     if not added:
         return []
-    base = {(r, w, m) for r, w, m in engine.Judge(law, garden).run()}
+    from core import judge as dmjudge
+    base = set(base)                                  # git's own findings (the law's own problems among them)
     out = []
-    for rule, where, msg in engine.Judge(law, G).run():
+    for rule, where, msg in dmjudge.judge(law, dmjudge.Scope.tree(garden=G)):
         if (rule, where, msg) in base:
             continue
         m = re.match(r'^([a-z0-9][a-z0-9._-]*)\[(\d+)\]', where)
@@ -1464,7 +1468,7 @@ def main(argv):
                 for r in rows:
                     print('\t'.join('' if x is None else str(x) for x in r))
             return 0
-        if cmd == 'check':
+        if cmd == 'check':                   # the union of git and the stores, judged whole: git's findings, then theirs
             if path:
                 stores, pre = [Store(path, create=False)], []
             else:

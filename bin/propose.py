@@ -952,11 +952,11 @@ def core_gate(a):
                 shutil.copy2(os.path.join(ROOT, f), os.path.join(tmp, f))
         _core_apply(a, tmp)
         sys.path.insert(0, ROOT)
-        from core import check as core_check, engine
-        law = core_check.garden_law(tmp, tmp if os.path.isfile(os.path.join(tmp, 'core', 'law', 'core.yaml')) else None)
+        from core import engine, judge as dmjudge
+        law = dmjudge.garden_law(tmp, dmjudge.carried(tmp))
         garden = engine.Garden.read(tmp)
         garden.gid = identity()[0]          # the copy has no history: its id is this garden's
-        found = engine.judge(law, garden)
+        found = dmjudge.judge(law, dmjudge.Scope.tree(tmp, garden))
         return not found, [f"{r:<11} {w}: {m}" for r, w, m in found] + \
             [f"core check: {len(garden.beans)} beans — {len(found)} error(s)"]
     finally:

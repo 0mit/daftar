@@ -7,6 +7,7 @@
                                           # pre-commit hook runs this: bin/held.py `new --staged`, in the same process)
     python3 bin/check.py --merge-commit   # a merge git commits itself (the pre-merge-commit hook runs this)
     python3 bin/check.py --law            # the core's law alone, proved one law (a release's own tree too)
+    python3 bin/check.py ... --json       # the same verdict as one JSON document, as a hub reads it (core/check.py)
 
 (`python` on Windows; `python3 bin/daftar.py check` runs this too.) The law a garden runs is GARDEN.md's `extends`,
 `core@<version>`, and the gate is the core's, core/check.py: its rules over the statements, and at a commit the commit's
@@ -79,7 +80,8 @@ def main(argv):
         print(__doc__.strip())
         return 0
     held = '--held' in argv
-    argv = [a for a in argv if a != '--held']
+    as_json = ['--json'] if '--json' in argv else []    # the verdict as one document (core/check.py): a hub reads it
+    argv = [a for a in argv if a not in ('--held', '--json')]
     staged = '--staged' in argv or '--merge-commit' in argv
     if held and not staged:
         print("check: --held asks, after the gate over the index, that every pointer the commit adds resolves on this "
@@ -107,7 +109,7 @@ def main(argv):
     # every commit. It reads the index and judges it exactly as before; only the process is one.
     from core import check as core_check
     sys.stdout.flush()
-    code = core_check.main(rest or [ROOT])
+    code = core_check.main((rest or [ROOT]) + as_json)
     sys.stdout.flush()
     if code or not held:
         return code

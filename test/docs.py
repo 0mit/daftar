@@ -133,6 +133,95 @@ _named = sorted(w.strip() for w in _listed.group(1).split(",")) if _listed else 
 check("MODEL.md names exactly the profiles the law offers", _named == _offered and len(_offered) >= 5,
       f"MODEL.md: {_named}; the law: {_offered}")
 
+# THE COUNTS AND THE LIST OF THE RULES ARE THE LAW'S (core 2.24, C8). MODEL.md and CHECKLIST.md say how many verbs and
+# rules the law has, and which; a number typed by hand is a second statement, and it drifted (MODEL.md's 38 rows and
+# core.yaml's 34 against verbs.yaml's 43, CHECKLIST's `weight` against core.yaml's `bearer`). Each is read from the law
+# here, and a count, a list or a name that disagrees fails by what it says.
+_WORDS = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
+          "seventeen eighteen nineteen twenty").split()
+
+
+def _number(word):
+    w = word.lower()
+    if w.isdigit():
+        return int(w)
+    if w in _WORDS:
+        return _WORDS.index(w)
+    tens, _, unit = w.partition("-")
+    return 20 + _WORDS.index(unit) if tens == "twenty" and unit in _WORDS[1:10] else None
+
+
+def law_counts(model, checklist, agents, core, verbs):
+    """[what disagrees]: the counts and the rules MODEL.md, CHECKLIST.md and AGENTS.md state, against core.yaml and
+    verbs.yaml as read."""
+    out = []
+    rules = [str(r["rule"]) for r in core["rules"]]
+    face = [str(v["verb"]) for v in core["verbs"]]
+    rows = [str(v["verb"]) for v in verbs["verbs"]]
+
+    def said(text, pattern, what):
+        m = re.search(pattern, text)
+        if not m:
+            out.append(f"{what}: not found")
+            return None
+        n = _number(m.group(1))
+        if n is None:
+            out.append(f"{what}: {m.group(1)!r} is no number")
+        return n
+    n = said(model, r"\*\*The face's (\S+) verbs\*\*", "MODEL.md, the face's verbs")
+    if n is not None and n != len(face):
+        out.append(f"MODEL.md says the face has {n} verbs; core.yaml has {len(face)}")
+    n = said(model, r"\*\*The (\S+) rows\*\* \(`core/law/verbs\.yaml`\)", "MODEL.md, the rows of verbs.yaml")
+    if n is not None and n != len(rows):
+        out.append(f"MODEL.md says verbs.yaml has {n} rows; it has {len(rows)}")
+    m = re.search(r"\*\*The \S+ rows\*\* \(`core/law/verbs\.yaml`\):\n(.*?)\n- \*\*", model, re.S)
+    tabled = re.findall(r"`([a-z][a-z-]*)`", m.group(1)) if m else []
+    if sorted(tabled) != sorted(rows):
+        out.append(f"MODEL.md's table of verbs.yaml's rows: only there {sorted(set(tabled) - set(rows))}, missing "
+                   f"{sorted(set(rows) - set(tabled))}, twice {sorted({v for v in tabled if tabled.count(v) > 1})}")
+    m = re.search(r"Its (\S+) rules are strict.*?lists them: the core's (\S+), (\S+) that today's gate held — (.*?) — and "
+                  r"(\S+) that judge forms — (.*?)\.", " ".join(model.split()))
+    if not m:
+        out.append("MODEL.md, the gate's rules: not found")
+    else:
+        total, core_n, held_n, held, forms_n, forms = m.groups()
+        held_l, forms_l = re.findall(r"`([a-z]+)`", held), re.findall(r"`([a-z]+)`", forms)
+        if _number(total) != len(rules):
+            out.append(f"MODEL.md says the gate has {total} rules; core.yaml has {len(rules)}")
+        if (_number(core_n), _number(held_n), _number(forms_n)) != (len(rules) - len(held_l) - len(forms_l),
+                                                                    len(held_l), len(forms_l)) \
+                or rules[-len(held_l) - len(forms_l):] != held_l + forms_l:
+            out.append(f"MODEL.md counts the rules {core_n}, {held_n} ({held_l}) and {forms_n} ({forms_l}); core.yaml "
+                       f"lists {rules}")
+    part_a = checklist.split("## Part A", 1)[-1].split("\n## ", 1)[0]
+    n = said(part_a, r"\n(\S+) rules, each strict", "CHECKLIST.md Part A, the rules")
+    if n is not None and n != len(rules):
+        out.append(f"CHECKLIST.md Part A says {n} rules; core.yaml has {len(rules)}")
+    m = re.search(r"The first (\S+) are the core's own; the next (\S+),", part_a)
+    if not m or _number(m.group(1)) + _number(m.group(2)) + 3 != len(rules):
+        out.append(f"CHECKLIST.md Part A's first and next do not add up to core.yaml's {len(rules)} rules with the "
+                   f"three that judge forms")
+    items = [i for i in re.findall(r"(?m)^- \[ \] \*\*([a-z][a-z, ]*)\*\*", part_a) if not i.endswith(", too")]
+    if items != rules:
+        out.append(f"CHECKLIST.md Part A lists {items}; core.yaml's rules are {rules}")
+    n = said(agents, r"the (\S+) rules\)", "AGENTS.md, the rules")
+    if n is not None and n != len(rules):
+        out.append(f"AGENTS.md says {n} rules; core.yaml has {len(rules)}")
+    return out
+
+
+_core = _read.data(os.path.join(ROOT, "core", "law", "core.yaml"))
+_verbs = _read.data(os.path.join(ROOT, "core", "law", "verbs.yaml"))
+_wrong = law_counts(text["MODEL.md"], text["CHECKLIST.md"], text["AGENTS.md"], _core, _verbs)
+check("MODEL.md, CHECKLIST.md and AGENTS.md count the verbs and the rules as the law has them, and list the rules in "
+      "its order: the face's verbs, verbs.yaml's rows and each in their table, the gate's rules and Part A's items",
+      not _wrong, _wrong)
+_planted = {"a count of rows": (text["MODEL.md"].replace("**The 43 rows**", "**The 44 rows**"), text["CHECKLIST.md"]),
+            "a count of rules": (text["MODEL.md"], text["CHECKLIST.md"].replace("Twenty-one rules, each", "Twenty rules, each")),
+            "a rule's name": (text["MODEL.md"], text["CHECKLIST.md"].replace("**bearer** —", "**weight** —"))}
+_missed = [k for k, (m, c) in _planted.items() if not law_counts(m, c, text["AGENTS.md"], _core, _verbs)]
+check("...and each wrong count or name planted in them is found: " + ", ".join(_planted), not _missed, _missed)
+
 ci = open(os.path.join(ROOT, ".github", "workflows", "ci.yml"), encoding="utf-8").read()
 ci_suites = set(re.findall(r"python3 (test/[a-z_]+\.py)", ci))
 assert ci_suites, "no suite was found in the workflow"

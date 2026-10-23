@@ -344,12 +344,11 @@ class Map:
         if len(tops) != 1:
             raise ValueError(f"the chain of `beneath` has {len(tops)} tops ({', '.join(tops) or 'none: it loops'}), "
                              f"where one layer stands above the rest")
-        out, at = [], tops[0]
-        while at:
-            if at in out:
-                raise ValueError(f"the chain of `beneath` loops at `{at}`")
-            out.append(at)
-            at = (self.layers.get(at) or {}).get('beneath')
+        sys.path.insert(0, ROOT)
+        from core import reach
+        out, loop = reach.chain(tops[0], lambda at: [b] if (b := (self.layers.get(at) or {}).get('beneath')) else [])
+        if loop is not None:
+            raise ValueError(f"the chain of `beneath` loops at `{loop}`")
         return out
 
     def placed(self):

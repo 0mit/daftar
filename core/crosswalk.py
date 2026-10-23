@@ -251,16 +251,16 @@ class Reader:
 
     def reach(self, bean, path, model):
         """The first bean the model's row selects, reached by following the path from the bean (never the bean itself)."""
-        seen, here = {bean.id}, bean
-        while True:
-            nxt = self.follow(here, path)
+        from core import reach
+
+        def step(bid):
+            nxt = self.follow(self.G.beans[bid], path)
             nxt = nxt.split('#', 1)[0] if isinstance(nxt, str) else nxt
-            if not isinstance(nxt, str) or nxt in seen or nxt not in self.G.beans:
-                return None
-            if nxt in self.selected(model):
-                return nxt
-            seen.add(nxt)
-            here = self.G.beans[nxt]
+            return [nxt] if isinstance(nxt, str) and nxt in self.G.beans else []
+        for x, _via in reach.Reach(bean.id, step):
+            if x in self.selected(model):
+                return x
+        return None
 
     def reached(self, path, model):
         """{bean id}: the beans the records of the model reach by the path, through any of their statements its last
