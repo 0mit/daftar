@@ -865,7 +865,10 @@ class Judge:
                         seen.add(why)
                         self.err('bearer', f"{b.id}[{i}] {verb}", f"{what} is stated of {self.norm(r['of'], b)}: {why}")
 
-    def names(self):
+    def names(self, also=()):
+        """Rule `names`: a name's form, and a name its namespace gives once naming one being — over git, and with
+        `also`, the names a store gives beside it (bin/store.py), each (namespace, name, the being it names, its place,
+        where the union reads it)."""
         given, order = {}, {bid: n for n, bid in enumerate(self.G.beans)}
         for b in self.G.beans.values():
             for i, verb, r in b.items:
@@ -881,7 +884,9 @@ class Judge:
                 if verb == 'name' and isinstance(r.get('by'), str) and r.get('as') != 'unknown' \
                         and (self.L.namespaces.get(r['by']) or {}).get('once') == TRUE:     # a name nobody said names nobody
                     given.setdefault((r['by'], r.get('as')), []).append((self.norm(r.get('of'), b), f"{b.id}[{i}] name",
-                                                                         (order[b.id], i)))
+                                                                         (0, order[b.id], i)))
+        for ns, nm, being, where, at in also:
+            given.setdefault((ns, nm), []).append((being, where, at))
         for (ns, nm), hits in given.items():
             beings = sorted({str(h[0]) for h in hits})
             if len(beings) > 1:               # TOLD AT THE LAST PLACE IT IS GIVEN, in the garden's order (Garden.read)

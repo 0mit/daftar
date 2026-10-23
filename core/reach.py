@@ -11,7 +11,8 @@ cycle shows itself. Every question below is that one walk, asked differently:
                                                  order, and the being where it came back to one already on it (or None)
 
 The gate's order and life, the law's ladder, the cursor, a scheme's parents, the groupings' wholes, the layers' chain, a
-crosswalk's path and a volume's folders all walk this; a store's SQL walks its own until its check is a reading."""
+crosswalk's path and a volume's folders all walk this, and so do a rule's `cycle` and `reach` compiled to SQL over a
+store (core/union.py), over what the SQL reads."""
 import collections
 
 

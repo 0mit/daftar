@@ -56,12 +56,13 @@ writes one for a being that has no bean.
 THE CHECK. `check` judges the union of git and every store this host keeps, by the one judge every door asks
 (core/judge.py, the scope `union`): git's own findings first, then what the stores add. A union small enough is judged by the
 core's own engine — every rule, over the beans and the stores' beings read as beans — and what it finds beyond git's own
-findings is the store's; in a larger one, each store small enough is still judged so, beside git, alone. A large store
-is judged by queries, and the rules that span stores are judged by queries over them all: `names` (a name given once names one being), `order` (no
-cycle through own, part, be at, need), each act a row names (a knowing act, here or in git), each being's kind against
-its bean's, the overlaps (one `(being, id)`, one form), and every pointer in git. The relations those queries do not
-judge are named, never passed over in silence. The gate never reads a store: a gate that judged one machine's disk
-would pass on one and fail on another.
+findings is the store's; in a larger one, each store small enough is still judged so, beside git, alone. Over the whole
+union, however large, each rule that is a reading of the law is judged by its reading compiled to SQL (core/union.py),
+by the same operations, with the engine's words and places; a name a namespace gives once by the engine's own code,
+the SQL finding the names given twice; and by queries, each act a row names (a knowing act, here or in git), each
+being's kind against its bean's, the overlaps (one `(being, id)`, one form), and every pointer in git. Each rule judged
+neither way at that size is named, never passed over in silence. The gate never reads a store: a gate that judged one
+machine's disk would pass on one and fail on another.
 
 ROWS IN (`put`, standard input): `{"being": "<id>", "verb": "<verb>", "roles": {...}, "id": "<id>"?, "while"?, "why"?,
 "note"?}`, one a line; `{"being": "<id>", "kind": "<kind>", "title"?, "summary"?}` declares a being first. `--act`
@@ -90,6 +91,8 @@ POINTER = re.compile(r'^store:([a-z][a-z0-9-]*):([a-z0-9][a-z0-9_-]*)(?:#([a-z0-
 REF = re.compile(r'^([a-z0-9][a-z0-9._-]*)#([a-z0-9][a-z0-9_-]*)$')
 BESIDE = ('while', 'why', 'note')
 UNION_ROWS = 200_000                      # a union of at most this many rows is judged by the core's engine whole
+QUERIED = ('form', 'valency', 'knowing', 'frame', 'names', 'harm')   # the code rules a large union's check judges by
+                                                                    # its queries or at a row's put: the size line says how
 SCHEMA_VERSION = '1'
 
 
@@ -1074,15 +1077,20 @@ def _check(stores, garden, law, base):
     for s in stores:
         if s not in large:
             out += _union_judged([s], garden, law, base)
-    out += _names_once(stores, garden, law)
-    out += _cycles(stores, garden, law)
-    judged = {'hold', 'name', 'part', 'measure', 'own', 'need', 'be', 'derive', 'read', 'make', 'say'}
-    rest = sorted({v for s in large for v in s.verbs()} - judged)
+    with compiled(stores, garden, law) as U:        # EVERY RULE THAT IS A READING, by its SQL over the whole union
+        found, unjudged = _readings(U, law, base)
+        out += found
+        out += _names_given(U, garden, law, base)
+    read = [r for r in (getattr(law, 'readings', None) or {}) if r not in dict(unjudged)]
+    rest = [r for r in law.rules if r not in read and r not in QUERIED]
     if rest:
         out.append(('size', ', '.join(s.name for s in large),
-                    f"{sum(size[s.name] for s in large)} rows: judged by queries (names, order, acts, kinds, overlaps, "
-                    f"pointers), each row judged at its put; the rules of {', '.join(rest)} over the union are not judged "
-                    f"at this size"))
+                    f"{sum(size[s.name] for s in large)} rows: judged over the union by their readings, as SQL "
+                    f"(core/union.py): {', '.join(read) or 'none'}; by its queries: knowing (each act a row names), "
+                    f"names (a name a namespace gives once), form (each being's kind, one form an id, each pointer); "
+                    f"at each row's put (a bulk load's sampled rows): form, valency, frame and harm; not judged over the "
+                    f"union at this size: {', '.join(rest)}"
+                    + ''.join(f"; {r}'s reading has no SQL form here ({why})" for r, why in unjudged)))
     seen, kept = set(), []
     for f in out:                                      # a finding the engine and a query both make is said once
         if f not in seen:
@@ -1178,10 +1186,10 @@ def _plain_statements(statements):
             for st in statements if isinstance(st, dict) and len(st) == 1 for v, r in st.items()]
 
 
-def _union_judged(stores, garden, law, base):
-    """The union of git and the stores, judged whole by the core's engine: every finding git alone does not have, and
-    none of `knowing` at a store's row (a row names its act; `_acts_resolve` judges it). In the union every being is a
-    bean, so every filler is its plain id."""
+def _union_garden(stores, garden):
+    """(G, added): the union of git and `stores`, read as beans — every bean of git, a pointer in it read as the plain
+    id; each being a store keeps, a bean, its rows its statements after git's own, each a statement no keeping before
+    it holds — and, for each bean a store added to, the index from which its statements are the store's."""
     G = garden.copy()
     added = {}                               # bean id -> index from which its statements are the store's
     for bid, bean in list(G.beans.items()):  # a bean that names a being by a pointer, read with the plain id
@@ -1213,6 +1221,14 @@ def _union_judged(stores, garden, law, base):
                 added[bid] = 0
             nb = engine.Bean(bid, path=(bean.path if bean is not None else None), header=header, raw=None)
             G.beans[bid] = nb
+    return G, added
+
+
+def _union_judged(stores, garden, law, base):
+    """The union of git and the stores, judged whole by the core's engine: every finding git alone does not have, and
+    none of `knowing` at a store's row (a row names its act; `_acts_resolve` judges it). In the union every being is a
+    bean, so every filler is its plain id."""
+    G, added = _union_garden(stores, garden)
     if not added:
         return []
     from core import judge as dmjudge
@@ -1230,86 +1246,129 @@ def _union_judged(stores, garden, law, base):
     return out
 
 
-def _names_once(stores, garden, law):
-    """A name a namespace gives once names one being, over git and every store (SQL)."""
-    once = sorted(n for n, r in law.namespaces.items() if r.get('once') == 'true')
-    given = {}
-    for b in garden.beans.values():
-        for i, v, r in b.items:
-            if v == 'name' and r.get('by') in once and isinstance(r.get('as'), str) and r.get('as') != 'unknown' \
-                    and 'held' not in r:
-                of = b.id if r.get('of') == 'self' else _plainid(r.get('of'))
-                given.setdefault((r['by'], r['as']), set()).add(str(of))
+def _rows_n(s, bid):
+    """[(verb, n, roles with their id)] of every row of `bid` a store keeps, in the order `get` gives them."""
+    r = s._being_row(bid)
+    if not r:
+        return []
     out = []
-    for s in stores:
-        if 'name' not in s.verbs():
+    for verb in s.verbs():
+        cur = s.db.execute(f"SELECT * FROM {_q('v_' + _col(verb))} WHERE being=? ORDER BY n", (r[0],))
+        names = [d[0] for d in cur.description]
+        for row in cur.fetchall():
+            sid, roles, _known, n, _b = s._decode(verb, row, names)
+            out.append((verb, n, dict(roles, id=sid)))
+    return out
+
+
+def _kept_by(s, bid):
+    return s.db.execute('SELECT 1 FROM being WHERE id=?', (bid,)).fetchone() is not None
+
+
+def _skips(stores, garden):
+    """For each store, the rows (verb, n) the union does not hold, as `_union_garden` reads it: a row whose statement
+    its being's bean, or a store before it, holds already — one form, or one id. Only a being git has a bean for, or
+    two stores keep, can have one."""
+    skips = [set() for _ in stores]
+    both = {bid for bid in garden.beans if any(_kept_by(s, bid) for s in stores)}
+    for k, s in enumerate(stores):                    # a being two stores keep: read from the one keeping fewer
+        for e in stores[:k]:
+            small, big = sorted((s, e), key=lambda x: x.db.execute('SELECT COUNT(*) FROM being').fetchone()[0])
+            both |= {bid for (bid,) in small.db.execute('SELECT id FROM being') if _kept_by(big, bid)}
+    for bid in sorted(both):
+        bean = garden.beans.get(bid)
+        items = None
+        if bean is not None:
+            if not bean.unread and 'store:' in json.dumps(bean.statements, default=str):
+                bean = engine.Bean(bid, header=dict(bean.header, statements=_plain_statements(bean.statements)))
+            items = [(v, r) for _i, v, r in bean.items]
+        for k, s in enumerate(stores):
+            if not _kept_by(s, bid):
+                continue
+            rows = _rows_n(s, bid)
+            if items is None:                         # the first keeping of a being git has no bean for: all its rows
+                items = [(v, _plainid(s.denormalize(bid, v, r))) for v, _n, r in rows]
+                continue
+            have = {canonical(v, s.normalize(bid, v, r)) for v, r in items}
+            ids = {r.get('id') for v, r in items}
+            kept = []
+            for v, n, r in rows:
+                if canonical(v, {x: y for x, y in r.items() if x != 'id'}) not in have and r['id'] not in ids:
+                    kept.append((v, _plainid(s.denormalize(bid, v, r))))
+                else:
+                    skips[k].add((v, n))
+            items = items + kept
+    return skips
+
+
+@contextlib.contextmanager
+def compiled(stores, garden, law):
+    """The union of git and `stores` as core/union.py reads it: each store's file attached read-only to a connection of
+    its own, under `s<k>`, in one transaction; the Union over them."""
+    from core import union as dmunion
+    db = sqlite3.connect('file::memory:', uri=True, isolation_level=None)
+    try:
+        for k, s in enumerate(stores):
+            db.execute(f"ATTACH DATABASE ? AS s{k}", (_uri(s.path, 'ro'),))
+        db.execute('BEGIN')
+        keeps = []
+        for k, (s, skip) in enumerate(zip(stores, _skips(stores, garden))):
+            verbs = s.verbs()
+            keeps.append(dmunion.Keeping(f"s{k}", verbs, {v: 'v_' + _col(v) for v in verbs},
+                                         {v: s.columns(v) for v in verbs}, {v: s.shapes(v) for v in verbs}, skip))
+        U = dmunion.Union(db, engine.Judge(law, garden), keeps)
+        try:
+            yield U
+        finally:
+            U.close()
+    finally:
+        db.close()
+
+
+def _readings(U, law, base):
+    """([(rule, where, message)], [(rule, why)]): what each rule that is a reading of the law refuses over the union,
+    by its SQL (core/union.py), with what git alone finds left out; and each such rule whose reading has no SQL form
+    there, with the step that has none."""
+    from core import union as dmunion
+    out, unjudged = [], []
+    for rule, reading in (getattr(law, 'readings', None) or {}).items():
+        try:
+            found = U.refusals(reading)
+        except dmunion.NoSQL as e:
+            unjudged.append((rule, str(e)))
             continue
-        marks = ','.join('?' * len(once))
-        rows = s.db.execute(f"SELECT t_by, t_as, (SELECT id FROM being WHERE n=COALESCE(b_of, -1)), t_of FROM v_name "
-                            f"WHERE t_by IN ({marks}) AND t_as IS NOT NULL AND t_as != 'unknown'", once)
-        for ns, nm, of_b, of_t in rows:
-            given.setdefault((ns, nm), set()).add(str(of_b or of_t))
-    for (ns, nm), beings in sorted(given.items()):
-        if len(beings) > 1:
-            out.append(('names', f"{ns}:{nm}", f"{ns} gives {nm!r} once, and it names {', '.join(sorted(beings))}"))
-    return out
+        out += [(rule, where, msg) for where, msg in found if (rule, where, msg) not in base]
+    return out, unjudged
 
 
-def _cycles(stores, garden, law):
-    """Nothing owns itself, is part of itself, is at itself or needs itself through others: the chains of git and every
-    store (rule order's, read from its reading in the law: engine.ordered), walked over the beings' numbers."""
-    from core import reckon as dmreckon
-    out = []
-    for verb, low, high, words in engine.ordered(law):
-        graph = {}
-        for b in garden.beans.values():
-            for _i, v, r in b.items:
-                if v != verb or 'held' in r:
-                    continue
-                for a in [b.id if r.get(k) == 'self' else _plainid(r.get(k)) for k in low]:
-                    for c in [b.id if r.get(k) == 'self' else _plainid(r.get(k)) for k in high]:
-                        for x in (a if isinstance(a, list) else [a]):
-                            for y in (c if isinstance(c, list) else [c]):
-                                if isinstance(x, str) and isinstance(y, str):
-                                    graph.setdefault(x, set()).add(y)
-        for s in stores:
-            if verb not in s.verbs():
-                continue
-            cols = s.columns(verb)
-            for lo in low:
-                for hi in high:
-                    if lo not in cols or hi not in cols or not cols[lo][0] or not cols[hi][0]:
-                        continue
-                    q = (f"SELECT a.id, c.id FROM {_q('v_' + _col(verb))} t JOIN being a ON a.n = t.{cols[lo][0]} "
-                         f"JOIN being c ON c.n = t.{cols[hi][0]}")
-                    for x, y in s.db.execute(q):
-                        graph.setdefault(x, set()).add(y)
-        state, found = {}, set()
-        for start in list(graph):
-            if start in state:
-                continue
-            stack = [(start, iter(sorted(graph.get(start, ()))))]
-            state[start], path = 1, [start]
-            while stack:
-                node, it = stack[-1]
-                nxt = next(it, None)
-                if nxt is None:
-                    state[node] = 2
-                    stack.pop()
-                    path.pop()
-                    continue
-                st = state.get(nxt)
-                if st == 1:
-                    loop = path[path.index(nxt):] + [nxt]
-                    key = frozenset(loop)
-                    if key not in found:
-                        found.add(key)
-                        out.append(('order', f"{verb}", dmreckon.written(words, dmreckon.Member(verb, {'loop': loop}, None))))
-                elif st is None:
-                    state[nxt] = 1
-                    path.append(nxt)
-                    stack.append((nxt, iter(sorted(graph.get(nxt, ())))))
-    return out
+def _names_given(U, garden, law, base):
+    """Rule `names`' once clause over the union, by the engine's own (core/engine.py `names`): a name a namespace
+    gives once, given in a store, where over the union it names more than one being. The SQL finds those names; the
+    engine says the refusal."""
+    once = sorted(n for n, r in law.namespaces.items() if r.get('once') == 'true')
+    st = U.statements('name')
+    w = {k: _q(st.cols[k][0]) for k in ('by', 'as', 'held')}
+    n_of, marks = _q(st.cols['of'][1]), ','.join('?' * len(once))
+    given = (f"FROM {_q(st.name)} WHERE typeof({w['by']}) = 'text' AND {w['by']} IN ({marks}) AND {w['held']} IS NULL "
+             f"AND ({w['as']} IS NULL OR {w['as']} != 'unknown')")
+    many = U.db.execute(f"SELECT {w['by']}, {w['as']} {given} GROUP BY {w['by']}, {w['as']} "
+                        f"HAVING COUNT(DISTINCT {n_of}) > 1 AND MAX(_src) > 0", once).fetchall()
+    if not many:
+        return []
+    U.db.execute("CREATE TEMP TABLE u_many (ns, nm)")
+    U.db.executemany("INSERT INTO u_many VALUES (?, ?)", many)
+    from core import union as dmunion
+    also = []
+    for ns, nm, of, src, bean, verb, i, bo1, bo2 in U.db.execute(
+            f"SELECT {w['by']}, {w['as']}, {n_of}, _src, _bean, _verb, _i, _bo1, _bo2 {given} AND _src > 0 AND "
+            f"EXISTS (SELECT 1 FROM u_many WHERE ns = {w['by']} AND nm IS {w['as']}) ORDER BY _bo1, _bo2, _src, _vr, _i",
+            once).fetchall():
+        k = U.index(src, bean, verb, i)
+        also.append((ns, dmunion.dec(nm), of, f"{bean}[{k}] {verb}", (bo1, bo2, k)))
+    U.db.execute("DROP TABLE temp.u_many")
+    J = engine.Judge(law, garden)
+    J.names(also=also)
+    return [(r, wh, m) for r, wh, m in J.out if r == 'names' and (r, wh, m) not in base]
 
 
 def union_of(being, stores, *, garden=None):
