@@ -406,7 +406,7 @@ def problems(J, b):
     if not (forms and b.items):
         return out
     import seq as dmseq
-    import reckon as dmreckon
+    from core import reckon as dmreckon
     law = None
 
     def lw():
@@ -474,7 +474,7 @@ def reading_problems(where, reading, law, verbs=None):
     """A reading's steps against the closed list (reckon's check), its conditions in the core's signs, and its paths
     read over statements: from a bean's header or a verb, or — where the step reads statements (`entries`) — from a
     statement's roles and keys."""
-    import reckon as dmreckon
+    from core import reckon as dmreckon
     out = []
     verbs = verbs or {}
     keys = {'id', 'while', 'why', 'note', 'held', 'by', 'of', 'through', 'to', 'from', 'at', 'as'} | {

@@ -46,8 +46,6 @@ LEVELS = ('none', 'personal', 'special-category')                  # sensitivity
 GARDENER_KINDS = ('person', 'org')                                  # who may keep a garden (today's `manifest`)
 TEXT = dict(holds_no='Cc', but=('\t',), lines_in='block')          # text holds no control character (`value_types`)
 PORTS = ('tcp-port', 'udp-port')                                    # the systems whose positions are ports (IANA)
-ORDERED = (('own', ('of',), ('by', 'from'), 'owns'), ('part', ('by',), ('of',), 'is part of'),   # the chains the order
-           ('be', ('by',), ('at',), 'is at'), ('need', ('by',), ('of',), 'needs'))    # holds acyclic: low → high
 CLOCKED = 'at'                     # the one role `now` may fill: the save writes its moment there (core.yaml's word `now`)
 
 
@@ -302,6 +300,26 @@ def _files(root):
         return sorted(files)
 
 
+class Finding(tuple):
+    """One refusal, `(rule, where, message)`, and beside it `proof`: the statements and the law's rows it rests on, as a
+    rule's reading gives them (`daftar why <rule> <where>` prints them) — none yet for a rule still stated in code."""
+
+    def __new__(cls, rule, where, msg, proof=()):
+        f = super().__new__(cls, (rule, where, msg))
+        f.proof = tuple(proof)
+        return f
+
+
+READ_SINCE = (3, 0)       # the core since which rules are readings of the law: a law older is judged by its own release
+
+
+def ordered(law):
+    """[(verb, low, high, message)]: the chains rule `order` holds acyclic, low → high — read from its reading in the
+    law (core/reckon.py `chains`), what the cursor walks and a store's check holds; none where the law gives no reading."""
+    from core import reckon
+    return reckon.chains((getattr(law, 'readings', None) or {}).get('order'))
+
+
 class Judge:
     def __init__(self, law, garden):
         self.L, self.G = law, garden
@@ -311,8 +329,31 @@ class Judge:
         self.systems = law.systems               # the standards', and the garden's own (part 7)
         self._up = None                          # the part/at graph, read once (`_part_at`)
 
-    def err(self, rule, where, msg):
-        self.out.append((rule, where, msg))
+    def err(self, rule, where, msg, proof=()):
+        self.out.append(Finding(rule, where, msg, proof))
+
+    def readings(self):
+        """The rules the law states as readings (core 3.0: order, life, necessity), each read by the one reckoner
+        (core/reckon.py) over this garden, by this law: each refusal with the statements and the law's rows it rests
+        on. A reading that cannot be read is refused by its rule, never passed."""
+        v = re.fullmatch(r'([0-9]+)\.([0-9]+)', str(getattr(self.L, 'version', '') or ''))
+        if v and (int(v.group(1)), int(v.group(2))) < READ_SINCE:
+            self.err('form', 'core/law/core.yaml', f"core {self.L.version} is older than this judge (core "
+                                                   f"{'.'.join(map(str, READ_SINCE))} and later): its rules order, life "
+                                                   f"and necessity are readings of the law, and that law holds none — "
+                                                   f"judge it by its own release")
+            return
+        if not getattr(self.L, 'readings', None):
+            return
+        from core import reckon
+        for rule, reading in self.L.readings.items():
+            try:
+                found = reckon.refusals(self, reading)
+            except reckon.Refused as e:
+                self.err(rule, 'core.yaml', f"its reading cannot be read here: {e}")
+                continue
+            for where, msg, proof in found:
+                self.err(rule, where, msg, proof)
 
     # ------------------------------------------------------------------------------------------------ beings
     def kind_of(self, x, b):
@@ -654,72 +695,13 @@ class Judge:
                 and all(self.norm(r2.get(theirs), b) == self.norm(r.get(mine), b) for theirs, mine in how['match'].items())]
         return self.norm(hits[0].get(how['take']), b) if len(hits) == 1 and how['take'] in hits[0] else None
 
-    def order(self):
-        graph = {lv: {s['at'] for s in listed(row.get('stands')) if isinstance(s, dict)} for lv, row in self.L.levels.items()}
-        edges = []
-        for b in self.G.beans.values():
-            for i, verb, r in b.items:
-                if verb == 'stand' and 'by' in r and 'at' in r:
-                    a, c = self.norm(r['by'], b), self.norm(r['at'], b)
-                    if isinstance(a, str) and isinstance(c, str):
-                        graph.setdefault(a, set()).add(c)
-                        edges.append((a, c, f"{b.id}[{i}] stand"))
-        for a, c, where in edges:
-            path = [a] if a == c else reach.way(c, a, lambda n: sorted(graph.get(n, ())))
-            if path:
-                self.err('order', where, f"{a} stands at {' → '.join([c] + path[:-1]) if path[:-1] else c}, which stands "
-                                         f"on {a}: nothing stands on itself through others")
-        for b in self.G.beans.values():
-            for i, verb, r in b.items:
-                if verb != 'part' or 'by' not in r or 'of' not in r:
-                    continue
-                lp = (self.L.kinds.get(self.kind_of(r['by'], b)) or {}).get('level')
-                lw = (self.L.kinds.get(self.kind_of(r['of'], b)) or {}).get('level')
-                if lp and lw and lp != lw and lp not in self.L.below(lw, ways=('made-of',)):
-                    self.err('order', f"{b.id}[{i}] part", f"a part never stands above its whole: {lp} is not {lw} and "
-                                                           f"not a level {lw} is made of")
-
-    def life(self):
-        comes = {}
-        for b in self.G.beans.values():
-            for i, verb, r in b.items:
-                if verb == 'come' and 'by' in r:
-                    comes.setdefault(self.norm(r['by'], b), []).append((b, i, r))
-        for who, sts in comes.items():
-            for b, i, r in sts:
-                where = f"{b.id}[{i}] come"
-                line = self.line_of(self.kind_of(r['by'], b))
-                given = (self.L.lines.get(line) or {}).get('given') == TRUE
-                for t in listed(r.get('through')):
-                    if isinstance(t, str) and t in self.L.crown:
-                        continue                           # the chain's end
-                    tk = self.kind_of(t, b)
-                    if given:
-                        if self.line_of(tk) != line:
-                            self.err('life', where, f"a being of the line {line} comes through the {line}: "
-                                                    f"{t if isinstance(t, str) else tk} is not")
-                    else:
-                        hands = (self.L.kinds.get(tk) or {}).get('rung') == 'reason'     # a being at reason
-                        tool = isinstance(t, str) and self.norm(t, b) in comes
-                        if not (hands or tool):
-                            self.err('life', where, f"a made or said being comes through hands (a being at reason), or "
-                                                    f"through a tool whose own coming goes on: "
-                                                    f"{t if isinstance(t, str) else tk} is neither")
-        graph = {w: {self.norm(t, b) for b, _i, r in sts for t in listed(r.get('through')) if isinstance(t, str)}
-                 for w, sts in comes.items()}
-        for w, sts in comes.items():
-            if reach.reaches(w, w, lambda n: graph.get(n, ())):
-                self.err('life', f"{sts[0][0].id}[{sts[0][1]}] come", f"{w} comes through itself: every chain ends at "
-                                                                      f"the crown, and a circle never ends")
-
-    def necessity_and_squares(self):
+    def squares(self):
+        """Rule `squares`, on two positions of a figure: those that cannot both stand, on one statement through one
+        source, are refused (a reading once a statement's verb is a column a reading reads: parked, core 3.0)."""
         ops = {}
         for b in self.G.beans.values():
             for i, verb, r in b.items:
                 v = self.L.verbs.get(verb) or {}
-                if verb == 'necessary' and 'through' not in r and not (isinstance(r.get('of'), str) and r['of'] in self.L.crown):
-                    self.err('necessity', f"{b.id}[{i}] necessary", "only the crown is necessary by itself: say what "
-                                                                    "this is necessary `through`")
                 if v.get('figure'):
                     key = (self.norm(r.get('of'), b), self.norm(r.get('through'), b))
                     ops.setdefault(key, []).append((verb, f"{b.id}[{i}] {verb}"))
@@ -1097,24 +1079,6 @@ class Judge:
             if row.get('required') == 'true' and k not in self.G.manifest:
                 self.err('form', 'GARDEN.md', f"`{k}:` is missing — the manifest requires it: {row.get('meaning')}")
 
-    def cycles(self):
-        """Nothing owns itself, is part of itself, is at itself or needs itself through others."""
-        for verb, low, high, says in ORDERED:
-            graph, first = {}, {}
-            for b in self.G.beans.values():
-                for i, v, r in b.items:
-                    if v != verb or 'held' in r:
-                        continue
-                    for a in [x for k in low for x in self._beans_in(r.get(k), b)]:
-                        for c in [x for k in high for x in self._beans_in(r.get(k), b)]:
-                            graph.setdefault(a, set()).add(c)
-                            first.setdefault((a, c), f"{b.id}[{i}] {verb}")
-            for (a, c), where in sorted(first.items()):
-                path = [a] if a == c else reach.way(c, a, lambda n: sorted(graph.get(n, ())))
-                if path:
-                    self.err('order', where, f"{' → '.join([a, c] + path[:-1] + ([a] if a != c else []))}: nothing "
-                                             f"{says} itself through others")
-
     def gardens(self):
         """A garden's id names another garden; a name qualified to cross names a garden this one knows."""
         known = {self.G.gid} if self.G.gid else set()
@@ -1394,16 +1358,14 @@ class Judge:
         for b in self.G.beans.values():
             self.bean(b)
         self.placeholder()
-        self.order()
-        self.life()
-        self.necessity_and_squares()
+        self.readings()          # order, life, necessity: each its reading in the law, told where its code told it first
+        self.squares()
         self.responses()
         self.covers()
         self.bearer()
         self.names()
         self.layers()
         self.text_and_gardener()
-        self.cycles()
         self.gardens()
         self.grants()
         self.consent()

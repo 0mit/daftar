@@ -33,6 +33,8 @@ jobs:
         run: python3 test/journal.py
       - name: "core: the minimal core's engine — the law proved whole, every verb's row, and each of its rules' refusals"
         run: python3 test/core.py
+      - name: "core_readings: the rules as readings (core 3.0) — order, life and necessity each its reading in the law, read by the one reckoner; the law without a rule's reading lets that rule's cases pass and changes no other (C1); each refusal carries the statements and the law's rows it rests on, which `daftar why` prints (C6); the grammar's new operations by their vectors"
+        run: python3 test/core_readings.py
       - name: "core_save: the save commits a garden of statements, the core's gate at the commit — the moment the save's, the law ratified"
         run: python3 test/core_save.py
       - name: "core_translate: a garden of today's beans (v0.49.0's law) written in statements, into a copy — every value placed, VOCAB.md the core's rows, the engine passing"

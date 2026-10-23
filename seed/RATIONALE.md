@@ -339,6 +339,12 @@ page's table are each a selection of beans or entries and something computed fro
 of operations, each naming earlier steps only, a reading cannot loop and no string is evaluated; read each time by one
 reader, it is never written back as a fact. An act that fixes a reading records the commit it was read at.
 
+A RULE'S READING SAYS WHAT IT REFUSES, AND THE LAW IT READS (3.0). `refuse` names the steps whose members are
+the rule's refusals, each with its words, told at the statement the member is: the order a refusal is told in is
+written, not left to the order code runs in. A rule reads the law as well as the garden — the crown, the kinds, the
+lines, the levels' ladder — and an input said by the law reaches those tables, so a reading never copies a row of the
+law into itself: one statement of each thing.
+
 ## core/law/lines.yaml: aggregates
 
 (std-vocab 32: `aggregates`)
@@ -356,6 +362,15 @@ CLOSED, SO THAT A READER CAN HOLD EVERY ONE (24.0). Each row says what it takes,
 uses, and what it gives. A set, a truth that may be NOT KNOWN, a value with its uncertainty, an order, groups: the
 kinds are few so that a result is always one a person can check. bin/dmreckon.py applies these rows and nothing else; `takes` is an attribute block, read as `attrs` are. Rows are added by the release that builds their
 evaluation, and by no other.
+
+A RULE IS A READING (3.0). The gate's rules were prose beside hand-written code, so what was refused could be
+read only in Python and a rule could drift from its words (the next version's design, option R). A rule needs what a
+question needs and four things more: two sets joined on equal columns (`join`, one row with the series' join, since
+an operation's name is its key), the edges of a relation that lie on a loop (`cycle`) and what a relation reaches
+(`reach`), one member of each group by the order the garden is read in (`first`, `last`), and a being's built-in
+columns (`describe`). None makes a value; each row it gives carries the statements and the law's rows it rests on, so
+a refusal names its path. They were measured first on six gardens and fifteen faults (the design's prototype), then
+held to the engine's every verdict before its code was taken out. An operation beyond them is added only by a person.
 
 ## core/law/lines.yaml: comparisons
 
@@ -605,6 +620,10 @@ foundation. A part never stands above what its whole is made of: the order of bo
 verbs[own]`, `core/law/core.yaml: placements[habitat]`), and v1 part 2 brought that into this rule: nothing owns itself,
 is part of itself, is at itself or needs itself through others (§16 item 8, daftar #92).
 
+A READING SINCE 3.0. The rule is its reading: each stand judged on the law's ladder and the garden's stands
+together, a part's level against what its whole's level is made of, and the four chains (own, part, be, need) each a
+`cycle` within the beans. The cursor and a store's check read the chains from it, so they are stated once.
+
 ## core/law/core.yaml: rules[life]
 
 EVERY CHAIN ENDS (the core spec §5; ratified with the core's engine, daftar #81–#84, 2026-10-01). `come` is the verb of
@@ -613,6 +632,10 @@ the living; a made or said being comes through hands — a being at reason — o
 and every chain ends at the crown. None is demanded: a being with no `come` is not refused. Why the chain is the life
 chain, and why it ends at one: `core/law/core.yaml: verbs[come]` and `core/law/core.yaml: crown`.
 
+A READING SINCE 3.0. Each coming read through each being it comes through: of a given line, through that line;
+else through hands (a being at reason) or through a tool that comes; and no being on a circle of comings, told at its
+first coming. The crown ends a chain, and is read from the law's own table.
+
 ## core/law/core.yaml: rules[necessity]
 
 WHAT IS NECESSARY IS NECESSARY THROUGH SOMETHING (the core spec §5, thesis 12; ratified with the core's engine, daftar
@@ -620,6 +643,9 @@ WHAT IS NECESSARY IS NECESSARY THROUGH SOMETHING (the core spec §5, thesis 12; 
 itself and necessary only through another, so a `necessary` statement names what it is necessary through. The one
 exception is the crown, necessary by itself: `necessary: { of: theone }` is the one statement that needs none. His proof
 that the chain ends there is under `core/law/core.yaml: crown`.
+
+A READING SINCE 3.0. A `necessary` with no `through`, of anything but the crown, read from the law's table of
+the crown.
 
 ## core/law/core.yaml: rules[squares]
 

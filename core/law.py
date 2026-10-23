@@ -222,6 +222,9 @@ class Law:
         self.foundations = list(F.get('foundations') or [])
         self.figures = list(F.get('figures') or [])
         self.rules = [r['rule'] for r in F.get('rules') or []]
+        # A RULE'S READING (core 3.0): the rule stated in the reading grammar, read by the one reckoner — the rule's one
+        # statement, its `says` its reason. A rule with none is applied by core/engine.py's code
+        self.readings = {str(r['rule']): r['reading'] for r in F.get('rules') or [] if isinstance(r, dict) and r.get('reading')}
         self.version = str(F.get('version') or '')         # what a garden that runs this law pins: `core@<version>`
         self.manifest = {m['key']: m for m in F.get('manifest') or []}            # GARDEN.md's keys, each in its form
         self.manifest_forms = {f['form']: f for f in F.get('manifest_forms') or []}
@@ -1570,6 +1573,11 @@ class Law:
             bad('core.yaml manifest', "GARDEN.md names its garden, the law it runs, its gardener and its zone")
         if self.rules != known_rules:
             bad('core.yaml rules', f"the engine applies {', '.join(known_rules)}; the law lists {', '.join(self.rules)}")
+        if self.readings:                                       # a rule's reading, in the grammar of any reading (3.0)
+            from core import lines, reckon
+            for rule, reading in self.readings.items():
+                for _lv, t in reckon.check_rule(f"rules[{rule}].reading", reading, lines.law_view(self)):
+                    bad('core.yaml', t)
         for name, v in self.verbs.items():
             self._verb_problems(name, v, bad)
             if self.profiles and v.get('home') not in (None, 'core') and v.get('home') not in self.profiles:

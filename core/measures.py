@@ -707,7 +707,7 @@ def weighing_problems(J, where, r):
     out = lines.attrs_problems(f"{where}.weighing", r['weighing'], J.L.forms.get('weighing') or {})
     if out:
         return out
-    import reckon as dmreckon
+    from core import reckon as dmreckon
     return [(f"{where}.weighing", what.split(': ', 1)[-1]) for level, what in dmreckon.check_weighing('', r['weighing'])
             if level == 'error']
 

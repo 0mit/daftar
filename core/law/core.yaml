@@ -1,11 +1,12 @@
 # daftar's core: the face, ratified 2026-10-01 (step 2 of the refinery; the spec is the garden's daftar-core-spec.md).
 # The words the engine hardcodes, each named by hand in the nine languages. Everything else stands on these and comes
 # in as rows (verbs, kinds, levels, namespaces, flows) or from an outside standard. core/engine.py reads this file and
-# applies its rules; `python3 core/check.py --law` proves it consistent with itself and with the rows beside it.
+# applies its rules — a rule that holds a `reading` by that reading, read by the one reckoner (core/reckon.py); `python3
+# core/check.py --law` proves it consistent with itself and with the rows beside it.
 
 # The law's version. A garden that runs this law pins it in GARDEN.md, `extends: core@<version>`, and the gate holds the
 # pin to it; it moves with a change to the law, a RULE-CHANGE.
-version: "2.25"
+version: "3.0"
 
 # ---------------------------------------------------------------------------------------------------------------- roles
 # The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ὡς.
@@ -189,15 +190,85 @@ manifest_forms:
   - { form: release, pattern: '^(v[0-9]+\.[0-9]+\.[0-9]+|untagged ([0-9a-f]{4,40}|unknown))$', says: "a release's tag (`v1.0.0`), or `untagged <commit>`, or `untagged unknown`" }
 
 # ---------------------------------------------------------------------------------------------------------------- the gate
-# Every rule the engine applies. Strict: each is an error.
+# Every rule the engine applies. Strict: each is an error. A rule's `reading` is the rule, in the grammar of every reading
+# (core/law/lines.yaml `selection_form`, its `refuse`), and its `says` is its reason.
 rules:
   - { rule: form,       says: "a statement is one verb of the verb row, with roles from the seven, the qualifiers its row declares, and id, while, why, note (and held, sealed); nothing else. Text holds no control character but a tab, and a line feed only in a block scalar. GARDEN.md holds the manifest's keys alone, each in its form, and pins this law's version; once the garden holds a bean, it names its gardener, a person or an organisation it holds a bean for. A grant is to a being or to every member of a reading, and its cover names parts a bean has — a key of its header, `body`, a verb's statements, or a verb's narrowed by their `as`" }
   - { rule: valency,    says: "each required role is filled, each filler has the shape and nature its role takes, and no role is filled that the verb does not take" }
   - { rule: knowing,    says: "every statement of a bean is the `of` of a knowing act in it; a knowing act's `at` is `now` until the save writes the moment, and a moment typed there is refused — but where the act was known in another garden: its `at` then holds that garden's bean beside the moment it was known at there, and the commit that brings it takes it from that garden (`take`). A row of a store names the act or acts that know it instead, each a knowing act kept in git or a store, and the store's check judges it where the store is kept" }
   - { rule: placeholder, says: "a statement the engine derives (a verb's default) is never written: written, it is refused" }
-  - { rule: order,      says: "nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or needs itself through others; a part never stands above what its whole is made of" }
-  - { rule: life,       says: "a living being comes through the living; a made or said being comes through hands, a being at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded" }
-  - { rule: necessity,  says: "a `necessary` statement names what it is necessary through — except of the crown, necessary by itself (thesis 12)" }
+  - rule: order
+    says: "nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or needs itself through others; a part never stands above what its whole is made of"
+    reading:
+      inputs:
+        - { name: stands, origin: { act: say, nature: sayable, by: law } }
+        - { name: kinds, origin: { act: say, nature: sayable, by: law } }
+      steps:
+        - { id: stand, op: select, entries: stand }
+        - { id: stands-on-itself, op: cycle, of: stand, with: stands, from: by, to: at }
+        - { id: part, op: select, entries: part }
+        - { id: piece, op: describe, of: part, at: by, as: piece }
+        - { id: whole, op: describe, of: piece, at: of, as: whole }
+        - { id: piece-kind, op: join, of: whole, with: kinds, on: { piece.kind: kind }, keep: both, as: [p, piece-row] }
+        - { id: whole-kind, op: join, of: piece-kind, with: kinds, on: { p.whole.kind: kind }, keep: both, as: [q, whole-row] }
+        - { id: levelled, op: select, of: whole-kind, where: [ { path: q.piece-row.level, "∃": "true" }, { path: whole-row.level, "∃": "true" } ] }
+        - { id: made-of, op: select, of: stands, where: [ { path: as, "=": made-of } ] }
+        - { id: made-of-reached, op: reach, of: levelled, at: whole-row.level, through: made-of, from: by, to: at }
+        - { id: above, op: join, of: levelled, with: made-of-reached, on: { whole-row.level: start, q.piece-row.level: reached }, keep: unmatched }
+        - { id: beans, op: select }
+        - { id: owned, op: select, entries: own, where: [ { path: held, "∄": "true" } ] }
+        - { id: own-loop, op: cycle, of: owned, from: of, to: [by, from], within: beans }
+        - { id: owns-itself, op: first, of: own-loop, by: [start, next], groups: values }
+        - { id: parts, op: select, entries: part, where: [ { path: held, "∄": "true" } ] }
+        - { id: part-loop, op: cycle, of: parts, from: by, to: of, within: beans }
+        - { id: part-of-itself, op: first, of: part-loop, by: [start, next], groups: values }
+        - { id: placed, op: select, entries: be, where: [ { path: held, "∄": "true" } ] }
+        - { id: be-loop, op: cycle, of: placed, from: by, to: at, within: beans }
+        - { id: at-itself, op: first, of: be-loop, by: [start, next], groups: values }
+        - { id: needed, op: select, entries: need, where: [ { path: held, "∄": "true" } ] }
+        - { id: need-loop, op: cycle, of: needed, from: by, to: of, within: beans }
+        - { id: needs-itself, op: first, of: need-loop, by: [start, next], groups: values }
+      refuse:
+        - { of: stands-on-itself, message: "{start} stands at {way}, which stands on {start}: nothing stands on itself through others" }
+        - { of: above, message: "a part never stands above its whole: {q.piece-row.level} is not {whole-row.level} and not a level {whole-row.level} is made of" }
+        - { of: owns-itself, message: "{loop}: nothing owns itself through others" }
+        - { of: part-of-itself, message: "{loop}: nothing is part of itself through others" }
+        - { of: at-itself, message: "{loop}: nothing is at itself through others" }
+        - { of: needs-itself, message: "{loop}: nothing needs itself through others" }
+  - rule: life
+    says: "a living being comes through the living; a made or said being comes through hands, a being at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded"
+    reading:
+      inputs:
+        - { name: crown, origin: { act: say, nature: sayable, by: law } }
+        - { name: lines, origin: { act: say, nature: sayable, by: law } }
+      steps:
+        - { id: come, op: select, entries: come, where: [ { path: by, "∃": "true" } ] }
+        - { id: who, op: describe, of: come, at: by, as: who }
+        - { id: through, op: describe, of: who, at: through, as: via }
+        - { id: short-of-the-crown, op: join, of: through, with: crown, on: { via.being: crown }, keep: unmatched }
+        - { id: given, op: select, of: lines, where: [ { path: given, "=": "true" } ] }
+        - { id: of-a-given-line, op: join, of: short-of-the-crown, with: given, on: { who.line: line }, keep: matched }
+        - { id: not-of-its-line, op: join, of: of-a-given-line, with: given, on: { who.line: line, via.line: line }, keep: unmatched }
+        - { id: made-or-said, op: minus, of: short-of-the-crown, with: of-a-given-line }
+        - { id: no-hands, op: select, of: made-or-said, where: [ { path: via.rung, "≠": reason } ] }
+        - { id: neither, op: join, of: no-hands, with: come, on: { via.being: by }, keep: unmatched }
+        - { id: comes-round, op: cycle, of: come, from: by, to: through }
+        - { id: on-a-circle, op: join, of: come, with: comes-round, on: { by: start }, keep: both, as: [come, circle] }
+        - { id: circle, op: first, of: on-a-circle, by: come.by }
+      refuse:
+        - { of: not-of-its-line, message: "a being of the line {who.line} comes through the {who.line}: {via} is not" }
+        - { of: neither, message: "a made or said being comes through hands (a being at reason), or through a tool whose own coming goes on: {via} is neither" }
+        - { of: circle, message: "{circle.start} comes through itself: every chain ends at the crown, and a circle never ends" }
+  - rule: necessity
+    says: "a `necessary` statement names what it is necessary through — except of the crown, necessary by itself (thesis 12)"
+    reading:
+      inputs:
+        - { name: crown, origin: { act: say, nature: sayable, by: law } }
+      steps:
+        - { id: necessary, op: select, entries: necessary, where: [ { path: through, "∄": "true" } ] }
+        - { id: not-the-crown, op: join, of: necessary, with: crown, on: { of: crown }, keep: unmatched }
+      refuse:
+        - { of: not-the-crown, message: "only the crown is necessary by itself: say what this is necessary `through`" }
   - { rule: squares,    says: "two positions that cannot both stand — contraries or contradictories — on one statement through one source are refused; subcontraries may both stand. One observer gives one verdict on one statement (`respond` with an `as`), and a `rule` on statements is given once every speaker of them has responded" }
   - { rule: bearer,     says: "a quantity is stated only of what its dimensions and its kind hold for (`holds_for`): a nature, or a level the being is or is made of — through `made-of` alone, never `possible-on`. A mass is a body's (the foundation `weight`), a temperature an ensemble's; information and money are what is carried — a document's, an agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a mass of its own, a single molecule a temperature, a machine its bytes or a body money of its own is refused" }
   - { rule: frame,      says: "a position is in a declared system, in its one form, and finds its other half by its complement" }
