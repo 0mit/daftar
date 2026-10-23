@@ -251,6 +251,20 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v2.25.1** (2026-10-23, code alone, core 2.25) — **the writers' keys and a hub that reports**
+  (the next version's design: P2's tools and P3's code). bin/install.py makes this machine's agent key where the account keeps
+  none (ed25519, in daftard's state folder under `agent/`, 0700 and 0600) and proposes its `name` for the bean of the
+  machine's agent harness to the gardener (class F), written out off git in the clone's git directory; `--sign` sets a
+  clone to sign with it where no other key is set. bin/save.py says which key signed a commit where commit.gpgsign is
+  set, and refuses before anything is written a key it cannot read, or one the clone is told is the gardener's ratifying
+  key (`daftar.ratifyingKey`). bin/hub.py: `install --report` judges every push as it would and refuses nothing of the
+  garden's, still running no gate once a commit fails steps 1-3; a log of every ref update judged (`daftar/hub.log`,
+  read by `report`); a receipt on refs/notes/daftar for each commit a taken push brought, naming the verdict, the
+  writer, the law's pin and digest, the judge's release and the mode, signed by the hub's key (`receipts` lists them and
+  the commits with none); a push to the receipts' ref refused. Folded in: #195 (a merge answers for what it decided
+  itself, judged three ways against its merge base) and #196 (the hub's own key, made by `install`). test/hubreport.py,
+  test/hubkey.py, test/core_gate.py.
+
 - **core 2.25** (2026-10-23, daftar v2.25.0, human-ratified rule-change) — **the agent's own door: a rule the gardener
   stated, refused at the agent's act before it runs, and bash as its first instruction.** The law: core/law/guards.yaml,
   a closed table of guards, each its stance on the permission square, what it reads of the act, what it takes, its

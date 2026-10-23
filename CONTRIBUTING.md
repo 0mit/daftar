@@ -69,6 +69,8 @@ parts, changes).
    python3 test/relay.py
    python3 test/core_law.py
    python3 test/core_gate.py
+   python3 test/hubkey.py
+   python3 test/hubreport.py
    python3 test/core_view.py
    python3 test/core_gaps.py
    python3 test/core_ported.py

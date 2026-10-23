@@ -35,6 +35,14 @@ flow law keeps from a said value, found by a distinctive needle, REFUSED (exit 2
 logged from instructions with `quoted: 0`, and said so. Each traced pass is appended to the session's log in the commit
 that adds the value, once, so the claim the gate checks is made by the save and not typed.
 
+SIGNED WHERE THE CLONE SIGNS (the next version's design, P2). Where commit.gpgsign is set, git signs the commit with the key
+the clone names (user.signingkey; `bin/install.py --sign` names this machine's agent key), and the save says with which.
+REFUSED BEFORE ANYTHING IS WRITTEN: a key it cannot read (an SSH key ssh-keygen finds no fingerprint of), and A KEY THIS
+CLONE IS TOLD IS THE GARDENER'S RATIFYING KEY — `git config --add daftar.ratifyingKey <SHA256:… or its public key
+file>`, here or for the account (`--global`): a save is an agent's act as well as a person's, and what a hub reads as
+the gardener's ratification is the gardener's own commit, signed by a key only their presence opens (asked on the
+desktop before each use, `ssh-add -c`), never a save that signs whatever the clone names.
+
 ONE SAVE AT A TIME (24.0, N34): a save holds an exclusive lock on `<git dir>/daftar-save.lock` from its first read to
 its commit, so two writers in one clone — a person and an agent, two agents, a view host's form — queue, and neither
 journals over the other's staged files. A save that waits longer than `DAFTAR_SAVE_WAIT` seconds (120 unless set) is
@@ -67,9 +75,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import parse as dmparse  # noqa: F401,E402 — its import sets UTF-8 on stdout and stderr, whatever the machine's code page
 import garden as dmgarden  # noqa: E402 — the one garden model: where its documents are
 import journal  # noqa: E402 — the entry is written by the journal tool's own code, and nowhere else
+import install as dminstall  # noqa: E402 — the one reader of an SSH key's fingerprint, beside the one maker of keys
 
 ROOT = journal.ROOT
 TRACED = []                 # (log, pass) the SAVE guard found, written in commit()
+SIGNED = []                 # the key the commit is signed with, read in ready(), said in commit()
 PY = 'python' if os.name == 'nt' else 'python3'
 AGAIN = f"{PY} bin/save.py --again"
 
@@ -161,8 +171,39 @@ def ready(again, body=''):
         refuse("no git identity is set here, so the commit's author would be guessed from the machine — nothing "
                "written. Set the one you commit under (an agent: its own name, e.g. \"agent (model, session)\"):\n"
                "  git config user.name \"Your Name\"\n  git config user.email \"you@example.org\"")
+    SIGNED[:] = [signing()]
     trace_said()
     return pending
+
+
+def signing():
+    """The key the commit will be signed with — its SHA-256 fingerprint, or the OpenPGP key as named — or None where
+    commit.gpgsign is not set; refused before anything is written where it is a key no fingerprint is read of, or one
+    this clone is told is the gardener's ratifying key."""
+    if git('config', '--type=bool', '--get', 'commit.gpgsign').stdout.strip() != 'true':
+        return None
+    fmt = git('config', '--get', 'gpg.format').stdout.strip() or 'openpgp'
+    key = git('config', '--get', 'user.signingkey').stdout.strip()
+    told = [t for t in git('config', '--get-all', 'daftar.ratifyingKey').stdout.split('\n') if t.strip()]
+    if fmt == 'ssh':
+        fpr = dminstall.ssh_fingerprint(key)
+        if not fpr:
+            refuse(f"commit.gpgsign is set and the key this clone signs with ({key or 'none: user.signingkey is not '
+                   f'set'}) is no SSH key ssh-keygen reads a fingerprint of — nothing written. Name one: {PY} "
+                   f"bin/install.py --sign signs with this machine's agent key")
+        ratifying = fpr in {dminstall.ssh_fingerprint(t) for t in told}
+    else:                       # an OpenPGP key as the clone names it, compared by its long id (its last 16 hex digits)
+        def long_id(t):
+            return re.sub(r'[^0-9A-F]', '', t.upper())[-16:]
+        fpr = key or f"the OpenPGP key of {git('config', '--get', 'user.email').stdout.strip() or 'the committer'}"
+        ratifying = bool(key) and long_id(key) in {long_id(t) for t in told}
+    if ratifying:
+        refuse(f"this clone signs with {fpr}, which it is told is the gardener's ratifying key (git config "
+               f"daftar.ratifyingKey) — nothing written. A save never signs as the gardener: their ratification is "
+               f"their own commit, signed with that key and asked on the desktop before each use (ssh-add -c). Sign "
+               f"saves with this machine's agent key ({PY} bin/install.py --sign, after `git config --unset "
+               f"user.signingkey`)")
+    return fpr
 
 
 def trace_said():
@@ -287,6 +328,8 @@ def commit(message, again):
     if subprocess.run(['git', '-C', ROOT, 'commit', '-q', '-m', message]).returncode != 0:
         return not_saved("the commit was refused (above)")
     print(dmparse.said(f"saved {git('rev-parse', '--short', 'HEAD').stdout.strip()}: {message}"))
+    if SIGNED and SIGNED[0]:
+        print(dmparse.said(f"save: signed with {SIGNED[0]}"))
     return 0
 
 

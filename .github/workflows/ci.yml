@@ -71,6 +71,12 @@ jobs:
       - name: "core_gate: the gate's others and the launcher in a garden of the core — parse, public, hook, hub, launch — and a session's pass log in the core's form, traced by the save and claimed at the gate"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_gate.py
+      - name: "hubkey: a garden hub's own key — made by bin/hub.py install in the account's state folder, never in a garden or a repository, shown by `key` — and what the hub writes with it, judged as any writer's"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/hubkey.py
+      - name: "hubreport: the writers' keys and a hub that reports — this machine's agent key made by bin/install.py and its name proposed, the save signing and refusing the gardener's ratifying key, bin/hub.py reporting what it would refuse, then refusing, and a receipt signed by the hub's key on each commit it judged"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/hubreport.py
       - name: "core_view: the profiles a garden of the core takes, and the view asset on statements — a page of drawings judged by rule profile, drawn, written back by its author mode, and drawn as today's words drew it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_view.py
