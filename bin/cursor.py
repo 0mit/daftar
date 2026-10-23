@@ -154,12 +154,15 @@ def _beans(x, G):
     return [v for v in (x if isinstance(x, list) else [x]) if isinstance(v, str) and v in G.beans]
 
 
-def core_resolve(target, G):
-    """A bean id, or a path resolved to the bean whose `be`, as location, holds the longest position covering it."""
+def core_resolve(target, G, law=None):
+    """A bean id, or a path resolved to the bean whose `be`, as location, holds the nearest position covering it — the
+    longest, and of two as long what the tie of the law's use `locations` lets stand (core/law/lines.yaml `nearest`)."""
     if target in G.beans:
         return target, None
+    sys.path.insert(0, ROOT)
+    from core import nearest
     ap = os.path.abspath(target)
-    best, best_len, covering = None, -1, None
+    found = []                                  # (bean, the position's path here, what covers it), in the garden's order
     for b in G.beans.values():
         for _i, v, r in b.items:
             if v != 'be' or r.get('as') != 'location' or 'held' in r:
@@ -170,10 +173,12 @@ def core_resolve(target, G):
                 tagged = re.match(r'^[a-z][a-z0-9-]*:(.+)$', at)
                 here = dmstale.resolve_here(tagged.group(1)) if tagged else None
                 here = here or dmstale.resolve_here(at)
-                if here and (ap == here or ap.startswith(here.rstrip('/') + '/')) and len(here) > best_len:
+                if here and (ap == here or ap.startswith(here.rstrip('/') + '/')):
                     kept = ((b.header.get('details') or {}).get('located_at') or {}).get(r.get('id')) or {}
-                    best, best_len, covering = b.id, len(here), dict(kept, at=at, id=r.get('id'))
-    return best, covering
+                    found.append((b.id, here, dict(kept, at=at, id=r.get('id'))))
+    keys, tie = nearest.use(law, 'locations')
+    stand, _near = nearest.nearest(found, keys, {'length': lambda f: -len(f[1])}, tie)
+    return (stand[0][0], stand[0][2]) if stand else (None, None)
 
 
 def core_attention(bid, G):
@@ -207,7 +212,7 @@ def core_main(target):
     from core import engine
     from core.check import garden_law
     G = engine.Garden.read(ROOT)
-    bean, covering = core_resolve(target, G)
+    bean, covering = core_resolve(target, G)       # by the law's use `locations`, read beside the core it runs
     if not bean:
         print(f"no bean points at {target!r} — nothing in the garden claims it")
         return 2

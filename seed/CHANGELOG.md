@@ -251,6 +251,22 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 3.1** (2026-10-23, daftar v3.1.0, human-ratified rule-change) — **one ordering of what holds a case: the
+  nearest, its keys named by the law and its tie declared at each use.** MINOR: a table of the law and the one
+  mechanism that reads it, every verdict as before. core/law/lines.yaml `nearest`: its three ties — `refuse` (none of
+  them decides), `both` (every one stands, together), `order` (the first, in the order its use reads) — and its four
+  uses, each naming its keys in order and its tie: the flow table's rows a pass meets (`as`, both: rows as near stand
+  together, one that refuses refusing the pass), a scheme's pattern rows a name fits (`literal`, then `slots`, order),
+  the wholes a member inherits a class's code from (`way`, both), and the locations that cover a path (`length`,
+  order). core/nearest.py is the mechanism: core/law.py `decide`, core/groupings.py `rows_of`, `fit` and `inherit`
+  (bin/group.py's lookup and the reckoner's inherit through the one `fitting`), and bin/cursor.py read their keys and
+  their tie from the law, and the law's check refuses a use the code has none of, a key its use lacks, a tie of no
+  meaning and a use with no row. Rule `layers` and the flow table's header now say what was done — rows as near stand
+  together — where they said "of two as near, a refusal". The relational rules `knowing`, `vacancy`, `consent` and
+  `room` keep their code: each needs what the reading grammar does not hold, parked for the gardener with what each
+  needs. test/core_nearest.py: the mechanism by its vectors, the rows held to the closed lists, and each use under each
+  tie by a copy of the law.
+
 - **core 3.0** (2026-10-23, daftar v3.0.0, human-ratified rule-change) — **the rules as readings: order, life and
   necessity stated in the law's own reading grammar, their code gone.** MAJOR: the grammar a rule is stated in. The
   grammar (core/law/lines.yaml): `join` joins two sets on equal columns beside two series (one row, its name its key),

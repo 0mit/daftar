@@ -69,21 +69,18 @@ class Law:
             except (KeyError, OSError):
                 continue
         self.schemes, self.classes = mine + theirs, classes
-        self.rows = groupings.rows_of(self.schemes, self.slots, self.systems)
+        self.rows = groupings.rows_of(self.schemes, self.slots, self.systems, lines)
         self.apart = {f"{s}:{c}" for s, rows in classes.items() for c, r in rows.items()
                       if str(r.get('apart') or '') == 'true'}
 
     def fits(self, text, reads='as', within=()):
         """The first row a text fits, and what its slots hold: (row, values) or (None, None). A row that applies only
         `within` a whole of a code is tried where one of `within` (the codes the text's wholes hold) is it or a code
-        above it; a row that applies only `beside` siblings is not tried here."""
-        for r in self.rows:
-            if (r.reads or 'as') != reads or r.beside or (r.within and r.within not in within):
-                continue
-            got = r.template.match(text)
-            if got is not None:
-                return r, got
-        return None, None
+        above it; a row that applies only `beside` siblings is not tried here. Of two rows as near, what the law's tie
+        lets stand (core/law/lines.yaml `nearest`, `patterns`), the first of them."""
+        stand = groupings.fitting(self.rows, text, lambda r: not ((r.reads or 'as') != reads or r.beside
+                                                                  or (r.within and r.within not in within)))
+        return stand[0] if stand else (None, None)
 
 
 class Catalogue:

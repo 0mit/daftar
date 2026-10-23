@@ -575,24 +575,25 @@ class Law:
         """Whether a pass `from` a layer `to` a layer `through` a method or a verb, carrying statements known there by the
         act `as_`, stands: (granted, grant, rows). A row holds it where its `from`, `to` and `through` hold the pass's, its
         `keeper`, where it names one, is the file's, and its `as`, where it names one, the pass's act — and is then nearer
-        than a row that names only layers. Of the core's rows that hold it the nearest decide, and of two as near a
-        refusal; `ratified` is granted only to the party a garden's own row of that name grants; a garden's own row that
+        than a row that names only layers. Of the core's rows that hold it the nearest decide, as the tie of their use
+        says (core/law/lines.yaml `nearest`, `flows`: rows as near stand together, and one that refuses refuses it);
+        `ratified` is granted only to the party a garden's own row of that name grants; a garden's own row that
         holds it and refuses it refuses it. `closed` where no row of the core holds it (core/law/flows.yaml)."""
-        def near(r):
-            if not (frm in listed(r.get('from')) and to in listed(r.get('to')) and through in listed(r.get('through'))
-                    and (r.get('keeper') is None or r.get('keeper') == keeper)):
-                return 0
-            if r.get('as') is None:
-                return 1
-            return 2 if as_ in listed(r.get('as')) else 0
-        mine = [r for r in self.garden_flows if near(r)]
-        core = [(near(r), r) for r in self.flows if not any(r is g for g in self.garden_flows)]
-        core = [(n, r) for n, r in core if n]
+        def holds(r):
+            return (frm in listed(r.get('from')) and to in listed(r.get('to')) and through in listed(r.get('through'))
+                    and (r.get('keeper') is None or r.get('keeper') == keeper)
+                    and (r.get('as') is None or as_ in listed(r.get('as'))))
+        mine = [r for r in self.garden_flows if holds(r)]
+        core = [r for r in self.flows if not any(r is g for g in self.garden_flows) and holds(r)]
         refused = [str(r.get('flow', '')) for r in mine if r.get('grant') == 'refused']
         if not core:
             return False, 'closed', refused
-        top = max(n for n, _ in core)
-        rows = [r for n, r in core if n == top]
+        # THE NEAREST DECIDE (core/law/lines.yaml `nearest`, its use `flows`): by its keys, and as its tie says
+        from core import nearest
+        keys, tie = nearest.use(self, 'flows')
+        rows, near = nearest.nearest(core, keys, {'as': lambda r: 0 if r.get('as') is not None else 1}, tie)
+        if not rows:
+            return False, 'refused', [str(r.get('flow', '')) for r in near] + refused
         said = {r.get('grant') for r in rows}
         grant = 'refused' if 'refused' in said or not said <= set(GRANTS) else 'ratified' if 'ratified' in said \
             else 'granted'
@@ -1723,6 +1724,9 @@ class Law:
         for where, msg in self.form_problems():
             bad(where, msg)
         for where, msg in self.grouping_problems():
+            bad(where, msg)
+        from core import nearest                               # each use of the nearest: its keys and its tie
+        for where, msg in nearest.problems(self):
             bad(where, msg)
         for where, msg in self.risk_problems():
             bad(where, msg)

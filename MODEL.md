@@ -296,8 +296,9 @@ A name is a statement: the namespace gives it.
 - **Standing** is the law's own: the layer a file sits in. A file stands in one layer.
 - **A pass** moves statements from a layer to a layer by a method, `pass: { of: [r1], from: world, to: estate,
   through: record, as: read }` — into the estate, `as` the act it is known by there — and stands only where the flow
-  table grants it (`core/law/flows.yaml`): of the rows that hold it the nearest decides, a row that names `as` nearer
-  than one that names only layers, and of two as near, a refusal. A row `ratified` is refused until a garden's own row
+  table grants it (`core/law/flows.yaml`): of the rows that hold it the nearest decide, a row that names `as` nearer
+  than one that names only layers, and rows as near stand together, so one that refuses refuses it (the nearest's use
+  `flows`, `core/law/lines.yaml` `nearest`). A row `ratified` is refused until a garden's own row
   grants the party it names, with the basis it grants on; a garden's own rows otherwise only refuse.
 - **A session's pass log** (`captures/passes/<slug>.jsonl`, which the session's bean names in `details`, `pass_log: {
   requests: { holds: "file:<path>" } }`) holds what its launcher (`bin/launch.py`) and its save logged, one pass to a
@@ -528,7 +529,8 @@ proposes and a person ratifies. An agent that meets something it may not decide 
 - **Patterns.** A name fits a **template** of literal text and slots (lines.yaml `slots`: a counter, a date a calendar
   has, a time, a digest …), a row of a scheme of the knowledge profile's form `pattern`: the release ships the
   conventions their publishers document (`name-patterns`, DCF's), a garden extracts its own, each accepted row a
-  journalled write. `fit` groups members by the most specific row their text fits, and mines what no row knows: a
+  journalled write. `fit` groups members by the most specific row their text fits — more literal characters, then
+  fewer slots, then the order read (the nearest's use `patterns`) — and mines what no row knows: a
   counter's runs and the positions nobody holds, a date in every calendar whose days it names. A row `suggests` classes,
   `marks` the folder a file's name speaks for, and applies only `within` a whole or `beside` siblings of a code. It
   takes the whole text, a `part` of it or a `word` in it (`match`) — a holding's name, a folder's, a note, or its
@@ -538,8 +540,13 @@ proposes and a person ratifies. An agent that meets something it may not decide 
 - **Classes.** A scheme of the form `class` holds codes that may stand for a being (`work:<org>`), some `apart`.
   `inherit` reads a member's codes: those said of it; else those said of its nearest whole up `part` and of each
   folder that holds it — unless a nearer word, an `apart` code its name suggests, or not fitting its whole by kind, day
-  and shape sets it apart, with why; else those its patterns suggest. Two codes of one scheme both stand; `part` is
-  acyclic (rule `order`), and a scheme's own cycle is refused.
+  and shape sets it apart, with why; else those its patterns suggest. Two codes of one scheme both stand, and so do the
+  codes of wholes as near (the nearest's use `wholes`); `part` is acyclic (rule `order`), and a scheme's own cycle is
+  refused.
+- **The nearest.** Where several candidates hold one case — the flow table's rows a pass meets, the pattern rows a name
+  fits, the wholes a member inherits from, the locations that cover a path — one ordering decides: the keys its use
+  names in `core/law/lines.yaml` `nearest`, read in order, and what a tie of the nearest does there, declared at each
+  use: `refuse` (none decides), `both` (every one stands) or `order` (the first, in the order the use reads).
 - **Lines and groupings.** A group's line (`selection_form.line`) names its range, count, gaps, cells and the value its
   members agree on: what the gate's replies, the pages and the runs page show. The groupings are the standard readings
   a profile brings — a run of names, a day, a root's class, any list of names, a watcher's passes, accounting's lines
