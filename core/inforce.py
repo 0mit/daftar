@@ -129,7 +129,7 @@ class InForce:
 
     def _reading(self, ref):
         try:
-            import reckon as dmreckon
+            from core import reckon as dmreckon
             v = dmreckon.holds(ref, root=self.root)
         except Exception:  # noqa: BLE001 — a reading nobody can read is not known: said by None, never guessed
             return None

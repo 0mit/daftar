@@ -251,6 +251,31 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 3.0** (2026-10-23, daftar v3.0.0, human-ratified rule-change) — **the rules as readings: order, life and
+  necessity stated in the law's own reading grammar, their code gone.** MAJOR: the grammar a rule is stated in. The
+  grammar (core/law/lines.yaml): `join` joins two sets on equal columns beside two series (one row, its name its key),
+  each value read as the being it names — `self` its bean, a statement's id `<bean>#<id>` — keeping each pair, each
+  member matched, or each unmatched; `cycle`, the edges of a relation that lie on a loop, with the way round; `reach`,
+  what a relation reaches from each start, itself first; `first` and `last`, one member of each group, by the order the
+  garden is read in, the groups as they are read or in the order of their values; `describe`, a being's built-in columns
+  — its kind, nature, line and rung; an input said by the law, one of its tables (`crown`, `kinds`, `lines`, `stands`,
+  the levels' own ladder); and a rule's reading's `refuse`, the steps whose members are its refusals, each with its
+  words and its proof. The rules (core/law/core.yaml): `order`, with its four chains, `life` and `necessity` each hold
+  their `reading`, the rule's one statement, its `says` its reason; core/engine.py's order, life, cycles and necessity's
+  lines are gone, and the cursor and a store's check read the chains from the law (`engine.ordered`). `squares` and
+  `names` keep their code: each holds a clause the six operations cannot state (a statement's verb as a column and the
+  knowing acts that cover a statement; a name's pattern and Unicode's bidi controls), parked for the gardener. The
+  reckoner moved into the core (core/reckon.py), the one reckoner of the gate, the tools and daftard; bin/reckon.py runs
+  it, and a tool's `import reckon` is it. A refusal carries the statements and the law's rows it rests on
+  (`engine.Finding.proof`), and `daftar why <rule> <place>` prints them with the rule's reason. A law older than 3.0,
+  which holds no reading, is refused by this engine rather than judged without its rules. Every verdict held to
+  v2.25.1's: each case of test/core-cases.yaml, and each of 23 to 33 faults (one or more for each clause of order, life
+  and necessity, and of squares and names beside them) on each of the six gardens of the conformance corpus, gives the
+  same findings in the same order — save the refusal of an operation the law does not hold, which now lists the six new
+  ones; where one garden holds refusals of several clauses, a rule's are told together, so order's chains are told with
+  order rather than after the text's checks. test/core_readings.py: C1, the law without a rule's reading lets that
+  rule's cases pass and changes no other; C6; each operation by its vectors.
+
 - **daftar v2.25.1** (2026-10-23, code alone, core 2.25) — **the writers' keys and a hub that reports**
   (the next version's design: P2's tools and P3's code). bin/install.py makes this machine's agent key where the account keeps
   none (ed25519, in daftard's state folder under `agent/`, 0700 and 0600) and proposes its `name` for the bean of the

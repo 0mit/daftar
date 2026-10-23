@@ -311,10 +311,63 @@ operations:
     exact: per-channel
     u_rule: absolute
     takes:
-      series: { required: "true", in: { type: field_path } }
-      with: { required: "true", in: { type: field_path } }
+      series: { in: { type: field_path }, meaning: "the first of two series, its `with` the second's path" }
+      with: { required: "true", in: any, meaning: "the second: a series' path, with `series`; with `of`, an earlier step's set or an input's" }
       channel: { in: { type: kebab } }
-    meaning: "two series row by row: agree, compatible (within k·u), differ, or one only"
+      of: { in: { type: kebab }, meaning: "the first of two sets: an earlier step's, or an input's" }
+      "on": { in: any, meaning: "with `of`: the columns that are equal, `{<path of a member of of>: <path of a member of with>}`, each value read as the being it names; a value that is no name — nothing, a list, a `someone` — equals none" }
+      keep: { in: [both, matched, unmatched], meaning: "with `of`: each pair that agrees, as one member (`both`, the default); each member of `of` some member of `with` agrees with, once (`matched`); or each that none does (`unmatched`)" }
+      as: { in: any, meaning: "with `keep: both`: the two names a pair's members are read under, `[<of's>, <with's>]`" }
+    meaning: "two series row by row: agree, compatible (within k·u), differ, or one only; or two sets on equal columns, the members of `of` in their order and, for each, those of `with` in theirs"
+  - op: cycle
+    gives: set
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the members whose edges are judged: an earlier step's set" }
+      with: { in: { type: kebab }, meaning: "more edges of the same relation, walked and never judged: a set, or an input said by the law" }
+      from: { required: "true", in: any, meaning: "where an edge starts: a path of a member, or a list of paths" }
+      to: { required: "true", in: any, meaning: "where it leads: a path of a member, or a list of paths" }
+      within: { in: { type: kebab }, meaning: "a set of beans: an edge counts where both its ends are among them" }
+    meaning: "the edges of a relation that lie on a loop, with the way round: for each member of `of` and each edge it makes — from each being at `from` to each at `to`, a list read as its items and each a name read as the being it names — the edge whose end leads back to its start by the edges of `of` and `with`, nearest first and each being's next in the order of their names (core/reach.py): the member, with `start` and `next`, the edge's two ends; `way`, the beings from `next` to the last before `start` (`next` alone for an edge to itself); and `loop`, from `start` round to it again. Its proof is the statements and the law's rows that give each edge of the way"
+  - op: reach
+    gives: set
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the members whose starts are read: an earlier step's set" }
+      at: { required: "true", in: { type: field_path }, meaning: "each member's start, read as the being it names" }
+      through: { required: "true", in: { type: kebab }, meaning: "the relation's edges: an earlier step's set, or an input said by the law" }
+      from: { required: "true", in: any, meaning: "where an edge starts: a path, or a list of paths" }
+      to: { required: "true", in: any, meaning: "where it leads: a path, or a list of paths" }
+    meaning: "what a relation reaches: for each start, itself and every being the edges of `through` lead to from it in one step or more, nearest first — a member each, `start` and `reached`, with `way`, the beings from the start (not itself) to what it reached; each start read once. Its proof is the statements and the law's rows of the way's edges"
+  - op: first
+    gives: set
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab } }
+      by: { required: "true", in: any, meaning: "the paths whose values make a group, each read as the being it names: one path, or a list" }
+      groups: { in: [read, values], meaning: "the order the groups are given in: as their first members are read (`read`, the default), or of their values, each name by its characters (`values`)" }
+    meaning: "one member of each group of the members whose values at `by` are one: the first in the order the garden is read in — its documents in their order, each document's statements in theirs; the groups in the order `groups` says"
+  - op: last
+    gives: set
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab } }
+      by: { required: "true", in: any, meaning: "the paths whose values make a group, each read as the being it names: one path, or a list" }
+      groups: { in: [read, values], meaning: "the order the groups are given in: as their first members are read (`read`, the default), or of their values, each name by its characters (`values`)" }
+    meaning: "one member of each group of the members whose values at `by` are one: the last in the order the garden is read in; the groups in the order `groups` says"
+  - op: describe
+    gives: set
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab } }
+      at: { required: "true", in: { type: field_path }, meaning: "the being described: the value at this path of each member — a list, each of its items, a member for each" }
+      as: { required: "true", in: { type: kebab }, meaning: "the name the built-in columns are read under: `<as>.being`, the being as it is written, and `<as>.kind`, `<as>.nature`, `<as>.line`, `<as>.rung`" }
+    meaning: "each member with the built-in columns of a being, read from the law: its kind — a bean's own, a being's a store keeps, a `someone`'s — its kind's nature, the line its kind is on (its own, or its level's) and its rung; none for what names no being (the crown, `unknown`, a word)"
   - op: weigh
     gives: groups
     exact: "false"
@@ -567,10 +620,11 @@ groupings:
     line: [code, count, "sum:measure.value"]
 
 selection_form:
-  inputs: "optional: values a reading takes from outside what the garden holds, one entry each, named, each with its `origin` (`schema_language.origin`). Read by the reader (`{act: read, nature: soma, by: reader}`) — the moment of the reading, from the clock; said by another garden (`{act: said, nature: lekton, by: garden}`) — a value read from it at a commit it published and granted (`garden`, `path`); any other — a value the ASKER gives, in the form `type` or `quantity` states, and the reading's line records it as the asker's, said. Who is asking is such a value until a guard signs the asker in. A step names an input `{input: <name>}`; a reading with an input is read only where the input is given"
+  inputs: "optional: values a reading takes from outside what the garden holds, one entry each, named, each with its `origin` (`schema_language.origin`). Read by the reader (`{act: read, nature: soma, by: reader}`) — the moment of the reading, from the clock; said by another garden (`{act: said, nature: lekton, by: garden}`) — a value read from it at a commit it published and granted (`garden`, `path`); said by the law (`{act: say, nature: sayable, by: law}`) — the law's table the input's name names, with the garden's own rows, each row a member: `crown`, `kinds`, `lines`, or `stands`, each level's stands as `{by: <the level>, at, as, while}`, the law's own ladder; any other — a value the ASKER gives, in the form `type` or `quantity` states, and the reading's line records it as the asker's, said. Who is asking is such a value until a guard signs the asker in. A step names an input `{input: <name>}`; a reading with an input is read only where the input is given"
   steps: "the reading, in order: each step applies ONE operation of `operations`, to what earlier steps gave and to the beans the garden holds, with what that operation's row `takes`; the last step's result is the reading's. A step names earlier steps by `id`, or an input by its `name`, and never a later step, so a reading never loops. No formula is written and no string is evaluated"
   zone: "optional: the civil time zone, a row of `time-zones`, in which a step that groups or compares by a calendar level reads a moment. A step that needs one refuses without it"
   result: "what the last step gives, by its operation's row: a set (of beans, entries or values), a truth (true, false or NOT KNOWN), a value with its u, an order, or groups. Where a truth is asked — a clause's `when`, a checklist's `met_by`, a grant's audience — a set holds when it is not empty, and NOT KNOWN does not hold"
+  refuse: "a rule's reading (core.yaml `rules`, its `reading`): the steps whose members are the rule's refusals, each `{of: <step>, message: <words>}`, a set or an order. A refusal is told at the place of the statement its member is (`<bean>[<i>] <verb>`; of a pair, the first's), in the order of `refuse` and of each step's members. The message names a member's values by `{<path>}`, each written as text — a list with ` → ` between its items, and a being a `describe` reads as it was written, or a `someone` by its kind — and nothing in it is evaluated. Each refusal carries its proof, the statements and the law's rows its member rests on, which `daftar why <rule> <place>` prints"
   line: "a group's one line: what the gate's replies, the pages and the runs page show of a group in place of its members — its fields in the order its grouping's `line` names, each written by its value's own writer (a count, a position in the reader's calendar, a being by its title), the members' own text never repeated. A field is one of: `range` (the group's template with its counter's first and last, or its date's extent, in place of the slot), `count` (how many members), `missing` (the positions between a counter's first and last nobody holds, counted), `extent` (a date's or a time's first and last), `values` (a word slot's values, the first few), `code` (the code a group of `inherit` holds, and where it came from), `apart` (how many were set apart, and why, by reason), `cells:<path>` (the cells of the level the grouping names the members' positions at the path fall in), `agree:<path>` (the value every member holds at the path, shown only where all agree), `each:<path>` (the values the members hold at the path, each with how many, the most first), `sum:<path>` (the quantities at the path added)"
   read: "READ each time it is asked, by bin/reckon.py, and never written back as a fact. An act that fixes a reading — an invoice, a period closed, a verdict — records the commit and the moment it was read at (`pin_form`)"
 pin_form:

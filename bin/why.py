@@ -3,6 +3,7 @@
 
     python3 bin/why.py clause.state           # an item of core/law/ or the garden's VOCAB.md rows, found by name
     python3 bin/why.py 'core/law/verbs.yaml: verbs[be]'   # or by its key, as this prints it
+    python3 bin/why.py order 'x7[1] stand'    # a refusal the gate printed: what it rests on, and the rule's reason
     python3 bin/why.py --check                # every reason names something the law still says (exit 1 if not)
     python3 bin/why.py --stale                # reasons that speak of a law name the law no longer has
     python3 bin/why.py --take-comments        # a garden's VOCAB.md comments moved to its reasons, each under its name
@@ -234,7 +235,66 @@ def main(argv):
                 print(f"STALE   {k} — speaks of {', '.join('`'+g+'`' for g in gone)}, which {_law} no longer has")
             print(f"why: {_why}: {len(st)} reasons speak of something the law no longer says — they have become journal")
         return 0
+    if len(argv) >= 2 and argv[0] in rule_names():
+        root = argv[argv.index('--garden') + 1] if '--garden' in argv[:-1] else ROOT
+        return refusal_show(argv[0], argv[1], os.path.abspath(root))
     return core_show(argv[0])
+
+
+def rule_names():
+    sys.path.insert(0, ROOT)
+    from core import read
+    return [str(r.get('rule')) for r in read.data(os.path.join(CORE_LAW, 'core.yaml')).get('rules') or []
+            if isinstance(r, dict)]
+
+
+_PLACE = re.compile(r'^(.+)\[([0-9]+)\] (\S+)$')
+
+
+def refusal_show(rule, place, root):
+    """`why <rule> <place>`: the garden at `root` judged, and each refusal of `rule` told at `place` (as the gate prints
+    it: `<bean>[<i>] <verb>`) printed with what it rests on — each statement, the bean's kind, each row of the law —
+    and the rule's reason. A rule its reading states carries its proof (core 3.0); one still in code says so."""
+    sys.path.insert(0, ROOT)
+    from core import engine, judge, reckon
+    law = judge.garden_law(root, judge.carried(root))
+    G = engine.Garden.read(root)
+    found = [f for f in engine.Judge(law, G).run() if f[0] == rule and f[1] == place]
+    if not found:
+        print(f"why: rule {rule} refuses nothing at {place} in the garden at {root}")
+        return 1
+    says = next((str(r.get('says')) for r in read_rules() if r.get('rule') == rule), '')
+    for f in found:
+        print(f"{rule:<11} {place}: {f[2]}")
+        proof = getattr(f, 'proof', ())
+        if not proof:
+            print("  rests on: not said — the rule is still stated in code (core/engine.py), and its refusals carry no "
+                  "proof yet")
+        else:
+            print("  rests on:")
+        for item in proof:
+            m = _PLACE.match(item)
+            b = G.beans.get(m.group(1)) if m else None
+            if b is not None:
+                r = next((rr for j, v, rr in b.items if j == int(m.group(2))), None)
+                print(f"    {item}: {{ {', '.join(f'{k}: {v}' for k, v in (r or {}).items())} }}")
+            elif item.endswith(':kind') and item[:-5] in G.beans:
+                print(f"    {item}: {G.beans[item[:-5]].kind} (its header)")
+            elif item.startswith('law:'):
+                row = reckon.law_row(law, item)
+                print(f"    {item}: " + (f"{{ {', '.join(f'{k}: {v}' for k, v in row.items() if k != 'meaning')} }}"
+                                         if isinstance(row, dict) else
+                                         f"no row of the law's `{item[4:]}` agrees" if row is None and '[' not in item
+                                         else str(row)))
+            else:
+                print(f"    {item}")
+        print(f"  the rule: {' '.join(says.split())}")
+    return 0
+
+
+def read_rules():
+    from core import read
+    return [r for r in read.data(os.path.join(CORE_LAW, 'core.yaml')).get('rules') or [] if isinstance(r, dict)]
 
 
 def core_items(root=ROOT):

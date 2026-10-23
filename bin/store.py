@@ -1075,7 +1075,7 @@ def _check(stores, garden, law, base):
         if s not in large:
             out += _union_judged([s], garden, law, base)
     out += _names_once(stores, garden, law)
-    out += _cycles(stores, garden)
+    out += _cycles(stores, garden, law)
     judged = {'hold', 'name', 'part', 'measure', 'own', 'need', 'be', 'derive', 'read', 'make', 'say'}
     rest = sorted({v for s in large for v in s.verbs()} - judged)
     if rest:
@@ -1255,11 +1255,12 @@ def _names_once(stores, garden, law):
     return out
 
 
-def _cycles(stores, garden):
+def _cycles(stores, garden, law):
     """Nothing owns itself, is part of itself, is at itself or needs itself through others: the chains of git and every
-    store (engine.ORDERED), walked over the beings' numbers."""
+    store (rule order's, read from its reading in the law: engine.ordered), walked over the beings' numbers."""
+    from core import reckon as dmreckon
     out = []
-    for verb, low, high, says in engine.ORDERED:
+    for verb, low, high, words in engine.ordered(law):
         graph = {}
         for b in garden.beans.values():
             for _i, v, r in b.items:
@@ -1303,7 +1304,7 @@ def _cycles(stores, garden):
                     key = frozenset(loop)
                     if key not in found:
                         found.add(key)
-                        out.append(('order', f"{verb}", f"{' → '.join(loop)}: nothing {says} itself through others"))
+                        out.append(('order', f"{verb}", dmreckon.written(words, dmreckon.Member(verb, {'loop': loop}, None))))
                 elif st is None:
                     state[nxt] = 1
                     path.append(nxt)

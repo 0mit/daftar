@@ -29,7 +29,8 @@ the translation kept of it — its role, its scan policy, the analyses cached of
 attended to is the bean's figures: a statement `forbidden` or `obligatory`, beside what is `possible`, `impossible` or
 `contingent` of the same, and what is `impossible` or `contingent` of what it needs; with the notes `details.safety`
 keeps, and the sensitivity the core derives. The chains it inherits along are the ones the core's order holds acyclic
-(core/engine.py `ORDERED`): what it is at, what it needs, what it is part of, and who owns it.
+(rule order's reading in the law, core/engine.py `ordered`): what it is at, what it needs, what it is part of, and
+who owns it.
 
 Usage:
     python3 bin/cursor.py <bean-id>
@@ -270,7 +271,8 @@ def core_main(target):
 
     print("\n" + BOLD("INHERITED") + " — along every chain the core's order holds acyclic")
     any_inherited = False
-    for verb, low, high, says in engine.ORDERED:
+    for verb, low, high, words in engine.ordered(law):         # read from rule order's reading in the law
+        says = (re.search(r'nothing (.+?) itself', words) or re.search(r'(.+)', verb)).group(1)
         walked, seen, frontier = [], {bean}, [bean]
         while frontier:
             nxt = []
