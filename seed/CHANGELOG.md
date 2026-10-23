@@ -251,6 +251,20 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v3.1.2** (2026-10-23, code, core 3.1) — **the union judged by the same rules at every size: each rule that
+  is a reading, compiled to SQL** (the next version's design: P5 and D6). A store's check of a union too large to read
+  into memory judged two rules in SQL of its own, beside the engine: a name given once (`_names_once`) and the chains of
+  rule `order` (`_cycles`). Both are gone. core/union.py compiles each rule that is a reading of the law (`order`,
+  `life`, `necessity`) step by step into SQL over git and every store the host keeps, by the same operations: `select`,
+  `describe`, `join`, `minus`, `first` and `last` as SQL; `cycle` and `reach` walked by core/reach.py, the one walk, a
+  cycle over what SQL leaves of its edges once every one that cannot lie on a cycle is dropped. Each refusal is the engine's over the same union read as
+  beans: its words, at the place of its statement, in its order. A name a namespace gives once is judged over the
+  union by the engine's own code (core/engine.py `names`, which now takes the names a store gives), the SQL finding the
+  names given twice. A large union's check names, rule by rule, each core rule it judges neither by a reading's SQL nor
+  by its own queries, where it named verbs before. test/store_union.py holds every case of test/core-cases.yaml, kept
+  five ways between git and one or two stores, to the engine's verdict over the union, word for word. No file of the
+  law changed.
+
 - **daftar v3.1.1** (2026-10-23, the documents and code, core 3.1) — **the rules as the documents list them, written
   from the law** (the next version's design: D5). CHECKLIST.md's Part A and MODEL.md's gate hold, between their marks,
   what `python3 bin/rules.py --write` writes from core/law/core.yaml: each rule's name and its `says`, in the law's

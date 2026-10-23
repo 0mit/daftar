@@ -96,6 +96,9 @@ jobs:
       - name: "store: statements kept off git as rows, one universe with the beans — a row judged as the gate judges a statement, the pointer through the gate, the check over the union whole and by queries, the round trips between keepings, many writers, a snapshot, a removal recorded, a store found by its host's bean"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/store.py
+      - name: "store_union: the union judged by the same rules at every size — each rule that is a reading of the law, compiled to SQL over git and the stores (core/union.py), gives the engine's refusals over the same union, word for word, place for place, in order: every case of test/core-cases.yaml kept five ways between git and one or two stores; and a large union's check names each core rule it does not judge"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/store_union.py
       - name: "run: every job a tool starts, a course on the standard walk, its registry the store runs — setup, start and how it ends, names and keys, a stop whole, tasks and children, identity, the store's statements judged against the walk, a reader of another user, many writers"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/run.py

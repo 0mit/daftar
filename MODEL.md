@@ -465,8 +465,10 @@ proposes and a person ratifies. An agent that meets something it may not decide 
   into a bean by hand is refused (core/law/flows.yaml). `python3 bin/store.py` keeps, reads, exports, imports and checks.
 - **The check of the union.** The rules that span keepings — `names`, `order`, `room`, `line`, and that each act a row
   names is a knowing act — hold over git and every store a host keeps, and the store's check judges them where the
-  stores are, reading git as well: whole, by the engine's own rules, while the union is small; by queries when it is
-  large, naming what it did not judge. The gate never reads a store, so its verdict on git is the same on every host.
+  stores are, reading git as well: whole, by the engine's own rules, while the union is small; when it is large, each
+  rule that is a reading of the law by its reading compiled to SQL (core/union.py), with the engine's words at the
+  engine's places, and the rest by queries where it has them, naming each rule it did not judge. The gate never reads
+  a store, so its verdict on git is the same on every host.
 
 ## Imports and exports: one machinery
 - **One way in and out.** Another system's records come in, and the garden's statements go out, through one
