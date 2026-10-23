@@ -204,6 +204,7 @@ statements:
 
 
 ZONE = None     # the civil time zone the garden reckons its days in, set by main (31.0: GARDEN.md `zone`)
+AGENTS = 'agents-work'   # the agents' work agreement the seed plants beside the gardener (seed/agents-work.md.template)
 
 
 def host_zone():
@@ -437,6 +438,12 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, la
         # and commits through the core's gate
         with open(os.path.join(target, 'beans', gid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
             fh.write(core_gardener(gid, gname or gid, ggenos))
+        # THE AGENTS' WORK AGREEMENT, the seed's default instructions, said by the gardener with their own bean: what
+        # every agent working here is held to at its own door (bin/hook.py), each clause the gardener's to change
+        agents = os.path.join(seed, AGENTS + '.md.template')
+        if os.path.isfile(agents):
+            with open(os.path.join(target, 'beans', AGENTS + '.md'), 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(open(agents, encoding='utf-8').read().replace('@@GARDENER@@', gid))
         gpath = os.path.join(target, 'GARDEN.md')
         gtext = open(gpath, encoding='utf-8').read()
         gtext = re.sub(r'(?m)^gardener:[^\n]*$', f'gardener: {gid}                      # who keeps this garden: its first bean', gtext, count=1)
@@ -444,14 +451,21 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, la
             fh.write(gtext)
         env = dict(os.environ, GIT_AUTHOR_NAME='germinate', GIT_AUTHOR_EMAIL='germinate@localhost',
                    GIT_COMMITTER_NAME='germinate', GIT_COMMITTER_EMAIL='germinate@localhost')
+        planted = os.path.isfile(os.path.join(target, 'beans', AGENTS + '.md'))
         r = subprocess.run([sys.executable, os.path.join(target, 'bin', 'save.py'), 'germinate',
                             f'the gardener: [[{gid}]]', '--body',
                             f"- action: planted [[{gid}]], the {'person who keeps' if ggenos == 'person' else 'organisation that keeps'} "
                             f"this garden, and named them in GARDEN.md `gardener:` — a RULE-CHANGE, as every change to the "
-                            f"manifest is."], cwd=target, env=env, capture_output=True, text=True, encoding='utf-8',
-                           errors='replace')
+                            f"manifest is."
+                            + (f"\n- action: planted [[{AGENTS}]], the agents' work agreement: the seed's default "
+                               f"instructions, said by the gardener — one text, one parser, and bash 5.0 or later as "
+                               f"the shell" if planted else '')], cwd=target, env=env, capture_output=True, text=True,
+                           encoding='utf-8', errors='replace')
         if r.returncode != 0:
             die(f"the gardener's bean was refused by the garden's gate:\n{r.stdout}{r.stderr}", 1)
+        if planted:                  # the agent's own door again, now the agreement names the shell it sets
+            subprocess.run([sys.executable, os.path.join(target, 'bin', 'hook.py'), 'install', 'claude-code'],
+                           cwd=target, capture_output=True, text=True, encoding='utf-8', errors='replace')
     elif gid:
         today = 'now'            # the entry below stamps it: one reading of the clock for the heading and the bean (23.0)
         with open(os.path.join(target, 'beans', gid + '.md'), 'w', encoding='utf-8', newline='\n') as fh:

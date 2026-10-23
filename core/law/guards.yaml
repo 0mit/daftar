@@ -1,0 +1,75 @@
+# The guards: what an agent's own door checks before the agent acts. A guard is named by an instruction of the garden's
+# gardener — a clause of the agents' work agreement on the permission square, whose `guard` is a row here and whose
+# `operand` is what the row `takes` (core/law/measures.yaml `clause`) — and holds while such an instruction says its
+# `stance`; one that says the stance's contradictory lifts it. It reads one thing of the act (`reads`): the `command` a
+# shell is given, or the `shell` the agent's harness runs its commands in. Each row is applied by core/guards.py, one
+# function a row and none without one, and held there to its `vectors`: what it refuses and what it lets through, each
+# with the operand it is judged under where the row takes one.
+# The table is closed. These rows are the law itself: a change to them is a RULE-CHANGE, made here.
+guards:
+  - guard: one-text-one-parser
+    stance: forbidden
+    reads: command
+    takes: {}
+    meaning: "a command is parsed by one shell, the garden's: text meant for another interpreter goes to it as a file, on standard input or as one argument, never inside another interpreter's quotes. Refused before it runs: an interpreter — a shell (bash, sh, zsh, dash, ksh, fish), pwsh, powershell, cmd, `python -c`, `perl -e`, `node -e`, or a command for another host (`ssh <host> …`) — given its text as a quoted argument that holds a line break, a heredoc, a backquote, `$(` or the other quote; a double-quoted argument anywhere that holds a backquote or `$(`; and, failing closed, a command whose quotes, substitutions or heredocs do not close"
+    vectors:
+      - { command: "bash -c 'python3 tools/choices.py beans/x.md \"the gardener's choices\"'; python3 bin/save.py agent \"x: the choices\" --body \"- action: x gained the choices\"", refused: "true" }
+      - { command: "bash -c \"python3 tools/messages.py --set 'a copy goes under `Other`, by `folder`'\"", refused: "true" }
+      - { command: "bash -c \"sed -i 's/by date/by their `classes`/' lib/groups.py\"", refused: "true" }
+      - { command: "bash -c 'ssh host powershell -Command - <<EOF\nGet-Service | Where-Object { $_.Name -eq 'svc' }\nEOF'", refused: "true" }
+      - { command: "python3 bin/save.py agent \"the store\" --body \"- action: wrote `held` into the store\"", refused: "true" }
+      - { command: "bash -c 'cat > entry.md <<EOF\n- action: the plan written\nEOF\npython3 bin/save.py agent \"the plan\" < entry.md'", refused: "true" }
+      - { command: "bash -c 'python3 -c \"import json; print(json.load(open(\\\"x.json\\\"))[\\\"a\\\"])\"'", refused: "true" }
+      - { command: "bash -c \"printf '%s\\n' '## an item · proposed' >> log/pending.md\"", refused: "true" }
+      - { command: "bash -c 'python3 - <<PY\nimport re\np = \"beans/x.md\"\nPY'", refused: "true" }
+      - { command: "python3 -c 'print(\"x\")'", refused: "true" }
+      - { command: "python3 -c 'import os\nprint(os.getcwd())'", refused: "true" }
+      - { command: "perl -ne 'print \"x\"' notes.txt", refused: "true" }
+      - { command: "node -e 'console.log(\"x\")'", refused: "true" }
+      - { command: "ssh host \"ls '/srv/a b'\"", refused: "true" }
+      - { command: "ssh -p 2222 host 'cat > f <<EOF\nx\nEOF'", refused: "true" }
+      - { command: "powershell -Command \"Write-Output 'x'\"", refused: "true" }
+      - { command: "cmd /c \"echo 'x'\"", refused: "true" }
+      - { command: "sh -c 'echo $(date)'", refused: "true" }
+      - { command: "zsh -c 'ls `pwd`'", refused: "true" }
+      - { command: "sudo -u web bash -lc 'echo \"x\"'", refused: "true" }
+      - { command: "find . -name '*.md' -exec bash -c 'wc -l \"$0\"' {} \\;", refused: "true" }
+      - { command: "echo \"today is $(date)\"", refused: "true" }
+      - { command: "x=$(bash -c 'printf \"%s\" x')", refused: "true" }
+      - { command: "bash -c 'echo \"unclosed", refused: "true" }
+      - { command: "bash script.sh", refused: "false" }
+      - { command: "python3 bin/save.py agent \"the store\" < entry.md", refused: "false" }
+      - { command: "ssh host bash -s < script.sh", refused: "false" }
+      - { command: "powershell -File script.ps1", refused: "false" }
+      - { command: "python3 tools/choices.py beans/x.md --note \"the gardener's choices\"", refused: "false" }
+      - { command: "bash -c 'make test'", refused: "false" }
+      - { command: "python3 -c 'print(1)'", refused: "false" }
+      - { command: "ssh host 'systemctl status cron'", refused: "false" }
+      - { command: "ssh host bash -s <<'EOF'\nls \"/srv/a b\"\nEOF", refused: "false" }
+      - { command: "python3 - <<'EOF'\nprint(\"it's\")\nEOF", refused: "false" }
+      - { command: "cat > notes.txt <<'EOF'\nit's \"quoted\", `ticked` and $(not run)\nEOF", refused: "false" }
+      - { command: "git log --oneline -5 --format='%h %s'", refused: "false" }
+      - { command: "grep -rn \"def judge\" core/", refused: "false" }
+      - { command: "d=$(date +%F); echo \"$d\"", refused: "false" }
+      - { command: "ls -la | wc -l && echo done", refused: "false" }
+      - { command: "find . -name '*.py' -exec wc -l {} +", refused: "false" }
+      - { command: "pwsh -File ./setup.ps1 -Name \"it's\"", refused: "false" }
+      - { command: "echo 'it'\"'\"'s'", refused: "false" }
+  - guard: shell-is
+    stance: obligatory
+    reads: shell
+    takes:
+      shell: { required: "true", in: { registry: technology, take: code }, meaning: "the shell the agent's commands run in: a technology of the catalogue" }
+      floor: { in: { pattern: "^[0-9]+(\\.[0-9]+)*$" }, meaning: "the lowest version of it taken, its numbers compared one by one" }
+    meaning: "the shell the agent's harness runs its commands in is the one the instruction names, at or above its floor, as the harness's own rule picks it; while it is not, or none is found, every command is refused"
+    vectors:
+      - { operand: { shell: bash, floor: "5.0" }, shell: bash, version: "5.3.20", refused: "false" }
+      - { operand: { shell: bash, floor: "5.0" }, shell: bash, version: "5.0", refused: "false" }
+      - { operand: { shell: bash, floor: "5.0" }, shell: bash, version: "5.10", refused: "false" }
+      - { operand: { shell: bash, floor: "5.0" }, shell: bash, version: "3.2.57", refused: "true" }
+      - { operand: { shell: bash, floor: "5.0" }, shell: zsh, version: "5.9", refused: "true" }
+      - { operand: { shell: bash, floor: "5.0" }, shell: "", version: "", refused: "true" }
+      - { operand: { shell: bash }, shell: bash, version: "3.2.57", refused: "false" }
+      - { operand: { shell: zsh }, shell: zsh, version: "5.9", refused: "false" }
+columns:
+  guards: { guard: required, stance: required, reads: required, takes: required, meaning: required, vectors: required }

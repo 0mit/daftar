@@ -242,3 +242,33 @@ jobs:
           missing=$(git log --format='%H %s%n%b%x00' "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
             | python3 -c "import sys; print('\n'.join(c.split('\n')[0][:72] for c in sys.stdin.read().split('\x00') if c.strip() and 'Signed-off-by:' not in c))")
           if [ -n "$missing" ]; then echo "commits with no Signed-off-by:"; echo "$missing"; exit 1; fi
+  # THE AGENT'S OWN DOOR ON EVERY SYSTEM: the guards' suite alone, short, on each system an agent's harness runs on —
+  # the shell the install finds is each system's own (a bash on Linux, Homebrew's on macOS, Git for Windows' bash)
+  guard:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      DAFTAR_TIME_SOURCES: ""     # the suite's own time source on the loopback (test/machine.py): macOS's runner reaches no NTP server
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install PyYAML
+      - run: git config --global user.name ci && git config --global user.email ci@localhost
+      - name: "python3 names the Python set up, where the system names none (Windows)"
+        if: runner.os == 'Windows'
+        run: python -c "import os, shutil, sys; p = os.path.join(os.path.dirname(sys.executable), 'python3.exe'); os.path.exists(p) or shutil.copy(sys.executable, p)"
+      - name: "guard: the law's guards held to their vectors, the gardener's instructions read through the one judge, every recorded case refused before it runs and every allowed form let through, the harness's shell set for this system"
+        run: python3 test/guard.py
+      - name: "guard, on macOS with Homebrew's bash: the install finds it, and the guards judge under it"
+        if: runner.os == 'macOS'
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: brew install bash && cd test && python3 guard.py

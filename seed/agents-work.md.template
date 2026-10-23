@@ -1,0 +1,24 @@
+---
+bean: agents-work
+kind: contract
+title: "agents-work — how every agent works in this garden: the gardener's standing instructions"
+summary: "The agents' work agreement: the gardener's standing instructions to every agent that works in this garden, one clause each. A clause that names a guard (core/law/guards.yaml) is checked at the agent's own door before each act, and the act it forbids is refused there (bin/hook.py). The gardener changes a clause by their own word."
+statements:
+  - say:        { by: @@GARDENER@@, at: now }
+  - own:        { by: @@GARDENER@@, of: self }
+  - can:        { id: quoted-text, by: { someone: session }, of: "give an interpreter its text inside another interpreter's quotes" }
+  - forbidden:  { id: one-text-one-parser, of: quoted-text, through: self, clause: { guard: one-text-one-parser } }
+  - can:        { id: commands-in-bash, by: { someone: session }, of: "run its commands in bash, 5.0 or later" }
+  - obligatory: { id: shell-is, of: commands-in-bash, through: self, clause: { guard: shell-is, operand: { shell: bash, floor: "5.0" } } }
+---
+What every agent working in this garden is bound by, as its gardener says it. These two clauses are the seed's: a new
+garden starts with them.
+
+- **One text, one parser.** A command is read by one shell, the garden's. Text meant for another interpreter, such as
+  another shell, PowerShell, Python, a remote host or a journal entry's body, goes to it as a file, on standard input,
+  or as one argument. It is never carried inside another interpreter's quotes.
+- **The shell is bash, 5.0 or later.** The agent's harness runs its commands in bash. `python3 bin/hook.py install
+  claude-code` sets it in this clone's own settings.
+
+To lift a clause, say its contradictory: `permitted` of `quoted-text`, or `omissible` of `commands-in-bash`, each a
+clause naming the same guard. To change one, change its operand, for example another shell or another floor.

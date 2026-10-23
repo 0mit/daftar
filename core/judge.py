@@ -107,6 +107,60 @@ def judge(law, scope):
     return out
 
 
+def instructions(law, scope, seed=None):
+    """([guards.Instruction], [(rule, where, message)]): the gardener's standing instructions to agents in the garden
+    `scope` holds (a tree) — each clause on the permission square whose `clause` names a guard, read by this judge's own
+    reader and law, so no other code reads them. An instruction is the gardener's own word or nothing (CHECKLIST Part
+    D): a clause counts where a `say` by the garden's gardener covers it, while it holds (its `while`, core/inforce.py;
+    one not known to hold counts: the default is caution) and its `state` leaves it in force. The second list is what
+    rule `measured` finds in those clauses: a door that cannot read an instruction refuses rather than guess it.
+
+    `seed`, the path of the seed's agents' work agreement (seed/agents-work.md.template): for each guard no instruction
+    of the garden names, the seed's clauses naming it, read as the gardener's (`Instruction.seed`) by this release's law
+    — the default a garden starts at, until its gardener says otherwise."""
+    from core import guards, inforce, measures
+    if scope.garden is None:
+        scope.garden = engine.Garden.read(scope.root)
+    if law is None:
+        law = garden_law(scope.root)
+    G = scope.garden
+    J = engine.Judge(law, G)
+    F = inforce.InForce(scope.root, G=G, law=law)
+    out, bad = [], []
+
+    def read_bean(b, at, is_seed, J):
+        for i, verb, r in b.items:
+            c = r.get('clause')
+            if verb not in guards.CONTRADICTORY or 'held' in r or not isinstance(c, dict) or c.get('guard') is None:
+                continue
+            said = G.gardener is not None and any(v == 'say' and rr.get('by') == G.gardener
+                                                  for v, rr in J._acts_of(b, i, r))
+            if not said or str(c.get('state') or 'in-force') != 'in-force' or F.holds(b.id, r) is False:
+                continue
+            found = measures.guard_problems(J, f"{at}[{i}] {verb}.clause", c, verb)
+            if found:
+                bad.extend(('measured', w, m) for w, m in found)
+                continue
+            hit = J.statement(r.get('of'), b)
+            says = hit[3].get('of') if hit and isinstance(hit[3].get('of'), str) else None
+            yield guards.Instruction(str(c['guard']), verb, c.get('operand') or {},
+                                     f"{at}#{r['id']}" if isinstance(r.get('id'), str) else f"{at}[{i}]", says, is_seed)
+
+    for b in G.beans.values():
+        out += read_bean(b, b.id, False, J)
+    if seed and os.path.isfile(seed) and G.gardener:
+        with open(seed, encoding='utf-8') as fh:
+            text = fh.read().replace('@@GARDENER@@', G.gardener)
+        head, body = engine.dmparse.split_front_matter(text)
+        sb = engine.Bean(str((read.loads(head, seed) or {}).get('bean') or 'seed'), seed, read.loads(head, seed),
+                         body=body)
+        named = {i.guard for i in out}
+        rel = os.path.relpath(seed, ROOT).replace(os.sep, '/') if seed.startswith(ROOT) else seed
+        # the seed is the release's, read by the release's own law and standards, whatever the garden carries
+        out += [i for i in read_bean(sb, rel, True, engine.Judge(Law.load(), G)) if i.guard not in named]
+    return out, bad
+
+
 def _staged(law, scope):
     """The index, copied into a temporary directory and judged there with the law it stages; then the commit's own
     rules, between the index and the last commit."""

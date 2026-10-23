@@ -89,3 +89,4 @@ verovio	Verovio	software	RISM Digital Center	https://book.verovio.org/	https://w
 web-app-manifest	Web Application Manifest	format	W3C	https://www.w3.org/TR/appmanifest/	https://www.w3.org/	0613	2513;3514
 service-workers	Service Workers	protocol	W3C	https://www.w3.org/TR/service-workers/	https://www.w3.org/	0613	2513;2514
 opentelemetry	OpenTelemetry	software	the OpenTelemetry authors (CNCF)	https://opentelemetry.io/docs/specs/semconv/	https://opentelemetry.io/	0612;0613	2522;2512
+bash	GNU Bash	software	the GNU Project	https://www.gnu.org/software/bash/manual/	https://www.gnu.org/software/bash/	0613	2512;2522

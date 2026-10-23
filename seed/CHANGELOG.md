@@ -251,6 +251,25 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 2.25** (2026-10-23, daftar v2.25.0, human-ratified rule-change) — **the agent's own door: a rule the gardener
+  stated, refused at the agent's act before it runs, and bash as its first instruction.** The law: core/law/guards.yaml,
+  a closed table of guards, each its stance on the permission square, what it reads of the act, what it takes, its
+  meaning and its vectors — `one-text-one-parser` (forbidden: an interpreter's text carried inside another's quotes)
+  and `shell-is` (obligatory: the shell the agent's harness runs its commands in, at or above a floor). The gardener's
+  instruction is a clause of the agents' work agreement: a `forbidden` or `obligatory` (lifted by `permitted` or
+  `omissible`) whose `clause` names the `guard` and gives its `operand`, the two attributes the form `clause` gains;
+  rule `measured` holds it to the table, and an instruction counts only where the gardener's `say` covers it (CHECKLIST
+  Part D). The seed plants the agreement in every new garden, said by its gardener with their own bean
+  (seed/agents-work.md.template): one text, one parser, and bash 5.0 or later; it is the default for a guard no
+  instruction of a garden names. The technology catalogue gains `bash`. The code: core/guards.py applies each row,
+  reading a command as the garden's shell reads it, and the law's self-check holds every row to its function and its
+  vectors; core/judge.py `instructions` reads the gardener's instructions through the one judge; bin/hook.py gains
+  `start`, gives them to the model as a session begins, and before each shell command refuses what they forbid, naming
+  the instruction, what it found and the file to write instead, failing closed; its install writes the harness's shell
+  per system (CLAUDE_CODE_SHELL on Linux, Homebrew's bash on macOS or a refusal saying what to install, Git for Windows'
+  bash checked), and bin/install.py and germination install it in every garden's clone. test/guard.py replays every
+  recorded case and every allowed form, and runs on Linux, macOS and Windows in CI.
+
 - **core 2.24** (2026-10-23, daftar v2.24.0, human-ratified rule-change) — **the record made true, and one judge
   behind every door.** The words: MODEL.md's journal and gate say that each writer signs its commits with a key its
   bean names — a person with a key only their presence opens, an agent with the key of the machine it runs on — and

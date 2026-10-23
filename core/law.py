@@ -81,6 +81,7 @@ VALUES = 'values.yaml'                                     # what a value is to 
 CROSSWALKS = 'crosswalks.yaml'                             # a foreign system's records read from statements (P5.3)
 FORMATS_LAW = 'formats.yaml'                               # the formats statements come in and go out in, the readers
                                                            # of a model's records, the conversions of a field (2.12)
+GUARDS = 'guards.yaml'                                     # what an agent's own door checks before it acts (P6)
 MEASURES = 'measures.yaml'                                 # the forms of a measure: a region, a repetition, a clause's
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
@@ -110,7 +111,8 @@ def shapes_of(spec):
 COLUMNED = (('systems.yaml', 'forms'), ('places.yaml', 'forms'), ('protocols.yaml', 'forms'), ('quantities.yaml', 'forms'),
             ('registries.yaml', 'forms'), (LINES, 'columns'), (MEASURES, 'columns'), ('flows.yaml', 'columns'),
             (VALUES, 'columns'), (PROFILES, 'forms'),     # the profiles' tables (lenses, archetypes, orientations…) too
-            (FORMATS_LAW, 'columns'))                     # the formats, the readers, the conversions
+            (FORMATS_LAW, 'columns'),                     # the formats, the readers, the conversions
+            (GUARDS, 'columns'))                          # the guards an instruction names
 
 
 def _columned(law_dir, std_dir):
@@ -301,6 +303,10 @@ class Law:
         law.own_crosswalks()
         fm = os.path.join(d, FORMATS_LAW) if os.path.isfile(os.path.join(d, FORMATS_LAW)) else os.path.join(LAW_DIR, FORMATS_LAW)
         law._formats((read.data(fm) or {}) if os.path.isfile(fm) else {})
+        gd = os.path.join(d, GUARDS) if os.path.isfile(os.path.join(d, GUARDS)) else os.path.join(LAW_DIR, GUARDS)
+        law.guards = {str(r['guard']): r for r in listed(((read.data(gd) or {}) if os.path.isfile(gd) else {}).get('guards'))
+                      if isinstance(r, dict) and r.get('guard') is not None}
+        law.tables['guards'] = list(law.guards)
         for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies), (PROFILES, law._profiles)):
             put(read.data(os.path.join(d, name) if os.path.isfile(os.path.join(d, name)) else os.path.join(LAW_DIR, name)))
         return law
@@ -1465,6 +1471,9 @@ class Law:
             if f.get('rule') not in self.rules:
                 bad(f"core/law/forms.yaml {name}", f"names no rule of the law to judge it ({f.get('rule')!r})")
         for where, msg in columns_problems(getattr(self, 'dir', LAW_DIR), getattr(self.std, 'law_dir', None)):
+            bad(where, msg)
+        from core import guards as _guards              # the guards: a function a row, each held to its vectors
+        for where, msg in _guards.problems(self):
             bad(where, msg)
         types = {str(t.get('type')) for t in (getattr(self, 'line_law', {}) or {}).get('types') or [] if isinstance(t, dict)}
         values = getattr(self, 'values', None) or {}

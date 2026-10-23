@@ -281,6 +281,9 @@ bad:
   - { rule: names, name: "a name holding a bidi control character", says: "a bidi control character", bean: x88, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: dns, of: self, as: "shop\u202e.example" } } ] }
   - { rule: harm, name: "a government number unsealed", says: "a government number", bean: x89, kind: document, statements: [ { say: { by: sam, at: now } }, { name: { by: ir-national-code, of: self, as: "0012345678" } } ] }
   - { rule: profile, name: "a channel holding what is no attribute of its form", says: "is no attribute of it", bean: x90, kind: host, statements: [ { say: { by: sam, at: now } }, { serve: { by: self, at: ["192.0.2.22", "tcp-port:25"], through: smtp, channel: { colour: red } } } ] }
+  - { rule: measured, name: "a clause naming no guard of the law", says: "is no guard of the law", bean: x91, kind: contract, statements: [ { say: { by: sam, at: now } }, { can: { id: quoted, by: { someone: session }, of: "quote" } }, { forbidden: { of: quoted, through: self, clause: { guard: one-text-two-parsers } } } ] }
+  - { rule: measured, name: "a guard said by a stance that neither holds nor lifts it", says: "is neither", bean: x92, kind: contract, statements: [ { say: { by: sam, at: now } }, { can: { id: shell, by: { someone: session }, of: "run in bash" } }, { permitted: { of: shell, through: self, clause: { guard: shell-is, operand: { shell: bash } } } } ] }
+  - { rule: measured, name: "a guard's operand out of what it takes", says: "no code of `technology`", bean: x93, kind: contract, statements: [ { say: { by: sam, at: now } }, { can: { id: shell, by: { someone: session }, of: "run in tcsh" } }, { obligatory: { of: shell, through: self, clause: { guard: shell-is, operand: { shell: tcsh } } } } ] }
 
 # Faults judged only as files: what the gate reads from a bean's own text, which a bean made in memory does not have.
 disk:
@@ -379,6 +382,7 @@ clauses:
     - { says: "what it occurs for, and what brings it into force", bad: [x82] }
     - { says: "and what a placement takes", bad: [x52] }
     - { says: "a clause's `by_role`", bad: [x73] }
+    - { says: "a clause's `guard`", bad: [x91, x92, x93] }
     - { says: "A payment `charged` in another currency", bad: [x68, x69, x70] }
     - { says: "a weighing judges every pair", bad: [x71, x72] }
     - { says: "a mark fixes the base of a cell", bad: [x74] }
