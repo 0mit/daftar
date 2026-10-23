@@ -2956,6 +2956,20 @@ guards and its improvements are each ordered by a key the law declares as a read
 thing first is written where anyone can read and check it. A key only orders: the Contract's classes come before every
 weight, and nothing is hidden or dropped by being last.
 
+## core/law/lines.yaml: nearest
+
+ONE ORDERING, ITS TIE DECLARED AT EACH USE (3.1). Four places chose among the candidates that hold one case by the
+nearest or the most specific — the flow table's rows a pass meets, the pattern rows a name fits, the wholes a member
+inherits a code from, the locations that cover a path — each by an ordering written in its own code, and each did
+something of its own with a tie: rows of the flow table as near stood together, the pattern read first took a name,
+inherit kept the codes of both wholes, the cursor took the first location. Refusing every tie, as was first proposed,
+would have changed the verdicts of the patterns and of inherit; so a tie is declared at each use instead — `refuse`,
+`both`, or the declared `order` — and the keys are named by the law, in the order they are read, each one a measure its
+use's code computes, a closed list the law's check holds the rows to. Which candidate is nearer, and what two as near
+do, is then read from the law and stated once; a garden that would have a tie refused says so in a row. The flow
+table's words had said "of two as near, a refusal", where two rows that grant had granted: the words now say what was
+done, rows as near standing together, one that refuses refusing the pass.
+
 ## core/law/verbs.yaml: verbs[weigh]
 
 (std-vocab 32: `terms[weighings]`)

@@ -528,6 +528,37 @@ ordering_keys:
       - { name: importance, origin: { act: say }, quantity: ratio }
       - { name: uncertainty, origin: { act: say }, quantity: ratio }
     steps: [{ id: key, op: multiply, of: importance, with: uncertainty }]
+# THE NEAREST: one ordering of the candidates that hold one case, nearest or most specific first — by the keys its use
+# names, read in order, each one of that use's own — and, at each use, what a tie of the nearest does. A use the law
+# names no row for, or a key a use does not have, is refused by the law's check (core/nearest.py applies these rows).
+# These rows are the law itself: a change to them is a RULE-CHANGE, made here.
+nearest:
+  ties:
+    - { tie: refuse, meaning: "none of them decides: the case is held by none" }
+    - { tie: both, meaning: "every one of them stands, together" }
+    - { tie: order, meaning: "the first of them stands, in the order its use reads its candidates in" }
+  uses:
+    - use: flows
+      meaning: "the rows of the flow table that hold a pass (core/law/flows.yaml; rule `layers`). Rows that stand together stand as all of them say: a pass is refused where one of them refuses it, and asks a party where one of them asks one"
+      keys:
+        - { key: as, meaning: "a row that names the act what the pass carries is known by there (`as`) is nearer than one that names only layers" }
+      tie: both
+    - use: patterns
+      meaning: "the rows of a scheme of names' templates (`form: pattern`) that a name fits, read in order: the garden's own schemes first, then the release's, each scheme's rows in theirs"
+      keys:
+        - { key: literal, meaning: "a template with more literal characters is nearer" }
+        - { key: slots, meaning: "of two as literal, one with fewer slots is nearer" }
+      tie: order
+    - use: wholes
+      meaning: "the wholes a member inherits a class's code from: its whole up `part`, and for a content each folder that holds it"
+      keys:
+        - { key: way, meaning: "a whole is nearer than one beyond it on its way up, and no whole beyond one that holds a code is read on that way; wholes on two ways are as near" }
+      tie: both
+    - use: locations
+      meaning: "the beans whose `be`, as location, holds a position covering a path (the cursor), read in the garden's order"
+      keys:
+        - { key: length, meaning: "a longer position is nearer" }
+      tie: order
 # THE GROUPINGS: one row a standard reading a profile brings (`home`; `core` for every garden), the kind of group it
 # makes and what its one line shows (`selection_form.line`). A garden adds its own in VOCAB.md (`groupings`), read the
 # same way. Each is read each time and never written: what a person says of a member — a `classify` of it — stands above

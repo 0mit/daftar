@@ -397,6 +397,7 @@ class Row:
 
     def __init__(self, scheme, row, slots, systems, order):
         self.scheme, self.code, self.order = scheme, str(row.get('code')), order
+        self.near = None                                 # its measures by the keys of its use (`rows_of`)
         self.template = Template(str(row['template']), slots, case=row.get('case') or 'any',
                                  calendar=row.get('calendar') or None,
                                  extensions=str(row.get('extensions') or '').split(), systems=systems,
@@ -413,13 +414,22 @@ class Row:
     def coding(self):
         return f"{self.scheme}:{self.code}"
 
-    def key(self):
-        return (-self.template.literal, self.template.width, self.order)
+
+class Ranked(list):
+    """Pattern rows, nearest first, and the tie a name that fits two as near is read by (`tie`)."""
+    tie = 'order'
 
 
-def rows_of(schemes, slots, systems):
+MEASURES = {'literal': lambda r: -r.template.literal, 'slots': lambda r: r.template.width}   # the keys of `patterns`
+
+
+def rows_of(schemes, slots, systems, law=None):
     """[Row] of every pattern row of `schemes` — [(scheme, rows)] in the order they are read, the garden's own first —
-    most specific first. A row whose template is not in its form is left out here; the law's check names it."""
+    most specific first, by the keys the law's use `patterns` names (core/law/lines.yaml `nearest`: more literal
+    characters, then fewer slots), rows alike in them in the order read; its tie with them. A row whose template is not
+    in its form is left out here; the law's check names it. `law`: a core.law.Law or lines.yaml's data."""
+    from core import nearest
+    keys, tie = nearest.use(law, 'patterns')
     out, order = [], 0
     for scheme, rows in schemes:
         for r in rows:
@@ -430,7 +440,30 @@ def rows_of(schemes, slots, systems):
             except TemplateError:
                 continue
             order += 1
-    return sorted(out, key=Row.key)
+    for r in out:
+        r.near = tuple(MEASURES[k](r) for k in keys)
+    ranked = Ranked(nearest.rank(out, keys, MEASURES))
+    ranked.tie = tie
+    return ranked
+
+
+def fitting(rows, text, tried):
+    """[(row, what its slots hold)]: the rows `rows_of` ranked that `text` fits, of those `tried(row)` lets be tried —
+    the nearest it fits, and of two as near what the tie of the law's use `patterns` lets stand (`rows.tie`)."""
+    from core import nearest
+    tie = getattr(rows, 'tie', 'order')
+    hits = []
+    for r in rows:
+        if hits and r.near != hits[0][0].near:
+            break                                         # past the nearest the text fits
+        if not tried(r):
+            continue
+        got = r.template.match(text)
+        if got is not None:
+            hits.append((r, got))
+            if tie == 'order':
+                break
+    return nearest.tied(hits, tie)
 
 
 def fit(items, rows, systems, reads=None, holds=None, beside=None, mine_rest=True):
@@ -442,19 +475,13 @@ def fit(items, rows, systems, reads=None, holds=None, beside=None, mine_rest=Tru
     groups, rest = {}, {}
     for key, text, container in items:
         text = str(text)
-        hit = None
-        for r in rows:
-            if r.only == 'suggests' or (reads is not None and (r.reads or 'as') != reads):
-                continue
-            if r.within and not (holds and holds(key, r.within)):
-                continue
-            if r.beside and not (beside and beside(key, r.beside)):
-                continue
-            got = r.template.match(text)
-            if got is not None:
-                hit = (r, got)
-                break
-        if hit:
+
+        def tried(r, key=key):
+            return not (r.only == 'suggests' or (reads is not None and (r.reads or 'as') != reads)
+                        or (r.within and not (holds and holds(key, r.within)))
+                        or (r.beside and not (beside and beside(key, r.beside))))
+        stand = fitting(rows, text, tried)
+        for hit in stand:
             g = groups.setdefault((hit[0].coding, container), {'template': hit[0].template.text,
                                                               'code': hit[0].coding, 'container': container,
                                                               'members': [], 'texts': [], 'values': [],
@@ -463,7 +490,7 @@ def fit(items, rows, systems, reads=None, holds=None, beside=None, mine_rest=Tru
             g['members'].append(key)
             g['texts'].append(text)
             g['values'].append(hit[1])
-        else:
+        if not stand:
             rest.setdefault((shape(text), container), []).append((key, text))
     out = [_summed(g) for _, g in sorted(groups.items(), key=lambda kv: (str(kv[0][1]), kv[0][0]))]
     loose = {}                        # shapes alike but in a digit run's width: mined together, a counter's one run
@@ -643,7 +670,7 @@ def path_codes(rows, path):
     return out
 
 
-def inherit(being, said, wholes, suggested=None, apart=None, fits=None, scheme=None, limit=4096):
+def inherit(being, said, wholes, suggested=None, apart=None, fits=None, scheme=None, limit=4096, tie='both'):
     """[(code, where it came from, through)] of `being` in one class scheme:
       said(b)       -> the codes said of b (a `classify` in a bean)
       wholes(b)     -> what b inherits from: its whole up `part`, and for a content each folder that holds it
@@ -651,6 +678,8 @@ def inherit(being, said, wholes, suggested=None, apart=None, fits=None, scheme=N
       apart(code)   -> True for a code whose members inherit nothing (the form `class`, `apart`), of any scheme
       scheme        -> the scheme asked: a suggested code of it is the member's where nothing is said or inherited
       fits(b, w)    -> None when b fits the whole w, else why it is set apart (the grouping's `weighs`)
+      tie           -> what wholes as near that hold codes do: the law's use `wholes` says (core/law/lines.yaml
+                       `nearest`), every one standing (`both`), the first met (`order`), or none (`refuse`)
     Said, else inherited from the nearest wholes that hold a said code — a nearer said code stopping the walk, an `apart`
     code holding its subtree to itself, a member that does not fit set apart with why — else suggested. A being is
     visited once: `part` is free of cycles by rule `order`, and a store's cycle, which its check refuses, ends here."""
@@ -677,6 +706,10 @@ def inherit(being, said, wholes, suggested=None, apart=None, fits=None, scheme=N
             out.append((None, 'set apart: inside a whole that keeps its own', w))
             stops.add(w)
     got = [x for x in out if x[0] is not None]
+    if got:                                             # the wholes the walk met that hold codes are as near
+        from core import nearest
+        stand = nearest.tied(list(dict.fromkeys(w for _c, _s, w in got)), tie)
+        got = [x for x in got if x[2] in stand]
     if got:
         return got
     mine = [c for c in sugg if not scheme or c.split(':', 1)[0] == scheme]

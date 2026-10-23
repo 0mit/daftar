@@ -2461,7 +2461,8 @@ class Reckoner:
                         continue
             self._gl['schemes'] = mine + theirs          # the garden's own first, then the release's
             self._gl['knowledge'] = K
-            self._gl['rows'] = groupings.rows_of(self._gl['schemes'], self._gl['slots'], self._gl['systems'])
+            self._gl['rows'] = groupings.rows_of(self._gl['schemes'], self._gl['slots'], self._gl['systems'], lines)
+            self._gl['lines'] = lines                    # the law's uses of the nearest, read with the rows
         return self._gl
 
     def op_fit(self, s):
@@ -2573,13 +2574,10 @@ class Reckoner:
         def suggested(b):
             got = []
             for n in own_names(b):
-                hit = next((r for r in G['rows'] if (r.reads or 'as') == 'name.as' and r.template.match(n) is not None), None)
-                if hit:
+                for hit, _v in groupings.fitting(G['rows'], n, lambda r: (r.reads or 'as') == 'name.as'):
                     got += hit.suggests
             for x in held_as.get(b) or []:                   # a content by the names its folders hold it by
-                hit = next((r for r in G['rows'] if (r.reads or 'as') == 'as' and not r.marks and r.template.match(x) is not None),
-                           None)
-                if hit:
+                for hit, _v in groupings.fitting(G['rows'], x, lambda r: (r.reads or 'as') == 'as' and not r.marks):
                     got += hit.suggests
             for f, x in held_in.get(b) or []:                # ...and by each holding's path beneath its volume
                 p = path_of(f)
@@ -2587,12 +2585,14 @@ class Reckoner:
                     got += [c for c in groupings.path_codes(G['rows'], f"{p}/{x}" if p else x) if c not in got]
             return got
 
+        from core import nearest
+        tie = nearest.use(G['lines'], 'wholes')[1]      # wholes as near that hold codes, as the law's use says
         out = collections.OrderedDict()
         self.found_classes = getattr(self, 'found_classes', {})
         detail = {}
         for m in self.arg(s, 'of', 'set'):
             got = groupings.inherit(m.bean, lambda b: said.get(b), lambda b: wholes.get(b), suggested,
-                                    lambda c: c in apart, scheme=scheme)
+                                    lambda c: c in apart, scheme=scheme, tie=tie)
             detail[m.id] = got
             for code, source, through in got or [(None, 'nothing said, inherited or suggested', None)]:
                 key = f"{code} ({source}{' from ' + through if through and through != m.bean else ''})" if code \
