@@ -6,6 +6,8 @@ core/law.py as bin/check.py reads it, with the garden's own rows), so this listi
 appears here it is checked; if it is checked it appears here.
 
 Usage: python3 bin/rules.py [--terms] [--core] [--every-profile]     (no --terms or --core = both)
+       python3 bin/rules.py --write      # CHECKLIST.md's Part A and MODEL.md's gate, written again from the law
+       python3 bin/rules.py --written    # what --write writes, printed
 
 `--core` the rules and the face — the statement, the order, the figures, the tables, the layers and the flow law;
 `--terms` the verbs with their roles and qualifiers, the kinds, the namespaces, the forms (their attributes read by
@@ -197,5 +199,99 @@ def core_rules(argv):
     return 0
 
 
+# ---- the rules as the documents list them ---------------------------------------------------------------------------
+# CHECKLIST.md's Part A and MODEL.md's gate list the rules. Each is WRITTEN here from core/law/core.yaml — the rule's
+# name, its `says` and whether it holds a reading — so a document says what the law says, and nothing is typed beside
+# it to drift: `--write` writes both in place, between their marks; test/docs.py holds them to what this writes.
+WRITTEN = {
+    'CHECKLIST.md': ("<!-- the rules as the law states them, written by `python3 bin/rules.py --write` from "
+                     "core/law/core.yaml: change the law, never these lines -->",
+                     "<!-- the end of the rules written from the law -->"),
+    'MODEL.md': ("<!-- the gate's rules, written by `python3 bin/rules.py --write` from core/law/core.yaml -->",
+                 "<!-- the end of the gate's rules written from the law -->"),
+}
+_ONES = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
+         "seventeen eighteen nineteen").split()
+_TENS = "_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()
+
+
+def number(n):
+    """`n` in words, as the documents write a count: `twenty-one`; digits from a hundred on."""
+    if n < 20:
+        return _ONES[n]
+    if n < 100:
+        return _TENS[n // 10] + ('' if n % 10 == 0 else '-' + _ONES[n % 10])
+    return str(n)
+
+
+def _wrapped(text, first='', rest='', width=120):
+    import textwrap
+    return textwrap.fill(' '.join(text.split()), width=width, initial_indent=first, subsequent_indent=rest,
+                         break_long_words=False, break_on_hyphens=False)
+
+
+def _listed(names):
+    q = [f"`{n}`" for n in names]
+    return q[0] if len(q) == 1 else ', '.join(q[:-1]) + ' and ' + q[-1]
+
+
+def law_rules(root=ROOT):
+    """The rules of core/law/core.yaml, in their order, as the law holds them."""
+    sys.path.insert(0, root)
+    from core import read
+    return [r for r in read.data(os.path.join(root, 'core', 'law', 'core.yaml')).get('rules') or [] if isinstance(r, dict)]
+
+
+def written(doc, rules):
+    """The lines `doc` (CHECKLIST.md or MODEL.md) holds between its marks, written from the rules."""
+    names = [str(r['rule']) for r in rules]
+    read_ = [str(r['rule']) for r in rules if r.get('reading')]
+    begin, end = WRITTEN[doc]
+    if doc == 'CHECKLIST.md':
+        out = [begin, _wrapped(
+            f"{number(len(rules)).capitalize()} rules, each strict: a breach is an error. Each is written here as the law "
+            f"states it, its `says` in `core/law/core.yaml`. {number(len(read_)).capitalize()} of them are readings of "
+            f"the law ({_listed(read_)}), read by the one reckoner, and each of their refusals names the statements "
+            f"and the law's rows it rests on (`python3 bin/why.py <rule> <place>`); the other "
+            f"{number(len(rules) - len(read_))} are applied by the core's code: core/engine.py's, and core/commit.py's "
+            f"for what only a commit can show."), '']
+        for r in rules:
+            says = str(r.get('says') or '').strip()
+            says = says[:1].upper() + says[1:] + ('' if says.endswith('.') else '.')
+            reading = f" Its reading: `core/law/core.yaml` `rules[{r['rule']}].reading`." if r.get('reading') else ''
+            out.append(_wrapped(f"**{r['rule']}** — {says}{reading}", '- [ ] ', '      '))
+        return '\n'.join(out + [end])
+    return '\n'.join([begin, _wrapped(
+        f"**The gate** is `core/check.py`, run at every commit by the pre-commit hook `bin/hooks/pre-commit` on the staged "
+        f"files. Its {number(len(rules))} rules are strict: each breach is an error, and the commit is refused. "
+        f"`CHECKLIST.md`, Part A, lists them as the law states them — {_listed(names)} — and "
+        f"{number(len(read_))} of them are readings of the law: {_listed(read_)}.", '- ', '  '), end])
+
+
+def write_documents(root=ROOT):
+    """Each document's lines between its marks written again from the law: [the documents changed]."""
+    rules, changed = law_rules(root), []
+    for doc, (begin, end) in WRITTEN.items():
+        p = os.path.join(root, doc)
+        text = open(p, encoding='utf-8').read()
+        a, b = text.find(begin), text.find(end)
+        if a < 0 or b < a:
+            raise SystemExit(f"{doc}: its marks are missing — `{begin}` … `{end}`")
+        new = text[:a] + written(doc, rules) + text[b + len(end):]
+        if new != text:
+            with open(p, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(new)
+            changed.append(doc)
+    return changed
+
+
 if __name__ == '__main__':
+    if '--write' in sys.argv[1:]:
+        done = write_documents()
+        print(f"written from the law: {', '.join(done) or 'nothing changed'}")
+        sys.exit(0)
+    if '--written' in sys.argv[1:]:
+        for doc in WRITTEN:
+            print(written(doc, law_rules()))
+        sys.exit(0)
     sys.exit(core_rules(sys.argv[1:]))

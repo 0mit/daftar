@@ -379,10 +379,13 @@ proposes and a person ratifies. An agent that meets something it may not decide 
 - **Each change carries its journal entry**, in `log/journal.md` and in the same commit: who, what and why
   (manifesto: hidden). People record decisions and approvals; agents record what they ran, why, and what happened. A heading is
   written by the clock (`bin/journal.py`, which `bin/save.py` calls), never typed.
+<!-- the gate's rules, written by `python3 bin/rules.py --write` from core/law/core.yaml -->
 - **The gate** is `core/check.py`, run at every commit by the pre-commit hook `bin/hooks/pre-commit` on the staged
   files. Its twenty-one rules are strict: each breach is an error, and the commit is refused. `CHECKLIST.md`, Part A,
-  lists them: the core's thirteen, five that today's gate held — `consent`, `harm`, `room`, `vacancy`, `kept` — and
-  three that judge forms — `line`, `measured`, `profile`.
+  lists them as the law states them — `form`, `valency`, `knowing`, `placeholder`, `order`, `life`, `necessity`,
+  `squares`, `bearer`, `frame`, `names`, `layers`, `ratify`, `consent`, `harm`, `room`, `vacancy`, `kept`, `line`,
+  `measured` and `profile` — and three of them are readings of the law: `order`, `life` and `necessity`.
+<!-- the end of the gate's rules written from the law -->
 - **The commit's own rules**: every bean a commit changes is named by the journal entry it adds; a statement it adds is
   known by an act it adds, at that entry's moment; a change to the law says RULE-CHANGE. Only the commit that adopts
   the core in a garden, a RULE-CHANGE, carries the moments its history recorded: `bin/dmupgrade.py <a release of the

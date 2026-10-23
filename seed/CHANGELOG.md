@@ -251,6 +251,15 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v3.1.1** (2026-10-23, the documents and code, core 3.1) — **the rules as the documents list them, written
+  from the law** (the next version's design: D5). CHECKLIST.md's Part A and MODEL.md's gate hold, between their marks,
+  what `python3 bin/rules.py --write` writes from core/law/core.yaml: each rule's name and its `says`, in the law's
+  order, and which rules are readings; test/docs.py holds both to it byte for byte, and finds a rule's words typed by
+  hand. Part A's items had been written by hand beside the `says`, and some held more than their rule's `says` does —
+  a bean's header keys and an id used once, `unknown` only in a required role, a knowing act with no `of`, a day
+  reckoned in the garden's zone, which files are the law, the knowledge profile's schemes: those words are proposed for
+  the `says`, for the gardener. No file of the law changed.
+
 - **core 3.1** (2026-10-23, daftar v3.1.0, human-ratified rule-change) — **one ordering of what holds a case: the
   nearest, its keys named by the law and its tie declared at each use.** MINOR: a table of the law and the one
   mechanism that reads it, every verdict as before. core/law/lines.yaml `nearest`: its three ties — `refuse` (none of
