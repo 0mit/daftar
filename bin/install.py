@@ -173,6 +173,17 @@ def install(repo=None, quiet=False):
         print(f"install: {refusal}", file=sys.stderr)
         return 1
     say(f"installed: pre-commit gate + semantic merge driver in {os.path.relpath(git_dir, repo)}")
+    # 4) THE AGENT'S OWN DOOR, in a garden: the guards before each act of an agent in another maker's loop, and the shell
+    #    its harness runs commands in, in the clone's own settings (bin/hook.py install), named from the main working
+    #    tree as the merge driver is. A shell it cannot set leaves the guards refusing every command until it is set.
+    main = main_worktree(repo)
+    if os.path.isfile(os.path.join(main, 'GARDEN.md')) and os.path.isfile(os.path.join(main, 'bin', 'hook.py')):
+        r = subprocess.run([py, os.path.join(main, 'bin', 'hook.py'), 'install', 'claude-code'], cwd=main,
+                           capture_output=True, text=True, encoding='utf-8', errors='replace', env={**os.environ, **CHILD_ENV})
+        for line in r.stdout.splitlines():
+            say(line)
+        if r.returncode != 0:
+            print(f"install: {r.stderr.strip() or r.stdout.strip()}", file=sys.stderr)
     return 0
 
 

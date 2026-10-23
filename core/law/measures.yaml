@@ -239,6 +239,12 @@ forms:
       over:
         in: { key_of: over }
         meaning: "the part of what the agreement concerns that this clause is for — a key of its `over`: of two purchases, the one paid in six instalments. Absent where the clause is for all of it, and where nobody has said which part — the question is then the bean's `open:`, and the key is written when someone says it"
+      guard:
+        in: { registry: guards, take: guard }
+        meaning: "the guard an agent's own door applies to this clause (core/law/guards.yaml): a clause of the agents' work agreement, a position on the permission square — the guard's stance, which holds it, or its contradictory, which lifts it — that the gardener said, read before each act of every agent of the garden and refused there"
+      operand:
+        in: any
+        meaning: "with `guard`: what the guard takes, as its row's `takes` declares it — the shell and its floor, for `shell-is`"
   placement:
     meaning: "Where this being is found: a list of positions, each in a named anchor system, each stating how far it is known to reach. A being may be located in several systems at once, and a location that is not known is STATED as unknown rather than left out.\n"
     replaces: located_at

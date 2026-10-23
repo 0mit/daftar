@@ -315,11 +315,14 @@ try:
                 return ['', x[1]]
             return [unworded(v) for v in x]
         return x
-    same = [k for k in ('views', 'order', 'reference', 'levels', 'addresses', 'techcat', 'opens_on')
+    same = [k for k in ('views', 'order', 'reference', 'levels', 'addresses', 'opens_on')
             if unworded(pa.get(k)) == unworded(pb.get(k))]
     ua, ub = pa.get('units') or {}, pb.get('units') or {}     # the core's law holds more units than today's: every one
     if ua and all(ub.get(u) == v for u, v in ua.items()):   # of today's is drawn the same way
         same.append('units')
+    ta, tb = pa.get('techcat') or {}, pb.get('techcat') or {}   # and its catalogue more technologies: each of today's
+    if ta and all(unworded(tb.get(c)) == unworded(v) for c, v in ta.items()):   # drawn the same way
+        same.append('techcat')
     check("translation: the report draws the same page — its drawings, order, reference, lenses, units and addresses — "
           "but for the law's own words", len(same) == 8 and 'error' not in pa and 'error' not in pb,
           (same, str(pa)[:300], str(pb)[:300]))

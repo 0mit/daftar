@@ -74,6 +74,7 @@ parts, changes).
    python3 test/core_ported.py
    python3 test/core_exact.py
    python3 test/core_conformance.py
+   python3 test/guard.py
    python3 test/save.py
    python3 test/converge.py
    python3 test/calendars.py
@@ -125,7 +126,8 @@ parts, changes).
    ```
 
    CI runs a brief set of them on every push and pull request — the documents, the manifesto, the journal, the assets,
-   the site and what is public — and the whole list only when the workflow is run by hand; before a release, run the
+   the site and what is public, and the guards' suite on Linux, macOS and Windows — and the whole list only when the
+   workflow is run by hand; before a release, run the
    whole list here with `python3 test/timings.py -j 6` (`reuse lint` is the REUSE tool, `pip install reuse`). `test/site.py` builds the page again with `site/board.py`,
    which clones this repository at the tag `site/RELEASE` names: a clone without its tags cannot run it.
 

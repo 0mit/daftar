@@ -216,7 +216,7 @@ try:
     ada = read.document(os.path.join(N, 'beans', 'ada.md'))[0] if os.path.isfile(os.path.join(N, 'beans', 'ada.md')) else {}
     say = next((next(iter(s.values())) for s in ada.get('statements') or [] if next(iter(s)) == 'say'), {})
     check(f"a garden grown from v1.0.0 pins {PIN} from its first commit, and its gate is the core's",
-          r.returncode == 0 and f'({PIN}, daftar v1.0.0)' in r.out and 'core check: grown: 1 beans' in r.out
+          r.returncode == 0 and f'({PIN}, daftar v1.0.0)' in r.out and 'core check: grown: 2 beans' in r.out and os.path.isfile(os.path.join(N, 'beans', 'agents-work.md'))
           and re.search(rf'(?m)^extends: {re.escape(PIN)}', text('GARDEN.md', N)) and log[-1].endswith(f'at {PIN}. No beans.'),
           r.out[-800:])
     check("...its gardener planted in statements and saved, the moment the clock read in place of `now`",

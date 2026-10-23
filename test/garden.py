@@ -56,7 +56,7 @@ try:
           not any(os.path.basename(p) in ('.hidden.md', 'notes.txt', 'deep.md') for p in got), got)
     check("a space asked alone gives that space alone, in the order of its names",
           [os.path.basename(p) for p in dmgarden.paths(G, 'mappings')] == ['m-one.md']
-          and dmgarden.ids(G, 'beans')[:2] == ['a-one', 'b-two'], dmgarden.ids(G, 'beans'))
+          and dmgarden.ids(G, 'beans') == ['a-one', 'agents-work', 'b-two', 'sam'], dmgarden.ids(G, 'beans'))
 
     # ---- 2. what git holds
     run('git', 'add', 'beans/a-one.md', 'beans/sub/deep.md', cwd=G)

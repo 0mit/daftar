@@ -6213,3 +6213,31 @@ first holds nothing, the same way, into the same role — the form had no "or".
 
 A VIDEO STATES ITS MOMENT IN ITS MOVIE HEADER, in UTC as the format says, which exif-image did not read; a header of
 zeros, or one on the 1904 epoch, is a clock never set.
+
+## core/law/guards.yaml: guards
+
+A RULE THE GARDENER STATED IS REFUSED AT THE AGENT'S ACT, NOT FOUND LATER IN A JOURNAL (the operator, 2026-10-23: "we
+need to make sure that zsh bash mistake won't happen again", and on trust: "make law inforce really inforce and prevent
+the memory based mistakes of the agents we recorded"). Measured first: the agents knew the rule; the harness ran their
+commands through another shell than the one they wrote for, and text meant for one interpreter, carried inside
+another's quotes, lost words and let a journal entry say what had not happened. A guard reads the words of an act, so it
+narrows such a trap and cannot close it; what closes it is the executor being the garden's shell and other text going
+through files, and the refusal makes the file the easy way. The table is closed, as a reading's operations are: a guard
+is a row the law states and a function the release ships, held to the row's vectors, so a gardener names a guard and
+never writes one, and the same act gets the same verdict on every system; a garden's own guard would be a new power.
+
+## core/law/guards.yaml: guards[shell-is]
+
+NO SHELL IS PRIVILEGED BY THE LAW (manifesto sibling): `shell-is` takes any shell the technology catalogue names, and
+the garden chooses; the seed's default is bash. Its floor is 5.0, the gardener's (2026-10-23): the machines agents work
+on run 5.1 or later, Git for Windows ships 5, and Apple's /bin/bash is 3.2, below it, so on macOS the install finds
+Homebrew's or says what to install. The harness's own rule picks the shell, not the agent, and is read where it runs
+(bin/hook.py's table of harnesses), never in the law.
+
+## core/law/measures.yaml: forms.clause.attrs.guard
+
+THE GARDENER'S INSTRUCTION IS A CLAUSE OF THE AGENTS' WORK AGREEMENT, on the square of obligation an agreement's clauses
+already take, rather than a new kind of statement: `forbidden` or `obligatory` holds a guard, its contradictory lifts
+it, and what the guard takes is the clause's `operand`. Only a clause the gardener's `say` covers is an instruction
+(CHECKLIST Part D), so no text in a bean commands an agent; and a new garden starts at the safe default, the seed's
+agreement, each clause the gardener's to change by their own word.

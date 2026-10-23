@@ -411,7 +411,7 @@ def _reading(b, G, ref):
     return bool(hit) and hit[1] == 'reckon'
 
 
-def clause_problems(J, M, b, where, r):
+def clause_problems(J, M, b, where, r, verb=None):
     from core import lines
     c = r['clause']
     out = lines.attrs_problems(f"{where}.clause", c, J.L.forms.get('clause') or {})
@@ -455,7 +455,26 @@ def clause_problems(J, M, b, where, r):
                        "holds it (a `pay`, a `hold`)"))
     if c.get('of') is not None and c.get('each') is None:
         out.append((w, "`of` is read from each occurrence: with `each`, the reading it occurs for"))
+    out += guard_problems(J, w, c, verb)
     return out
+
+
+def guard_problems(J, w, c, verb):
+    """A clause that names a guard (core/law/guards.yaml): a row of the table, said by a position on the permission
+    square that is the guard's stance or its contradictory, its operand what the guard takes; an operand names a guard."""
+    from core import guards
+    if c.get('guard') is None:
+        return [(f"{w}.operand", "is what a guard takes: name the guard (`guard`)")] if c.get('operand') is not None \
+            else []
+    row = guards.table(J.L).get(str(c['guard']))
+    if row is None:
+        return [(f"{w}.guard", f"{c['guard']!r} is no guard of the law: "
+                               f"{', '.join(sorted(guards.table(J.L))) or 'the table holds none'}")]
+    stance = str(row.get('stance'))
+    if verb not in (stance, guards.CONTRADICTORY.get(stance)):
+        return [(w, f"names the guard `{c['guard']}`, which is held by `{stance}` and lifted by "
+                    f"`{guards.CONTRADICTORY.get(stance)}`: a `{verb}` is neither")]
+    return guards.operand_problems(J.L, row, c.get('operand'), f"{w}.operand")
 
 
 def placement_problems(J, M, b, where, r):
@@ -550,7 +569,7 @@ def problems(J, b):
             continue
         where = f"{b.id}[{i}] {verb}"
         if (verb == 'can' or verb in FIGURE_PERMISSION) and r.get('clause') is not None:
-            out += clause_problems(J, M, b, where, r)
+            out += clause_problems(J, M, b, where, r, verb)
         if verb == 'be' and r.get('placed') is not None:
             out += placement_problems(J, M, b, where, r)
         if verb == 'pay':
