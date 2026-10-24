@@ -7,7 +7,7 @@ document's section, the reasons written of today's law were carried line by line
 item it was written of, and the narrative that still sits INSIDE the law's data (`meaning:` / `why:` strings that tell a story) may shrink and
 may not grow.
 """
-import glob, os, re, subprocess, sys
+import glob, hashlib, os, re, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "bin"))
 import why as dmwhy
@@ -31,11 +31,21 @@ check("every reason is keyed by an item of the core's law (`core/law/<file>: <pa
 # word for word. Line by line, because a reason carried whole can sit under the wrong item: 24.0 moved each comment of
 # the law to the key below it, so a section's banner opened the reason of the first item it introduced (`== NATURES ==`
 # under `crown`), and a paragraph moves to the item it speaks of without a word of it changing.
+# A LINE REWORDED ON PURPOSE is held in its new words, by the release that reworded it: keyed by the old line's SHA-256,
+# because an old line may name what bin/public.py now refuses (v3.1.3's named a private range a garden may give its
+# hosts), and a line kept here to say it was reworded would put it back.
+REWORDED = {
+    "7d1eaf20b26cda04fca32e15b2729b178b3103b913cdaa0dd609d92ca97fb95d":    # v3.1.3, a documentation range (RFC 3849)
+        "`merge_field` absorbs a general value into a more precise one where the two are ORDERED: 2001:db8:1::/48",
+    "212865c85975e46278a7ca79ae695ee901899aba30a620ac2cc4d9a25c899eb0":    # v3.1.3
+        'into 2001:db8::/32, "AlmaLinux 9" into "AlmaLinux 9.8". WHICH keys are ordered that way was decided in',
+}
 _old = subprocess.run(["git", "-C", ROOT, "show", "v0.49.0:seed/RATIONALE.md"], capture_output=True, text=True,
                       encoding="utf-8").stdout
 _old_why = {}
 _key = None
 for _ln in _old.split("\n"):
+    _ln = REWORDED.get(hashlib.sha256(_ln.encode("utf-8")).hexdigest(), _ln)
     if _ln.startswith("## "):
         _key = _ln[3:].strip(); _old_why[_key] = []
     elif _key is not None:

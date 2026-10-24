@@ -251,6 +251,15 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v3.1.3** (2026-10-25, the reasons, core 3.1) — **the subsumption example in a documentation range.**
+  seed/RATIONALE.md gave one network inside another in RFC 1918's private range; it now gives it in IPv6's range for
+  documentation (RFC 3849): `2001:db8:1::/48` into `2001:db8::/32`. A private range is one a garden may name for its
+  own hosts, so bin/public.py refused every push from such a garden over a line of the reasons; a documentation range
+  is one every page of this repository may use. test/rationale.py, which holds every line of v0.49.0's reasons word for
+  word, holds the two reworded lines in their new words, keyed by the old lines' SHA-256. And test/view_handplace.py's
+  queue check, which failed late in a month, when the loan's next instalment falls within its notice beside the
+  deposit, compares the owed leads with bin/leads.py's. No file of the law changed.
+
 - **daftar v3.1.2** (2026-10-23, code, core 3.1) — **the union judged by the same rules at every size: each rule that
   is a reading, compiled to SQL** (the next version's design: P5 and D6). A store's check of a union too large to read
   into memory judged two rules in SQL of its own, beside the engine: a name given once (`_names_once`) and the chains of
