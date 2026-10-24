@@ -207,8 +207,7 @@ try:
     r = grow.garden(REL, C, 'sam', '--gardener-name', 'Sam')
     sketch = ('void setup() { pinMode(LED_BUILTIN, OUTPUT); }\nvoid loop() { digitalWrite(LED_BUILTIN, HIGH); delay(1000); '
               'digitalWrite(LED_BUILTIN, LOW); delay(1000); }\n')
-    write(C, 'VOCAB.md', '---\nprofiles: [knowledge]\nkinds:\n'
-          '  - { kind: component, nature: body, level: device, meaning: "a part an electronic thing is built of" }\n'
+    write(C, 'VOCAB.md', '---\nprofiles: [knowledge]\n'
           'schemes:\n' + at_authority('spdx', 'the licences a work is under, by their SPDX identifiers',
                                       'the SPDX project', 'https://spdx.org/licenses/', '^[A-Za-z0-9][A-Za-z0-9.+-]*$',
                                       sensitive=False) + "---\n# the maker's own rows\n")

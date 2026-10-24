@@ -5,7 +5,7 @@ checked, a path split into its folders and its name, an id minted by a conventio
 
   the records of a model   file-tree, copies, exiftool: Records in, Records out, each with its `model` — what
                            bin/import.py runs a crosswalk over (`IMPORTED`)
-  a provider's table       the nine a scheme the law holds `fetched` is read by (registries.yaml `knowledge_schemes`,
+  a provider's table       each a scheme the law holds `fetched` is read by (registries.yaml `knowledge_schemes`,
                            `fetch.reader`): the provider's file in, the rows of the scheme's file out (`FETCHED`,
                            bin/fetch.py)
 
@@ -685,7 +685,263 @@ def shared_mime_info(data):
     return {'rows': [tops[k] for k in sorted(tops)] + sorted(types, key=lambda r: r['code']), 'release': release}
 
 
+# ================================================================================================ the beings' schemes
+_OBO_TAG = re.compile(r'^([A-Za-z_-]+):\s?(.*)$')
+_OBO_SYNONYM = re.compile(r'^"((?:[^"\\]|\\.)*)"\s+(EXACT|RELATED|NARROW|BROAD)\b')
+_OBO_RANK = re.compile(r'^has_rank\s+NCBITaxon:([a-z_]+)')
+
+
+def obo(data):
+    """An ontology in the OBO flat file format (1.2 and 1.4), as the OBO Foundry's ontologies publish it — UBERON, the
+    Cell Ontology, the Hymenoptera Anatomy and Plant ontologies, ChEBI, NCBITaxon — read one stanza at a time, never as
+    a graph. The ontology's own terms alone (an id whose prefix is the header's `ontology`, its case aside; an imported
+    term is its own ontology's): code (the id's local part, `UBERON:0000948` read `0000948`), level (the rank its
+    `has_rank` names, NCBITaxon's; `term` where it names none), parent (its first `is_a` in the ontology), parents (each
+    `is_a` there) and part_of (each `relationship: part_of` there), with spaces; name; synonyms (EXACT) and related
+    (RELATED, NARROW, BROAD), each a list written with ` | `; status, `obsolete` where it is. Its definitions, comments
+    and cross-references are the publisher's text, and are not read. The release is the header's `data-version`."""
+    try:
+        text = data.decode('utf-8')
+    except UnicodeDecodeError:
+        raise Refused("the ontology is not UTF-8 text") from None
+    lines = text.split('\n')
+    head, n = {}, 0
+    for n, line in enumerate(lines):
+        if line.startswith('['):
+            break
+        m = _OBO_TAG.match(line.rstrip('\r'))
+        if m and m.group(1) not in head:
+            head[m.group(1)] = m.group(2).strip()
+    if 'format-version' not in head or not head.get('ontology'):
+        raise Refused("the file is no OBO ontology: its header names no format-version and no ontology")
+    prefix = head['ontology'].split('/')[-1].split('.')[0].upper() + ':'
+    out, term, seen = [], None, set()
+
+    def done(t):
+        if not t or not t.get('id', '').upper().startswith(prefix):
+            return
+        code = t['id'][len(prefix):]
+        if not code or code in seen:
+            raise Refused(f"the ontology names the term {t['id']!r} " + ('twice' if code else 'with no local part'))
+        seen.add(code)
+        mine = [p[len(prefix):] for p in t['is_a'] if p.upper().startswith(prefix)]
+        out.append({'code': code, 'level': t['rank'] or 'term', 'parent': mine[0] if mine else '',
+                    'parents': ' '.join(mine), 'part_of': ' '.join(p[len(prefix):] for p in t['part_of']
+                                                                   if p.upper().startswith(prefix)),
+                    'name': t.get('name', ''), 'synonyms': ' | '.join(t['exact']), 'related': ' | '.join(t['related']),
+                    'status': 'obsolete' if t['obsolete'] else ''})
+
+    for line in lines[n:]:
+        line = line.rstrip('\r')
+        if line.startswith('['):
+            done(term)
+            term = {'is_a': [], 'part_of': [], 'exact': [], 'related': [], 'rank': '', 'obsolete': False} \
+                if line.strip() == '[Term]' else None
+            continue
+        if term is None or not line or line.startswith('!'):
+            continue
+        m = _OBO_TAG.match(line)
+        if not m:
+            continue
+        tag, value = m.group(1), m.group(2).split(' ! ')[0].strip()
+        if tag == 'id':
+            term['id'] = value
+        elif tag == 'name':
+            term['name'] = value
+        elif tag == 'is_a':
+            term['is_a'].append(value.split()[0])
+        elif tag == 'relationship' and value.startswith('part_of '):
+            term['part_of'].append(value.split()[1])
+        elif tag == 'synonym':
+            s = _OBO_SYNONYM.match(value)
+            if s:
+                (term['exact'] if s.group(2) == 'EXACT' else term['related']).append(
+                    s.group(1).replace('\\"', '"').replace('|', '/'))
+        elif tag == 'property_value':
+            r = _OBO_RANK.match(value)
+            if r:
+                term['rank'] = r.group(1)
+        elif tag == 'is_obsolete':
+            term['obsolete'] = value == 'true'
+    done(term)
+    if not out:
+        raise Refused(f"the ontology {head['ontology']!r} holds no term of its own ({prefix})")
+    return {'rows': out, 'release': head.get('data-version') or None}
+
+
+_GET_CODE = re.compile(r'^([A-Z]{1,3})([0-9]+)\.([0-9]+)$')
+
+
+def iucn_get_maps(data):
+    """The IUCN Global Ecosystem Typology's map details (`map-details.xml`, its maps of the ecosystem functional groups,
+    published under CC BY 4.0): each functional group once — code (`T1.1`), level `group`, parent its biome (`T1`),
+    name as the map names it after its code — and each biome and realm its codes name — `T1`, level `biome`, parent
+    `T`; `T`, level `realm` — with no name: the biomes' and realms' names are in the typology's profiles, which IUCN
+    publishes under its own copyright, and are not read. The release is the latest day a map was updated."""
+    import xml.etree.ElementTree as ET
+    if re.search(rb'<!(DOCTYPE|ENTITY)', data):
+        raise Refused("the map details declare a document type or an entity: they are data, refused before they are read")
+    try:
+        root = ET.fromstring(data)
+    except ET.ParseError as e:
+        raise Refused(f"the map details are not XML they can be read in: {e}") from None
+    groups, upper, days = {}, {}, []
+    for m in root.iter('Map'):
+        code = (m.get('efg_code') or '').strip()
+        c = _GET_CODE.match(code)
+        named = (m.findtext('Functional_group') or '').strip()
+        if not c or not named.startswith(code + ' '):
+            raise Refused(f"a map names the group {code!r} as {named[:60]!r}: no functional group read here")
+        if m.get('update'):
+            days.append(m.get('update'))
+        realm, biome = c.group(1), c.group(1) + c.group(2)
+        groups.setdefault(code, {'code': code, 'level': 'group', 'parent': biome, 'name': named[len(code):].strip()})
+        upper.setdefault(biome, {'code': biome, 'level': 'biome', 'parent': realm, 'name': ''})
+        upper.setdefault(realm, {'code': realm, 'level': 'realm', 'parent': '', 'name': ''})
+    if not groups:
+        raise Refused("the map details name no functional group")
+    order = {'realm': 0, 'biome': 1, 'group': 2}
+    rows = sorted(list(upper.values()) + list(groups.values()), key=lambda r: (order[r['level']], r['code']))
+    return {'rows': rows, 'release': f"the maps updated to {max(days)}" if days else None}
+
+
+COLDP_COLUMNS = ('col:ID', 'col:parentID', 'col:status', 'col:rank', 'col:scientificName', 'col:authorship')
+
+
+def coldp(data):
+    """A Catalogue of Life Data Package (ColDP), the zip ChecklistBank exports a release of the Catalogue of Life in:
+    its NameUsage.tsv, one name usage a line — an accepted taxon, or a synonym whose parent is the taxon it names —
+    read into code (`col:ID`), level (`col:rank`), parent (`col:parentID`), name (`col:scientificName`), authorship and
+    status (`accepted`, `synonym`, …). Its metadata.yaml says the release: its `alias` (COL26.10 XR) and `issued`."""
+    import zipfile
+    try:
+        z = zipfile.ZipFile(io.BytesIO(data))
+    except zipfile.BadZipFile as e:
+        raise Refused(f"the package is no zip it can be read in: {e}") from None
+    names = {os.path.basename(n): n for n in z.namelist()}
+    if 'NameUsage.tsv' not in names:
+        raise Refused("the package holds no NameUsage.tsv: a package of Name.tsv and Taxon.tsv is not read here")
+    release = None
+    if 'metadata.yaml' in names:
+        meta = z.read(names['metadata.yaml']).decode('utf-8', 'replace')
+        alias = re.search(r'^alias:\s*(.+)$', meta, re.M)
+        issued = re.search(r'^issued:\s*(.+)$', meta, re.M)
+        release = ' '.join(x.group(1).strip().strip('\'"') for x in (alias, issued) if x) or None
+    with z.open(names['NameUsage.tsv']) as fh:
+        lines = io.TextIOWrapper(fh, encoding='utf-8', newline='')
+        head = lines.readline().rstrip('\r\n').split('\t')
+        missing = [c for c in COLDP_COLUMNS if c not in head]
+        if missing:
+            raise Refused(f"NameUsage.tsv lacks the columns {', '.join(missing)}")
+        at = [head.index(c) for c in COLDP_COLUMNS]
+        out, seen = [], set()
+        for n, line in enumerate(lines, 2):
+            cells = line.rstrip('\r\n').split('\t')
+            if len(cells) < len(head):
+                if not line.strip():
+                    continue
+                raise Refused(f"line {n} of NameUsage.tsv has {len(cells)} cells, and its head names {len(head)}")
+            code, parent, status, rank, name, auth = (cells[i] for i in at)
+            if not code or code in seen or not name:
+                raise Refused(f"line {n} of NameUsage.tsv is no name usage read here: id {code!r}, name {name[:60]!r}"
+                              + (" (a second row of it)" if code in seen else ''))
+            seen.add(code)
+            out.append({'code': code, 'level': rank, 'parent': parent, 'name': name, 'authorship': auth,
+                        'status': status})
+    if not out:
+        raise Refused("the package names no taxon")
+    return {'rows': out, 'release': release}
+
+
+def _etim_csv(z, name):
+    try:
+        raw = z.read(name)
+    except KeyError:
+        raise Refused(f"ETIM's export holds no {name}") from None
+    text = raw.decode('utf-16' if raw[:2] in (b'\xff\xfe', b'\xfe\xff') else
+                      'utf-16-le' if raw[1:2] == b'\x00' else 'utf-8-sig')
+    return list(csv.DictReader(io.StringIO(text), delimiter=';'))
+
+
+def etim_csv(data):
+    """ETIM International's model in its CSV export (a zip of tables, UTF-16, `;` between cells): each group of
+    ETIMARTGROUP.csv (code `EG…`, level `group`, name) and each class of ETIMARTCLASS.csv (code `EC…`, level `class`,
+    parent its group, name, version), with the synonyms ETIMARTCLASSSYNONYMMAP.csv gives a class, written with ` | `.
+    Its features, values and units are ETIM's too, and are not read."""
+    import zipfile
+    try:
+        z = zipfile.ZipFile(io.BytesIO(data))
+    except zipfile.BadZipFile as e:
+        raise Refused(f"ETIM's export is no zip it can be read in: {e}") from None
+    groups = _etim_csv(z, 'ETIMARTGROUP.csv')
+    classes = _etim_csv(z, 'ETIMARTCLASS.csv')
+    synonyms = {}
+    for r in _etim_csv(z, 'ETIMARTCLASSSYNONYMMAP.csv'):
+        s = (r.get('CLASSSYNONYM') or '').strip()
+        if s:
+            synonyms.setdefault(r.get('ARTCLASSID'), []).append(s.replace('|', '/'))
+    out = []
+    for r in groups:
+        if not re.fullmatch(r'EG[0-9]{6}', r.get('ARTGROUPID') or ''):
+            raise Refused(f"ETIM's groups name {r.get('ARTGROUPID')!r}: no group read here")
+        out.append({'code': r['ARTGROUPID'], 'level': 'group', 'parent': '', 'name': r.get('GROUPDESC') or '',
+                    'synonyms': '', 'version': ''})
+    known = {r['code'] for r in out}
+    for r in classes:
+        code, group = r.get('ARTCLASSID') or '', r.get('ARTGROUPID') or ''
+        if not re.fullmatch(r'EC[0-9]{6}', code) or group not in known:
+            raise Refused(f"ETIM's classes name {code!r} in the group {group!r}: no class read here")
+        out.append({'code': code, 'level': 'class', 'parent': group, 'name': r.get('ARTCLASSDESC') or '',
+                    'synonyms': ' | '.join(s for s in synonyms.get(code, []) if s != r.get('ARTCLASSDESC')),
+                    'version': r.get('ARTCLASSVERSION') or ''})
+    if len(out) == len(known):
+        raise Refused("ETIM's export names no class")
+    return out
+
+
+_CPV_LEVELS = {2: 'division', 3: 'group', 4: 'class'}
+
+
+def cpv_genericode(data):
+    """The Common Procurement Vocabulary (CPV 2008) in the Genericode the Publications Office publishes it in: each row
+    a code of eight digits (its check digit not written) — code, level by its digits not zero (two a `division`, three a
+    `group`, four a `class`, five or more a `category`), parent the nearest code above it the list holds, name its
+    English `Name`. Its other languages are the Publications Office's, and are not read. The release is the list's
+    canonical version."""
+    import xml.etree.ElementTree as ET
+    if re.search(rb'<!(DOCTYPE|ENTITY)', data[:4096]):
+        raise Refused("the code list declares a document type or an entity: it is data, refused before it is read")
+    try:
+        root = ET.fromstring(data)
+    except ET.ParseError as e:
+        raise Refused(f"the code list is not XML it can be read in: {e}") from None
+    version = (root.findtext('Identification/CanonicalVersionUri') or '').rsplit('/', 1)[-1] or None
+    names = {}
+    for row in root.iter('Row'):
+        cells = {v.get('ColumnRef'): (v.findtext('SimpleValue') or '').strip() for v in row.findall('Value')}
+        code = cells.get('Code', '')
+        if not re.fullmatch(r'[0-9]{8}', code) or code in names:
+            raise Refused(f"the code list names {code!r}" + (' twice' if code in names else ': no code of the CPV'))
+        names[code] = cells.get('Name') or cells.get('en_label') or ''
+    if not names:
+        raise Refused("the code list names no code")
+    out = []
+    for code in sorted(names):
+        sig = len(code.rstrip('0')) or 1
+        parent = ''
+        for k in range(max(sig, 3) - 1, 1, -1):
+            up = code[:k].ljust(8, '0')
+            if up != code and up in names:
+                parent = up
+                break
+        out.append({'code': code, 'level': _CPV_LEVELS.get(max(sig, 2), 'category'), 'parent': parent,
+                    'name': names[code]})
+    return {'rows': out, 'release': f"CPV 2008, the Publications Office's version {version}" if version else None}
+
+
 FETCHED = {'ilo-isco-08-xlsx': ilo_isco_08_xlsx, 'unece-rec20-xlsx': unece_rec20_xlsx,
            'loinc-table-csv': loinc_table_csv, 'ifc-express': ifc_express, 'epsg-sql': epsg_sql,
            'gs1-syntax-dictionary': gs1_syntax_dictionary, 'cldr-units-json': cldr_units_json,
-           'geonames-dump': geonames_dump, 'photon-dump': photon_dump, 'shared-mime-info': shared_mime_info}
+           'geonames-dump': geonames_dump, 'photon-dump': photon_dump, 'shared-mime-info': shared_mime_info,
+           'obo': obo, 'coldp': coldp, 'etim-csv': etim_csv, 'cpv-genericode': cpv_genericode,
+           'iucn-get-maps': iucn_get_maps}

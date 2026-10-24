@@ -1282,15 +1282,9 @@ what only the gardener may — a grant to ratify — is the gardener's alone to 
 
 Sam makes candles from the co-op's wax. A shop in town will stock them if a beeswax candle burns down no faster than the
 paraffin one it sells now. So Sam lights one of each on the same evening and reads their heights every hour. A candle is
-a body of matter, a kind the law has not: the garden adds it. Each hour's heights are a series on the candle's own
+a body of matter, at the law's level material: its kind is the law's `material`. Each hour's heights are a series on the candle's own
 bean; the ruler reads to a fifth of a millimetre, and every height carries that uncertainty. The beeswax candle came to
 be through Sam's own hands.
-
-<!-- example-front-matter: VOCAB.md -->
-```yaml
-kinds:
-  - { kind: material, nature: body, level: material, meaning: "a body of matter kept and used: a candle" }
-```
 
 <!-- example: beans/candle-beeswax.md -->
 ```markdown

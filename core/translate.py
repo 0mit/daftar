@@ -1887,6 +1887,13 @@ def garden(src, dst):
                 if 'mapping' in fm and 'genos' not in fm and isinstance(fm.get('kind'), str):
                     mkinds.add(fm['kind'])
     rows['kinds'] += [{'kind': k, 'nature': 'sayable'} for k in sorted(mkinds)]
+    # A KIND THE LAW HOLDS AS THE GARDEN DECLARED IT — its nature, level and rung alike — IS THE LAW'S NOW (core 3.2: a
+    # body kind a level): the garden's row would declare it twice. One declared otherwise stays, for the gate to name.
+    from core.law import LAW_DIR
+    held = {str(r.get('kind')): r for r in read.data(os.path.join(LAW_DIR, 'kinds.yaml')).get('kinds') or []
+            if isinstance(r, dict)}
+    rows['kinds'] = [r for r in rows['kinds'] if not (r['kind'] in held and all(
+        str(held[r['kind']].get(k) or '') == str(r.get(k) or '') for k in ('nature', 'level', 'rung')))]
     adds = oldv.get('registry_additions') or {}
     tables = {}
     if adds.get('net_protocols'):

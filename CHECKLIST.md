@@ -53,7 +53,9 @@ show.
       level the being is or is made of — through `made-of` alone, never `possible-on`. A mass is a body's (the
       foundation `weight`), a temperature an ensemble's; information and money are what is carried — a document's, an
       agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a mass of its own, a
-      single molecule a temperature, a machine its bytes or a body money of its own is refused.
+      single molecule a temperature, a machine its bytes or a body money of its own is refused. A code of a scheme that
+      names the levels its codes classify (`at`) is said only of a being at one of them: a taxon of an organism, never
+      of a host; a sayable, which has no level, is not refused.
 - [ ] **frame** — A position is in a declared system, in its one form, and finds its other half by its complement.
 - [ ] **names** — A name its namespace gives once names one being. A garden's id is twelve hexadecimal digits, and never
       this garden's own: a `garden` bean is another garden. A name a garden gave, qualified to cross, is

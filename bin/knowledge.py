@@ -17,6 +17,13 @@ candidates, and a person picks the code (a model's pick is `inferred`).
     python3 bin/knowledge.py resolve <scheme> <code>    # a lookup at the authority — refused until the flow law grants it
     python3 bin/knowledge.py bean <bean-id>             # a bean's `knowledge:` entries, resolved
     python3 bin/knowledge.py crosswalk 2522             # the fields an occupation draws on
+    python3 bin/knowledge.py propose <bean>             # codes for a being: by its kind's level, from its title
+    python3 bin/knowledge.py propose --level organ heart [--wikidata <party>]   # … for words at a level; with
+                                                        # --wikidata, Wikidata's items picked by their class too, sent
+                                                        # only to a party the garden's flow law grants
+
+`propose` reads only the schemes whose `at` names the being's level — no taxon is proposed for a host — and, of a
+scheme of millions, streams its rows; `find` passes such schemes over unless one is named.
 
 In a garden of the core (v1 part 7) the schemes are core/law/registries.yaml's and the garden's own rows `schemes` and
 `files` in its VOCAB.md, and a bean's codes are its statements: each `classify`, and each `use` of a code.
@@ -53,6 +60,162 @@ def _fm(path):
 
 def _words(text):
     return re.findall(r"[a-z0-9]+", str(text).lower())
+
+
+def _listed(x):
+    return x if isinstance(x, list) else [] if x is None else [x]
+
+
+def _said(text):
+    """A name as it is compared whole: its case, its hyphens and its spacing aside, and its last word's English plural
+    (`pulleys`, `ball bearings`, `assemblies` — never `brass`), as a catalogue of goods writes its names."""
+    words = re.sub(r"[-_‐–]", " ", str(text)).lower().split()
+    if words and len(words[-1]) > 3 and words[-1].endswith("s") and not words[-1].endswith(("ss", "us", "is")):
+        w = words[-1]
+        words[-1] = w[:-3] + "y" if w.endswith("ies") else w[:-1]
+    return " ".join(words)
+
+
+def _sorted_has(path, code):
+    """True when `code` is a line of `path`, a file of lines sorted by their bytes: a binary search over the file, never
+    a read of it."""
+    import mmap
+    key = str(code).encode("utf-8")
+    with open(path, "rb") as fh:
+        if os.fstat(fh.fileno()).st_size == 0:
+            return False
+        m = mmap.mmap(fh.fileno(), 0, access=mmap.ACCESS_READ)
+        try:
+            lo, hi = 0, len(m)
+            while lo < hi:
+                mid = (lo + hi) // 2
+                start = m.rfind(b"\n", 0, mid) + 1
+                end = m.find(b"\n", start)
+                end = len(m) if end < 0 else end
+                line = m[start:end]
+                if line == key:
+                    return True
+                if line < key:
+                    lo = end + 1
+                else:
+                    hi = start
+            return False
+        finally:
+            m.close()
+
+
+def _reads(k, scheme):
+    """True when this machine can read `scheme`'s rows: its file, or a copy fetched from its provider."""
+    if (k.schemes.get(scheme) or {}).get("holding") == "fetched":
+        import fetch as dmfetch
+        return bool(dmfetch.current(scheme))
+    d = k.decl.get(scheme) or {}
+    return bool(d.get("file")) and os.path.isfile(os.path.join(k.root, d["file"]))
+
+
+BIG = 300000                                   # rows past which a scheme is streamed for a name, never held whole
+
+
+def _big(k, scheme):
+    """True when the copies of a fetched scheme read here hold more than BIG rows (their fetched.json)."""
+    if (k.schemes.get(scheme) or {}).get("holding") != "fetched" or scheme in k._rows:
+        return False
+    import json
+    import fetch as dmfetch
+    n = 0
+    for p in dmfetch.current(scheme):
+        try:
+            with open(os.path.join(os.path.dirname(p), "fetched.json"), encoding="utf-8") as fh:
+                n += int(json.load(fh).get("rows") or 0)
+        except (OSError, ValueError):
+            return True
+    return n > BIG
+
+
+# ------------------------------------------------------------------------------------------------ Wikidata, an item a time
+UA = "daftar-knowledge (the one finder, proposing a code for a person to pick; https://github.com/0mit/daftar)"
+_LAST = [0.0]
+
+
+def web_get(api):
+    """A reader of the authority's API at `api`: a request at most once a second, its User-Agent naming daftar."""
+    import json, time, urllib.parse, urllib.request
+
+    def get(params):
+        wait = 1.0 - (time.monotonic() - _LAST[0])
+        if wait > 0:
+            time.sleep(wait)
+        url = api + "?" + urllib.parse.urlencode(sorted(dict(params, format="json").items()))
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=60) as r:
+                return json.load(r)
+        finally:
+            _LAST[0] = time.monotonic()
+    return get
+
+
+def _claims(entity, prop):
+    out = []
+    for c in ((entity or {}).get("claims") or {}).get(prop, []):
+        v = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
+        out.append(v.get("id") if isinstance(v, dict) else v)
+    return [v for v in out if isinstance(v, str)]
+
+
+def items_at(get, row, words, level, limit=10, depth=12):
+    """[(item, label, description, class)]: the items the authority's search gives for `words`, in its order, whose
+    classes — `instance_of` once, then `subclass_of` any number of times (the scheme's `lookup`) — reach a code its
+    `classes` names for `level`: an item is picked by its class, never by its label. Each with its claims, in
+    `entity`."""
+    look = row.get("lookup") or {}
+    wanted = {c for x in _listed(row.get("classes")) if isinstance(x, dict) and x.get("level") == level
+              for c in _listed(x.get("codes"))}
+    hits = get({"action": "wbsearchentities", "search": words, "language": "en", "uselang": "en", "type": "item",
+                "limit": limit}).get("search", [])
+    cands = [h["id"] for h in hits if isinstance(h, dict) and h.get("id")]
+    if not cands or not wanted:
+        return []
+    ents, classes = {}, {}
+
+    def load(ids):
+        need = sorted({i for i in ids if i not in classes})
+        for k in range(0, len(need), 50):
+            got = get({"action": "wbgetentities", "ids": "|".join(need[k:k + 50]), "props": "claims|labels|descriptions",
+                       "languages": "en"}).get("entities", {})
+            for i, e in got.items():
+                ents[i] = e
+                classes[i] = (_claims(e, look.get("instance_of")), _claims(e, look.get("subclass_of")))
+        for i in need:
+            classes.setdefault(i, ([], []))
+
+    load(cands)
+    reached = {}
+    front = [(c, n) for c in cands for n in classes[c][0] + classes[c][1]]
+    seen = {c: set() for c in cands}
+    for _ in range(depth):
+        front = [(c, n) for c, n in front if c not in reached and n not in seen[c]]
+        if not front:
+            break
+        for c, n in front:
+            seen[c].add(n)
+        load([n for _c, n in front])
+        nxt = []
+        for c, n in front:
+            if c in reached:
+                continue
+            if n in wanted:
+                reached[c] = n
+            else:
+                nxt += [(c, m) for m in classes[n][1]]
+        front = nxt
+    out = []
+    for c in cands:
+        if c in reached:
+            e = ents.get(c) or {}
+            out.append({"item": c, "label": ((e.get("labels") or {}).get("en") or {}).get("value", ""),
+                        "description": ((e.get("descriptions") or {}).get("en") or {}).get("value", ""),
+                        "class": reached[c], "entity": e})
+    return out
 
 
 def _runs_core(root):
@@ -153,6 +316,121 @@ class Knowledge:
         key = self.decl.get(scheme, {}).get("key", "code")
         return next((r for r in self.rows(scheme) if r.get(key) == str(code)), None)
 
+    def has(self, scheme, code):
+        """True when `code` is a code of `scheme`. Of a fetched scheme whose every copy read here keeps its codes sorted
+        (bin/fetch.py, `codes.txt`), by a binary search in them, never by reading its rows; else among its rows."""
+        if (self.schemes.get(scheme) or {}).get("holding") == "fetched" and scheme not in self._rows:
+            import fetch as dmfetch
+            files = [os.path.join(os.path.dirname(p), "codes.txt") for p in dmfetch.current(scheme)]
+            if files and all(os.path.isfile(f) for f in files):
+                return any(_sorted_has(f, code) for f in files)
+        return self.row(scheme, code) is not None
+
+    # ------------------------------------------------------------------------------------------ the beings' finder
+    def at_level(self, level):
+        """The schemes whose codes classify beings at `level` (their `at`), by name."""
+        return [s for s, r in sorted(self.schemes.items()) if level in [str(x) for x in _listed(r.get("at"))]]
+
+    def _stream(self, scheme):
+        """Each row of `scheme`, as it is read: a fetched scheme's copies line by line, never held whole."""
+        if (self.schemes.get(scheme) or {}).get("holding") == "fetched" and scheme not in self._rows:
+            import fetch as dmfetch
+            paths = dmfetch.current(scheme)
+            if paths:
+                for p in paths:
+                    with open(p, encoding="utf-8", newline="") as fh:
+                        head = fh.readline().rstrip("\r\n").split("\t")
+                        for line in fh:
+                            cells = line.rstrip("\r\n").split("\t")
+                            yield dict(zip(head, cells))
+                return
+        yield from self.rows(scheme)
+
+    def named(self, queries, schemes):
+        """{query: [(scheme, row, how)]}: the rows of `schemes` whose name (`how` = `name`), an exact synonym
+        (`synonym`) or another synonym (`related`) is a query as a whole, its case, hyphens and spacing aside — each
+        scheme read once for every query, row by row. A scheme this machine cannot read is passed over."""
+        want = {_said(q): q for q in queries}
+        out = {q: [] for q in queries}
+        for s in schemes:
+            if not self.held(s):
+                continue
+            try:
+                for r in self._stream(s):
+                    for how, cell in (("name", "name"), ("name", "name_en"), ("synonym", "synonyms"),
+                                      ("related", "related")):
+                        text = r.get(cell)
+                        if not text:
+                            continue
+                        for one in (text.split(" | ") if how != "name" else [text]):
+                            q = want.get(_said(one))
+                            if q is not None:
+                                out[q].append((s, r, how))
+            except KeyError:                       # a scheme fetched from its provider, which this machine has not
+                continue
+        rank = {"name": 0, "synonym": 1, "related": 2}
+        for q in out:
+            seen, kept = set(), []
+            for s, r, how in sorted(out[q], key=lambda t: (rank[t[2]], t[1].get("status") not in ("", "accepted"))):
+                key = (s, r.get(self.decl.get(s, {}).get("key", "code")))
+                if key not in seen:
+                    seen.add(key)
+                    kept.append((s, r, how))
+            out[q] = kept
+        return out
+
+    def code_in(self, scheme, value):
+        """The code of `scheme` a value another scheme names it by is (`UBERON:0000948`, `42141500-6`): the value as it
+        is, else without a prefix of letters and `:` or `_`, else without a check digit after `-`, the first in the
+        form its `code_pattern` gives; None where none is."""
+        pat = (self.schemes.get(scheme) or {}).get("code_pattern")
+        v = str(value).strip()
+        forms = [v, re.sub(r"^[A-Za-z]+[:_]", "", v)]
+        forms += [re.sub(r"-[0-9]$", "", f) for f in forms]
+        for f in forms:
+            if not pat or dmparse.law_match(pat, f):
+                return f
+        return None
+
+    def propose(self, words, level, get=None, authority="wikidata"):
+        """[{coding, name, scheme, how, ...}]: the codes proposed for a being at `level` named by `words` — from each
+        scheme held here whose `at` names the level, by its names; and, with `get` (a reader of the authority's API, which
+        the caller has been granted), the authority's items picked by their class for the level, and through each the
+        codes of the schemes it names (`named_in`), where their `at` names the level. Nothing is written: a person picks."""
+        out, seen = [], set()
+
+        def add(p):
+            if p["coding"] not in seen:
+                seen.add(p["coding"])
+                out.append(p)
+
+        for s, r, how in self.named([words], self.at_level(level))[words]:
+            key = self.decl.get(s, {}).get("key", "code")
+            add({"coding": "%s:%s" % (s, r.get(key)), "name": self.name(r), "scheme": s, "how": how,
+                 "level": r.get("level", ""), "status": r.get("status", "")})
+        arow = self.schemes.get(authority) or {}
+        if get is None or arow.get("holding") != "at-authority":
+            return out
+        for it in items_at(get, arow, words, level):
+            add({"coding": "%s:%s" % (authority, it["item"]), "name": it["label"], "scheme": authority,
+                 "how": "class %s" % it["class"], "level": "", "status": it["description"]})
+            for s in self.at_level(level):
+                for n in _listed(self.schemes[s].get("named_in")):
+                    if not isinstance(n, dict) or n.get("scheme") != authority:
+                        continue
+                    for v in _claims(it["entity"], n.get("property")):
+                        code = self.code_in(s, v)
+                        if code is None:
+                            continue
+                        held = self.held(s) and _reads(self, s)
+                        if held and not self.has(s, code):
+                            continue
+                        r = (self.row(s, code) if held and not _big(self, s) else None) or {}
+                        add({"coding": "%s:%s" % (s, code), "name": self.name(r), "scheme": s,
+                             "how": "%s %s %s" % (authority, it["item"], n.get("property")),
+                             "level": r.get("level", ""), "status": "" if held else "not held here"})
+        return out
+
     def ancestry(self, scheme, code):
         """[root, …, code] as rows, following `parent`; [row] for a flat scheme."""
         out, r, seen = [], self.row(scheme, code), set()
@@ -185,8 +463,8 @@ class Knowledge:
         q = _words(words)
         out = []
         for s in ([scheme] if scheme else sorted(self.schemes)):
-            if not self.held(s):
-                continue
+            if not self.held(s) or (not scheme and self.schemes[s].get("at")):
+                continue                           # a scheme of beings at a level is `propose`'s, by its level
             key = self.decl[s].get("key", "code")
             try:
                 rows = self.rows(s)
@@ -247,6 +525,74 @@ def _at(k, root, position):
     print(dmwhere.show(a))
     return 0
 
+def _level_of(root, kind):
+    """The level of the law a being of `kind` is at: its row of core/law/kinds.yaml (the garden's copy, else this
+    release's), or the garden's own (VOCAB.md `kinds`); None for a sayable."""
+    rows = []
+    for d in (root, os.path.dirname(HERE)):
+        p = os.path.join(d, "core", "law", "kinds.yaml")
+        if os.path.isfile(p):
+            with open(p, encoding="utf-8") as fh:
+                rows = list((dmparse.loads(fh.read()) or {}).get("kinds") or [])
+            break
+    rows += _listed(_fm(os.path.join(root, "VOCAB.md")).get("kinds"))
+    r = next((x for x in rows if isinstance(x, dict) and x.get("kind") == kind), None)
+    return (r or {}).get("level")
+
+
+def _propose(k, root, args, get=None):
+    """`propose <bean> | --level <level> <words…> [--wikidata <party>]`: the codes proposed, one a line. A lookup at
+    Wikidata sends the words out of the garden: only to a party the garden's flow law grants (`sent-out`, through
+    `send`), named by its bean; refused, the held schemes' proposals alone are shown."""
+    level, party, words = None, None, []
+    it = iter(args)
+    for w in it:
+        if w == "--level":
+            level = next(it, None)
+        elif w == "--wikidata":
+            party = next(it, None)
+        else:
+            words.append(w)
+    src = "request"
+    if level is None:
+        if len(words) != 1:
+            print(__doc__)
+            return 2
+        p = os.path.join(root, "beans", words[0] + ".md")
+        if not os.path.isfile(p):
+            print("knowledge: no bean %s here" % words[0])
+            return 1
+        fm = _fm(p)
+        level = _level_of(root, fm.get("kind"))
+        if not level:
+            print("knowledge: %s is a %s, at no level of the law: a sayable is classed by no scheme of beings"
+                  % (words[0], fm.get("kind")))
+            return 1
+        words, src = [str(fm.get("title") or words[0])], "estate"
+    text, refused = " ".join(words), False
+    if party and get is None:
+        import importlib
+        dmpass = importlib.import_module("pass")
+        d = dmpass.flows(root).decide(src, "remote", "send", party=party) \
+            if os.path.isfile(os.path.join(root, "beans", party + ".md")) else None
+        if d is None or not d.granted:
+            refused = True
+            print("NotGranted: looking %r up at Wikidata sends it to %s, and %s — nothing sent. The gardener grants a party "
+                  "in VOCAB.md, by name and on a basis:\n  flows:\n    - { flow: sent-out, from: %s, to: remote, through: "
+                  "send, grant: granted, party: %s, basis: \"<why>\" }" % (
+                      text, party, "no bean here names that party" if d is None else
+                      "this garden's flow law does not grant it (%s: %s)" % (", ".join(d.rows) or "closed", d.grant),
+                      src, party))
+        else:
+            get = web_get(((k.schemes.get("wikidata") or {}).get("lookup") or {}).get("api"))
+    found = k.propose(text, level, get=get)
+    print("proposed for %r at the level %s (%d) — nothing is written: a person picks" % (text, level, len(found)))
+    for p in found:
+        print("%-24s %-40s %-10s %s%s" % (p["coding"], p["name"][:40], p["level"], p["how"],
+                                          ("   (" + p["status"] + ")") if p["status"] else ""))
+    return 1 if refused else 0
+
+
 def main():
     root = os.path.dirname(HERE)
     a = sys.argv[1:]
@@ -304,6 +650,8 @@ def main():
         sys.exit(_at(k, root, a[1]))
     elif cmd == "gold" and len(a) >= 2:
         _gold(k, a[1])
+    elif cmd == "propose" and len(a) >= 2:
+        sys.exit(_propose(k, root, a[1:]))
     elif cmd == "resolve" and len(a) >= 3:
         # A LOOKUP AT THE AUTHORITY SENDS A CODE OUT OF THE GARDEN, to a party the garden has not granted: the flow law
         # (the Leviathan's Body 3) is what grants it, and until it is built nothing is granted (draft §10)

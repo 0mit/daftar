@@ -824,8 +824,21 @@ class Judge:
         return '' if level == rule['level'] or rule['level'] in made else \
             f"it holds for {rule['level']} and what is made of it, and a {kind} ({level}) is neither"
 
+    def classed_at(self, coding, kind):
+        """Why a being of `kind` is not classed by `coding`, a code of a scheme that names the levels of the law its codes
+        classify (`at`): '' when it is at one of them, when the scheme names none, or when its kind has no level — a
+        sayable, which no level holds."""
+        scheme, _code = dmparse.split_coding(coding)
+        row = (self.L.std.knowledge.schemes.get(scheme) if self.L.std and scheme else None) or {}
+        at = [str(x) for x in listed(row.get('at'))]
+        level = (self.L.kinds.get(kind) or {}).get('level')
+        if not at or not level or level in at:
+            return ''
+        return f"{scheme}'s codes classify beings at {', '.join(at)}, and a {kind} is at {level}"
+
     def bearer(self):
-        """Rule bearer: a quantity stated of a being is one its dimensions and its kind hold for. The kind is the one the
+        """Rule bearer: a quantity stated of a being is one its dimensions and its kind hold for; and a code of a scheme
+        that names its levels (`at`) is stated only of a being at one of them. The kind is the one the
         statement names (`as`, a quantity of the law) or the one its value's unit is of. A foundation is the bearer of the
         dimension its property names (`weight` of mass), and is read as it always was where `as` names that property."""
         q = self.L.std.quantities if self.L.std else {}
@@ -839,11 +852,15 @@ class Judge:
                 kind = self.kind_of(r['of'], b)
                 if kind is None:
                     continue
+                as_role = ((self.L.verbs.get(verb) or {}).get('roles') or {}).get('as') or {}
+                if as_role.get('table') == 'knowledge' and isinstance(r.get('as'), str):
+                    why = self.classed_at(r['as'], kind)
+                    if why:
+                        self.err('bearer', f"{b.id}[{i}] {verb}", f"{r['as']} is stated of {self.norm(r['of'], b)}: {why}")
                 rules = []                                  # (what holds, why it is asked)
                 for f in self.L.foundations:
                     if f.get('property') and r.get('as') == f['property']:
                         rules.append((f.get('holds_for'), f"{f['property']} (the foundation {f.get('foundation')})"))
-                as_role = ((self.L.verbs.get(verb) or {}).get('roles') or {}).get('as') or {}
                 qname = r.get('as') if isinstance(r.get('as'), str) and r['as'] in q \
                     and as_role.get('table') == 'properties' else None
                 if qname is None and isinstance(r.get('value'), dict) and r['value'].get('unit'):

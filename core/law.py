@@ -671,6 +671,8 @@ class Law:
             return list(self.verbs) + self.tables.get('methods', [])
         if name == 'namespaces':
             return list(self.namespaces)
+        if name == 'kinds':
+            return list(self.kinds)
         return self.tables.get(name)
 
     def has(self, name, value):
@@ -1281,8 +1283,7 @@ class Law:
             for f in listed(r.get('format')):
                 if str(f) not in self.formats:
                     out.append((f"core/law/formats.yaml readers {name!r}", f"reads {f!r}, which is no format of the law"))
-        reg = os.path.join(getattr(self, 'dir', None) or LAW_DIR, 'registries.yaml')
-        for row in listed((read.data(reg) if os.path.isfile(reg) else {}).get('knowledge_schemes')):
+        for row in listed(self._registries().get('knowledge_schemes')):
             fetch = row.get('fetch') if isinstance(row, dict) else None
             if isinstance(fetch, dict) and fetch.get('reader') is not None:
                 rd = self.readers.get(str(fetch['reader']))
@@ -1290,6 +1291,40 @@ class Law:
                     out.append((f"core/law/registries.yaml knowledge_schemes {row.get('scheme')!r}",
                                 f"fetch.reader {fetch['reader']!r} is no reader of core/law/formats.yaml `readers` the "
                                 f"release reads with"))
+        return out
+
+    def _registries(self):
+        """core/law/registries.yaml of this law, read once for every check that asks (the file read is kept with its
+        path, so a copy of the law pointed at another directory reads its own)."""
+        reg = os.path.join(getattr(self, 'dir', None) or LAW_DIR, 'registries.yaml')
+        kept = getattr(self, '_registries_read', None)
+        if kept is None or kept[0] != reg:
+            kept = (reg, read.data(reg) if os.path.isfile(reg) else {})
+            self._registries_read = kept
+        return kept[1]
+
+    def scheme_levels_problems(self):
+        """[(where, message)]: the levels a scheme says its codes classify (`at`), and the levels its own classes stand
+        for (`classes`, a scheme typed by its own codes), each a level of the law (core/law/levels.yaml), named once;
+        and where a scheme says another names its codes (`named_in`), that scheme is one of the knowledge tree."""
+        out = []
+        rows = [r for r in listed(self._registries().get('knowledge_schemes')) if isinstance(r, dict)]
+        names = {str(r.get('scheme')) for r in rows}
+        for row in rows:
+            where = f"core/law/registries.yaml knowledge_schemes {row.get('scheme')!r}"
+            at = [str(x) for x in listed(row.get('at'))]
+            for lv in at:
+                if lv not in self.levels:
+                    out.append((where, f"`at`: {lv!r} is no level of the law ({', '.join(self.levels)})"))
+            if len(set(at)) != len(at):
+                out.append((where, "`at` names a level twice"))
+            for c in listed(row.get('classes')):
+                lv = c.get('level') if isinstance(c, dict) else None
+                if lv not in self.levels or not listed(c.get('codes')):
+                    out.append((where, f"`classes`: {c!r} names no level of the law with its codes"))
+            for n in listed(row.get('named_in')):
+                if not isinstance(n, dict) or str(n.get('scheme')) not in names or not n.get('property'):
+                    out.append((where, f"`named_in`: {n!r} is no scheme of the knowledge tree with its property"))
         return out
 
     def _carried_row_problems(self, where, r):
@@ -1718,6 +1753,8 @@ class Law:
         for where, msg in self.crosswalk_problems():
             bad(where, msg)
         for where, msg in self.formats_problems():
+            bad(where, msg)
+        for where, msg in self.scheme_levels_problems():
             bad(where, msg)
         for where, msg in self.units_crosswalk_problems():
             bad(where, msg)

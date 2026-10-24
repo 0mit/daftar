@@ -8,6 +8,46 @@
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 reasons: [prediction, impossible, out-of-context, universal]
 vacancies:
+  - at: "table:kinds"
+    position: organism
+    reason: universal
+    why: "A body at the level organism that is not a person: a human body as a body, an animal, an insect, a tree, a microbe. Declared for every garden that keeps one; what kind of organism it is, is a code of a scheme of taxa (`col`, `ncbitaxon`), never a kind. D29 asks it proved in a garden before a release takes it"
+  - at: "table:kinds"
+    position: cell
+    reason: universal
+    why: "One body kind a level: a being held at the level cell has a kind that says the level once, and what kind of cell it is, is a code of a scheme whose `at` names cell. Declared for any garden, vacant until one holds such a being"
+  - at: "table:kinds"
+    position: tissue
+    reason: universal
+    why: "One body kind a level: a being held at the level tissue has a kind that says the level once, and what kind of tissue it is, is a code of a scheme whose `at` names tissue. Declared for any garden, vacant until one holds such a being"
+  - at: "table:kinds"
+    position: organ
+    reason: universal
+    why: "One body kind a level: a being held at the level organ has a kind that says the level once, and what kind of organ it is, is a code of a scheme whose `at` names organ. Declared for any garden, vacant until one holds such a being"
+  - at: "table:kinds"
+    position: population
+    reason: universal
+    why: "One body kind a level: a being held at the level population has a kind that says the level once, and what kind of population it is, is a code of a scheme whose `at` names population. Declared for any garden, vacant until one holds such a being"
+  - at: "table:kinds"
+    position: community
+    reason: universal
+    why: "One body kind a level: a being held at the level community has a kind that says the level once, and what kind of community it is, is a code of a scheme whose `at` names community. Declared for any garden, vacant until one holds such a being"
+  - at: "table:kinds"
+    position: ecosystem
+    reason: universal
+    why: "One body kind a level: a being held at the level ecosystem has a kind that says the level once, and what kind of ecosystem it is, is a code of a scheme whose `at` names ecosystem. Declared for any garden, vacant until one holds such a being"
+  - at: "table:kinds"
+    position: material
+    reason: universal
+    why: "One body kind a level: a being held at the level material has a kind that says the level once, and what kind of material it is, is a code of a scheme whose `at` names material. Declared for any garden, vacant until one holds such a being"
+  - at: "table:kinds"
+    position: component
+    reason: universal
+    why: "One body kind a level: a being held at the level component has a kind that says the level once, and what kind of component it is, is a code of a scheme whose `at` names component. Declared for any garden, vacant until one holds such a being"
+  - at: "table:kinds"
+    position: celestial-body
+    reason: universal
+    why: "One body kind a level: a being held at the level celestial-body has a kind that says the level once, and what kind of celestial-body it is, is a code of a scheme whose `at` names celestial-body. Declared for any garden, vacant until one holds such a being"
   - at: "table:storage_formats"
     position: ntfs
     reason: prediction

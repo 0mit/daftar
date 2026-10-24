@@ -5,6 +5,16 @@ kinds:
   - { kind: product, nature: sayable }
   - { kind: org, nature: sayable }
   - { kind: person, nature: body, level: organism, rung: reason }
+  - { kind: organism, nature: body, level: organism, meaning: "a living body that is one being and no person: a human body as a body, an animal, an insect, a tree, a microbe; what kind of organism it is, is a code of a scheme of taxa (`classify`)" }
+  - { kind: cell, nature: body, level: cell, meaning: "one cell, held apart as a being: what kind of cell it is, is a code of a scheme of cells" }
+  - { kind: tissue, nature: body, level: tissue, meaning: "a tissue held apart as a being, a sample of it among them" }
+  - { kind: organ, nature: body, level: organ, meaning: "an organ held apart as a being — a heart, a leaf, a walnut, a wing — part of the organism it is of, or no longer; what kind of organ it is, is a code of a scheme of anatomy" }
+  - { kind: population, nature: body, level: population, meaning: "organisms of one kind living together, held as one being: a herd, a hive's colony, a stand of trees" }
+  - { kind: community, nature: body, level: community, meaning: "populations of many kinds living together, held as one being" }
+  - { kind: ecosystem, nature: body, level: ecosystem, meaning: "a community with the matter it lives on and in, held as one being: a forest, a lake; what kind of ecosystem it is, is a code of a typology of ecosystems" }
+  - { kind: material, nature: body, level: material, meaning: "matter in bulk held as one being: a bar of steel, a sheet, a batch of a polymer, a stone; what it is made of is a code of a scheme of substances or materials" }
+  - { kind: component, nature: body, level: component, meaning: "a made part held as one being — a pulley's rim, a bearing, a seal, a board — part of the device it is assembled into; what kind of part it is, is a code of a scheme of made things" }
+  - { kind: celestial-body, nature: body, level: celestial-body, meaning: "a star, a planet, a moon or an asteroid held as one being, beside the Earth the law's `bodies` rows hold" }
   - { kind: instance, nature: sayable }
   - { kind: host, nature: body, level: device }
   - { kind: virtual-host, nature: sayable }

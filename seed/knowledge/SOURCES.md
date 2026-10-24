@@ -302,3 +302,107 @@ Commission." Modified or adapted versions must be marked as such.
   a type not here is refused with a sentence, and a `tz` is shown in the IANA zone its first alias names.
 - **Behind CLDR 48:** two zones (America/Ciudad_Juarez, America/Coyhaique) and eleven numbering systems the runtime of
   2026 knows are not here; written again from a later CLDR's `common/bcp47`, they are.
+
+## The schemes of beings: what each classifies at a level of the law (`at`)
+
+Each licence below was quoted from its source first-hand on 2026-10-24, with the URL it was read at; each reader was
+built that day against the file named, its SHA-256 given. A scheme's `at` (core/law/registries.yaml) names the levels
+of the law whose beings its codes classify: the gate refuses a code said of a being at another level (rule bearer).
+
+## col — the Catalogue of Life, eXtended Release (fetched)
+
+- **Not shipped.** Each machine fetches the release's ColDP archive with `python3 bin/fetch.py col`
+  (`https://api.checklistbank.org/dataset/316691/export.zip?format=COLDP`, which answers with the archive
+  ChecklistBank prepared), and reads its NameUsage.tsv: each accepted name and synonym with its rank, parent and
+  authorship. Built against COL26.10 XR, issued 2026-10-16 (144,796,066 bytes, sha-256
+  eee7ab4bc2d5cfc0c0d28c0d56c4f1d92d6cc65df8f36883eef8f49ec603f93d): 8,504,545 name usages. The XR has no Darwin
+  Core Archive: ChecklistBank answers "DwCA archive for dataset 316691 not found".
+- **Its licence** is CC BY 4.0: ChecklistBank's record of the release says `"license": "cc by"`
+  (https://api.checklistbank.org/dataset/316691). What a garden shows of it credits the Catalogue of Life, citing the
+  release's DOI, 10.48580/dgzlf.
+
+## ncbitaxon — NCBI's taxonomy, as the OBO Foundry builds it (fetched)
+
+- **Not shipped.** `python3 bin/fetch.py ncbitaxon` (`http://purl.obolibrary.org/obo/ncbitaxon.obo`), read by the
+  reader `obo`: each taxon with its rank, parent and names. Built against the build of 2026-07-12 (688,489,597 bytes,
+  sha-256 a73eb642b33e2ec8480ef452574885b9d2627c97898d62ac096f0b173a292b69): 2,854,484 taxa.
+- **Its licence:** NCBI "itself places no restrictions on the use or distribution of the data contained therein"
+  (https://www.ncbi.nlm.nih.gov/home/about/policies/); the OBO build's own header names CC0 1.0 (`terms:license
+  https://creativecommons.org/publicdomain/zero/1.0/`), as the OBO Foundry's page does.
+
+## uberon, cl, hao, po — anatomy and cells (fetched)
+
+- **Not shipped.** Each is read by the reader `obo` from its purl
+  (`http://purl.obolibrary.org/obo/<name>.obo`): each term of the ontology's own prefix, its parents, what it is part
+  of, its synonyms. Built against UBERON releases/2026-10-01 (22,529,133 bytes, sha-256
+  d4751a15d7551a8414caee2628c62bf68301d567caf54ccfa3eef383ae7cbb61, 16,141 terms); the Cell Ontology
+  releases/2026-06-08 (17,353,259 bytes, sha-256 7e19b4aef8e7fe7720b0c4474c6a5b8713c904ea9ab7b7d5d96f2cb28b8fc51f,
+  3,531 terms); the Hymenoptera Anatomy Ontology's master copy (918,246 bytes, sha-256
+  2fbbc0ccfda41d1b1d201dff9abe4056ca635878ab1bcedf958cf484d8c2c633, 2,596 terms, no data-version); the Plant Ontology
+  releases/2026-01-09 (1,338,438 bytes, sha-256 d90949737a9925bdb775ba7dd4a9521cb63ca4acd40211e4c7661655f379f4c9,
+  1,793 terms).
+- **Their licences**, each from its repository's LICENSE and its file's header: UBERON CC BY 3.0 ("Attribution 3.0
+  Unported", `dcterms-license http://creativecommons.org/licenses/by/3.0/`); the Cell Ontology CC BY 4.0; the
+  Hymenoptera Anatomy Ontology CC0 1.0 ("CC0 1.0 Universal"); the Plant Ontology CC BY 4.0.
+
+## chebi — chemical entities (fetched)
+
+- **Not shipped.** `python3 bin/fetch.py chebi` (`http://purl.obolibrary.org/obo/chebi.obo`), read by `obo`. Built
+  against release 256 (271,094,615 bytes, sha-256 1fd3e7d0b9ba51934b20ebcda01eefe6e14f3b3b835a737a4665414da2122c50):
+  219,012 entities.
+- **Its licence** is CC BY 4.0: "The data on this website is available under the Creative Commons License (CC BY
+  4.0), and governed by EMBL-EBI's terms of use" (https://www.ebi.ac.uk/chebi/about); the file's header says the same.
+
+## iucn-get — the IUCN Global Ecosystem Typology (fetched)
+
+- **Not shipped.** `python3 bin/fetch.py iucn-get` reads the map details of the typology's version 2.1.3
+  (`https://zenodo.org/api/records/10081251/files/map-details.xml/content`, 114,612 bytes, sha-256
+  6df0b503e5e4503de7538da2ec84d54584a12eb5ab8b16b85c0d0165585c2379): 109 functional groups by code and name, and the 25
+  biomes and 10 realms their codes name.
+- **Its licence:** the Zenodo record is CC BY 4.0 (`cc-by-4.0`). The biomes' and realms' names are not read: they are
+  in the typology's descriptive profiles (Keith et al., eds., 2020), "© 2020 IUCN", whose reproduction "for resale or
+  other commercial purposes is prohibited without prior written permission"
+  (https://portals.iucn.org/library/sites/library/files/documents/2020-037-En.pdf).
+
+## etim — ETIM's classes of technical products (fetched, never forked)
+
+- **Not shipped.** `python3 bin/fetch.py etim` reads ETIM 10.0's international English edition as its CSV export
+  (`ETIM-10.0-ALL-SECTORS-CSV-METRIC-EI-2024-12-05.zip`, 2,895,379 bytes, sha-256
+  9b2aa17f105315884661fe6a7a35f5fdbc8835d768a5906117cbc420420b6214, downloaded without an account): 159 groups and
+  5,640 classes with their synonyms. Its group "Machine element" (EG020017) holds 31 classes.
+- **Its licence:** "The ETIM Classification Model … and ETIM MC (Modelling Class) extension are made available under
+  the Open Data Commons Attribution Licence" — and "we would like to make sure that worldwide there is only one copy of
+  the model being maintained by the rightful author and owner" (https://www.etim-international.com/?p=1811). So each
+  machine reads ETIM's own copy, and daftar cites its codes (machine-elements.tsv), never its texts.
+
+## cpv — the EU's Common Procurement Vocabulary (fetched)
+
+- **Not shipped.** `python3 bin/fetch.py cpv` reads the Publications Office's Genericode of CPV 2008, version
+  20260520-0 (its Cellar item, 26,352,171 bytes, sha-256
+  aedd06f0ee402c8a49d3d8b9928c10656e4d6a3918d55328b0efae53440b50f1): 9,454 codes with their English names.
+- **Its terms:** the CPV is Commission Regulation (EC) No 213/2008; Commission Decision 2011/833/EU makes the
+  Commission's published documents "available for reuse: (a) for commercial or non-commercial purposes … (b) without
+  charge … and (c) without the need to make an individual application", on conditions that may include "the obligation
+  for the reuser to acknowledge the source" and "not to distort the original meaning" (Articles 4 and 6, read at
+  http://publications.europa.eu/resource/celex/32011D0833). The vocabulary's own record names no licence, and the
+  Publications Office sends questions on "the conditions under which the content of the CELLAR, and of the EU
+  Vocabularies may be re-used" to op-copyright@publications.europa.eu. Held as `LicenseRef-EU-Commission-Decision-2011-833`:
+  fetched by each machine, its codes cited, nothing shipped.
+
+## wikidata — any being, an item at a time (at its authority)
+
+- **Not held.** `python3 bin/knowledge.py propose … --wikidata <party>` asks Wikidata's API for the words and an item's
+  classes, one request a second, only where the garden's flow law grants the party (`sent-out`, through `send`); an
+  item is picked by its class (`classes` on the scheme's row), never by its label.
+- **Its licence:** "All structured data (i.e. the main, Property, Lexeme, and EntitySchema namespaces) is released into
+  the public domain under Creative Commons Zero" (https://www.wikidata.org/wiki/Wikidata:Licensing).
+
+## machine-elements.tsv — the machine elements and made parts no open standard holds whole (shipped)
+
+- **Source:** daftar's own words, written on 2026-10-24 after a test set of 126 generic definitions was measured on
+  the open schemes above. It holds the parts and features no open scheme holds (a pulley's rim, a damper's ring, a
+  cylinder's tube, gland, end cap and mount, a blind plug, a cap, an X-ring, a PTFE seal) and the classic elements as
+  their families and kinds. Each row points at its Wikidata item where Wikidata has one (30 of the 44), and cites the
+  codes ETIM and CPV give it where they give one, never their texts. `parent` is the kind of element a row is;
+  `part_of` the element it is a part of.
+- **Its licence** is CC BY 4.0, as the law's.

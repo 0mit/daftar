@@ -1,0 +1,45 @@
+code	level	parent	part_of	name	synonyms	meaning	wikidata	etim	cpv
+transmission	family			power transmission element		a part that carries rotation or force from one part to another		EG020017	42141000
+pulley	element	transmission		pulley	belt pulley	a wheel on a shaft or a bearing whose rim takes a belt, a rope or a chain	Q48378	EC003882	42141400
+crankshaft-pulley	element	pulley		crankshaft pulley	damper pulley	a pulley fixed on an engine's crankshaft that drives its belts, often carrying a torsional vibration damper		EC003882	42141400
+idler-pulley	element	pulley		idler pulley	idler | idler wheel	a pulley that turns freely on its own bearing, guiding or tensioning a belt and driving nothing	Q5989142	EC003882	42141400
+sheave	element	pulley		sheave		a grooved wheel that holds a rope or a cable	Q1057381		42141400
+pulley-rim	element	transmission	pulley	pulley rim		the outer ring of a pulley, which carries the grooves its belt runs in			
+hub	element	transmission		hub		the central part of a wheel, a pulley or a gear, by which it is fixed to a shaft or turns on a bearing	Q101860684		
+v-belt	element	transmission		V-belt	vee belt	a belt of trapezoidal section that runs in a pulley's V-groove	Q1752270		34312700
+gear	element	transmission		gear	gear wheel | cogwheel	a wheel with teeth that meshes with another's to carry rotation	Q143873	EC011968	42141000
+shaft	element	transmission		shaft		a bar, usually round, that turns and carries the parts fixed on it	Q309383		42141100
+shaft-coupling	element	transmission		shaft coupling	coupling	a part that joins two shafts end to end, so that one drives the other	Q17992492		42141700
+bearing	family			bearing		a part that lets one part turn or slide on another, carrying the load between them	Q190100	EC012129	44440000
+ball-bearing	element	bearing		ball bearing		a rolling bearing whose rolling elements are balls held between two rings	Q11432170	EC012129	44440000
+deep-groove-ball-bearing	element	ball-bearing		deep groove ball bearing	deep groove bearing	a ball bearing whose rings have deep raceway grooves, carrying a radial load and some axial load either way	Q85840418	EC012129	44440000
+bushing	element	bearing		bushing	bush | plain bearing	a sleeve in which a shaft or a rod turns or slides: a plain bearing, without rolling elements	Q12832024		
+seal	family			seal		a part that keeps a fluid in, or dirt out, where two parts meet	Q17004810	EG015910	44425000
+o-ring	element	seal		O-ring	seal ring | toroidal seal	a ring of round section seated in a groove, which seals as it is pressed	Q942417	EC010584	44425200
+x-ring	element	seal		X-ring	quad ring	a ring of four-lobed section seated as an O-ring is, with two sealing lips on each side			
+radial-shaft-seal	element	seal		radial shaft seal	lip seal | lip oil seal | oil seal	a lip seal around a turning shaft, its lip pressed on the shaft by its own spring	Q1778660		
+rod-seal	element	seal		rod seal		a seal around a cylinder's piston rod, which keeps the pressure in	Q59630201		
+wiper-seal	element	seal		wiper seal	wiper | scraper seal	a seal at a cylinder's mouth that scrapes dirt off the rod as it goes in	Q8026705		
+ptfe-seal	element	seal		PTFE seal		a seal whose sliding ring is of PTFE, pressed on its counterface by an elastic ring beneath it			
+wear-ring	element	seal		wear ring	guide ring	a ring on a piston or in a gland that guides the moving part and keeps metal off metal		EC010617	
+gasket	element	seal		gasket		a seal pressed between two faces that do not move	Q1132541		34312500
+blind-plug	element	seal		blind plug	blanking plug	a plug that closes a port or a drilled passage for good			
+cap	element	seal		cap	dust cap | end cover	a cover that closes an opening of a part, a bearing's or a tube's end, against dirt			
+fastener	family			fastener		a part that joins or holds parts together	Q2002016	EG020045	44530000
+screw	element	fastener		screw		a fastener with an external thread	Q11022		44531510
+retaining-ring	element	fastener		retaining ring	snap ring	a ring seated in a groove that keeps a part from sliding along a shaft or a bore	Q3662575	EC002383	
+circlip	element	retaining-ring		circlip		a split retaining ring sprung into its groove, with holes for the pliers that fit it	Q2144243	EC002383	
+dowel-pin	element	fastener		dowel pin	pin | locating pin	a plain pin that locates one part on another	Q1365730		
+rivet	element	fastener		rivet		a permanent fastener whose shank is upset to hold the parts	Q212500	EC002353	44532100
+washer	element	fastener		washer	flat washer | plain washer	a thin plate with a hole that spreads a fastener's load or locks it	Q637321	EC000098	44532200
+fluid-power	family			fluid power element		a part of a machine that works by a fluid under pressure	Q1640293		
+hydraulic-cylinder	element	fluid-power		hydraulic cylinder		an actuator whose piston a liquid under pressure pushes along a tube	Q2318337	EC012253	42121100
+cylinder-tube	element	fluid-power	hydraulic-cylinder	cylinder tube	cylinder barrel	the barrel of a hydraulic cylinder, in which its piston slides			
+piston	element	fluid-power	hydraulic-cylinder	piston		the part that slides in a cylinder, moved by the pressure on it or moving it	Q45227		34312400
+piston-rod	element	fluid-power	hydraulic-cylinder	piston rod		the rod that joins a piston to what it moves, passing out of the cylinder	Q788143		
+gland	element	fluid-power	hydraulic-cylinder	gland	rod gland | cylinder gland	the end of a cylinder the rod passes through, which holds its rod seal and its wiper			
+cylinder-end-cap	element	fluid-power	hydraulic-cylinder	cylinder end cap	cylinder head | end cap	the head that closes a hydraulic cylinder's tube at its other end			
+cylinder-mount	element	fluid-power	hydraulic-cylinder	cylinder mount	mount | mounting eye	the eye, the clevis or the base by which a cylinder is fixed to its machine			
+damping	family			vibration damping element		a part that takes the energy out of a vibration		EC011696	
+torsional-vibration-damper	element	damping		torsional vibration damper	harmonic damper | crankshaft damper	a ring and a hub joined by an elastic layer, fixed on a crankshaft to damp its twisting vibration	Q12858436	EC011696	
+damper-ring	element	damping	torsional-vibration-damper	damper ring	rubber damper element | rubber element	the elastic ring, of rubber, between a damper's inertia ring and its hub			

@@ -101,7 +101,7 @@ class Standards:
                 return f"{scheme} is held at its authority and states no `code_pattern`: a code of it cannot be checked here"
             return '' if dmparse.law_match(pat, code) else f"{code!r} is not in the form of a code of {scheme}: `{pat}`"
         try:
-            found = self.knowledge.row(scheme, code)
+            found = self.knowledge.has(scheme, code)
         except (KeyError, OSError) as e:
             pat = row.get('code_pattern')
             if row.get('holding') == 'fetched' and pat:     # none fetched here: checked by its form alone

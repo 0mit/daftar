@@ -251,6 +251,40 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v3.2.0** (DRAFT, not ratified; core 3.2) — **the beings by their levels: a body kind a level, a scheme
+  that names the levels it classifies, the open standards of known beings read, one finder, and the machine elements
+  the open standards leave** (measured first on a test set of 126 generic definitions).
+  core/law/kinds.yaml: `organism` (body, level organism) beside `person`, and `cell`, `tissue`, `organ`, `population`,
+  `community`, `ecosystem`, `material`, `component` and `celestial-body`, a body kind for each other level a body can be
+  at, each a `universal` vacancy (vacancies.yaml, `table:kinds`, which the law now resolves); `host` stays the made body
+  at level device. What kind of organ, organism or part a being is, is a code of a scheme, never a kind.
+  core/law/registries.yaml: `knowledge_schemes` gains `at` (the levels of the law whose beings a scheme's codes classify),
+  `named_in` (another scheme whose items name this one's codes, by a property), `lookup` and `classes` (a scheme read at
+  its authority and typed by its own codes: Wikidata's P31 and P279, and the classes standing for each level); twelve
+  rows — `col` (the Catalogue of Life's XR, CC BY 4.0), `ncbitaxon` (CC0), `uberon` (CC BY 3.0), `cl`, `po` (CC BY 4.0),
+  `hao` (CC0), `chebi` (CC BY 4.0), `iucn-get` (CC BY 4.0, the functional groups' names alone), `etim` (ODC-By 1.0,
+  fetched, never forked), `cpv` (reusable under Decision 2011/833/EU, fetched), `wikidata` (CC0, at its authority) and
+  `machine-elements` (daftar's own, shipped, CC BY 4.0) — each licence quoted first-hand in seed/knowledge/SOURCES.md.
+  core/law/core.yaml: rule `bearer` also says that a code of a scheme naming its levels is said only of a being at one of
+  them, a sayable not refused; core/engine.py judges it (no taxon of a host, no motor's class of a person).
+  core/law/formats.yaml and core/readers.py: five readers — `obo` (the OBO flat file format, which all six OBO
+  ontologies publish; NCBITaxon's JSON is older than its OBO and HAO and PO publish none), `coldp` (the XR has no Darwin
+  Core Archive), `etim-csv`, `cpv-genericode`, `iucn-get-maps`. bin/fetch.py keeps each copy's codes sorted
+  (`codes.txt`), and bin/knowledge.py looks a code up there by a binary search, so the gate checks one code of 8.5
+  million as fast as one of a hundred. bin/knowledge.py `propose`: the one finder, by a being's level — the held schemes
+  whose `at` names it, by name and synonym, streamed; Wikidata's items picked by their class and, through each, the codes
+  of the schemes it names, sent only to a party the garden's flow law grants (`sent-out`); `find` passes the schemes of
+  beings over unless one is named. seed/knowledge/machine-elements.tsv: 44 rows in six families, 30 pointing at their
+  Wikidata items, citing ETIM's and CPV's codes, never their texts. Three gardens of the corpus had declared a kind the
+  law now holds — seed/COOKBOOK.md's candles `material`, test/cases.py's maker garden `component` (at level device),
+  test/core-cases.yaml `cell` — and now take the law's rows; core/translate.py drops a garden's kind the law holds
+  alike, which would be declared twice. bin/review.py: a date inside an address (a provider's file named by its day,
+  as ETIM's is) is not counted as a story, as a date in backticks is not. test/core_beings.py; test/core-cases.yaml
+  x12h and y45 for rule bearer's two new clauses; test/io.py counts 18 readers.
+  Ratified in part on 2026-10-25: the test set, the natural schemes and the made schemes. The body kinds, the local
+  proof of D29, `at` and the machine elements wait for the ladder redefined by its frame and its lines, and for daftar's
+  description of mechanics by its basic elements; its version may be renumbered then.
+
 - **daftar v3.1.3** (2026-10-25, the reasons, core 3.1) — **the subsumption example in a documentation range.**
   seed/RATIONALE.md gave one network inside another in RFC 1918's private range; it now gives it in IPv6's range for
   documentation (RFC 3849): `2001:db8:1::/48` into `2001:db8::/32`. A private range is one a garden may name for its

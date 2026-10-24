@@ -7,7 +7,6 @@ zone: Asia/Tehran                  # GARDEN.md's: the bearer's zone, where a day
 
 vocab:                             # the garden's own rows, as its VOCAB.md would hold them
   kinds:                           # beside the law's own (person, org, contract, document, garden, host, …)
-    - { kind: cell,      nature: body,    line: living, level: cell, vacant: "the cases use it, not the garden" }
     - { kind: clause,    nature: sayable, line: said,   level: statement }
     - { kind: part,      nature: body,    line: made,   level: component }
     - { kind: rack,      nature: body,    line: made,   level: device }
@@ -124,6 +123,7 @@ garden:
 # beans that must pass when added to the garden above (each alone)
 good:
   # rule bearer (2026-10-10): what a quantity holds for, reached through `made-of` alone
+  - { name: "a product, a sayable, is classed by a scheme of made things: it has no level to refuse", bean: y45, kind: product, statements: [ { say: { by: sam, at: now } }, { classify: { of: self, as: "machine-elements:pulley" } } ] }
   - { name: "a document states a person's mass and a machine's temperature: what it is about bears them", bean: y30, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: ada, as: mass, value: { count: "62", unit: kg } } }, { measure: { of: nas, as: temperature-difference, value: { count: "12", unit: K } } } ] }
   - { name: "a part's 220 ohms, a rack's power and its illuminance: made of material, a body measured", bean: y31, kind: part, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: resistance, value: { count: "220", unit: Ohm } } }, { measure: { of: home-rack, as: power, value: { count: "450", unit: W } } }, { measure: { of: home-rack, as: illuminance, value: { count: "300", unit: lx } } } ] }
   - { name: "a document's size is its own, and the machine that carries it says what it can hold", bean: y33, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: information, value: { count: "2", unit: MBy } } }, { hold: { by: nas, of: { count: "2", unit: TBy } } } ] }
@@ -169,6 +169,7 @@ good:
   - { name: "an attendance said to take its hours is as one that says nothing", bean: y35, kind: document, statements: [ { say: { by: sam, at: now } }, { attend: { by: ben, of: ladder, at: 2026-12-20/2026-12-21, transparency: opaque } } ] }
 bad:
   # rule bearer (2026-10-10): what a quantity holds for, reached through `made-of` alone
+  - { rule: bearer, name: "a cell is classed by no scheme of made things", says: "classify beings at component, device, and a cell is at cell", bean: x12h, kind: cell, statements: [ { say: { by: sam, at: now } }, { classify: { of: self, as: "machine-elements:pulley" } } ] }
   - { rule: bearer, name: "one molecule has no temperature", says: "it holds for material and what is made of it", bean: x12b, kind: grain, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: temperature-difference, value: { count: "3", unit: K } } } ] }
   - { rule: bearer, name: "a contract has no voltage", says: "a contract is a sayable", bean: x12c, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: potential-difference, value: { count: "5", unit: V } } } ] }
   - { rule: bearer, name: "a machine has no money of its own: an agreement about it does", says: "it holds for a sayable", bean: x12d, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "100", unit: XTS } } } ] }
@@ -327,6 +328,8 @@ clauses:
     - { says: "a quantity is stated only of what", bad: [x12c, x12e, x12f] }
     - { says: "A mass is a body's", bad: [x12, x12b] }
     - { says: "information and money are what is carried", bad: [x12d, x12g] }
+    - { says: "A code of a scheme that names the levels its codes classify", bad: [x12h] }
+    - { says: "a sayable, which has no level, is not refused", good: [y45] }
   frame:
     - { says: "a position is in a declared system", bad: [x13, x13b, x13c, x13d, x13e, x13f] }
   names:

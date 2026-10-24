@@ -34,6 +34,17 @@ registry_files:
   - { registry: units-cldr-units, file: "seed/knowledge/units-cldr-units.tsv", key: code }
   - { registry: geonames, key: code }
   - { registry: osm-places, key: code }
+  - { registry: col, key: code }
+  - { registry: ncbitaxon, key: code }
+  - { registry: uberon, key: code }
+  - { registry: cl, key: code }
+  - { registry: hao, key: code }
+  - { registry: po, key: code }
+  - { registry: chebi, key: code }
+  - { registry: iucn-get, key: code }
+  - { registry: etim, key: code }
+  - { registry: cpv, key: code }
+  - { registry: machine-elements, file: "seed/knowledge/machine-elements.tsv", key: code }
 knowledge_schemes:
   - scheme: isced-f-2013
     classifies: "fields of knowledge (education and training)"
@@ -255,6 +266,202 @@ knowledge_schemes:
     levels: [{ level: element }]
     neighbours: none
     sources: "seed/knowledge/SOURCES.md"
+  - scheme: col
+    classifies: "living beings by their scientific names, as the Catalogue of Life's eXtended Release holds them — each accepted name and its synonyms, ranked (a species, a genus, an order) and placed in one tree; a population is classified by its organisms' taxon"
+    holding: fetched
+    fetch:
+      from: "https://api.checklistbank.org/dataset/316691/export.zip?format=COLDP"
+      reader: coldp
+      latest: "the Catalogue of Life issues a release each month and an eXtended Release (XR) beside it; ChecklistBank lists them (https://api.checklistbank.org/dataset?releasedFrom=3, the XR's origin `xrelease`), and answers a release's ColDP export (dataset/<key>/export.zip?format=COLDP) with its prepared archive"
+    licence: CC-BY-4.0
+    release: "COL26.10 XR, issued `2026-10-16`"
+    code_pattern: "^[0-9A-Z][0-9A-Z.]{0,13}$"
+    publisher: "the Catalogue of Life Partnership, through ChecklistBank"
+    url: "https://www.catalogueoflife.org"
+    at: [organism, population]
+    named_in: [{ scheme: wikidata, property: P10585 }]
+    levels: [{ level: rank }]
+    neighbours: [ncbitaxon]
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: ncbitaxon
+    classifies: "living beings by NCBI's taxonomy, as the OBO Foundry builds it: each taxon with its rank and its parent, the names GenBank gives it beside"
+    holding: fetched
+    fetch:
+      from: "http://purl.obolibrary.org/obo/ncbitaxon.obo"
+      reader: obo
+      latest: "the OBO build of NCBI's taxonomy is rebuilt from NCBI's dump (its `data-version` the day); the purl answers with the latest"
+    licence: CC0-1.0
+    release: "the build `2026-07-12` (its data-version)"
+    code_pattern: "^[1-9][0-9]{0,8}$"
+    publisher: "NCBI (the U.S. National Center for Biotechnology Information); the OBO build by the OBO Foundry"
+    url: "https://www.ncbi.nlm.nih.gov/taxonomy"
+    at: [organism, population]
+    named_in: [{ scheme: wikidata, property: P685 }]
+    levels: [{ level: rank }]
+    neighbours: [col]
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: uberon
+    classifies: "the parts of animal bodies across species — organs, tissues, systems and the structures they are made of (UBERON, the cross-species anatomy ontology)"
+    holding: fetched
+    fetch:
+      from: "http://purl.obolibrary.org/obo/uberon.obo"
+      reader: obo
+      latest: "UBERON is released as its repository tags a release (github.com/obophenotype/uberon/releases); the purl answers with the latest"
+    licence: CC-BY-3.0
+    release: "`uberon/releases/2026-10-01`"
+    code_pattern: "^[0-9]{7}$"
+    publisher: "the UBERON project (the OBO Foundry)"
+    url: "https://obophenotype.github.io/uberon/"
+    at: [organ, tissue]
+    named_in: [{ scheme: wikidata, property: P1554 }]
+    levels: [{ level: term }]
+    neighbours: [cl, hao, po]
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: cl
+    classifies: "the kinds of cells of animals (the Cell Ontology)"
+    holding: fetched
+    fetch:
+      from: "http://purl.obolibrary.org/obo/cl.obo"
+      reader: obo
+      latest: "the Cell Ontology is released as its repository tags a release (github.com/obophenotype/cell-ontology/releases); the purl answers with the latest"
+    licence: CC-BY-4.0
+    release: "`cl/releases/2026-06-08`"
+    code_pattern: "^[0-9]{7}$"
+    publisher: "the Cell Ontology project (the OBO Foundry)"
+    url: "https://obophenotype.github.io/cell-ontology/"
+    at: [cell]
+    named_in: [{ scheme: wikidata, property: P7963 }]
+    levels: [{ level: term }]
+    neighbours: [uberon, po]
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: hao
+    classifies: "the parts of the bodies of bees, wasps, ants and sawflies (the Hymenoptera Anatomy Ontology)"
+    holding: fetched
+    fetch:
+      from: "http://purl.obolibrary.org/obo/hao.obo"
+      reader: obo
+      latest: "the Hymenoptera Anatomy Ontology is kept at github.com/hymao/hao; the purl answers with its master copy"
+    licence: CC0-1.0
+    code_pattern: "^[0-9]{7}$"
+    publisher: "the Hymenoptera Anatomy Ontology project (the OBO Foundry)"
+    url: "https://hymao.org"
+    at: [organ, tissue]
+    named_in: [{ scheme: wikidata, property: P9356 }]
+    levels: [{ level: term }]
+    neighbours: [uberon]
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: po
+    classifies: "the parts of plants — organs, tissues and cells — and their stages (the Plant Ontology)"
+    holding: fetched
+    fetch:
+      from: "http://purl.obolibrary.org/obo/po.obo"
+      reader: obo
+      latest: "the Plant Ontology is kept at github.com/Planteome/plant-ontology; the purl answers with its master copy"
+    licence: CC-BY-4.0
+    code_pattern: "^[0-9]{7}$"
+    publisher: "the Planteome project (the OBO Foundry)"
+    url: "https://planteome.org"
+    at: [organ, tissue, cell]
+    named_in: [{ scheme: wikidata, property: P13866 }]
+    levels: [{ level: term }]
+    neighbours: [uberon, cl]
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: chebi
+    classifies: "chemical entities — particles, atoms, molecules, ions and the substances made of them — and their classes (ChEBI)"
+    holding: fetched
+    fetch:
+      from: "http://purl.obolibrary.org/obo/chebi.obo"
+      reader: obo
+      latest: "EMBL-EBI releases ChEBI monthly; the purl answers with the latest"
+    licence: CC-BY-4.0
+    code_pattern: "^[1-9][0-9]{0,6}$"
+    publisher: "EMBL-EBI (the European Bioinformatics Institute)"
+    url: "https://www.ebi.ac.uk/chebi/"
+    at: [elementary-particle, hadron, nucleus, atom, molecule, material]
+    named_in: [{ scheme: wikidata, property: P683 }]
+    levels: [{ level: term }]
+    neighbours: [substances]
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: iucn-get
+    classifies: "ecosystems by the IUCN Global Ecosystem Typology: realms, biomes and ecosystem functional groups"
+    holding: fetched
+    fetch:
+      from: "https://zenodo.org/api/records/10081251/files/map-details.xml/content"
+      reader: iucn-get-maps
+      latest: "the typology's maps are published on Zenodo as versions of one record (10.5281/zenodo.3546513), each with its map-details.xml; the record of version 2.1.3 is 10081251"
+    licence: CC-BY-4.0
+    release: "the maps of version 2.1.3, published `2023-11-08`"
+    code_pattern: "^(T|M|F|S|MT|SF|FM|MFT|TF|SM)([0-9]{1,2}(\\.[0-9]{1,2})?)?$"
+    publisher: "IUCN, the International Union for Conservation of Nature (its Commission on Ecosystem Management)"
+    url: "https://global-ecosystems.org"
+    at: [ecosystem]
+    levels: [{ level: realm }, { level: biome }, { level: group }]
+    neighbours: none
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: etim
+    classifies: "technical products by ETIM's classes — electrical, HVAC, plumbing, building, shipbuilding and machinery products — in their groups"
+    holding: fetched
+    fetch:
+      from: "https://www.etim-international.com/wp-content/uploads/2024/12/ETIM-10.0-ALL-SECTORS-CSV-METRIC-EI-2024-12-05.zip"
+      reader: etim-csv
+      latest: "ETIM International publishes each release of its model in its international English edition (EI) at https://www.etim-international.com/downloads/?_sft_downloadcategory=model-releases, a CSV export among its formats"
+    licence: ODC-By-1.0
+    release: "ETIM 10.0, its international English edition of `2024-12-05`"
+    code_pattern: "^E[CG][0-9]{6}$"
+    publisher: "ETIM International"
+    url: "https://www.etim-international.com"
+    at: [component, device]
+    levels: [{ level: group }, { level: class }]
+    neighbours: [cpv, machine-elements]
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: cpv
+    classifies: "what public bodies buy — supplies, works and services — by the EU's Common Procurement Vocabulary (CPV 2008); a service classifies no body"
+    holding: fetched
+    fetch:
+      from: "http://publications.europa.eu/resource/cellar/1356ebf8-80b9-11ea-bf12-01aa75ed71a1.0001.05/DOC_1"
+      reader: cpv-genericode
+      latest: "the Publications Office keeps the CPV in EU Vocabularies (op.europa.eu/en/web/eu-vocabularies, the dataset cpv), each version a manifestation of its work in the Cellar; its Genericode is the manifestation of type GC"
+    licence: LicenseRef-EU-Commission-Decision-2011-833
+    release: "CPV 2008, the Publications Office's version `20260520-0`"
+    code_pattern: "^[0-9]{8}$"
+    publisher: "the European Commission; the Publications Office of the European Union"
+    url: "https://op.europa.eu/en/web/eu-vocabularies/dataset/-/resource?uri=http://publications.europa.eu/resource/dataset/cpv"
+    at: [organism, material, component, device]
+    named_in: [{ scheme: wikidata, property: P5417 }]
+    levels: [{ level: division }, { level: group }, { level: class }, { level: category }]
+    neighbours: [etim, machine-elements]
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: wikidata
+    classifies: "anything, by its item — a Q-number — read one item at a time from Wikidata's API, its classes through `instance of` and `subclass of`: an item is picked by its class, never by its label"
+    holding: at-authority
+    licence: CC0-1.0
+    release: "live: an item is read when it is looked up, and a garden says when it read it"
+    code_pattern: "^Q[1-9][0-9]{0,11}$"
+    publisher: "Wikidata's contributors (the Wikimedia Foundation)"
+    url: "https://www.wikidata.org"
+    lookup: { api: "https://www.wikidata.org/w/api.php", instance_of: P31, subclass_of: P279 }
+    classes:
+      - { level: organism, codes: [Q16521] }
+      - { level: organ, codes: [Q712378, Q24060707, Q4936952, Q27043950] }
+      - { level: tissue, codes: [Q40397, Q4936952, Q27043950] }
+      - { level: cell, codes: [Q7868, Q189118] }
+      - { level: ecosystem, codes: [Q37813, Q101998] }
+      - { level: material, codes: [Q214609, Q79529, Q43460564, Q37756, Q81163, Q11474, Q169336] }
+      - { level: component, codes: [Q8205328, Q839546, Q1183543, Q11019] }
+      - { level: device, codes: [Q8205328, Q839546, Q1183543, Q11019] }
+    levels: [{ level: item }]
+    neighbours: none
+    sources: "seed/knowledge/SOURCES.md"
+  - scheme: machine-elements
+    classifies: "the machine elements and made parts no open standard classifies whole — a pulley and its sheave, a bearing, a gear, a shaft, a seal, a fastener, a spring — in daftar's own words, each pointing at its Wikidata item and citing the codes ETIM and CPV give it, never their texts"
+    holding: shipped
+    licence: CC-BY-4.0
+    publisher: "daftar (curated; each row in daftar's own words, measured on a test set before it was written)"
+    url: "seed/knowledge/machine-elements.tsv"
+    at: [component, device]
+    levels: [{ level: family }, { level: element }]
+    neighbours: [etim, cpv]
+    sources: "seed/knowledge/SOURCES.md"
 knowledge_scheme_form:
   holding: "shipped | extract | at-authority | fetched — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); held at the publisher and looked up there, checked here only by `code_pattern`; or fetched — each machine downloads the provider's own table (`fetch`) into a cache outside git (bin/fetch.py), under the provider's terms, and reads its codes there; while the release still carries a copy, a machine that has fetched none reads that"
   fetch: "with `fetched`: { from: the provider's own download, reader: how its rows are read, a reader of core/law/formats.yaml `readers` (core/readers.py, bin/fetch.py), latest: how to learn of its latest release, part: where the provider serves its table in parts (a country, a region) — `{part}` in `from`, and the form a part is named in, a regular expression; each part is fetched alone, the parts a garden needs, and read as one table; host: where a machine that installs the provider's file keeps it — read by the reader, unchanged, where this machine has fetched none }"
@@ -265,6 +472,10 @@ knowledge_scheme_form:
   relations: "a registry of relations between its own codes, rows {from, to, rel}, `rel` one of part-of, requires, adjacent (N23); resolved by the `registry_links` rows the garden declares for it"
   labels: "[{language, registry, attribution?}] — its labels in another language: a registry of {code, name} rows, and the words its publisher asks to be printed with them, verbatim (N25)"
   units: "a registry of rows in the form `units_crosswalk_form` — its codes crossed into the law's units and kinds, one row a code, so a value written with one of its codes is read as the law's, and the law's written back with its code (bin/units.py)"
+  at: "the levels of the law (core/law/levels.yaml) whose beings its codes classify: a code of it is said (`classify`) only of a being of a kind at one of them — no taxon of a host, no motor's class of a person (rule bearer); a being of a sayable kind, which has no level, is not refused. Absent, its codes classify beings at any level"
+  named_in: "[{scheme, property}] — another scheme whose items name this one's codes, and the property they are named by (Wikidata's P1554 holds UBERON's): where a finder that found an item there reads this scheme's code"
+  lookup: "with `at-authority`, where and how a code is looked up at its publisher: `api`, the address asked, and the properties that type an item by another — `instance_of`, `subclass_of` (Wikidata's P31, P279)"
+  classes: "[{level, codes}] — for a scheme whose items are typed by its own codes (`lookup`): the codes whose instances and subclasses are beings at each level of the law, by which a finder picks an item by its class, never by its label"
   form: "a form of a profile the garden takes (core/law/profiles.yaml `forms`) whose attributes its rows hold, as columns, beside `code`, `level`, `parent` and `name`: the accounting profile's `chart` makes the scheme a chart of accounts, the knowledge profile's `pattern` a registry of names' templates and its `class` a scheme of classes. Its rows are held to the form"
 # HOW A SCHEME'S CODES CROSS INTO THE LAW'S UNITS AND KINDS (`knowledge_schemes.units`): one row a code, in a registry of
 # its own whose file holds the columns it uses of these. A crossing is daftar's: it names the provider's codes and pairs
@@ -307,3 +518,7 @@ forms:
     labels: optional
     units: optional
     form: optional
+    at: optional
+    named_in: optional
+    lookup: optional
+    classes: optional

@@ -49,6 +49,7 @@ parts, changes).
    python3 test/core.py
    python3 test/core_readings.py
    python3 test/core_nearest.py
+   python3 test/core_beings.py
    python3 test/core_save.py
    python3 test/core_speed.py
    python3 test/core_held.py
