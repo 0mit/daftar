@@ -339,11 +339,14 @@ try:
     leads = json.loads(out) if rc == 0 else []
     q = E['drawings']['waits']
     owed = [x for x in q['leads'] if x['kind'] == 'obligation']
+    # the deposit always; the loan's instalment too once the next 1st falls within its notice, late in a month
     check("queue: the reader's leads are bin/leads.py --json's for them, grouped by what each waits on — Sam's parked "
           "decision, and Ali's deposit as owed to him, by Ali, by how the page calls her; paying it stays hers",
           sorted((x['kind'], x['about']) for x in q['leads']) == sorted((x['kind'], x['about']) for x in leads)
           and ('decision', 'camera-insurance') in [(x['kind'], x['about']) for x in q['leads']]
-          and [(x['clause'], x.get('side'), x.get('owed_by_titles')) for x in owed] == [('deposit-due', 'owed', ['Ali'])],
+          and sorted(x['clause'] for x in owed) == sorted(x['clause'] for x in leads if x['kind'] == 'obligation')
+          and ('deposit-due', 'owed', ['Ali']) in [(x['clause'], x.get('side'), x.get('owed_by_titles')) for x in owed]
+          and all((x.get('side'), x.get('owed_by_titles')) == ('owed', ['Ali']) for x in owed),
           (q, leads))
     sh = (E.get('sheets') or {}).get('camera') or {}
     pay = next((x for r in sh.get('rows', []) if r['verb'] == 'pay' for x in r['statements'] if x['key'] == 'pay#camera'), {})

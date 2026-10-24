@@ -1817,8 +1817,8 @@ keeps a bean's statements as a set (MERGE.md). They stand here, beside how many 
 placed them.
 
 == LEAF SUBSUMPTION ORDERS (declared 2026-08-03, Phase 6) ==
-`merge_field` absorbs a general value into a more precise one where the two are ORDERED: 192.168.0.0/24
-into 192.168.0.0/16, "AlmaLinux 9" into "AlmaLinux 9.8". WHICH keys are ordered that way was decided in
+`merge_field` absorbs a general value into a more precise one where the two are ORDERED: 2001:db8:1::/48
+into 2001:db8::/32, "AlmaLinux 9" into "AlmaLinux 9.8". WHICH keys are ordered that way was decided in
 code by two hardcoded checks on the key's NAME, whose own comment called them "the last hardcoded merge
 knowledge here, and they belong in the vocabulary". They are here now.
 
