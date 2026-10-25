@@ -15,8 +15,8 @@ DAFTAR SHIPS NO ONE ELSE'S TABLE where the provider's terms do not let it: each 
 under the provider's terms, and keeps the provider's file unchanged beside the rows read from it. The cache is this
 machine's, never the garden's: `DAFTAR_STANDARDS_CACHE`, else `%LOCALAPPDATA%\\daftar\\standards` on Windows, else
 `$XDG_CACHE_HOME/daftar/standards` (`~/.cache/daftar/standards`). Each copy is kept under the SHA-256 of the provider's
-file: `<scheme>/<sha-256>/source.<ext>`, `rows.tsv` and `fetched.json` (from where, when, how many rows, and the part
-and the provider's release where it has them). A garden reads a fetched scheme's codes from the newest copy here — of a
+file: `<scheme>/<sha-256>/source.<ext>`, `rows.tsv`, `codes.txt` (its codes sorted, one a line, which a code is looked
+up in) and `fetched.json` (from where, when, how many rows, and the part and the provider's release where it has them). A garden reads a fetched scheme's codes from the newest copy here — of a
 scheme in parts, the newest of each part, as one table (bin/knowledge.py) — and from the release's copy while it carries
 one.
 
@@ -127,6 +127,12 @@ def keep(scheme, data, source, *, part=None, root=ROOT, now=None):
         w = csv.DictWriter(fh, fieldnames=cols, delimiter='\t', lineterminator='\n')
         w.writeheader()
         w.writerows(rows)
+    # ITS CODES, SORTED, ONE A LINE: a code is found by a binary search (bin/knowledge.py), never by reading the rows —
+    # the gate checks one code of a scheme of millions as fast as one of a hundred
+    key = next((r.get('key') for r in _law(root).get('registry_files') or [] if isinstance(r, dict)
+                and r.get('registry') == scheme), None) or 'code'
+    with open(os.path.join(tmp, 'codes.txt'), 'w', encoding='utf-8', newline='') as fh:
+        fh.writelines(c + '\n' for c in sorted({str(r.get(key) or '') for r in rows} - {''}))
     when = (now or datetime.datetime.now().astimezone()).isoformat(timespec='seconds')
     meta = {'scheme': scheme, 'from': source, 'at': when, 'sha256': sha, 'rows': len(rows)}
     meta.update({k: v for k, v in (('part', part), ('release', release)) if v})

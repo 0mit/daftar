@@ -217,6 +217,36 @@ try:
                                 'rung': 'reason'}
           and kinds['helper'] == {'kind': 'helper', 'nature': 'sayable'}
           and rows['levels'][0]['line'] == 'organisation' and again == [], (moved, text, again))
+    # WHOM A RECORD CONCERNS, AND WHAT IT IS ABOUT (core 4.1, D16): `concern` a person's alone, the rest `about`
+    os.makedirs(os.path.join(T, 'mappings'))
+
+    def doc(space, bid, kind, *sts):
+        with open(os.path.join(T, space, bid + '.md'), 'w', encoding='utf-8', newline='') as fh:
+            fh.write(f"---\nbean: {bid}\nkind: {kind}\ntitle: {bid}\nstatements:\n  - say: {{ by: w, at: now }}\n"
+                     + ''.join(f"  - {s}\n" for s in sts) + "---\n\nIt concerns: h1, as words, unchanged.\n")
+    doc('beans', 'p1', 'person')
+    doc('beans', 'h1', 'host')
+    doc('beans', 'm1', 'mind')
+    doc('mappings', 'mp', 'host')
+    doc('beans', 'd1', 'document', 'concern: { of: [h1, p1, mp, m1] }   # the people and the machines')
+    doc('beans', 'd2', 'document', 'concern: { id: c2, by: w, of: [h1] }')
+    doc('beans', 'd3', 'document', 'concern: { of: [p1] }')
+    doc('beans', 'd4', 'document', 'concern: { of: [h1, nobody-here] }')
+    doc('beans', 'd5', 'document', 'concern: { of: [{ someone: person }, self] }')
+    moved = translate.between('4.0', '4.1', T)
+    got = {b: [ln.strip() for ln in open(os.path.join(T, 'beans', b + '.md'), encoding='utf-8').read().split('\n')
+               if ln.strip().startswith(('- concern:', '- about:'))] for b in ('d1', 'd2', 'd3', 'd4', 'd5')}
+    again = translate.between('4.0', '4.1', T)
+    check("the translator moves a garden's `concern` to core 4.1: the persons it names stay (a kind at reason, a mapping's "
+          "being read as a bean's), each other being goes to an `about` beside it with its `by`, and a concern of no person "
+          "is `about` whole, its id kept; one naming what is no bean here stays for the gate; its body unchanged; once",
+          moved == ['beans/d1.md', 'beans/d2.md', 'beans/d5.md']
+          and got['d1'] == ['- concern: { of: [p1, m1] }   # the people and the machines', '- about: { of: [h1, mp] }']
+          and got['d2'] == ['- about: { id: c2, by: w, of: [h1] }'] and got['d3'] == ['- concern: { of: [p1] }']
+          and got['d4'] == ['- concern: { of: [h1, nobody-here] }']
+          and got['d5'] == ['- concern: { of: [{ someone: person }] }', '- about: { of: [self] }']
+          and 'It concerns: h1, as words' in open(os.path.join(T, 'beans', 'd1.md'), encoding='utf-8').read()
+          and again == [], (moved, got, again))
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

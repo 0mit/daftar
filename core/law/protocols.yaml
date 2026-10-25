@@ -200,6 +200,24 @@ protocols:
     default_ports: [161, 162]
     plane: management
     meaning: "Simple Network Management Protocol: a being read, and sometimes written, by its operator."
+  - protocol: rdp
+    technology: rdp
+    layer: application
+    transport: tcp
+    default_ports: [3389]
+    meaning: "the Remote Desktop Protocol: one host's desktop shown, and driven, from another."
+  - protocol: ldap
+    technology: ldap
+    layer: application
+    transport: tcp
+    default_ports: [389]
+    meaning: "the Lightweight Directory Access Protocol: a directory's entries read and written — the accounts and groups a domain holds."
+  - protocol: rtsp
+    technology: rtsp
+    layer: application
+    transport: tcp
+    default_ports: [554]
+    meaning: "the Real-Time Streaming Protocol: a stream asked for, played, paused and stopped — a camera's video among them; the media itself rides beside it."
   - protocol: ethernet
     technology: ethernet
     layer: link

@@ -132,6 +132,8 @@ good:
   - { name: "a document's size is its own, and the machine that carries it says what it can hold", bean: y33, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: information, value: { count: "2", unit: MBy } } }, { hold: { by: nas, of: { count: "2", unit: TBy } } } ] }
   # the ladder (core 4.0): matter in an organisation, an animal's work, a code of a scheme at its positions
   - { name: "matter in bulk is part of a machine: its organisation is made of it", bean: y46, kind: host, statements: [ { say: { by: sam, at: now } }, { part: { by: { someone: lump }, of: self } } ] }
+  # what a sayable is about, and whom it concerns (core 4.1, D16)
+  - { name: "a document is about a machine and a disk, and concerns a person", bean: y48, kind: document, statements: [ { say: { by: sam, at: now } }, { about: { of: [nas, disk] } }, { concern: { of: [ben] } } ] }
   - { name: "a nest comes through its bird: what the living make comes through the living", bean: y47, kind: nest, statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [ { someone: bird } ] } } ] }
   - { name: "a contract's amount, and a person's weight in newtons", bean: y32, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "100", unit: XTS } } }, { measure: { of: ben, as: weight, value: { count: "690", unit: N } } } ] }
   - { name: "a required role nobody said is `unknown`", bean: y1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: unknown, of: { count: "1", unit: XTS } } } ] }
@@ -212,6 +214,9 @@ bad:
   - { rule: form,        bean: x1f, kind: spaceship, statements: [ { say: { by: sam, at: now } } ] }
   - { rule: form,        bean: x1g, kind: document, header: { status: active }, statements: [ { say: { by: sam, at: now } } ] }
   - { rule: valency, name: "a bird gives no word: `say` takes a body at reason", says: "only at reason", bean: x3s, kind: document, statements: [ { say: { by: { someone: bird }, at: now } } ] }
+  - { rule: valency, name: "a record concerns a person: a machine is what it is about", says: "a body fills this role only at reason (a person); nas is a host", bean: x3u, kind: document, statements: [ { say: { by: sam, at: now } }, { concern: { of: [ben, nas] } } ] }
+  - { rule: valency, name: "an organisation is no person a record concerns", says: "this role takes a being that is body", bean: x3v, kind: document, statements: [ { say: { by: sam, at: now } }, { concern: { of: [hpe] } } ] }
+  - { rule: valency, name: "what is about a being is a sayable: a machine is about nothing", says: "this role takes a being that is sayable; nas is body", bean: x3w, kind: document, statements: [ { say: { by: sam, at: now } }, { about: { by: nas, of: [disk] } } ] }
   - { rule: valency,     bean: x2, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { of: { count: "1", unit: XTS } } } ] }
   - { rule: valency,     bean: x3, kind: document, statements: [ { say: { by: nas, at: now } } ] }
   - { rule: valency,     bean: x3b, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: [ada, ben], of: "1" } } ] }
@@ -322,7 +327,7 @@ clauses:
     - { says: "once the garden holds a bean, it names its gardener", garden: [no-gardener] }
     - { says: "A grant is to a being or to every member of a reading", bad: [x65, x66, x67] }
   valency:
-    - { says: "each required role is filled", bad: [x2, x3s, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
+    - { says: "each required role is filled", bad: [x2, x3s, x3u, x3v, x3w, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
     - { says: "a role takes a list only where its row says `many`", bad: [x3b] }
   knowing:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
@@ -351,7 +356,7 @@ clauses:
     - { says: "a quantity is stated only of what", bad: [x12c, x12e, x12f, x12h] }
     - { says: "A mass is a body's", bad: [x12, x12b] }
     - { says: "information and money are what is carried", bad: [x12d, x12g] }
-    - { says: "A code of a scheme that names the positions its codes classify", suite: [test/cases.py] }
+    - { says: "A code of a scheme that names the positions its codes classify", suite: [test/cases.py, test/core_beings.py] }
   frame:
     - { says: "a position is in a declared system", bad: [x13, x13b, x13c, x13d, x13e] }
     - { says: "a day is reckoned in the garden's `zone`, and `now` is written at `at` alone", bad: [x13f] }

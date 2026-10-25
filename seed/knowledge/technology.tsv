@@ -18,7 +18,7 @@ wireguard	WireGuard	protocol	Jason A. Donenfeld / the WireGuard project	https://
 openssh	OpenSSH	software	the OpenBSD project	https://www.openssh.com/manual.html	https://www.openssh.com/	0612	2522;2529
 postgresql	PostgreSQL	software	The PostgreSQL Global Development Group	https://www.postgresql.org/docs/current/	https://www.postgresql.org/	0612	2521;2522
 odoo	Odoo	software	Odoo S.A.	https://www.odoo.com/documentation/19.0/	https://www.odoo.com/	0613;0413	2512;2514;2511
-python	Python	software	Python Software Foundation	https://docs.python.org/3/	https://www.python.org/	0613	2512;2514
+python	Python	programming-language	Python Software Foundation	https://docs.python.org/3/	https://www.python.org/	0613	2512;2514
 git	Git	software	the Git project	https://git-scm.com/doc	https://git-scm.com/	0613	2512;2522
 rsync	rsync	software	the rsync project	https://download.samba.org/pub/rsync/rsync.1	https://rsync.samba.org/	0612	2522;3511
 slackware	Slackware Linux	operating-system	Slackware Linux, Inc.	https://docs.slackware.com/	http://www.slackware.com/	0612	2522
@@ -90,3 +90,41 @@ web-app-manifest	Web Application Manifest	format	W3C	https://www.w3.org/TR/appma
 service-workers	Service Workers	protocol	W3C	https://www.w3.org/TR/service-workers/	https://www.w3.org/	0613	2513;2514
 opentelemetry	OpenTelemetry	software	the OpenTelemetry authors (CNCF)	https://opentelemetry.io/docs/specs/semconv/	https://opentelemetry.io/	0612;0613	2522;2512
 bash	GNU Bash	software	the GNU Project	https://www.gnu.org/software/bash/manual/	https://www.gnu.org/software/bash/	0613	2512;2522
+avr	AVR (8-bit microcontrollers)	microcontroller	Microchip Technology (formerly Atmel)	https://ww1.microchip.com/downloads/en/DeviceDoc/AVR-InstructionSet-Manual-DS40002198.pdf	https://www.microchip.com/en-us/products/microcontrollers/8-bit-mcus/avr-mcus	0714	2152;3114
+avr-xmega	AVR XMEGA	microcontroller	Microchip Technology (formerly Atmel)	https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-8331-8-and-16-bit-AVR-Microcontroller-XMEGA-AU_Manual.pdf	https://www.microchip.com/en-us/products/microcontrollers/8-bit-mcus/avr-mcus	0714	2152;3114
+arm-cortex-m	Arm Cortex-M	microcontroller	Arm	https://support.arm.com/documentation/ddi0553/latest/	https://www.arm.com/architecture/cpu/m-profile	0714	2152;3114
+c	C (ISO/IEC 9899)	programming-language	ISO/IEC JTC 1/SC 22/WG 14	https://www.open-std.org/jtc1/sc22/wg14/www/projects	https://www.open-std.org/jtc1/sc22/wg14/	0613	2512;2152
+cpp	C++ (ISO/IEC 14882)	programming-language	ISO/IEC JTC 1/SC 22/WG 21	https://www.open-std.org/jtc1/sc22/wg21/docs/papers/	https://isocpp.org/	0613	2512;2152
+csharp	C#	programming-language	Microsoft (ECMA-334)	https://learn.microsoft.com/en-us/dotnet/csharp/	https://learn.microsoft.com/en-us/dotnet/csharp/	0613	2512;2514
+php	PHP	programming-language	The PHP Group	https://www.php.net/manual/en/	https://www.php.net/	0613	2513;2512
+sql	SQL (ISO/IEC 9075)	programming-language	ISO/IEC JTC 1/SC 32	https://www.iso.org/standard/76583.html	https://www.iso.org/committee/45020.html	0612;0613	2521;2512
+dotnet	.NET	framework	Microsoft and the .NET Foundation	https://learn.microsoft.com/en-us/dotnet/	https://dotnet.microsoft.com/	0613	2512;2514
+wpf	Windows Presentation Foundation (WPF)	framework	Microsoft	https://learn.microsoft.com/en-us/dotnet/desktop/wpf/	https://github.com/dotnet/wpf	0613	2512;2514
+react	React	framework	Meta Platforms and the React community	https://react.dev/learn	https://react.dev/	0613	2513;2512
+revit-api	Revit API	api	Autodesk	https://help.autodesk.com/view/RVT/2025/ENU/?guid=Revit_API_Revit_API_Developers_Guide_html	https://aps.autodesk.com/	0613;0731	2512;2142
+rs-485	RS-485 (TIA-485-A)	physical-layer	TIA (the Telecommunications Industry Association)	https://tiaonline.org/standards/	https://tiaonline.org/	0714	2152;3113
+rs-232	RS-232 (TIA-232-F)	physical-layer	TIA (the Telecommunications Industry Association)	https://tiaonline.org/standards/	https://tiaonline.org/	0714	2152;3114
+i2c	I2C-bus	serial-interface	NXP Semiconductors (from Philips)	https://www.nxp.com/docs/en/user-guide/UM10204.pdf	https://www.nxp.com/	0714	2152;3114
+uart	UART (asynchronous serial)	serial-interface	no one owner: the 16550 UART, as Texas Instruments documents it	https://www.ti.com/lit/ds/symlink/tl16c550d.pdf	https://www.ti.com/	0714	2152;3114
+knx	KNX (ISO/IEC 14543-3)	protocol	KNX Association	https://www.knx.org/knx-en/for-professionals/What-is-KNX/A-brief-introduction/	https://www.knx.org/	0714;0713	2151;3113
+zigbee	Zigbee	protocol	Connectivity Standards Alliance	https://csa-iot.org/all-solutions/zigbee/	https://csa-iot.org/	0714	2152;2153
+z-wave	Z-Wave	protocol	Z-Wave Alliance	https://z-wavealliance.org/z-wave-specifications/	https://z-wavealliance.org/	0714	2152;2153
+gsm	GSM	protocol	3GPP (from ETSI)	https://www.3gpp.org/specifications-technologies	https://www.3gpp.org/	0714	2153;2152
+rfid	RFID (ISO/IEC 18000)	protocol	ISO/IEC JTC 1/SC 31	https://www.iso.org/committee/45332.html	https://www.iso.org/committee/45332.html	0714	2152;3114
+websocket	The WebSocket Protocol	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc6455	https://www.ietf.org/	0612;0613	2512;2514
+bcf	BIM Collaboration Format (BCF)	format	buildingSMART International	https://github.com/buildingSMART/BCF-XML	https://www.buildingsmart.org/	0613;0731	2512;2142
+embedded-linux	embedded Linux	operating-system	the Linux kernel community; the Yocto Project builds embedded distributions of it	https://docs.yoctoproject.org/	https://www.yoctoproject.org/	0613;0714	2152;2512
+cisco-ios	Cisco IOS	operating-system	Cisco Systems	https://www.cisco.com/c/en/us/support/ios-nx-os-software/index.html	https://www.cisco.com/c/en/us/products/ios-nx-os-software/index.html	0612	2523;3513
+redis	Redis	software	Redis Ltd.	https://redis.io/docs/latest/	https://redis.io/	0612;0613	2521;2512
+asterisk	Asterisk	software	Sangoma and the Asterisk project	https://docs.asterisk.org/	https://www.asterisk.org/	0612	2523;3513
+cisco-cucm	Cisco Unified Communications Manager	software	Cisco Systems	https://www.cisco.com/c/en/us/support/unified-communications/unified-communications-manager-callmanager/series.html	https://www.cisco.com/c/en/us/products/unified-communications/unified-communications-manager-callmanager/index.html	0612	2523;2153
+llama-cpp	llama.cpp	software	ggml.ai and the llama.cpp contributors	https://github.com/ggml-org/llama.cpp/tree/master/docs	https://github.com/ggml-org/llama.cpp	0613	2512;2519
+ollama	Ollama	software	Ollama	https://docs.ollama.com/	https://ollama.com/	0613	2512;2519
+claude-code	Claude Code	tool	Anthropic	https://docs.claude.com/en/docs/claude-code/overview	https://www.claude.com/product/claude-code	0613	2512;2514
+bascom-avr	BASCOM-AVR	tool	MCS Electronics	https://www.mcselec.com/	https://www.mcselec.com/	0613;0714	2152;3114
+atmel-studio	Microchip Studio (formerly Atmel Studio)	tool	Microchip Technology	https://onlinedocs.microchip.com/	https://www.microchip.com/en-us/tools-resources/develop/microchip-studio	0613;0714	2152;3114
+altium-designer	Altium Designer	tool	Altium	https://www.altium.com/documentation/altium-designer	https://www.altium.com/altium-designer	0714	2152;3114
+proteus	Proteus Design Suite	tool	Labcenter Electronics	https://www.labcenter.com/tutorials/	https://www.labcenter.com/	0714	2152;3114
+vite	Vite	tool	VoidZero and the Vite contributors	https://vite.dev/guide/	https://vite.dev/	0613	2513;2512
+rdp	Remote Desktop Protocol (RDP)	protocol	Microsoft (Open Specifications)	https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-rdpbcgr/5073f4ed-1e93-45e1-b039-6e30c385867c	https://learn.microsoft.com/en-us/openspecs/	0612	2522;3512
+ldap	Lightweight Directory Access Protocol (LDAP)	protocol	IETF	https://datatracker.ietf.org/doc/html/rfc4511	https://www.ietf.org/	0612	2522;2523

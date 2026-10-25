@@ -251,6 +251,28 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.1** (2026-10-25, daftar v4.1.0, human-ratified rule-change) — **the beings' schemes, and the catalogues**
+  (the beings' design, ratified by the operator on 2026-10-25, the needs met there; the next machinery's design, VI.2 to
+  VI.5, ratified on 2026-10-24). MINOR. The open standards of known beings are schemes of the law, each `at` the
+  positions its codes classify, as the ladder's design ratified them: `col`, the Catalogue of Life's eXtended Release
+  (leading), and `ncbitaxon` at organism; `uberon`, `hao` and `po` at organ and tissue; `cl` at cell; `chebi` at
+  molecule and material; `iucn-get`, the IUCN typology's functional groups, at ecosystem; `etim` and `cpv` at device and
+  component — each fetched by every machine and never shipped, its licence quoted first-hand in
+  seed/knowledge/SOURCES.md; and `wikidata`, held at its authority and checked by its form. Five readers, one a format:
+  `obo`, `coldp`, `etim-csv`, `cpv-genericode`, `iucn-get-maps`. A fetched copy keeps its codes sorted (`codes.txt`), and
+  the gate finds a code there by a binary search, so a scheme of millions costs what a hundred does. One finder,
+  `bin/knowledge.py propose <bean> | --at <position> <words>`, proposes codes from the schemes held here whose `at` names
+  a position the being's kind holds, and writes nothing: a person picks. It asks no authority anything — no being's
+  words go to Wikidata, which this garden grants nothing. The technology catalogue gains 38 rows — ollama, llama.cpp,
+  Claude Code, the works register's 34 with their occupations, rdp and ldap — and the categories microcontroller,
+  programming-language (Python among them), framework, api, physical-layer, serial-interface and tool. protocols.yaml
+  gains rdp, ldap and rtsp, each with its default port and transport. A verb `about` says what a sayable speaks of, and
+  `concern` is narrowed to a person — a body at reason —, as its meaning always said: a garden's `concern` statements
+  are split when it moves (core/translate.py `between`), the persons staying in `concern` and every other being going
+  to `about`. A debt the ledger reads that no clause asks is a course too, the archetype's fourth source: owed, no day
+  said, drawn open (bin/seq.py). In code: core/readers.py, bin/fetch.py, core/standards.py, bin/knowledge.py,
+  core/translate.py's step for 4.1, bin/seq.py, the view's course line; bin/review.py reads a date inside an address
+  as a file's name, not a story.
 - **core 4.0** (2026-10-25, daftar v4.0.0, human-ratified rule-change) — **the ladder by its frame and four lines**
   (the ladder's design, ratified by the operator on 2026-10-25, every need as recommended, an animal's work as he
   amended it: "Nature and organic has privilege"). MAJOR: a kind's row and `describe`'s columns change their form, and

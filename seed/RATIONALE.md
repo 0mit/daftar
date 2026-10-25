@@ -5032,6 +5032,19 @@ WHOM A RECORD CONCERNS IS NOT WHO OWNS IT. A certificate about a client is the p
 data. Erasure, a person's request to be shown what is kept, and the derived sensitivity all ask the same question,
 so it is asked of one term.
 
+A PERSON'S ALONE (core 4.1). Its meaning always said a person, and its row took any being: of the 23 beings the
+garden's `concern` statements named when it was measured, 22 were no person — hosts, a product, procedures a design
+spoke of —, since the law had no word for what a sayable is about and the nearest verb was bent to say it. A role's
+row is where a meaning is held (valency), so `of` takes a body at reason, and what is no person goes to `about`. A
+garden's statements are split when it moves, never refused.
+
+## core/law/verbs.yaml: verbs[about]
+
+WHAT A SAYABLE SPEAKS OF IS NOT WHOM IT IS PERSONAL TO. A design about a machine, a session's report on six hosts, a
+procedure for a product: each is about beings, and none is any person's data. Said with `concern`, they made a
+record personal that was not, and hid the few that were among them. `about` holds the rest, and derives nothing: a
+person a sayable speaks of, it concerns, and that is said with `concern`.
+
 ## core/law/verbs.yaml: verbs[grant]
 
 (std-vocab 32: `terms[grants]`)
@@ -6226,6 +6239,27 @@ a village, a district, a locality — by Photon's own layers, with their names i
 Persian and Turkish: some seventy thousand for Iran, of a million and more that also hold every street and house,
 which stay the search's. The map is a capture of its contributors' truth (ODbL 1.0), and its element ids establish no
 identity.
+
+## core/law/registries.yaml: knowledge_schemes[col]
+
+WHAT KIND OF ORGANISM, ORGAN OR PART A BEING IS, IS A CODE OF A SCHEME, NEVER A KIND (core 4.1). The law names no
+heart, no bee and no pulley: the standards that do are the publishers', and the law points at them. Each of the open
+schemes of known beings was measured first on a test set of 126 generic definitions — 68 at a position of the ladder,
+58 processes, checks and designations at none — and taken as each licence allows: fetched by every machine from its
+provider, never shipped, the licence quoted from its source. The Catalogue of Life leads for organisms, NCBI's taxonomy
+beside it; UBERON, the Hymenoptera and Plant ontologies hold anatomy, the Cell Ontology cells, ChEBI substances, the
+IUCN typology ecosystems, ETIM and the CPV made things. Each names the positions its codes classify (`at`), so the gate
+refuses a taxon of a host and an organ's code of a material, and the finder asks a scheme only for what it classifies:
+by name alone, UBERON answers `piston` and NCBI answers a nut with a taxon. The made line is held only in part — the
+finer parts of an assembly and a part's features by no open scheme — and what fills it waits for daftar's own
+description of mechanics.
+
+## core/law/registries.yaml: knowledge_schemes[wikidata]
+
+ITS CODES CHECKED HERE, NOTHING ASKED THERE (core 4.1). Wikidata's structured data is CC0 and holds most of what the
+open standards hold between them, and a code of it may be written beside theirs. Looking a being up there sends its
+words to a party outside the garden, which only the gardener grants (the flow law's `sent-out`); this garden grants
+none, so the finder holds no way to ask, and a code of it is checked by its form alone.
 
 ## core/law/registries.yaml: knowledge_scheme_form.fetch
 

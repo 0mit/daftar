@@ -2165,7 +2165,95 @@ def ladder_vocab(root):
     return ['VOCAB.md']
 
 
-BETWEEN = (('3.2', url_remotes), ('4.0', ladder_vocab))
+# WHAT A SAYABLE IS ABOUT, AND WHOM IT CONCERNS (core 4.1, D16): `concern` named any being, and most of what it named was
+# no person — a host, a product, a procedure a design spoke of. It is a person's now, and the rest is `about`.
+CONCERN = re.compile(r'^(?P<lead>\s*-\s+)concern:\s*(?P<roles>\{.*\})(?P<gap>\s*)(?P<tail>#.*)?$')
+_BARE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.:/-]*$')
+
+
+def _flow(roles):
+    """A statement's roles written as the garden writes one: `{ by: x, of: [a, b] }`, each value bare where it can be."""
+    def one(v):
+        if isinstance(v, list):
+            return '[' + ', '.join(one(x) for x in v) + ']'
+        if isinstance(v, dict):
+            return '{ ' + ', '.join(f"{k}: {one(x)}" for k, x in v.items()) + ' }'
+        s = str(v)
+        return s if _BARE.match(s) and s not in ('true', 'false', 'null', 'yes', 'no') else json.dumps(s, ensure_ascii=False)
+    return '{ ' + ', '.join(f"{k}: {one(v)}" for k, v in roles.items()) + ' }'
+
+
+def concern_about(root):
+    """[path]: each `concern` of a bean, in place, as core 4.1 reads it — the persons it names stay in `concern`, and
+    each other being it names goes to an `about` beside it, with the same `by`; a concern that names no person becomes
+    `about` whole, its id kept. A being is a person where its kind is at the rung reason (the law's `at_rung`): a bean
+    of this garden by its kind, `self` by the bean's own, `{ someone: <kind> }` by that kind. A concern sealed (`held`)
+    is left as it is, and so is one whose `of` names what is no bean here: the gate names it."""
+    from core.law import Law
+    vocab = os.path.join(root, 'VOCAB.md')
+    own = []
+    if os.path.isfile(vocab):
+        with open(vocab, encoding='utf-8') as fh:
+            fm, _b = dmparse.split_front_matter(fh.read())
+        own = [('VOCAB.md', dmparse.loads(fm) or {})] if fm else []
+    law = Law.load(*own)
+    beans = {}
+    for d in DOCUMENTS:                           # a being is a bean or a mapping, as the one garden model lists them
+        for f in _names(root, d):
+            with open(os.path.join(root, d, f), encoding='utf-8', newline='') as fh:
+                beans[os.path.join(d, f)] = fh.read()
+    kinds = {}
+    for f, text in beans.items():
+        m = re.match(r'(?s)---\r?\n(.*?)\r?\n---', text)
+        k = re.search(r'(?m)^kind:\s*(\S+)\s*$', m.group(1)) if m else None
+        b = re.search(r'(?m)^bean:\s*(\S+)\s*$', m.group(1)) if m else None
+        if k and b:
+            kinds[b.group(1).strip('"\'')] = k.group(1).strip('"\'')
+
+    def person(x, me):
+        kind = kinds.get(me) if x == 'self' else kinds.get(x) if isinstance(x, str) else \
+            x.get('someone') if isinstance(x, dict) else None
+        if kind is None or kind not in law.kinds:
+            return None
+        return (law.kinds[kind] or {}).get('nature') == 'body' and law.at_rung(kind, 'reason')
+
+    changed = []
+    for f, text in beans.items():
+        m = re.match(r'(?s)(---\r?\n)(.*?)(\r?\n---)', text)
+        if not m or 'concern:' not in m.group(2):
+            continue
+        me = os.path.basename(f)[:-3] if f.endswith('.md') else os.path.basename(f)
+        nl = '\r\n' if '\r\n' in m.group(2) else '\n'
+        out, moved = [], False
+        for line in m.group(2).split(nl):
+            c = CONCERN.match(line)
+            roles = yaml.safe_load(c.group('roles')) if c else None
+            if not c or not isinstance(roles, dict) or 'held' in roles or 'of' not in roles:
+                out.append(line)
+                continue
+            of = roles['of'] if isinstance(roles['of'], list) else [roles['of']]
+            said = [person(x, me) for x in of]
+            if None in said or all(said):
+                out.append(line)
+                continue
+            tail = (c.group('gap') + c.group('tail')) if c.group('tail') else ''
+            people = [x for x, p in zip(of, said) if p]
+            things = [x for x, p in zip(of, said) if not p]
+            if people:
+                out.append(c.group('lead') + 'concern: ' + _flow(dict(roles, of=people)) + tail)
+                rest = {k: v for k, v in roles.items() if k in ('by', 'at', 'note')}
+                out.append(c.group('lead') + 'about: ' + _flow(dict(rest, of=things)))
+            else:
+                out.append(c.group('lead') + 'about: ' + _flow(dict(roles, of=things)) + tail)
+            moved = True
+        if moved:
+            with open(os.path.join(root, f), 'w', encoding='utf-8', newline='') as fh:
+                fh.write(m.group(1) + nl.join(out) + m.group(3) + text[m.end():])
+            changed.append(f.replace(os.sep, '/'))
+    return changed
+
+
+BETWEEN = (('3.2', url_remotes), ('4.0', ladder_vocab), ('4.1', concern_about))
 
 
 def between(have, gives, root):

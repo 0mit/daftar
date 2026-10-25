@@ -219,9 +219,15 @@ verbs:
     home: knowledge
   - verb: concern
     meaning: "to be about a person: whom a record is personal to"
-    roles: { by: { shape: being }, of: { shape: being, many: true } }
+    roles: { by: { shape: being }, of: { shape: being, many: true, nature: [body], rung: reason } }
     required: [of]
     replaces: [about]
+    home: core
+  - verb: about
+    meaning: "to be about a being: what a sayable speaks of — a host, a product, a procedure, a design; a person it speaks of, it concerns (`concern`)"
+    roles: { by: { shape: being, nature: [sayable] }, of: { shape: being, many: true } }
+    required: [of]
+    replaces: []
     home: core
   - verb: rate
     meaning: "to say how much harm a being can do a person if it leaves the garden, above what the engine derives"

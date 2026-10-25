@@ -141,6 +141,7 @@ verbs:reckon	calculer	calculus (a pebble): a reckoning declared, read each time 
 verbs:pin	fixer	fixus (fastened): the moment and the commit a reading was read at, fixed; épingler (to pin — the image, not the act)	proposed	agent (claude opus-5.5), by hand
 verbs:classify	classer	classis (a division of the Roman people): a being set in its class by a code of a scheme	proposed	agent (claude opus-5.5), by hand
 verbs:concern	concerner	concernere (to sift together): the person a record is about — la personne concernée, the data subject of French data protection	proposed	agent (claude opus-5.5), by hand
+verbs:about	porter sur	porter sur (to bear on): ce sur quoi porte un document; the person concerned is concerner	proposed	agent (claude opus-5.5), by hand
 verbs:rate	évaluer	ex + valere (to draw out the worth): how much harm a being can do a person if it leaves the garden	proposed	agent (claude opus-5.5), by hand
 verbs:fail	défaillir	de + fallere (to fall short): a way a being can fail, or is failing — défaillance, the failure of a mode de défaillance	proposed	agent (claude opus-5.5), by hand
 verbs:repair	réparer	reparare (to make ready again): to remedy a failure, where the fix lives	proposed	agent (claude opus-5.5), by hand

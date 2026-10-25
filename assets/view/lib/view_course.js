@@ -24,6 +24,7 @@
     }
     var what = c.source === 'clause' ? t.say('course-clause', {what: c.clause || c.id})
       : c.source === 'need' ? t.say('course-need', {what: c.id})
+      : c.source === 'debt' ? t.say('course-debt', {})
       : (c.walk_title || c.walk || c.id);
     var when = c.due && c.step === 'ahead' ? h`<span class="eg-course-when">${t.say('course-due', {})} ${w.moment.show(String(c.due), {style: 'long', relative: true})}</span>`
       : c.at && w.moment.parse(String(c.at)) ? h`<span class="eg-course-when">${w.moment.show(String(c.at), {style: 'long', relative: true})}</span>` : '';
