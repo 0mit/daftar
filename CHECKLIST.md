@@ -64,7 +64,9 @@ show.
       — a document's, an agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a
       mass of its own, a single molecule a temperature, a machine its bytes or a body money of its own is refused. A
       code of a scheme that names the positions its codes classify (`at`) is said only of a being whose kind holds one
-      of them, each on its own line: a taxon of an organism, never of a host.
+      of them, each on its own line: a taxon of an organism, never of a host. A concept (a code of a scheme of the form
+      `concept`) is said only of a being its pattern's root can fit by what is drawn of it: a device's concept never of
+      one body, one body's never of a device, a body's own never of a fiat part.
 - [ ] **frame** — A position is in a declared system, in its one form, and finds its other half by its complement; a day
       is reckoned in the garden's `zone`, and `now` is written at `at` alone.
 - [ ] **names** — A name its namespace gives once names one being. A garden's id is twelve hexadecimal digits, and never
@@ -154,9 +156,10 @@ show.
       one side of a chart to no more; each being a chart's account stands for is one the garden holds; and a match names
       payments whose amounts agree, each matched once in an entity's books; a scheme of the knowledge profile holds each
       row to its form — names' templates (`form: pattern`), classes (`form: class`, with no cycle among its codes'
-      parents), policies (`form: keep`) and schemas (`form: schema`) — a garden's own grouping takes a name the law's do
-      not and is read as a reading of the closed list, and a garden's own risk is resolved by ways of keeping properties
-      of the law, held only where it takes the storage profile.
+      parents), concepts (`form: concept`, each pattern in the core's compliances, pairs and closures, and no two of one
+      signature), policies (`form: keep`) and schemas (`form: schema`) — a garden's own grouping takes a name the law's
+      do not and is read as a reading of the closed list, and a garden's own risk is resolved by ways of keeping
+      properties of the law, held only where it takes the storage profile.
 <!-- the end of the rules written from the law -->
 
 **The commit's own rules**, which only a commit can show:

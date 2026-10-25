@@ -44,6 +44,7 @@ registry_files:
   - { registry: iucn-get, key: code }
   - { registry: etim, key: code }
   - { registry: cpv, key: code }
+  - { registry: made, file: "seed/knowledge/made.yaml", key: code, format: yaml }
 knowledge_schemes:
   - scheme: isced-f-2013
     classifies: "fields of knowledge (education and training)"
@@ -433,6 +434,17 @@ knowledge_schemes:
     levels: [{ level: item }]
     neighbours: none
     sources: "seed/knowledge/SOURCES.md"
+  - scheme: made
+    classifies: "made bodies by what each is — a form, what a body is by its own form (an O-ring, a circlip, a deep groove ball bearing) — and by what each does among its neighbours — a role, read from its joints (a rod seal, a gland, a hub): each a concept, its pattern in the core's basic set with its limits (the knowledge profile's form `concept`)"
+    holding: shipped
+    licence: "CC-BY-4.0"
+    publisher: "daftar (its own words; the codes Wikidata, ETIM and CPV give each concept cited beside it)"
+    url: "seed/knowledge/made.yaml"
+    at: [device, component]
+    levels: [{ level: form }, { level: role }]
+    neighbours: [etim, cpv, wikidata]
+    sources: "seed/knowledge/SOURCES.md"
+    form: concept
 knowledge_scheme_form:
   holding: "shipped | extract | at-authority | fetched — how its codes are held: shipped with the release in seed/knowledge/; a garden's own extract in extracts/, each edit a journalled write and not a RULE-CHANGE (F9); held at the publisher and looked up there, checked here only by `code_pattern`; or fetched — each machine downloads the provider's own table (`fetch`) into a cache outside git (bin/fetch.py), under the provider's terms, and reads its codes there; while the release still carries a copy, a machine that has fetched none reads that"
   fetch: "with `fetched`: { from: the provider's own download, reader: how its rows are read, a reader of core/law/formats.yaml `readers` (core/readers.py, bin/fetch.py), latest: how to learn of its latest release, part: where the provider serves its table in parts (a country, a region) — `{part}` in `from`, and the form a part is named in, a regular expression; each part is fetched alone, the parts a garden needs, and read as one table; host: where a machine that installs the provider's file keeps it — read by the reader, unchanged, where this machine has fetched none }"
@@ -444,7 +456,7 @@ knowledge_scheme_form:
   labels: "[{language, registry, attribution?}] — its labels in another language: a registry of {code, name} rows, and the words its publisher asks to be printed with them, verbatim (N25)"
   units: "a registry of rows in the form `units_crosswalk_form` — its codes crossed into the law's units and kinds, one row a code, so a value written with one of its codes is read as the law's, and the law's written back with its code (bin/units.py)"
   at: "the positions of the ladder whose beings its codes classify, on any line but the frame (core/law/levels.yaml, core.yaml `levels`): a code of it is said (`classify`) only of a being whose kind holds one of them, each compared on its own line — no taxon of a host, no motor's class of a person, no organ's code of a material (rule bearer). Absent, its codes classify beings of any kind"
-  form: "a form of a profile the garden takes (core/law/profiles.yaml `forms`) whose attributes its rows hold, as columns, beside `code`, `level`, `parent` and `name`: the accounting profile's `chart` makes the scheme a chart of accounts, the knowledge profile's `pattern` a registry of names' templates and its `class` a scheme of classes. Its rows are held to the form"
+  form: "a form of a profile the garden takes (core/law/profiles.yaml `forms`) whose attributes its rows hold, as columns, beside `code`, `level`, `parent` and `name`: the accounting profile's `chart` makes the scheme a chart of accounts, the knowledge profile's `pattern` a registry of names' templates, its `class` a scheme of classes and its `concept` a scheme of concepts, each a pattern of bodies and their joints. Its rows are held to the form"
 # HOW A SCHEME'S CODES CROSS INTO THE LAW'S UNITS AND KINDS (`knowledge_schemes.units`): one row a code, in a registry of
 # its own whose file holds the columns it uses of these. A crossing is daftar's: it names the provider's codes and pairs
 # each with the law's own rows, and the provider's table stays where its holding keeps it. The law's proof holds every

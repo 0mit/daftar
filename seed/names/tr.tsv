@@ -142,6 +142,7 @@ verbs:pin	sabitleme	sabit (Arabic thābit: fixed)	proposed	agent (claude opus-5.
 verbs:classify	sınıflandırma	sınıf (Arabic ṣinf: a kind)	proposed	agent (claude opus-5.5), by hand
 verbs:concern	ilgilendirme	ilgi (a bond, an interest)	proposed	agent (claude opus-5.5), by hand
 verbs:about	hakkında	hak (what is due, the truth of a thing) + -ında: what a record speaks of	proposed	agent (claude opus-5.5), by hand
+verbs:join	birleşme	bir (one) + -leş- (to become): two bodies made one pair at a feature of each; eklem, a joint of the body	proposed	agent (claude opus-5.5), by hand
 verbs:rate	hassasiyet derecesi	hassas (Arabic: sensitive) + derece (a degree)	proposed	agent (claude opus-5.5), by hand
 verbs:fail	arıza	Arabic ʿāriḍa (what befalls)	proposed	agent (claude opus-5.5), by hand
 verbs:repair	onarım	onarmak (to mend, to make well)	proposed	agent (claude opus-5.5), by hand

@@ -41,6 +41,8 @@ jobs:
         run: python3 test/core_grammar.py
       - name: "core_beings: the schemes of known beings on the ladder (core 4.1) — each `at` the positions it classifies and rule bearer refusing a code of it on a kind that holds none, the readers of the open standards of known beings, a code found in its sorted index, the one finder by position, which asks no authority"
         run: python3 test/core_beings.py
+      - name: "core_mechanics: the mechanics (core 4.2) — the core's verb `join` and its compliances, pairs and closures, the made scheme of concepts each a pattern with its limits and the crosswalk kept, one signature one row as the law's self-check, the matcher `fits` calls for a concept on the generic seed and the held-out pump, and rule bearer refusing a concept said of a being its root is known not to fit"
+        run: python3 test/core_mechanics.py
       - name: "core_save: the save commits a garden of statements, the core's gate at the commit — the moment the save's, the law ratified"
         run: python3 test/core_save.py
       - name: "core_translate: a garden of today's beans (v0.49.0's law) written in statements, into a copy — every value placed, VOCAB.md the core's rows, the engine passing"

@@ -269,6 +269,19 @@ verbs:
     replaces: [weighings]
     home: core
 
+  # ---------------------------------------------------------------- the mechanics (core 4.2)
+  - verb: join
+    meaning: "two bodies touch at a feature of each (`at`: a position of each one's own frame, `hub#bore`), in a pair (`as`) that leaves them the freedoms its row names, kept together by one or more closures (`closure`): one statement a joint, in the bean of the least whole that holds both. What is read from `part` and `join` — a link, a coupling, the least whole that bears a role — is never stated"
+    roles:
+      by: { shape: being, nature: [body] }
+      to: { shape: being, nature: [body] }
+      at: { shape: position, many: true }
+      as: { shape: row, table: pairs }
+    qualifiers: { closure: { shape: row, table: closures, many: true } }
+    required: [by, to, as]
+    replaces: []
+    home: core
+
   # ---------------------------------------------------------------- between gardens
   - verb: propose
     meaning: "to offer beans to another garden, under an agreement between their gardeners"
@@ -400,8 +413,40 @@ roles_replace:                           # a word that is only a role of whateve
   as:      [by_role]
   of:      []
 
+# THE MECHANICS' TABLES (core 4.2), which `join` and a concept's pattern name: what a body gives under load, the pairs two
+# bodies make where they touch — each with the rotations (`r`) and translations (`t`) it leaves them, or a higher pair,
+# touching along a line or at a point — and what keeps a pair together.
+compliances:
+  - { compliance: rigid,    meaning: "keeps its form under the loads it is made for: a hub, a shaft, a tube" }
+  - { compliance: elastic,  meaning: "gives under load and returns: a spring, rubber, an O-ring" }
+  - { compliance: tension,  meaning: "takes pull alone, and lies along what it is wrapped on: a belt, a rope, a chain, a tendon" }
+  - { compliance: pressure, meaning: "takes push alone, and takes the form of what holds it: oil, air, blood" }
+pairs:
+  - { pair: fixed,       r: "0", t: "0", meaning: "no motion left: a fastening, which makes two bodies one link" }
+  - { pair: revolute,    r: "1", t: "0", meaning: "turns about one axis" }
+  - { pair: prismatic,   r: "0", t: "1", meaning: "slides along one axis" }
+  - { pair: cylindrical, r: "1", t: "1", meaning: "turns about and slides along one axis" }
+  - { pair: helical,     r: "1", t: "1", coupled: "true", meaning: "turns and slides as one motion: a thread" }
+  - { pair: spherical,   r: "3", t: "0", meaning: "turns about a point" }
+  - { pair: planar,      r: "1", t: "2", meaning: "slides on a plane and turns about its normal" }
+  - { pair: universal,   r: "2", t: "0", meaning: "turns about two crossed axes" }
+  - { pair: rolling,     higher: "true", meaning: "rolls on a curve or a surface: a ball in a raceway" }
+  - { pair: meshing,     higher: "true", meaning: "teeth on teeth: gears, a rack and its pinion" }
+  - { pair: cam,         higher: "true", meaning: "a curve slides on a curve or a point" }
+  - { pair: wrapping,    higher: "true", meaning: "a tension body lies on a wheel or a drum: a belt on a pulley" }
+  - { pair: pressing,    higher: "true", meaning: "a pressure body pushes a face: oil on a piston" }
+closures:
+  - { closure: form,     meaning: "the shapes hold it: a circlip in its groove, a key in its keyways, a thread" }
+  - { closure: force,    meaning: "a load keeps the contact: weight, a spring, a fluid's pressure, a belt's tension, a screw's preload" }
+  - { closure: friction, meaning: "interference or clamping: a press fit, a shrink fit, a clamped face" }
+  - { closure: material, meaning: "one material across the boundary: a weld, a braze, an adhesive, a vulcanized bond" }
+  - { closure: chain,    meaning: "the rest of the chain closes it, as a flexible body must be closed" }
+
 # The columns of each table of rows above: which every row holds (`required`) and which it may (`optional`); a row holds
 # the required ones and no other (core/law.py, `columns`). A reading names a table they declare as an input said by
 # the law (core/law/lines.yaml `selection_form.inputs`).
 columns:
   verbs: { verb: required, meaning: required, roles: required, qualifiers: optional, required: required, choice: optional, default: optional, replaces: required, home: required, figure: optional }
+  compliances: { compliance: required, meaning: required }
+  pairs: { pair: required, r: optional, t: optional, coupled: optional, higher: optional, meaning: required }
+  closures: { closure: required, meaning: required }

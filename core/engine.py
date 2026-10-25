@@ -845,6 +845,17 @@ class Judge:
         return f"{scheme}'s codes classify beings at {', '.join(at)}, and a {kind} holds " + \
             (', '.join(f"{ln} {lv}" for ln, lv in mine.items()) or 'no position on the ladder')
 
+    def concept_root(self, code, who):
+        """'' unless `code` is a concept's (a scheme of the form `concept`, core 4.2) and what the garden draws of the
+        being `who` is known not to fit its pattern's root (core/mechanics.py `contradicts`): then why. What is not
+        drawn never refuses it: a classification stands as said."""
+        scheme = code.partition(':')[0]
+        K = self.L.std.knowledge if self.L.std else None
+        if not K or (K.schemes.get(scheme) or {}).get('form') != 'concept' or code not in self.L.concepts():
+            return ''
+        d = self.L.garden_drawing(self.G)
+        return self.L.matcher().contradicts(d, who, code) if isinstance(who, str) and who in d.nodes else ''
+
     def bearer(self):
         """Rule bearer: a quantity stated of a being is one its dimensions and its kind hold for; and a code of a scheme
         that names the positions its codes classify (`at`) is stated only of a being whose kind holds one of them. The kind
@@ -864,7 +875,7 @@ class Judge:
                     continue
                 as_role = ((self.L.verbs.get(verb) or {}).get('roles') or {}).get('as') or {}
                 if as_role.get('table') == 'knowledge' and isinstance(r.get('as'), str):
-                    why = self.classed_at(r['as'], kind)
+                    why = self.classed_at(r['as'], kind) or self.concept_root(r['as'], self.norm(r['of'], b))
                     if why:
                         self.err('bearer', f"{b.id}[{i}] {verb}", f"{r['as']} is stated of {self.norm(r['of'], b)}: {why}")
                 rules = []                                  # (what holds, why it is asked)

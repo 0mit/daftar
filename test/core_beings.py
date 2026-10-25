@@ -274,8 +274,9 @@ name: part of
     # ---- THE FINDER
     K = dmk.Knowledge(G)
     check("propose: the schemes asked for a position are those whose `at` names it",
-          K.at_positions(['organism']) == ['col', 'ncbitaxon'] and K.at_positions(['component']) == ['cpv', 'etim']
-          and K.at_positions(['organism', 'living', 'reason']) == ['col', 'ncbitaxon'] and K.at_positions(['device']) == ['cpv', 'etim'],
+          K.at_positions(['organism']) == ['col', 'ncbitaxon'] and K.at_positions(['component']) == ['cpv', 'etim', 'made']
+          and K.at_positions(['organism', 'living', 'reason']) == ['col', 'ncbitaxon']
+          and K.at_positions(['device']) == ['cpv', 'etim', 'made'],
           (K.at_positions(['organism']), K.at_positions(['component'])))
     got = [p['coding'] for p in K.propose('Apis mellifera', ['organism'])]
     check("propose: a taxon by its name, from the copy fetched here, and nothing of a scheme of made things",
@@ -285,7 +286,8 @@ name: part of
     check("propose: nothing for the same words at a position its schemes do not classify",
           not K.propose('V belt pulley', ['organism']))
     got = [(p['coding'], p['how']) for p in K.propose('belt pulley', ['component'])]
-    check("propose: a class by its synonym", got == [('etim:EC003882', 'synonym')], got)
+    check("propose: a class by its synonym, and the made scheme's concept of it (core 4.2)",
+          got == [('etim:EC003882', 'synonym'), ('made:pulley', 'synonym')], got)
     check("find: the schemes of beings are passed over unless one is named",
           not [x for x in K.find('pulley') if x[1] == 'etim'] and [x for x in K.find('pulley', scheme='etim')])
     check("propose: it holds no way to ask an authority — no reader of an API, no `--wikidata`",

@@ -304,6 +304,30 @@ vacancies:
     position: parquet
     reason: universal
     why: "the columnar table data tools exchange large ones in: held for the first store that gives its rows to one"
+  - at: "table:pairs"
+    position: prismatic
+    reason: universal
+    why: "a lower pair of the basic set no seed part makes alone: a slide, a key in a sliding keyway"
+  - at: "table:pairs"
+    position: planar
+    reason: universal
+    why: "a lower pair of the basic set no seed part makes: a block on a plane, a plane joint of a wrist"
+  - at: "table:pairs"
+    position: universal
+    reason: universal
+    why: "a lower pair of the basic set no seed part makes: a cross joint, a saddle joint of a thumb"
+  - at: "table:pairs"
+    position: meshing
+    reason: universal
+    why: "a higher pair of the basic set no seed part makes: gears, a rack and its pinion"
+  - at: "table:pairs"
+    position: cam
+    reason: universal
+    why: "a higher pair of the basic set no seed part makes: a cam and its follower"
+  - at: "table:closures"
+    position: chain
+    reason: universal
+    why: "a closure of the basic set no seed joint is kept by: a chain of links closing a flexible body"
 dropped:
   - at: "owned_by.entry_one_of"
     position: contract

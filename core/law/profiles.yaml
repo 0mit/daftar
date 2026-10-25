@@ -180,7 +180,7 @@ profiles:
   - profile: knowledge
     meaning: "for a garden that says what things ARE in the world's shared terms: the field of knowledge a skill or a technology draws on (ISCED-F 2013), the occupation a role or a person's work is (ISCO-08), and the established technology a program, instance or host runs (with its official documentation). The codes are UNIVERSAL: the same in every garden, so knowledge merges across gardens that never met — and a being that IS one of them (an occupation, a field, a technology) is identified by it, `identifier: isco-08:2522`, a coding."
     verbs: [classify]
-    forms: [pattern, class]
+    forms: [pattern, class, concept]
     went: { knowledge: "the verbs `classify` (`classified_as`) and `use` (`uses`, `draws_on`)" }
   - profile: view
     meaning: "for a garden that draws what it keeps: a page of drawings, each of a mapping or a bean the garden holds, read at four lenses, with live values beside the drawing and actions a host may run. Its asset is `assets/view/`, which a garden receives only while it extends this profile. A garden that draws nothing should inherit none of it."
@@ -491,6 +491,25 @@ forms:
       apart:
         in: ["true"]
         meaning: "`true`: a member of this code inherits no code from its wholes, and its parts inherit from it alone — a program's tree, a system's dropping, another's code placed there"
+  concept:
+    meaning: "what a code of a scheme of concepts is, on the rows of a scheme that names this form (`form: concept`), beside its code, its level and its name: a pattern of bodies and their joints, with its limits. Its level is `form`, what a body is by its own form, said of it (`classify`); or `role`, what a body does among its neighbours, read from its joints by `fits` (`{concept: <code>}`) and never stored, of the least whole that bears it. A body said to be of a concept fits it as said; one known not to fit its root is refused the classification (rule bearer). Two rows whose patterns are one up to the names of their nodes, their limits equal, are one concept: the second is refused, and its words go on the first"
+    attrs:
+      pattern:
+        required: "true"
+        in: { entries: { root: { required: "true" }, nodes: {}, edges: {}, not: {} } }
+        meaning: "the concept's topology and its limits: `root`, the body or device it is, and `nodes`, the others by their names, each a constraint — `compliance` (a row of the core's `compliances`) or `compliance_not`, `device` (`true`: bodies joined; `false`: one body), `not_fiat` (`true`: a body of its own), `features` it holds (each by `kind`, `side`, `profile`, `count`), `fits` (another concept: a form it is), and its limits, what the topology does not say: `shape`, `section`, `material`, `function`, `designation`, `use` (what it is on). `edges` must hold and `not` must not: each between two of its nodes (`x`, `y`, the root among them), a joint of one of the core's `pairs` (`pair`, a list) between them or the parts beneath them, or between their links (`link`), or a relation read (`rel`): `part`, `one-link`, `coupled`, `sibling`, `outside`; a joint with its closures (`closure`, all of them; `closure_any`, one) and the feature at each end (`a`, `b`). Each node is a distinct body, reached from the root through the edges that must hold, or named by an edge that must not alone. A pattern with a `not` is read only of a body drawn whole: what is not drawn is not known to be absent"
+      synonyms:
+        in: { type: text }
+        meaning: "its other names in English, the workshop's among them, ` | ` between two: a word is a row of its own only where its pattern or its limits differ"
+      wikidata:
+        in: { type: text }
+        meaning: "the item Wikidata gives the same thing, or a list of them: its Q-number, a code of the scheme `wikidata`"
+      etim:
+        in: { type: text }
+        meaning: "the class ETIM gives the same thing: its code, a code of the scheme `etim`"
+      cpv:
+        in: { type: text }
+        meaning: "the code the CPV gives the same thing: a code of the scheme `cpv`"
   keep:
     meaning: "what a code of a policy scheme asks of its members' keepings, on the rows of a scheme that names this form (`form: keep`) beside its code, level, parent and name: the risks each member must be safe against, how recently a keeping must have been found whole, and the codes of other schemes it is read for. A content's code is read by `inherit` — what a person classed it, or its nearest whole, as — else it is the code whose `for` names a code the content holds; a content of no code is read for what its keepings resolve, and judged against nothing"
     attrs:

@@ -89,8 +89,8 @@ try:
           LINES['groupings'])
     P = read.data(os.path.join(LAW, 'profiles.yaml'))
     know = next(p for p in P['profiles'] if p['profile'] == 'knowledge')
-    check("law: the knowledge profile brings the forms `pattern` and `class`; the view the aspects and the cursor",
-          know.get('forms') == ['pattern', 'class'] and 'cursor' in [a['archetype'] for a in P['archetypes']]
+    check("law: the knowledge profile brings the forms `pattern`, `class` and `concept` (core 4.2); the view the aspects "
+          "and the cursor", know.get('forms') == ['pattern', 'class', 'concept'] and 'cursor' in [a['archetype'] for a in P['archetypes']]
           and [a['aspect'] for a in P['aspects']][:6] == ['holds', 'carried-by', 'copies', 'in-backup', 'its-series',
                                                           'its-class'], know)
     from core.check import garden_law

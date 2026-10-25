@@ -1,0 +1,895 @@
+# The generic seed of daftar's mechanics, written in the basic set alone: bodies with their compliance, features as
+# positions of their own frame, joints with a pair and its closures, `parts` for a device's parts and `fiat` for the
+# fiat parts of one body. Generic engineering, no maker's facts: a crankshaft pulley with a rubber torsional damper, two
+# idlers on a deep groove ball bearing (metal held by a circlip, polymer moulded on), two pump pulleys, a double-acting
+# hydraulic cylinder; and, held out, an engine's water pump, written after the concepts were tuned on the seed.
+# `expect`: the concepts of the made scheme a node fits; `external`: a neighbour of the machine around the assembly,
+# not drawn whole; `said`: a form said of it and not drawn. test/core_mechanics.py reads it.
+seed:
+  damper-pulley:
+    nodes:
+      crank:
+        compliance: rigid
+        shape: bar
+        use: crankshaft
+        external: true
+        said: shaft
+        expect: [shaft]
+        features:
+          nose: {kind: seat}
+          kw: {kind: keyway, side: ext}
+          end: {kind: thread, side: int}
+      hub:
+        compliance: rigid
+        material: cast-iron
+        expect: [hub]
+        features:
+          bore: {kind: bore}
+          kw: {kind: keyway, side: int}
+          seat: {kind: seat}
+          face: {kind: face}
+      rubber:
+        compliance: elastic
+        shape: ring
+        section: rect
+        material: rubber
+        expect: [damper-ring]
+        features:
+          bore: {kind: bore}
+          seat: {kind: seat}
+      ring:
+        compliance: rigid
+        shape: ring
+        material: cast-iron
+        expect: [pulley-rim]
+        features:
+          bore: {kind: bore}
+          grooves: {kind: groove, side: ext, profile: multi-v}
+      key:
+        compliance: rigid
+        shape: bar
+        expect: [key]
+        features:
+          sides: {kind: face}
+      bolt:
+        compliance: rigid
+        shape: headed-bar
+        expect: [screw]
+        features:
+          thread: {kind: thread, side: ext}
+          head: {kind: face}
+          flats: {kind: flats}
+      washer:
+        compliance: rigid
+        shape: plate-ring
+        expect: [washer]
+        features:
+          bore: {kind: bore}
+          faces: {kind: face}
+      belt:
+        compliance: tension
+        shape: belt
+        section: multi-v
+        external: true
+        expect: [poly-v-belt]
+        features:
+          ribs: {kind: face, profile: multi-v}
+      damper:
+        device: true
+        parts: [hub, rubber, ring]
+        expect: [torsional-vibration-damper, crankshaft-pulley, pulley]
+    joints:
+    - - hub#seat
+      - rubber#bore
+      - fixed
+      - [material]
+    - - rubber#seat
+      - ring#bore
+      - fixed
+      - [material]
+    - - hub#bore
+      - crank#nose
+      - fixed
+      - [friction]
+    - - key#sides
+      - hub#kw
+      - fixed
+      - [form]
+    - - key#sides
+      - crank#kw
+      - fixed
+      - [form]
+    - - bolt#thread
+      - crank#end
+      - helical
+      - [friction]
+    - - bolt#head
+      - washer#faces
+      - fixed
+      - [force]
+    - - washer#faces
+      - hub#face
+      - fixed
+      - [force]
+    - - belt#ribs
+      - ring#grooves
+      - wrapping
+      - [force]
+  idler-metal:
+    nodes:
+      bracket:
+        compliance: rigid
+        use: engine-bracket
+        external: true
+        expect: []
+        features:
+          thread: {kind: thread, side: int}
+          face: {kind: face}
+      bolt:
+        compliance: rigid
+        shape: headed-bar
+        expect: [screw]
+        features:
+          thread: {kind: thread, side: ext}
+          head: {kind: face}
+      inner:
+        compliance: rigid
+        shape: ring
+        material: bearing-steel
+        expect: [bearing-inner-ring]
+        features:
+          bore: {kind: bore}
+          race: {kind: raceway, side: ext}
+          face: {kind: face}
+      outer:
+        compliance: rigid
+        shape: ring
+        material: bearing-steel
+        expect: [bearing-outer-ring]
+        features:
+          seat: {kind: seat}
+          race: {kind: raceway, side: int}
+          face: {kind: face}
+          sgroove: {kind: groove, side: int, profile: rect}
+      balls:
+        compliance: rigid
+        shape: ball
+        count: 8
+        expect: [ball]
+      cage:
+        compliance: rigid
+        shape: ring
+        material: polymer
+        expect: [cage]
+      shield:
+        compliance: rigid
+        shape: disc
+        material: steel
+        expect: [shield]
+        features:
+          rim: {kind: seat}
+      bearing:
+        device: true
+        parts: [inner, outer, balls, cage, shield]
+        expect: [deep-groove-ball-bearing]
+      wheel:
+        compliance: rigid
+        material: steel-sheet
+        fiat: [w-rim, w-hub]
+        expect: [pulley]
+      w-rim:
+        fiat_of: wheel
+        features:
+          groove: {kind: groove, side: ext, profile: v}
+        expect: [pulley-rim]
+      w-hub:
+        fiat_of: wheel
+        features:
+          bore: {kind: bore}
+          cgroove: {kind: groove, side: int, profile: rect}
+        expect: [hub]
+      circlip:
+        compliance: elastic
+        shape: split-ring
+        material: spring-steel
+        expect: [circlip, retaining-ring]
+        features:
+          rim: {kind: seat}
+          face: {kind: face}
+          lugs: {kind: lug-hole, count: 2}
+      cap:
+        compliance: rigid
+        shape: cup
+        material: steel
+        expect: [cap]
+        features:
+          rim: {kind: seat}
+      belt:
+        compliance: tension
+        shape: belt
+        section: v
+        external: true
+        expect: [v-belt]
+        features:
+          flanks: {kind: face, profile: v}
+      idler:
+        device: true
+        parts: [wheel, bearing, circlip, cap]
+        expect: [idler-pulley]
+    joints:
+    - - inner#race
+      - balls
+      - rolling
+      - [force]
+    - - balls
+      - outer#race
+      - rolling
+      - [force]
+    - - cage
+      - balls
+      - spherical
+      - [form]
+    - - shield#rim
+      - outer#sgroove
+      - fixed
+      - [form]
+    - - outer#seat
+      - w-hub#bore
+      - fixed
+      - [friction]
+    - - circlip#rim
+      - w-hub#cgroove
+      - fixed
+      - [form]
+    - - circlip#face
+      - outer#face
+      - fixed
+      - [form]
+    - - cap#rim
+      - w-hub#bore
+      - fixed
+      - [friction]
+    - - bolt#head
+      - inner#face
+      - fixed
+      - [force]
+    - - inner#face
+      - bracket#face
+      - fixed
+      - [force]
+    - - bolt#thread
+      - bracket#thread
+      - helical
+      - [friction]
+    - - belt#flanks
+      - w-rim#groove
+      - wrapping
+      - [force]
+  idler-polymer:
+    nodes:
+      bracket:
+        compliance: rigid
+        use: engine-bracket
+        external: true
+        expect: []
+        features:
+          face: {kind: face}
+      bearing:
+        device: true
+        said: deep-groove-ball-bearing
+        expect: [deep-groove-ball-bearing]
+        features:
+          outer: {kind: seat}
+          bore: {kind: bore}
+          face: {kind: face}
+      wheel:
+        compliance: rigid
+        material: pa66-gf30
+        expect: [pulley]
+        features:
+          groove: {kind: groove, side: ext, profile: v}
+          bore: {kind: bore}
+      belt:
+        compliance: tension
+        shape: belt
+        section: v
+        external: true
+        expect: [v-belt]
+        features:
+          flanks: {kind: face, profile: v}
+      idler:
+        device: true
+        parts: [wheel, bearing]
+        expect: [idler-pulley]
+    joints:
+    - - bearing#outer
+      - wheel#bore
+      - fixed
+      - [material, form]
+    - - bearing#face
+      - bracket#face
+      - fixed
+      - [force]
+    - - belt#flanks
+      - wheel#groove
+      - wrapping
+      - [force]
+  ps-pump-pulley:
+    nodes:
+      shaft:
+        compliance: rigid
+        shape: bar
+        use: power-steering-pump
+        external: true
+        said: shaft
+        expect: [shaft]
+        features:
+          seat: {kind: seat}
+      wheel:
+        compliance: rigid
+        material: steel-sheet
+        fiat: [p-rim, p-hub]
+        expect: [pulley, power-steering-pump-pulley]
+      p-rim:
+        fiat_of: wheel
+        features:
+          groove: {kind: groove, side: ext, profile: multi-v}
+        expect: [pulley-rim]
+      p-hub:
+        fiat_of: wheel
+        features:
+          bore: {kind: bore}
+        expect: [hub]
+      belt:
+        compliance: tension
+        shape: belt
+        section: multi-v
+        external: true
+        expect: [poly-v-belt]
+        features:
+          ribs: {kind: face, profile: multi-v}
+    joints:
+    - - p-hub#bore
+      - shaft#seat
+      - fixed
+      - [friction]
+    - - belt#ribs
+      - p-rim#groove
+      - wrapping
+      - [force]
+  water-pump-pulley:
+    nodes:
+      flange:
+        compliance: rigid
+        use: water-pump
+        external: true
+        expect: []
+        features:
+          face: {kind: face}
+          threads: {kind: thread, side: int, count: 4}
+      wheel:
+        compliance: rigid
+        material: steel-sheet
+        fiat: [q-rim, q-hub]
+        expect: [pulley, water-pump-pulley]
+      q-rim:
+        fiat_of: wheel
+        features:
+          grooves: {kind: groove, side: ext, profile: v, count: 4}
+        expect: [pulley-rim]
+      q-hub:
+        fiat_of: wheel
+        features:
+          face: {kind: face}
+          holes: {kind: hole-pattern, count: 4}
+        expect: [hub]
+      screws:
+        compliance: rigid
+        shape: headed-bar
+        count: 4
+        expect: [screw]
+        features:
+          thread: {kind: thread, side: ext}
+          head: {kind: face}
+      belts:
+        compliance: tension
+        shape: belt
+        section: v
+        external: true
+        count: 4
+        expect: [v-belt]
+        features:
+          flanks: {kind: face, profile: v}
+    joints:
+    - - q-hub#face
+      - flange#face
+      - fixed
+      - [friction]
+    - - screws#thread
+      - flange#threads
+      - helical
+      - [friction]
+    - - screws#head
+      - q-hub#face
+      - fixed
+      - [force]
+    - - belts#flanks
+      - q-rim#grooves
+      - wrapping
+      - [force]
+  cylinder:
+    nodes:
+      tube:
+        compliance: rigid
+        shape: tube
+        material: steel
+        expect: [cylinder-tube]
+        features:
+          bore: {kind: bore}
+          thread: {kind: thread, side: int}
+          end: {kind: seat}
+          ports: {kind: port, count: 2}
+      endcap:
+        compliance: rigid
+        shape: disc
+        material: steel
+        expect: [cylinder-end-cap]
+        features:
+          inner: {kind: face}
+          outer: {kind: face}
+          rim: {kind: seat}
+          port: {kind: port}
+      mount:
+        compliance: rigid
+        material: steel
+        expect: [cylinder-mount]
+        features:
+          eye: {kind: eye}
+          base: {kind: face}
+      gland:
+        compliance: rigid
+        shape: sleeve
+        material: steel
+        expect: [gland]
+        features:
+          bore: {kind: bore}
+          rsg: {kind: groove, side: int, profile: rect}
+          wg: {kind: groove, side: int, profile: rect}
+          thread: {kind: thread, side: ext}
+          og: {kind: groove, side: ext, profile: rect}
+          inner: {kind: face}
+      bush:
+        compliance: rigid
+        shape: sleeve
+        material: bronze
+        expect: [bush]
+        features:
+          seat: {kind: seat}
+          bore: {kind: bore}
+      rod:
+        compliance: rigid
+        shape: bar
+        material: chromed-steel
+        fiat: [rod-eye]
+        expect: [piston-rod]
+        features:
+          seat: {kind: seat}
+          thread: {kind: thread, side: ext}
+          shoulder: {kind: face}
+          flats: {kind: flats}
+      rod-eye:
+        fiat_of: rod
+        features:
+          eye: {kind: eye}
+        expect: [cylinder-mount]
+      piston:
+        compliance: rigid
+        shape: disc
+        material: steel
+        expect: [piston]
+        features:
+          bore: {kind: bore}
+          sg: {kind: groove, side: ext, profile: rect}
+          wg: {kind: groove, side: ext, profile: rect}
+          capface: {kind: face}
+          rodface: {kind: face}
+      nut:
+        compliance: rigid
+        shape: hex
+        expect: [nut]
+        features:
+          thread: {kind: thread, side: int}
+          face: {kind: face}
+          flats: {kind: flats}
+      slide:
+        compliance: rigid
+        shape: ring
+        material: ptfe
+        expect: [slide-ring]
+        features:
+          bore: {kind: bore}
+          seat: {kind: seat}
+      xring:
+        compliance: elastic
+        shape: ring
+        section: four-lobed
+        material: nbr
+        expect: [x-ring, energizer]
+      ptfeseal:
+        device: true
+        parts: [slide, xring]
+        expect: [ptfe-seal, piston-seal]
+      wear:
+        compliance: rigid
+        shape: split-ring
+        material: polymer
+        expect: [wear-ring]
+        features:
+          seat: {kind: seat}
+      rodseal:
+        compliance: elastic
+        shape: ring
+        section: lip
+        material: polyurethane
+        expect: [lip-seal, rod-seal]
+        features:
+          lip: {kind: lip}
+      wiper:
+        compliance: elastic
+        shape: ring
+        section: lip
+        material: polyurethane
+        expect: [lip-seal, wiper-seal]
+        features:
+          lip: {kind: lip}
+      oring:
+        compliance: elastic
+        shape: ring
+        section: round
+        material: nbr
+        expect: [o-ring, static-seal]
+      plug:
+        compliance: rigid
+        shape: plug
+        material: steel
+        expect: [blind-plug]
+      oil-cap:
+        compliance: pressure
+        use: working-fluid
+        material: oil
+        expect: []
+      oil-rod:
+        compliance: pressure
+        use: working-fluid
+        material: oil
+        expect: []
+      air:
+        compliance: pressure
+        use: ambient
+        material: air
+        external: true
+        expect: []
+      pin-a:
+        compliance: rigid
+        shape: bar
+        external: true
+        expect: [pin]
+        features:
+          seat: {kind: seat}
+      pin-b:
+        compliance: rigid
+        shape: bar
+        external: true
+        expect: [pin]
+        features:
+          seat: {kind: seat}
+      cylinder:
+        device: true
+        parts: [tube, endcap, mount, gland, bush, rod, piston, nut, ptfeseal, wear, rodseal, wiper, oring, plug]
+        expect: [hydraulic-cylinder]
+    joints:
+    - - endcap#rim
+      - tube#end
+      - fixed
+      - [material]
+    - - mount#base
+      - endcap#outer
+      - fixed
+      - [material]
+    - - gland#thread
+      - tube#thread
+      - helical
+      - [friction]
+    - - oring
+      - gland#og
+      - fixed
+      - [form]
+    - - oring
+      - tube#bore
+      - fixed
+      - [force]
+    - - bush#seat
+      - gland#bore
+      - fixed
+      - [friction]
+    - - bush#bore
+      - rod#seat
+      - cylindrical
+      - [form]
+    - - rodseal
+      - gland#rsg
+      - fixed
+      - [form]
+    - - rodseal#lip
+      - rod#seat
+      - cylindrical
+      - [force]
+    - - wiper
+      - gland#wg
+      - fixed
+      - [form]
+    - - wiper#lip
+      - rod#seat
+      - cylindrical
+      - [force]
+    - - piston#bore
+      - rod#seat
+      - fixed
+      - [form]
+    - - piston#rodface
+      - rod#shoulder
+      - fixed
+      - [force]
+    - - nut#thread
+      - rod#thread
+      - helical
+      - [friction]
+    - - nut#face
+      - piston#capface
+      - fixed
+      - [force]
+    - - xring
+      - piston#sg
+      - fixed
+      - [form]
+    - - xring
+      - slide#bore
+      - fixed
+      - [force]
+    - - slide#seat
+      - tube#bore
+      - cylindrical
+      - [force]
+    - - wear
+      - piston#wg
+      - fixed
+      - [form]
+    - - wear#seat
+      - tube#bore
+      - cylindrical
+      - [form]
+    - - plug
+      - endcap#port
+      - fixed
+      - [friction]
+    - - mount#eye
+      - pin-a#seat
+      - revolute
+      - [form]
+    - - rod-eye#eye
+      - pin-b#seat
+      - revolute
+      - [form]
+    - - oil-cap
+      - piston#capface
+      - pressing
+      - [force]
+    - - oil-cap
+      - endcap#inner
+      - pressing
+      - [force]
+    - - oil-cap
+      - tube#bore
+      - pressing
+      - [force]
+    - - oil-cap
+      - slide
+      - pressing
+      - [force]
+    - - oil-cap
+      - xring
+      - pressing
+      - [force]
+    - - oil-cap
+      - plug
+      - pressing
+      - [force]
+    - - oil-cap
+      - nut
+      - pressing
+      - [force]
+    - - oil-rod
+      - piston#rodface
+      - pressing
+      - [force]
+    - - oil-rod
+      - gland#inner
+      - pressing
+      - [force]
+    - - oil-rod
+      - tube#bore
+      - pressing
+      - [force]
+    - - oil-rod
+      - rod#seat
+      - pressing
+      - [force]
+    - - oil-rod
+      - slide
+      - pressing
+      - [force]
+    - - oil-rod
+      - rodseal
+      - pressing
+      - [force]
+    - - oil-rod
+      - oring
+      - pressing
+      - [force]
+    - - air
+      - wiper
+      - pressing
+      - [force]
+    - - air
+      - oring
+      - pressing
+      - [force]
+    - - air
+      - rod#seat
+      - pressing
+      - [force]
+heldout:
+  water-pump:
+    nodes:
+      housing:
+        compliance: rigid
+        material: cast-aluminium
+        expect: []
+        features:
+          bbore: {kind: bore}
+          sbore: {kind: bore}
+          cgroove: {kind: groove, side: int, profile: rect}
+          volute: {kind: face}
+      b-inner:
+        compliance: rigid
+        shape: ring
+        material: bearing-steel
+        expect: [bearing-inner-ring]
+        features:
+          bore: {kind: bore}
+          race: {kind: raceway, side: ext}
+      b-outer:
+        compliance: rigid
+        shape: ring
+        material: bearing-steel
+        expect: [bearing-outer-ring]
+        features:
+          seat: {kind: seat}
+          race: {kind: raceway, side: int}
+          face: {kind: face}
+      bearing:
+        device: true
+        parts: [b-inner, b-outer]
+        said: deep-groove-ball-bearing
+        expect: [deep-groove-ball-bearing]
+      shaft:
+        compliance: rigid
+        shape: bar
+        material: steel
+        expect: [shaft]
+        features:
+          s1: {kind: seat}
+          s2: {kind: seat}
+          s3: {kind: seat}
+          s4: {kind: seat}
+      circlip:
+        compliance: elastic
+        shape: split-ring
+        material: spring-steel
+        expect: [circlip, retaining-ring]
+        features:
+          rim: {kind: seat}
+          face: {kind: face}
+          lugs: {kind: lug-hole, count: 2}
+      seal:
+        compliance: elastic
+        shape: ring
+        section: lip
+        material: nbr
+        expect: [lip-seal]
+        features:
+          case: {kind: seat}
+          lip: {kind: lip}
+      impeller:
+        compliance: rigid
+        material: cast-iron
+        expect: []
+        features:
+          bore: {kind: bore}
+          vanes: {kind: face}
+      flange:
+        compliance: rigid
+        material: steel
+        expect: []
+        features:
+          bore: {kind: bore}
+          face: {kind: face}
+          holes: {kind: hole-pattern, count: 4}
+      coolant:
+        compliance: pressure
+        use: working-fluid
+        material: coolant
+        expect: []
+      air:
+        compliance: pressure
+        use: ambient
+        material: air
+        external: true
+        expect: []
+      pump:
+        device: true
+        parts: [housing, bearing, shaft, circlip, seal, impeller, flange]
+        expect: []
+    joints:
+    - - b-inner#bore
+      - shaft#s1
+      - fixed
+      - [friction]
+    - - b-outer#seat
+      - housing#bbore
+      - fixed
+      - [friction]
+    - - b-inner#race
+      - b-outer#race
+      - revolute
+      - [form]
+    - - circlip#rim
+      - housing#cgroove
+      - fixed
+      - [form]
+    - - circlip#face
+      - b-outer#face
+      - fixed
+      - [form]
+    - - seal#case
+      - housing#sbore
+      - fixed
+      - [friction]
+    - - seal#lip
+      - shaft#s2
+      - revolute
+      - [force]
+    - - impeller#bore
+      - shaft#s3
+      - fixed
+      - [friction]
+    - - flange#bore
+      - shaft#s4
+      - fixed
+      - [friction]
+    - - coolant
+      - impeller#vanes
+      - pressing
+      - [force]
+    - - coolant
+      - seal
+      - pressing
+      - [force]
+    - - coolant
+      - housing#volute
+      - pressing
+      - [force]
+    - - air
+      - seal
+      - pressing
+      - [force]

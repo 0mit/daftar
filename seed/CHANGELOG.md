@@ -251,6 +251,31 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.2** (2026-10-25, daftar v4.2.0, human-ratified rule-change) — **the mechanics** (the mechanics' design,
+  ratified whole by the operator on 2026-10-25, each of its eight needs on its recommended option). MINOR. Made things
+  are described from their basic elements up, on Reuleaux's theory of machines (1876) and mereotopology's part,
+  connection and boundary, with ISO 10303-105's split of a connection into its joint and its pair: a body of a
+  compliance, a feature a position of its body's own frame (`hub#bore`, the system `local-frame`), `part`, and a verb of
+  the core, `join` — two bodies at a feature of each, in a pair, kept by its closures, one statement a joint in the bean
+  of the least whole that holds both. Three tables of the core beside it in verbs.yaml: `compliances` (rigid, elastic,
+  tension, pressure), `pairs` (13: eight lower, each with the rotations and translations it leaves, and five higher) and
+  `closures` (form, force, friction, material, chain); the pairs and the closure no seed part uses are vacant, reason
+  universal. A scheme of concepts is the knowledge profile's new form `concept`: a row's level is a `form`, what a body
+  is by its own form, said of it with `classify`, or a `role`, what it does among its neighbours, read from its joints
+  and never stored; its pattern is a root and nodes, each a constraint, and edges that must and must not hold, with its
+  limits — shape, section, material, function, designation, use. The made scheme (`made`, shipped, CC BY 4.0, at device
+  and component) holds 46 concepts, 13 forms and 33 roles: machine-elements.tsv of the beings' design rewritten as
+  patterns, its families dropped as the roles they are, its Wikidata, ETIM and CPV codes kept as the columns `wikidata`,
+  `etim` and `cpv`, a word of one concept on its one row. The comparator `fits` takes `{concept: <code>}`: the being at
+  the path is said to be of it, or its pattern is read in what the garden's statements draw — one matcher
+  (core/mechanics.py) for the gate, the readings and the store's SQL, which never guesses: a fact no statement draws fits
+  no constraint, and an absence is read only of a body drawn whole. ONE SIGNATURE, ONE ROW: two concepts whose patterns
+  are one up to their nodes' names, their limits equal, are one, and the law's self-check refuses the second. Rule
+  bearer refuses a concept said of a being whose pattern's root it is known not to fit — a device's of one body, one
+  body's of a device, a body's own of a fiat part; rule profile holds a scheme of concepts to its form. Measured on the
+  generic seed (test/mechanics-seed.yaml), every concept tried on every node: 67 fits of 67, none unexpected; the
+  held-out pump 7 of 7.
+
 - **core 4.1** (2026-10-25, daftar v4.1.0, human-ratified rule-change) — **the beings' schemes, and the catalogues**
   (the beings' design, ratified by the operator on 2026-10-25, the needs met there; the next machinery's design, VI.2 to
   VI.5, ratified on 2026-10-24). MINOR. The open standards of known beings are schemes of the law, each `at` the
