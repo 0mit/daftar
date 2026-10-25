@@ -36,7 +36,7 @@ sys.path.insert(0, os.path.join(ROOT, 'bin'))
 sys.path.append(os.path.join(ROOT, 'test'))
 import machine  # noqa: E402
 machine.ensure()      # its time source and standards cache, not the machine's
-from core import engine, read, union  # noqa: E402
+from core import engine, lines, read, reckon, union  # noqa: E402
 from core.law import Law  # noqa: E402
 import store  # noqa: E402
 
@@ -93,6 +93,89 @@ def both(git, stores):
         for rule, reading in LAW.readings.items():
             sql_says += [(rule, w, m) for w, m in U.refusals(reading)]
     return engine_says, sql_says
+
+
+# THE GRAMMAR'S COLUMNS AND OPERATIONS AT SIZE (core 3.2 to 3.4): readings no rule states yet, each written as a rule's
+# reading is, that read what the grammar gained — a statement's columns, of the member itself and of a value naming one
+# (I.1); a position's (I.2); a path through every depth and into a value's parts, and a bean's header (I.7); `overlap`
+# (I.8); a refusal told at a path (I.9) — each held to the reckoner's own reading of the union read as beans
+GRAMMAR = {
+    'statements': {
+        'steps': [{'id': 'd', 'op': 'select', 'entries': 'decline'},
+                  {'id': 'me', 'op': 'describe', 'of': 'd', 'as': 's'},
+                  {'id': 'it', 'op': 'describe', 'of': 'me', 'at': 'of', 'as': 'o'},
+                  {'id': 'r', 'op': 'select', 'entries': 'respond'},
+                  {'id': 'rs', 'op': 'describe', 'of': 'r', 'at': 'of', 'as': 'o'},
+                  {'id': 'ag', 'op': 'select', 'entries': 'agree'},
+                  {'id': 'ags', 'op': 'describe', 'of': 'ag', 'as': 's'}],
+        'refuse': [{'of': 'it', 'at': 'of', 'message': "{s.place} {s.bean} {s.verb} {s.index} {s.id} -> {o.being} "
+                                                        "{o.place} {o.bean} {o.verb} {o.index} {o.id} {o.kind}"},
+                   {'of': 'rs', 'at': 'of', 'message': "{o.being} {o.place} {o.id} {o.system}"},
+                   {'of': 'ags', 'message': "{s.place} {s.id} {by:set}"}]},
+    'positions': {
+        'steps': [{'id': 'b', 'op': 'select', 'entries': 'be'},
+                  {'id': 'p', 'op': 'describe', 'of': 'b', 'at': 'at', 'as': 'p'},
+                  {'id': 'pt', 'op': 'select', 'of': 'p', 'where': [{'path': 'p.system', '∃': 'true'}]},
+                  {'id': 'a', 'op': 'select', 'entries': 'attend'},
+                  {'id': 't', 'op': 'describe', 'of': 'a', 'at': 'at', 'as': 't'}],
+        'refuse': [{'of': 'pt', 'at': 'at', 'message': "{p.being}: {p.system} {p.point} {p.from} {p.to}"},
+                   {'of': 't', 'message': "{t.being}: {t.system} {t.point} {t.from} {t.to} {t.kind} {t.place}"}]},
+    'overlap': {
+        'steps': [{'id': 'a', 'op': 'select', 'entries': 'attend'},
+                  {'id': 't', 'op': 'describe', 'of': 'a', 'at': 'at', 'as': 't'},
+                  {'id': 'who', 'op': 'describe', 'of': 't', 'at': 'by', 'as': 'who'},
+                  {'id': 'all', 'op': 'overlap', 'of': 'who', 'from': 't.from', 'to': 't.to', 'by': 'who.being',
+                   'as': ['e', 'l']},
+                  {'id': 'first', 'op': 'overlap', 'of': 'who', 'from': 't.from', 'to': 't.to', 'by': 'who.being',
+                   'first': 'true', 'as': ['e', 'l']},
+                  {'id': 'held', 'op': 'overlap', 'of': 'who', 'by': ['who.being', 'of'], 'groups': 'values',
+                   'as': ['e', 'l']},
+                  {'id': 'raw', 'op': 'overlap', 'of': 'a', 'from': 'at', 'to': 'at', 'as': ['e', 'l']}],
+        'refuse': [{'of': 'all', 'message': "{e.t.being} | {l.t.being} {e.who.being}"},
+                   {'of': 'first', 'at': 'at', 'message': "{e.at} | {l.at}"},
+                   {'of': 'held', 'message': "{e.of} {e.by} | {l.of} {l.by}"},
+                   {'of': 'raw', 'message': "{e.at} | {l.at}"}]},
+    'depths': {
+        'steps': [{'id': 'beans', 'op': 'select'},
+                  {'id': 'titled', 'op': 'select', 'of': 'beans', 'where': [{'path': 'title', '∃': 'true'}]},
+                  {'id': 'deep', 'op': 'select', 'of': 'beans', 'where': [{'path': 'details.**', '=': 'needle'}]},
+                  {'id': 'p', 'op': 'select', 'entries': 'pay'},
+                  {'id': 'xts', 'op': 'select', 'of': 'p', 'where': [{'path': 'of.unit', '=': 'XTS'}]},
+                  {'id': 'any', 'op': 'select', 'of': 'p', 'where': [{'path': '**', '=': 'sam'}]},
+                  {'id': 'every', 'op': 'describe', 'of': 'p', 'at': '**', 'as': 'v'},
+                  {'id': 'units', 'op': 'describe', 'of': 'p', 'at': 'of.unit', 'as': 'u'},
+                  {'id': 'ag', 'op': 'select', 'entries': 'agree'},
+                  {'id': 'parties', 'op': 'describe', 'of': 'ag', 'at': 'by', 'as': 'who'}],
+        'refuse': [{'of': 'titled', 'message': "{bean} {kind} {title} {summary} {tags:set} {details.**:set}"},
+                   {'of': 'deep', 'message': "{bean}"},
+                   {'of': 'xts', 'at': 'of', 'message': "{of.count} {of.unit} {**:set}"},
+                   {'of': 'any', 'message': "{by}"},
+                   {'of': 'every', 'message': "{v.being} {v.kind} {v.place} {v.system}"},
+                   {'of': 'units', 'message': "{u.being} {u.system}"},
+                   {'of': 'parties', 'message': "{who.being} {who.kind}"}]},
+}
+
+
+def grammar(git, stores, said):
+    """[(reading, the reckoner's, the SQL's)] of each reading of GRAMMAR whose two readings of the union differ, each
+    [(place, words)]; `said` counts what each refuses."""
+    G, _added = store._union_garden(stores, git)
+    J = engine.Judge(LAW, G)
+    out = []
+    with store.compiled(stores, git, LAW) as U:
+        for name, r in GRAMMAR.items():
+            try:
+                e = [(w, m) for w, m, _p in reckon.refusals(J, r)]
+            except reckon.Refused as x:              # a reading that cannot be read: refused alike
+                e = [('cannot be read', str(x))]
+            try:
+                s = U.refusals(r)
+            except reckon.Refused as x:
+                s = [('cannot be read', str(x))]
+            said[name] = said.get(name, 0) + len(e)
+            if e != s:
+                out.append((name, e, s))
+    return out
 
 
 def keepable(verb, roles):
@@ -159,6 +242,7 @@ try:
     cases = [('the garden alone', None)] + [(f"passes: {c.get('name') or c['bean']}", c) for c in CASES['good']] + \
         [(f"rule {c['rule']}: {c['bean']}" + (f" ({c['name']})" if c.get('name') else ''), c) for c in CASES['bad']]
     differ, judged, refused = [], 0, 0
+    gdiffer, gsaid = [], {}
     for name, c in cases:
         beans = dict(base)
         if c is not None:
@@ -169,11 +253,35 @@ try:
             refused += len(e)
             if e != s:
                 differ.append((name, way, e, s))
+            gdiffer += [(name, way) + g for g in grammar(git, stores, gsaid)]
             for x in stores:
                 x.close()
     check(f"every case of test/core-cases.yaml, kept five ways ({judged} unions): each reading's SQL gives the engine's "
           f"refusals over the union, the same words at the same places in the same order ({refused} refusals)",
           not differ, differ[:3])
+    registry = lines.law_view(LAW).registry
+    bad = {k: [t for lv, t in reckon.check_rule(k, r, registry, LAW) if lv == 'error'] for k, r in GRAMMAR.items()}
+    check("the readings of the grammar's columns and operations are rules' readings the law's check takes",
+          not any(bad.values()), bad)
+    check(f"...and each, compiled to SQL, gives the reckoner's refusals over the union read as beans — a statement's "
+          f"columns and a position's, a bean's header, every depth and a value's parts, `overlap`, a refusal told at a "
+          f"path — the same words at the same places in the same order, over every one of those unions "
+          f"({', '.join(f'{k} {v}' for k, v in gsaid.items())} refusals)", not gdiffer and all(gsaid.values()),
+          gdiffer[:2])
+    extra = dict(base, **{'g-1': bean('g-1', 'document', [{'say': {'by': 'sam', 'at': 'now'}},
+                                                          {'pay': {'by': 'sam', 'of': {'count': '3', 'unit': 'XTS'}}}],
+                                      {'summary': 'a sum', 'tags': ['b', 'a'],
+                                       'details': {'deep': [{'x': 'needle'}], 'n': '2'}})})
+    hdiffer, hsaid, deep = [], {}, []
+    for way, git, stores in ways(extra, T):
+        hdiffer += [(way,) + g for g in grammar(git, stores, hsaid)]
+        if way == 'git':
+            G, _a = store._union_garden(stores, git)
+            deep = [w for w, m, _p in reckon.refusals(engine.Judge(LAW, G), GRAMMAR['depths']) if m == 'g-1']
+        for x in stores:
+            x.close()
+    check("...and over a bean whose header holds a summary, tags and a text deep in its details, kept five ways: a "
+          "bean's header, and a text at any depth of it, read alike", not hdiffer and deep == [None], (hdiffer[:2], deep))
     rules = {c['rule'] for c in CASES['bad']}
     check("...and the cases hold a refusal of each rule that is a reading (order, life, necessity)",
           set(LAW.readings) <= rules, set(LAW.readings) - rules)

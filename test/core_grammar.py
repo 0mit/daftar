@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """core_grammar — the reading grammar, part one (core 3.2, the next machinery's design, body I: I.1, I.3, I.4, I.5, I.6 and
-I.9's set words) and part two (core 3.3: I.2, I.7, I.8), and the two values the law now holds (body VIII).
+I.9's set words), part two (core 3.3: I.2, I.7, I.8) and part three (core 3.4: I.9, a refusal told at a path), and the
+two values the law now holds (body VIII).
 
 Each by its vectors: `describe` of a statement — the member itself, or a value naming one; the comparator `fits` and
 the law's table of checks, closed both ways and held to its vectors, the designations among them; one spelling, one
 system, as the law's own check, with the two collisions decided and the translator that moves a garden past them; an
 input from an earlier rule and from any table the law's columns declare, the manifest among them; a refusal's words
 writing a set; the weighing's bound and the pass log's folder read from the law; a path through every depth, `describe`
-of a position and the operation `overlap`; and the store's SQL, which calls the law's own `fits` and names what it has
-no form for. Invented beings; nothing here is a fact. (`python` on Windows.)"""
+of a position and the operation `overlap`; a refusal told at a path inside its statement; and the store's SQL, which has
+a form for each and names what it has none for. Invented beings; nothing here is a fact. (`python` on Windows.)"""
 import copy
 import os
 import shutil
@@ -333,37 +334,63 @@ except reckon.Refused as e:
     said = str(e)
 check("...and a span is read from two paths or none", said and 'from' in said and 'to' in said, said)
 
+# ------------------------------------------------------------------------------------------------ part three (core 3.4)
+# I.9, a refusal told at a path inside its statement
+RULE = {'steps': [{'id': 'pay', 'op': 'select', 'entries': 'pay'},
+                  {'id': 'xts', 'op': 'select', 'of': 'pay', 'where': [{'path': 'of.unit', '=': 'XTS'}]},
+                  {'id': 'beans', 'op': 'select', 'kind': 'person'}],
+        'refuse': [{'of': 'xts', 'at': 'of.unit', 'message': "{of.count} {of.unit}"},
+                   {'of': 'xts', 'message': "{of.unit}"},
+                   {'of': 'beans', 'at': 'title', 'message': "{bean}"}]}
+J = judge([SAY, {'pay': {'by': 'w', 'of': {'count': '3', 'unit': 'XTS'}}},
+           {'pay': {'by': 'w', 'of': {'count': '1', 'unit': 'USD'}}}])
+got = [(w, m) for w, m, _p in reckon.refusals(J, RULE)]
+check("a refusal told at a path (`at`): at that path inside its statement, `<bean>[<i>] <verb>.<at>`; one with none at "
+      "its statement; a member that is no statement has no place, and none is made for it",
+      got == [('v[1] pay.of.unit', '3 XTS'), ('v[1] pay', 'XTS'), (None, 'w')], got)
+view = lines.law_view(LAW).registry
+check("...and the law's check takes `{of, at, message}`, `at` a path of the statement's keys",
+      not [t for lv, t in reckon.check_rule('r', RULE, view, LAW) if lv == 'error'],
+      reckon.check_rule('r', RULE, view, LAW))
+for bad in ('**', 'of.*', 'of>kind', 'v:of', 'of[unit=XTS]', 'Of', 3, ''):
+    r = dict(RULE, refuse=[{'of': 'xts', 'at': bad, 'message': 'm'}])
+    got = [t for lv, t in reckon.check_rule('r', r, view, LAW) if lv == 'error']
+    check(f"...and refuses `at: {bad!r}`: each segment one key, as a place names it",
+          any('`at` is a path' in t for t in got), got)
+got = [t for lv, t in reckon.check_rule('r', dict(RULE, refuse=[{'of': 'xts', 'at': 'of', 'message': 'm', 'why': 'x'}]),
+                                        view, LAW) if lv == 'error']
+check("...and a refusal holds nothing else", any('at?: <path>' in t for t in got), got)
+
 # ------------------------------------------------------------------------------------------------ the store's SQL
-try:
-    union._statement_columns_read({'steps': [{'id': 'a', 'op': 'select', 'entries': 'need'},
-                                             {'id': 'b', 'op': 'describe', 'of': 'a', 'as': 's'}], 'refuse': []})
-    said = None
-except union.NoSQL as e:
-    said = str(e)
-try:
-    union._statement_columns_read({'steps': [{'id': 'a', 'op': 'select', 'entries': 'need'},
-                                             {'id': 'b', 'op': 'describe', 'of': 'a', 'at': 'of', 'as': 'o'}],
-                                   'refuse': [{'of': 'b', 'message': '{o.place}'}]})
-    said2 = None
-except union.NoSQL as e:
-    said2 = str(e)
-check("the store's SQL names what it has no form for yet — describe of a statement — so a rule reading one is named "
-      "as not judged at size, never judged without it",
-      said and 'no SQL form' in said and said2 and 'o.place' in said2, (said, said2))
-check("...and its `fits` is the law's own, a registered function", 'fits' in union.WORD_SIGNS
-      and union.Union._fits.__doc__ and 'Law.fits' in union.Union._fits.__doc__)
-try:
-    union._statement_columns_read({'steps': [{'id': 'a', 'op': 'select', 'entries': 'be'},
-                                             {'id': 'b', 'op': 'describe', 'of': 'a', 'at': 'at', 'as': 'p'},
-                                             {'id': 'c', 'op': 'select', 'of': 'b', 'where': [{'path': 'p.point', '=': 'true'}]}],
-                                   'refuse': [{'of': 'c', 'message': 'm'}]})
-    said = None
-except union.NoSQL as e:
-    said = str(e)
-check("...nor yet for a position's columns (core 3.3, I.2), `overlap` (I.8) or a path through every depth (I.7): each "
-      "named, the rule not judged at size",
-      said and 'p.point' in said and 'position' in said and not hasattr(union.Union, '_op_overlap')
-      and "'**'" in union.Union._col.__code__.co_consts.__repr__(), said)
+check("the store's SQL has a form for each column, comparator and operation the grammar gained — a statement's and "
+      "a position's columns, a bean's header, `**` and a value's parts, `fits`, `overlap`, a refusal's `at` — each read "
+      "by the reckoner's own reader through a function the connection registers (test/store_union.py holds each to "
+      "the reckoner over every case kept five ways)",
+      hasattr(union.Union, '_op_overlap') and 'fits' in union.WORD_SIGNS and 'Law.fits' in union.Union._fits.__doc__
+      and union.STATEMENT_COLUMNS == reckon.STATEMENT_COLUMNS and union.POSITION_COLUMNS == reckon.POSITION_COLUMNS
+      and not hasattr(union, '_statement_columns_read'))
+check("...a description's statement and position columns computed only where a reading reads them — named, or the "
+      "description read whole, or read through `**` — so order, which reads its descriptions' kinds alone, pays none "
+      "over a store's millions of rows",
+      union._wanted(LAW.readings['order']) == set() and union._wanted(LAW.readings['life']) == {'who', 'via'}
+      and union._wanted({'steps': [{'id': 'a', 'op': 'describe', 'of': 'x', 'at': 'of', 'as': 'o'},
+                                   {'id': 'b', 'op': 'describe', 'of': 'a', 'at': 'by', 'as': 'p'}],
+                         'refuse': [{'of': 'b', 'message': '{o.place} {p.kind}'}]}) == {'o'},
+      (union._wanted(LAW.readings['order']), union._wanted(LAW.readings['life'])))
+st = union.Step('s', {'of': ('w0', 'n0', None)}, ['k'], None, 'statement', ('statement', 'pay'), nodes=[('=', '_raw')])
+beans = union.Step('b', {'bean': ('w0', 'w0', None)}, ['k'], None, 'bean', ('bean',),
+                   nodes=[('?bean', 'w0')], thin=[('', ('bean', 'kind') + union.HEADER)])
+said = []
+for step, path in ((st, 'of>kind'), (st, 'v:of'), (beans, 'pay.of'), (beans, '**')):
+    try:
+        union.Union._path_ok(None, step, path, 'here')
+        said.append(None)
+    except union.NoSQL as e:
+        said.append(str(e))
+check("...and names what it still has none for — a path that starts at another bean or follows a ref, and a "
+      "bean's statements, which no step carries — so a rule reading one is named as not judged at size, never judged "
+      "without it",
+      all(said) and 'follows a ref' in said[0] and 'statements' in said[2], said)
 
 print(f"core_grammar: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)
