@@ -374,7 +374,9 @@ def walk(garden, node, text, at=None):
         out = []
         for v, w in cur:
             sep = '' if w.endswith(':') else '.'
-            if isinstance(v, dict):
+            if s.key == '**':                   # every value below, at any depth, each before what it holds (I.7)
+                out.extend(_below(v, w))
+            elif isinstance(v, dict):
                 items = v.items() if s.star else ([(s.key, v[s.key])] if s.key in v else [])
                 for k, x in items:
                     out.append((x, f"{w}{sep}{k}"))
@@ -382,7 +384,7 @@ def walk(garden, node, text, at=None):
                 for n, x in enumerate(v):
                     ident = x.get('id') if isinstance(x, dict) and isinstance(x.get('id'), str) else n
                     out.append((x, f"{w}[{ident}]"))
-            elif isinstance(v, list):
+            elif isinstance(v, list) and not (i and segs[i - 1].key == '**'):   # after `**`, its items are read too
                 for n, x in enumerate(v):   # a key into a list reads each entry that holds it
                     if isinstance(x, dict) and s.key in x:
                         out.append((x[s.key], f"{w}[{x.get('id', n)}].{s.key}"))
@@ -391,6 +393,27 @@ def walk(garden, node, text, at=None):
             out = [(x, w) for x, w in _flatten(out) if isinstance(x, dict) and str(x.get(a)) == want]
         cur = out
     return cur
+
+
+def _below(v, w):
+    """[(value, where)] for every value below `v`, read at `w`: each value of a map and each item of a list, each before
+    the values it holds, at any depth (the path segment `**`, core 3.3, I.7)."""
+    out = []
+
+    def go(x, at):
+        sep = '' if at.endswith(':') else '.'
+        if isinstance(x, dict):
+            kids = [(y, f"{at}{sep}{k}") for k, y in x.items()]
+        elif isinstance(x, list):
+            kids = [(y, f"{at}[{y.get('id') if isinstance(y, dict) and isinstance(y.get('id'), str) else n}]")
+                    for n, y in enumerate(x)]
+        else:
+            return
+        for y, where in kids:
+            out.append((y, where))
+            go(y, where)
+    go(v, w)
+    return out
 
 
 def _flatten(pairs):
@@ -2244,6 +2267,60 @@ class Reckoner:
     def op_last(self, s):
         return self.op_first(s, last=True)
 
+    def op_overlap(self, s):
+        """`overlap` (core 3.3, I.8): the pairs of members whose spans overlap — one starting before the other ends,
+        and ending after it starts — within each group of the members whose values at `by` are one; each pair a member
+        read under `as`, the earlier first, told at the later's place. A group's members in the order of their starts
+        (of their ends, where they start alike; then as the set holds them), and the pairs in the order of theirs. With
+        `first`, only the group's first is paired, alone, with each later one. With no span (`from`, `to`), every two
+        members of a group overlap: each holds what it holds at once."""
+        ms = self.arg(s, 'of', 'set')
+        names = s.get('as')
+        if not (isinstance(names, list) and len(names) == 2 and all(isinstance(n, str) for n in names)):
+            raise Refused(f"step {s['id']}: a pair is read under two names, `as: [<the earlier's>, <the later's>]`")
+        if ('from' in s) != ('to' in s):
+            raise Refused(f"step {s['id']}: a span is read from two paths, `from` and `to`, or from none")
+        x, y = names
+        by = _paths(s.get('by'))
+        groups, keys = {}, []
+        for k, m in enumerate(ms):
+            sp = self._span_at(m, s['from'], s['to']) if 'from' in s else (0, 0)
+            key = tuple(self._one(m, p) for p in by)
+            if sp is None or None in key:
+                continue                         # no span, or a value at `by` that is no name: in no group
+            if key not in groups:
+                groups[key] = []
+                keys.append(key)
+            groups[key].append((sp, k, m))
+        if s.get('groups') == 'values':
+            keys = sorted(keys)
+        out = []
+        for key in keys:
+            g = sorted(groups[key], key=lambda e: (e[0], e[1]))
+            for j in range(1 if str(s.get('first')) == 'true' and g else len(g)):
+                (l1, h1), _k1, a = g[j]
+                for (l2, h2), _k2, b in g[j + 1:]:
+                    if 'from' in s and not (l2 < h1 and l1 < h2):
+                        continue
+                    ar, br = as_row(a), as_row(b)
+                    beans = {(f"{x}.{n}" if n else x): v for n, v in ar.beans.items()}
+                    beans.update({(f"{y}.{n}" if n else y): v for n, v in br.beans.items()})
+                    out.append(Row(f"{ar.id} & {br.id}", {x: ar.node, y: br.node}, br.bean, br.place, br.seq, beans,
+                                   _proof(ar.proof, br.proof)))
+        return out
+
+    def _span_at(self, m, frm, to):
+        """(from, to) in milliseconds of member `m`'s span, read at two paths — each one moment, or a day (its start,
+        and the end of its end) — or None where either holds no one position of time."""
+        ends = []
+        for path, end in ((frm, False), (to, True)):
+            found = walk(self.g, m.node, path, at=m.bean)
+            p = _pos(found[0][0], self.zone, self.notes) if len(found) == 1 else None
+            if p is None:
+                return None
+            ends.append(p[1] if p[0] == 'ms' else (p[1] + (1 if end else 0)) * dmcal.DAY_MS)
+        return tuple(ends)
+
     def op_describe(self, s):
         L = self._core_law()
         name = s['as']
@@ -2266,6 +2343,7 @@ class Reckoner:
                 cols = {'being': v, 'kind': kind, 'nature': row.get('nature'), 'line': line, 'rung': row.get('rung')}
                 said = self._statement_named(v, bid)          # a value that names a statement: that statement (I.1)
                 cols.update(self._statement_cols(said))
+                cols.update(self._position_cols(v, kind is not None or bean is not None or said is not None))
                 proof = _proof(mr.proof, (f"{bean}:kind",) if bean else (),
                                (f"law:kinds[{kind}]",) if isinstance(kind, str) and kind in L.kinds else (),
                                (said[3],) if said else ())
@@ -2284,6 +2362,26 @@ class Reckoner:
         b, i, verb, place, roles = said
         sid = roles.get('id') if isinstance(roles, dict) and isinstance(roles.get('id'), str) else None
         return {'bean': b, 'verb': verb, 'index': str(i), 'place': place, 'id': sid}
+
+    def _position_cols(self, v, named):
+        """The columns of a position (core 3.3, I.2): its `system`; `point`, whether it names a point — its system
+        covers one (core/frame.py `covers_point`); and its span, `from` and `to`, to the moment — a day its whole, an
+        extent to the end of its end — each written as a moment in UTC to the millisecond. None for what is no position:
+        a being, a statement, `now`, `unknown`, or a text no system reads."""
+        none = dict.fromkeys(('system', 'point', 'from', 'to'))
+        if named or not isinstance(v, str) or v in ('self', 'now', 'unknown'):
+            return none
+        from core import frame
+        J = getattr(self.g, 'J', None)
+        systems = J.systems if J is not None else self._core_law().systems
+        try:
+            p = frame.read(v, systems, J.G.zone if J is not None else self.zone)
+        except frame.Refused:
+            return none
+        sp = frame.span(p)
+        return {'system': p.system, 'point': 'true' if frame.covers_point(p, systems) else 'false',
+                'from': dmcal.write_moment(sp[0], 'gregorian-civil', 'Z', 'millisecond') if sp else None,
+                'to': dmcal.write_moment(sp[1], 'gregorian-civil', 'Z', 'millisecond') if sp else None}
 
     def _statement_at(self, place):
         """(bean, index, verb, place, roles) of the statement told at `place` (`<bean>[<i>] <verb>`), or None."""
@@ -3071,6 +3169,9 @@ class Judged:
             v = {'bean': b.id}
             if b.kind is not None:
                 v['kind'] = b.kind
+            for key in ('title', 'summary', 'tags', 'details'):    # the rest of its header (core 3.3: `**` reads it)
+                if isinstance(b.header, dict) and key in b.header:
+                    v[key] = b.header[key]
             for i, verb, r in b.items:
                 v.setdefault(verb, []).append(r)
                 self.places[id(r)] = (f"{b.id}[{i}] {verb}", n)
@@ -3084,7 +3185,8 @@ class Judged:
 
 
 _SLOT = re.compile(r'\{([a-z0-9_][a-z0-9_.-]*)(:set)?\}')
-_DESCRIBED = ('being', 'kind', 'nature', 'line', 'rung', 'bean', 'verb', 'index', 'place', 'id')   # describe's columns
+_DESCRIBED = ('being', 'kind', 'nature', 'line', 'rung', 'bean', 'verb', 'index', 'place', 'id',   # describe's columns
+              'system', 'point', 'from', 'to')
 
 
 def _writ(v):

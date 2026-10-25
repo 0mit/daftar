@@ -287,6 +287,11 @@ a bean, and each would otherwise invent a syntax for it. The pattern is the law'
 reads it, so a path is judged and followed the same way everywhere. `>` follows a ref because the graph is made of refs;
 `[<attr>=<value>]` selects entries by what they hold rather than by their position, which carries nothing.
 
+EVERY DEPTH, IN ONE SEGMENT (3.3). Vacancy asks whether any text a bean holds names a row, at whatever depth the text
+sits, and a path reaches one depth per segment: `**` reads every value below where it stands, each before what it holds,
+so that question is a path and not a walk written in code. It reads below, not the node itself, so `**` alone is what a
+node holds and `**.b` every `b` beneath it.
+
 ## core/law/lines.yaml: types[held_pointer]
 
 (std-vocab 32: `value_types[held_pointer]`)
@@ -385,6 +390,15 @@ A STATEMENT'S OWN COLUMNS (3.2). Squares pairs two positions by their verbs, kno
 and every refusal is told at a statement's place: a statement's bean, verb, index, place and id are columns of what the
 garden holds, and `describe` gives them — of the member itself, or of a value that names a statement — so no new
 operation reads them.
+
+A POSITION'S OWN COLUMNS, AND WHAT OVERLAPS (3.3). Room asks whether a place is a point or an area and whether two
+times overlap, and knowing whether an `at` is a stated moment: a position's system, whether it names a point, and its
+span are columns of what the garden holds, read by the reader rule frame and rule room already read them by, so
+`describe` gives them and no second reader of positions is written. What overlaps is one operation, because a pair is
+not a column: the pairs of one group whose spans overlap, in the order of their starts, each told at the later's
+place, where it came to overlap one before it — and with `first`, the first holder alone with each later one, as a
+place is held by whoever came first. The span is written as a moment in UTC so that any reader compares two spans by
+their characters' meaning alone, in no zone.
 
 ## core/law/lines.yaml: comparisons
 

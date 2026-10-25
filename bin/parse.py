@@ -303,12 +303,13 @@ def form_said(row):
     return f"checked by {row['checked_by']}" if row.get('checked_by') else repr(row.get('pattern'))
 
 
-# A PATH INTO WHAT BEANS HOLD (`value_types[field_path]`, 24.0): read here and nowhere else. A segment is a key, or `*` for
-# every key of a map or entry of a list, with `[<attr>=<value>]` for the entries holding that value; `.` goes in, `>` follows
-# a ref to the bean it names and goes on there; `<bean>:` first starts at another bean; `@occurrence` is a word of its own.
+# A PATH INTO WHAT BEANS HOLD (`value_types[field_path]`, 24.0): read here and nowhere else. A segment is a key, `*` for
+# every key of a map or entry of a list, or `**` for every key and item below, at any depth (core 3.3, I.7), with
+# `[<attr>=<value>]` for the entries holding that value; `.` goes in, `>` follows a ref to the bean it names and goes on
+# there; `<bean>:` first starts at another bean; `@occurrence` is a word of its own.
 Segment = collections.namedtuple('Segment', 'bean key star match follow')
 _PATH_BEAN = re.compile(r'([a-z0-9][a-z0-9-]*):', re.ASCII)
-_PATH_SEG = re.compile(r'(\*|[a-z0-9_][a-z0-9_-]*)(?:\[([a-z_][a-z0-9_]*)=([^\]\s]+)\])?', re.ASCII)
+_PATH_SEG = re.compile(r'(\*\*|\*|[a-z0-9_][a-z0-9_-]*)(?:\[([a-z_][a-z0-9_]*)=([^\]\s]+)\])?', re.ASCII)
 
 
 def path_read(text):
@@ -324,9 +325,9 @@ def path_read(text):
     while True:
         m = _PATH_SEG.match(text, i)
         if not m:
-            raise ValueError(f"at character {i + 1}: a key, `*`, or a key with `[<attr>=<value>]` is wanted"
+            raise ValueError(f"at character {i + 1}: a key, `*`, `**`, or a key with `[<attr>=<value>]` is wanted"
                              + (f", not {text[i:i + 8]!r}" if i < len(text) else ", and the path ends"))
-        out.append(Segment(bean if not out else None, m.group(1), m.group(1) == '*',
+        out.append(Segment(bean if not out else None, m.group(1), m.group(1) in ('*', '**'),
                            (m.group(2), m.group(3)) if m.group(2) else None, follow))
         i = m.end()
         if i == len(text):
