@@ -639,6 +639,15 @@ class Judge:
             elif gardens:
                 self.err('knowing', where, f"`at: {at}` — an act known in another garden carries the moment it was known "
                                            f"at there, and is never `now` here")
+        # A NEED MET BY A PERSON IS THEIR WORD (core 3.7, the next machinery's design, IV.1): known by their own `say`
+        for i, verb, r in b.items:
+            if verb != 'meet':
+                continue
+            acts = self._acts_of(b, i, r)
+            for p in (x for x in self._beans_in(r.get('by'), b) if self._is_person(x)):
+                if not any(v == 'say' and p in self._beans_in(rr.get('by'), b) for v, rr in acts):
+                    self.err('knowing', f"{b.id}[{i}] meet", f"a need met by {p} is {p}'s word: known by {p}'s own `say` "
+                                                             f"in this bean, whose `of` names it, never by another's act")
         if blanket:
             return
         for i, verb, r in b.items:

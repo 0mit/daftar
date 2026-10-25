@@ -7,8 +7,10 @@ stored (MODEL.md: readings; manifesto: once).
 WHO IS TOLD IS NEVER CONFIGURED: it is read from what the garden already says, so nobody keeps a second list that
 disagrees with the garden. A lead says what waits, whose it is, and what it is about:
 
-  decision   a decision parked in log/pending.md (`status: proposed`): the gardener's, and also whoever a
-             `grant … as: ratify, class: <its class>` of the gardener's opens it to
+  decision   a need not met on the bean it concerns, that waits on someone (bin/waiting.py, the one reader of what
+             waits): whose its `from` names — a person, else whoever keeps the being it names —, else whoever keeps
+             the being that needs it, else the gardener; and also whoever a `grant … as: ratify, class: <its class>`
+             of the gardener's opens its class to
   case       a case on a walk (a course: a being `be`ing at a walk `as: order`) at a step that is not final: the
              party's whose part the step's `by` names (the `agree … as: <part>` of the case's agreement), said
              overdue where the step's `usually` has passed (bin/seq.py `where`); where nobody took that part, whoever
@@ -46,9 +48,6 @@ import parse as dmparse  # noqa: E402,F401 — its import sets UTF-8 on stdout a
 import importlib  # noqa: E402
 dmpass = importlib.import_module('pass')  # noqa: E402 — `pass` is a keyword: imported by name
 import seq as dmseq  # noqa: E402 — where a course stands, read from its moves and its walk
-
-HEAD = re.compile(r'^## (.+?)(?: · |$)')
-
 
 
 def stored_courses(root):
@@ -92,38 +91,6 @@ def stored_courses(root):
             out.append((being, sid))
     return out
 
-def pending(root):
-    """[(id, class, status)] of log/pending.md's entries, as each writes them: `## <id> · …`, `- class: X …`,
-    `- status: …`. What a fenced block holds is the file's own example of an entry (the seed's "Entry shape"), never an
-    entry: read, it was a decision `<slug>` waiting on every gardener of every garden grown from the seed."""
-    path = os.path.join(root, 'log', 'pending.md')
-    out, cur, fenced = [], None, False
-    try:
-        lines = open(path, encoding='utf-8').read().splitlines()
-    except OSError:
-        return out
-    for ln in lines:
-        if ln.lstrip().startswith('```'):
-            fenced = not fenced
-            continue
-        if fenced:
-            continue
-        m = HEAD.match(ln)
-        if m:
-            cur = [m.group(1).strip(), '', '']
-            out.append(cur)
-            continue
-        if cur is None:
-            continue
-        s = ln.strip()
-        if s.startswith('- class:'):                  # a class of the Contract of Parts (MODEL.md): one letter, A to K
-            m = re.match(r'([A-K])(?![A-Za-z])', s[len('- class:'):].strip())
-            cur[1] = m.group(1) if m else ''
-        elif s.startswith('- status:'):
-            cur[2] = (s[len('- status:'):].strip().split() or [''])[0]
-    return [tuple(x) for x in out]
-
-
 def listed(x):
     return x if isinstance(x, list) else [] if x is None else [x]
 
@@ -140,19 +107,17 @@ def read(root=ROOT):
     _law, G = dmseq.core(root)
     leads = []
 
-    # DECISIONS: the gardener's, and whoever a ratify grant of their class opens them to
-    ratifiers = {}
-    for b in G.beans.values():
-        for _i, verb, r in b.items:
-            if verb == 'grant' and r.get('as') == 'ratify' and 'held' not in r:
-                for c in listed(r.get('class')):
-                    ratifiers.setdefault(str(c), set()).update(str(x) for x in listed(r.get('to')) if isinstance(x, str))
-    for pid, cls, status in pending(root):
-        if status != 'proposed':
-            continue
-        for who in sorted({gardener} | ratifiers.get(cls, set()) - {None}):
-            leads.append({'for': who, 'kind': 'decision', 'about': pid, 'class': cls,
-                          'why': f"a decision parked for you to take (class {cls or 'unsaid'}): log/pending.md {pid}"})
+    # DECISIONS: what waits — each need not met that waits on someone, read by bin/waiting.py, for each it is for
+    import waiting as dmwaiting
+    for x in dmwaiting.read(root)[0]:
+        held = {'blocks': '', 'contingent': ', parked (it does not block)', 'impossible': ', which cannot be met'}
+        for who in x['for']:
+            leads.append({'for': who, 'kind': 'decision', 'about': x['about'], 'need': x['need'], 'class': x['class'],
+                          'strength': x['strength'], 'blocked_by': x['blocked_by'],
+                          'why': f"{x['ref']} waits for you (class {x['class'] or 'unsaid'}"
+                                 f"{held[x['strength']]}"
+                                 + (f", after {', '.join(x['blocked_by'])}" if x['blocked_by'] else '')
+                                 + f"): {x['what']}"})
 
     # CASES: each course at a step that is not final, for the party whose part the step names
     for bid, b in sorted(G.beans.items()):

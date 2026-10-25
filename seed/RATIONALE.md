@@ -677,6 +677,16 @@ a person, the session an agent works in — so the key that signs a commit can b
 keys exist (D17). The gate holds the grammar, a being's id; a host that writes as itself (a hub's merge, the routines
 engine's) is a being too, and which being a key may name is the hub's to judge with the keys.
 
+(core 3.7)
+
+A NEED A PERSON MEETS IS THEIR WORD (the next machinery's design, IV.1, ratified 2026-10-24). What waits is a need on the
+bean it concerns, and it is met when its person says so: the start packet of 2026-10-23 recorded each decision as a
+`need` met by a `meet` the operator said. A bean whose act has no `of` covers every statement in it, so a `meet` by the
+operator written beside an agent's blanket `make` was known — as the agent's own making of the operator's decision. The
+`meet` by a person is known by that person's `say`, which names it or covers it; a `meet` by a document, a tool or a
+release (a checklist's item met by the paper that answers it) is known as any statement is. Measured before the clause:
+in the six gardens of the corpus, no `meet` by a person lacked that person's `say`.
+
 ## core/law/core.yaml: rules[placeholder]
 
 WHAT THE LAW DERIVES IS NOT WRITTEN (the core spec §4; ratified with the core's engine, daftar #81–#84, 2026-10-01). A
@@ -5435,6 +5445,20 @@ from what the garden says — its sessions' worktrees, the decisions in log/pend
 latest session's bean — through the reader of what waits (bin/leads.py), so it cannot disagree with the garden, and a
 handover is its session bean's body. A harness that runs the hooks gives it at a session's start; an agent whose harness
 runs none reads it first (AGENTS.md).
+
+## core/law/tools.yaml: tools[waiting]
+
+WHAT WAITS IS A NEED ON THE BEAN IT CONCERNS, AND THE QUEUE IS A VIEW (the next machinery's design, body IV, option B,
+ratified 2026-10-24 with its mapping). log/pending.md held 214 entries and more than seventy spellings of a status;
+reading it whole took a classifier and a second pass, which first counted thirteen entries marked PARTLY DONE as
+closed, and the gate never read it. A need is checked, has a whose and a class, and is met by its person's word; so
+`waiting` reads every need not met that waits on someone, by whose, by class and by bean, leads' decisions and `now`
+read it, and log/pending.md is written from it by each save, as Part A is written from the says. A need of beings alone
+whose nobody is named — a program needs its framework, a probe reaches a host — is a dependency, read as a relation, and
+waits on nobody. The move of a queue reads each entry by its last mark as the operator's mapping says — acked a need still
+open, parked a lower strength, blocked a need of a need, partly split into parts — and places it on the bean its
+neighbourhood names, else on the session that parked it; an entry that names neither is told, and placed by a map the
+gardener reads, never guessed.
 
 ## core/law/tools.yaml: tools[run]
 

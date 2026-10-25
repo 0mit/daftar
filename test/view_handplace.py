@@ -7,7 +7,7 @@ A garden of the core is grown here (test/grow.py) taking the view profile, and a
 its gardener; Ali, kept by name on her own word (she agreed to the camera's agreement); a reader kept under an opaque
 id; the camera and the lens Sam and Ali bought, each paid by one and borne by both in shares, one of them uneven; a
 loan repaid in six monthly instalments (a clause with a due day and a repetition) and a deposit due within days; a
-dinner; Ali's phone, held off git on this machine's store; a decision parked; and a page of four drawings, none drawn by
+dinner; Ali's phone, held off git on this machine's store; a decision parked, a need on its bean; and a page of four drawings, none drawn by
 a module. Then:
 
   part 1, the law   the law offers the four archetypes, each with the axes it runs on; the page passes the core's gate
@@ -159,6 +159,19 @@ statements:
   - pay:        {{ id: deposit, by: ali, to: sam, of: {{ count: "5.00", unit: XTS }} }}
   - obligatory: {{ id: deposit-due, of: deposit, through: self, note: "a deposit, once", clause: {{ due: "{D(3)}" }} }}
 ''',
+    'camera-insurance': '''bean: camera-insurance
+kind: design
+title: "camera-insurance — whether the camera is insured"
+statements:
+  - say:  { by: sam, at: now }
+  - own:  { by: sam, of: self }
+  - need: { id: insured, by: self, of: "whether the camera is insured, and who pays for it", from: sam, note: "class D" }
+details:
+  waiting:
+    insured:
+      neighbourhood: "camera"
+      recommendation: "Sam insures it; the two bear it as they bear the camera"
+''',
     'dinner': f'''bean: dinner
 kind: event
 title: "dinner — Sam's dinner with friends"
@@ -220,16 +233,9 @@ try:
         "namespaces:\n  - { namespace: anchor-hostname, once: \"false\", meaning: \"a machine's own name for itself\" }\n", 1))
     for bid, text in BEANS.items():
         put(f'beans/{bid}.md', '---\n' + text + '---\n' + bid + ', as Sam records it.\n')
-    put('log/pending.md', get('log/pending.md').rstrip('\n') + f'''
-
-## camera-insurance · whether the camera is insured, and who pays for it · proposed {D(0)} by sam
-- class: D
-- neighborhood: camera
-- proposal: Sam insures it; the two bear it as they bear the camera
-- status: proposed
-''')
     rc, out = run(PY, 'bin/save.py', 'sam', "the camera, the loan, Ali, a reader and a dinner",
-                  '--body', '- action: recorded [[laptop]], [[ali]], [[p-0a1b2c3d]], [[camera]], [[loan]] and [[dinner]]. '
+                  '--body', '- action: recorded [[laptop]], [[ali]], [[p-0a1b2c3d]], [[camera]], [[loan]], [[camera-insurance]] and '
+                  '[[dinner]]. '
                   'RULE-CHANGE: VOCAB.md names the namespace a machine names itself in.')
     check("the invented garden is saved through the core's gate", rc == 0 and '0 error(s)' in out, out[-1500:])
     rc, out = run(PY, 'bin/held.py', 'put', 'ali', 'phone', '--basis', 'camera#agreed')

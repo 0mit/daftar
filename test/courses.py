@@ -126,7 +126,8 @@ statements:
   - need:       { id: batteries, by: self, of: "four 12 V batteries", from: ali }
   - need:       { id: a-window, by: self, of: "an hour with the office's load off" }
   - contingent: { of: a-window }
-  - meet:       { by: ali, of: batteries }
+  - meet:       { id: delivered, by: ali, of: batteries }
+  - say:        { by: ali, of: [delivered], at: now }
   - need:       { id: price, by: self, of: { count: "4000", unit: XTS }, from: ali }
   - repair:     { id: fixes, by: self, of: "ups-1#runtime-2026101012" }
   - fail:       { id: load-drop, by: ups-1, as: "the load dropped during the swap", through: battery-change }

@@ -48,6 +48,7 @@ tools:
   - { tool: stale, family: read }
   - { tool: leads, family: read }
   - { tool: now, family: read }
+  - { tool: waiting, family: read }
   - { tool: where, family: read }
   - { tool: group, family: read }
   - { tool: cal, family: measure }

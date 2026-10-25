@@ -372,8 +372,13 @@ the gardener delegates for named beans, the person a `grant` names (`as: ratify`
 delegated by default. A person's ratification (C to G, and J) is a commit that person signs with their ratifying key, or
 one a grant `as: ratify` of that class names; a hub refuses a change of those classes that no such commit brings, and
 where no hub judges, the ratification is the entry's word alone, and says so. When the class is unclear, an agent
-proposes and a person ratifies. An agent that meets something it may not decide parks it in `log/pending.md` as
-`status: proposed`, does everything safe around it, and carries on.
+proposes and a person ratifies. An agent that meets something it may not decide parks it as a need on the bean it
+concerns — `need: { id, by: self, of: <what>, from: <whose>, note: "class <letter>" }`, its neighbourhood and
+recommendation in that bean's `details.waiting.<id>` —, does everything safe around it, and carries on. How pressing it
+is is its strength (`contingent` of it, it waits without blocking); a need that waits on another names that one in its
+`of`. The person whose it is meets it (`meet`), known by their own `say`; a need withdrawn is taken out, its entry naming
+it. What waits is read, never kept (`python3 bin/waiting.py`), and `log/pending.md` is a view written from it, the queue
+as it stood kept below it as history.
 
 ## The journal and the gate
 - **Each change carries its journal entry**, in `log/journal.md` and in the same commit: who, what and why
