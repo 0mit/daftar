@@ -957,6 +957,53 @@ check("bundle: one page per drawing, the drawing mounted by the same runtime, it
       _dash.get("uid") == "view-silo" and "viewMount" in json.dumps(_dash) and 'org=~\\"$org\\"' in json.dumps(_dash)
       and os.path.isfile(os.path.join(BD, "grafana", "dashboards", "view-index.json")), str(_dash)[:300])
 
+# --- a probe's inside resolution (core 4.3): a name a probe reaches, resolved where the being serving it stands on the LAN
+check("bundle: a monitor whose targets stand on no LAN resolves no name inside: the blackbox service has no extra_hosts",
+      "extra_hosts" not in (_svc.get("blackbox") or {}), _svc.get("blackbox"))
+_sc = get("beans/silo-controller.md")
+put("beans/silo-controller.md", _sc.replace(
+    "  - serve: {id: serves-http, ", "  - be: {id: at-lan, by: self, at: 10.1.0.40, as: location, placed: {openness: here}}\n"
+    "  - serve: {id: serves-web, by: self, at: ['uri:https://silo.example.org/'], through: http}\n  - serve: {id: serves-http, ", 1))
+BD2 = os.path.join(T, "bundle-inside")
+out, rc = dmview("bundle", "--out", BD2)
+_t2 = lambda m: json.load(open(os.path.join(BD2, "targets", m + ".json"))) if os.path.isfile(os.path.join(BD2, "targets", m + ".json")) else []
+_s2 = (yaml.safe_load(open(os.path.join(BD2, "docker-compose.yml"))) or {}).get("services") or {} \
+    if os.path.isfile(os.path.join(BD2, "docker-compose.yml")) else {}
+check("bundle: an http endpoint at a uri is probed at it, and its certificate; the name it names is resolved, for the "
+      "probe alone, to where the being serving it stands on the LAN, the monitor's machine on it too (blackbox's extra_hosts)",
+      rc == 0 and "https://silo.example.org/" in [x["targets"][0] for x in _t2("http")]
+      and "https://silo.example.org/" in [x["targets"][0] for x in _t2("tls")]
+      and (_s2.get("blackbox") or {}).get("extra_hosts") == ["silo.example.org:10.1.0.40"]
+      and (_s2.get("prometheus") or {}).get("extra_hosts") == ["host.docker.internal:host-gateway"], out[-500:] + str(_s2.get("blackbox")))
+_dc, _ym2 = get("beans/dryer-controller.md"), get("beans/yard-monitor.md")
+
+
+def _dryer(at):
+    put("beans/dryer-controller.md", _dc.replace("\nstatements:\n", "\nstatements:\n  - be: {id: at-lan, by: self, at: %s, as: "
+                                                 "location, placed: {openness: here}}\n  - serve: {id: serves-web, by: self, "
+                                                 "at: ['uri:https://dryer.example.org/'], through: http}\n" % at, 1))
+    out, rc = dmview("bundle", "--out", BD2)
+    comp = (yaml.safe_load(open(os.path.join(BD2, "docker-compose.yml"))) or {}).get("services") or {}
+    return out, rc, (comp.get("blackbox") or {}).get("extra_hosts"), dmview("check")[0]
+
+
+put("beans/yard-monitor.md", _ym2.replace("  - need: {id: reaches-dryer-shell,", "  - need: {id: reaches-dryer-web, by: self, "
+                                          "of: [dryer-controller], through: http}\n  - need: {id: reaches-dryer-shell,", 1))
+out, rc, _xh, _ck = _dryer("10.1.0.41")
+check("bundle: a name another being serves on a private address, with no prefix saying the monitor's machine is on its "
+      "LAN, is not resolved — never guessed — and `view check` names it", rc == 0 and _xh == ["silo.example.org:10.1.0.40"]
+      and "probes dryer.example.org, served by dryer-controller, as the world resolves it" in _ck, (out[-400:], _xh, _ck[-600:]))
+put("beans/silo-controller.md", get("beans/silo-controller.md").replace("at: 10.1.0.40, as: location", "at: 10.1.0.40/24, as: location", 1))
+out, rc, _xh, _ck = _dryer("10.1.0.41")
+check("bundle: ...and resolved where a prefix the monitor's machine states holds its address",
+      rc == 0 and _xh == ["dryer.example.org:10.1.0.41", "silo.example.org:10.1.0.40"], (out[-400:], _xh))
+out, rc, _xh, _ck = _dryer("10.2.0.41")
+check("bundle: ...and not where the address lies outside that network", rc == 0 and _xh == ["silo.example.org:10.1.0.40"],
+      (out[-400:], _xh))
+put("beans/dryer-controller.md", _dc)
+put("beans/yard-monitor.md", _ym2)
+put("beans/silo-controller.md", _sc)
+
 # --- a second adapter, beside the first: another technology the catalogue has, read by the adapter named for it
 SIBLING = """TECHNOLOGY = "zabbix"
 

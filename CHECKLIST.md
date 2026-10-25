@@ -50,14 +50,16 @@ show.
       needs itself through others; a part never stands above what its whole is made of. Its reading:
       `core/law/core.yaml` `rules[order].reading`.
 - [ ] **life** — A living or organic being comes through the living; a made or said being comes through hands, a being
-      at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded. Its
-      reading: `core/law/core.yaml` `rules[life].reading`.
+      at reason, or through tools whose own coming goes on; a happening, a `fail`, comes through happenings alone — its
+      causes — and only a happening comes through one; every chain ends at the crown, and none is demanded. Its reading:
+      `core/law/core.yaml` `rules[life].reading`.
 - [ ] **necessity** — A `necessary` statement names what it is necessary through — except of the crown, necessary by
       itself (thesis 12). Its reading: `core/law/core.yaml` `rules[necessity].reading`.
 - [ ] **squares** — Two positions that cannot both stand — contraries or contradictories — on one statement through one
       source are refused; subcontraries may both stand. One observer gives one verdict on one statement (`respond` with
-      an `as`) — confirms, disputes or abstains —, and a `rule` on statements is given once every speaker of them has
-      responded.
+      an `as`) — confirms, disputes or abstains, or of a failure finds it benign —, and a `rule` on statements is given
+      once every speaker of them has responded. A response that finds a statement benign is of a `fail`, and names the
+      day it is looked at again: an `obligatory` of it whose clause falls due.
 - [ ] **bearer** — A quantity is stated only of what its dimensions and its kind hold for (`holds_for`): a nature, or a
       position the being's kind holds or is made of — through `made-of` alone, never `possible-on` or `member-of`. A
       mass is a body's (the foundation `weight`), a temperature an ensemble's; information and money are what is carried
@@ -141,7 +143,8 @@ show.
       a table that names a being of the garden is marked by it; a grant's window is a repetition each of whose
       occurrences lasts a length of time, in cells of a day or more of a calendar reckoned by rule whose day begins at
       midnight, each of its places written as a place of its cell, with its time of day `hh:mm` where it names one, and
-      counted from its `from` where it strides, by a length of time, or counts its times.
+      counted from its `from` where it strides, by a length of time, or counts its times; a need's `interval` is a
+      length of time, with no ends.
 - [ ] **profile** — What a profile gives is used only where the garden takes the profile (VOCAB.md `profiles`): a verb
       whose home it is, and an attribute it adds to a form of the core; and what its forms hold is in its form — a page
       draws the drawings of its bean, each once and all of them, a drawing's values are named once on its page, and what

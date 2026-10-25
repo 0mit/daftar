@@ -992,7 +992,8 @@ def operate(key, v):
                        for ln in v["lanes"] if isinstance(ln, dict)]
     if v.get("members"):
         op["items"] = [{"label": it.get("label", ""), "binds": _ids(it.get("binds")), "fact": it.get("fact"),
-                        "why": it.get("why", ""), "bean": it.get("being")} for it in v["members"] if isinstance(it, dict)]
+                        "says": it.get("says", ""), "why": it.get("why", ""), "bean": it.get("being")}
+                       for it in v["members"] if isinstance(it, dict)]
     if v.get("funnels"):
         op["funnels"] = [{"name": f.get("label", ""), "stages": [
             {"label": s.get("label", ""), "count": s.get("tally"), "counts": s.get("counts", ""), "what": s.get("what", ""),

@@ -8,7 +8,9 @@ it, `$F` stands for the viewer's scope, which the served page fills in — the p
 live-state is whether a being answers the probes its monitor runs against it. What the monitor watches is its own
 `reaches` and each target's own `endpoints`: a reach over a protocol probes every endpoint of that protocol the target
 states, or, where it states none, the address the page's reference chooses for it on the protocol's default ports; a
-reach that has neither is not probed, and `view check` says so.
+reach that has neither is not probed, and `view check` says so. An http endpoint at a `uri` is probed at it, and its
+certificate too where its scheme is https. A name a probe reaches is resolved, for the probe alone, to where its serving
+being stands on the LAN (`inside`, below): the blackbox service's `extra_hosts`.
 
 WHAT ONLY THIS TECHNOLOGY NEEDS — its alert rules and where their mail goes, the credentials an SNMP read names, a
 filesystem read over the monitor's own ssh access, the Grafana plugins its pages need — sits in the monitor's own record
@@ -38,7 +40,7 @@ per drawing, the drawing itself mounted by the same runtime; the alert rules. It
 `history` do, to the monitor's own address, which the host's configuration gives — each answer read within one
 deadline, up to a size, and where it was asked (view_fetch), and one poll's reads within one budget.
 """
-import json, os, re, urllib.parse
+import ipaddress, json, os, re, urllib.parse
 
 import view_fetch
 
@@ -299,9 +301,18 @@ def targets(m):
                 parked.append((t, p, "it states no address"))
             continue
         row = protocol(p)
+        if p == "http":                                # an endpoint at a uri is probed at it: its name, scheme and port
+            for e in vm.fm(t).get("endpoints") or []:
+                if isinstance(e, dict) and e.get("protocol") == p and e.get("system") == "uri" and e.get("at"):
+                    groups["http"].append({"targets": [str(e["at"])], "labels": dict(lb)})
+                    if str(e["at"]).startswith("https://"):
+                        groups["tls"].append({"targets": [str(e["at"])], "labels": dict(lb)})
         eps = [(str(e.get("at")), str(e.get("port")), e.get("confidentiality") == "encrypted")
                for e in (vm.fm(t).get("endpoints") or [])
                if isinstance(e, dict) and e.get("protocol") == p and e.get("at") and e.get("port")]
+        if not eps and any(isinstance(e, dict) and e.get("protocol") == p and e.get("system") == "uri"
+                           for e in vm.fm(t).get("endpoints") or []):
+            continue                                   # probed at its uri, above
         if not eps:
             a = primary(t)
             eps = [(a, str(port), p == "http" and int(port) == 443) for port in (row.get("default_ports") or [])] if a else []
@@ -333,12 +344,94 @@ def targets(m):
     return groups, parked
 
 
+# A PROBE'S INSIDE RESOLUTION (core 4.3): a site whose public address its LAN cannot reach (no hairpin) probes its own
+# public names wrongly from inside. A name a probe reaches is resolved, for the probe alone, to the address its serving
+# being stands at on the LAN — its own `be … as: location`, else that of the being it lives in — at an address of RFC
+# 1918 or RFC 4193. Never guessed: where neither position states a prefix, only a name the monitor's own machine serves
+# is resolved (its own address); a being elsewhere is on the monitor's LAN where a prefix either states holds both.
+# Written as the blackbox service's `extra_hosts`, read from the ledger each time; `view check` names what is left.
+# RFC 1918's three blocks — 10/8, 172.16/12 and 192.168/16, the last written by its number — and RFC 4193's fc00::/7
+LANS = [ipaddress.ip_network(n) for n in ("10.0.0.0/8", "172.16.0.0/12", (0xC0A80000, 16), "fc00::/7")]
+
+
+def _lan(b):
+    """[(address, network or None)] — the private addresses a being stands at as its location."""
+    out = []
+    for e in vm.fm(b).get("located_at") or []:
+        if not (isinstance(e, dict) and e.get("at")) or e.get("openness") == "unknown":
+            continue
+        try:
+            i = ipaddress.ip_interface(str(e["at"]))
+        except ValueError:
+            continue
+        if any(i.ip.version == n.version and i.ip in n for n in LANS):
+            out.append((str(i.ip), i.network if "/" in str(e["at"]) else None))
+    return out
+
+
+def lan_of(b):
+    """(the machine, [(address, network or None)]): the being itself, or the first being it lives in, that stands at a
+    private address; (None, []) where none does."""
+    seen = set()
+    while isinstance(b, str) and b and b not in seen:
+        seen.add(b)
+        got = _lan(b)
+        if got:
+            return b, got
+        li = vm.fm(b).get("lives_in")
+        b = li.get("bean") if isinstance(li, dict) else None
+    return None, []
+
+
+def _one_lan(a, net, mine):
+    """Whether `a` (its network `net`, where its position states one) is on the LAN of `mine`, by a prefix either side
+    states: with none, nothing says it is."""
+    ip = ipaddress.ip_address(a)
+    return any(ipaddress.ip_address(x).version == ip.version and (net is not None or n is not None)
+               and (net is None or ipaddress.ip_address(x) in net) and (n is None or ip in n) for x, n in mine)
+
+
+def resolutions(m, groups):
+    """([(name, address)], [(name, being, why)]): each name the monitor's probes reach, resolved to where its serving
+    being stands on the LAN; and each served at a private address that nothing says is on the monitor's LAN."""
+    machine, mine = lan_of(m["bean"])
+    if not machine:
+        return [], []                                  # a monitor on no LAN probes every name as the world resolves it
+    out, left = {}, {}
+    for mod in ("http", "tls", "tcp", "smtp"):
+        for g in groups.get(mod) or []:
+            for t in g.get("targets") or []:
+                host = urllib.parse.urlsplit(t if "://" in t else "//" + t).hostname
+                try:
+                    ipaddress.ip_address(host or "")
+                    continue                           # an address is reached as it is
+                except ValueError:
+                    pass
+                being = (g.get("labels") or {}).get("name")
+                where, theirs = lan_of(being)
+                hit = theirs[0][0] if theirs and where == machine else \
+                    next((a for a, net in theirs if _one_lan(a, net, mine)), None)
+                if host and hit:
+                    out.setdefault(host, hit)
+                elif host and theirs:
+                    left.setdefault(host, (being, "it stands at %s on a LAN, and no prefix says the monitor's machine "
+                                                  "is on it: state the locations with their prefix" % theirs[0][0]))
+    return sorted(out.items()), sorted((h, b, w) for h, (b, w) in left.items() if h not in out)
+
+
+def inside(m, groups):
+    """[(name, address)]: each name the monitor's probes reach, resolved to where its serving being stands on the LAN."""
+    return resolutions(m, groups)[0]
+
+
 def check_monitor(m):
     """(errors, warnings) of what the adapter reads: a reach it cannot probe is said, never dropped in silence."""
     errs, warns = [], []
     _g, parked = targets(m)
     for b, p, why in parked:
         warns.append("reaches %s over %s, and does not probe it: %s" % (b, p, why))
+    for name, b, why in resolutions(m, _g)[1]:
+        warns.append("probes %s, served by %s, as the world resolves it: %s" % (name, b, why))
     st = m.get("settings")
     if st is not None and not isinstance(st, dict):
         errs.append("its settings are not a mapping of what %s reads (alerts, alerting, snmp, filesystems, "
@@ -426,7 +519,7 @@ services:
     volumes: ['./blackbox.yml:/etc/blackbox.yml:ro']
     ports: ['9115:9115']
     cap_add: ['NET_RAW']   # icmp
-    mem_limit: %(mem_blackbox)s
+%(bb_hosts)s    mem_limit: %(mem_blackbox)s
   grafana:
     image: grafana/grafana:%(img_grafana)s
     restart: unless-stopped
@@ -817,8 +910,11 @@ def bundle(m, views, out):
     open(os.path.join(out, "blackbox.yml"), "w").write(BLACKBOX_YML % dict(d["probe_timeouts"],
                                                                           skip="false" if d["tls_verify"] else "true"))
     it, ml = d["image_tags"], d["mem_limits"]
+    names = inside(m, groups)
+    bb_hosts = ("    extra_hosts: [%s]   # each name probed where it is served on the LAN\n"
+                % ", ".join("'%s:%s'" % (n, a) for n, a in names)) if names else ""
     compose = COMPOSE % {"project": vm.PAGE, "dir": dirpath, "plugins": ",".join(st.get("grafana_plugins") or []),
-                         "extra": snmp_svc + am_svc, "retention": d["retention"],
+                         "extra": snmp_svc + am_svc, "retention": d["retention"], "bb_hosts": bb_hosts,
                          "img_prometheus": it["prometheus"], "img_node": it["node-exporter"], "img_blackbox": it["blackbox"],
                          "img_grafana": it["grafana"], "mem_prometheus": ml["prometheus"], "mem_node": ml["node-exporter"],
                          "mem_blackbox": ml["blackbox"], "mem_grafana": ml["grafana"]}

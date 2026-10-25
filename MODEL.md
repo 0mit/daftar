@@ -20,7 +20,8 @@ it. The words the gate knows are the core, `core/law/core.yaml`, and every other
 - **The life chain.** A being came to be through others (`come`): born of, made, said, started. A living being comes
   through the living; a made or said one through hands — a being at reason — or through a tool whose own coming goes
   on. Every chain ends at the crown, `theone`, the Necessary Existent, with two faces, love and wisdom. Nothing demands
-  a chain: a being that states none is held at the crown all the same.
+  a chain: a being that states none is held at the crown all the same. A happening, a failure, comes through
+  happenings alone: its causes.
 
 ## Beans and gardens
 - A **bean** is one being — a machine, a domain, a program, a person, a contract — as one file, `beans/<id>.md`. Its
@@ -280,7 +281,8 @@ A name is a statement: the namespace gives it.
   wherever a page draws one (the view's archetype `course`): its walk's steps in their order, the one it stands at,
   since when, who acts, overdue, its needs met or not and blocking or not — a course written, a clause's occurrence
   (due on its day, met when a payment `settles` it) and a standing need (holding, or crossed while a `fail` of it has
-  no `repair`), each read as a course by bin/seq.py `courses` and never written as moves. Each line's own
+  no `repair`, or silent past its `interval`; the reading that probes it fails apart from it, a `fail` by the reading),
+  each read as a course by bin/seq.py `courses` and never written as moves. Each line's own
   structure is a value in a form of core/law/lines.yaml, and rule `line` judges it. A region of a line (`extent`) and a
   repetition along one (`recurrence`, each of its places `at` with a time of day where it names one, `5T17:45`) are
   forms of core/law/measures.yaml; how well a value is known is inside it (`u`,

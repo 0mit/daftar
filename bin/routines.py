@@ -55,6 +55,10 @@ A walk with a person's step stops there: the routine proposes, the person ratifi
 A CROSSING (`cross`): a being's need, read against the latest probe readings, that stops holding writes once the
 `measure` that showed it and a `fail` through it (bin/leads.py: a health lead for its keeper); holding again, the
 `measure` and a `repair` of it. Every other sample stays in the probe cache: the garden keeps what a person acts on.
+A PROBE IS A READING OF A BEING'S NEED (core 4.3), its health apart from its value: a reading that cannot be read (no
+reading of its input, or one whose quality is not ok) writes once a `fail` BY THE READING — the probe's failure, not
+the being's, a health lead told as the probe's — and its `repair` when it reads again. A need's `interval` is its
+silence: a reading older than it, or a probe failing for longer, does not hold, and the crossing says it is silent.
 Where a `repair … of: <the need>, at: <a walk>` names the walk that remedies it, a crossing places the being on that
 walk: its plan proposed to the keeper, or run where the walk is granted.
 
@@ -352,13 +356,47 @@ def need_rows(G, holder):
     return read, unread
 
 
-def read_needs(G, holder, being, readings, root=ROOT):
-    """Each need of `holder` a reading meets, read for `being`: [{need, of, as, holds, why, inputs}] — `holds` True,
-    False, or None where it could not be read (an input not given, a reading not known): what is not known does not
-    hold, and nothing is forced. Needs sharing an `as` are alternatives: `group_holds` reads them together."""
+def interval_ms(n):
+    """(the need's `interval` in milliseconds, or None where it states none; why it is not read, or '')."""
+    x = n.get('interval')
+    if not isinstance(x, dict):
+        return None, ''
+    if not isinstance(x.get('measure'), dict):
+        return None, "its interval is counted in cells of a calendar, which this reader does not measure"
+    try:
+        return dmstale._ms_of(dmstale._law('UNITS'), x['measure'], "the need's interval"), ''
+    except dmstale.Unreckoned as e:
+        return None, str(e)
+
+
+def probe_fails(b, rid):
+    """The fails of a probe — a reading of a need, `rid` — this bean holds that no repair answers."""
+    repaired = {str(r.get('of')) for r in statements(b, 'repair')}
+    return [r for r in statements(b, 'fail') if r.get('by') == rid and str(r.get('id')) not in repaired]
+
+
+def _ms(at, zone=None):
+    """UNIX milliseconds of a moment a statement or a reading holds — a clock with no offset read in the garden's zone,
+    as rule frame reckons it — or None."""
+    try:
+        return moment_ms(str(at).replace('T', ' '))
+    except Exception:      # noqa: BLE001 — a moment nobody wrote is no moment
+        m = re.match(r'^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})$', str(at).strip())
+        return stamp_ms(''.join(m.groups()[:3]), ''.join(m.groups()[3:]), zone) if m and zone else None
+
+
+def read_needs(G, holder, being, readings, root=ROOT, now=None):
+    """Each need of `holder` a reading meets, read for `being`: [{need, of, as, holds, why, inputs, unread}] — `holds`
+    True, False, or None where it could not be read (an input not given, a reading not known): what is not known does
+    not hold, and nothing is forced. Needs sharing an `as` are alternatives: `group_holds` reads them together.
+
+    A PROBE IS A READING OF A BEING'S NEED (core 4.3): whether it read is its own health, apart from its value. A reading
+    that could not be read is named in `unread`, with why: the probe's failure, which is not the being's. Where the need
+    states an `interval`, silence past it does not hold: a reading older than that, or the probe failing for longer."""
     import reckon as dmreckon
     b = G.beans.get(str(holder))
     rows, _unread = need_rows(G, holder)
+    now = now_ms() if now is None else now
     out = []
     for n, by in rows:
         if n.get('while') is not None and n['while'] in {r.get('id') for r in statements(b, 'reckon')}:
@@ -367,10 +405,13 @@ def read_needs(G, holder, being, readings, root=ROOT):
                     continue               # needed only while its reading holds: not now
             except Exception:      # noqa: BLE001 — a `while` that cannot be read leaves the need in force
                 pass
-        verdicts, whys, used = [], [], {}
+        verdicts, whys, used, unread = [], [], {}, []
+        silence, unmeasured = interval_ms(n)
+        if unmeasured:
+            whys.append(unmeasured)
         for rid in by:
             entry = next((r for r in statements(b, 'reckon') if r.get('id') == rid), {})
-            given, missing = {}, []
+            given, missing, mine = {}, [], {}
             for d in (entry.get('reading') or {}).get('inputs') or []:
                 if not isinstance(d, dict) or not d.get('name'):
                     continue
@@ -382,12 +423,26 @@ def read_needs(G, holder, being, readings, root=ROOT):
                     missing.append(src)
                     continue
                 given[d['name']] = v
-                used[d['name']] = {'value': v, 'at': src.get('at'), 'instrument': src.get('instrument'),
-                                   'tool': src.get('tool'), 'property': src.get('property') or d.get('quantity'),
-                                   'key': src.get('key'), 'detail': src.get('detail')}
+                mine[d['name']] = used[d['name']] = {'value': v, 'at': src.get('at'), 'instrument': src.get('instrument'),
+                                                     'tool': src.get('tool'), 'property': src.get('property') or d.get('quantity'),
+                                                     'key': src.get('key'), 'detail': src.get('detail')}
             if missing:
-                verdicts.append(None)
-                whys.append('; '.join(missing))
+                unread.append((rid, '; '.join(missing)))
+                since = min((m for m in (_ms(f.get('at'), G.zone) for f in probe_fails(b, rid)) if m is not None), default=None)
+                if silence is not None and since is not None and now - since > silence:
+                    verdicts.append(False)
+                    whys.append(f"silent: its probe {rid} has not read since {shown(since, G.zone)}, longer than the need's "
+                                f"interval")
+                else:
+                    verdicts.append(None)
+                    whys.append('; '.join(missing))
+                continue
+            old = [(k, x) for k, x in mine.items() if silence is not None and _ms(x.get('at'), G.zone) is not None
+                   and now - _ms(x['at'], G.zone) > silence]
+            if old:
+                verdicts.append(False)
+                whys.append('; '.join(f"silent: `{k}` was last read {x['at']}, longer ago than the need's interval"
+                                      for k, x in old))
                 continue
             try:
                 v = dmreckon.holds(f"{holder}:{rid}", root=root, inputs=given)
@@ -401,7 +456,9 @@ def read_needs(G, holder, being, readings, root=ROOT):
                 whys.append(f"{rid} is not known")
         holds = True if True in verdicts else False if verdicts and all(x is False for x in verdicts) else None
         out.append({'need': n.get('id'), 'of': n.get('of'), 'as': n.get('as'), 'from': n.get('from'), 'holds': holds,
-                    'why': '; '.join(whys), 'inputs': used, 'holder': str(holder)})
+                    'why': '; '.join(whys), 'inputs': used, 'holder': str(holder), 'unread': unread,
+                    'read': [rid for rid in by if rid not in {u for u, _w in unread}],
+                    'silent': holds is False and any(w.startswith('silent:') for w in whys)})
     return out
 
 
@@ -476,10 +533,35 @@ def mint(b, base):
 
 
 def open_fails(b, need):
-    """The fails of a need this bean holds (`<need>-<stamp>`, through a measure) that no repair answers."""
+    """The fails of a need this bean holds (`<need>-<stamp>`, through a measure) that no repair answers: the being's
+    own, never its probe's (a fail `by` a reading)."""
     repaired = {str(r.get('of')) for r in statements(b, 'repair')}
     return [r for r in statements(b, 'fail') if str(r.get('id', '')).startswith(f"{need}-")
-            and str(r.get('id')) not in repaired and r.get('through')]
+            and str(r.get('id')) not in repaired and r.get('through') and r.get('by') in ('self', b.id)]
+
+
+def probe_block(G, bean, row, machine, at_text):
+    """The statements the health of a need's probes writes in the being's bean, and the ids it mints: a `fail` by each
+    reading that did not read, once — the probe's failure, not the being's — and a `repair` of each such fail of a
+    reading that reads again."""
+    b = G.beans[str(bean)]
+    sid = re.sub(r'[^0-9]', '', at_text)[:12]
+    block, ids = [], []
+    for rid, why in row.get('unread') or []:
+        if probe_fails(b, rid):
+            continue                              # failing already: written once, never each sample
+        fid = mint(b, f"{rid}-unread-{sid}"[:120])
+        block.append(f"- fail: {{ id: {fid}, by: {rid}, as: {json.dumps(f'the probe {rid} does not read: {_words(why, 300)}')}, "
+                     f"at: \"{at_text}\" }}")
+        ids.append(fid)
+    for rid in row.get('read') or []:
+        for f in probe_fails(b, rid):
+            rid2 = mint(b, f"{f['id']}-repaired")
+            block.append(f"- repair: {{ id: {rid2}, by: {machine}, of: {f['id']}, note: \"the probe {rid} reads again\" }}")
+            ids.append(rid2)
+    if ids:
+        block.append(f"- read: {{ by: {machine}, of: [{', '.join(ids)}], at: now }}")
+    return block, ids
 
 
 def crossing_block(G, bean, row, machine, at_text, holds):
@@ -511,7 +593,8 @@ def crossing_block(G, bean, row, machine, at_text, holds):
     else:
         fid = mint(b, f"{row['need']}-{sid}")
         words = row['of'] if isinstance(row['of'], str) else ', '.join(map(str, listed(row['of'])))
-        block.append(f"- fail: {{ id: {fid}, by: self, as: {json.dumps(f'{words}: does not hold')}, "
+        said = 'silent past its interval' if row.get('silent') else 'does not hold'
+        block.append(f"- fail: {{ id: {fid}, by: self, as: {json.dumps(f'{words}: {said}')}, "
                      f"through: {mids[0] if mids else row['need']}, at: \"{at_text}\" }}")
         ids.append(fid)
     know = []
@@ -562,9 +645,21 @@ def cross(G, readings, root=ROOT, write=True):
     for bid, b in sorted(G.beans.items()):
         if bid in walks:
             continue                              # a walk's needs are its interlocks, read only when it runs
-        rows = [r for r in read_needs(G, bid, bid, readings, root) if r['inputs']]
-        for row in rows:
-            if row['holds'] is None:
+        for row in read_needs(G, bid, bid, readings, root):
+            # A PROBE'S HEALTH, apart from its value: a reading that did not read is its probe's failure, written once
+            pblock, pids = probe_block(G, bid, row, machine, at_text)
+            if pblock:
+                changed.append({'bean': bid, 'need': row['need'], 'probe': True, 'ids': pids, 'why': row['why'],
+                                'stopped': 'its probe reads again' if all(i.endswith('-repaired') for i in pids)
+                                else 'its probe does not read'})
+                if write:
+                    touched.append(b.path)
+                    pending.append((b.path, '\n'.join(pblock) + '\n'))
+                lines += [f"- action: [[{bid}]] {row['need']}: the probe {rid} does not read: {_words(why, 300)}"
+                          for rid, why in row['unread'] if any(i.startswith(f"{rid}-unread-") for i in pids)]
+                lines += [f"- action: [[{bid}]] {row['need']}: the probe {rid} reads again" for rid in row['read']
+                          if any(i.endswith('-repaired') and i.startswith(f"{rid}-unread-") for i in pids)]
+            if not (row['inputs'] or row['silent']) or row['holds'] is None:
                 continue                          # not known: no crossing either way
             was_open = bool(open_fails(b, row['need']))
             if row['holds'] is False and not was_open or row['holds'] is True and was_open:
