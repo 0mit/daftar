@@ -251,6 +251,22 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 3.3** (2026-10-25, daftar v3.3.0, human-ratified rule-change) — **the reading grammar, part two** (the next
+  machinery's design, body I: I.2, I.7, I.8). MINOR. `describe` gives a position's own columns: its `system`; `point`,
+  whether it names a point (its system `covers` one) or an area, which holds many; and its span, `from` and `to`, to the
+  moment — a moment itself, a day the whole of it, an extent to the end of its end — each written as a moment in UTC to
+  the millisecond (none for a being, a statement, `now`, `unknown`, or what no system reads). A path's segment `**` reads
+  every value below where it stands, at any depth — each value of a map and each item of a list, each before what it
+  holds — in the one path reader (bin/parse.py `path_read`) and the law's `field_path`; a rule's garden is each bean's
+  whole header (`title`, `summary`, `tags`, `details`) beside its verbs, as the grammar always said. One operation,
+  `overlap`: the pairs of members whose spans overlap, within each group of the members whose values at `by` are one,
+  in the order of their starts, each pair told at the later's place; with `first`, the first alone with each later one;
+  with no span, every two of a group. Rule room's point and span are read by core/frame.py's one reader of each
+  (`covers_point`, `span`), which `describe` reads too. The store's SQL has no form yet for a position's columns,
+  `overlap` or `**`, and names a rule that reads one as not judged at size. The rules consent, vacancy, room,
+  placeholder, bearer and harm keep their code: none can yet be stated as a reading with every verdict the same, each
+  measured and parked with what it still needs, and consent's scope between gardens (the design's V.3), which consent's
+  reading is to read, waits with it.
 - **core 3.2** (2026-10-25, daftar v3.2.0, human-ratified rule-change) — **the reading grammar, part one, and the
   rules' words** (the next machinery's design, body I: I.1, I.3, I.4, I.5, I.6 and I.9's set words; body VIII as ratified
   as written). MINOR. `describe` gives a statement's own columns — its bean, verb, index, place and id — of the member

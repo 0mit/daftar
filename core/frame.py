@@ -180,3 +180,28 @@ def _extent(text, system, a, b, systems, zone):
     if after:
         raise Refused(f"{text!r}: an extent runs from its start to its end, and this one starts after it ends")
     return Position(text, system, end=end, day=start.day, moment=start.moment, stated=start.stated and end.stated)
+
+
+def covers_point(p, systems):
+    """Whether the position `p` names a point, by its system's `covers` — one spot, where two bodies are in one room — or
+    an area — a region, a cell, a line, which holds many. A system that says nothing is read as it was before it could
+    say: a point. Rule room reads it, and a reading by `describe` (core 3.3, I.2: `<as>.point`)."""
+    c = (systems.get(p.system) or {}).get('covers')
+    if isinstance(c, dict):
+        value = p.text[len(p.system) + 1:] if p.text.startswith(p.system + ':') else p.text
+        return not (isinstance(c.get('area'), str) and re.search(c['area'], value)
+                    and not (isinstance(c.get('point'), str) and re.search(c['point'], value)))
+    return c != 'area'
+
+
+def span(p):
+    """(from, to) in milliseconds of a position of time — a moment itself, a day the whole of it, an extent from its
+    start to the end of its end — or None for one that is no time. Rule room reads it, and a reading by `describe`
+    (core 3.3, I.2: `<as>.from`, `<as>.to`)."""
+    def ms(q, end):
+        if q.moment is not None:
+            return q.moment
+        return (q.day + (1 if end else 0)) * dmcal.DAY_MS if q.day is not None else None
+    lo = ms(p, False)
+    hi = ms(p.end, True) if p.end is not None else ms(p, True)
+    return (lo, hi) if lo is not None and hi is not None else None

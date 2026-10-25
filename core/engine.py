@@ -28,7 +28,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
 from core import frame, reach, read  # noqa: E402
-import cal as dmcal  # noqa: E402 — a day's length, to reckon a day's span beside a moment's
+import cal as dmcal  # noqa: E402 — the calendars, which core/inforce.py and core/crosswalk.py read through the engine
 from core.law import listed, shapes_of, TRUE  # noqa: E402
 import importlib
 dmpass = importlib.import_module('pass')  # noqa: E402 — the one matcher of a path against a layer's pattern
@@ -970,14 +970,7 @@ class Judge:
             return None
         if to_the_moment and (p.moment is None or p.end is None or p.end.moment is None):
             return None
-
-        def ms(q, end):
-            if q.moment is not None:
-                return q.moment
-            return (q.day + (1 if end else 0)) * dmcal.DAY_MS if q.day is not None else None
-        lo = ms(p, False)
-        hi = ms(p.end, True) if p.end is not None else ms(p, True)
-        return (lo, hi) if lo is not None and hi is not None else None
+        return frame.span(p)
 
     def _codes(self, x):
         """The scheme of every code `<scheme>:<code>` a structure holds, as written."""
@@ -1218,12 +1211,7 @@ class Judge:
         """Whether a position covers a point, by its system's `covers` — one spot, where two bodies are in one room — or
         an area — a region, a cell, a line, which holds many. A system that says nothing is read as it was before it
         could say: a point."""
-        c = (self.systems.get(p.system) or {}).get('covers')
-        if isinstance(c, dict):
-            value = p.text[len(p.system) + 1:] if p.text.startswith(p.system + ':') else p.text
-            return not (isinstance(c.get('area'), str) and re.search(c['area'], value)
-                        and not (isinstance(c.get('point'), str) and re.search(c['point'], value)))
-        return c != 'area'
+        return frame.covers_point(p, self.systems)
 
     def room(self):
         """Two bodies in one room — at one position that names a point, a sayable taking no room — two listeners at one

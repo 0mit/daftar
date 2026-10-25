@@ -359,6 +359,19 @@ operations:
       by: { required: "true", in: any, meaning: "the paths whose values make a group, each read as the being it names: one path, or a list" }
       groups: { in: [read, values], meaning: "the order the groups are given in: as their first members are read (`read`, the default), or of their values, each name by its characters (`values`)" }
     meaning: "one member of each group of the members whose values at `by` are one: the last in the order the garden is read in; the groups in the order `groups` says"
+  - op: overlap
+    gives: set
+    exact: "true"
+    u_rule: none
+    takes:
+      of: { required: "true", in: { type: kebab }, meaning: "the members: an earlier step's set" }
+      from: { in: { type: field_path }, meaning: "where each member's span starts: one moment, or a day, its start (`describe`'s `<as>.from`)" }
+      to: { in: { type: field_path }, meaning: "where it ends: one moment, or a day, its end (`<as>.to`); with `from`, or neither" }
+      by: { in: any, meaning: "the paths whose values make a group, each read as the being it names: one path, or a list. Pairs are of one group; a member whose value there is no name is in none" }
+      groups: { in: [read, values], meaning: "the order the groups are given in: as their first members are read (`read`, the default), or of their values, each name by its characters (`values`)" }
+      first: { in: ["true", "false"], meaning: "with `true`: only the first member of each group is paired, alone with each later one" }
+      as: { required: "true", in: any, meaning: "the two names a pair's members are read under, `[<the earlier's>, <the later's>]`" }
+    meaning: "the pairs of members whose spans overlap — the one starts before the other ends and ends after it starts — within each group of the members whose values at `by` are one: each pair one member, the earlier and the later under the names of `as`, told at the later's place (where it came to overlap one before it), its proof both members'. A group's members are in the order of their starts, of their ends where they start alike, then as the set holds them; its pairs in that order, the earlier's first. With `first: \"true\"`, only the first is paired, alone with each later one — the first holder of a place compared with each who comes after. A member whose span is not one moment or one day at each path is in no pair. With neither `from` nor `to`, every two members of a group overlap: each holds what it holds at once"
   - op: describe
     gives: set
     exact: "true"
@@ -366,8 +379,8 @@ operations:
     takes:
       of: { required: "true", in: { type: kebab } }
       at: { in: { type: field_path }, meaning: "what is described: the value at this path of each member — a list, each of its items, a member for each; absent, the member itself, a statement" }
-      as: { required: "true", in: { type: kebab }, meaning: "the name the built-in columns are read under: `<as>.being`, the being as it is written, and `<as>.kind`, `<as>.nature`, `<as>.line`, `<as>.rung`; of a statement, `<as>.bean` (the bean it is written in), `<as>.verb`, `<as>.index`, `<as>.place` (`<bean>[<i>] <verb>`, where a refusal is told) and `<as>.id`" }
-    meaning: "each member with the built-in columns of a being, read from the law: its kind — a bean's own, a being's a store keeps, a `someone`'s — its kind's nature, the line its kind is on (its own, or its level's) and its rung; none for what names no being (the crown, `unknown`, a word). Of a statement — the member itself, or a value naming one by its id in the bean it is written in or as `<bean>#<id>` — the columns of that statement; none for what names no statement"
+      as: { required: "true", in: { type: kebab }, meaning: "the name the built-in columns are read under: `<as>.being`, the being as it is written, and `<as>.kind`, `<as>.nature`, `<as>.line`, `<as>.rung`; of a statement, `<as>.bean` (the bean it is written in), `<as>.verb`, `<as>.index`, `<as>.place` (`<bean>[<i>] <verb>`, where a refusal is told) and `<as>.id`; of a position, `<as>.system`, `<as>.point` and `<as>.from` and `<as>.to`" }
+    meaning: "each member with the built-in columns of a being, read from the law: its kind — a bean's own, a being's a store keeps, a `someone`'s — its kind's nature, the line its kind is on (its own, or its level's) and its rung; none for what names no being (the crown, `unknown`, a word). Of a statement — the member itself, or a value naming one by its id in the bean it is written in or as `<bean>#<id>` — the columns of that statement; none for what names no statement. Of a position — a value that names no being and no statement, read in a declared system (rule frame) — its columns: its system; `point`, `\"true\"` where it names a point (its system `covers` one) and `\"false\"` where an area, which holds many; and its span, `from` and `to`, to the moment — a moment itself, a day the whole of it, an extent from its start to the end of its end — each written as a moment in UTC to the millisecond, none for a position that is no time; none for `now`, `unknown` and what no system reads"
   - op: weigh
     gives: groups
     exact: "false"
@@ -904,9 +917,9 @@ types:
     meaning: "what every key and every string value of a bean, a mapping, GARDEN.md and VOCAB.md is: characters a person reads. It holds no character of the Unicode general category `holds_no` but those in `but`, and a line feed only in a scalar of the style `lines_in` names. Every other value type is text first"
   - type: field_path
     origin: { act: say, nature: sayable, by: law }
-    pattern: "^(?:@occurrence|(?:[a-z0-9][a-z0-9-]*:)?(?:\\*|[a-z0-9_][a-z0-9_-]*)(?:\\[[a-z_][a-z0-9_]*=[^\\]\\s]+\\])?(?:\\.(?:\\*|[a-z0-9_][a-z0-9_-]*)(?:\\[[a-z_][a-z0-9_]*=[^\\]\\s]+\\])?)*(?:>(?:\\*|[a-z0-9_][a-z0-9_-]*)(?:\\[[a-z_][a-z0-9_]*=[^\\]\\s]+\\])?(?:\\.(?:\\*|[a-z0-9_][a-z0-9_-]*)(?:\\[[a-z_][a-z0-9_]*=[^\\]\\s]+\\])?)*)*)$"
-    refusal: "must be a path into what beans hold — keys joined by `.`; `*` for every key of a map or entry of a list; `[<attr>=<value>]` for the entries holding that value; `>` to follow a ref to the bean it names and go on there; `<bean>:` first to start at another bean; or `@occurrence`. For example `parties[role=seller].who>title`"
-    meaning: "a PATH into a bean's front matter, read by the one reader (bin/parse.py `path_read`; evaluated by bin/reckon.py). Read from the bean it is read from — the selected member, the occurrence, the bean that declares it — unless it names another. A list is gone into entry by entry. `@occurrence` is the moment an occurrence of an `each` clause entered its selection"
+    pattern: "^(?:@occurrence|(?:[a-z0-9][a-z0-9-]*:)?(?:\\*\\*|\\*|[a-z0-9_][a-z0-9_-]*)(?:\\[[a-z_][a-z0-9_]*=[^\\]\\s]+\\])?(?:\\.(?:\\*\\*|\\*|[a-z0-9_][a-z0-9_-]*)(?:\\[[a-z_][a-z0-9_]*=[^\\]\\s]+\\])?)*(?:>(?:\\*\\*|\\*|[a-z0-9_][a-z0-9_-]*)(?:\\[[a-z_][a-z0-9_]*=[^\\]\\s]+\\])?(?:\\.(?:\\*\\*|\\*|[a-z0-9_][a-z0-9_-]*)(?:\\[[a-z_][a-z0-9_]*=[^\\]\\s]+\\])?)*)*)$"
+    refusal: "must be a path into what beans hold — keys joined by `.`; `*` for every key of a map or entry of a list; `**` for every key and item below, at any depth; `[<attr>=<value>]` for the entries holding that value; `>` to follow a ref to the bean it names and go on there; `<bean>:` first to start at another bean; or `@occurrence`. For example `parties[role=seller].who>title`"
+    meaning: "a PATH into a bean's front matter, read by the one reader (bin/parse.py `path_read`; evaluated by bin/reckon.py). Read from the bean it is read from — the selected member, the occurrence, the bean that declares it — unless it names another. A list is gone into entry by entry. `**` reads every value below where it stands, at any depth — each value of a map and each item of a list, each before what it holds — so a path reaches every text a node holds (core 3.3, I.7). `@occurrence` is the moment an occurrence of an `each` clause entered its selection"
   - type: held_pointer
     pattern: "^root:[a-z0-9][a-z0-9-]*/[0-9a-f]{32}$"
     refusal: "must be `root:<logical root>/<32 lowercase hexadecimal digits>` — a key bin/held.py mints, which says nothing of what it holds"

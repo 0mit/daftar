@@ -27,8 +27,10 @@ THE OPERATIONS. Those the rules' readings are written in (core/law/lines.yaml): 
 beans, or of a step, by `exists`, `absent`, `is` and `≠`; `describe`, a being's kind, nature, line and rung from the
 law's kinds; `join` of two sets, matched, unmatched or both; `minus`; `first` and `last`; and the two walks, walked
 by core/reach.py, the one walk: `cycle` over what SQL leaves of its edges once every one that cannot lie on a cycle
-is dropped, `reach` over its relation's edges as SQL reads them. Any other operation, a condition by another comparator, or a path into a filler's own parts has no SQL form here:
-`NoSQL` names the step, and the store's check names the rule as not judged at that size.
+is dropped, `reach` over its relation's edges as SQL reads them. Any other operation (`overlap` among them, core 3.3), a
+condition by another comparator, a path into a filler's own parts or through every depth (`**`), or a statement's or a
+position's columns of a description has no SQL form here: `NoSQL` names the step, and the store's check names the rule
+as not judged at that size.
 
 ONE CASE IS READ OTHERWISE. A store keeps a being's id and a statement's id apart (bin/store.py `normalize`): a filler
 it keeps as a being, a list, or a text it keeps outside a statement of its own being is read as it keeps it. The engine
@@ -51,6 +53,7 @@ CARRIED = ('_src', '_bean', '_verb', '_i', '_place', '_bkind')   # what a statem
                                                                     # the kind its bean is of in the union
 WORD_SIGNS = {'exists', 'absent', 'is', '≠', 'fits'}
 STATEMENT_COLUMNS = ('bean', 'verb', 'index', 'place', 'id')   # describe's columns of a statement (core 3.2): no SQL form yet
+POSITION_COLUMNS = ('system', 'point', 'from', 'to')           # describe's columns of a position (core 3.3): none yet
 
 
 def q(name):
@@ -371,9 +374,13 @@ class Union:
     def _col(self, st, path, sid, named=False):
         """The column of `path` in step `st` (its value as the being it names, with `named`): a column, or NULL where
         no member holds the path. A path into a filler's own parts has no SQL form here."""
+        if '**' in re.split(r'[.>]', str(path)):
+            raise NoSQL(f"step {sid}: `{path}` reads every depth (`**`), which has no SQL form here")
         if path in st.cols:
             return q(st.cols[path][1 if named else 0])
         segs = str(path).split('.')
+        if st.kind == 'bean' and segs[0] in ('title', 'summary', 'tags', 'details'):
+            raise NoSQL(f"step {sid}: `{path}` reads a bean's header beside its kind, which has no SQL form here")
         for k in range(1, len(segs)):
             if '.'.join(segs[:k]) in st.cols:
                 raise NoSQL(f"step {sid}: `{path}` reads into a value's own parts")
@@ -507,7 +514,7 @@ class Union:
         cols[f"{name}.being"] = (being, named, kind)
         for key, c in (('kind', kind), ('nature', f"nat{n}"), ('line', f"lin{n}"), ('rung', f"run{n}")):
             cols[f"{name}.{key}"] = (c, c, None)
-        for key in STATEMENT_COLUMNS:                # a being's member has none; a reading that reads one is NoSQL
+        for key in STATEMENT_COLUMNS + POSITION_COLUMNS:   # a being's member has none; a reading that reads one is NoSQL
             cols[f"{name}.{key}"] = (f"nul{n}", f"nul{n}", None)
         return self._view(sql, cols, st.keys + [dk], st.seq, st.kind, st.lineage + ('describe', s['id']),
                           table=self._shared(s['id']), foreign=st.foreign)
@@ -793,9 +800,10 @@ class Union:
 
 
 def _statement_columns_read(reading):
-    """NoSQL where a rule's reading describes a statement (core 3.2, I.1): a `describe` with no `at`, or a path, a
-    condition, a key or a refusal's words reading a statement's column of a description. Their SQL form is not written
-    yet, so the rule is named as not judged at that size rather than judged without them."""
+    """NoSQL where a rule's reading describes a statement (core 3.2, I.1) or a position (core 3.3, I.2): a `describe`
+    with no `at`, or a path, a condition, a key or a refusal's words reading a statement's or a position's column of a
+    description. Their SQL form is not written yet, so the rule is named as not judged at that size rather than judged
+    without them."""
     steps = [s for s in reading.get('steps') or [] if isinstance(s, dict)]
     names = {s.get('as') for s in steps if s.get('op') == 'describe' and isinstance(s.get('as'), str)}
     for s in steps:
@@ -808,9 +816,10 @@ def _statement_columns_read(reading):
                 continue
             texts += [json.dumps(v, ensure_ascii=False) if not isinstance(v, str) else v]
     for t in texts:
-        for m in re.finditer(r'([a-z0-9_-]+)\.(' + '|'.join(STATEMENT_COLUMNS) + r')\b', t):
+        for m in re.finditer(r'([a-z0-9_-]+)\.(' + '|'.join(STATEMENT_COLUMNS + POSITION_COLUMNS) + r')\b', t):
             if m.group(1) in names:
-                raise NoSQL(f"`{m.group(0)}`: a statement's column of a description has no SQL form here")
+                raise NoSQL(f"`{m.group(0)}`: a {'position' if m.group(2) in POSITION_COLUMNS else 'statement'}'s "
+                            f"column of a description has no SQL form here")
 
 
 def _sortable(key):

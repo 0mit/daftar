@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """core_grammar — the reading grammar, part one (core 3.2, the next machinery's design, body I: I.1, I.3, I.4, I.5, I.6 and
-I.9's set words), and the two values the law now holds (body VIII).
+I.9's set words) and part two (core 3.3: I.2, I.7, I.8), and the two values the law now holds (body VIII).
 
 Each by its vectors: `describe` of a statement — the member itself, or a value naming one; the comparator `fits` and
 the law's table of checks, closed both ways and held to its vectors, the designations among them; one spelling, one
 system, as the law's own check, with the two collisions decided and the translator that moves a garden past them; an
 input from an earlier rule and from any table the law's columns declare, the manifest among them; a refusal's words
-writing a set; the weighing's bound and the pass log's folder read from the law; and the store's SQL, which calls the
-law's own `fits` and names what it has no form for. Invented beings; nothing here is a fact. (`python` on Windows.)"""
+writing a set; the weighing's bound and the pass log's folder read from the law; a path through every depth, `describe`
+of a position and the operation `overlap`; and the store's SQL, which calls the law's own `fits` and names what it has
+no form for. Invented beings; nothing here is a fact. (`python` on Windows.)"""
 import copy
 import os
 import shutil
@@ -238,6 +239,100 @@ check("a weighing's bound is its form's row of the law: 0.10 as released; a law 
 check("a session's pass log is kept under the folder the flow law names (core/law/flows.yaml `pass_logs`)",
       LAW.pass_logs.get('session', {}).get('folder') == 'captures/passes/', LAW.pass_logs)
 
+# ------------------------------------------------------------------------------------------------ part two (core 3.3)
+# I.7, a path segment for every depth
+segs = dmparse.path_read('details.**.b')
+check("a path's segment `**` reads every key and item below, at any depth: the one path reader, and the law's "
+      "`field_path` (and `***` is no segment)",
+      [s.key for s in segs] == ['details', '**', 'b'] and LAW.fits({'type': 'field_path'}, 'details.**.b')
+      and LAW.fits({'type': 'field_path'}, '**') and not LAW.fits({'type': 'field_path'}, 'a.***')
+      and dmparse.path_problem('a.***'), segs)
+below = reckon.walk(None, {'a': [{'b': 'x', 'id': 'q'}, 'y'], 'c': {'d': 'z'}}, '**', at='v')
+check("...each value of a map and each item of a list, each before what it holds, where it is named as any path names it",
+      below == [([{'b': 'x', 'id': 'q'}, 'y'], 'v:a'), ({'b': 'x', 'id': 'q'}, 'v:a[q]'), ('x', 'v:a[q].b'),
+                ('q', 'v:a[q].id'), ('y', 'v:a[1]'), ({'d': 'z'}, 'v:c'), ('z', 'v:c.d')], below)
+check("...and a key after it is read at every depth: `**.b`",
+      [v for v, _w in reckon.walk(None, {'b': 1, 'a': [{'b': 2, 'c': {'b': 3}}]}, '**.b')] == [2, 3],
+      reckon.walk(None, {'b': 1, 'a': [{'b': 2, 'c': {'b': 3}}]}, '**.b'))
+
+
+def judged(statements, details=None, also=()):
+    h = {'bean': 'v', 'kind': 'host', 'title': 'v', 'statements': statements}
+    if details is not None:
+        h['details'] = details
+    beans = {'v': engine.Bean('v', header=h),
+             'w': engine.Bean('w', header={'bean': 'w', 'kind': 'person', 'title': 'w', 'statements': [SAY]})}
+    for b in also:
+        beans[b.id] = b
+    return engine.Judge(LAW, engine.Garden(beans, CASES['zone'], manifest={'gardener': 'w'}))
+
+
+env = reading(None, [{'id': 'hay', 'op': 'select', 'where': [{'path': '**', '=': 'needle'}]},
+                     {'id': 'title', 'op': 'select', 'where': [{'path': 'title', '=': 'w'}]}],
+              J=judged([SAY], details={'deep': [{'x': 'needle'}]}))
+check("...over a rule's garden, whose beans are their whole header and their verbs: a text in `details`, at any depth, "
+      "and a bean's title", [m.id for m in env['hay']] == ['v'] and [m.id for m in env['title']] == ['w'],
+      (env['hay'], env['title']))
+
+# I.2, describe of a position
+AT = ['2026-10-01', 'w', '2026-10-01 10:00+03:30', '2026-10-01/2026-10-03', '192.0.2.10', 'now', 'zz!']
+env = reading([SAY, {'be': {'by': 'self', 'at': AT, 'as': 'location'}}],
+              [{'id': 'be', 'op': 'select', 'entries': 'be'}, {'id': 'p', 'op': 'describe', 'of': 'be', 'at': 'at', 'as': 'p'}])
+cols = [tuple(m.node['p'][k] for k in ('system', 'point', 'from', 'to')) for m in env['p']]
+check("describe of a position: its system, whether it names a point, and its span to the moment — a day its whole, a "
+      "moment itself, an extent to the end of its end — written in UTC; a place no span; none for a being, `now`, or "
+      "what no system reads",
+      cols == [('gregorian-civil', 'true', '2026-10-01 00:00:00.000Z', '2026-10-02 00:00:00.000Z'),
+               (None,) * 4, ('gregorian-civil', 'true', '2026-10-01 06:30:00.000Z', '2026-10-01 06:30:00.000Z'),
+               ('gregorian-civil', 'true', '2026-10-01 00:00:00.000Z', '2026-10-04 00:00:00.000Z'),
+               ('ipv4', 'true', None, None), (None,) * 4, (None,) * 4], cols)
+area = next((n for n, r in LAW.systems.items() if isinstance(r, dict) and r.get('covers') == 'area'), None)
+J = judge([SAY])
+p = engine.frame.read('192.0.2.10', LAW.systems, None)
+check("...`point` by its system's `covers`, as rule room reads it (core/frame.py `covers_point`, the one reader): an "
+      "area holds many", J.at_point(p) and engine.frame.covers_point(p, LAW.systems)
+      and (area is None or not engine.frame.covers_point(engine.frame.Position('x', area), LAW.systems)), area)
+
+# I.8, overlap
+ATT = [('w', '2026-10-01 10:00+03:30/2026-10-01 12:00+03:30'), ('w', '2026-10-01 11:00+03:30/2026-10-01 13:00+03:30'),
+       ('w', '2026-10-01 09:00+03:30/2026-10-01 10:30+03:30'), ('self', '2026-10-01 09:00+03:30/2026-10-01 10:30+03:30'),
+       ('w', '2026-10-01 13:00+03:30/2026-10-01 14:00+03:30'), ('w', '2026-10-01')]
+steps = [{'id': 'att', 'op': 'select', 'entries': 'attend'}, {'id': 't', 'op': 'describe', 'of': 'att', 'at': 'at', 'as': 't'},
+         {'id': 'who', 'op': 'describe', 'of': 't', 'at': 'by', 'as': 'who'}]
+env = reading([SAY] + [{'attend': {'by': b, 'of': 'v', 'at': a}} for b, a in ATT],
+              steps + [{'id': 'all', 'op': 'overlap', 'of': 'who', 'from': 't.from', 'to': 't.to', 'by': 'who.being',
+                        'as': ['a', 'b']},
+                       {'id': 'first', 'op': 'overlap', 'of': 'who', 'from': 't.from', 'to': 't.to', 'by': 'who.being',
+                        'first': 'true', 'as': ['a', 'b']},
+                       {'id': 'held', 'op': 'overlap', 'of': 'who', 'by': 'who.being', 'groups': 'values',
+                        'as': ['a', 'b']}])
+pairs = lambda k: [(m.place, m.node['a']['who']['being'], m.node['a']['t']['being'][11:16],  # noqa: E731
+                    m.node['b']['t']['being'][11:16]) for m in env[k]]
+check("overlap: the pairs of one group (`by`, each value the being it names) whose spans overlap — touching ends do not "
+      "— in the order of their starts, each told at the later's place; a day overlaps its hours",
+      pairs('all') == [('v[3] attend', 'w', '', '09:00'), ('v[1] attend', 'w', '', '10:00'),
+                       ('v[2] attend', 'w', '', '11:00'), ('v[5] attend', 'w', '', '13:00'),
+                       ('v[1] attend', 'w', '09:00', '10:00'), ('v[2] attend', 'w', '10:00', '11:00')], pairs('all'))
+check("...with `first`, the first alone with each later one",
+      pairs('first') == [('v[3] attend', 'w', '', '09:00'), ('v[1] attend', 'w', '', '10:00'),
+                         ('v[2] attend', 'w', '', '11:00'), ('v[5] attend', 'w', '', '13:00')], pairs('first'))
+check("...and with no span, every two of a group, the groups in the order of their values ('self' read as its bean)",
+      [p[:2] for p in pairs('held')] == [('v[2] attend', 'w'), ('v[3] attend', 'w'), ('v[5] attend', 'w'),
+                                         ('v[6] attend', 'w'), ('v[3] attend', 'w'), ('v[5] attend', 'w'),
+                                         ('v[6] attend', 'w'), ('v[5] attend', 'w'), ('v[6] attend', 'w'),
+                                         ('v[6] attend', 'w')] and len(env['held']) == 10, pairs('held'))
+got = reckon.check_rule('x', {'steps': steps + [{'id': 'o', 'op': 'overlap', 'of': 'who', 'as': ['a', 'b'],
+                                                 'first': 'maybe'}], 'refuse': [{'of': 'o', 'message': 'm'}]},
+                        lines.law_view(LAW).registry, LAW)
+check("...a step of the law's closed list, its takes checked as any operation's", any('first' in t for _l, t in got), got)
+try:
+    reading([SAY], [{'id': 'a', 'op': 'select', 'entries': 'attend'},
+                    {'id': 'o', 'op': 'overlap', 'of': 'a', 'from': 'at', 'as': ['a', 'b']}])
+    said = None
+except reckon.Refused as e:
+    said = str(e)
+check("...and a span is read from two paths or none", said and 'from' in said and 'to' in said, said)
+
 # ------------------------------------------------------------------------------------------------ the store's SQL
 try:
     union._statement_columns_read({'steps': [{'id': 'a', 'op': 'select', 'entries': 'need'},
@@ -257,6 +352,18 @@ check("the store's SQL names what it has no form for yet — describe of a state
       said and 'no SQL form' in said and said2 and 'o.place' in said2, (said, said2))
 check("...and its `fits` is the law's own, a registered function", 'fits' in union.WORD_SIGNS
       and union.Union._fits.__doc__ and 'Law.fits' in union.Union._fits.__doc__)
+try:
+    union._statement_columns_read({'steps': [{'id': 'a', 'op': 'select', 'entries': 'be'},
+                                             {'id': 'b', 'op': 'describe', 'of': 'a', 'at': 'at', 'as': 'p'},
+                                             {'id': 'c', 'op': 'select', 'of': 'b', 'where': [{'path': 'p.point', '=': 'true'}]}],
+                                   'refuse': [{'of': 'c', 'message': 'm'}]})
+    said = None
+except union.NoSQL as e:
+    said = str(e)
+check("...nor yet for a position's columns (core 3.3, I.2), `overlap` (I.8) or a path through every depth (I.7): each "
+      "named, the rule not judged at size",
+      said and 'p.point' in said and 'position' in said and not hasattr(union.Union, '_op_overlap')
+      and "'**'" in union.Union._col.__code__.co_consts.__repr__(), said)
 
 print(f"core_grammar: {len(FAILS)} failed")
 sys.exit(1 if FAILS else 0)
