@@ -17,6 +17,12 @@ candidates, and a person picks the code (a model's pick is `inferred`).
     python3 bin/knowledge.py resolve <scheme> <code>    # a lookup at the authority — refused until the flow law grants it
     python3 bin/knowledge.py bean <bean-id>             # a bean's `knowledge:` entries, resolved
     python3 bin/knowledge.py crosswalk 2522             # the fields an occupation draws on
+    python3 bin/knowledge.py propose <bean>             # codes for a being: by its kind's positions, its title
+    python3 bin/knowledge.py propose --at organ heart   # … for words, at a position of the ladder
+
+`propose` reads only the schemes whose `at` names a position the being's kind holds — no taxon is proposed for a host —
+and, of a scheme of millions, streams its rows; `find` passes such schemes over unless one is named. It asks no
+authority anything: a being's words never leave the garden through it.
 
 In a garden of the core (v1 part 7) the schemes are core/law/registries.yaml's and the garden's own rows `schemes` and
 `files` in its VOCAB.md, and a bean's codes are its statements: each `classify`, and each `use` of a code.
@@ -53,6 +59,48 @@ def _fm(path):
 
 def _words(text):
     return re.findall(r"[a-z0-9]+", str(text).lower())
+
+
+def _listed(x):
+    return x if isinstance(x, list) else [] if x is None else [x]
+
+
+def _said(text):
+    """A name as it is compared whole: its case, its hyphens and its spacing aside, and its last word's English plural
+    (`pulleys`, `ball bearings`, `assemblies` — never `brass`), as a catalogue of goods writes its names."""
+    words = re.sub(r"[-_‐–]", " ", str(text)).lower().split()
+    if words and len(words[-1]) > 3 and words[-1].endswith("s") and not words[-1].endswith(("ss", "us", "is")):
+        w = words[-1]
+        words[-1] = w[:-3] + "y" if w.endswith("ies") else w[:-1]
+    return " ".join(words)
+
+
+def _sorted_has(path, code):
+    """True when `code` is a line of `path`, a file of lines sorted by their bytes: a binary search over the file, never
+    a read of it."""
+    import mmap
+    key = str(code).encode("utf-8")
+    with open(path, "rb") as fh:
+        if os.fstat(fh.fileno()).st_size == 0:
+            return False
+        m = mmap.mmap(fh.fileno(), 0, access=mmap.ACCESS_READ)
+        try:
+            lo, hi = 0, len(m)
+            while lo < hi:
+                mid = (lo + hi) // 2
+                start = m.rfind(b"\n", 0, mid) + 1
+                end = m.find(b"\n", start)
+                end = len(m) if end < 0 else end
+                line = m[start:end]
+                if line == key:
+                    return True
+                if line < key:
+                    lo = end + 1
+                else:
+                    hi = start
+            return False
+        finally:
+            m.close()
 
 
 def _runs_core(root):
@@ -153,6 +201,84 @@ class Knowledge:
         key = self.decl.get(scheme, {}).get("key", "code")
         return next((r for r in self.rows(scheme) if r.get(key) == str(code)), None)
 
+    def has(self, scheme, code):
+        """True when `code` is a code of `scheme`. Of a fetched scheme whose every copy read here keeps its codes sorted
+        (bin/fetch.py, `codes.txt`), by a binary search in them, never by reading its rows; else among its rows."""
+        if (self.schemes.get(scheme) or {}).get("holding") == "fetched" and scheme not in self._rows:
+            import fetch as dmfetch
+            files = [os.path.join(os.path.dirname(p), "codes.txt") for p in dmfetch.current(scheme)]
+            if files and all(os.path.isfile(f) for f in files):
+                return any(_sorted_has(f, code) for f in files)
+        return self.row(scheme, code) is not None
+
+    # ------------------------------------------------------------------------------------------ the beings' finder
+    def at_positions(self, positions):
+        """The schemes whose codes classify beings at one of `positions` (their `at`), by name."""
+        mine = {str(p) for p in positions}
+        return [s for s, r in sorted(self.schemes.items()) if mine & {str(x) for x in _listed(r.get("at"))}]
+
+    def _stream(self, scheme):
+        """Each row of `scheme`, as it is read: a fetched scheme's copies line by line, never held whole."""
+        if (self.schemes.get(scheme) or {}).get("holding") == "fetched" and scheme not in self._rows:
+            import fetch as dmfetch
+            paths = dmfetch.current(scheme)
+            if paths:
+                for p in paths:
+                    with open(p, encoding="utf-8", newline="") as fh:
+                        head = fh.readline().rstrip("\r\n").split("\t")
+                        for line in fh:
+                            cells = line.rstrip("\r\n").split("\t")
+                            yield dict(zip(head, cells))
+                return
+        yield from self.rows(scheme)
+
+    def named(self, queries, schemes):
+        """{query: [(scheme, row, how)]}: the rows of `schemes` whose name (`how` = `name`), an exact synonym
+        (`synonym`) or another synonym (`related`) is a query as a whole, its case, hyphens and spacing aside — each
+        scheme read once for every query, row by row. A scheme this machine cannot read is passed over."""
+        want = {_said(q): q for q in queries}
+        out = {q: [] for q in queries}
+        for s in schemes:
+            if not self.held(s):
+                continue
+            try:
+                for r in self._stream(s):
+                    for how, cell in (("name", "name"), ("name", "name_en"), ("synonym", "synonyms"),
+                                      ("related", "related")):
+                        text = r.get(cell)
+                        if not text:
+                            continue
+                        for one in (text.split(" | ") if how != "name" else [text]):
+                            q = want.get(_said(one))
+                            if q is not None:
+                                out[q].append((s, r, how))
+            except KeyError:                       # a scheme fetched from its provider, which this machine has not
+                continue
+        rank = {"name": 0, "synonym": 1, "related": 2}
+        for q in out:
+            seen, kept = set(), []
+            for s, r, how in sorted(out[q], key=lambda t: (rank[t[2]], t[1].get("status") not in ("", "accepted"))):
+                key = (s, r.get(self.decl.get(s, {}).get("key", "code")))
+                if key not in seen:
+                    seen.add(key)
+                    kept.append((s, r, how))
+            out[q] = kept
+        return out
+
+    def propose(self, words, positions):
+        """[{coding, name, scheme, how, ...}]: the codes proposed for a being at `positions` named by `words`, from each
+        scheme held here whose `at` names one of them, by its names. Nothing is written, and nothing is asked of an
+        authority: a person picks."""
+        out, seen = [], set()
+        for s, r, how in self.named([words], self.at_positions(positions))[words]:
+            key = self.decl.get(s, {}).get("key", "code")
+            coding = "%s:%s" % (s, r.get(key))
+            if coding not in seen:
+                seen.add(coding)
+                out.append({"coding": coding, "name": self.name(r), "scheme": s, "how": how,
+                            "level": r.get("level", ""), "status": r.get("status", "")})
+        return out
+
     def ancestry(self, scheme, code):
         """[root, …, code] as rows, following `parent`; [row] for a flat scheme."""
         out, r, seen = [], self.row(scheme, code), set()
@@ -185,8 +311,8 @@ class Knowledge:
         q = _words(words)
         out = []
         for s in ([scheme] if scheme else sorted(self.schemes)):
-            if not self.held(s):
-                continue
+            if not self.held(s) or (not scheme and self.schemes[s].get("at")):
+                continue                           # a scheme of beings at positions is `propose`'s
             key = self.decl[s].get("key", "code")
             try:
                 rows = self.rows(s)
@@ -247,6 +373,56 @@ def _at(k, root, position):
     print(dmwhere.show(a))
     return 0
 
+def _positions_of(root, kind):
+    """The positions of the ladder a being of `kind` holds, one a line: its row of core/law/kinds.yaml (the garden's
+    copy, else this release's), or the garden's own (VOCAB.md `kinds`); none for a sayable."""
+    rows = []
+    for d in (root, os.path.dirname(HERE)):
+        p = os.path.join(d, "core", "law", "kinds.yaml")
+        if os.path.isfile(p):
+            with open(p, encoding="utf-8") as fh:
+                rows = list((dmparse.loads(fh.read()) or {}).get("kinds") or [])
+            break
+    rows += _listed(_fm(os.path.join(root, "VOCAB.md")).get("kinds"))
+    r = next((x for x in rows if isinstance(x, dict) and x.get("kind") == kind), None) or {}
+    return [str(v) for k, v in r.items() if k not in ("kind", "nature", "meaning") and v]
+
+
+def _propose(k, root, args):
+    """`propose <bean> | --at <position> <words…>`: the codes proposed, one a line."""
+    at, words = None, []
+    it = iter(args)
+    for w in it:
+        if w == "--at":
+            at = next(it, None)
+        else:
+            words.append(w)
+    if at is None:
+        if len(words) != 1:
+            print(__doc__)
+            return 2
+        p = os.path.join(root, "beans", words[0] + ".md")
+        if not os.path.isfile(p):
+            print("knowledge: no bean %s here" % words[0])
+            return 1
+        fm = _fm(p)
+        positions = _positions_of(root, fm.get("kind"))
+        if not positions:
+            print("knowledge: %s is a %s, at no position of the ladder: a sayable is classed by no scheme of beings"
+                  % (words[0], fm.get("kind")))
+            return 1
+        words = [str(fm.get("title") or words[0])]
+    else:
+        positions = [at]
+    text = " ".join(words)
+    found = k.propose(text, positions)
+    print("proposed for %r at %s (%d) — nothing is written: a person picks" % (text, ", ".join(positions), len(found)))
+    for p in found:
+        print("%-24s %-40s %-10s %s%s" % (p["coding"], p["name"][:40], p["level"], p["how"],
+                                          ("   (" + p["status"] + ")") if p["status"] else ""))
+    return 0
+
+
 def main():
     root = os.path.dirname(HERE)
     a = sys.argv[1:]
@@ -304,6 +480,8 @@ def main():
         sys.exit(_at(k, root, a[1]))
     elif cmd == "gold" and len(a) >= 2:
         _gold(k, a[1])
+    elif cmd == "propose" and len(a) >= 2:
+        sys.exit(_propose(k, root, a[1:]))
     elif cmd == "resolve" and len(a) >= 3:
         # A LOOKUP AT THE AUTHORITY SENDS A CODE OUT OF THE GARDEN, to a party the garden has not granted: the flow law
         # (the Leviathan's Body 3) is what grants it, and until it is built nothing is granted (draft §10)

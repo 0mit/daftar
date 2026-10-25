@@ -141,6 +141,7 @@ verbs:reckon	إحْصاء	ح-ص-ي (pebbles: to count by pebbles): a reckoning d
 verbs:pin	تَثْبِيت	ث-ب-ت (to stand fast): fixing the moment and the commit a reading was read at	proposed	agent (claude opus-5.5), by hand
 verbs:classify	تَصْنِيف	ص-ن-ف (a kind, a sort): setting a being in its class by a code of a scheme	proposed	agent (claude opus-5.5), by hand
 verbs:concern	شَأْن	ش-أ-ن (an affair, a concern): صاحب الشأن, the person concerned — the person a record is about; بشأن (concerning); the owner is another question (`own`)	proposed	agent (claude opus-5.5), by hand
+verbs:about	حَوْلَ	ح-و-ل (to turn about): what a record speaks of, around which it turns; the person it is personal to is شأن	proposed	agent (claude opus-5.5), by hand
 verbs:rate	تقدير الحساسية	ق-د-ر (to measure out) + ح-س-س (to feel): how much harm a being can do a person if it leaves the garden	proposed	agent (claude opus-5.5), by hand
 verbs:fail	تَعَطُّل	ع-ط-ل (to stand idle): a way a being can break down, or is breaking down	proposed	agent (claude opus-5.5), by hand
 verbs:repair	إصلاح	ص-ل-ح (to be sound): setting a failure right, where the fix lives	proposed	agent (claude opus-5.5), by hand

@@ -101,6 +101,22 @@ statements:
 ---
 Agreed in words.
 ''')
+    write(G, 'beans/cash-loan.md', '''---
+bean: cash-loan
+kind: contract
+title: "cash-loan — Ali lent Sam cash, and no day or terms were said"
+statements:
+  - say:        { by: sam, at: now }
+  - own:        { by: theone, of: self }
+  - agree:      { by: ali, of: "a cash loan", through: spoken, as: lender }
+  - agree:      { by: sam, of: "a cash loan", through: spoken, as: borrower }
+  - pay:        { id: lent, by: ali, of: { count: "80.00", unit: XTS } }
+  - bear:       { by: sam, of: lent, share: "1" }
+  - pay:        { id: back, by: sam, of: { count: "30.00", unit: XTS } }
+  - bear:       { by: ali, of: back, share: "1" }
+---
+Ali lent Sam cash; Sam has paid some of it back.
+''')
     write(G, 'beans/ups-1.md', '''---
 bean: ups-1
 kind: host
@@ -155,7 +171,7 @@ Another option.
     g = subprocess.run([PY, 'core/check.py'], cwd=G, capture_output=True, text=True, encoding='utf-8', errors='replace')
     check("...and every bean of it passes the gate as written", g.returncode == 0, (g.stdout + g.stderr)[-1500:])
     j = None
-    p = subprocess.run([PY, '-c', READ, '2026-10-20T12:00:00+03:00', 'repair-1', 'washer-loan', 'ups-1', 'battery-change'],
+    p = subprocess.run([PY, '-c', READ, '2026-10-20T12:00:00+03:00', 'repair-1', 'washer-loan', 'ups-1', 'battery-change', 'cash-loan'],
                        cwd=G, capture_output=True, text=True, encoding='utf-8', errors='replace')
     try:
         j = json.loads(p.stdout)
@@ -177,6 +193,13 @@ Another option.
           steps[:4] == [('instalments:1', 'met', False), ('instalments:2', 'due', True), ('instalments:3', 'due', True),
                         ('instalments:4', 'ahead', False)] and len(loan) == 4
           and all(c.get('source') == 'clause' for c in loan) and loan[0].get('due') == '2026-08-01', steps)
+    debt = j.get('cash-loan') or []
+    check("a debt the ledger reads that no clause asks, read as a course: open at `owed`, by its debtor, what is owed "
+          "netted, no day said; and a loan whose clauses ask its payments has none of its own",
+          [(c.get('source'), c.get('id'), c.get('step'), c.get('by'), c.get('final'), c.get('overdue')) for c in debt]
+          == [('debt', 'debt:sam:ali:XTS', 'owed', 'sam', False, None)]
+          and [s['id'] for s in debt[0]['steps']] == ['owed', 'settled'] and '50' in str(debt[0].get('words'))
+          and 'no day' in str(debt[0].get('words')) and not [c for c in loan if c.get('source') == 'debt'], debt)
     ups = j.get('ups-1') or []
     check("a standing need a reading meets, read as a course: crossed since the `fail` through a `measure` of it that "
           "no `repair` answers, with what failed in words",

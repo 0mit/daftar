@@ -321,7 +321,10 @@ try:
     if ua and all(ub.get(u) == v for u, v in ua.items()):   # of today's is drawn the same way
         same.append('units')
     ta, tb = pa.get('techcat') or {}, pb.get('techcat') or {}   # and its catalogue more technologies: each of today's
-    if ta and all(unworded(tb.get(c)) == unworded(v) for c, v in ta.items()):   # drawn the same way
+    moved = {'python': 'programming-language'}                  # drawn the same way, but the category core 4.1 moved
+    if ta and all(unworded(dict(tb.get(c) or {}, category=v.get('category')) if c in moved and
+                           (tb.get(c) or {}).get('category') == moved[c] else tb.get(c)) == unworded(v)
+                  for c, v in ta.items()):
         same.append('techcat')
     check("translation: the report draws the same page — its drawings, order, reference, lenses, units and addresses — "
           "but for the law's own words", len(same) == 8 and 'error' not in pa and 'error' not in pb,

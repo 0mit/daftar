@@ -192,6 +192,7 @@ export const SAID = {
   'course-not-begun': {en: 'not begun', fa: 'آغاز نشده'},
   'course-clause': {en: 'clause {what}', fa: 'بند {what}'},
   'course-need': {en: 'need {what}', fa: 'نیاز {what}'},
+  'course-debt': {en: 'a debt, no day said', fa: 'بدهی، روزی گفته نشده'},
   'course-due': {en: 'falls due', fa: 'سررسید'},
   'course-who': {en: 'with {who}', fa: 'با {who}'},
   'course-needs': {en: '{met} of {all} needs met, {blocking} blocking', fa: '{met} از {all} نیاز برآورده، {blocking} بازدارنده'},

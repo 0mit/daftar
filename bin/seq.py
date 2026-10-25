@@ -1187,6 +1187,8 @@ CLAUSE_STEPS = [{'id': 'ahead', 'as': 'not yet due'}, {'id': 'due', 'as': 'due, 
                 {'id': 'disputed', 'as': 'the parties disagree that it holds', 'resumes': True}]
 NEED_STEPS = [{'id': 'holds', 'as': 'its reading holds'},
               {'id': 'crossed', 'as': 'its reading stopped holding: a failure is open', 'resumes': True}]
+DEBT_STEPS = [{'id': 'owed', 'as': 'owed, and no day said for it'},
+              {'id': 'settled', 'as': 'settled: what was owed is paid back', 'final': True}]
 FIGURE = ('obligatory', 'permitted', 'forbidden', 'omissible')
 
 
@@ -1210,6 +1212,8 @@ def courses(root, bean, now=None):
                `met` where a payment `settles` it (by its number or its day) or the clause says so, `waived`, `broken`
       need     a standing need a reading meets (bin/routines.py), read as a course: `holds`, or `crossed` since the
                `fail` through a `measure` of it that no `repair` answers
+      debt     a debt the ledger reads (bin/ledger.py, netted between each two parties, a currency at a time) that no
+               clause asks — owed, and no day said: read as a course on DEBT_STEPS, open at `owed` (core 4.1)
     The needs a course states (its being's, for a written course) come with it: each met or not (a `meet` of it
     stands), blocking or not (`contingent` of it: not blocking), and its amount where it needs one."""
     root = root or ROOT
@@ -1234,6 +1238,7 @@ def courses(root, bean, now=None):
                     'words': tr.get('note') if isinstance(tr, dict) else None})
     out += clause_courses(root, bean, items, now)
     out += need_courses(items)
+    out += debt_courses(root, b)
     return out
 
 
@@ -1300,6 +1305,31 @@ def clause_courses(root, bean, items, now=None):
                         'since': (today - n) * dmcal.DAY_MS if n <= today else None, 'by': None, 'party': None,
                         'overdue': step == 'due' and n < today, 'final': step in ('met', 'waived', 'broken'),
                         'words': r.get('note')})
+    return out
+
+
+def debt_courses(root, b):
+    """Each debt the ledger reads of a bean that no clause asks — owed, no day said (core 4.1): read as a course on
+    DEBT_STEPS, open at `owed`, one a debtor, a creditor and a currency, netted as bin/ledger.py nets them; a bean with a
+    clause has its debts' days in its clauses' occurrences."""
+    import importlib
+    if b is None:
+        return []
+    try:
+        dmledger = importlib.import_module('ledger')
+    except ImportError:
+        return []
+    units = dmledger.core_units()
+    ag = dmledger.core_agreement(b, core(root)[1], units)
+    if ag['clauses']:
+        return []
+    out = []
+    for cur in sorted(ag['owed']):
+        for debtor, creditor, x in dmledger.net(ag['owed'][cur]):
+            out.append({'source': 'debt', 'id': f"debt:{debtor}:{creditor}:{cur}", 'walk': None, 'steps': DEBT_STEPS,
+                        'step': 'owed', 'at': None, 'due': None, 'since': None, 'by': debtor, 'party': None,
+                        'overdue': None, 'final': False,
+                        'words': f"{debtor} owes {creditor} {dmledger.said(x, cur, units)}, and no day is said"})
     return out
 
 

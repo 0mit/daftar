@@ -74,7 +74,7 @@ STORY = re.compile(r"\b20\d\d-\d\d-\d\d\b|\bfirst draft\b|\bthe operator\b|\bthi
                    r"|\b(?:at|in|since|until|declared|added|narrowed|introduced|retired|removed|renamed)\s+\d+\.\d+\b"
                    r"|\(\d+\.\d+(?:\)|[:;])|\b\d+\.\d+\s+(?:added|narrowed|introduced|retired|removed|renamed)\b", re.I)
 _DATE = re.compile(r'20\d\d-\d\d-\d\d')
-_TICKS = re.compile(r'`[^`]*`')
+_TICKS = re.compile(r'`[^`]*`|https?://\S+')     # a value written in backticks, or an address: a file it names
 # The keys whose value IS a value rather than something told to a reader: an `example` of one, a `pattern` that checks
 # one (`value_pattern` too), and a term's `forms` — the ways a value is written. A story regex run over a value finds
 # the value's own digits. Every other string the law holds is read, whatever its key: a list of the keys that TELL
@@ -132,8 +132,9 @@ def story_in(law):
 
     Read from the PARSED law, and every string of it but a value's (`is_value_key`). A line grep sees only the first
     line of a folded `>` block: it counted fourteen while forty-five sat in the law. A date inside backticks is read as
-    an example of a value — a `2026-01-01` in a pattern's explanation — and is not counted: a LIMIT of the proxy, since
-    a story date written in backticks passes too, and `--law` says so beside the count."""
+    an example of a value — a `2026-01-01` in a pattern's explanation — and is not counted, nor one inside an address
+    (`https://…/ETIM-10.0-…-2024-12-05.zip`, a provider's file named by its day): a LIMIT of the proxy, since a story
+    date written in backticks passes too, and `--law` says so beside the count."""
     out = []
     for q, s in _strings(law if isinstance(law, (dict, list)) else {}, ''):
         ticks = [m.span() for m in _TICKS.finditer(s)]
