@@ -1112,7 +1112,7 @@ the garden's own system is a `be` as location as any other, and a code of its sc
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
 kinds:
-  - { kind: hive, nature: body, level: population, meaning: "a colony of bees, and the box it lives in" }
+  - { kind: hive, nature: body, organisation: population, bios: living, meaning: "a colony of bees, and the box it lives in" }
 systems:
   - system: apiary-site
     dimension: place
@@ -1289,7 +1289,7 @@ be through Sam's own hands.
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
 kinds:
-  - { kind: material, nature: body, level: material, meaning: "a body of matter kept and used: a candle" }
+  - { kind: material, nature: body, matter: material, meaning: "a body of matter kept and used: a candle" }
 ```
 
 <!-- example: beans/candle-beeswax.md -->

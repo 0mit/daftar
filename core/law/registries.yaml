@@ -265,6 +265,7 @@ knowledge_scheme_form:
   relations: "a registry of relations between its own codes, rows {from, to, rel}, `rel` one of part-of, requires, adjacent (N23); resolved by the `registry_links` rows the garden declares for it"
   labels: "[{language, registry, attribution?}] — its labels in another language: a registry of {code, name} rows, and the words its publisher asks to be printed with them, verbatim (N25)"
   units: "a registry of rows in the form `units_crosswalk_form` — its codes crossed into the law's units and kinds, one row a code, so a value written with one of its codes is read as the law's, and the law's written back with its code (bin/units.py)"
+  at: "the positions of the ladder whose beings its codes classify, on any line but the frame (core/law/levels.yaml, core.yaml `levels`): a code of it is said (`classify`) only of a being whose kind holds one of them, each compared on its own line — no taxon of a host, no motor's class of a person, no organ's code of a material (rule bearer). Absent, its codes classify beings of any kind"
   form: "a form of a profile the garden takes (core/law/profiles.yaml `forms`) whose attributes its rows hold, as columns, beside `code`, `level`, `parent` and `name`: the accounting profile's `chart` makes the scheme a chart of accounts, the knowledge profile's `pattern` a registry of names' templates and its `class` a scheme of classes. Its rows are held to the form"
 # HOW A SCHEME'S CODES CROSS INTO THE LAW'S UNITS AND KINDS (`knowledge_schemes.units`): one row a code, in a registry of
 # its own whose file holds the columns it uses of these. A crossing is daftar's: it names the provider's codes and pairs
@@ -307,3 +308,4 @@ forms:
     labels: optional
     units: optional
     form: optional
+    at: optional

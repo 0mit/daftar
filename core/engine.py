@@ -377,10 +377,6 @@ class Judge:
     def nature(self, kind):
         return (self.L.kinds.get(kind) or {}).get('nature')
 
-    def line_of(self, kind):
-        row = self.L.kinds.get(kind) or {}
-        return row.get('line') or (self.L.level_line(row['level']) if row.get('level') else None)
-
     def norm(self, x, b):
         """A filler as one value, wherever it is written: `self` is the bean, a statement id is `<bean>#<id>`."""
         if x == 'self':
@@ -468,7 +464,7 @@ class Judge:
         if spec.get('nature') and nat not in listed(spec['nature']):
             return f"this role takes a being that is {' or '.join(listed(spec['nature']))}; {x if isinstance(x, str) else kind} " \
                    f"is {nat or ('the crown' if x in self.L.crown else 'of no nature the law knows')}"
-        if spec.get('rung') and nat == 'body' and (self.L.kinds.get(kind) or {}).get('rung') != spec['rung']:
+        if spec.get('rung') and nat == 'body' and not self.L.at_rung(kind, spec['rung']):
             return f"a body fills this role only at {spec['rung']} (a person); {x if isinstance(x, str) else kind} is a " \
                    f"{kind}"
         return ''
@@ -811,9 +807,9 @@ class Judge:
 
     def holds(self, rule, kind):
         """Why a being of `kind` cannot bear what `rule` (a `holds_for`) names — '' when it can, or when its kind says too
-        little to tell. A nature is matched as written; a level is reached through `made-of` alone (what a being is made
-        of carries its categories up; what it is possible on does not), and `while: ensemble` only by a being made of
-        that level in number, never by the level itself."""
+        little to tell. A nature is matched as written; a level is one of the kind's positions or reached from one through
+        `made-of` alone (what a being is made of carries its categories up; what it is possible on, or a member of, does
+        not), and `while: ensemble` only by a being made of that level in number, never by the level itself."""
         nat = self.nature(kind)
         if rule is None or nat is None:
             return ''
@@ -823,20 +819,38 @@ class Judge:
             return ''
         if nat != 'body':
             return f"it holds for a body made of {rule['level']}, and a {kind} is a {nat}"
-        level = (self.L.kinds.get(kind) or {}).get('level')
-        if not level:
+        mine = list(self.L.positions(kind).values())
+        if not mine:
             return ''
-        made = self.L.below(level, ways=('made-of',))
+        level = mine[0]                                     # its first position, in the ladder's order, names it
+        made = set().union(*(self.L.below(p, ways=('made-of',)) for p in mine))
         if rule.get('while') == 'ensemble':
             return '' if rule['level'] in made else \
                 f"it holds for what is made of {rule['level']} in number, and a {kind} ({level}) is not"
-        return '' if level == rule['level'] or rule['level'] in made else \
+        return '' if rule['level'] in mine or rule['level'] in made else \
             f"it holds for {rule['level']} and what is made of it, and a {kind} ({level}) is neither"
 
+    def classed_at(self, coding, kind):
+        """Why a being of `kind` is not classed by `coding`, a code of a scheme that names the positions its codes
+        classify (`at`): '' where its kind holds one of them, each compared on its own line, or where the scheme names
+        none."""
+        scheme, _code = dmparse.split_coding(coding)
+        row = (self.L.std.knowledge.schemes.get(scheme) if self.L.std and scheme else None) or {}
+        at = [str(x) for x in listed(row.get('at'))]
+        if not at:
+            return ''
+        mine = self.L.positions(kind)
+        if any(mine.get(self.L.level_line(p)) == p for p in at):
+            return ''
+        return f"{scheme}'s codes classify beings at {', '.join(at)}, and a {kind} holds " + \
+            (', '.join(f"{ln} {lv}" for ln, lv in mine.items()) or 'no position on the ladder')
+
     def bearer(self):
-        """Rule bearer: a quantity stated of a being is one its dimensions and its kind hold for. The kind is the one the
-        statement names (`as`, a quantity of the law) or the one its value's unit is of. A foundation is the bearer of the
-        dimension its property names (`weight` of mass), and is read as it always was where `as` names that property."""
+        """Rule bearer: a quantity stated of a being is one its dimensions and its kind hold for; and a code of a scheme
+        that names the positions its codes classify (`at`) is stated only of a being whose kind holds one of them. The kind
+        is the one the statement names (`as`, a quantity of the law) or the one its value's unit is of. A foundation is the
+        bearer of the dimension its property names (`weight` of mass), and is read as it always was where `as` names that
+        property."""
         q = self.L.std.quantities if self.L.std else {}
         dims = {str(d.get('dimension')): d for d in (self.L.std.tables.get('dimensions') or []) if isinstance(d, dict)} \
             if self.L.std else {}
@@ -848,11 +862,15 @@ class Judge:
                 kind = self.kind_of(r['of'], b)
                 if kind is None:
                     continue
+                as_role = ((self.L.verbs.get(verb) or {}).get('roles') or {}).get('as') or {}
+                if as_role.get('table') == 'knowledge' and isinstance(r.get('as'), str):
+                    why = self.classed_at(r['as'], kind)
+                    if why:
+                        self.err('bearer', f"{b.id}[{i}] {verb}", f"{r['as']} is stated of {self.norm(r['of'], b)}: {why}")
                 rules = []                                  # (what holds, why it is asked)
                 for f in self.L.foundations:
                     if f.get('property') and r.get('as') == f['property']:
                         rules.append((f.get('holds_for'), f"{f['property']} (the foundation {f.get('foundation')})"))
-                as_role = ((self.L.verbs.get(verb) or {}).get('roles') or {}).get('as') or {}
                 qname = r.get('as') if isinstance(r.get('as'), str) and r['as'] in q \
                     and as_role.get('table') == 'properties' else None
                 if qname is None and isinstance(r.get('value'), dict) and r['value'].get('unit'):
@@ -926,9 +944,9 @@ class Judge:
         return [b.id if v == 'self' else v for v in listed(x) if v == 'self' or (isinstance(v, str) and v in self.G.beans)]
 
     def _is_person(self, bid):
-        """A being at reason: a person (the kind's `rung`)."""
+        """A being at reason: a person (the kind's rung)."""
         bean = self.G.beans.get(bid)
-        return bool(bean) and (self.L.kinds.get(bean.kind) or {}).get('rung') == 'reason'
+        return bool(bean) and self.L.at_rung(bean.kind, 'reason')
 
     def _acts_of(self, b, i, r):
         """The knowing acts that cover statement [i] of bean b: those whose `of` names its id, else those with no `of`."""
@@ -1327,7 +1345,7 @@ class Judge:
                 walk(r)
                 if verb == 'name' and isinstance(r.get('by'), str):
                     spaces.add(r['by'])
-        levels = {row.get('level') for row in self.L.kinds.values()} | {s.get('at') for row in self.L.levels.values()
+        levels = {p for k in self.L.kinds for p in self.L.positions(k).values()} | {s.get('at') for row in self.L.levels.values()
                                                                          for s in listed(row.get('stands'))
                                                                          if isinstance(s, dict)} | leaves
         used = {'kinds': kinds, 'levels': levels, 'verbs': verbs | {x.get('verb') for x in self.L.exclusive},

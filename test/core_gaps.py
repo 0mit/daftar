@@ -70,7 +70,7 @@ def gate():
 VOCAB = """---
 profiles: [accounting, knowledge]
 kinds:
-  - { kind: tree, nature: body, line: living, level: organism, meaning: "a tree, where it was found", vacant: "the rowans the crosswalk carries come in a later commit" }
+  - { kind: tree, nature: body, organisation: organism, bios: living, meaning: "a tree, where it was found", vacant: "the rowans the crosswalk carries come in a later commit" }
 schemes:
   - scheme: analytic
     classifies: where the garden's money goes, plan by plan

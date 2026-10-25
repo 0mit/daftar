@@ -184,7 +184,7 @@ try:
     with open(os.path.join(G, 'VOCAB.md'), encoding='utf-8') as fh:
         v = fh.read()
     with open(os.path.join(G, 'VOCAB.md'), 'w', encoding='utf-8') as fh:
-        fh.write(v.replace('kinds:\n', 'kinds:\n- {kind: boat, nature: body, line: made, level: device, vacant: "no boat is recorded yet"}\n', 1))
+        fh.write(v.replace('kinds:\n', 'kinds:\n- {kind: boat, nature: body, organisation: device, vacant: "no boat is recorded yet"}\n', 1))
     r = save('sam', 'a boat is a kind', '- action: the kind boat, for the garden')
     check("a change to the law with no RULE-CHANGE said is refused by `ratify`",
           r.returncode == 1 and 'ratify' in r.out, r.stdout + r.stderr)

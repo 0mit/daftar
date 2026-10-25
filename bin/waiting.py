@@ -102,7 +102,7 @@ def read(root=ROOT):
 
     def person(x):
         b = G.beans.get(x) if isinstance(x, str) else None
-        return bool(b) and (L.kinds.get(b.kind) or {}).get('rung') == 'reason'
+        return bool(b) and L.at_rung(b.kind, 'reason')
 
     def keepers(bid):
         b = G.beans.get(bid)

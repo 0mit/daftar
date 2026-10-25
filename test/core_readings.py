@@ -209,9 +209,12 @@ check("first and last: one member of each group, the first or the last as the ga
       and [m.node['by'] for m in env['fv']] == ['self', 'w'], [[m.place for m in env[k]] for k in ('f', 'l', 'fv')])
 env = reading([SAY, {'come': {'by': 'self', 'through': ['w', {'someone': 'person'}, 'theone', 'no-such']}}],
               [{'id': 'c', 'op': 'select', 'entries': 'come'}, {'id': 'd', 'op': 'describe', 'of': 'c', 'at': 'through', 'as': 'via'}])
-cols = [(m.node['via']['kind'], m.node['via']['line'], m.node['via']['rung']) for m in env['d']]
-check("describe: a member for each being of a list, with its kind, its line and its rung — none for the crown or a word",
-      cols == [('person', 'living', 'reason'), ('person', 'living', 'reason'), (None, None, None), (None, None, None)]
+cols = [(m.node['via']['kind'], m.node['via']['organisation'], m.node['via']['bios'], m.node['via']['rung'],
+         m.node['via']['matter']) for m in env['d']]
+check("describe: a member for each being of a list, with its kind and its position on each line of the ladder, a "
+      "column a line (core 4.0) — none for the crown or a word",
+      cols == [('person', 'organism', 'living', 'reason', None)] * 2 + [(None,) * 5] * 2
+      and 'line' not in env['d'][0].node['via']
       and reckon.written('{via} is', env['d'][1]) == 'person is', cols)
 check("an input said by the law: its table's rows, each with its proof; one no rule reads is refused by name",
       [m.id for m in reckon.law_table(LAW, 'crown')] == ['law:crown[theone]']

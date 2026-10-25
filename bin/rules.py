@@ -128,7 +128,7 @@ def core_rules(argv):
         for n in L.natures.values():
             _say(f"  nature {str(n.get('nature')):8} {n.get('meaning')}")
         for ln in L.lines.values():
-            _say(f"  line {str(ln.get('line')):10} holds {', '.join(map(str, ln.get('holds') or [])) or '—'}")
+            _say(f"  line {str(ln.get('line')):12} holds {', '.join(map(str, ln.get('holds') or [])) or '—'}")
         _say(f"  levels: {len(L.levels)} — `python3 bin/why.py <level>` says one")
         _say("  conditions: " + ', '.join(sorted(L.conditions)))
         for f in L.foundations:
@@ -167,8 +167,7 @@ def core_rules(argv):
                 _say(f"      replaces today's: {', '.join(map(str, v['replaces']))}")
         _title(f"THE KINDS — {len(L.kinds)}: what a bean records, each of a nature")
         for k, r in L.kinds.items():
-            _say(f"  {k:22} {r.get('nature')}{' · ' + str(r.get('line')) if r.get('line') else ''}"
-                 f"{' · ' + str(r.get('level')) if r.get('level') else ''}")
+            _say(f"  {k:22} {r.get('nature')}" + ''.join(f" · {ln} {lv}" for ln, lv in L.positions(k).items()))
         _title(f"THE NAMESPACES — {len(L.namespaces)}: who gives a name, and whether once (rule names)")
         _say('  ' + ', '.join(f"{n}{' (once)' if r.get('once') == 'true' else ''}" for n, r in L.namespaces.items()))
         _title(f"THE PROFILES — {len(L.profiles)}: what a garden takes up beside the core (VOCAB.md `profiles`, rule "

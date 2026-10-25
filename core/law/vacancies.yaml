@@ -8,6 +8,30 @@
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 reasons: [prediction, impossible, out-of-context, universal]
 vacancies:
+  - at: "table:kinds"
+    position: component
+    reason: universal
+    why: "a body kind named by its positions, for any garden that keeps a being at component: what it is beyond its kind is a code of a scheme whose `at` names component"
+  - at: "table:kinds"
+    position: organ
+    reason: universal
+    why: "a body kind named by its positions, for any garden that keeps a being at organ: what it is beyond its kind is a code of a scheme whose `at` names organ"
+  - at: "table:kinds"
+    position: tissue
+    reason: universal
+    why: "a body kind named by its positions, for any garden that keeps a being at tissue: what it is beyond its kind is a code of a scheme whose `at` names tissue"
+  - at: "table:kinds"
+    position: cell
+    reason: universal
+    why: "a body kind named by its positions, for any garden that keeps a being at cell: what it is beyond its kind is a code of a scheme whose `at` names cell"
+  - at: "table:kinds"
+    position: ecosystem
+    reason: universal
+    why: "a body kind named by its positions, for any garden that keeps a being at ecosystem: what it is beyond its kind is a code of a scheme whose `at` names ecosystem"
+  - at: "table:kinds"
+    position: celestial-body
+    reason: universal
+    why: "a body kind named by its positions, for any garden that keeps a being at celestial-body: what it is beyond its kind is a code of a scheme whose `at` names celestial-body"
   - at: "table:storage_formats"
     position: ntfs
     reason: prediction

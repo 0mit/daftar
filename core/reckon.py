@@ -2327,7 +2327,7 @@ class Reckoner:
         for m in self.arg(s, 'of', 'set'):
             mr = as_row(m)
             if 'at' not in s:                  # THE MEMBER ITSELF, a statement (core 3.2, I.1): its bean, verb, place
-                cols = dict(dict.fromkeys(_DESCRIBED), **self._statement_cols(self._statement_at(mr.place)))
+                cols = dict(dict.fromkeys(described(L)), **self._statement_cols(self._statement_at(mr.place)))
                 beans = dict(mr.beans)
                 beans[name] = mr.bean
                 out.append(Row(mr.id, dict(mr.node if isinstance(mr.node, dict) else {}, **{name: cols}), mr.bean,
@@ -2338,8 +2338,8 @@ class Reckoner:
             for k, v in enumerate(vals):
                 kind, bean = self._kind(v, bid)
                 row = L.kinds.get(kind) or {} if isinstance(kind, str) else {}
-                line = (row.get('line') or (L.level_line(row['level']) if row.get('level') else None)) if row else None
-                cols = {'being': v, 'kind': kind, 'nature': row.get('nature'), 'line': line, 'rung': row.get('rung')}
+                held = L.positions(kind) if row else {}
+                cols = dict({'being': v, 'kind': kind, 'nature': row.get('nature')}, **{ln: held.get(ln) for ln in L.facets})
                 said = self._statement_named(v, bid)          # a value that names a statement: that statement (I.1)
                 cols.update(self._statement_cols(said))
                 cols.update(self._position_cols(v, kind is not None or bean is not None or said is not None))
@@ -3175,10 +3175,14 @@ class Judged:
 
 
 _SLOT = re.compile(r'\{([a-z0-9_][a-z0-9_.-]*)(:set)?\}')
-_DESCRIBED = ('being', 'kind', 'nature', 'line', 'rung', 'bean', 'verb', 'index', 'place', 'id',   # describe's columns
-              'system', 'point', 'from', 'to')
 STATEMENT_COLUMNS = ('bean', 'verb', 'index', 'place', 'id')       # of a statement (core 3.2, I.1)
 POSITION_COLUMNS = ('system', 'point', 'from', 'to')               # of a position (core 3.3, I.2)
+
+
+def described(L):
+    """describe's columns, in the order it writes them: a being's, its kind's position on each facet of the ladder, one
+    column a line, named by the line (core 4.0), then a statement's and a position's."""
+    return ('being', 'kind', 'nature') + tuple(getattr(L, 'facets', ()) or ()) + STATEMENT_COLUMNS + POSITION_COLUMNS
 
 
 def position_cols(v, systems, zone):
@@ -3215,7 +3219,7 @@ def _writ(v):
     written, or a `someone` by its kind."""
     if isinstance(v, list):
         return ' → '.join(_writ(x) for x in v)
-    if isinstance(v, dict) and set(v) == set(_DESCRIBED):
+    if isinstance(v, dict) and {'being', 'kind', 'nature', *STATEMENT_COLUMNS, *POSITION_COLUMNS} <= set(v):
         return v['being'] if isinstance(v['being'], str) else v['place'] if v.get('place') else str(v['kind'])
     return str(v)
 

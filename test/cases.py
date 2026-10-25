@@ -207,11 +207,13 @@ try:
     r = grow.garden(REL, C, 'sam', '--gardener-name', 'Sam')
     sketch = ('void setup() { pinMode(LED_BUILTIN, OUTPUT); }\nvoid loop() { digitalWrite(LED_BUILTIN, HIGH); delay(1000); '
               'digitalWrite(LED_BUILTIN, LOW); delay(1000); }\n')
-    write(C, 'VOCAB.md', '---\nprofiles: [knowledge]\nkinds:\n'
-          '  - { kind: component, nature: body, level: device, meaning: "a part an electronic thing is built of" }\n'
+    write(C, 'VOCAB.md', '---\nprofiles: [knowledge]\n'           # the law's own kind component (core 4.0): a made part
           'schemes:\n' + at_authority('spdx', 'the licences a work is under, by their SPDX identifiers',
                                       'the SPDX project', 'https://spdx.org/licenses/', '^[A-Za-z0-9][A-Za-z0-9.+-]*$',
-                                      sensitive=False) + "---\n# the maker's own rows\n")
+                                      sensitive=False)
+          + at_authority('genera', 'organisms by their genus', 'the maker', 'https://example.org/genera',
+                         '^[A-Z][a-z]+$', sensitive=False).replace(" }\n", ", at: [organism] }\n")
+          + "---\n# the maker's own rows\n")
     write(C, 'beans/blinker-board.md', bean('blinker-board', 'host', 'blinker-board — the board the blinker runs on', [
         'read: { by: sam, at: now }', 'own: { by: sam, of: self }', 'run: { by: self, of: blink }']))
     write(C, 'beans/led.md', bean('led', 'component', 'led — the light-emitting diode that blinks', [
@@ -231,14 +233,33 @@ try:
           "what is made of one", g.returncode != 0 and any(ln.startswith('bearer') and 'blink' in ln for ln in g.out.split('\n')),
           g.out[-700:])
     write(C, 'beans/blink.md', BLINK)
-    r2 = save(C, 'sam', 'RULE-CHANGE: the blinker', '- action: RULE-CHANGE — VOCAB.md takes the knowledge profile, the '
-              'kind component and SPDX held at its authority; wrote [[blinker-board]], [[led]], [[resistor]] and '
+    r2 = save(C, 'sam', 'RULE-CHANGE: the blinker', '- action: RULE-CHANGE — VOCAB.md takes the knowledge profile and '
+              'SPDX held at its authority; wrote [[blinker-board]], [[led]], [[resistor]] and '
               '[[blink]]',
               '- ratified_by: sam')
     check("blinker: a board runs a sketch named by its content's SHA-256 and classed by its SPDX licence, its LED's rate "
           "in hertz and its resistor's 220 ohms a resistance — saved through the gate",
           r.returncode == 0 and r2.returncode == 0 and 'details' not in text(C, 'beans/resistor.md')
           and 'unit: Ohm' in text(C, 'beans/resistor.md'), r2.out[-800:])
+    # A SCHEME THAT NAMES THE POSITIONS ITS CODES CLASSIFY (core 4.0, rule bearer): a genus of an organism — the
+    # gardener, a person, holds organism —, never of the board, a host at device, nor of the sketch, which holds none
+    board = text(C, 'beans/blinker-board.md')
+    write(C, 'beans/blinker-board.md', board.replace('  - run:', '  - classify: { of: self, as: "genera:Ursus" }\n  - run:', 1))
+    write(C, 'beans/blink.md', BLINK.replace('---\n```c', '  - classify: { of: self, as: "genera:Ursus" }\n---\n```c', 1))
+    g = gate(C)
+    bad = [ln for ln in g.out.split('\n') if ln.startswith('bearer')]
+    check("blinker: a genus is no class of the board (a host, at device) nor of the sketch (a sayable, at no position): "
+          "rule bearer refuses both, naming the positions the scheme classifies",
+          g.returncode != 0 and len(bad) == 2 and all("genera's codes classify beings at organism" in ln for ln in bad)
+          and any('blinker-board' in ln and 'organisation device' in ln for ln in bad)
+          and any('blink[' in ln and 'no position on the ladder' in ln for ln in bad), g.out[-900:])
+    write(C, 'beans/blinker-board.md', board)
+    write(C, 'beans/blink.md', BLINK)
+    sam = text(C, 'beans/sam.md')
+    write(C, 'beans/sam.md', sam.replace('statements:\n', 'statements:\n  - classify: { of: self, as: "genera:Homo" }\n', 1))
+    g = gate(C)
+    check("...and a genus of the gardener, a person, who holds organism, passes", g.returncode == 0, g.out[-600:])
+    write(C, 'beans/sam.md', sam)
 
     # ---- A PRODUCTION LINE WITH ACCOUNTS
     D = os.path.join(T, 'bracket-line')

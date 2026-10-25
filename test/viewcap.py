@@ -124,7 +124,7 @@ if r.returncode:
     print("\nviewcap: %d failed" % len(FAILS))
     sys.exit(1)
 _v = get("VOCAB.md")
-put("VOCAB.md", _v.replace("\n---\n", "\nkinds:\n  - { kind: boat, nature: body, line: made, level: device }\n---\n", 1))
+put("VOCAB.md", _v.replace("\n---\n", "\nkinds:\n  - { kind: boat, nature: body, organisation: device }\n---\n", 1))
 put("beans/boat-club.md", bean("boat-club", "org", "The lake boat club", "own: { by: rosa, of: self }"))
 put(f"beans/{BOSUN}.md", bean(BOSUN, "person", BOSUN, "own: { by: theone, of: self }"))
 put(f"beans/{GUEST}.md", bean(GUEST, "person", GUEST, "own: { by: theone, of: self }"))

@@ -49,9 +49,9 @@ show.
 - [ ] **order** — Nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or
       needs itself through others; a part never stands above what its whole is made of. Its reading:
       `core/law/core.yaml` `rules[order].reading`.
-- [ ] **life** — A living being comes through the living; a made or said being comes through hands, a being at reason,
-      or through tools whose own coming goes on; every chain ends at the crown, and none is demanded. Its reading:
-      `core/law/core.yaml` `rules[life].reading`.
+- [ ] **life** — A living or organic being comes through the living; a made or said being comes through hands, a being
+      at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded. Its
+      reading: `core/law/core.yaml` `rules[life].reading`.
 - [ ] **necessity** — A `necessary` statement names what it is necessary through — except of the crown, necessary by
       itself (thesis 12). Its reading: `core/law/core.yaml` `rules[necessity].reading`.
 - [ ] **squares** — Two positions that cannot both stand — contraries or contradictories — on one statement through one
@@ -59,10 +59,12 @@ show.
       an `as`) — confirms, disputes or abstains —, and a `rule` on statements is given once every speaker of them has
       responded.
 - [ ] **bearer** — A quantity is stated only of what its dimensions and its kind hold for (`holds_for`): a nature, or a
-      level the being is or is made of — through `made-of` alone, never `possible-on`. A mass is a body's (the
-      foundation `weight`), a temperature an ensemble's; information and money are what is carried — a document's, an
-      agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a mass of its own, a
-      single molecule a temperature, a machine its bytes or a body money of its own is refused.
+      position the being's kind holds or is made of — through `made-of` alone, never `possible-on` or `member-of`. A
+      mass is a body's (the foundation `weight`), a temperature an ensemble's; information and money are what is carried
+      — a document's, an agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a
+      mass of its own, a single molecule a temperature, a machine its bytes or a body money of its own is refused. A
+      code of a scheme that names the positions its codes classify (`at`) is said only of a being whose kind holds one
+      of them, each on its own line: a taxon of an organism, never of a host.
 - [ ] **frame** — A position is in a declared system, in its one form, and finds its other half by its complement; a day
       is reckoned in the garden's `zone`, and `now` is written at `at` alone.
 - [ ] **names** — A name its namespace gives once names one being. A garden's id is twelve hexadecimal digits, and never

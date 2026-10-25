@@ -707,6 +707,9 @@ A READING SINCE 3.0. The rule is its reading: each stand judged on the law's lad
 together, a part's level against what its whole's level is made of, and the four chains (own, part, be, need) each a
 `cycle` within the beans. The cursor and a store's check read the chains from it, so they are stated once.
 
+SINCE 4.0 a part's position on organisation is read against what its whole's is made of — or, where a kind holds no
+position on organisation, its matter's —, each from what `describe` gives of it, one column a line.
+
 ## core/law/core.yaml: rules[life]
 
 EVERY CHAIN ENDS (the core spec §5; ratified with the core's engine, daftar #81–#84, 2026-10-01). `come` is the verb of
@@ -718,6 +721,10 @@ chain, and why it ends at one: `core/law/core.yaml: verbs[come]` and `core/law/c
 A READING SINCE 3.0. Each coming read through each being it comes through: of a given line, through that line;
 else through hands (a being at reason) or through a tool that comes; and no being on a circle of comings, told at its
 first coming. The crown ends a chain, and is read from the law's own table.
+
+SINCE 4.0 the given line is bios: a being whose kind holds a position on it, living or organic, comes through a
+living one. An animal's work — a nest, a comb — comes through its maker as life does, and the made stays what hands make
+(the operator, 2026-10-25: "Nature and organic has privilege"); a bird, at the rung sensitive, is no hands.
 
 ## core/law/core.yaml: rules[necessity]
 
@@ -763,6 +770,12 @@ the weight of the bodies it is about; what is refused is a mass given to the say
 
 A sayable being has no weight of its own (`foundation_rules`), and yet a product's record states its units' weight. The
 attribute says which it measures, so the rule refuses the one and allows the other, and the gate never guesses.
+
+SINCE 4.0 a level the being is is a position its kind holds, on any line, and `member-of` is followed no more than
+`possible-on`: a herd stands on its members and is not made of them, so it bears no temperature of its own. And a code of
+a scheme that names the positions its codes classify (`at`) is said only of a being whose kind holds one of them, each
+compared on its own line: a taxon of an organism, never of a host; no motor's class of a person; no organ's code of a
+material.
 
 ## core/law/core.yaml: rules[frame]
 
@@ -1324,12 +1337,46 @@ with place; an embryo's morphogenetic field is its tissues' signalling; a field 
 semantic field and Bourdieu's field are orders of sayables and of persons, reason's; an algebraic field is a structure,
 said.
 
+THE POSITIONS BY THEIR LINES (core 4.0). The fifteen steps of gravitation, the living, the made and the said are
+organisation's, each keeping its stands but the cell's on a world in balance, which moves to `living`: life is the step
+of bios, possible on a celestial body while balance, and a cell stands possible-on living, so tissue, organ and organism
+reach it through made-of — a living organisation is possible only where life is. `organic` stands on living: what the
+living make or leave without being alive themselves — a nest, a comb, honey, wood, a shell, remains — comes through the
+living as life does (the operator: "Nature and organic has privilege"), and is never folded into the made, which comes
+through hands at reason. `sensitive` is the rung above life — to perceive, desire and move — and reason stands on it
+while proportion: the powers nest, as "the sensory power the self-nutritive" (Aristotle, De Anima II.3), and the
+nutritive power is life itself, bios, and no rung. A collection stands on its members by a third way, `member-of` (BFO's
+member parts, Bunge's aggregate, the member-collection relation integrative levels keep apart from composition): a
+population on its organisms, a community on its populations, and an ecosystem stays made of its community and of the
+matter it lives on. A component is one body — made of material, holding no made part — and a device bodies joined, made
+parts assembled to work as one; a device may be part of a device while it is mounted, the lens of a camera, the bearing
+of a pulley; and a feature — a groove, a thread, a keyway — is no position, a part of a body that cannot be taken from it
+(ISO 15926-2's feature, DOLCE's).
+
 ## core/law/core.yaml: lines
 
 (std-vocab 32: `lines`)
 
 The ladder's strands (32.0): the frame, matter, gravitation, the living, λόγος, the made. A line says what the gift needs
 of its giver (`given_by`) where the ladder decides it: a living being comes through the living, a made one through hands.
+
+THE FRAME AND FOUR LINES (core 4.0; the ladder's design, ratified by the operator on 2026-10-25, every need as
+recommended). The operator: "instead of dividing under material and over celestial, we need to apply categorization by
+frame(time space) line (organization degree of complexity) , line( rationality rungs), line (bios),line(matter)". Read
+so, his own definitions are already coordinates — "person should be rational living organism, human body is organism and
+a router is a host which is not organic": rung reason, bios living, organisation organism; organisation device, and no
+bios. So the lines are facets, not branches of one tree: a being holds at most one position on each, its kind naming
+them, as ISO 15926-2's arrangement classes are one of each partition and any combination across partitions, and DOLCE
+keeps an amount of matter apart from the object it constitutes and agency apart from the body. The frame — space-time
+for bodies, the taxis for sayables — is the ground of every line, which every position reaches through its stands, and
+never a rung: where, when and how large are the frame's, quantities at its positions, and no line orders beings by them
+(a galaxy is larger than a cell, not more complex: Jolley's dimensional fallacy, Feibleman's astronomical branch).
+Matter keeps its eight steps; organisation takes the steps of gravitation, the living, the made and the said, its degree
+of complexity the made-of order itself, partial as ratified on 2026-10-10, each nature's in its own frame; bios holds
+life and what life makes or leaves, given along the chain the crown holds; the rung holds a body's powers, which take no
+room, as the line of reason held no being before. A kind's positions hold for its beings' whole life (DOLCE's rigid
+categories, ISO 15926-2's whole-life individual): what changes within a life — it dies, it is taken apart, a lens is
+mounted — is a statement with its window.
 
 ## core/law/core.yaml: conditions
 
@@ -4254,6 +4301,17 @@ capability grid could express; `unproven` is the one it could not and the one a 
 LOCAL gene (`local_gene`): object types this garden manages that std-vocab doesn't schematize. Each gets a small
 schema (MODEL Rule 6). A genos that proves general is promoted alongside its terms.
 
+A KIND BY ITS POSITIONS (core 4.0). A kind names the position it holds on each line of the ladder but the frame, a
+column a line: at most one a line, each on a line that holds its nature — or, a body's, on the rung: a power whose chain
+reaches its organisation, reason through sensitive to organism — and none it can read from another of them through
+made-of, since a body's matter is read through its organisation's chain (manifesto: once). A person is a rational
+living organism, organisation organism, bios living, rung reason; a host the made body at device, with no bios and no
+rung. The body kinds at component, organ, tissue, cell, ecosystem and celestial body are declared for any garden,
+universal vacancies, each saying its bios; what a being is beyond its kind is a code of a scheme. Organism and material
+wait, as the machinery for beings ratified on 2026-09-25: each is written first as a garden's own row and occupied by
+real beings, and a release takes it then. A garden's own row of an earlier core is rewritten by its positions when it
+moves (core/translate.py `between`), and one the law now holds as the garden wrote it becomes the law's.
+
 ## core/law/kinds.yaml: kinds[org]
 
 (std-vocab 32: `gene[org]`)
@@ -5619,6 +5677,10 @@ hold for less than they do. A kind that shares another's units says whose (`unit
 newtons, an entropy in heat capacity's joules per kelvin. Weight (وزن) is the foundation's force, holding for every
 body; gravitation (گرانش) is a step of the ladder, celestial body to galaxy, where directions are ordered, and its field kinds
 need only the frame's dimensions, as gravitation is the frame's own geometry.
+
+SINCE 4.0 the six kinds weighted by a perceiver's response — luminous intensity, luminous flux, illuminance,
+luminance, luminous efficacy and the loudness level — stand on the rung sensitive, the power whose response weighs
+them, not on the organism: a perceiver is a body that perceives.
 
 ## core/law/core.yaml: conditions[ensemble]
 
