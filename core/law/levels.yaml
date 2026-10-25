@@ -21,3 +21,9 @@ levels:
   - { level: ecosystem, line: living, stands: [{ at: community, as: made-of }], meaning: "a community with the matter it lives on and in — up to every ecosystem of a world together, its biosphere" }
   - { level: component, line: made, stands: [{ at: material, as: made-of }, { at: reason, as: possible-on }], meaning: "a made part: a chip, a board, a platter, a cable" }
   - { level: device, line: made, stands: [{ at: component, as: made-of }], meaning: "components assembled to work as one — or devices and structure assembled at a place, a rack, a room of machines, a building: a machine, a router, a drive, a camera, a sensor. What it does beyond keeping its form is lent by the hands it came through, its vias" }
+
+# The columns of each table of rows above: which every row holds (`required`) and which it may (`optional`); a row holds
+# the required ones and no other (core/law.py, `columns`). A reading names a table they declare as an input said by
+# the law (core/law/lines.yaml `selection_form.inputs`).
+columns:
+  levels: { level: required, line: required, stands: required, meaning: required, frame_of: optional }

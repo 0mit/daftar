@@ -348,7 +348,7 @@ class Judge:
         from core import reckon
         for rule, reading in self.L.readings.items():
             try:
-                found = reckon.refusals(self, reading)
+                found = reckon.refusals(self, reading, rule)
             except reckon.Refused as e:
                 self.err(rule, 'core.yaml', f"its reading cannot be read here: {e}")
                 continue

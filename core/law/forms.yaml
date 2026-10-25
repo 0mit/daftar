@@ -33,11 +33,12 @@ forms:
     rule: measured
     home: core
     replaces: [weighings.criteria, weighings.pairwise, weighings.why_inconsistent]
-    meaning: "the criteria a judge weighs and each pair's judgment (Saaty's scale: 1 to 9, or its inverse): every pair judged once, its consistency ratio at most 0.10 or `why_inconsistent` saying why it stands. The weights are read, never stored"
+    meaning: "the criteria a judge weighs and each pair's judgment (Saaty's scale: 1 to 9, or its inverse): every pair judged once, its consistency ratio at most its bound (`at_most`) or `why_inconsistent` saying why it stands. The weights are read, never stored"
+    at_most: { consistency_ratio: "0.10" }
     attrs:
       criteria:         { required: true, in: { entries: { name: { required: true, in: { type: kebab } }, what: { required: true, in: prose } }, keyed_by: name }, meaning: "what is weighed, each in the words a person checks it against" }
       pairwise:         { required: true, in: { entries: { a: { required: true, in: { type: kebab } }, b: { required: true, in: { type: kebab } }, judged: { required: true, in: { pattern: '^(1/)?[1-9]$' } }, why: { in: prose }, note: { in: prose } } }, meaning: "each pair of criteria, judged once: how much more `a` counts than `b`" }
-      why_inconsistent: { in: prose, meaning: "why a consistency ratio above 0.10 stands" }
+      why_inconsistent: { in: prose, meaning: "why a consistency ratio above its bound stands" }
 
   channel:
     held_by: [serve.channel, carry.channel, route.channel, translate.channel, filter.channel]

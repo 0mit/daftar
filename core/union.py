@@ -49,7 +49,8 @@ class NoSQL(Exception):
 SEQ = ('_bo1', '_bo2', '_src', '_vr', '_i')            # where the garden reads a statement: bean, keeping, verb, row
 CARRIED = ('_src', '_bean', '_verb', '_i', '_place', '_bkind')   # what a statement's members carry: its place, and
                                                                     # the kind its bean is of in the union
-WORD_SIGNS = {'exists', 'absent', 'is', '≠'}
+WORD_SIGNS = {'exists', 'absent', 'is', '≠', 'fits'}
+STATEMENT_COLUMNS = ('bean', 'verb', 'index', 'place', 'id')   # describe's columns of a statement (core 3.2): no SQL form yet
 
 
 def q(name):
@@ -104,6 +105,7 @@ class Union:
         self._rk = reckon.Reckoner(None, rules_law=self.L)
         db.create_function('dm_eq', 2, self._eq, deterministic=True)
         db.create_function('dm_written', 4, _written, deterministic=True)
+        db.create_function('dm_fits', 2, self._fits, deterministic=True)   # the law's one judge of a form (3.2)
         self._load()
 
     # ------------------------------------------------------------------------------------------------ the union
@@ -313,19 +315,36 @@ class Union:
     def _eq(self, x, o):
         return 1 if self._rk._eq(dec(x), o) else 0
 
+    def _fits(self, x, spec):
+        """`fits` over the union: the value, or any item of a list, in the one form of the row `spec` names (core/law.py
+        `Law.fits`, the function the reckoner calls)."""
+        v = dec(x)
+        return 1 if any(self.L.fits(json.loads(spec), y) for y in (v if isinstance(v, list) else [v])) else 0
+
     # ------------------------------------------------------------------------------------------------ the steps
-    def refusals(self, reading):
+    def refusals(self, reading, rule=None):
         """[(place, words)]: what a rule's reading refuses in the union, in the order of its `refuse` and of each step's
-        members — the engine's refusals over the union read as beans. `NoSQL` where a step has no SQL form here."""
+        members — the engine's refusals over the union read as beans. `NoSQL` where a step has no SQL form here. Its
+        steps are kept under `rule`, for a later rule that takes one as an input (core 3.2)."""
         from core import lines
         reading = lines.worded(reading)
+        _statement_columns_read(reading)
         self.env, self._uses = {}, {}
+        if not hasattr(self, '_steps'):
+            self._steps = {}
         for s in reading.get('steps') or []:
             for k in ('of', 'with', 'through', 'within'):
                 if isinstance(s.get(k), str):
                     self._uses[s[k]] = self._uses.get(s[k], 0) + 1
         for d in reading.get('inputs') or []:
             o = d.get('origin') if isinstance(d, dict) and isinstance(d.get('origin'), dict) else {}
+            if isinstance(d, dict) and isinstance(d.get('from'), dict):     # a step of an earlier rule, as compiled
+                got = (self._steps.get(d['from'].get('rule')) or {}).get(d['from'].get('step'))
+                if got is None:
+                    raise NoSQL(f"input {d.get('name')}: the step {d['from'].get('step')} of the rule "
+                                f"{d['from'].get('rule')} was not compiled before this one")
+                self.env[d['name']] = got
+                continue
             if not (o.get('act') == 'say' and o.get('by') == 'law'):
                 raise NoSQL(f"input {d.get('name') if isinstance(d, dict) else d}: a rule's input is a table of the law")
             self.env[d['name']] = self._law_table(d['name'])
@@ -334,6 +353,8 @@ class Union:
             if fn is None:
                 raise NoSQL(f"step {s.get('id')}: `{s.get('op')}` has no SQL form here")
             self.env[s['id']] = fn(s)
+        if rule is not None:
+            self._steps[rule] = dict(self.env)
         out = []
         for ref in reading.get('refuse') or []:
             st = self.env.get(ref.get('of'))
@@ -380,7 +401,7 @@ class Union:
         return out
 
     def _law_table(self, name):
-        rows = reckon.law_table(self.L, name)
+        rows = reckon.law_table(self.L, name, self.G.manifest)
         paths = []
         for r in rows:
             paths += [k for k in r.node if k not in paths]
@@ -418,6 +439,13 @@ class Union:
         if comp not in WORD_SIGNS:
             raise NoSQL(f"step {sid}: the condition `{comp}` has no SQL form here")
         w = self._col(st, c['path'], sid)
+        if comp == 'fits':
+            try:
+                self.L.fits_row(c[comp])              # a row the law has, as the reckoner holds it
+            except ValueError as e:
+                raise NoSQL(f"step {sid}: {e}") from None
+            lit = "'" + json.dumps(c[comp], sort_keys=True).replace("'", "''") + "'"
+            return f"({w} IS NOT NULL AND dm_fits({w}, {lit}) = 1)"
         if comp == 'exists':
             return f"{w} IS NOT NULL"
         if comp == 'absent':
@@ -473,12 +501,14 @@ class Union:
         kd = (f"CASE WHEN typeof(x.{being}) = 'blob' THEN json_extract(CAST(x.{being} AS TEXT), '$.someone') "
               f"WHEN x.{being} = 'self' THEN x._bkind WHEN x.{known} IS NOT NULL THEN x.{known} "
               f"WHEN typeof(x.{being}) = 'text' THEN {self._bean_kind('x.' + being)} END")
-        sql = (f"SELECT y.*, k.nature AS nat{n}, k.line AS lin{n}, k.rung AS run{n} FROM (SELECT x.*, {kd} AS {kind} "
+        sql = (f"SELECT y.*, k.nature AS nat{n}, k.line AS lin{n}, k.rung AS run{n}, NULL AS nul{n} FROM (SELECT x.*, {kd} AS {kind} "
                f"FROM ({one} UNION ALL {many}) x) y LEFT JOIN u_kinds k ON k.kind = y.{kind}")
         cols = {p: v for p, v in st.cols.items() if p != name and not p.startswith(name + '.')}
         cols[f"{name}.being"] = (being, named, kind)
         for key, c in (('kind', kind), ('nature', f"nat{n}"), ('line', f"lin{n}"), ('rung', f"run{n}")):
             cols[f"{name}.{key}"] = (c, c, None)
+        for key in STATEMENT_COLUMNS:                # a being's member has none; a reading that reads one is NoSQL
+            cols[f"{name}.{key}"] = (f"nul{n}", f"nul{n}", None)
         return self._view(sql, cols, st.keys + [dk], st.seq, st.kind, st.lineage + ('describe', s['id']),
                           table=self._shared(s['id']), foreign=st.foreign)
 
@@ -760,6 +790,27 @@ class Union:
                 if last:
                     break
         return i
+
+
+def _statement_columns_read(reading):
+    """NoSQL where a rule's reading describes a statement (core 3.2, I.1): a `describe` with no `at`, or a path, a
+    condition, a key or a refusal's words reading a statement's column of a description. Their SQL form is not written
+    yet, so the rule is named as not judged at that size rather than judged without them."""
+    steps = [s for s in reading.get('steps') or [] if isinstance(s, dict)]
+    names = {s.get('as') for s in steps if s.get('op') == 'describe' and isinstance(s.get('as'), str)}
+    for s in steps:
+        if s.get('op') == 'describe' and 'at' not in s:
+            raise NoSQL(f"step {s.get('id')}: `describe` of the member itself, a statement, has no SQL form here")
+    texts = [str(r.get('message') or '') for r in reading.get('refuse') or [] if isinstance(r, dict)]
+    for s in steps:
+        for k, v in s.items():
+            if k in ('id', 'op'):
+                continue
+            texts += [json.dumps(v, ensure_ascii=False) if not isinstance(v, str) else v]
+    for t in texts:
+        for m in re.finditer(r'([a-z0-9_-]+)\.(' + '|'.join(STATEMENT_COLUMNS) + r')\b', t):
+            if m.group(1) in names:
+                raise NoSQL(f"`{m.group(0)}`: a statement's column of a description has no SQL form here")
 
 
 def _sortable(key):

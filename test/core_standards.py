@@ -107,7 +107,7 @@ check("a value the core renamed is written in its word: the shape's sources are 
 sysrow = standards.here().systems['unix-filesystem']
 check("...and prose is kept as written, every value a string: `establishes` is the string `false`, a pattern its own "
       "backslashes", sysrow['establishes'] == 'false'
-      and standards.here().systems['git-remote']['pattern'].endswith(r'[^ ]*\.git)|[a-z][a-z0-9+.-]*://[^ ]+)$'),
+      and standards.here().systems['git-remote']['pattern'].endswith(r'[^ ]*\.git))$'),
       sysrow)
 
 # ------------------------------------------------------------------------------------------- the units

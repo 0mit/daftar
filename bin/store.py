@@ -1333,7 +1333,7 @@ def _readings(U, law, base):
     out, unjudged = [], []
     for rule, reading in (getattr(law, 'readings', None) or {}).items():
         try:
-            found = U.refusals(reading)
+            found = U.refusals(reading, rule)
         except dmunion.NoSQL as e:
             unjudged.append((rule, str(e)))
             continue

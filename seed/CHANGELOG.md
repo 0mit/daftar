@@ -251,6 +251,30 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 3.2** (2026-10-25, daftar v3.2.0, human-ratified rule-change) — **the reading grammar, part one, and the
+  rules' words** (the next machinery's design, body I: I.1, I.3, I.4, I.5, I.6 and I.9's set words; body VIII as ratified
+  as written). MINOR. `describe` gives a statement's own columns — its bean, verb, index, place and id — of the member
+  itself (no `at`) or of a value that names a statement. The comparator `fits` holds a value to a row's one form — a
+  namespace's, a type's or a system's pattern, its `holds_no`, the check its `checked_by` names — or tests a Unicode
+  property alone, by one function the gate, the readings and the store's SQL (`dm_fits`) call. The checks move from
+  bin/parse.py's closed dict into the law, core/law/checks.yaml, shaped as the guards are: each check's name, what it
+  reads, the library it calls and its vectors, one function a row and none without one, held both ways by the law's
+  check; beside them the designations of the mechanics' and the beings' designs — a rolling bearing's basic
+  designation, a metric thread, an O-ring's and a lip seal's sizes, a steel grade, a polymer's ISO 1043 abbreviation —
+  each a pattern with its vectors, written from the public charts, the standards that define them unread (paid).
+  `namespace_shape` and `system_shape` no longer list the checks. One spelling, one system is the law's own check: each
+  sample a system teaches is fitted to every other system's form, and one that fits a second is an error of the law.
+  Its two collisions are decided as I.4 says: `network-segment` refuses a network named `node`, `way` or `relation`;
+  `git-remote` keeps its ssh forms, and a remote fetched by a URL is a `uri` — the release's translator (core/translate.py
+  `between`, run by bin/dmupgrade.py's move) writes each held `git-remote:<URL>` as `uri:<URL>`. An input said by the law
+  names any table the law's columns declare — the face's, the kinds, the levels, the namespaces, the verbs and the units
+  now declare theirs — the garden's own rows marked `garden: true`, and `manifest`, the manifest's keys each with the
+  garden's value; a rule's reading may take a step of a rule before it in the law's order (`{name, from: {rule, step}}`).
+  A refusal's words write a set, `{<path>:set}`. The rules' `says` hold the words CHECKLIST Part A held by hand (T1-SAYS.md),
+  and two values the code alone held are rows the words name: a weighing's bound (core/law/forms.yaml `weighing`,
+  `at_most`) and the pass log's folder (core/law/flows.yaml `pass_logs`). Knowing, squares and names keep their code:
+  each needs what this part of the grammar does not hold, measured and parked for the gardener. test/core_grammar.py.
+
 - **daftar v3.1.3** (2026-10-25, the reasons, core 3.1) — **the subsumption example in a documentation range.**
   seed/RATIONALE.md gave one network inside another in RFC 1918's private range; it now gives it in IPv6's range for
   documentation (RFC 3849): `2001:db8:1::/48` into `2001:db8::/32`. A private range is one a garden may name for its

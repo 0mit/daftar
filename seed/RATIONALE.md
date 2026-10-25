@@ -345,6 +345,15 @@ written, not left to the order code runs in. A rule reads the law as well as the
 lines, the levels' ladder — and an input said by the law reaches those tables, so a reading never copies a row of the
 law into itself: one statement of each thing.
 
+ANY TABLE THE LAW DECLARES, AND A STEP OF AN EARLIER RULE (3.2). A rule read four tables of the law, opened by name;
+each rule still to be ported needed another — the verbs' rows, the namespaces, the garden's own rows, the manifest —
+and a list grown each release states again what the law already declares. An input said by the law names any table the
+law's columns declare, the face's first, the garden's own rows marked as its own, and the manifest's keys each with the
+garden's value. A rule may read a step of a rule before it in the law's order and never one after it, so what one rule
+finds is stated once and read by the others, and the readings stay stratified as their steps are. A refusal that names
+several beings writes them as a set, in the order of their characters, with commas, so its words do not hang on the
+order the garden happened to be read in.
+
 ## core/law/lines.yaml: aggregates
 
 (std-vocab 32: `aggregates`)
@@ -372,12 +381,22 @@ columns (`describe`). None makes a value; each row it gives carries the statemen
 a refusal names its path. They were measured first on six gardens and fifteen faults (the design's prototype), then
 held to the engine's every verdict before its code was taken out. An operation beyond them is added only by a person.
 
+A STATEMENT'S OWN COLUMNS (3.2). Squares pairs two positions by their verbs, knowing covers a statement in its own bean,
+and every refusal is told at a statement's place: a statement's bean, verb, index, place and id are columns of what the
+garden holds, and `describe` gives them — of the member itself, or of a value that names a statement — so no new
+operation reads them.
+
 ## core/law/lines.yaml: comparisons
 
 (std-vocab 32: `comparators`)
 
 A CONDITION NAMES ITS COMPARISON (24.0). `monotone` marks the comparisons whose answer never turns back — what has been
 reached stays reached — because a reading over them can be read once per occurrence and not re-judged.
+
+ONE JUDGE OF A FORM (3.2). Whether a value is in a row's one form — its pattern, the characters it may not hold, the
+check a validator makes — was answered by the gate in Python and nowhere a reading could ask it. `fits` asks it of a
+namespace's, a type's or a system's row, or of a Unicode property alone, by the one function the gate, the readings
+and the store's SQL call, so a rule about a name's form can be stated where it is read.
 
 ## core/law/verbs.yaml: verbs[reckon]
 
@@ -572,6 +591,14 @@ and its meaning said prose. A gardener writes one rule, or several each under a 
 system is done, who decides what — so the key takes exactly that: one text, or texts under names. The schema language
 says it once, as `in: { prose: named }`, beside `in: prose`.
 
+## core/law/core.yaml: columns
+
+(core 3.2)
+
+THE FACE'S TABLES DECLARE THEIR COLUMNS. A reading names a table of the law as an input where the law declares the
+table's columns; the face's tables, the kinds, the levels, the namespaces, the verbs and the units declare theirs now,
+so a reading can name them, and each row is held to them as every other table's is.
+
 ## core/law/core.yaml: rules[form]
 
 A STATEMENT IS A VERB AND ITS ROLES, AND NOTHING ELSE (the core spec §2; ratified with the core's engine, daftar
@@ -583,6 +610,17 @@ character (`core/law/lines.yaml: types[text]`), and GARDEN.md holds its keys, ea
 once it holds a bean (`core/law/core.yaml: manifest`). A grant's cover names the parts it opens of each bean; a grant
 the core cannot say as narrowly is kept whole in `details`, where it opens nothing: closed by default, never wider (§16
 item 19, daftar #103).
+
+## core/law/core.yaml: rules
+
+(core 3.2)
+
+EACH RULE'S WORDS HOLD WHAT ITS CHECKLIST ITEM HELD. CHECKLIST Part A has been written from the rules' `says` since
+v3.1.1, and the hand-written items it replaced had held facts some `says` lacked: a bean's header, an id used once,
+`unknown` only in a required role, a knowing act with no `of`, a day reckoned in the garden's zone, which files are the
+law, a verdict's three words, the knowledge profile's schemes. Each was enforced already, so no verdict moved; the words
+were proposed for the gardener and ratified as written (T1-SAYS.md). Two values the words named lived in the code
+alone, a weighing's bound and the pass log's folder: each is a row of the law now, and its rule's words name the row.
 
 ## core/law/core.yaml: rules[valency]
 
@@ -760,6 +798,13 @@ is held on stands.
 ABSENT, THE WHOLE — BUT NOT WHAT IS HELD (2026-10-12). The cover's default is the whole bean, its header, body and
 statements, and stays so; what is held off git is the exception, opened only by name (`core/law/core.yaml:
 rules[harm]`).
+
+## core/law/forms.yaml: forms.weighing.at_most
+
+(core 3.2)
+
+Saaty's bound on a weighing's consistency ratio, 0.10, was written in core/reckon.py and in the form's words: it is the
+form's row, read by the one judge of a weighing.
 
 ## core/law/core.yaml: rules[room]
 
@@ -1429,6 +1474,10 @@ in the journal of the estate the law was first written in.
 (std-vocab 32: `anchor_systems[network-segment]`)
 
 Declared at 11.0, when the operator ratified that a segment is a place and not an address.
+
+NO NETWORK NAMED NODE, WAY OR RELATION (3.2). `osm` writes an element `relation/1234567`, which is also
+`<network>/<segment>`. A network is never named by an OpenStreetMap element's type: the smallest change, and no garden
+names one so. One spelling is read by one system, and the law's own check now finds a second.
 
 ## core/law/systems.yaml: systems[git-object-graph]
 
@@ -4980,6 +5029,13 @@ the material. So a pass holds how long its material was, where it sat in the ses
 already holds it (a locator into the repository, not a digest of a value), and how often its value was found in its
 source, which is the measure of whether it was quoted or only hoped.
 
+## core/law/flows.yaml: pass_logs
+
+(core 3.2)
+
+The folder a session's pass log is kept under was a constant of core/commit.py, which rule layers named only in its
+words: the flow law names it, and the commit's check reads it there.
+
 ## doc:MANIFESTO.md#serve
 
 THE FIRST OF THE NINE LIVES. In the *Phaedrus* (248d–e) the soul that has seen most is born into the first of nine
@@ -5151,6 +5207,10 @@ and in most beans the code's own `git_remote` said it already; where it did not,
 is kept apart from every other system's: a remote with its user, a path relative to the login that shows it is a
 repository, or a URL — and a repository at an absolute path on a named host is a position in that host's filesystem.
 
+A URL IS A URI (3.2). git-remote read a URL, and so did `uri`: one spelling, two systems, which only a test named. A
+remote fetched by a URL is a position in `uri`; git-remote keeps the ssh forms that make a remote a remote, and the
+release's translator writes each held URL remote as `uri:` when a garden moves to core 3.2.
+
 ## core/law/systems.yaml: systems[uri]
 
 (std-vocab 32: `anchor_systems[uri]`)
@@ -5229,6 +5289,9 @@ is held, and the law writes no copy. A check that cannot run on a machine refuse
 `kept: held` says where a namespace's names are kept when it is not git: a government number is a secret of its
 person's (MODEL.md, ground rule 7), and a gate can know one by its namespace, so it refuses one written unsealed.
 
+(3.2) The checks a namespace may name are the rows of core/law/checks.yaml that read a name; the list that named them
+here is gone, stated once in the table.
+
 ## core/law/namespaces.yaml: namespaces[ror]
 
 (core 2.0)
@@ -5238,6 +5301,19 @@ an organisation, a researcher, a building's object, an image, a traded thing and
 give them once, so that two gardens that meet at one of them meet at one being. A map's ids and a plus code are not
 among them: both are position systems already, and an OpenStreetMap id never establishes an identity (its features
 split and merge).
+
+## core/law/checks.yaml: checks
+
+(core 3.2)
+
+THE CHECKS ARE THE LAW'S, THEIR ARITHMETIC A LIBRARY'S. Which checks a namespace or a system may name was a closed dict
+in bin/parse.py, and two lists of their names in the law said it again. The table holds each check once: what it
+reads, the well-used library it calls, and its vectors — the publisher's own example and an altered copy — so the law's
+own check proves each row holds them, and that no function is without a row or a row without a function. A designation
+— how a part's type is written: a bearing, a thread, a seal, a steel, a polymer — is a pattern of the law beside them
+(the beings-standards sitting, 2026-10-25: rows of this table, each checked first by someone holding the standard). The
+standards that define them are paid and were not read: each pattern is the form the public charts write, and its
+vectors are theirs.
 
 ## core/law/flows.yaml: flows[refusal-detail-served]
 
