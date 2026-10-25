@@ -26,7 +26,11 @@ disagrees with the garden. A lead says what waits, whose it is, and what it is a
              reading: a disk's pending sectors, a clock's offset, a certificate's days left), with no `repair` of
              it: whoever answers for the being in keeping it (`answer … as: keeping`), else its owner, else the
              gardener. A failure recorded with no reading behind it is a finding, kept in the reading, not a lead
-             (design §14: leads for what someone can act on)
+             (design §14: leads for what someone can act on). A probe's own failure — a `fail` by a reading of the
+             being's need, which did not read — is one too, told as the probe's and not the being's; so is a need
+             silent past its `interval` (a `fail` through the need). A failure found `benign` (`respond … as:
+             benign`) is none until the day its review falls due (an `obligatory` of the response, due that day):
+             then it is looked at again, and that clause is an obligation lead as well (core 4.3)
   session    an agent's session left open — a worktree of the garden on a `session/<slug>` branch, as
              bin/session.py lists it (its close retires the worktree; a session bean's own words do not say it,
              since closing leaves `details.status` as it was): the gardener's, to close or to ratify what it did
@@ -202,15 +206,49 @@ def read(root=ROOT):
                                   'days': days, 'side': 'owed', 'owed_by': bound,
                                   'why': f"{bid} {cid}, owed to {who} by {', '.join(bound) or 'nobody named'}, {when}"})
 
-    # HEALTH: a failure a reading shows, not yet repaired — for whoever keeps the being
-    repaired = {(str(r.get('of')) if '#' in str(r.get('of')) else f"{rb}#{r.get('of')}")   # a bare id is its own bean's
-                for rb, b in G.beans.items() for _i, verb, r in b.items if verb == 'repair'}
+    # HEALTH: a failure a reading shows, not yet repaired — for whoever keeps the being. A probe's own failure (a `fail`
+    # by a reading of the being's need, core 4.3) is one too, told as the probe's and not the being's; so is a need's
+    # silence past its interval (a `fail` through the need). A failure found benign (`respond … as: benign`) is none
+    # until the day its review falls due (an `obligatory` of the response), when it is looked at again
+    def ref(rb, x):
+        return str(x) if '#' in str(x) else f"{rb}#{x}"          # a bare id is its own bean's
+
+    repaired = {ref(rb, r.get('of')) for rb, b in G.beans.items() for _i, verb, r in b.items if verb == 'repair'}
+    review = {}                                                   # a response, by its ref: the day it is looked at again
+    for rb, b in G.beans.items():
+        for _i, verb, r in b.items:
+            c = r.get('clause')
+            if verb == 'obligatory' and 'held' not in r and isinstance(c, dict) and c.get('due') is not None:
+                try:
+                    review[ref(rb, r.get('of'))] = min(dmstale.day_of(c['due']), review.get(ref(rb, r.get('of')), 10 ** 9))
+                except ValueError:
+                    pass
+    benign = set()
+    for rb, b in G.beans.items():
+        for _i, verb, r in b.items:
+            if verb == 'respond' and r.get('as') == 'benign' and 'held' not in r and isinstance(r.get('id'), str) \
+                    and review.get(ref(rb, r['id']), today) > today:
+                benign.update(ref(rb, s) for s in listed(r.get('of')))
     for bid, b in sorted(G.beans.items()):
         readings = {str(r.get('id')): r for _i, verb, r in b.items if verb == 'measure' and isinstance(r.get('id'), str)}
+        probes = {str(r.get('id')) for _i, verb, r in b.items if verb == 'reckon' and isinstance(r.get('id'), str)}
+        needs = {str(r.get('id')) for _i, verb, r in b.items if verb == 'need' and isinstance(r.get('id'), str)}
         for _i, verb, r in b.items:
             fid = r.get('id')
-            if verb != 'fail' or 'held' in r or not isinstance(fid, str) or str(r.get('through')) not in readings \
-                    or f"{bid}#{fid}" in repaired:
+            if verb != 'fail' or 'held' in r or not isinstance(fid, str) or f"{bid}#{fid}" in repaired \
+                    or f"{bid}#{fid}" in benign:
+                continue
+            if str(r.get('by')) in probes or str(r.get('through')) in needs and r.get('by') in ('self', bid):
+                probe = str(r['by']) if str(r.get('by')) in probes else None
+                for who in sorted(set(keepers_of(b, bid) or [str(x) for _j, v, a in b.items if v == 'own'
+                                                             and a.get('of') in (None, 'self', bid)
+                                                             for x in listed(a.get('by')) if isinstance(x, str)
+                                                             and x != 'theone'] or ([gardener] if gardener else []))):
+                    leads.append({'for': who, 'kind': 'health', 'about': bid, 'fail': fid, 'since': str(r.get('at') or ''),
+                                  **({'probe': probe} if probe else {}),
+                                  'why': f"{bid}: {r.get('as')}" + (f" — its probe's failure, not {bid}'s" if probe else '')})
+                continue
+            if str(r.get('through')) not in readings:
                 continue
             keepers = [str(x) for _j, v, a in b.items if v == 'answer' and a.get('as') == 'keeping'
                        and a.get('of') in (None, 'self', bid) for x in listed(a.get('by')) if isinstance(x, str)]

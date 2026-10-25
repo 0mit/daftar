@@ -726,6 +726,13 @@ SINCE 4.0 the given line is bios: a being whose kind holds a position on it, liv
 living one. An animal's work — a nest, a comb — comes through its maker as life does, and the made stays what hands make
 (the operator, 2026-10-25: "Nature and organic has privilege"); a bird, at the rung sensitive, is no hands.
 
+SINCE 4.3 a happening comes through happenings (body VII.4 of the next machinery's design, ratified as written by the
+operator on 2026-10-24). A cause is a `come` between two failures: the one it names came of those it comes through. It is
+written from a recorded mechanism and never from correlation, since a `come` is known like every statement, by who said,
+read or derived it. A happening comes through happenings alone, and only a happening through one, so a cause never
+crosses into a being's coming. Its circle is refused by the clause that refuses every circle of coming: the beings' and
+the happenings' are one relation, and one loop is told once.
+
 ## core/law/core.yaml: rules[necessity]
 
 WHAT IS NECESSARY IS NECESSARY THROUGH SOMETHING (the core spec §5, thesis 12; ratified with the core's engine, daftar
@@ -746,6 +753,12 @@ two knowers' statements about one thing stand side by side until a person settle
 One observer gives one verdict on one statement, and a ruling waits until every speaker of what it rules on has
 responded (§16 item 19, daftar #103): a disagreement is heard before it is ruled on (`core/law/verbs.yaml:
 verbs[rule]`).
+
+SINCE 4.3 a failure may be found benign (body VII.3, ratified as written on 2026-10-24). A condition that is
+understood and harmless leaves the leads without leaving the ledger: an observer's response says so (`as: benign`), with
+its reasons in its words, and it names the day it is looked at again. That day is an `obligatory` of the response whose
+clause falls due, so the reader of what falls due reads it as it reads every clause, and no second calendar is kept. A
+benign response with no such day would retire a failure for ever, which is forgetting it, so the rule asks for the day.
 
 ## core/law/core.yaml: rules[bearer]
 
@@ -965,6 +978,10 @@ takes are measures the seven roles do not say, each a form of core/law/measures.
 is as it is: `core/law/measures.yaml: uncertainty_form`, `extent_form`, `recurrence_form` and `forms.clause`; what a
 placement takes, and never more room than its host holds, `core/law/core.yaml: placements`; a weighing's judgments,
 `core/law/verbs.yaml: verbs[weigh]`; a mark said at both ends, `core/law/verbs.yaml: verbs[mark]`.
+
+SINCE 4.3 a need's `interval` is in this rule's care (body VII.2, ratified as written on 2026-10-24). How long
+the reading that meets a need may be silent is a length of time, as a step's `usually` is: an extent on time with no
+ends, a measure or cells of a calendar's level.
 
 ## core/law/core.yaml: rules[profile]
 
@@ -2867,6 +2884,13 @@ the one way a part of a being is named, so the gate resolves the bean and the ke
 `<bean>#<key>` through `bean_id`, was built first and removed before the release: two spellings of one name are two
 things a merge would not compare.
 
+A NEED'S SILENCE IS ITS INTERVAL (core 4.3; body VII.2 of the next machinery's design, ratified as written on
+2026-10-24). A probe that stops answering reads as no data at all, and nothing announces it: an audit found a machine's
+active checks silent from a known minute, and three probes dead for weeks. So a need may say how long its reading may be
+silent before it is not met. Past that, a reading older than the interval, or a probe failing for longer, does not
+hold, and the crossing says the need is silent, as a step's `usually` makes a course overdue. A need with no interval
+reads as before: what is not known is not met, and no crossing is written either way.
+
 ## core/law/terms.yaml: terms[refs]
 
 (std-vocab 32: `terms[refs].meaning`)
@@ -3368,6 +3392,10 @@ the Creator (Ibn Sina's preparing causes, Aquinas's secondary causes), not an oc
 nothing would answer for anything. By nature (a mother, a plant regrowing) or by making (a server, a repository), as
 Aristotle, Physics II.1, parts them. An unknown via is an existential fact — someone, reached through what is known —
 never an invented name. Never demanded (Heidegger, The Principle of Reason: the rose is without why).
+
+SINCE 4.3 a `come` may be between two happenings, a cause (body VII.4): `by` a failure, `through` the
+failures it came of. A cause is the one place two statements are linked as coming, so the roles take a statement as
+well as a being; rule life keeps the two apart.
 
 ## core/law/core.yaml: verbs[acquire]
 
@@ -4293,6 +4321,12 @@ capability grid could express; `unproven` is the one it could not and the one a 
 (std-vocab 32: `terms[risks]`)
 
 **Why a risk is not a capability.** A `capabilities` entry at `forbidden` + `possible` IS a latent risk, and the two are deliberately NOT merged: a capability records the STANCE a being takes, a risk records a FAILURE MODE, and the same prohibition can hold on beings with no risk attached. Where one produces the other, the risk entry says so in `evidence` and cites the capability by name. The alternative — deriving risks from capabilities in the gate — was rejected because a derived finding cannot carry a `consequence` that anybody wrote, and the consequence is the part worth having.
+
+A PROBE'S FAILURE IS THE PROBE'S (core 4.3; body VII.1, ratified as written on 2026-10-24). A probe is the
+reading that meets a being's need, and whether it read is apart from what it reads. A reading that cannot be read is
+no failure of the being: the audit's dead probes read as no data, not as a fault, because nothing told the one from the
+other. So `fail` takes a statement in `by`, the reading, as `meet` already does, and a probe's failure is told as the
+probe's: written once, repaired when it reads again.
 
 ## core/law/kinds.yaml: kinds
 
@@ -6142,6 +6176,13 @@ A NEW BEING IS AN EMPTY SHEET OF ITS KIND. Making a being is a write like any ot
 first Save mints the bean's id and writes the file whole, then saves it. A person's id is minted opaque, `p-<8 hex>`,
 its title the id, because a person is kept by name only on their own word (rule `consent`), and a sheet opened from a
 page has no such word yet.
+
+## core/law/profiles.yaml: forms.drawing.attrs.members.in.entries.says
+
+A BOARD MEMBER SAYS ONE LINE (core 4.3; body VII.6 of the next machinery's design, ratified as written on 2026-10-24).
+A member's `fact` names a value of its drawing, a number the page reads live; a board's parts carried lines of prose
+as well — answers on the network, records to a share, renews by DNS — which no binding names, and they were kept beside
+the page in its bean's details, unseen. `says` is that line, beside `fact`: prose the page shows as it is written.
 
 ## core/law/profiles.yaml: forms.page.attrs.fields
 

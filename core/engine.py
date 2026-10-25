@@ -718,12 +718,32 @@ class Judge:
 
     def responses(self):
         """Rule `squares`, on a disagreement (v1 part 12b: today's `answers` and `hearings`): one observer gives one
-        verdict on one statement; a `rule` on statements is given once every speaker of them has responded."""
+        verdict on one statement; a `rule` on statements is given once every speaker of them has responded. A response
+        that finds a statement benign is of a `fail`, and names the day it is looked at again: an `obligatory` of it whose
+        clause falls due (core 4.3)."""
         seen, heard = {}, {}
+        reviews = {}                               # an `obligatory` whose clause falls due, by the statement it is of
+        for b in self.G.beans.values():
+            for _i, verb, r in b.items:
+                c = r.get('clause')
+                if verb == 'obligatory' and 'held' not in r and isinstance(c, dict) and \
+                        (c.get('due') is not None or c.get('falls_due') is not None):
+                    reviews.setdefault(self.norm(r.get('of'), b), True)
         for b in self.G.beans.values():
             for i, verb, r in b.items:
                 if verb != 'respond' or 'held' in r:
                     continue
+                if r.get('as') == 'benign':
+                    for s in listed(r.get('of')):
+                        hit = self.statement(s, b)
+                        if hit and hit[2] != 'fail':
+                            self.err('squares', f"{b.id}[{i}] respond", f"finds `{s}` benign, and it is a `{hit[2]}`: "
+                                                                         f"benign is said of a failure, a `fail`")
+                    if not (isinstance(r.get('id'), str) and reviews.get(self.norm(r['id'], b))):
+                        self.err('squares', f"{b.id}[{i}] respond", "finds a failure benign and names no day it is looked "
+                                                                     "at again: give the response an `id`, and write "
+                                                                     "`obligatory: { of: <its id>, through: <who asks it>, "
+                                                                     "clause: { due: <the day> } }`")
                 for s in listed(r.get('of')):
                     hit = self.statement(s, b)
                     if not hit:

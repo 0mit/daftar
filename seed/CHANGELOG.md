@@ -251,6 +251,25 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.3** (2026-10-25, daftar v4.3.0, human-ratified rule-change) — **monitoring as needs** (body VII of the next
+  machinery's design, VII.1 to VII.4 and VII.6, ratified as written by the operator on 2026-10-24, its rows designed in
+  the build). MINOR. A probe is a reading of a being's need, and whether it read is apart from what it reads: `fail`'s
+  `by` takes a statement, the reading, so a probe that did not read is its own failure and not the being's;
+  bin/routines.py `cross` writes it once, by the reading, and its `repair` when it reads again, and bin/leads.py tells
+  it as the probe's. A need takes an `interval`, an extent on time with no ends, as a step's `usually`: how long its
+  reading may be silent before it is not met — a reading older than it, or a probe failing for longer, is a crossing
+  said silent; rule measured holds its form. A response may find a failure `benign` (the verdicts' fourth row): rule
+  squares asks that it be of a `fail` and name the day it is looked at again, an `obligatory` of the response whose
+  clause falls due; until that day the failure is no lead, and the review is an obligation as every clause is. A cause
+  is a `come` between two happenings: `come`'s roles take statements, and rule life reads that a happening, a `fail`,
+  comes through happenings alone and only a happening through one, its circle refused as every circle of coming. A board
+  member says one line of prose (`says`, beside `fact`, the drawing form's `members`). In the view asset, an http
+  endpoint at a `uri` is probed at it, and the Prometheus adapter resolves a probed name, for the probe alone, to where
+  its serving being stands on the LAN — its `be … as: location` at an address of RFC 1918 or RFC 4193: a name the
+  monitor's own machine serves, and one another being serves where a prefix either location states holds both, never
+  guessed — the blackbox service's `extra_hosts`, and `view check` names each name it leaves.
+  VII.5 (a signal, expectations, a noise class) waits for cases, as the design's own resolution said.
+
 - **core 4.2** (2026-10-25, daftar v4.2.0, human-ratified rule-change) — **the mechanics** (the mechanics' design,
   ratified whole by the operator on 2026-10-25, each of its eight needs on its recommended option). MINOR. Made things
   are described from their basic elements up, on Reuleaux's theory of machines (1876) and mereotopology's part,

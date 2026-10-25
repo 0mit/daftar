@@ -136,6 +136,10 @@ good:
   - { name: "a document is about a machine and a disk, and concerns a person", bean: y48, kind: document, statements: [ { say: { by: sam, at: now } }, { about: { of: [nas, disk] } }, { concern: { of: [ben] } } ] }
   - { name: "a device said to be a torsional vibration damper, two of its bodies joined by a bonded fixed pair", bean: y49, kind: host, statements: [ { say: { by: sam, at: now } }, { join: { by: { someone: component }, to: { someone: component }, as: fixed, closure: [material] } }, { classify: { of: self, as: "made:torsional-vibration-damper" } } ] }
   - { name: "a nest comes through its bird: what the living make comes through the living", bean: y47, kind: nest, statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [ { someone: bird } ] } } ] }
+  # monitoring (core 4.3): a probe a reading of a need, its silence the need's interval, a failure benign, a cause
+  - { name: "a probe fails: the reading that meets a need did not read, a failure of the reading and not of the machine; the need silent past ten minutes", bean: y50, kind: host, statements: [ { say: { by: sam, at: now } }, { need: { id: up, by: self, of: "every service runs", interval: { of: time, measure: { count: "10", unit: min } } } }, { meet: { by: none-down, of: up } }, { reckon: { id: none-down, reading: { what: "no service is down", inputs: [ { name: down, origin: { act: read, nature: soma, by: nas }, quantity: number } ], steps: [ { id: zero, op: constant, value: { count: "0", unit: "{item}" } }, { id: ok, op: compare, of: down, with: zero, is: at-most } ] } } }, { fail: { id: unread, by: none-down, as: "the probe none-down does not read: no reading of down", at: "2026-10-01 10:00" } } ] }
+  - { name: "a failure found benign, looked at again on the day its review falls due", bean: y51, kind: host, statements: [ { say: { by: sam, at: now } }, { fail: { id: errors, by: self, as: "errors in the log", at: "2026-10-01 10:00" } }, { respond: { id: errors-benign, by: sam, of: [errors], as: benign, through: "the filter never sends QUIT: each session ends at its timeout, and nothing is lost" } }, { obligatory: { id: errors-review, of: errors-benign, through: sam, clause: { due: "2026-11-15" } } } ] }
+  - { name: "a cause: one failure came of another", bean: y52, kind: host, statements: [ { say: { by: sam, at: now } }, { fail: { id: v6, by: self, as: "IPv6 enabled again", at: "2026-10-01 10:00" } }, { fail: { id: timeouts, by: self, as: "DNS timeouts", at: "2026-10-01 10:05" } }, { come: { by: timeouts, through: [v6] } } ] }
   - { name: "a contract's amount, and a person's weight in newtons", bean: y32, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "100", unit: XTS } } }, { measure: { of: ben, as: weight, value: { count: "690", unit: N } } } ] }
   - { name: "a required role nobody said is `unknown`", bean: y1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: unknown, of: { count: "1", unit: XTS } } } ] }
   - { name: "the payer who bears beside another bearer says more than the default", bean: y2, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: p, by: ada, of: { count: "2", unit: XTS } } }, { bear: { by: ada, of: p } }, { bear: { by: ben, of: p } } ] }
@@ -193,6 +197,8 @@ bad:
   - { rule: consent,     bean: x62, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { by: [ada], of: self } }, { represent: { by: ada, of: ben } } ] }
   - { rule: squares,     bean: x63, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { id: m1, by: ada, of: self, as: mass, value: { count: "4", unit: kg } } }, { respond: { by: ben, of: [m1], as: confirms } }, { respond: { by: ben, of: [m1], as: disputes } } ] }
   - { rule: squares,     bean: x64, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { id: m1, by: ada, of: self, as: mass, value: { count: "4", unit: kg } } }, { measure: { id: m2, by: ben, of: self, as: mass, value: { count: "5", unit: kg } } }, { respond: { by: ada, of: [m1, m2], through: "I weighed it twice" } }, { rule: { by: sam, of: [m1, m2] } } ] }
+  - { rule: squares, name: "benign is said of a failure: a reading is none", says: "benign is said of a failure", bean: x63b, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { id: m1, by: ada, of: self, as: mass, value: { count: "4", unit: kg } } }, { respond: { id: m1-benign, by: ben, of: [m1], as: benign } }, { obligatory: { of: m1-benign, through: sam, clause: { due: "2026-11-15" } } } ] }
+  - { rule: squares, name: "a failure found benign names the day it is looked at again", says: "names no day it is looked at again", bean: x63c, kind: host, statements: [ { say: { by: sam, at: now } }, { fail: { id: f1, by: self, as: "errors in the log", at: "2026-10-01 10:00" } }, { respond: { id: f1-benign, by: sam, of: [f1], as: benign } } ] }
   - { rule: form,        bean: x65, kind: document, statements: [ { say: { by: sam, at: now } }, { do: { id: d, by: nas, as: web } }, { grant: { by: sam, to: [d], as: read } } ] }
   - { rule: form,        bean: x66, kind: document, statements: [ { say: { by: sam, at: now } }, { grant: { by: sam, to: [ben], as: read, cover: { parts: [colour] } } } ] }
   - { rule: form,        bean: x67, kind: document, statements: [ { say: { by: sam, at: now } }, { grant: { by: sam, to: [ben], as: read, cover: {} } } ] }
@@ -220,6 +226,7 @@ bad:
   - { rule: valency, name: "an organisation is no person a record concerns", says: "this role takes a being that is body", bean: x3v, kind: document, statements: [ { say: { by: sam, at: now } }, { concern: { of: [hpe] } } ] }
   - { rule: valency, name: "what is about a being is a sayable: a machine is about nothing", says: "this role takes a being that is sayable; nas is body", bean: x3w, kind: document, statements: [ { say: { by: sam, at: now } }, { about: { by: nas, of: [disk] } } ] }
   - { rule: valency, name: "a joint is between two bodies: a document joins nothing", says: "this role takes a being that is body", bean: x3x, kind: document, statements: [ { say: { by: sam, at: now } }, { join: { by: self, to: { someone: component }, as: fixed } } ] }
+  - { rule: valency, name: "a failure is a being's or a reading's: no statement of this bean fails", says: "no-such", bean: x3y, kind: host, statements: [ { say: { by: sam, at: now } }, { fail: { by: no-such, as: "it does not read" } } ] }
   - { rule: valency,     bean: x2, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { of: { count: "1", unit: XTS } } } ] }
   - { rule: valency,     bean: x3, kind: document, statements: [ { say: { by: nas, at: now } } ] }
   - { rule: valency,     bean: x3b, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: [ada, ben], of: "1" } } ] }
@@ -252,6 +259,10 @@ bad:
   - { rule: life, name: "a nest comes through the living, never through a machine", says: "what is organic comes through the living", bean: x8b, kind: nest, statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [nas] } } ] }
   - { rule: life, name: "a bird is no hands: a made body comes through a being at reason", says: "comes through hands", bean: x8c, kind: host, statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [ { someone: bird } ] } } ] }
   - { rule: life,        bean: x9b, kind: host,    statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [x9b] } } ] }
+  - { rule: life, name: "a happening comes through happenings alone: a failure came of no person", says: "is no `fail`", bean: x8d, kind: host, statements: [ { say: { by: sam, at: now } }, { fail: { id: f1, by: self, as: "errors in the log", at: "2026-10-01 10:00" } }, { come: { by: f1, through: [sam] } } ] }
+  - { rule: life, name: "what comes through a happening is a happening: a need is none", says: "is not one", bean: x8e, kind: host, statements: [ { say: { by: sam, at: now } }, { fail: { id: f1, by: self, as: "errors in the log", at: "2026-10-01 10:00" } }, { need: { id: up, by: self, of: "every service runs" } }, { come: { by: up, through: [f1] } } ] }
+  - { rule: life, name: "only a happening comes through a happening: a machine came of a failure", says: "only a happening comes through a happening", bean: x8f, kind: host, statements: [ { say: { by: sam, at: now } }, { fail: { id: f1, by: self, as: "errors in the log", at: "2026-10-01 10:00" } }, { come: { by: self, through: [f1] } } ] }
+  - { rule: life, name: "two failures, each the other's cause: a circle never ends", says: "comes through itself", bean: x9c, kind: host, statements: [ { say: { by: sam, at: now } }, { fail: { id: f1, by: self, as: "errors in the log", at: "2026-10-01 10:00" } }, { fail: { id: f2, by: self, as: "DNS timeouts", at: "2026-10-01 10:05" } }, { come: { by: f2, through: [f1] } }, { come: { by: f1, through: [f2] } } ] }
   - { rule: necessity,   bean: x10, kind: document, statements: [ { say: { by: sam, at: now } }, { necessary: { of: ada } } ] }
   - { rule: squares,     bean: x11, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { forbidden: { of: r, through: pot } } ] }
   - { rule: squares,     bean: x11b, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { omissible: { of: r, through: pot } } ] }
@@ -283,6 +294,8 @@ bad:
   - { rule: measured,    bean: x51, kind: contract, statements: [ { say: { by: sam, at: now } }, { can: { id: rent, by: sam, of: "pay the rent", clause: { due: 2026-10-01, notice: { count: "7", unit: kg }, falls_due: [ { from: "over.home", after: { of: time, measure: { count: "3", unit: d } } } ] } } } ] }
   - { rule: measured,    bean: x52, kind: host,     statements: [ { say: { by: sam, at: now } }, { hold: { by: self, of: [ { count: "2", unit: "{item}" } ] } }, { be: { by: nas, at: [x52, "x52#u1"], as: location, placed: { takes: [ { count: "3", unit: "{item}" } ] } } } ] }
   - { rule: measured,    bean: x53, kind: host,     statements: [ { say: { by: sam, at: now } }, { be: { by: self, at: "home-rack#u9", as: location, placed: { u: { count: "2", unit: m }, accuracy: { count: "5", unit: m, kind: bound }, during: { of: necessity, from: 2026-01-01 } } } } ] }
+  - { rule: measured, name: "how long a reading may be silent has no ends", says: "has no ends", bean: x53b, kind: host, statements: [ { say: { by: sam, at: now } }, { need: { id: up, by: self, of: "every service runs", interval: { of: time, from: "2026-10-01", measure: { count: "10", unit: min } } } } ] }
+  - { rule: measured, name: "a need's interval is a length of time, not of place", says: "a length of time", bean: x53c, kind: host, statements: [ { say: { by: sam, at: now } }, { need: { id: up, by: self, of: "every service runs", interval: { of: place, measure: { count: "10", unit: m } } } } ] }
   - { rule: room,        bean: x26, kind: document, statements: [ { say: { by: sam, at: now } }, { serve: { by: nas, at: ["192.0.2.10", "tcp-port:80"], through: http } }, { serve: { by: shop, at: ["192.0.2.10", "tcp-port:80"], through: http } } ] }
   - { rule: order,       bean: x27, kind: host,     statements: [ { say: { by: sam, at: now } }, { own: { by: shop, of: self } }, { own: { by: self, of: shop } } ] }
   - { rule: names,       bean: x28, kind: garden,   statements: [ { say: { by: sam, at: now } }, { name: { by: garden-id, of: self, as: "garden-b" } } ] }
@@ -330,7 +343,7 @@ clauses:
     - { says: "once the garden holds a bean, it names its gardener", garden: [no-gardener] }
     - { says: "A grant is to a being or to every member of a reading", bad: [x65, x66, x67] }
   valency:
-    - { says: "each required role is filled", bad: [x2, x3s, x3u, x3v, x3w, x3x, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
+    - { says: "each required role is filled", bad: [x2, x3s, x3u, x3v, x3w, x3x, x3y, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
     - { says: "a role takes a list only where its row says `many`", bad: [x3b] }
   knowing:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
@@ -348,13 +361,15 @@ clauses:
   life:
     - { says: "a living or organic being comes through the living", bad: [x8, x8b], good: [y47] }
     - { says: "a made or said being comes through hands", bad: [x9, x8c] }
-    - { says: "every chain ends at the crown", bad: [x9b] }
+    - { says: "a happening, a `fail`, comes through happenings alone", bad: [x8d, x8e, x8f], good: [y52] }
+    - { says: "every chain ends at the crown", bad: [x9b, x9c] }
   necessity:
     - { says: "a `necessary` statement names", bad: [x10] }
   squares:
     - { says: "two positions that cannot both stand", bad: [x11, x11b, x11c] }
     - { says: "subcontraries may both stand", good: [y4] }
     - { says: "One observer gives one verdict", bad: [x63, x64] }
+    - { says: "A response that finds a statement benign is of a `fail`", bad: [x63b, x63c], good: [y51] }
   bearer:
     - { says: "a quantity is stated only of what", bad: [x12c, x12e, x12f, x12h] }
     - { says: "A mass is a body's", bad: [x12, x12b] }
@@ -423,6 +438,7 @@ clauses:
     - { says: "a weighing judges every pair", bad: [x71, x72] }
     - { says: "a mark fixes the base of a cell", bad: [x74] }
     - { says: "a grant's window is a repetition", bad: [x83] }
+    - { says: "a need's `interval` is a length of time", bad: [x53b, x53c], good: [y50] }
   profile:
     - { says: "what a profile gives is used only where the garden takes the profile", bad: [x60] }
     - { says: "and what its forms hold is in its form", bad: [x61, x62] }

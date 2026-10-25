@@ -21,6 +21,8 @@ What is measured is held in the core in these places, each in its form (core/law
   a window      `grant: { …, window: <form recurrence> }` — when a grant holds: a repetition each of whose occurrences
                 lasts a length of time, on days of a calendar reckoned by rule, each opening at its place's time of day
                 counted from midnight (`5T08:30`), so that what the gate accepts `bin/pass.py may` reads.
+  an interval   `need: { …, interval: <form extent> }` — how long the reading that meets a need may be silent before
+                the need is not met: a length of time with no ends, as a step's `usually` (core 4.3).
 
 Rule `measured` judges each of them by the tables the release carries — the lines a region lies on (`lines`), the
 systems (the standards' and the garden's own), the units in UCUM with their factors, the quantities and their
@@ -334,6 +336,18 @@ class Measures:
             out.append((f"{where}.every", f"{every['unit']} is no stride along {met}"))
         return out
 
+    def interval(self, where, x):
+        """[problem] of `x` as a need's interval (core/law/verbs.yaml `need.interval`): how long its reading may be
+        silent, an extent on time with no ends — a `measure`, or a `level` and a `count` — as a step's `usually`."""
+        out = self.extent(where, x)
+        if out or not isinstance(x, dict):
+            return out
+        if x.get('of') != 'time':
+            return [(where, f"is an extent on `{x.get('of')}`: how long a reading may be silent is a length of time")]
+        ends = sorted(set(x) & {'from', 'to'})
+        return [(where, f"holds {', '.join(ends)}: how long a reading may be silent has no ends — a `measure`, or a "
+                        f"`level` and a `count`")] if ends else []
+
     def window(self, where, x):
         """[problem] of `x` as a grant's window (core/law/verbs.yaml `grant.window`): a recurrence each of whose
         occurrences lasts a length of time, opening on days of a calendar reckoned by rule at a time of day counted from
@@ -580,6 +594,8 @@ def problems(J, b):
             out += weighing_problems(J, where, r)
         if verb == 'grant' and r.get('window') is not None:
             out += M.window(f"{where}.window", r['window'])
+        if verb == 'need' and r.get('interval') is not None:
+            out += M.interval(f"{where}.interval", r['interval'])
         if (verb == 'can' or verb in FIGURE_PERMISSION) and isinstance(r.get('clause'), dict) and \
                 isinstance(r['clause'].get('by_role'), str):
             roles = {rr.get('as') for _j, v, rr in b.items if v == 'agree' and 'held' not in rr}

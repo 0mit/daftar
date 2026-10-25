@@ -298,9 +298,10 @@ function board(root,view,lv,state,op){let o=head(view,lv);
  o+='<div class="op-board">'+(op.items||[]).map((it,i)=>{let worst='up';(it.binds||[]).forEach(id=>{const st=stateOf(B(view,id),V(state,id),state.live);if(st==='down')worst='down';else if(st==='nd'&&worst==='up')worst='nd';});
   if(!(it.binds||[]).length)worst='blind';
   const fact=it.fact?(state.live?fmt(V(state,it.fact),B(view,it.fact)):'—')+' '+h(B(view,it.fact).name||''):'';
-  return '<div class="dev '+worst+'" data-dev="'+i+'">'+dot(worst==='blind'?'nd':worst)+'<span class="dv-n">'+h(it.label)+'</span><span class="dv-s">'+(worst==='blind'?'no signal':stateWord(worst,state.live))+'</span>'+((worst==='blind'?it.why:fact)?'<span class="dv-f">'+(worst==='blind'?h(it.why):fact)+'</span>':'')+'</div>';}).join('')+'</div>';
+  const says=it.says?'<span class="dv-f">'+h(it.says)+'</span>':'';
+  return '<div class="dev '+worst+'" data-dev="'+i+'">'+dot(worst==='blind'?'nd':worst)+'<span class="dv-n">'+h(it.label)+'</span><span class="dv-s">'+(worst==='blind'?'no signal':stateWord(worst,state.live))+'</span>'+((worst==='blind'?it.why:fact)?'<span class="dv-f">'+(worst==='blind'?h(it.why):fact)+'</span>':'')+says+'</div>';}).join('')+'</div>';
  root.innerHTML=o+opFoot(view,op,state);evInspect(root,view,state);
- root.querySelectorAll('[data-dev]').forEach(n=>{const it=op.items[+n.dataset.dev];inspectable(n,'dev:'+n.dataset.dev,()=>'<b>'+h(it.label)+'</b>'+(it.binds||[]).map(id=>{const b=B(view,id);return '<div class="ins-row"><span>'+h(b.name)+'</span>'+stateWord(stateOf(b,V(state,id),state.live),state.live)+'<div class="ins-q">'+h(b.source||'')+'</div></div>';}).join('')+((it.binds||[]).length?'':'<div class="ins-sub">'+h(it.why||'nothing measures it')+'</div>')+partCard((view.facts||{})[it.bean]));});
+ root.querySelectorAll('[data-dev]').forEach(n=>{const it=op.items[+n.dataset.dev];inspectable(n,'dev:'+n.dataset.dev,()=>'<b>'+h(it.label)+'</b>'+(it.binds||[]).map(id=>{const b=B(view,id);return '<div class="ins-row"><span>'+h(b.name)+'</span>'+stateWord(stateOf(b,V(state,id),state.live),state.live)+'<div class="ins-q">'+h(b.source||'')+'</div></div>';}).join('')+((it.binds||[]).length?'':'<div class="ins-sub">'+h(it.why||'nothing measures it')+'</div>')+(it.says?'<div class="ins-sub">'+h(it.says)+'</div>':'')+partCard((view.facts||{})[it.bean]));});
  wireActs(root,view,state);}
 
 function scoreboard(root,view,lv,state,op){let o=head(view,lv)+'<div class="op-facts">'+(op.numbers||[]).map(id=>{const b=B(view,id),v=V(state,id),st=stateOf(b,v,state.live);

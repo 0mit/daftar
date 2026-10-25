@@ -812,9 +812,10 @@ forms:
             label: { required: "true", in: prose }
             binds: { in: { entries: { bind: { required: "true", in: { key_of: values } } } } }
             fact: { in: { key_of: values } }
+            says: { in: prose }
             why: { in: prose }
             being: { in: being }
-        meaning: "board: its parts, each with the values that say its state, one fact, and why an unmeasured part is not measured"
+        meaning: "board: its parts, each with the values that say its state, one fact, one line of prose it says (`says`), and why an unmeasured part is not measured"
       numbers:
         in: { entries: { bind: { required: "true", in: { key_of: values } } } }
         meaning: "scoreboard, funnel, race: the headline numbers"

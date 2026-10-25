@@ -122,7 +122,7 @@ A value a shape reads is the key of a `view_bindings` entry on the page.
 | lanes | `lanes` (each path, and the hops it must get through) |
 | roster | `per_item` (a live-series), `active_over`, `top`, `parts` |
 | gauges | `per_item`, `min`, `max` |
-| board | `facts`, `members` (each part, the values that say its state, one fact, why an unmeasured part is not measured) |
+| board | `facts`, `members` (each part, the values that say its state, one fact, one line of prose it says (`says`), why an unmeasured part is not measured) |
 | scoreboard | `numbers`, `list`, `parts` |
 | funnel | `funnels` (each stream's stages, stops and marks), `window`, `numbers`, `rollcall` |
 | race | `step_at` (0 before the first step, n at the n-th of the procedure it draws), `elapsed`, `eta`, `progress`, `deadline` (an extent) or `deadline_from`, `checkpoints`, `numbers`, `parts` |
@@ -334,7 +334,11 @@ each target's own `endpoints`; which technology it runs is its own `knowledge` (
 the **adapter** for that technology: `lib/sources/<code>.py`, named by a code of the technology catalogue. The first
 adapter reads Prometheus; `http` reads one JSON document at JSON Pointers (a device's own API, a runner's status
 file); another technology is read by an adapter beside it, and a binding may give a query for each. What only one technology needs sits where the monitor's `settings` pointer points, read by its adapter as the
-adapter's own docstring says.
+adapter's own docstring says. A name a probe reaches is resolved, for the probe alone, to where the being that serves
+it stands on the LAN — its own `be … as: location` at an address of RFC 1918 or RFC 4193, else the being's it lives
+in: a name the monitor's own machine serves, at its own address, and one another being serves where a prefix either
+location states holds both; `view check` names each it leaves to the world's resolution. So a site with no hairpin
+probes its own public names from inside (the Prometheus adapter writes it as the blackbox service's `extra_hosts`).
 
 An adapter is a module with `TECHNOLOGY` (its catalogue code) and these functions: `describe(binding)` (the query that
 computes a shown number: its path), `check_binding(binding)` and `check_monitor(monitor)` (what it cannot read),

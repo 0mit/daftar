@@ -10,7 +10,7 @@ tables:                                   # the small tables these rows name; a 
   sensitivities: [none, personal, special-category]
   presences:     [present, absent]                     # what a reading found: present, or looked for and not found
   jobs:          [router, mail-primary, mail-backup, file-server, dns-resolver, dns-authoritative, monitoring, web, app-host, vpn-gateway, ledger-hub, workstation]
-  verdicts:      [confirms, disputes, abstains]        # what a response to another's statement says of it (v1 part 12b)
+  verdicts:      [confirms, disputes, abstains, benign]   # what a response to another's statement says of it (v1 part 12b); of a failure, benign (core 4.3)
   treatments:    [route, mangle, queue]                # how a forwarding device steers traffic: by a route, a mark, a queue
   senses:        ["1", "-1"]                          # a move along its direction, or against it: its reverse
   transparencies: [opaque, transparent]               # whether an attendance takes the hours of those present (iCalendar TRANSP, RFC 5545 3.8.2.7)
@@ -89,13 +89,15 @@ verbs:
 
   # ---------------------------------------------------------------- what a being needs, does and holds
   - verb: need
-    meaning: "to require something to function: how badly is a position on the necessity square — said of none, it blocks: what needs it waits until it is met; `contingent` of it, it does not block; `impossible` of it, it cannot be met. An item of a checklist is one (v1 part 12b): what is asked for (`of`, in words where no being says it, or an amount of what its provider gives: a price, hours, a window's length), who provides it (`from`, a being or the word for a party), needed `while` a reading or a clause holds (absent, always), met by what `meet`s it; the needs of one bean that share an `as` are alternatives, any one of which meets it"
+    meaning: "to require something to function: how badly is a position on the necessity square — said of none, it blocks: what needs it waits until it is met; `contingent` of it, it does not block; `impossible` of it, it cannot be met. An item of a checklist is one (v1 part 12b): what is asked for (`of`, in words where no being says it, or an amount of what its provider gives: a price, hours, a window's length), who provides it (`from`, a being or the word for a party), needed `while` a reading or a clause holds (absent, always), met by what `meet`s it; the needs of one bean that share an `as` are alternatives, any one of which meets it. Its `interval` is how long the reading that meets it may be silent before it is not met — its last reading older than that, or its probe failing for longer — as a step's `usually` makes a course overdue"
     roles:
       by:      { shape: being }
       of:      { shape: [being, statement, text, quantity], many: true }
       from:    { shape: [being, text] }
       through: { shape: row, table: protocols }
       as:      { shape: text }
+    qualifiers:
+      interval: { shape: form, form: extent }
     required: [by, of]
     replaces: [depends_on, consumes, reaches, needed_when, items, one_of]
     home: core
@@ -238,8 +240,8 @@ verbs:
 
   # ---------------------------------------------------------------- failure and its remedy, disagreement
   - verb: fail
-    meaning: "a way a being can fail, or is failing: a statement on the necessity square, possible or happening"
-    roles: { by: { shape: being }, as: { shape: text }, through: { shape: [being, statement, text] }, at: { shape: position } }
+    meaning: "a way a being can fail, or is failing: a statement on the necessity square, possible or happening; or a probe failing — a reading of a being's need (its `reckon`, the `by`) that did not read, whether it ran apart from what it reads, which is no failure of the being"
+    roles: { by: { shape: [being, statement] }, as: { shape: text }, through: { shape: [being, statement, text] }, at: { shape: position } }
     required: [by, as]
     replaces: [risks]
     home: core
@@ -256,7 +258,7 @@ verbs:
     replaces: [hearings, ruling]
     home: core
   - verb: respond
-    meaning: "to respond to a statement: an observer's verdict on another's reading — it confirms, disputes or abstains (asked, and would not say), once for each statement — or a speaker's own words at a hearing, in its `through`; a `rule` on statements is given once every speaker of them has responded (v1 part 12b)"
+    meaning: "to respond to a statement: an observer's verdict on another's reading — it confirms, disputes or abstains (asked, and would not say), once for each statement — or a speaker's own words at a hearing, in its `through`; a `rule` on statements is given once every speaker of them has responded (v1 part 12b). Of a failure (a `fail`), `benign`: known to do no harm, it leaves the leads until the day an `obligatory` of the response falls due, when it is looked at again"
     roles: { by: { shape: being }, of: { shape: statement, many: true }, as: { shape: row, table: verdicts }, through: { shape: text }, at: { shape: position } }
     required: [by, of]
     replaces: [answers, heard]
