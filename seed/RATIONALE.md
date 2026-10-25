@@ -662,6 +662,21 @@ the core, a RULE-CHANGE a person ratifies, carries the moments history recorded 
 daftar #85). An act known in another garden holds that garden's bean beside its moment there, and the commit that brings
 it takes it (§16 item 14, daftar #98).
 
+(core 3.5)
+
+A RENAME IS READ AS A MERGE READS A PARENT (the next machinery's design, II.1, ratified 2026-10-24). git lists a rename as a
+deletion and an addition, so a renamed bean's acts were fresh in the commit that renamed it and their moments, history's,
+were refused (bean-rename-keeps-moments: a host's bean renamed, 2026-10-17). The commit's entry says the
+rename, `- renamed: [[<old>]] → [[<new>]]`, a line the commit's rules read, and the bean it was at HEAD is its parent: a
+statement it held is known as it was. A line the commit's changes do not bear out — the old bean not taken out, or the
+new not added — reads nothing.
+
+WHO WROTE IT IS A BEING (V.1, ratified 2026-10-24). A heading's writer was free text, and one garden spelled its writers
+seven ways (actor-grammar): no tool could say who wrote what. The heading names a being the garden holds, by its bean —
+a person, the session an agent works in — so the key that signs a commit can be checked against it once the writers'
+keys exist (D17). The gate holds the grammar, a being's id; a host that writes as itself (a hub's merge, the routines
+engine's) is a being too, and which being a key may name is the hub's to judge with the keys.
+
 ## core/law/core.yaml: rules[placeholder]
 
 WHAT THE LAW DERIVES IS NOT WRITTEN (the core spec §4; ratified with the core's engine, daftar #81–#84, 2026-10-01). A
@@ -885,6 +900,19 @@ one, and in its bean at the pinned commit, is taken out or changed. A correction
 after the day; what comes after the close with an earlier day is read on the first day after it, as the difference.
 Nothing of the books is stored at closing: the commit is.
 
+(core 3.5)
+
+THE LANGUAGE IS HELD TO ITS PIN (the next machinery's design, II.2, ratified 2026-10-24, option A). An agent changed a garden's
+copy of the view asset's check until it passed, and no gate judged it (release-tool-edited-in-garden); a garden ran a
+patched asset that a pull would overwrite (view-asset-garden-patch). A garden's verdicts are its release's only while its
+tools are: so the release carries the SHA-256 of every file it ships (`seed/LANGUAGE.sha256`), signed by its tag with the
+tree that holds it, and a commit that adds or changes such a file is refused where the file does not hold its digest —
+RULE-CHANGE or not, since a change to the language comes through a release. The digests change only in the commit that
+adopts a release, which moves `daftar_release` and says RULE-CHANGE, and a merge brings them as the other side committed
+them. Only what a commit stages is read: what came before was judged when it was made, and a hub replays every commit.
+The tools that judge say first where the copy they run differs, so their verdict is read as that copy's. A digest is of
+a file as git keeps it — in text a CRLF is read as LF — so a checkout that turned its line ends holds the release's file.
+
 ## core/law/core.yaml: rules[line]
 
 WHAT HOLDS A LINE HOLDS ITS FORM (the core spec §16 item 12, v1 part 6, merged by the operator as daftar #96,
@@ -894,6 +922,17 @@ have a form the seven roles alone do not say. One rule judges them, through the 
 channels (`core/law/lines.yaml: forms.series`), a course by its walk, where a case stands read and not stored
 (`core/law/verbs.yaml: verbs[move]`), a reading by the closed list of operations (`core/law/lines.yaml:
 selection_form`), a pin by a commit the garden has (`core/law/verbs.yaml: verbs[pin]`).
+
+(core 3.5)
+
+A PIN MAY NAME ANOTHER REPOSITORY (V.4, ratified 2026-10-24). A run of the suites is an observation of the daftar
+codebase at a commit of its own (results-through-the-mechanisms), and a reading across gardens rests on the other
+garden's commit: neither is a commit this garden has, and `pin_form`'s `garden` had declared one that nothing checked.
+A pin `through` a garden or a codebase names that repository's commit, `<root>@<object>`, the root one a host keeps a
+clone of it at. The gate holds `through` to a `garden` or a `codebase` bean and refuses none of its commits: whether a
+repository's history holds one is a fact only a host with a clone can read, and a verdict that depended on the machine
+would pass on one and fail on another. bin/where.py reads it there — PINNED, NOT-IN-CLONE — and HOPED where the host
+keeps no clone.
 
 ## core/law/core.yaml: rules[measured]
 

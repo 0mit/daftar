@@ -1456,6 +1456,14 @@ decision and the work of everyone who holds a copy:
    cloned again. A copy that is not replaced still holds the value, and a merge from it brings it back.
 4. Say what was done in the journal, by path and never by value.
 
+## A bean renamed
+
+A being keeps what is known of it when its bean takes another name, and the commit that renames it says so. Move the
+file (`git mv beans/<old>.md beans/<new>.md`), write its `bean:` anew, and each bean that names it to name the new one,
+then save with the line `- renamed: [[<old>]] → [[<new>]]` in the entry: the gate reads the bean it was as the renamed
+one's parent, as a merge reads a parent, so the acts it held keep the moments they were known at. Without the line each
+act is new in that commit, and a moment history recorded is refused.
+
 ## A value the law does not have yet
 
 First ask whether it is a value at all. The NAS runs its vendor's operating system, which no table of the law lists: but

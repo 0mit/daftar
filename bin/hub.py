@@ -24,7 +24,10 @@ again, commit by commit, oldest first:
      keeps (`seed/LANGUAGE`), any Python or shell file, the drawing module a page names (`view.drawings`) and the
      name itself, and a captured view of another program (`captures/views/`), whose templates its client compiles into
      script (bin/pass.py `may`, and the layer map).
-  4. THE GATE, in a checkout of the pushed tip — or of every commit, with `--each`.
+  4. THE GATE, in a checkout of the pushed tip — or of every commit, with `--each`; and every commit's OWN RULES,
+     replayed against its parent by the code it carries (core 3.5, II.3: the one judge's scope `replay`), all but the
+     clock's register of headings, a clone's — so a hub refuses what a commit's hook refused, and a commit made past
+     its hook is judged here all the same.
 
 THE HUB RUNS ONLY CODE THE GARDENER LET IN. The gate it runs is the one the pushed tree carries, because a garden's
 gate reads the law beside it; so no push reaches step 4 until every commit in it has passed step 3, and step 3 lets
@@ -377,6 +380,25 @@ def gate(commit, env, tmp):
         raise Refused("the garden it leaves does not pass the gate:\n" + said.strip()[-1500:])
 
 
+def replay(commit, env, v=None):
+    """THE COMMIT'S OWN RULES, REPLAYED AGAINST ITS PARENT (core 3.5, II.3): the one judge's scope `replay` — the
+    commit checked out with its parent as HEAD and its tree as the index, and its own gate run there with `--replay`: an
+    entry naming each bean it changes, the moments its acts carry, RULE-CHANGE, kept, harm, consent's future
+    whereabouts, the language held to its pin — all but the clock's register of headings, which is a clone's. So a hub
+    refuses what the commit's hook refused, and a commit made past its hook (`--no-verify`) is judged after all. The
+    refusal, or None; and with `v`, its judgment, what the replay was (`replay`), for the receipt."""
+    sys.path.insert(0, ROOT)
+    from core import judge as dmjudge
+    scope = dmjudge.Scope.replay([commit], env)
+    found = dmjudge.judge(None, scope)
+    said = scope.said.get(commit, '').strip()
+    if v is not None:
+        v['replay'] = said if said.startswith(('not replayed', 'could not')) else 'replayed against its parent'
+    if found:
+        return "its own rules refuse it, replayed against its parent as its hook judged it:\n" + said[-1500:]
+    return None
+
+
 def verdicts(old, new, only=None, each=False, env=None, known=('--exclude=refs/daftar/custom/*', '--all'),
              whole=False):
     """THE JUDGMENT OF ONE REF UPDATE, commit by commit: ([{commit, writer, key, refused, gate}], (tip, refusal)).
@@ -434,6 +456,7 @@ def verdicts(old, new, only=None, each=False, env=None, known=('--exclude=refs/d
                 if let_in:
                     try:
                         gate(c, env, tmp)
+                        v['refused'] = replay(c, env, v)
                     except Refused as x:
                         v['refused'] = str(x)
                 else:
@@ -443,6 +466,11 @@ def verdicts(old, new, only=None, each=False, env=None, known=('--exclude=refs/d
             found.append(v)
             if v['refused'] and not whole:
                 break
+        if not each and let_in:                       # every commit let in: each one's own rules, then the tip's tree
+            for v in found:
+                v['refused'] = replay(v['commit'], env, v)
+                if v['refused'] and not whole:
+                    break
         if each or not commits:
             tip = (None, "each commit judged by its own gate" if commits else "no commit new to the hub")
         elif not let_in:
@@ -586,8 +614,9 @@ def install(repo, only=None, each=False, report=False):
 
 NOTES = 'refs/notes/daftar'        # the hub's receipts, one note to a commit, written by the hub alone
 SIGNED_AS = 'daftar-receipt'       # the namespace a receipt is signed in, so no signature over one is a commit's
-WHOLE = ("the signature, the writer, the rights (`write`, `ratify:F`, `ratify:G`); not judged at the hub: the "
-         "Contract's classes C, D, E and J")
+WHOLE = ("the signature, the writer, the rights (`write`, `ratify:F`, `ratify:G`), the commit's own rules replayed "
+         "against its parent where its gate replays them (`replay`: all but the clock's register of headings); not "
+         "judged at the hub: the Contract's classes C, D, E and J")
 
 
 def _gitdir(env=None):
@@ -661,6 +690,7 @@ def pre_receive(lines, only=None, each=False, report=False, env=None):
     refusal; one that REPORTS refuses nothing of the garden's, and shows and logs what it would refuse. The receipts'
     ref is the hub's own, refused in either mode."""
     env = env or dict(os.environ)
+    dmcheck.differs(ROOT, 'hub')          # its own copy, said first where it is not its release's (core 3.5, II.2)
     gitdir, at, mode = _gitdir(env), _moment(), 'reporting' if report else 'refusing'
     shown, judged, refused, own = [], [], False, False
     for old, new, ref in lines:
@@ -709,7 +739,8 @@ def receipt_text(rec, v, env=None):
     lines = ["daftar: a hub's receipt", f"commit: {v['commit']}", f"ref: {rec['ref']}", f"verdict: {verdict}"]
     lines += [f"why: {' '.join(why.split())[:1500]}"] if why else []
     lines += [f"writer: {v['writer'] or 'none'}, by the key {v['key'] or 'none'}", f"judged: {WHOLE}",
-              f"gate: {gate}", f"law: {law_of(v['commit'], env)}", f"judge: {release()}", f"mode: {rec['mode']}",
+              f"gate: {gate}", f"replay: {' '.join(str(v.get('replay') or 'not run: the gate did not run').split())[:300]}",
+              f"law: {law_of(v['commit'], env)}", f"judge: {release()}", f"mode: {rec['mode']}",
               f"at: {rec['at']}"]
     return '\n'.join(lines) + '\n'
 

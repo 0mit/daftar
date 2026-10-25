@@ -167,6 +167,7 @@ good:
   - { name: "an acceptance nobody dated is an acceptance, and counts as consent (today's days.py)", bean: y17, kind: person, statements: [ { say: { by: sam, at: now } }, { own: { by: theone, of: self } }, { agree: { by: [y17], of: pot } } ] }
   - { name: "an attendance kept in view takes none of the hours: two that overlap, one transparent", bean: y34, kind: document, statements: [ { say: { by: sam, at: now } }, { attend: { by: ben, of: pot, at: 2026-12-02/2026-12-06 } }, { attend: { by: ben, of: ladder, at: 2026-12-05/2026-12-09, transparency: transparent } } ] }
   - { name: "an attendance said to take its hours is as one that says nothing", bean: y35, kind: document, statements: [ { say: { by: sam, at: now } }, { attend: { by: ben, of: ladder, at: 2026-12-20/2026-12-21, transparency: opaque } } ] }
+  - { name: "a pin through another garden: its commit that garden's, which no gate here refuses", bean: y36, kind: document, statements: [ { say: { by: sam, at: now } }, { classify: { id: c, of: self, as: "isco-08:2511" } }, { pin: { id: p, by: sam, of: [c], through: garden-a, at: ["2026-10-01 10:00+03:30", "garden-a@0123456789abcdef0123456789abcdef01234567"] } } ] }
 bad:
   # rule bearer (2026-10-10): what a quantity holds for, reached through `made-of` alone
   - { rule: bearer, name: "one molecule has no temperature", says: "it holds for material and what is made of it", bean: x12b, kind: grain, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: temperature-difference, value: { count: "3", unit: K } } } ] }
@@ -277,6 +278,7 @@ bad:
   - { rule: line, name: "a series with no id", says: "a series is named", bean: x84, kind: document, statements: [ { say: { by: sam, at: now } }, { record: { by: self, series: { channels: {} } } } ] }
   - { rule: line, name: "a move along no course of its bean", says: "is no course of this bean", bean: x85, kind: document, statements: [ { say: { by: sam, at: now } }, { move: { by: self, through: c1, at: now } } ] }
   - { rule: line, name: "a pin with no commit it was read in", says: "the commit it was read in", bean: x86, kind: document, statements: [ { say: { by: sam, at: now } }, { pin: { id: p, by: sam, at: now } } ] }
+  - { rule: line, name: "a pin through a person: no repository its commit is of", says: "and ben is neither", bean: x94, kind: document, statements: [ { say: { by: sam, at: now } }, { classify: { id: c, of: self, as: "isco-08:2511" } }, { pin: { id: p, by: sam, of: [c], through: ben, at: [now, "garden-a@0123456789abcdef0123456789abcdef01234567"] } } ] }
   - { rule: names, name: "an identifier someone else assigned, written as a name a garden gave", says: "never qualified", bean: x87, kind: person, statements: [ { say: { by: x87, at: now } }, { name: { by: garden, of: self, as: "shop.example" } } ] }
   - { rule: names, name: "a name holding a bidi control character", says: "a bidi control character", bean: x88, kind: host, statements: [ { say: { by: sam, at: now } }, { name: { by: dns, of: self, as: "shop\u202e.example" } } ] }
   - { rule: harm, name: "a government number unsealed", says: "a government number", bean: x89, kind: document, statements: [ { say: { by: sam, at: now } }, { name: { by: ir-national-code, of: self, as: "0012345678" } } ] }
@@ -310,6 +312,8 @@ clauses:
   knowing:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
     - { says: "a knowing act's `at` is `now` until the save", bad: [x5] }
+    - { says: "A bean renamed", commit: [renamed-unsaid] }
+    - { says: "An entry a commit adds names who wrote it", commit: [who-no-being] }
     - { says: "A row of a store names the act", suite: [test/store.py] }
   placeholder:
     - { says: "a statement the engine derives", bad: [x6] }
@@ -371,13 +375,14 @@ clauses:
     - { says: "what is kept is not damaged", commit: [journal-rewritten, journal-line-break] }
     - { says: "a series' part, once written", commit: [part-rewritten] }
     - { says: "a commit that takes a header key or a statement out", commit: [statement-taken, no-body] }
+    - { says: "a file the release keeps is as its release made it", commit: [language-patched, digests-moved] }
     - { says: "and what an entity's closed books read", suite: [test/books.py] }
   line:
     - { says: "what holds a line holds its form", bad: [x84] }
     - { says: "a walk's ways on lead to steps of the walk", bad: [x40] }
     - { says: "a course is a being placed on a walk", bad: [x85] }
     - { says: "a reading's steps are each one operation", bad: [x41] }
-    - { says: "a pin names a commit this garden has", bad: [x86] }
+    - { says: "a pin names a commit this garden has", bad: [x86, x94] }
   measured:
     - { says: "what is measured is in its form", bad: [x53] }
     - { says: "a region lies on a line that has regions", bad: [x53] }

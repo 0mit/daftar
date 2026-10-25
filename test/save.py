@@ -243,7 +243,7 @@ _cp = {k: v for k, v in ENV.items() if k not in ('PYTHONUTF8', 'PYTHONIOENCODING
 _cp['PYTHONIOENCODING'] = 'cp1252'
 _body = '- action: added [[friend-e]] — دوست سام.\n- why: سام گفت.'
 _s = state()
-rc, out, err = save('سام', 'دوستی را افزود', stdin=(_body + '\n').encode('utf-8'), env=_cp)
+rc, out, err = save('sam', 'دوستی را افزود', stdin=(_body + '\n').encode('utf-8'), env=_cp)
 check("the body on standard input, Persian on a cp1252 machine: saved (exit 0), the entry byte for byte, the message "
       "too",
       rc == 0 and journal()[len(_s[0]):].endswith(('\n' + _body + '\n').encode('utf-8'))
@@ -257,6 +257,8 @@ for _why, _args, _said in (
          ('sam', 'added friend-f', '--body', '- \x1b[2J x'),
          'control character'),
         ("an entry with no body", ('sam', 'added friend-f', '--body', '  '), 'has no body'),
+        ("a writer who is no being the garden holds (core 3.5, V.1)",
+         ('agent (claude)', 'added friend-f', '--body', '- action: added [[friend-f]].'), 'is no being this garden holds'),
         ("an option it does not know", ('sam', 'added friend-f', '--bdy', 'x'), "'--bdy' is no option of save"),
         ("--again beside anything else", ('--again', 'sam'), '--again takes nothing else'),
         ("--body with nothing after it", ('sam', 'added friend-f', '--body'), '--body takes')):

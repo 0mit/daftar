@@ -4,7 +4,9 @@ The engine judges a bean's statements wherever they stand. What a change says of
 commits, and is judged here:
 
   knowing  Every bean the commit changes is named by the journal entry it adds, and the entry's heading is one the clock
-           wrote (bin/journal.py registers each heading it writes). A knowing act the commit adds carries that
+           wrote (bin/journal.py registers each heading it writes), naming its writer by a being the garden holds — a
+           person, the session an agent works in, a host that writes as itself (core 3.5, V.1: `## <moment> · <bean> ·
+           <what>`; which being a signer may name is the hub's, once the writers' keys exist). A knowing act the commit adds carries that
            heading's moment, which the save (bin/save.py, through journal) writes in place of its `now`: a `now`
            left is a write not saved, and a moment typed there is refused, since only the clock supplies it. A
            statement the commit adds or changes is known by an act of this commit, because whoever wrote it now said it
@@ -18,6 +20,9 @@ commits, and is judged here:
            it was committed. What the merge commit adds of its own is judged: its own entry is the clock's, and names
            each bean the merge made (one that is neither parent's); a statement neither parent holds is known by an act
            at that entry's moment; and an act a parent held with no `of`, given one by the merge, is known as it was.
+           A RENAME (core 3.5, II.1) is read as a merge reads a parent: a commit that takes bean X out and adds bean Y,
+           its entry saying `- renamed: [[X]] → [[Y]]`, counts the statements HEAD:X held as old for Y, known as they
+           were (bean-rename-keeps-moments: git's rename, listed as a deletion and an addition, made every one fresh).
   ratify   A change to a file of the law (one the law's standing places in `law` or `manifesto`, the core's own law
            files, or one a release keeps by seed/LANGUAGE) is a RULE-CHANGE, ratified by a person, and the entry says
            so. A garden's first commit, its germination, has no HEAD and is exempt: it brings the law, decided by nobody
@@ -37,7 +42,8 @@ commits, and is judged here:
            `say` knows, `<verb>#<id>.<role>` — has a granted pass into it; and a `say` by a person it adds has a pass
            from `words` or `instructions` into its bean. A commit that claims nothing owes none of it.
 
-    findings(root, law, staged=None, garden=None) -> [(rule, where, message)]"""
+    findings(root, law, changes=None, garden=None, register=True) -> [(rule, where, message)]
+                                    # register False: a hub replaying a commit, which holds no clone's register of headings"""
 import collections
 import json
 import os
@@ -143,7 +149,13 @@ def merging(root):
     return sorted(h for h in env if git(root, 'cat-file', '-e', h + '^{commit}') is not None)
 
 
-def findings(root, law, changes=None, garden=None):
+def writer(heading):
+    """Who an entry's heading names as its writer: `## <moment> · <who> · <what>` (bin/journal.py `heading`)."""
+    parts = heading[3:].split(' · ')
+    return parts[1].strip() if len(parts) >= 3 else ''
+
+
+def findings(root, law, changes=None, garden=None, register=True):
     out = []
     changes = staged(root) if changes is None else changes
     if not changes:
@@ -161,15 +173,22 @@ def findings(root, law, changes=None, garden=None):
     entry = '\n'.join(added)
     named_by = '\n'.join(own)
     moments = {h[3:].split(' · ', 1)[0].strip() for h in heads}
-    stamped = dmjournal.registered(root)
+    stamped = dmjournal.registered(root) if register else None      # a hub replaying the commit holds no clone's register
     for h in heads:
-        if h not in stamped:
+        if stamped is not None and h not in stamped:
             out.append(('knowing', JOURNAL, f"the heading {h[:60]!r} was not written by the clock in this clone: a heading "
                                             f"is written by `bin/save.py` (or bin/journal.py), never typed"))
+        who = writer(h)
+        if garden is not None and who not in garden.beans:
+            out.append(('knowing', JOURNAL, f"the heading {h[:60]!r} names its writer {who!r}, which is no being this "
+                                            f"garden holds: an entry names who wrote it by a bean's id — a person's "
+                                            f"(`{garden.gardener or '<id>'}`), or the session an agent works in "
+                                            f"(`session-<slug>`, bin/session.py open) — `bin/save.py <bean> \"<what>\"`"))
     said = ' or '.join(sorted(moments)) or 'none: this commit adds no entry'
     adopting = any(p == MANIFEST for _s, p in changes) and bool(RULE_CHANGE.search(entry)) \
         and dmcheck.pin(root, 'HEAD').startswith('std-vocab@') and dmcheck.pin(root, '').startswith('core@')
     past = history(root) if adopting else set()
+    renamed = _renamed(own, changes)
     for status, path in changes:
         if not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):
             continue
@@ -186,8 +205,10 @@ def findings(root, law, changes=None, garden=None):
         if status == 'D':
             continue
         new = statements_of(root, '', path)
-        old = collections.Counter(canon(v, r) for _i, v, r in statements_of(root, 'HEAD', path)) if status != 'A' \
-            else collections.Counter()
+        # A BEAN RENAMED (II.1) reads the bean it was as a merge reads a parent: its statements at HEAD are old here
+        was_path = renamed.get(path, path)
+        before = statements_of(root, 'HEAD', was_path) if status != 'A' or path in renamed else []
+        old = collections.Counter(canon(v, r) for _i, v, r in before)
         given = set()                                       # a parent's knowing act with no `of`, which a merge gives one
         for h in others:
             theirs = statements_of(root, h, path)
@@ -198,8 +219,7 @@ def findings(root, law, changes=None, garden=None):
         fresh = []                                          # the statements this commit adds or changes
         # A STATEMENT SEALED is the statement it was, held off git (v1 part 8): its verb and id are HEAD's, and rule
         # harm judges the seal by the entry's `- held:` line; it asks no new act
-        was_ids = {(v, r.get('id')) for _i, v, r in statements_of(root, 'HEAD', path) if isinstance(r.get('id'), str)
-                   and 'held' not in r} if status != 'A' else set()
+        was_ids = {(v, r.get('id')) for _i, v, r in before if isinstance(r.get('id'), str) and 'held' not in r}
         for i, verb, r in new:
             c = canon(verb, r)
             if 'held' in r and (verb, r.get('id')) in was_ids:
@@ -244,6 +264,7 @@ def findings(root, law, changes=None, garden=None):
                                               "wrote it says, reads, makes or derives it now — a knowing act at `now` "
                                               "whose `of` names it, or one with no `of`, which covers the rest"))
     out += guarded(root, law, changes, entry, added, moments, garden, adopting, merge=bool(others))
+    out += held_to_pin(root, changes, entry, others)
     out += claimed(root, law, changes, garden)
     kept = kept_by_release(root, law)
     rc = [p for _s, p in changes if ruled(p, law, kept)]
@@ -255,6 +276,20 @@ def findings(root, law, changes=None, garden=None):
                     "a change to the law is a RULE-CHANGE, which a person ratifies: the journal entry this commit adds "
                     "says RULE-CHANGE, and who ratified it"))
     return out
+
+
+RENAMED = re.compile(r'^- renamed: \[\[([^\]\s]+)\]\] → \[\[([^\]\s]+)\]\]\s*$')     # `- renamed: [[X]] → [[Y]]`
+
+
+def _renamed(lines, changes):
+    """{the path added: the path taken out} of each bean the commit's own entry says is renamed, `- renamed: [[X]] →
+    [[Y]]`, where the commit takes X out and adds Y, both documents of the garden (II.1)."""
+    docs = tuple(d + '/' for d in engine.DOCUMENTS)
+    of = lambda st: {os.path.basename(p)[:-3]: p for s, p in changes if s == st and p.startswith(docs)  # noqa: E731
+                     and p.endswith('.md')}
+    gone, added = of('D'), of('A')
+    return {added[m.group(2)]: gone[m.group(1)] for ln in lines for m in [RENAMED.match(ln.rstrip())]
+            if m and m.group(1) in gone and m.group(2) in added}
 
 
 PEM = re.compile('-----BEGIN ' + r'[A-Z0-9 ]*PRIVATE KEY-----')    # in two parts, so that this file never matches it
@@ -373,6 +408,45 @@ def guarded(root, law, changes, entry, added, moments, garden=None, adopting=Fal
             out.append(('consent', path, f"places {', '.join(sorted(set(others)))} somewhere in the future, in git: a "
                                          f"future whereabouts of a person who is not the gardener is held off git "
                                          f"whatever they agreed to — seal its location (bin/held.py put)"))
+    return out
+
+
+def _release(root, ref):
+    """GARDEN.md's `daftar_release` at `ref` (`HEAD`, or the index ''), as written; '' where none."""
+    fm = _front(root, ref, MANIFEST)[0]
+    return str(fm.get('daftar_release') or '') if isinstance(fm, dict) else ''
+
+
+def held_to_pin(root, changes, entry, others=()):
+    """KEPT, the language held to its pin (core 3.5, II.2): after a commit, each file the release keeps that the commit
+    adds or changes holds the SHA-256 its release carries for it (seed/LANGUAGE.sha256, bin/pass.py `digests_of`), and
+    the digests themselves change only with the release — save in the commit that adopts one, which moves GARDEN.md's
+    `daftar_release` and says RULE-CHANGE (bin/dmupgrade.py writes it). A garden's first commit brings the release, and
+    a garden whose release carries no digests has none to be held to. Only what the commit stages is read: the commits
+    before it were judged when they were made, and a hub replays each (bin/hub.py); and a merge brings a file as the other
+    side committed it, judged then."""
+    text = git(root, 'show', ':' + dmpass.DIGESTS)
+    if text is None or git(root, 'rev-parse', '-q', '--verify', 'HEAD') is None:
+        return []
+    if _release(root, 'HEAD') != _release(root, '') and RULE_CHANGE.search(entry):
+        return []                                             # the adoption's own commit: the release comes in whole
+    blob = lambda ref, p: (git(root, 'rev-parse', '-q', '--verify', f"{ref}:{p}") or '').strip()   # noqa: E731
+    changes = [(s, p) for s, p in changes if not (others and any(blob(h, p) == blob('', p) for h in others))]
+    out = []
+    if any(p == dmpass.DIGESTS for _s, p in changes):
+        out.append(('kept', dmpass.DIGESTS, f"the digests of the release change, and this commit adopts no release: they "
+                                            f"are the release's, and change only with the release GARDEN.md records "
+                                            f"(bin/dmupgrade.py <tag>) — restore them (`git checkout HEAD -- "
+                                            f"{dmpass.DIGESTS}`)"))
+    want = dmpass.digests_of(text)
+    for status, path in changes:
+        if status == 'D' or path not in want:
+            continue
+        r = subprocess.run(['git', '-C', root, 'show', f":{path}"], capture_output=True)
+        if r.returncode == 0 and dmpass.sha256_of(data=r.stdout) != want[path]:
+            out.append(('kept', path, f"differs from the release's own ({_release(root, '') or 'the release'}): a file "
+                                      f"the release keeps is as its release made it — restore it (`git checkout HEAD -- "
+                                      f"{path}`), and bring a change to it through a release of daftar"))
     return out
 
 

@@ -9,7 +9,7 @@ path = ["*.md", "NOTICE", "seed/*.md", "seed/LANGUAGE", "seed/PUBLIC-ALLOW", "se
         "seed/knowledge/SOURCES.md", "seed/knowledge/technology.tsv", "seed/knowledge/crosswalk-isco-08-isced-f-2013.tsv",
         "seed/knowledge/signals.tsv", "seed/knowledge/technology-daftar.tsv", "seed/knowledge/name-patterns.tsv",
         "seed/knowledge/units-*.tsv",
-        "seed/names/*.tsv",
+        "seed/names/*.tsv", "seed/LANGUAGE.sha256",
         "site/*.html", "site/*.yaml", "site/assets/**", "site/RELEASE", ".github/ISSUE_TEMPLATE/**",
         ".github/pull_request_template.md",
         ".claude/skills/daftar/SKILL.md", "assets/*/README.md", "core/law/*.yaml"]

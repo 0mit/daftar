@@ -4,6 +4,7 @@
     python3 bin/sync.py [<remote> ...]     # every remote of this clone, or those named
     python3 bin/sync.py --ff-only [...]    # take only what needs no merge commit; where both moved, it waits
     python3 bin/sync.py --by <bean> [...]  # whose merge it is: the person running it, or the host a machine merges as
+                                           # (a merge's entry names a being, core 3.5: where both moved, it waits for one)
 
 EVERY MACHINE OF A GARDEN IS A PEER (design §7.1), and the receiver judges what it receives. For each peer — a git
 remote of this clone — its branch of the same name as this one is fetched into a quarantine ref,
@@ -55,7 +56,7 @@ def ancestor(a, b):
     return git('merge-base', '--is-ancestor', a, b).returncode == 0
 
 
-def step(remote, branch, ff_only=False, by='sync'):
+def step(remote, branch, ff_only=False, by=None):
     """One peer: fetched, judged, merged. (ok, what was done)."""
     ref = f"refs/daftar/incoming/{remote}"
     f = git('fetch', '-q', '--no-tags', remote, f"+{branch}:{ref}")
@@ -75,6 +76,9 @@ def step(remote, branch, ff_only=False, by='sync'):
     if ff_only:
         return False, (f"{remote}: diverged — its {n} commit(s) are judged and good, and this clone has its own: the merge "
                        f"waits for someone who can sign it (bin/sync.py without --ff-only)")
+    if by is None:                            # WHO WROTE IT IS A BEING (core 3.5, V.1): the merge's entry names whose it is
+        return False, (f"{remote}: diverged — its {n} commit(s) are judged and good, and the merge waits for whose it is: "
+                       f"bin/sync.py --by <bean>, the person running it or the host a machine merges as")
     m = git('merge', '--no-commit', '--no-ff', theirs)
     if m.returncode != 0:
         git('merge', '--abort')
@@ -111,8 +115,8 @@ def main(argv):
         print("sync: this clone is on no branch", file=sys.stderr)
         return 1
     ff_only = '--ff-only' in argv
-    by = argv[argv.index('--by') + 1] if '--by' in argv[:-1] else 'sync'
-    if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,63}', by):
+    by = argv[argv.index('--by') + 1] if '--by' in argv[:-1] else None
+    if by is not None and not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,63}', by):
         print(f"sync: --by names a bean: {by!r} is none", file=sys.stderr)
         return 2
     argv = [a for i, a in enumerate(argv) if a != '--ff-only' and a != '--by' and (i == 0 or argv[i - 1] != '--by')]

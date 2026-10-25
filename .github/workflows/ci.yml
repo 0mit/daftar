@@ -120,6 +120,8 @@ jobs:
       - name: "core_conformance: one verdict at every door — every clause of every rule broken by a case, each judged by the save, --again, the staged scope, the tree, a proposal's read, the store's union and a hub's checkout, alike"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/core_conformance.py
+      - name: "core_commit: a commit judged the same everywhere, and who said it — the language held to its release's digests, a heading's writer a being, a pin through another repository read where its clone is"
+        run: python3 test/core_commit.py
       - name: "save: one call journals, stages and commits; a refused save stays as it stands, and --again finishes it"
         if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
         run: python3 test/save.py
@@ -282,6 +284,8 @@ jobs:
         run: python -c "import os, shutil, sys; p = os.path.join(os.path.dirname(sys.executable), 'python3.exe'); os.path.exists(p) or shutil.copy(sys.executable, p)"
       - name: "guard: the law's guards held to their vectors, the gardener's instructions read through the one judge, every recorded case refused before it runs and every allowed form let through, the harness's shell set for this system"
         run: python3 test/guard.py
+      - name: "the release's digests hold on this system's checkout — a line end turned on checkout is no divergence (core 3.5, II.2)"
+        run: python3 bin/pass.py --digests --check
       - name: "guard, on macOS with Homebrew's bash: the install finds it, and the guards judge under it"
         if: runner.os == 'macOS'
         env:

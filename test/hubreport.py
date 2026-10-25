@@ -246,6 +246,8 @@ try:
           and re.search(r'^law: core@[0-9.]+, sha256:[0-9a-f]{64}$', rc, re.M) and 'judge: bin/hub.py of ' in rc
           and 'mode: reporting' in rc and 'not judged at the hub' in rc and '-----BEGIN SSH SIGNATURE-----' in rc
           and 'receipt written' in r.out, r.out + rc)
+    check("...and it says the commit's own rules were replayed against its parent (core 3.5, II.3)",
+          re.search(r'^replay: replayed against its parent$', rc, re.M), rc)
     r = run(PY, os.path.join(G, 'bin', 'hub.py'), 'receipts', HUB, f'{good}^!')
     check("receipts: the commit's receipt verifies, signed by this hub's key", r.returncode == 0 and good[:10] in r.out
           and f'signed by {hubf}' in r.out and "this hub's key" in r.out and 'with none' in r.out, r.out)
@@ -261,7 +263,7 @@ try:
           and 'verdict: taken, and would be refused' in rc and 'why: ' in rc,
           c.out + r.out[-1200:] + json.dumps(log)[:600] + rc)
     run('git', 'rm', '-q', 'beans/bad.md')
-    run('git', 'commit', '-q', '--no-verify', '-m', 'the bean the gate refuses, taken out')
+    save('the bean the gate refuses, taken out', '- action: [[bad]] taken out')
     r = push()
     check("reporting: the gardener's commit that takes it out is taken, the gate passing at its tip",
           r.returncode == 0 and 'WOULD REFUSE' not in r.out and last_log().get('verdict') == 'taken', r.out[-800:])
@@ -276,7 +278,7 @@ try:
           and run('git', 'config', 'commit.gpgsign', cwd=A).out.strip() == 'true', r.out)
     dmsafe.add_statements(os.path.join(A, 'beans', 'notes.md'), '- use: { id: from-agent, by: self, of: box }\n'
                                                                 '- say: { by: sam, of: [from-agent], at: now }\n')
-    r = save("a note, by an agent", '- action: [[notes]]', root=A, who='agent', env=AS_AGENT)
+    r = save("a note, by an agent", '- action: [[notes]]', root=A, who=AGENT, env=AS_AGENT)
     mine = head(A)
     r2 = push(A, AS_AGENT)
     rc = receipt(mine)
@@ -320,6 +322,18 @@ try:
           and last_log().get('verdict') == 'refused' and run('git', 'cat-file', '-e', bad, cwd=HUB).returncode != 0,
           r.out[-1200:])
     run('git', 'reset', '-q', '--hard', 'hub/master')
+    # THE COMMIT'S OWN RULES, REPLAYED (core 3.5, II.3): a tree the gate takes, made by a commit its hook refuses
+    write('beans/notes.md', read(os.path.join(G, 'beans', 'notes.md')).replace("by Sam.", "by Sam, unsaid."))
+    run('git', 'add', '-A')
+    run('git', 'commit', '-q', '--no-verify', '-m', 'a change no entry names')
+    unsaid = head()
+    r = push()
+    check("refusing: a commit whose tree the gate takes but whose own rules its hook refuses — a bean changed and named "
+          "by no entry, pushed with --no-verify — is refused at the hub, its rules replayed against its parent",
+          r.returncode != 0 and 'its own rules refuse it, replayed against its parent' in r.out
+          and 'named by no journal entry it adds' in r.out and 'does not pass the gate' not in r.out
+          and run('git', 'cat-file', '-e', unsaid, cwd=HUB).returncode != 0, r.out[-1200:])
+    run('git', 'reset', '-q', '--hard', 'hub/master')
     run('git', 'fetch', '-q', 'origin', cwd=A)
     run('git', 'reset', '-q', '--hard', 'origin/master', cwd=A)
     law_commit(A, AS_AGENT)
@@ -344,7 +358,7 @@ try:
     r1 = push()
     dmsafe.add_statements(os.path.join(A, 'beans', 'notes.md'), '- use: { id: beside-name, by: self, of: box }\n'
                                                                 '- say: { by: sam, of: [beside-name], at: now }\n')
-    r2 = save('beside the name', '- action: [[notes]]', root=A, who='agent', env=AS_AGENT)
+    r2 = save('beside the name', '- action: [[notes]]', root=A, who=AGENT, env=AS_AGENT)
     r = run(PY, 'bin/sync.py', '--by', AGENT, 'origin', cwd=A, env=AS_AGENT)
     merge = run('git', 'cat-file', 'commit', 'HEAD', cwd=A).out
     first = run('git', 'rev-parse', 'HEAD^1', cwd=A).out.strip()

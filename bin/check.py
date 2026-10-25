@@ -6,6 +6,8 @@
     python3 bin/check.py --staged --held  # ...and, the gate passed, every pointer it adds resolves on this host (the
                                           # pre-commit hook runs this: bin/held.py `new --staged`, in the same process)
     python3 bin/check.py --merge-commit   # a merge git commits itself (the pre-merge-commit hook runs this)
+    python3 bin/check.py --replay         # the commit's own rules alone, the index against HEAD: what a hub runs in a
+                                          # commit it checked out, replaying its rules against its parent (core 3.5)
     python3 bin/check.py --law            # the core's law alone, proved one law (a release's own tree too)
     python3 bin/check.py ... --json       # the same verdict as one JSON document, as a hub reads it (core/check.py)
 
@@ -69,6 +71,22 @@ def runs_core(p):
     return not p.startswith('std-vocab@')
 
 
+def differs(root=ROOT, tool='check'):
+    """THE COPY IT RUNS, SAID FIRST (core 3.5, II.2): where this copy of the language is not its release's — a file whose
+    SHA-256 is not the one seed/LANGUAGE.sha256 carries — a tool that judges says so before its verdict, on stderr, so
+    the verdict it prints is read as this copy's and not the release's. [path] of the files that differ."""
+    import importlib
+    try:
+        found = importlib.import_module('pass').diverged(root)
+    except Exception:          # noqa: BLE001 — the gate never fails for want of this line
+        return []
+    if found:
+        print(f"{tool}: this copy of daftar differs from its release in {len(found)} file(s) — "
+              f"{', '.join(found[:5])}{' …' if len(found) > 5 else ''} (seed/LANGUAGE.sha256): what it judges is not the "
+              f"release's verdict, and a commit that changes such a file is refused (rule kept)", file=sys.stderr)
+    return found
+
+
 def toplevel():
     r = subprocess.run(['git', 'rev-parse', '--show-toplevel'], capture_output=True, text=True, encoding='utf-8',
                        errors='replace')
@@ -82,7 +100,7 @@ def main(argv):
     held = '--held' in argv
     as_json = ['--json'] if '--json' in argv else []    # the verdict as one document (core/check.py): a hub reads it
     argv = [a for a in argv if a not in ('--held', '--json')]
-    staged = '--staged' in argv or '--merge-commit' in argv
+    staged = '--staged' in argv or '--merge-commit' in argv or '--replay' in argv
     if held and not staged:
         print("check: --held asks, after the gate over the index, that every pointer the commit adds resolves on this "
               "host: it goes with --staged (or --merge-commit), as the hook runs it", file=sys.stderr)
@@ -96,7 +114,7 @@ def main(argv):
     if '--merge-commit' in argv:
         argv = ['--staged']
     rest = [a for a in argv if a != '--all']
-    if [a for a in rest if a not in ('--staged',) + CORE_ONLY] or len(rest) > 1:
+    if [a for a in rest if a not in ('--staged', '--replay') + CORE_ONLY] or len(rest) > 1:
         print(f"check: the core's gate judges a whole garden (`--all`, or nothing), the index (`--staged`) or the law "
               f"(`--law`), and not {' '.join(rest)}", file=sys.stderr)
         return 2
@@ -104,6 +122,8 @@ def main(argv):
         print("check: no GARDEN.md here pins a law: the gate judges a garden (`--law` proves this release's law)",
               file=sys.stderr)
         return 2
+    if p:
+        differs()
     # THE CORE'S GATE, IN THIS PROCESS (2026-10-14): core/check.py's own `main`, given what it was given on its command
     # line, and nothing else — it was spawned as a second interpreter, which paid for Python and its imports twice at
     # every commit. It reads the index and judges it exactly as before; only the process is one.

@@ -371,8 +371,9 @@ def journal_append(heading, body):
 
 
 def who_runs():
-    rc, out, _ = _git(['config', 'user.name'])
-    return out.strip() if rc == 0 and out.strip() else f"{manifest().get('gardener') or 'the gardener'}, by bin/propose.py"
+    """Who a proposal's entry names as its writer: the gardener, whose proposal it is (core 3.5, V.1: a heading names a
+    being the garden holds, never git's user name)."""
+    return str(manifest().get('gardener') or 'the gardener')
 
 
 def inside_a_garden(d):

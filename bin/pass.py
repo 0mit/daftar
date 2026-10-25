@@ -5,6 +5,7 @@
     python3 bin/pass.py --layers --json     # the same, for a tool
     python3 bin/pass.py <path> ...          # the layer and the keeper of each path
     python3 bin/pass.py --flows [--json]    # each row of the flow law, and how far it is guarded
+    python3 bin/pass.py --digests [--write | --check]   # the SHA-256 of every file this release ships (seed/LANGUAGE.sha256)
 
 THE MAP IS LAW (manifesto: layers). The law's `layers` place what every garden has, and a garden places the rest with
 `standing`, a list on any of its beans. A pattern is matched as a release's `seed/LANGUAGE` is matched — `*` crosses `/`
@@ -146,6 +147,67 @@ def received(files, lines, extends, offers):
 def kept(files, lines, offers):
     """The files, out of `files`, a release keeps: the placeholder read as every profile the law offers."""
     return _shipped(files, expand(lines, offers))
+
+
+# -- the language held to its pin (core 3.5, II.2): the SHA-256 of every file the release ships, carried in its own tree
+#    and so signed by its tag; laid into a garden with the rest, and changed there only by the commit that adopts a release
+DIGESTS = 'seed/LANGUAGE.sha256'
+
+
+def release_files(root):
+    """The files of the release at `root` that its seed/LANGUAGE ships, every profile its law offers read — the digests'
+    own file aside: what `git ls-files` lists in a clone, else every file under `root` but git's and Python's caches."""
+    r = subprocess.run(['git', '-C', root, 'ls-files', '-z'], capture_output=True)
+    if r.returncode == 0 and r.stdout:
+        files = [f for f in r.stdout.decode('utf-8', 'replace').split('\0') if f]
+    else:
+        files = []
+        for d, ds, fs in os.walk(root):
+            ds[:] = [x for x in ds if x not in ('.git', '__pycache__')]
+            files += [os.path.relpath(os.path.join(d, f), root).replace(os.sep, '/') for f in fs if not f.endswith('.pyc')]
+
+    def read(p):
+        p = os.path.join(root, p)
+        return open(p, encoding='utf-8').read() if os.path.isfile(p) else ''
+    return [f for f in kept(files, language(read('seed/LANGUAGE')), offered_in(read)) if f != DIGESTS]
+
+
+def sha256_of(path=None, data=None):
+    """The SHA-256 of a file as git keeps it: in text (no NUL byte, as git tells text) a CRLF is read as LF, so a checkout
+    that turned its line ends (Git for Windows, core.autocrlf) holds the release's file still — and no text a release
+    ships keeps a CRLF (test/digests.py)."""
+    import hashlib
+    if data is None:
+        with open(path, 'rb') as fh:
+            data = fh.read()
+    return hashlib.sha256(data if b'\0' in data[:8000] else data.replace(b'\r\n', b'\n')).hexdigest()
+
+
+def digests_text(root):
+    """The digests of the release at `root`, as `sha256sum` writes them: `<SHA-256>  <path>`, one file a line, by path."""
+    return ''.join(f"{sha256_of(os.path.join(root, f))}  {f}\n" for f in sorted(release_files(root)))
+
+
+def digests_of(text):
+    """{path: SHA-256} of a digests file's text; lines that are not `<64 hex digits>  <path>` are left out."""
+    out = {}
+    for line in (text or '').split('\n'):
+        m = re.fullmatch(r'([0-9a-f]{64})  (\S.*)', line.rstrip('\r'))
+        if m:
+            out[m.group(2)] = m.group(1)
+    return out
+
+
+def diverged(root):
+    """[path] of each file the digests at `root` name that `root` holds with other content: the copy of the language
+    there is not the release's. [] where the copy carries no digests (a release from before core 3.5, or none)."""
+    p = os.path.join(root, *DIGESTS.split('/'))
+    if not os.path.isfile(p):
+        return []
+    with open(p, encoding='utf-8', errors='replace') as fh:
+        want = digests_of(fh.read())
+    return [f for f, h in sorted(want.items())
+            if os.path.isfile(os.path.join(root, f)) and sha256_of(os.path.join(root, f)) != h]
 
 
 def unwritten(doc):
@@ -1747,6 +1809,24 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
 
 
 def main(argv):
+    if '--digests' in argv:                       # a release's own tree: no garden, no map
+        text = digests_text(ROOT)
+        if '--write' in argv:
+            with open(os.path.join(ROOT, *DIGESTS.split('/')), 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(text)
+            print(f"pass: {DIGESTS} written, {text.count(chr(10))} files")
+            return 0
+        if '--check' in argv:
+            p = os.path.join(ROOT, *DIGESTS.split('/'))
+            have = open(p, encoding='utf-8').read() if os.path.isfile(p) else ''
+            if have != text:
+                print(f"pass: {DIGESTS} is not this tree's — write it again: python3 bin/pass.py --digests --write",
+                      file=sys.stderr)
+                return 1
+            print(f"pass: {DIGESTS} holds this tree's {text.count(chr(10))} files")
+            return 0
+        sys.stdout.write(text)
+        return 0
     try:
         m = Map.here()
     except ValueError as e:

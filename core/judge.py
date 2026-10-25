@@ -12,6 +12,11 @@ A door is where a write enters a garden. Each asks this, with what it holds as t
                                     commit's tree, checked out, judged by
                                     the gate it carries — its law and its
                                     judge, as the commit holds them
+    Scope.replay(shas, env)         the same commits' own rules, each     bin/hub.py, after the gate (core 3.5, II.3), so a
+                                    replayed against its parents by the   hub refuses what the commit's hook refused
+                                    code it carries: its index the
+                                    commit's tree, its HEAD the first
+                                    parent, the clock's register aside
     Scope.union(garden, keepings)   git and what a host keeps beside it,  bin/store.py's check
                                     judged together
 
@@ -52,13 +57,14 @@ def carried(root):
 class Scope:
     """What a door holds, to be judged: one of tree, staged, commits, union."""
 
-    KINDS = ('tree', 'staged', 'commits', 'union')
+    KINDS = ('tree', 'staged', 'commits', 'replay', 'union')
 
-    def __init__(self, kind, root=None, garden=None, commits=(), env=None, keepings=None):
+    def __init__(self, kind, root=None, garden=None, commits=(), env=None, keepings=None, replaying=False):
         if kind not in self.KINDS:
             raise ValueError(f"a scope is one of {', '.join(self.KINDS)}, not {kind!r}")
         self.kind, self.root, self.garden, self.commits, self.env, self.keepings = \
             kind, root, garden, list(commits), env, keepings
+        self.replaying = replaying         # staged: the commit's own rules alone, in a hub's replay of it
         self.said = {}                     # commit -> what its own gate printed (commits)
         self.unread = None                 # why the index could not be read (staged)
 
@@ -68,9 +74,16 @@ class Scope:
         return cls('tree', root=root if root is not None else getattr(garden, 'root', None), garden=garden)
 
     @classmethod
-    def staged(cls, root):
-        """The index of the clone at `root`, as the commit would hold it."""
-        return cls('staged', root=root)
+    def staged(cls, root, replaying=False):
+        """The index of the clone at `root`, as the commit would hold it. `replaying`: a commit a hub checked out, its
+        index the commit's tree and its HEAD its parent — the commit's own rules alone, and no register of headings,
+        which is a clone's and not the commit's (core 3.5, II.3)."""
+        return cls('staged', root=root, replaying=replaying)
+
+    @classmethod
+    def replay(cls, shas, env=None):
+        """Each of `shas`, its own rules replayed against its parents, in the repository `env` names."""
+        return cls('replay', commits=shas, env=env)
 
     @classmethod
     def commits(cls, shas, env=None):
@@ -97,6 +110,8 @@ def judge(law, scope):
         return _staged(law, scope)
     if scope.kind == 'commits':
         return _commits(scope)
+    if scope.kind == 'replay':
+        return _replay(scope)
     base = judge(law, Scope.tree(scope.root, scope.garden))
     seen = set(base)
     out = list(base)
@@ -183,6 +198,8 @@ def _staged(law, scope):
         except Exception:
             garden.gid = None
         scope.garden = garden
+        if scope.replaying:
+            return commit.findings(root, law, garden=garden, register=False)
         return judge(law, Scope.tree(snap, garden)) + commit.findings(root, law, garden=garden)
     finally:
         shutil.rmtree(snap, ignore_errors=True)
@@ -208,6 +225,51 @@ def checkout(commit, env, tmp):
         if r.returncode != 0:
             raise ValueError(f"could not check out {commit[:10]}: {r.stderr.strip()[:200]}")
     return where, e
+
+
+def _replay(scope):
+    """THE COMMIT'S OWN RULES, REPLAYED (core 3.5, II.3): each commit checked out as `checkout` makes it, its HEAD then
+    moved to its first parent with its index left the commit's tree, its other parents written as MERGE_HEAD, and its own
+    gate run there with `--replay` — the rules only a commit shows, as its hook judged them, but the register of
+    headings, which is the clone's and not the commit's. A garden's first commit has no parent to replay against, and a
+    tree whose gate replays nothing (a release before core 3.5) says so: neither gives a finding."""
+    env = {k: v for k, v in (scope.env or os.environ).items() if not k.startswith('GITHEAD_')}
+    out = []
+    with tempfile.TemporaryDirectory(prefix='judge-replay-') as tmp:
+        for c in scope.commits:
+            r = subprocess.run(['git', 'rev-list', '--parents', '-n', '1', c], capture_output=True, text=True, env=env)
+            parents = r.stdout.split()[1:] if r.returncode == 0 else []
+            if not parents:
+                scope.said[c] = "not replayed: a garden's first commit has no parent to replay its rules against"
+                continue
+            try:
+                where, e = checkout(c, env, tmp)
+            except ValueError as x:
+                scope.said[c] = str(x)
+                out.append(('gate', c[:10], str(x)))
+                continue
+            r = subprocess.run(['git', '-C', where, 'reset', '-q', '--soft', parents[0]], capture_output=True, text=True,
+                               env=e)
+            if r.returncode != 0:
+                scope.said[c] = f"could not replay {c[:10]} against {parents[0][:10]}: {r.stderr.strip()[:200]}"
+                out.append(('gate', c[:10], scope.said[c]))
+                continue
+            if parents[1:]:
+                g = subprocess.run(['git', '-C', where, 'rev-parse', '--git-path', 'MERGE_HEAD'], capture_output=True,
+                                   text=True, env=e).stdout.strip()
+                with open(g if os.path.isabs(g) else os.path.join(where, g), 'w', encoding='utf-8') as fh:
+                    fh.write(''.join(p + '\n' for p in parents[1:]))
+            gate = os.path.join(where, 'bin', 'check.py')
+            r = subprocess.run([sys.executable, gate, '--replay', '--json'], capture_output=True, cwd=where, env=e) \
+                if os.path.isfile(gate) else None
+            try:
+                d = json.loads(r.stdout.decode('utf-8'))
+                scope.said[c] = d['printed'] + r.stderr.decode('utf-8', 'replace')
+                out += [tuple(f) for f in d['found']]
+            except (AttributeError, ValueError, KeyError, TypeError):
+                scope.said[c] = ("not replayed: the gate this commit carries replays no commit's rules (a release before "
+                                 "core 3.5)")
+    return out
 
 
 def _commits(scope):
