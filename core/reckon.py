@@ -2314,11 +2314,10 @@ class Reckoner:
         and the end of its end) — or None where either holds no one position of time."""
         ends = []
         for path, end in ((frm, False), (to, True)):
-            found = walk(self.g, m.node, path, at=m.bean)
-            p = _pos(found[0][0], self.zone, self.notes) if len(found) == 1 else None
-            if p is None:
+            ms = span_end(walk(self.g, m.node, path, at=m.bean), end, self.zone, self.notes)
+            if ms is None:
                 return None
-            ends.append(p[1] if p[0] == 'ms' else (p[1] + (1 if end else 0)) * dmcal.DAY_MS)
+            ends.append(ms)
         return tuple(ends)
 
     def op_describe(self, s):
@@ -2368,20 +2367,11 @@ class Reckoner:
         covers one (core/frame.py `covers_point`); and its span, `from` and `to`, to the moment — a day its whole, an
         extent to the end of its end — each written as a moment in UTC to the millisecond. None for what is no position:
         a being, a statement, `now`, `unknown`, or a text no system reads."""
-        none = dict.fromkeys(('system', 'point', 'from', 'to'))
-        if named or not isinstance(v, str) or v in ('self', 'now', 'unknown'):
-            return none
-        from core import frame
+        if named:
+            return dict.fromkeys(POSITION_COLUMNS)
         J = getattr(self.g, 'J', None)
-        systems = J.systems if J is not None else self._core_law().systems
-        try:
-            p = frame.read(v, systems, J.G.zone if J is not None else self.zone)
-        except frame.Refused:
-            return none
-        sp = frame.span(p)
-        return {'system': p.system, 'point': 'true' if frame.covers_point(p, systems) else 'false',
-                'from': dmcal.write_moment(sp[0], 'gregorian-civil', 'Z', 'millisecond') if sp else None,
-                'to': dmcal.write_moment(sp[1], 'gregorian-civil', 'Z', 'millisecond') if sp else None}
+        return position_cols(v, J.systems if J is not None else self._core_law().systems,
+                             J.G.zone if J is not None else self.zone)
 
     def _statement_at(self, place):
         """(bean, index, verb, place, roles) of the statement told at `place` (`<bean>[<i>] <verb>`), or None."""
@@ -3187,6 +3177,37 @@ class Judged:
 _SLOT = re.compile(r'\{([a-z0-9_][a-z0-9_.-]*)(:set)?\}')
 _DESCRIBED = ('being', 'kind', 'nature', 'line', 'rung', 'bean', 'verb', 'index', 'place', 'id',   # describe's columns
               'system', 'point', 'from', 'to')
+STATEMENT_COLUMNS = ('bean', 'verb', 'index', 'place', 'id')       # of a statement (core 3.2, I.1)
+POSITION_COLUMNS = ('system', 'point', 'from', 'to')               # of a position (core 3.3, I.2)
+
+
+def position_cols(v, systems, zone):
+    """The columns of a position (core 3.3, I.2) that the value `v` is, read by `systems` in `zone`: its `system`;
+    `point`, whether it names a point — its system covers one (core/frame.py `covers_point`); and its span, `from` and
+    `to`, to the moment — a day its whole, an extent to the end of its end — each written as a moment in UTC to the
+    millisecond. None for `now`, `unknown`, `self`, or a text no system reads. The one reader of them: the reckoner's
+    `describe` and the store's SQL (core/union.py) call it."""
+    none = dict.fromkeys(POSITION_COLUMNS)
+    if not isinstance(v, str) or v in ('self', 'now', 'unknown'):
+        return none
+    from core import frame
+    try:
+        p = frame.read(v, systems, zone)
+    except frame.Refused:
+        return none
+    sp = frame.span(p)
+    return {'system': p.system, 'point': 'true' if frame.covers_point(p, systems) else 'false',
+            'from': dmcal.write_moment(sp[0], 'gregorian-civil', 'Z', 'millisecond') if sp else None,
+            'to': dmcal.write_moment(sp[1], 'gregorian-civil', 'Z', 'millisecond') if sp else None}
+
+
+def span_end(found, end, zone, notes):
+    """One end of a span in milliseconds, from what a path found (`walk`): one moment, or a day — its start, or the end
+    of it where `end` — else None. The one reader of an `overlap`'s span: the reckoner and the store's SQL call it."""
+    p = _pos(found[0][0], zone, notes) if len(found) == 1 else None
+    if p is None:
+        return None
+    return p[1] if p[0] == 'ms' else (p[1] + (1 if end else 0)) * dmcal.DAY_MS
 
 
 def _writ(v):
@@ -3230,8 +3251,19 @@ def refusals(J, reading, rule=None):
     for ref in reading.get('refuse') or []:
         for m in rk.env.get(ref.get('of')) or []:
             mr = as_row(m)
-            out.append((mr.place, written(str(ref.get('message') or ''), mr, g), mr.proof))
+            out.append((told_at(mr.place, ref), written(str(ref.get('message') or ''), mr, g), mr.proof))
     return out
+
+
+AT_PATH = re.compile(r'^[a-z0-9_][a-z0-9_-]*(\.[a-z0-9_][a-z0-9_-]*)*$', re.ASCII)   # a refusal's `at`: keys alone
+
+
+def told_at(place, ref):
+    """Where a refusal of `ref` is told: the place of its member's statement (`<bean>[<i>] <verb>`) — with `at`, a path
+    of the statement's keys, at that path inside it, `<bean>[<i>] <verb>.<at>` (core 3.4, I.9). A member that is no
+    statement has no place, and none is made for it."""
+    at = ref.get('at') if isinstance(ref, dict) else None
+    return f"{place}.{at}" if place and isinstance(at, str) else place
 
 
 def chains(reading):
@@ -3295,9 +3327,13 @@ def check_rule(where, reading, law_, law=None, earlier=None):
     if not isinstance(refuse, list) or not refuse:
         out.append(('error', f"{where}: `refuse` names the steps whose members are the rule's refusals"))
     for n, r in enumerate(refuse if isinstance(refuse, list) else []):
-        if not isinstance(r, dict) or set(r) != {'of', 'message'} or r.get('of') not in ids \
+        if not isinstance(r, dict) or set(r) - {'at'} != {'of', 'message'} or r.get('of') not in ids \
                 or not isinstance(r.get('message'), str):
-            out.append(('error', f"{where}.refuse[{n}]: a refusal is `{{of: <a step>, message: <words>}}`"))
+            out.append(('error', f"{where}.refuse[{n}]: a refusal is "
+                                 f"`{{of: <a step>, at?: <path>, message: <words>}}`"))
+        elif 'at' in r and not (isinstance(r['at'], str) and AT_PATH.match(r['at'])):
+            out.append(('error', f"{where}.refuse[{n}]: `at` is a path of the statement's keys, each one key "
+                                 f"(`clause.by_role`) — not {r['at']!r}"))
     return out
 
 

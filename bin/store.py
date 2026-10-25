@@ -1337,6 +1337,8 @@ def _readings(U, law, base):
         except dmunion.NoSQL as e:
             unjudged.append((rule, str(e)))
             continue
+        except dmunion.reckon.Refused as e:         # as the engine says a reading it cannot read (core/engine.py)
+            found = [('core.yaml', f"its reading cannot be read here: {e}")]
         out += [(rule, where, msg) for where, msg in found if (rule, where, msg) not in base]
     return out, unjudged
 

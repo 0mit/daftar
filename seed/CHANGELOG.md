@@ -251,6 +251,23 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 3.4** (2026-10-25, daftar v3.4.0, human-ratified rule-change) — **the reading grammar, part three** (the next
+  machinery's design, body I: I.9, and the forms' typing). MINOR. A rule's refusal may be told at a path inside its
+  statement: `refuse: {of, at, message}`, `at` a path of the statement's keys, told at `<bean>[<i>] <verb>.<at>`; a
+  member that is no statement keeps no place. The store's SQL (core/union.py) has a form for each column, comparator and
+  operation the grammar gained in 3.2 to 3.4 — a statement's columns, of the member itself and of a value naming one; a
+  position's; a bean's header; a path through every depth or into a value's parts; `fits`; `overlap`; a refusal's `at` —
+  each read by the reckoner's own reader through a function the connection registers, the member's node carried as the
+  reckoner holds it (a store's row read from the store where a step reads it), and a reading the reckoner cannot read
+  refused alike at size. What it still names as not judged at size: a path that starts at another bean or follows a ref,
+  and a bean's statements read through the bean. The forms' per-attribute checks stay the reader's typing (the operator's
+  word of 2026-10-24). The rules line, measured and profile keep their code: none of their relational clauses can yet be
+  moved into a reading with every verdict the same. Five were drafted and measured over test/core-cases.yaml and six
+  gardens with their faults: line's moves and pins refuse alike and differ in the place's spelling alone, which line and
+  profile write `<bean>: statements[<i>] <verb>.<path>`; measured's clause occurring for a reading refuses alike, in
+  another order where several refuse, a reading telling by its `refuse` and the code statement by statement; line's
+  ways on write the walk's steps in their words, and profile's page clause holds only where the garden takes the view
+  profile. Each is parked with what it still needs.
 - **core 3.3** (2026-10-25, daftar v3.3.0, human-ratified rule-change) — **the reading grammar, part two** (the next
   machinery's design, body I: I.2, I.7, I.8). MINOR. `describe` gives a position's own columns: its `system`; `point`,
   whether it names a point (its system `covers` one) or an area, which holds many; and its span, `from` and `to`, to the

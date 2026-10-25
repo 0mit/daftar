@@ -359,6 +359,12 @@ finds is stated once and read by the others, and the readings stay stratified as
 several beings writes them as a set, in the order of their characters, with commas, so its words do not hang on the
 order the garden happened to be read in.
 
+A REFUSAL TOLD AT A PATH INSIDE ITS STATEMENT (3.4). The rules still in code tell most refusals at an attribute of a
+statement, not at the statement: `pay.charged`, `can.clause.by_role` — more than seventy places. A reading that could
+tell only `<bean>[<i>] <verb>` would move each to a coarser place, and a reader fixing it would have to find the
+attribute again. `at` names the path, keys alone, so a place is still one place a reader can go to; a member that is no
+statement has no place, and none is made up for it.
+
 ## core/law/lines.yaml: aggregates
 
 (std-vocab 32: `aggregates`)

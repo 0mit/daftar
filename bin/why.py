@@ -253,8 +253,9 @@ _PLACE = re.compile(r'^(.+)\[([0-9]+)\] (\S+)$')
 
 def refusal_show(rule, place, root):
     """`why <rule> <place>`: the garden at `root` judged, and each refusal of `rule` told at `place` (as the gate prints
-    it: `<bean>[<i>] <verb>`) printed with what it rests on — each statement, the bean's kind, each row of the law —
-    and the rule's reason. A rule its reading states carries its proof (core 3.0); one still in code says so."""
+    it: `<bean>[<i>] <verb>`, or `<bean>[<i>] <verb>.<path>` inside it) printed with what it rests on — each statement,
+    the bean's kind, each row of the law — and the rule's reason. A rule its reading states carries its proof (core
+    3.0); one still in code says so."""
     sys.path.insert(0, ROOT)
     from core import engine, judge, reckon
     law = judge.garden_law(root, judge.carried(root))
