@@ -178,11 +178,11 @@ try:
     ns = L.namespaces
     shape = getattr(L, 'namespace_shape', None) or {}
     eight = ('ror', 'wikidata', 'orcid', 'ifc-guid', 'dicom-uid', 'gs1', 'tr-tckn', 'ir-national-code')
-    check("law: the eight namespaces are the law's, each with its form; a `checked_by` one the shape lists and the "
-          "reader has; the two government numbers kept held",
+    check("law: the eight namespaces are the law's, each with its form; a `checked_by` a check of the law's table that "
+          "reads a name and the reader has; the two government numbers kept held",
           all(n in ns and ns[n].get('pattern') for n in eight)
-          and all(ns[n]['checked_by'] in (shape.get('checked_by') or []) and ns[n]['checked_by'] in dmparse.FORM_CHECKS
-                  for n in ns if ns[n].get('checked_by'))
+          and all((L.checks.get(ns[n]['checked_by']) or {}).get('reads') == 'name'
+                  and ns[n]['checked_by'] in dmparse.FORM_CHECKS for n in ns if ns[n].get('checked_by'))
           and {n for n in ns if ns[n].get('kept') == 'held'} == {'tr-tckn', 'ir-national-code'},
           {n: (ns.get(n) or {}).get('checked_by') for n in eight})
     fc = dmparse.FORM_CHECKS
@@ -215,7 +215,7 @@ try:
     L3.namespaces['made-up'] = {'namespace': 'made-up', 'once': 'true', 'pattern': '^x$', 'checked_by': 'no-such-check',
                                 'kept': 'nowhere', 'meaning': 'x'}
     got = [f"{w}: {m}" for _r, w, m in L3.problems()]
-    check("law: a namespace checked by no check the shape lists, or kept nowhere the shape names, is refused",
+    check("law: a namespace checked by no check of the law's table, or kept nowhere the shape names, is refused",
           any('no-such-check' in m for m in got) and any('nowhere' in m for m in got), got)
     from core import lines as core_lines
     step = (L.forms.get('step') or {})

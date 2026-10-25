@@ -74,6 +74,8 @@ metadata:
   - { key: party, in: bean, meaning: "the bean of the party it went to, where it left the garden" }
   - { key: quoted, in: count, meaning: "how often the value a pass carries was found, as written, in its source; 0 where it was found nowhere quoted, and the pass is HOPED: the words may say it another way" }
   - { key: distinct, in: count, meaning: "how many of those finds were by a part of the value that names one thing — a day, an amount of three digits or more, eight characters or more; 0 where every find was by a short word or a small number, which is in everything: the attribution is weak" }
+pass_logs:
+  - { log: session, folder: "captures/passes/", meaning: "a session's pass log: a file under this folder, which the session's bean names in `details.pass_log`; it only grows, and a commit that stages one claims the session (rule layers)" }
 dropped:
   - { flow: law-owned, why: "a value the law owns is the filler of a role whose shape is a row, judged by its table (rule valency): no pass carries it" }
 
@@ -83,4 +85,5 @@ columns:
   methods: { method: required, meaning: required }
   flows: { flow: required, from: required, to: required, through: required, as: optional, grant: required, keeper: optional, party: optional, basis: optional, why: required }
   metadata: { key: required, in: required, meaning: required }
+  pass_logs: { log: required, folder: required, meaning: required }
   dropped: { flow: required, why: required }

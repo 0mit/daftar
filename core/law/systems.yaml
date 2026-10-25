@@ -21,8 +21,8 @@ systems:
     complement: [stated, bearer]
     neighbours: none
     datum: host
-    meaning: "a REPOSITORY as a client names it to fetch from: `<host>:<path>` as ssh writes it (`host-a:git/ledger.git`, `me@host-a:/srv/git/ledger.git`), or a URL (`https://example.org/ledger.git`). The host is part of the position, as a path's is: one path on two hosts is two repositories"
-    pattern: "^([A-Za-z0-9._-]+@[a-z0-9][a-z0-9.-]*:[^ :][^ ]*|(?!root:)[a-z0-9][a-z0-9.-]*:([^/ :][^ ]*/[^ ]*|[^/ :][^ ]*\\.git)|[a-z][a-z0-9+.-]*://[^ ]+)$"
+    meaning: "a REPOSITORY as a client names it to fetch from over ssh: `<host>:<path>` as ssh writes it (`host-a:git/ledger.git`, `me@host-a:/srv/git/ledger.git`). A repository fetched by a URL (`https://example.org/ledger.git`) is a position in `uri`: a URL is a URI. The host is part of the position, as a path's is: one path on two hosts is two repositories"
+    pattern: "^([A-Za-z0-9._-]+@[a-z0-9][a-z0-9.-]*:[^ :][^ ]*|(?!root:)[a-z0-9][a-z0-9.-]*:([^/ :][^ ]*/[^ ]*|[^/ :][^ ]*\\.git))$"
     form_note: "the remote as `git remote -v` prints it, its host in lowercase. An ssh remote shows it names a repository — its user (`me@host-a:ledger`), or a path relative to the login with a `/` or a `.git` (`host-a:git/ledger.git`) — so it is never read as another system's `<name>:<value>`; a repository at an absolute path on a host is a position in that host's filesystem"
     establishes: "false"
     why: "a repository is mirrored and moved between hosts: where it is fetched from corroborates which code it holds, and the code's own identity is its `git_remote`"
@@ -693,8 +693,8 @@ systems:
     levels: [{ level: network }, { level: segment }]
     neighbours: counted
     meaning: "WHERE A BEING IS ATTACHED in a network's topology: a VLAN, a wireless network, an address range with a role. A segment is a PLACE (where you are), which is a different question from an address (where you answer) — those have their own registry, and a being keeps its address while moving between segments."
-    pattern: "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9.:-]*$"
-    form_note: "<network>/<segment>, e.g. an office network's guest VLAN or its wireless network for laptops. The network is named because two sites both have a `vlan-13` and they are not the same place."
+    pattern: "^(?!(node|way|relation)/)[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9.:-]*$"
+    form_note: "<network>/<segment>, e.g. an office network's guest VLAN or its wireless network for laptops. The network is named because two sites both have a `vlan-13` and they are not the same place. A network is never named `node`, `way` or `relation`: those begin an `osm` element's spelling."
     establishes: "false"
     why: "a being moves between segments — a laptop joins the guest network and then the staff one — so a segment corroborates where it is and never fixes which being it is"
   - system: windows-filesystem
@@ -953,7 +953,6 @@ system_shape:
   reckoning: [arithmetic, astronomical, observational, tabulated]
   crosswalk: [computed, table, observed, none]
   day_begins: [midnight, sunset, noon]
-  checked_by: [ipaddress-v4, ipaddress-v6]
   sources:
     reckoning:
       arithmetic: { act: derive, nature: sayable }

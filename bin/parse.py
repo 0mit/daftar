@@ -121,7 +121,8 @@ COMPARE_FORMS = {'upper-trim': lambda v: re.sub(r'\s+', '', v).upper()}
 
 
 # HOW A FORM IS CHECKED WHEN A TOOL ALREADY CHECKS IT COMPLETELY (std-vocab 18.2). A system row states its form as a
-# `pattern`, or names a check here with `checked_by`. A pattern for an IP address is a second, weaker copy of a validator
+# `pattern`, or names a check with `checked_by`: a row of the law's table of checks (core/law/checks.yaml, core 3.2),
+# whose function, where it calls a library, is here. A pattern for an IP address is a second, weaker copy of a validator
 # the standard library has carried for years — the one written for 18.1 had to be tightened the day it was compared
 # with it. HERE, beside COMPARE_FORMS and for the same reason: the gate and the merge must judge a form the same way.
 def _ip_form(version):
@@ -179,13 +180,53 @@ def _uuid_integer(v):
         return False
 
 
-# Each takes a value its namespace's pattern already holds to; True when the check holds.
+# THE FUNCTIONS OF THE CHECKS THAT CALL A LIBRARY, one a row of core/law/checks.yaml and none without one (the law's
+# check holds them both ways). Each takes a value its row's pattern already holds to; True when the check holds.
 FORM_CHECKS = {'ipaddress-v4': _ip_form(4), 'ipaddress-v6': _ip_form(6),
                'ror-checksum': _ror,
                'orcid-checksum': lambda v: _stdnum('iso7064.mod_11_2').is_valid(v.replace('-', '')),
                'uuid-integer': _uuid_integer,
                'gs1-element': _gs1,
                'tckimlik': lambda v: _stdnum('tr.tckimlik').is_valid(v)}
+
+
+_CHECKS, _APPLY = [], {}      # the law's table of checks, read once; each check's applier, made once
+
+
+def checks():
+    """{name: row} of the law's table of checks (core/law/checks.yaml), this release's, read once."""
+    if not _CHECKS:
+        import yaml
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'core', 'law', 'checks.yaml')
+        try:
+            with open(p, encoding='utf-8') as fh:
+                rows = (yaml.load(fh, Loader=getattr(yaml, 'CBaseLoader', yaml.BaseLoader)) or {}).get('checks') or []
+        except OSError:
+            rows = []
+        _CHECKS.append({str(r['check']): r for r in rows if isinstance(r, dict) and r.get('check')})
+    return _CHECKS[0]
+
+
+def checked(name, value, rows=None):
+    """Whether `value` holds to the check `name` (a row of `rows`, the law's table of checks, this release's if none is
+    given): by its function where it calls a library, by its pattern where it is a designation. None where no row or no
+    function of that name is here; CheckUnavailable where its library is not installed."""
+    if rows is None and name in _APPLY:
+        return _APPLY[name](value)
+    row = (checks() if rows is None else rows).get(name)
+    if row is None:
+        return None
+    if row.get('pattern'):
+        pat = row['pattern']
+        fn = (lambda v: bool(law_match(pat, v)) if isinstance(v, str) else False)
+    elif name in FORM_CHECKS:
+        f = FORM_CHECKS[name]
+        fn = (lambda v: bool(f(v)))
+    else:
+        return None
+    if rows is None:
+        _APPLY[name] = fn
+    return fn(value)
 
 
 def law_match(pattern, value):
@@ -250,8 +291,7 @@ def in_form(row, value):
     if not isinstance(row, dict):
         return None
     if row.get('checked_by'):
-        chk = FORM_CHECKS.get(row['checked_by'])
-        return None if chk is None else bool(chk(value))
+        return checked(row['checked_by'], value)
     pat = row.get('pattern')
     if pat in (None, 'none'):
         return None

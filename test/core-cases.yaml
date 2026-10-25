@@ -296,20 +296,24 @@ disk:
 # in that suite.
 clauses:
   form:
-    - { says: "a statement is one verb of the verb row", bad: [x1, x1b, x1d, x1e] }
-    - { says: "nothing else", bad: [x1c, x1f, x1g] }
+    - { says: "a bean's front matter is its header", bad: [x1f, x1g] }
+    - { says: "a statement is one verb of the verb row", bad: [x1, x1b] }
+    - { says: "nothing else", bad: [x1c] }
+    - { says: "an `id` is one word, used once in its bean", bad: [x1d, x1e] }
     - { says: "Text holds no control character", disk: [x80] }
     - { says: "GARDEN.md holds the manifest's keys alone", garden: [manifest-key, pin-moved] }
     - { says: "once the garden holds a bean, it names its gardener", garden: [no-gardener] }
     - { says: "A grant is to a being or to every member of a reading", bad: [x65, x66, x67] }
   valency:
-    - { says: "each required role is filled", bad: [x2, x3, x3b, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
+    - { says: "each required role is filled", bad: [x2, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
+    - { says: "a role takes a list only where its row says `many`", bad: [x3b] }
   knowing:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
     - { says: "a knowing act's `at` is `now` until the save", bad: [x5] }
     - { says: "A row of a store names the act", suite: [test/store.py] }
   placeholder:
-    - { says: "a statement the engine derives", bad: [x6, x6b] }
+    - { says: "a statement the engine derives", bad: [x6] }
+    - { says: "a `bear` by the one who paid, alone", bad: [x6b] }
   order:
     - { says: "nothing stands on itself through others", bad: [x7, x27] }
     - { says: "a part never stands above", bad: [x7b] }
@@ -328,7 +332,8 @@ clauses:
     - { says: "A mass is a body's", bad: [x12, x12b] }
     - { says: "information and money are what is carried", bad: [x12d, x12g] }
   frame:
-    - { says: "a position is in a declared system", bad: [x13, x13b, x13c, x13d, x13e, x13f] }
+    - { says: "a position is in a declared system", bad: [x13, x13b, x13c, x13d, x13e] }
+    - { says: "a day is reckoned in the garden's `zone`, and `now` is written at `at` alone", bad: [x13f] }
   names:
     - { says: "a name its namespace gives once names one being", bad: [x14, x50, x51, x51b, x52] }
     - { says: "A garden's id is twelve hexadecimal digits", bad: [x28] }
@@ -397,3 +402,4 @@ clauses:
     - { says: "under one plan its amounts add up", suite: [test/books.py] }
     - { says: "each being a chart's account stands for", suite: [test/books.py] }
     - { says: "and a match names payments whose amounts agree", suite: [test/books.py] }
+    - { says: "a scheme of the knowledge profile holds each row to its form", suite: [test/group.py] }

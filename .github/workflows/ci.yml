@@ -37,6 +37,8 @@ jobs:
         run: python3 test/core_readings.py
       - name: "core_nearest: one ordering of the candidates that hold one case (core 3.1) — the keys each use names in the law, read in order, and the tie it declares (refuse, both, order), applied by the flow table, the patterns, the wholes and the locations alike"
         run: python3 test/core_nearest.py
+      - name: "core_grammar: the reading grammar, part one (core 3.2) — describe of a statement, `fits` and the law's closed table of checks with its vectors, one spelling one system as the law's own check and the translator past its two collisions, an input from an earlier rule and from any table the law's columns declare, a set in a refusal's words, the weighing's bound and the pass log's folder read from the law"
+        run: python3 test/core_grammar.py
       - name: "core_save: the save commits a garden of statements, the core's gate at the commit — the moment the save's, the law ratified"
         run: python3 test/core_save.py
       - name: "core_translate: a garden of today's beans (v0.49.0's law) written in statements, into a copy — every value placed, VOCAB.md the core's rows, the engine passing"

@@ -485,7 +485,6 @@ def _day_text(n):
 
 
 # ------------------------------------------------------------------------------------------ a session's pass log (v1 10)
-PASSES = 'captures/passes/'
 PASS_KEYS = ('from', 'to', 'through', 'metadata')            # and `as`, where a pass into the estate names its act
 OID = re.compile(r'(?:[0-9a-f]{40}|[0-9a-f]{64})')
 WORD = re.compile(r'[a-z][a-z0-9-]*')
@@ -542,7 +541,8 @@ def _metadata_problems(md, law, garden):
 def claimed(root, law, changes, garden=None):
     """LAYERS at a commit: a session's pass log only grows, and a commit that stages one owes what the claim owes."""
     out = []
-    logs = [(s, p) for s, p in changes if p.startswith(PASSES)]
+    folder = str((getattr(law, 'pass_logs', None) or {}).get('session', {}).get('folder') or '')   # the flow law's row
+    logs = [(s, p) for s, p in changes if folder and p.startswith(folder)]
     if not logs:
         return out
     named = _logs_named(root, garden)

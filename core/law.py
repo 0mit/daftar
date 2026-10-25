@@ -43,7 +43,7 @@ ROW_FILES = ('levels.yaml', 'layers.yaml', 'kinds.yaml',  # the bodies' levels, 
              'units.yaml', 'namespaces.yaml', 'flows.yaml')  # and the units in UCUM, each with the law's
                                                            # English name, the namespaces the standards give names in,
                                                            # and the flow law: its methods and rows (v1 part 8)
-FLOW_LAW = ('methods', 'metadata', 'dropped')              # what core/law/flows.yaml holds beside its rows, and a
+FLOW_LAW = ('methods', 'metadata', 'dropped', 'pass_logs')              # what core/law/flows.yaml holds beside its rows, and a
                                                            # garden's VOCAB.md does not
 GRANTS = ('granted', 'refused', 'ratified')
 ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flows': None, 'flow_sources': None,
@@ -82,6 +82,7 @@ CROSSWALKS = 'crosswalks.yaml'                             # a foreign system's 
 FORMATS_LAW = 'formats.yaml'                               # the formats statements come in and go out in, the readers
                                                            # of a model's records, the conversions of a field (2.12)
 GUARDS = 'guards.yaml'                                     # what an agent's own door checks before it acts (P6)
+CHECKS = 'checks.yaml'                                     # what a value is held to beside its row's pattern (3.2)
 MEASURES = 'measures.yaml'                                 # the forms of a measure: a region, a repetition, a clause's
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
@@ -108,11 +109,14 @@ def shapes_of(spec):
 # note riding on the law, or a fact of a new kind the form must first be given; a required one a row lacks leaves a
 # reader of that row without what every sibling gives. The standards' files declare them under `forms`, the files of a
 # line, a measure and the flow law under `columns` (their `forms` are the forms a qualifier holds).
-COLUMNED = (('systems.yaml', 'forms'), ('places.yaml', 'forms'), ('protocols.yaml', 'forms'), ('quantities.yaml', 'forms'),
+COLUMNED = (('core.yaml', 'columns'), ('kinds.yaml', 'columns'), ('levels.yaml', 'columns'),   # the face's tables, the
+            ('namespaces.yaml', 'columns'), ('verbs.yaml', 'columns'), ('units.yaml', 'columns'),  # rows beside it (3.2)
+            ('systems.yaml', 'forms'), ('places.yaml', 'forms'), ('protocols.yaml', 'forms'), ('quantities.yaml', 'forms'),
             ('registries.yaml', 'forms'), (LINES, 'columns'), (MEASURES, 'columns'), ('flows.yaml', 'columns'),
             (VALUES, 'columns'), (PROFILES, 'forms'),     # the profiles' tables (lenses, archetypes, orientations…) too
             (FORMATS_LAW, 'columns'),                     # the formats, the readers, the conversions
-            (GUARDS, 'columns'))                          # the guards an instruction names
+            (GUARDS, 'columns'),                          # the guards an instruction names
+            (CHECKS, 'columns'))                          # the checks a form names, and the designations
 
 
 def _columned(law_dir, std_dir):
@@ -130,7 +134,8 @@ def columns_problems(law_dir, std_dir=None):
     import json
     files = _columned(law_dir, std_dir)
     h = hashlib.sha256()
-    for code in (__file__, read.__file__):
+    import parse as dmparse                             # the one judge of a form, which the spelling check reads
+    for code in (__file__, read.__file__, dmparse.__file__):
         with open(code, 'rb') as fh:
             h.update(fh.read())
     for name, key, path in files:
@@ -174,11 +179,15 @@ def _law_kept(digest):
 
 
 def _columns_problems(files):
-    out = []
+    out, systems, checks = [], None, None
     for name, key, path in files:
         if not os.path.isfile(path):
             continue
         data = read.data(path)
+        if name == 'systems.yaml':
+            systems = {str(r['system']): r for r in data.get('systems') or [] if isinstance(r, dict) and r.get('system')}
+        if name == CHECKS:
+            checks = {str(r['check']): r for r in data.get('checks') or [] if isinstance(r, dict) and r.get('check')}
         forms = data.get(key) if isinstance(data.get(key), dict) else {}
         for table, rows in data.items():
             if table in ('forms', 'columns') or not (isinstance(rows, list) and rows
@@ -198,7 +207,94 @@ def _columns_problems(files):
                 for k in sorted(req - set(row)):
                     out.append((f"core/law/{name} {table} {n!r}", f"holds no `{k}`, which every row of `{table}` holds "
                                                                   f"(`{key}.{table}`)"))
+    return out + (_spelling(systems) if systems else []) + (_checks_problems(checks) if checks is not None else [])
+
+
+FITS = ('namespace', 'type', 'system', 'holds')          # what `fits` fits a value to (core/law/lines.yaml comparisons)
+CHECK_READS = ('name', 'position', 'designation')         # what a check reads (core/law/checks.yaml)
+GENERAL = re.compile(r'^[A-Z][a-z]?$')                    # a Unicode general category, or its major class: `Cc`, `L`
+
+
+def holds_property(value, prop):
+    """Whether the text `value` holds a character of the Unicode property `prop`: Bidi_Control (PropList.txt), or a
+    general category (`Cc`) or its major class (`C`)."""
+    if not isinstance(value, str):
+        return False
+    if prop == 'Bidi_Control':
+        import parse as dmparse
+        return bool(dmparse.bidi_controls(value))
+    import unicodedata
+    return any(unicodedata.category(c).startswith(prop) for c in value)
+
+
+def _spelling(rows):
+    """[(where, message)]: ONE SPELLING, ONE SYSTEM (core 3.2, I.4) over `rows`, {system: row}: each sample a system
+    teaches — its `example`, and each spelling its `form_note` writes in backquotes that is in its own form — fitted to
+    every other system's form; one that fits a second is an error of the law, since a position is read by the one
+    system whose form it is in."""
+    import parse as dmparse
+    out = []
+    for name, row in rows.items():
+        samples = ([str(row['example'])] if row.get('example') else []) + \
+            re.findall(r"`([^`<>\s]+)`", str(row.get('form_note') or ''))
+        for x in dict.fromkeys(samples):
+            if dmparse.in_form(row, x) is not True:
+                continue                                 # a word in backquotes, no spelling of the system
+            also = sorted(o for o, r in rows.items() if o != name and dmparse.in_form(r, x))
+            if also:
+                out.append((f"core/law/systems.yaml {name}", f"its sample `{x}` is in the form of {', '.join(also)} "
+                                                             f"too: one spelling is read by one system, and a position "
+                                                             f"by the one whose form it is in"))
     return out
+
+
+def _checks_problems(rows):
+    """[(where, message)]: the table of checks closed — a row calls a library or holds a pattern, one of the two; a
+    function a row that calls one and a row a function; each reads a name, a position or a designation — and each
+    row's vectors holding. A vector whose library is not installed here is not judged here."""
+    import parse as dmparse
+    out = []
+    for name, row in rows.items():
+        w = f"core/law/checks.yaml {name}"
+        calls, pat = row.get('calls'), row.get('pattern')
+        if bool(calls) == bool(pat):
+            out.append((w, "a check calls a library or holds a pattern, one of the two"))
+            continue
+        if row.get('reads') not in CHECK_READS:
+            out.append((w, f"reads {row.get('reads')!r}: a check reads {', '.join(CHECK_READS)}"))
+        if calls and name not in dmparse.FORM_CHECKS:
+            out.append((w, "calls a library, and bin/parse.py has no function for it: a check is applied, or it is "
+                           "not a row"))
+            continue
+        if pat:
+            try:
+                re.compile(str(pat))
+            except re.error as e:
+                out.append((w, f"its pattern is no regular expression: {e}"))
+                continue
+        vec = row.get('vectors') if isinstance(row.get('vectors'), dict) else {}
+        if not listed(vec.get('holds')) or not listed(vec.get('refuses')):
+            out.append((w, "its vectors hold a value it holds and a value it refuses, at least one of each"))
+        for want, key in ((True, 'holds'), (False, 'refuses')):
+            for v in listed(vec.get(key)):
+                try:
+                    got = dmparse.checked(name, v, rows)
+                except dmparse.CheckUnavailable:
+                    continue
+                if got is not want:
+                    out.append((f"{w} vectors", f"{v!r} is {'held' if got else 'refused'}, and the law says it is "
+                                                f"{'held' if want else 'refused'}"))
+    for name in dmparse.FORM_CHECKS:
+        if not (rows.get(name) or {}).get('calls'):
+            out.append(('core/law/checks.yaml', f"bin/parse.py applies `{name}`, which is no row of the table that "
+                                                f"calls a library"))
+    return out
+
+
+def spelling_problems(law):
+    """One spelling, one system over the standards' systems of `law` (`_spelling`): a garden's own rows are not judged
+    by it (log/pending.md nb-s1-open). The gate reads it with the columns' check, once per law version."""
+    return _spelling({n: r for n, r in (law.std_systems() or {}).items() if isinstance(r, dict)})
 
 
 class Law:
@@ -233,11 +329,14 @@ class Law:
         self.forms = {}                                     # the forms a `form` role names, by name
         self.added_forms = {}                               # core/law/forms.yaml: the forms part 12b adds, by name
         self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
-        self.namespace_shape = {}                           # core/law/namespaces.yaml: its checks, where kept
+        self.namespace_shape = {}                           # core/law/namespaces.yaml: where its names are kept
+        self.checks = {}                                    # core/law/checks.yaml: what a value is held to, by name
+        self.row_columns = {}                               # the columns the rows' files declare (kinds, levels, …)
         self.store_shape = {}                               # core/law/layers.yaml: a store's pointer, forms, relation
         self.flows, self.flow_sources, self.standing, self.exclusive = [], [], [], []
         self.garden_flows = []                              # the rows of `flows` a garden added (VOCAB.md)
         self.methods, self.pass_metadata, self.flows_dropped = {}, {}, {}   # core/law/flows.yaml beside its rows
+        self.pass_logs = {}                                 # ...and where a pass log is kept, by whose it is
         self.garden_rows = []                               # (key, name, row) of each row a garden added (rule vacancy)
         self.garden_crosswalks = []                         # (where, row) of each crosswalk a garden's VOCAB.md adds
         self.formats, self.readers, self.conversions = {}, {}, {}   # core/law/formats.yaml (2.12)
@@ -310,6 +409,9 @@ class Law:
         law.guards = {str(r['guard']): r for r in listed(((read.data(gd) or {}) if os.path.isfile(gd) else {}).get('guards'))
                       if isinstance(r, dict) and r.get('guard') is not None}
         law.tables['guards'] = list(law.guards)
+        ck = os.path.join(d, CHECKS) if os.path.isfile(os.path.join(d, CHECKS)) else os.path.join(LAW_DIR, CHECKS)
+        law.checks = {str(r['check']): r for r in listed(((read.data(ck) or {}) if os.path.isfile(ck) else {}).get('checks'))
+                      if isinstance(r, dict) and r.get('check') is not None}
         for name, put in ((TOOLS, law._tools), (VACANCIES, law._vacancies), (PROFILES, law._profiles)):
             put(read.data(os.path.join(d, name) if os.path.isfile(os.path.join(d, name)) else os.path.join(LAW_DIR, name)))
         return law
@@ -454,11 +556,15 @@ class Law:
             if key in FLOW_LAW and where != GARDEN:
                 for row in listed(val):
                     if isinstance(row, dict):
-                        {'methods': self.methods, 'metadata': self.pass_metadata,
-                         'dropped': self.flows_dropped}[key][str(row.get({'methods': 'method', 'metadata': 'key',
-                                                                          'dropped': 'flow'}[key]))] = row
+                        {'methods': self.methods, 'metadata': self.pass_metadata, 'dropped': self.flows_dropped,
+                         'pass_logs': self.pass_logs}[key][str(row.get({'methods': 'method', 'metadata': 'key',
+                                                                        'dropped': 'flow', 'pass_logs': 'log'}[key]))] = row
                 if key == 'methods':
                     self.tables['methods'] = list(self.methods)
+                continue
+            if key == 'columns' and where != GARDEN:           # the columns a row file declares (3.2): its tables
+                for t, cols in (val.items() if isinstance(val, dict) else ()):
+                    self.row_columns.setdefault(str(t), (os.path.basename(str(where).split()[0]), cols))
                 continue
             if key == 'namespace_shape' and where != GARDEN:   # what a namespace may name beside its pattern
                 self.namespace_shape = val if isinstance(val, dict) else {}
@@ -638,11 +744,120 @@ class Law:
         if not chk:
             return ''
         try:
-            ok = dmparse.FORM_CHECKS[chk](value)
+            ok = dmparse.checked(str(chk), value, self.checks)
         except dmparse.CheckUnavailable as e:
             return f"a name {namespace} gives is checked by {chk}, which cannot run here: {e}"
         return '' if ok else (f"{shown} is not a name {namespace} gives: it is in its form, and fails its check ({chk}) "
                               f"— {row.get('meaning', '')}")
+
+    def declared_tables(self):
+        """{table: (the file that declares it, its key column, its path)}: every table of rows the law's columns declare (core
+        3.2, I.6), the face's first; a name two files declare is the first's."""
+        if getattr(self, '_declared', None) is None:
+            out = {}
+            for name, key, path in _columned(getattr(self, 'dir', LAW_DIR), getattr(self.std, 'law_dir', None)):
+                forms = (read.data(path) or {}).get(key) if os.path.isfile(path) else None
+                for t, cols in (forms.items() if isinstance(forms, dict) else ()):
+                    if isinstance(cols, dict) and cols and t not in out:
+                        out[str(t)] = (name, str(next(iter(cols))), path)
+            self._declared = out
+        return self._declared
+
+    def declares(self, table):
+        """Whether the law's columns declare a table of that name (`declared_tables`): the face's and the rows' files
+        read already, so a gate reads no file again for the tables its rules read; any other by the law's files."""
+        if table == 'stands' or table in (self.face.get('columns') or {}) or table in self.row_columns:
+            return True
+        return table in self.declared_tables()
+
+    def input_rows(self, table):
+        """(its key column, [(key, row, the garden's own)]) of a table the law's columns declare — the garden's own rows
+        with the law's where a garden adds to it — or None where the law declares no table of that name."""
+        face = (self.face.get('columns') or {}).get(table)
+        row = self.row_columns.get(table)
+        if isinstance(face, dict) and face:              # read already: the face's tables and the rows' files'
+            name, key, path = 'core.yaml', str(next(iter(face))), None
+        elif row and isinstance(row[1], dict) and row[1]:
+            name, key = row[0], str(next(iter(row[1])))
+            path = os.path.join(getattr(self, 'dir', LAW_DIR), name)
+        elif table in ('systems', 'checks'):
+            name, key, path = table + '.yaml', table[:-1], None
+        else:
+            got = self.declared_tables().get(table)
+            if got is None:
+                return None
+            name, key, path = got
+        merged = {'kinds': self.kinds, 'levels': self.levels, 'namespaces': self.namespaces, 'verbs': self.verbs,
+                  'units': self.units, 'crown': self.crown, 'lines': self.lines}.get(table) \
+            if name in ('core.yaml', 'kinds.yaml', 'levels.yaml', 'namespaces.yaml', 'verbs.yaml', 'units.yaml') else None
+        if merged is not None:
+            return key, [(k, r, str(self.origin.get((id(merged), k)) or '').startswith(GARDEN + ' '))
+                         for k, r in merged.items()]
+        if table == 'systems':
+            own = {str(r.get('system')) for r in self.own.get('systems') or [] if isinstance(r, dict)}
+            return key, [(k, r, k in own) for k, r in self.systems.items()]
+        if table == 'checks':
+            return key, [(k, r, False) for k, r in self.checks.items()]
+        if name == 'core.yaml':
+            rows = self.face.get(table)
+        else:
+            rows = (read.data(path) or {}).get(table) if os.path.isfile(path) else None
+        return key, [(r.get(key), r, False) for r in listed(rows) if isinstance(r, dict)]
+
+    @property
+    def types(self):
+        """The forms a value is written in (core/law/lines.yaml `types`), by name."""
+        return {str(r['type']): r for r in listed(getattr(self, 'line_law', {}).get('types'))
+                if isinstance(r, dict) and 'type' in r}
+
+    def fits_row(self, spec):
+        """(what, row) the operand of `fits` names — `{namespace: <row>}`, `{type: <row>}`, `{system: <row>}`, or
+        `{holds: <Unicode property>}` (its property as the row) — or ValueError, saying why it names none a value fits."""
+        if not (isinstance(spec, dict) and len(spec) == 1 and next(iter(spec)) in FITS):
+            raise ValueError("`fits` takes one of `{namespace: <row>}`, `{type: <row>}`, `{system: <row>}`, "
+                             "`{holds: <Unicode property>}`")
+        what, name = next(iter(spec.items()))
+        name = str(name)
+        if what == 'holds':
+            if name != 'Bidi_Control' and not GENERAL.match(name):
+                raise ValueError(f"`{name}` is no Unicode property a value is fitted to: Bidi_Control, or a general "
+                                 f"category (`Cc`) or its class (`C`)")
+            return what, name
+        row = {'namespace': self.namespaces, 'type': self.types, 'system': self.systems}[what].get(name)
+        if not isinstance(row, dict):
+            raise ValueError(f"`{name}` is no row of the law's {what}s")
+        if row.get('pattern') in (None, 'none') and not row.get('checked_by') and not row.get('holds_no'):
+            raise ValueError(f"the {what} `{name}` states no form a value is fitted to")
+        return what, row
+
+    def fits(self, spec, value):
+        """Whether `value` is in the one form of the row `spec` names (`fits_row`): its pattern, its `holds_no` (but
+        what `but` lets through, and a line feed where `lines_in` names a style), and the check its `checked_by` names
+        (core/law/checks.yaml) — or, for `{holds: <property>}`, whether it holds a character of that property. One
+        judge of a form, for the reader's typing, the readings and the store's SQL. CheckUnavailable where a check's
+        library is not installed here."""
+        import parse as dmparse
+        what, row = self.fits_row(spec)
+        if what == 'holds':
+            return holds_property(value, row)
+        if not isinstance(value, str):
+            return False
+        if row.get('pattern') not in (None, 'none') and not dmparse.law_match(row['pattern'], value):
+            return False
+        if row.get('holds_no'):
+            but = set(listed(row.get('but'))) | ({'\n'} if row.get('lines_in') else set())
+            if holds_property(''.join(c for c in value if c not in but), str(row['holds_no'])):
+                return False
+        if row.get('checked_by'):
+            got = dmparse.checked(str(row['checked_by']), value, self.checks)
+            if got is None:
+                raise ValueError(f"`{row['checked_by']}` is no check of core/law/checks.yaml this reader applies")
+            return got
+        return True
+
+    def checks_problems(self):
+        """[(where, message)] of the law's table of checks (`_checks_problems`), as this law holds it."""
+        return _checks_problems(self.checks)
 
     @property
     def slots(self):
@@ -1498,11 +1713,14 @@ class Law:
             bad('core/law/values.yaml', "the tree has one root, `value`, a kind of nothing")
         import parse as dmparse                         # the one reader of a check a row names
         shape = getattr(self, 'namespace_shape', None) or {}
-        for name, row in (self.namespaces or {}).items():  # a namespace's check is one a validator makes, and is named
-            chk, kept = row.get('checked_by'), row.get('kept')
-            if chk is not None and (str(chk) not in listed(shape.get('checked_by')) or str(chk) not in dmparse.FORM_CHECKS):
-                bad(f"namespaces {name}", f"is checked by `{chk}`, which is no check of `namespace_shape.checked_by` "
-                                          f"({', '.join(listed(shape.get('checked_by')))}) the reader has")
+        for table, rows, reads in (('namespaces', self.namespaces, 'name'), ('systems', self.systems, 'position')):
+            for name, row in (rows or {}).items():      # a check a row names reads what that row gives
+                chk = row.get('checked_by') if isinstance(row, dict) else None
+                if chk is not None and (self.checks.get(str(chk)) or {}).get('reads') != reads:
+                    bad(f"{table} {name}", f"is checked by `{chk}`, which is no check of core/law/checks.yaml that reads "
+                                           f"a {reads} ({', '.join(n for n, c in self.checks.items() if c.get('reads') == reads)})")
+        for name, row in (self.namespaces or {}).items():
+            kept = row.get('kept')
             if kept is not None and str(kept) not in listed(shape.get('kept')):
                 bad(f"namespaces {name}", f"is kept `{kept}`, which is nowhere `namespace_shape.kept` names "
                                           f"({', '.join(listed(shape.get('kept')))})")
@@ -1576,9 +1794,15 @@ class Law:
             bad('core.yaml rules', f"the engine applies {', '.join(known_rules)}; the law lists {', '.join(self.rules)}")
         if self.readings:                                       # a rule's reading, in the grammar of any reading (3.0)
             from core import lines, reckon
-            for rule, reading in self.readings.items():
-                for _lv, t in reckon.check_rule(f"rules[{rule}].reading", reading, lines.law_view(self)):
+            earlier = {}                                         # the rules before it, in the law's order
+            for rule in self.rules:
+                reading = self.readings.get(rule)
+                if reading is None:
+                    continue
+                for _lv, t in reckon.check_rule(f"rules[{rule}].reading", reading, lines.law_view(self), law=self,
+                                                earlier=earlier):
                     bad('core.yaml', t)
+                earlier[rule] = reading
         for name, v in self.verbs.items():
             self._verb_problems(name, v, bad)
             if self.profiles and v.get('home') not in (None, 'core') and v.get('home') not in self.profiles:

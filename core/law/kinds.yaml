@@ -20,3 +20,9 @@ kinds:
   - { kind: volume, nature: sayable, meaning: "a filesystem: a tree of names kept on a carrier, which holds it — a disk, or a content that holds it, an archive or an image" }
   - { kind: folder, nature: sayable, meaning: "a directory: it gives a name to each thing it holds, and is part of its parent, or of its volume" }
   - { kind: content, nature: sayable, meaning: "an exact sequence of bytes, named by a digest of them (`blake3`, `sha-256`): what holds it holds it under a name" }
+
+# The columns of each table of rows above: which every row holds (`required`) and which it may (`optional`); a row holds
+# the required ones and no other (core/law.py, `columns`). A reading names a table they declare as an input said by
+# the law (core/law/lines.yaml `selection_form.inputs`).
+columns:
+  kinds: { kind: required, nature: required, line: optional, level: optional, rung: optional, meaning: optional }

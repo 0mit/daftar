@@ -224,3 +224,9 @@ units:
   - { unit: "{pair}", name: pair, quantity: number, why: "a count of pairs: counts of different things never convert into one another" }
   - { unit: "{set}", name: set, quantity: number, why: "a count of sets: counts of different things never convert into one another" }
   - { unit: "IRT", name: toman, quantity: money, factor: ["10", "1"], per: IRR, ucum: "false", why: "the toman, the unit the Iranian rial is counted in every day and ISO 4217 does not name: exactly ten rials. A unit of IRR, never a currency of its own" }
+
+# The columns of each table of rows above: which every row holds (`required`) and which it may (`optional`); a row holds
+# the required ones and no other (core/law.py, `columns`). A reading names a table they declare as an input said by
+# the law (core/law/lines.yaml `selection_form.inputs`).
+columns:
+  units: { unit: required, name: required, quantity: required, factor: optional, per: optional, ucum: optional, why: optional }

@@ -101,7 +101,7 @@ def resolves(item, G, law):
     if item.endswith(':kind'):
         return item[:-5] in G.beans
     if item.startswith('law:') and '[' not in item:
-        return item[4:] in reckon.LAW_TABLES
+        return item[4:] in law.declared_tables() or item[4:] == 'stands'
     return reckon.law_row(law, item) is not None
 
 
@@ -217,16 +217,17 @@ check("an input said by the law: its table's rows, each with its proof; one no r
       [m.id for m in reckon.law_table(LAW, 'crown')] == ['law:crown[theone]']
       and isinstance(reckon.law_table(LAW, 'stands')[0].proof[0], str), [m.id for m in reckon.law_table(LAW, 'crown')])
 try:
-    reckon.law_table(LAW, 'verbs')
+    reckon.law_table(LAW, 'no-such-table')
     check("...", False, 'no refusal')
 except reckon.Refused as e:
-    check("...and a table the list does not hold is refused, naming the list", 'crown, kinds, lines, stands' in str(e), e)
+    check("...and a table the law's columns do not declare is refused, naming those they do",
+          "a table the law's columns declare" in str(e) and 'crown' in str(e) and 'verbs' in str(e), e)
 
 # ------------------------------------------------------------------------------------------------ the grammar's check
 view = lines.law_view(LAW)
 order = LAW.readings['order']
 for name, broken, says in (
-        ('an input not of the law', dict(order, inputs=[{'name': 'stands', 'origin': {'act': 'say'}}]), 'only the law'),
+        ('an input not of the law', dict(order, inputs=[{'name': 'stands', 'origin': {'act': 'say'}}]), 'said by the law'),
         ('a refusal naming no step', dict(order, refuse=[{'of': 'nothing-here', 'message': 'x'}]), 'a refusal is'),
         ('an operation outside the closed list', dict(order, steps=order['steps'] + [{'id': 'g', 'op': 'guess', 'of': 'stand'}]),
          'is not an operation of the law'),

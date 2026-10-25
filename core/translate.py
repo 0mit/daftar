@@ -3,6 +3,7 @@
 statements, by the `replaces` map: the adoption's translator (bin/dmupgrade.py).
 
     python3 core/translate.py garden <garden> <copy>           # a copy of the garden, its beans in statements, counted
+    python3 core/translate.py between <core> <core> <garden>   # a garden of the core rewritten in place for a later core
 
 TODAY'S LAW IS THE GARDEN'S OWN: a garden in today's words carries it (seed/std-vocab.md), and the translator reads the
 words of its terms there; the release that gives the core carries none. The kinds are `gene`: soma is a body, lekton the
@@ -2022,7 +2023,50 @@ def proved_law(src, dst, rows, version):
     return out
 
 
+# BETWEEN TWO VERSIONS OF THE CORE (core 3.2): what a garden of the core is rewritten in as it moves to a later core —
+# in place, in the commit that moves it (bin/dmupgrade.py `move`). Each step is the core it first holds in, and what it
+# rewrites; a move runs every step above the core it leaves and not above the one it reaches.
+URL_REMOTE = re.compile(r"(?<![A-Za-z0-9_:-])git-remote:(?=[a-z][a-z0-9+.-]*://)")
+
+
+def url_remotes(root):
+    """[path]: one spelling, one system (core 3.2, the next machinery's design, I.4) — `git-remote` keeps its ssh forms, and a
+    remote fetched by a URL is a position in `uri`, since a URL is a URI: each `git-remote:<URL>` in the front matter of
+    a bean or a mapping is written `uri:<URL>`, in place."""
+    changed = []
+    for d in ('beans', 'mappings'):
+        for f in _names(root, d):                     # as the one garden model lists them (bin/garden.py)
+            p = os.path.join(root, d, f)
+            with open(p, encoding='utf-8', newline='') as fh:
+                text = fh.read()
+            m = re.match(r'(?s)(---\r?\n.*?\r?\n---)(\r?\n.*)?$', text)
+            if not m or not URL_REMOTE.search(m.group(1)):
+                continue
+            with open(p, 'w', encoding='utf-8', newline='') as fh:
+                fh.write(URL_REMOTE.sub('uri:', m.group(1)) + (m.group(2) or ''))
+            changed.append(f"{d}/{f}")
+    return changed
+
+
+BETWEEN = (('3.2', url_remotes),)
+
+
+def between(have, gives, root):
+    """[path]: what the steps from the core `have` to the core `gives` rewrote in the garden at `root`, in place."""
+    def v(x):
+        return tuple(int(p) for p in re.findall(r'[0-9]+', str(x)))
+    out = []
+    for at, step in BETWEEN:
+        if v(have) < v(at) <= v(gives):
+            out += [p for p in step(root) if p not in out]
+    return out
+
+
 def main(argv):
+    if argv[:1] == ['between'] and len(argv) == 4:
+        for p in between(argv[1], argv[2], os.path.abspath(argv[3])):
+            print(p)
+        return 0
     if argv[:1] == ['garden'] and len(argv) == 3:
         counts, problems = garden(os.path.abspath(argv[1]), os.path.abspath(argv[2]))
         for p in problems:

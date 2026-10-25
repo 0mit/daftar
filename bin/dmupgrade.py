@@ -724,6 +724,14 @@ def move(a, rel, sha, source, current):
     was_hooks = hooks()
     try:
         changed, removed = receive(rel, want, held, added)
+        # BETWEEN TWO CORES (core 3.2): the release's translator rewrites what the later core reads otherwise, in place
+        rewritten = []
+        if vtuple(gives) > vtuple(have):
+            tr = run(sys.executable, os.path.join(rel, 'core', 'translate.py'), 'between', have, gives, ROOT, check=False)
+            if tr.returncode not in (0, 2):
+                raise RuntimeError(f"the release's translator stopped: {(tr.stdout + tr.stderr).strip()[-400:]}")
+            rewritten = [ln.strip() for ln in tr.stdout.splitlines() if ln.strip()] if tr.returncode == 0 else []
+        changed = changed + rewritten
         if profiles != before:
             vpath = os.path.join(ROOT, 'VOCAB.md')
             vtext, vform = read_text(vpath)
@@ -737,8 +745,10 @@ def move(a, rel, sha, source, current):
             f"RULE-CHANGE: the profiles this garden takes, {', '.join(before) or 'none'} -> {', '.join(profiles) or 'none'}"
         gate = recorded(a, gpath, gtext, gform, title, [
             f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; the core {pin} -> "
-            f"{new_pin}; release {current or 'unrecorded'} -> {a.tag}. The beans are as they were: no step rewrites "
-            f"them between these versions of the core."
+            f"{new_pin}; release {current or 'unrecorded'} -> {a.tag}. "
+            + (f"The release's translator rewrote {len(rewritten)} bean(s) for the later core (core/translate.py "
+               f"`between`): {', '.join(rewritten)}." if rewritten else
+               "The beans are as they were: no step rewrites them between these versions of the core.")
             + (f" The profiles it takes: {', '.join(before) or 'none'} -> {', '.join(profiles) or 'none'}"
                f" (VOCAB.md `profiles`)." if profiles != before else ''),
             f"- changed: {', '.join(changed + ['GARDEN.md']) or 'none'}",

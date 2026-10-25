@@ -28,10 +28,16 @@ namespaces:
   - { namespace: tr-tckn,    once: "true", pattern: '^[1-9][0-9]{10}$', checked_by: tckimlik, kept: held, meaning: "a Turkish citizen's identity number (T.C. Kimlik No), its two last digits its check. A government number: kept only in the held store, never in git (MODEL.md, ground rule 7)" }
   - { namespace: ir-national-code, once: "true", pattern: '^[0-9]{10}$', kept: held, meaning: "an Iranian national code (کد ملی), ten digits. Its check digit is not checked here: no well-used validator covers it, and the law writes no copy of one. A government number: kept only in the held store, never in git (MODEL.md, ground rule 7)" }
 
-# What a row of `namespaces` may name beside its pattern: `checked_by`, a check a well-used validator makes completely
-# (bin/parse.py FORM_CHECKS: python-stdnum's ISO/IEC 7064 checks, its GS1 element strings and its T.C. Kimlik No, and the
-# standard library's uuid), run after the pattern; and `kept`, where the names it gives are kept when it is not git:
-# `held`, the held store alone (bin/held.py), so that a name of it written in a bean is refused (the rule `harm`).
+# What a row of `namespaces` may name beside its pattern: `checked_by`, a check of core/law/checks.yaml that reads a
+# name, made completely by a well-used validator (python-stdnum's ISO/IEC 7064 checks, its GS1 element strings and its
+# T.C. Kimlik No, and the standard library's uuid) and run after the pattern; and `kept`, where the names it gives are
+# kept when it is not git: `held`, the held store alone (bin/held.py), so that a name of it written in a bean is refused
+# (the rule `harm`).
 namespace_shape:
-  checked_by: [ror-checksum, orcid-checksum, uuid-integer, gs1-element, tckimlik]
   kept: [held]
+
+# The columns of each table of rows above: which every row holds (`required`) and which it may (`optional`); a row holds
+# the required ones and no other (core/law.py, `columns`). A reading names a table they declare as an input said by
+# the law (core/law/lines.yaml `selection_form.inputs`).
+columns:
+  namespaces: { namespace: required, once: required, pattern: optional, checked_by: optional, kept: optional, meaning: required }

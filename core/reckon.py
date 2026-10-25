@@ -658,6 +658,11 @@ def _cond_check(where, conds, env, comps):
             out.append(('error', f"{w}: a condition names exactly one comparator of the law — {sorted(comps)}; it names {cs}"))
             continue
         op = c[cs[0]]
+        if cs[0] == 'fits' and not (isinstance(op, dict) and len(op) == 1 and next(iter(op)) in
+                                    ('namespace', 'type', 'system', 'holds') and isinstance(next(iter(op.values())), str)):
+            out.append(('error', f"{w}: `fits` names one row of the law, `{{namespace: <row>}}`, `{{type: <row>}}` or "
+                                 f"`{{system: <row>}}`, or a Unicode property, `{{holds: <property>}}`"))
+            continue
         if isinstance(op, dict) and ('step' in op or 'input' in op):
             if op.get('step', op.get('input')) not in env:
                 out.append(('error', f"{w}: `{op}` names no earlier step and no input"))
@@ -768,8 +773,19 @@ def weights(entry):
     return crit, {a: F(x) for a, x in w.items()}, lam, ci, cr
 
 
-def check_weighing(where, entry):
-    """Every pair of criteria judged once, each pair naming criteria; CR ≤ 0.10, or `why_inconsistent` says why not."""
+def consistency_bound(form=None):
+    """(the bound as written, as a Fraction): a weighing's consistency ratio at most, read from its form's row of the law
+    (core/law/forms.yaml `weighing`, `at_most`) — the form given, or this release's."""
+    if form is None:
+        from core import read as _read
+        form = ((_read.data(os.path.join(HERE, 'law', 'forms.yaml')) or {}).get('forms') or {}).get('weighing') or {}
+    said = str(((form.get('at_most') or {}) if isinstance(form, dict) else {}).get('consistency_ratio'))
+    return said, Fraction(said)
+
+
+def check_weighing(where, entry, form=None):
+    """Every pair of criteria judged once, each pair naming criteria; its consistency ratio at most the bound its form
+    states (`consistency_bound`), or `why_inconsistent` says why not."""
     out = []
     if not isinstance(entry, dict):
         return out
@@ -796,8 +812,9 @@ def check_weighing(where, entry):
                           + ', '.join(f"({a}, {b})" for a, b in missing))]
     if len(crit) > 2:
         _c, _w, _l, _ci, cr = weights(entry)
-        if cr > Fraction(1, 10) and not entry.get('why_inconsistent'):
-            out.append(('error', f"{where}: its consistency ratio is {dmseq.rounded(cr, 2)}, above 0.10 — the judgments "
+        said, bound = consistency_bound(form)
+        if cr > bound and not entry.get('why_inconsistent'):
+            out.append(('error', f"{where}: its consistency ratio is {dmseq.rounded(cr, 2)}, above {said} — the judgments "
                                  f"contradict each other; judge again, or say in `why_inconsistent` why they stand"))
     return out
 
@@ -873,9 +890,19 @@ class Reckoner:
                 self.lines.append(f"input {n}: read in the garden {d.get('garden')} at {got.commit[:12]}, published and "
                                   f"granted — {show(self.env[n])}")
                 self.across = getattr(self, 'across', []) + [(d.get('garden'), got.commit)]
+            elif isinstance(d.get('from'), dict):
+                # FROM AN EARLIER RULE (core 3.2, I.5): the members of a step of a rule before this one in the law's order
+                r, st = d['from'].get('rule'), d['from'].get('step')
+                done = (getattr(getattr(self.g, 'J', None), '_steps', None) or {}).get(r)
+                if not isinstance(done, dict) or st not in done:
+                    raise Refused(f"input {n}: the step `{st}` of the rule {r}, which was not read before this one")
+                self.env[n] = done[st]
+                self.lines.append(f"input {n}: the step {st} of the rule {r}, {self._said(done[st])}")
             elif o.get('act') == 'say' and o.get('by') == 'law':
-                # SAID BY THE LAW (core 3.0): one of its tables, the garden's own rows with it, each row a member
-                self.env[n] = law_table(self._core_law(), n)
+                # SAID BY THE LAW (core 3.0; any table its columns declare, 3.2): the garden's own rows with it, each a
+                # member, and the manifest's keys each with the garden's value
+                J = getattr(self.g, 'J', None)
+                self.env[n] = law_table(self._core_law(), n, getattr(getattr(J, 'G', None), 'manifest', None))
                 self._sources[n] = f"law:{n}"
                 self.lines.append(f"input {n}: the law's table, {len(self.env[n])} row(s)")
             elif n in self.given:
@@ -1075,7 +1102,19 @@ class Reckoner:
             return not vals or all(x is None for x in vals)
         if comp in ('reached', 'at_step'):
             return any(self._course(m, w, comp, operand) for x, w in found)
+        if comp == 'fits':
+            return any(self._fits(y, operand) for x in vals for y in (x if isinstance(x, list) else [x]))
         return any(self._one_cond(x, comp, operand) for x in vals)
+
+    def _fits(self, x, spec):
+        """Whether the value `x` is in the one form of the row `spec` names (core/law.py `Law.fits`, core 3.2, I.3)."""
+        import parse as _p
+        try:
+            return self._core_law().fits(spec, x)
+        except ValueError as e:
+            raise Refused(f"`fits: {spec}`: {e}")
+        except _p.CheckUnavailable as e:
+            raise Refused(f"`fits: {spec}` cannot be read here: {e}")
 
     def _one_cond(self, x, comp, operand):
         if comp == 'is':
@@ -2211,6 +2250,13 @@ class Reckoner:
         out = []
         for m in self.arg(s, 'of', 'set'):
             mr = as_row(m)
+            if 'at' not in s:                  # THE MEMBER ITSELF, a statement (core 3.2, I.1): its bean, verb, place
+                cols = dict(dict.fromkeys(_DESCRIBED), **self._statement_cols(self._statement_at(mr.place)))
+                beans = dict(mr.beans)
+                beans[name] = mr.bean
+                out.append(Row(mr.id, dict(mr.node if isinstance(mr.node, dict) else {}, **{name: cols}), mr.bean,
+                               mr.place, mr.seq, beans, mr.proof))
+                continue
             bid = self._bean_at(m, s['at'])
             vals = [v for v, _n in self._named(m, s['at'])]
             for k, v in enumerate(vals):
@@ -2218,13 +2264,42 @@ class Reckoner:
                 row = L.kinds.get(kind) or {} if isinstance(kind, str) else {}
                 line = (row.get('line') or (L.level_line(row['level']) if row.get('level') else None)) if row else None
                 cols = {'being': v, 'kind': kind, 'nature': row.get('nature'), 'line': line, 'rung': row.get('rung')}
+                said = self._statement_named(v, bid)          # a value that names a statement: that statement (I.1)
+                cols.update(self._statement_cols(said))
                 proof = _proof(mr.proof, (f"{bean}:kind",) if bean else (),
-                               (f"law:kinds[{kind}]",) if isinstance(kind, str) and kind in L.kinds else ())
+                               (f"law:kinds[{kind}]",) if isinstance(kind, str) and kind in L.kinds else (),
+                               (said[3],) if said else ())
                 beans = dict(mr.beans)
                 beans[name] = bid
-                out.append(Row(mr.id if len(vals) == 1 else f"{mr.id} @{k}", dict(mr.node, **{name: cols}), mr.bean,
+                out.append(Row(mr.id if len(vals) == 1 else f"{mr.id} @{k}",
+                               dict(mr.node if isinstance(mr.node, dict) else {}, **{name: cols}), mr.bean,
                                mr.place, mr.seq, beans, proof))
         return out
+
+    @staticmethod
+    def _statement_cols(said):
+        """The columns of a statement `said` (bean, index, verb, place, roles), or none where it is None (I.1)."""
+        if not said:
+            return dict.fromkeys(('bean', 'verb', 'index', 'place', 'id'))
+        b, i, verb, place, roles = said
+        sid = roles.get('id') if isinstance(roles, dict) and isinstance(roles.get('id'), str) else None
+        return {'bean': b, 'verb': verb, 'index': str(i), 'place': place, 'id': sid}
+
+    def _statement_at(self, place):
+        """(bean, index, verb, place, roles) of the statement told at `place` (`<bean>[<i>] <verb>`), or None."""
+        J = getattr(self.g, 'J', None)
+        m = re.match(r'^([^\[\]]+)\[([0-9]+)\] (\S+)$', place or '')
+        b = J.G.beans.get(m.group(1)) if m and J is not None else None
+        hit = next(((i, v, r) for i, v, r in b.items if i == int(m.group(2)) and v == m.group(3)), None) if b else None
+        return (b.id, hit[0], hit[1], place, hit[2]) if hit else None
+
+    def _statement_named(self, v, bid):
+        """(bean, index, verb, place, roles) of the statement the value `v`, written in bean `bid`, names — an id of
+        one of that bean's statements, or `<bean>#<id>` — or None (core/engine.py `statement`)."""
+        J = getattr(self.g, 'J', None)
+        b = J.G.beans.get(bid) if J is not None and isinstance(bid, str) else None
+        hit = J.statement(v, b) if b is not None and isinstance(v, str) else None
+        return (hit[0].id, hit[1], hit[2], f"{hit[0].id}[{hit[1]}] {hit[2]}", hit[3]) if hit else None
 
     def _kind(self, v, bid):
         """(the kind of the being `v` names, written in bean `bid`; the bean whose header says it, or None): None for
@@ -2935,23 +3010,11 @@ _FORMULA = re.compile(r'([A-Z][a-z]?)([0-9]*)|(\()|(\))([0-9]*)', re.ASCII)
 
 
 # ============================================================================ a rule's reading (core 3.0)
-LAW_TABLES = ('crown', 'kinds', 'lines', 'stands')     # what an input said by the law names (`selection_form.inputs`)
-
-
-def law_table(L, name):
-    """The rows of the law's table `name`, the garden's own with them (a core.law.Law), each a member: its id and its
-    proof `law:<table>[<row>]`."""
+def law_table(L, name, manifest=None):
+    """The rows of the law's table `name` — any its columns declare (core 3.2, I.6) — the garden's own with them, each
+    marked `garden: true`, each a member: its id and its proof `law:<table>[<row>]`; `stands`, each level's stands with
+    its level as `by`; `manifest`, the manifest's keys, each with the value the garden's GARDEN.md gives it (`value`)."""
     from core.law import listed
-
-    def rows(table, items, key):
-        return [Row(f"law:{table}[{k}]", dict(r if isinstance(r, dict) else {}, **{key: k}), None,
-                    proof=(f"law:{table}[{k}]",)) for k, r in items]
-    if name == 'crown':
-        return rows('crown', L.crown.items(), 'crown')
-    if name == 'kinds':
-        return rows('kinds', L.kinds.items(), 'kind')
-    if name == 'lines':
-        return rows('lines', L.lines.items(), 'line')
     if name == 'stands':               # the law's own ladder: each level stands at what its rows say, as they say
         out = []
         for lv, r in L.levels.items():
@@ -2960,7 +3023,20 @@ def law_table(L, name):
                     w = f"law:levels[{lv}].stands[{k}]"
                     out.append(Row(w, dict(st, by=lv), None, proof=(w,)))
         return out
-    raise Refused(f"`{name}` is no table of the law a reading takes: {', '.join(LAW_TABLES)}")
+    got = L.input_rows(name)
+    if got is None:
+        raise Refused(f"`{name}` is no table of the law a reading takes: a table the law's columns declare "
+                      f"({', '.join(sorted(L.declared_tables()))})")
+    key, items = got
+    out = []
+    for k, r, mine in items:
+        node = dict(r if isinstance(r, dict) else {}, **{key: k})
+        if mine:
+            node['garden'] = 'true'
+        if name == 'manifest' and isinstance(manifest, dict) and manifest.get(k) is not None:
+            node['value'] = manifest[k]
+        out.append(Row(f"law:{name}[{k}]", node, None, proof=(f"law:{name}[{k}]",)))
+    return out
 
 
 _LAW_ROW = re.compile(r'^law:([a-z_]+)\[([^\]]+)\](?:\.stands\[([0-9]+)\])?$')
@@ -2974,8 +3050,8 @@ def law_row(L, item):
     if not m:
         return None
     table, key, k = m.groups()
-    rows = {'crown': L.crown, 'kinds': L.kinds, 'lines': L.lines, 'levels': L.levels}.get(table) or {}
-    row = rows.get(key)
+    got = L.input_rows(table) if table != 'levels' else ('level', [(n, r, False) for n, r in L.levels.items()])
+    row = next((r for n, r, _g in (got[1] if got else []) if str(n) == key), None)
     if k is not None:
         stands = listed((row or {}).get('stands'))
         return stands[int(k)] if int(k) < len(stands) else None
@@ -3007,8 +3083,8 @@ class Judged:
         return self.fm[i]
 
 
-_SLOT = re.compile(r'\{([a-z0-9_][a-z0-9_.-]*)\}')
-_DESCRIBED = frozenset(('being', 'kind', 'nature', 'line', 'rung'))
+_SLOT = re.compile(r'\{([a-z0-9_][a-z0-9_.-]*)(:set)?\}')
+_DESCRIBED = ('being', 'kind', 'nature', 'line', 'rung', 'bean', 'verb', 'index', 'place', 'id')   # describe's columns
 
 
 def _writ(v):
@@ -3016,29 +3092,38 @@ def _writ(v):
     written, or a `someone` by its kind."""
     if isinstance(v, list):
         return ' → '.join(_writ(x) for x in v)
-    if isinstance(v, dict) and set(v) == _DESCRIBED:
-        return v['being'] if isinstance(v['being'], str) else str(v['kind'])
+    if isinstance(v, dict) and set(v) == set(_DESCRIBED):
+        return v['being'] if isinstance(v['being'], str) else v['place'] if v.get('place') else str(v['kind'])
     return str(v)
 
 
 def written(message, m, garden=None):
-    """A refusal's words: `message`, each `{<path>}` in it the value at that path of the member `m`, as text. Nothing
-    in it is evaluated."""
+    """A refusal's words: `message`, each `{<path>}` in it the value at that path of the member `m`, as text — and each
+    `{<path>:set}` the values at the path, a list's items each, every one once and written as text, in the order of
+    their characters, with `, ` between them (core 3.2, I.9). Nothing in it is evaluated."""
     def one(mo):
         found = walk(garden, m.node, mo.group(1), at=m.bean)
+        if mo.group(2):
+            return ', '.join(sorted({_writ(x) for v, _w in found for x in (v if isinstance(v, list) else [v])
+                                     if x is not None}))
         return _writ(found[0][0]) if found else 'None'
     return _SLOT.sub(one, message)
 
 
-def refusals(J, reading):
+def refusals(J, reading, rule=None):
     """[(place, words, proof)]: what a rule's reading refuses in the garden the engine's Judge `J` judges, by `J`'s law —
-    each refusal at the place of its statement, in the order of the reading's `refuse` and of each step's members."""
+    each refusal at the place of its statement, in the order of the reading's `refuse` and of each step's members. Its
+    steps are kept on `J` under `rule`, for a later rule that takes one as an input (core 3.2, I.5)."""
     g = getattr(J, '_judged', None)
     if g is None:
         g = J._judged = Judged(J)
     from core import lines
     rk = Reckoner(g, rules_law=J.L)
     rk.run(lines.worded(reading))                  # its conditions in the core's signs, each in the reader's word
+    if rule is not None:
+        if getattr(J, '_steps', None) is None:
+            J._steps = {}
+        J._steps[rule] = {k: v for k, v in rk.env.items() if isinstance(v, list)}
     out = []
     for ref in reading.get('refuse') or []:
         for m in rk.env.get(ref.get('of')) or []:
@@ -3069,19 +3154,38 @@ def chains(reading):
     return out
 
 
-def check_rule(where, reading, law_):
+def check_rule(where, reading, law_, law=None, earlier=None):
     """[(level, text)] for a rule's reading against the grammar: its steps as any reading's (`check_selection`); its
-    inputs the law's tables alone, said by the law; its `refuse` naming its steps, each with its words."""
+    inputs the law's tables, said by the law — any the law's columns declare, by `law` (a core.law.Law) — or a step of a
+    rule before it in the law's order (`earlier`: {rule: its reading}); a row `fits` names one of the law; its `refuse`
+    naming its steps, each with its words."""
     if not isinstance(reading, dict):
         return [('error', f"{where}: a rule's reading is a mapping of `inputs`, `steps` and `refuse`")]
     out = [('error', f"{where}: `{k}` is not what a rule's reading holds — `inputs`, `steps`, `refuse`")
            for k in reading if k not in ('inputs', 'steps', 'refuse')]
     for n, d in enumerate(reading.get('inputs') or []):
         o = d.get('origin') if isinstance(d, dict) and isinstance(d.get('origin'), dict) else {}
-        if not (o.get('act') == 'say' and o.get('by') == 'law') or d.get('name') not in LAW_TABLES:
-            out.append(('error', f"{where}.inputs[{n}]: a rule's reading takes only the law's tables, said by the law "
-                                 f"(`{{name: <table>, origin: {{act: say, nature: sayable, by: law}}}}`): "
-                                 f"{', '.join(LAW_TABLES)}"))
+        f = d.get('from') if isinstance(d, dict) else None
+        if isinstance(f, dict):
+            r, st = f.get('rule'), f.get('step')
+            steps = {s.get('id') for s in ((earlier or {}).get(r) or {}).get('steps') or [] if isinstance(s, dict)}
+            if set(d) != {'name', 'from'} or set(f) != {'rule', 'step'} or st not in steps:
+                out.append(('error', f"{where}.inputs[{n}]: an input from an earlier rule is `{{name, from: {{rule, "
+                                     f"step}}}}`, a step of a rule that is a reading before this one in the law's order "
+                                     f"({', '.join(earlier or {}) or 'none'})"))
+            continue
+        if not (o.get('act') == 'say' and o.get('by') == 'law') or not (
+                law.declares(str(d.get('name'))) if law is not None else d.get('name') in ('crown', 'kinds', 'lines', 'stands')):
+            out.append(('error', f"{where}.inputs[{n}]: a rule's reading takes the law's tables, said by the law "
+                                 f"(`{{name: <table>, origin: {{act: say, nature: sayable, by: law}}}}`), a table the "
+                                 f"law's columns declare, or a step of an earlier rule (`{{name, from: {{rule, step}}}}`)"))
+    for s in reading.get('steps') or []:
+        for c in (s.get('where') or []) if isinstance(s, dict) and isinstance(s.get('where'), list) else []:
+            if isinstance(c, dict) and 'fits' in c and law is not None:
+                try:
+                    law.fits_row(c['fits'])
+                except ValueError as e:
+                    out.append(('error', f"{where}.steps[{s.get('id')}]: {e}"))
     from core import lines
     out += check_selection(where, lines.worded(reading), law_)
     ids = {s.get('id') for s in reading.get('steps') or [] if isinstance(s, dict)}
@@ -3258,7 +3362,7 @@ def weigh(bean, key, root=ROOT):
     for a in sorted(crit, key=lambda a: -w[a]):
         print(f"  {a}: ≈ {dmseq.rounded(w[a], 3)}")
     print(f"  λmax ≈ {dmseq.rounded(lam, 4)}, CI ≈ {dmseq.rounded(ci, 4)}, CR ≈ {dmseq.rounded(cr, 3)}"
-          + (" — above 0.10" if cr > Fraction(1, 10) else ''))
+          + (f" — above {consistency_bound()[0]}" if cr > consistency_bound()[1] else ''))
     print("  (read, never stored: a weighing orders what a person is shown, and decides nothing)")
 
 
