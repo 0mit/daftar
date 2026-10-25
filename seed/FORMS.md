@@ -321,7 +321,9 @@ grep -i "<its name in English>" seed/knowledge/currencies.tsv
 
 (In PowerShell: `Select-String "<its name in English>" seed\knowledge\currencies.tsv`.) Take the row whose `status` is
 `current`: its `code` is the unit, and its `digits` how many decimal places an amount in it may have — `"12.50"` in a
-currency of two, `"1250"` in one of none.
+currency of two, `"1250"` in one of none. Where the source names no currency — "9,000 lira", and nobody said which —
+the unit is `XXX`, the table's code for none: the amount is kept and summed exactly, never converted, and which
+currency it is goes to the queue as a question.
 
 ### An id nobody told you
 

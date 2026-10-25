@@ -74,7 +74,7 @@ quantities:
     of: { money: 1 }
     units_from: { registry: currencies, take: code, digits: digits }
     crosswalk: observed
-    meaning: "an amount in one currency. Each currency is a unit, and no factor joins two of them: two currencies meet only through a rate someone observed at a moment, from a source — a reading, recorded with its provenance, never a law. So every amount stays in the currency it was paid or owed in, and whatever is computed from amounts — a share, a sum, a balance, a conversion at an observed rate — is computed in fractions and read, never stored."
+    meaning: "an amount in one currency. An amount whose source names no currency is written in `XXX`, ISO 4217's code for none: kept, summed and shared exactly, never converted, and its currency asked of whoever can say. Each currency is a unit, and no factor joins two of them: two currencies meet only through a rate someone observed at a moment, from a source — a reading, recorded with its provenance, never a law. So every amount stays in the currency it was paid or owed in, and whatever is computed from amounts — a share, a sum, a balance, a conversion at an observed rate — is computed in fractions and read, never stored."
   # THE KINDS BEYOND THE FIRST ONES: each `of` in the dimensions; one that stands above its dimensions says
   # where (`stands`) and what it holds for (`holds_for`); one written in another's units says whose (`units_of`)
   - quantity: rotational-speed

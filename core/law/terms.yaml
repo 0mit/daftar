@@ -84,7 +84,7 @@ terms:
   - { term: authority, went: "the verb `derive` of the face" }
   - { term: located_at, went: "the verb `be` of the face" }
   - { term: fixes, went: "the verb `mark`" }
-  - { term: lines, went: "`details`, kept whole: a captured document's lines" }
+  - { term: lines, went: "`details`, kept whole: the lines this being lends to positions along it (`along`)" }
   - { term: timing, went: "the verb `be` as presence, its `at` an extent of time" }
   - { term: series, went: "the verb `record`" }
   - { term: roots, went: "`details`, kept whole: the roots a host's file positions are read from (bin/where.py)" }

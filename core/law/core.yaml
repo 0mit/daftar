@@ -6,7 +6,7 @@
 
 # The law's version. A garden that runs this law pins it in GARDEN.md, `extends: core@<version>`, and the gate holds the
 # pin to it; it moves with a change to the law, a RULE-CHANGE.
-version: "4.3"
+version: "4.4"
 
 # ---------------------------------------------------------------------------------------------------------------- roles
 # The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ὡς.
@@ -105,6 +105,7 @@ verbs:
     roles: { by: { shape: being, nature: [body, sayable], rung: reason }, of: { shape: statement, many: true }, through: { shape: text }, to: { shape: being }, at: { shape: [position, being], many: true } }
     required: [by, at]
   - verb: read
+    meaning: "to read the statements its `of` names off the world: a body — a person's eyes, an instrument, a tool that measures — observed them, `from` what it read, `through` the record it gave. Only a body reads; what an agent makes of what it was given is `derive`, by the session it ran in"
     roles: { by: { shape: being, nature: [body] }, of: { shape: statement, many: true }, from: { shape: being }, through: { shape: text }, at: { shape: [position, being], many: true } }
     required: [by, at]
   - verb: derive
@@ -117,13 +118,16 @@ verbs:
     required: [by, at]
   # the order
   - verb: be
+    meaning: "to be somewhere: where a being is, its `at` — a position or a being — `as` one of the placements (a place, an order, a presence, a habitat, a location), with what it holds there (`placed`)"
     roles: { by: { shape: being }, at: { shape: [position, being], many: true }, as: { shape: row, table: placements } }
     qualifiers: { placed: { shape: form, form: placement } }   # what it holds there: what it takes, how well its position is known, its window (part 7)
     required: [by, at]
   - verb: stand
+    meaning: "the one relation of the order: a being or a level (`by`) stands at another (`at`) in one of the two ways (`as`) — `made-of`, the lower in the higher, or `possible-on`, the lower its condition, `while` the condition matches"
     roles: { by: { shape: [being, row], table: levels }, at: { shape: [being, row], table: levels }, as: { shape: row, table: ways } }
     required: [by, at, as]
   - verb: part
+    meaning: "to be a part of a whole: `by` the part, `of` the whole. A part never stands above what its whole is made of"
     roles: { by: { shape: being }, of: { shape: being } }
     required: [by, of]
   - verb: name
@@ -136,10 +140,12 @@ verbs:
     roles: { by: { shape: [being, statement] }, through: { shape: [being, statement], many: true } }
     required: [by]
   - verb: own                                # whose it is
+    meaning: "whose a being is: `by` its owner, or `from` the parent it is owned through, `through` the agreement that makes it so. A person is owned by the crown alone"
     roles: { by: { shape: being }, of: { shape: being }, through: { shape: statement }, from: { shape: being } }
     required: [of]
     choice: { one_of: [by, from] }          # an owner, or the parent it is owned through
   - verb: answer                             # who answers for it, and in which mode
+    meaning: "who answers for a being (`by`), and in which mode (`as`): before the law, in keeping it, in how others meet it, or in paying for it. Before the law, its owner answers"
     roles: { by: { shape: being }, of: { shape: being }, as: { shape: row, table: modes } }
     required: [of, as]
     default:                                 # before the law, the owner answers: the `by` of `own` of the same being
@@ -147,6 +153,7 @@ verbs:
       when: { as: law }
       fill: { by: { verb: own, match: { of: of }, take: by } }
   - verb: acquire                            # from whom it came to us
+    meaning: "from whom a being came to us (`from`), and how (`as`) — bought, rented, given, lent or inherited — `through` the agreement, `at` the moment"
     roles: { by: { shape: being }, of: { shape: being }, from: { shape: being }, through: { shape: statement }, as: { shape: row, table: acquisitions }, at: { shape: position } }
     required: [of, from]
   # layers
@@ -155,14 +162,14 @@ verbs:
     roles: { by: { shape: being }, of: { shape: statement, many: true }, from: { shape: row, table: layers }, to: { shape: row, table: layers }, through: { shape: row, table: verbs }, as: { shape: row, table: knowing }, at: { shape: position } }
     required: [of, from, to, through]
   # the figures' positions: each takes a statement, and `through` what makes it so
-  - { verb: necessary,  figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
-  - { verb: contingent, figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
-  - { verb: possible,   figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
-  - { verb: impossible, figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
-  - { verb: obligatory, figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
-  - { verb: omissible,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
-  - { verb: permitted,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
-  - { verb: forbidden,  figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
+  - { verb: necessary,  meaning: "a position of the necessity square (Ibn Sina's wājib): what its `of` names cannot fail to be, `through` what makes it so. The crown alone is necessary by itself; the contradictory of `contingent`", figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
+  - { verb: contingent, meaning: "a position of the necessity square: what its `of` names may fail to be, `through` what makes it so; the contradictory of `necessary`", figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
+  - { verb: possible,   meaning: "a position of the necessity square (mumkin): what its `of` names may be, `through` what makes it so — a risk is a possible failure; the contradictory of `impossible`", figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
+  - { verb: impossible, meaning: "a position of the necessity square (mumtaniʿ): what its `of` names cannot be, `through` what makes it so; the contrary of `necessary`, the contradictory of `possible`", figure: necessity,  roles: { of: { shape: [statement, being] }, through: { shape: [being, statement] } }, required: [of] }
+  - { verb: obligatory, meaning: "a position of the permission square: what its `of` names is to be done, `through` the agreement, the law or the grant that asks it — a clause; the contrary of `forbidden`, the contradictory of `omissible`", figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
+  - { verb: omissible,  meaning: "a position of the permission square: what its `of` names may be left undone, `through` what allows it; the contradictory of `obligatory`", figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
+  - { verb: permitted,  meaning: "a position of the permission square: what its `of` names may be done, `through` the agreement, the law or the grant that allows it; the contradictory of `forbidden`", figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
+  - { verb: forbidden,  meaning: "a position of the permission square: what its `of` names is not to be done, `through` the agreement, the law or the grant that forbids it; the contrary of `obligatory`, the contradictory of `permitted`", figure: permission, roles: { of: { shape: statement }, through: { shape: [being, statement] } }, qualifiers: { clause: { shape: form, form: clause } }, required: [of, through] }
 
 # the small tables the face verbs name
 modes:        [law, keeping, meeting, paying]          # the four modes of answering: before the law, in keeping it, in how others meet it, in paying for it

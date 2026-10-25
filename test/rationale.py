@@ -328,8 +328,10 @@ readers = [os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*.p
 check("only the reader of reasons opens the reasoning: no verdict can depend on it", readers == ["why.py"], readers)
 # SIDEWAYS: a reason that speaks of a law name the law no longer has is no longer a reason; it is an account of what
 # used to be, which is a journal's business. A ratchet, because sorting them is editorial work.
-STALE_REASONS = 34         # the reasons written of today's law speak of its names (v1 part 13); 34 since each
-                           # paragraph went under the item it was written of: the same 54 names, in more keys
+STALE_REASONS = 35         # the reasons written of today's law speak of its names (v1 part 13); 34 since each
+                           # paragraph went under the item it was written of: the same 54 names, in more keys; 35
+                           # since v4.4.0 said `division_form` in words, and the carry above keeps every line of
+                           # the reason under `shapes[position]` that names it
 st = dmwhy.stale()
 check(f"reasons that have become journal have not grown (now {len(st)}, ceiling {STALE_REASONS})", len(st) <= STALE_REASONS, list(st.items())[:3])
 print(f"      (the ceiling can come down to {len(st)})")
