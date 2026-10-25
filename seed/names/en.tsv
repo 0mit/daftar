@@ -142,6 +142,7 @@ verbs:pin	pin	pinn (Old English: a peg): what rests on a reading, fixed	proposed
 verbs:classify	classify	classis (a division of the Roman people)	proposed	agent (claude opus-5.5), by hand
 verbs:concern	concern	concernere (to sift together): the person a record is about	proposed	agent (claude opus-5.5), by hand
 verbs:about	about	Old English onbūtan (on the outside of, around): what a sayable speaks of; a person it speaks of, it concerns	proposed	agent (claude opus-5.5), by hand
+verbs:join	join	Latin iungere (to yoke together): two bodies touching at a feature of each, in a pair, kept together by its closures	proposed	agent (claude opus-5.5), by hand
 verbs:rate	rate	rata (fixed, reckoned): how much harm a being can do a person	proposed	agent (claude opus-5.5), by hand
 verbs:fail	fail	fallere (to deceive, to disappoint)	proposed	agent (claude opus-5.5), by hand
 verbs:repair	repair	reparare (to make ready again)	proposed	agent (claude opus-5.5), by hand

@@ -371,8 +371,9 @@ class Union:
     def _fits(self, x, spec):
         """`fits` over the union: the value, or any item of a list, in the one form of the row `spec` names (core/law.py
         `Law.fits`, the function the reckoner calls)."""
-        v = dec(x)
-        return 1 if any(self.L.fits(json.loads(spec), y) for y in (v if isinstance(v, list) else [v])) else 0
+        v, spec = dec(x), json.loads(spec)
+        d = self.L.garden_drawing(self.G) if isinstance(spec, dict) and 'concept' in spec else None   # a being (4.2)
+        return 1 if any(self.L.fits(spec, y, d) for y in (v if isinstance(v, list) else [v])) else 0
 
     # ------------------------------------------------------------------------------------------------ a member's node
     def _node_args(self, st, path, alias=''):

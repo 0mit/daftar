@@ -134,6 +134,7 @@ good:
   - { name: "matter in bulk is part of a machine: its organisation is made of it", bean: y46, kind: host, statements: [ { say: { by: sam, at: now } }, { part: { by: { someone: lump }, of: self } } ] }
   # what a sayable is about, and whom it concerns (core 4.1, D16)
   - { name: "a document is about a machine and a disk, and concerns a person", bean: y48, kind: document, statements: [ { say: { by: sam, at: now } }, { about: { of: [nas, disk] } }, { concern: { of: [ben] } } ] }
+  - { name: "a device said to be a torsional vibration damper, two of its bodies joined by a bonded fixed pair", bean: y49, kind: host, statements: [ { say: { by: sam, at: now } }, { join: { by: { someone: component }, to: { someone: component }, as: fixed, closure: [material] } }, { classify: { of: self, as: "made:torsional-vibration-damper" } } ] }
   - { name: "a nest comes through its bird: what the living make comes through the living", bean: y47, kind: nest, statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [ { someone: bird } ] } } ] }
   - { name: "a contract's amount, and a person's weight in newtons", bean: y32, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "100", unit: XTS } } }, { measure: { of: ben, as: weight, value: { count: "690", unit: N } } } ] }
   - { name: "a required role nobody said is `unknown`", bean: y1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: unknown, of: { count: "1", unit: XTS } } } ] }
@@ -179,6 +180,7 @@ good:
   - { name: "a pin through another garden: its commit that garden's, which no gate here refuses", bean: y36, kind: document, statements: [ { say: { by: sam, at: now } }, { classify: { id: c, of: self, as: "isco-08:2511" } }, { pin: { id: p, by: sam, of: [c], through: garden-a, at: ["2026-10-01 10:00+03:30", "garden-a@0123456789abcdef0123456789abcdef01234567"] } } ] }
 bad:
   # rule bearer (2026-10-10): what a quantity holds for, reached through `made-of` alone
+  - { rule: bearer, name: "one body is no hydraulic cylinder: a device's concept is said of a device", says: "is a device, bodies joined, and this is one body", bean: x12i, kind: component, statements: [ { say: { by: sam, at: now } }, { classify: { of: self, as: "made:hydraulic-cylinder" } } ] }
   - { rule: bearer, name: "a herd has no temperature: it stands on its members, not made of them", says: "it holds for material and what is made of it", bean: x12h, kind: herd, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: temperature-difference, value: { count: "3", unit: K } } } ] }
   - { rule: bearer, name: "one molecule has no temperature", says: "it holds for material and what is made of it", bean: x12b, kind: grain, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: temperature-difference, value: { count: "3", unit: K } } } ] }
   - { rule: bearer, name: "a contract has no voltage", says: "a contract is a sayable", bean: x12c, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: potential-difference, value: { count: "5", unit: V } } } ] }
@@ -217,6 +219,7 @@ bad:
   - { rule: valency, name: "a record concerns a person: a machine is what it is about", says: "a body fills this role only at reason (a person); nas is a host", bean: x3u, kind: document, statements: [ { say: { by: sam, at: now } }, { concern: { of: [ben, nas] } } ] }
   - { rule: valency, name: "an organisation is no person a record concerns", says: "this role takes a being that is body", bean: x3v, kind: document, statements: [ { say: { by: sam, at: now } }, { concern: { of: [hpe] } } ] }
   - { rule: valency, name: "what is about a being is a sayable: a machine is about nothing", says: "this role takes a being that is sayable; nas is body", bean: x3w, kind: document, statements: [ { say: { by: sam, at: now } }, { about: { by: nas, of: [disk] } } ] }
+  - { rule: valency, name: "a joint is between two bodies: a document joins nothing", says: "this role takes a being that is body", bean: x3x, kind: document, statements: [ { say: { by: sam, at: now } }, { join: { by: self, to: { someone: component }, as: fixed } } ] }
   - { rule: valency,     bean: x2, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { of: { count: "1", unit: XTS } } } ] }
   - { rule: valency,     bean: x3, kind: document, statements: [ { say: { by: nas, at: now } } ] }
   - { rule: valency,     bean: x3b, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: [ada, ben], of: "1" } } ] }
@@ -327,7 +330,7 @@ clauses:
     - { says: "once the garden holds a bean, it names its gardener", garden: [no-gardener] }
     - { says: "A grant is to a being or to every member of a reading", bad: [x65, x66, x67] }
   valency:
-    - { says: "each required role is filled", bad: [x2, x3s, x3u, x3v, x3w, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
+    - { says: "each required role is filled", bad: [x2, x3s, x3u, x3v, x3w, x3x, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
     - { says: "a role takes a list only where its row says `many`", bad: [x3b] }
   knowing:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
@@ -357,6 +360,7 @@ clauses:
     - { says: "A mass is a body's", bad: [x12, x12b] }
     - { says: "information and money are what is carried", bad: [x12d, x12g] }
     - { says: "A code of a scheme that names the positions its codes classify", suite: [test/cases.py, test/core_beings.py] }
+    - { says: "A concept (a code of a scheme of the form `concept`) is said only of a being its pattern's root can fit", bad: [x12i], suite: [test/core_mechanics.py] }
   frame:
     - { says: "a position is in a declared system", bad: [x13, x13b, x13c, x13d, x13e] }
     - { says: "a day is reckoned in the garden's `zone`, and `now` is written at `at` alone", bad: [x13f] }

@@ -1,0 +1,485 @@
+# THE MADE SCHEME (core 4.2): what a made body is by its own form, and what it does among its neighbours by its joints.
+# Each row is a concept: its code, its names (the workshop's words among them), its level — a form, said of a body
+# (`classify`), or a role, read from its joints (`fits`) and never stored — its pattern in the core's basic set (bodies of
+# a compliance, their features, `part` and `join`: core/law/verbs.yaml) with its limits, and the codes Wikidata, ETIM and
+# CPV give the same thing. Its form is the knowledge profile's `concept` (core/law/profiles.yaml); its sources are in
+# seed/knowledge/SOURCES.md.
+  - code: o-ring
+    level: form
+    name: O-ring
+    synonyms: "toroidal sealing ring | seal ring | toroidal seal"
+    pattern:
+      root: { compliance: elastic, shape: ring, section: round }
+    wikidata: Q942417
+    etim: EC010584
+    cpv: "44425200"
+  - code: x-ring
+    level: form
+    name: X-ring
+    synonyms: "quad ring"
+    pattern:
+      root: { compliance: elastic, shape: ring, section: four-lobed }
+  - code: lip-seal
+    level: form
+    name: "lip seal"
+    synonyms: "U-cup | lip oil seal"
+    pattern:
+      root: { compliance: elastic, shape: ring, section: lip }
+  - code: circlip
+    level: form
+    name: circlip
+    synonyms: "retaining ring with lugs"
+    pattern:
+      root: { compliance: elastic, shape: split-ring, features: [{ kind: lug-hole, count: "2" }] }
+    wikidata: Q2144243
+    etim: EC002383
+  - code: screw
+    level: form
+    name: screw
+    synonyms: "bolt | cap screw"
+    pattern:
+      root: { compliance: rigid, shape: headed-bar, features: [{ kind: thread, side: ext }] }
+    wikidata: Q11022
+    cpv: "44531510"
+  - code: nut
+    level: form
+    name: nut
+    synonyms: "hex nut"
+    pattern:
+      root: { compliance: rigid, shape: hex, features: [{ kind: thread, side: int }] }
+  - code: washer
+    level: form
+    name: washer
+    synonyms: "flat washer | plain washer"
+    pattern:
+      root: { compliance: rigid, shape: plate-ring, features: [{ kind: bore }] }
+    wikidata: Q637321
+    etim: EC000098
+    cpv: "44532200"
+  - code: ball
+    level: form
+    name: ball
+    pattern:
+      root: { compliance: rigid, shape: ball }
+  - code: v-belt
+    level: form
+    name: V-belt
+    synonyms: "vee belt"
+    pattern:
+      root: { compliance: tension, shape: belt, section: v }
+    wikidata: Q1752270
+    cpv: "34312700"
+  - code: poly-v-belt
+    level: form
+    name: "poly-V belt"
+    synonyms: "multi-rib belt | serpentine belt"
+    pattern:
+      root: { compliance: tension, shape: belt, section: multi-v }
+  - code: bearing-inner-ring
+    level: form
+    name: "inner ring"
+    pattern:
+      root: { compliance: rigid, shape: ring, features: [{ kind: raceway, side: ext }] }
+  - code: bearing-outer-ring
+    level: form
+    name: "outer ring"
+    synonyms: cup
+    pattern:
+      root: { compliance: rigid, shape: ring, features: [{ kind: raceway, side: int }] }
+  - code: deep-groove-ball-bearing
+    level: form
+    name: "deep groove ball bearing"
+    synonyms: "radial ball bearing | deep groove bearing"
+    pattern:
+      root: { device: "true" }
+      nodes: { I: { fits: bearing-inner-ring }, O: { fits: bearing-outer-ring }, B: { shape: ball } }
+      edges:
+        - { x: root, y: I, rel: part }
+        - { x: root, y: O, rel: part }
+        - { x: root, y: B, rel: part }
+        - { x: I, y: B, pair: [rolling] }
+        - { x: B, y: O, pair: [rolling] }
+    wikidata: Q85840418
+    etim: EC012129
+    cpv: "44440000"
+  - code: shaft
+    level: role
+    name: shaft
+    synonyms: axle
+    pattern:
+      root: { compliance: rigid, shape: bar }
+      nodes: { F: { compliance: rigid }, W: { compliance: rigid } }
+      edges:
+        - { x: root, y: F, link: [revolute], a: { kind: [seat, raceway, bore] } }
+        - { x: root, y: W, pair: [fixed] }
+    wikidata: Q309383
+    cpv: "42141100"
+  - code: pin
+    level: role
+    name: pin
+    synonyms: "hinge pin | clevis pin"
+    pattern:
+      root: { compliance: rigid, shape: bar }
+      nodes: { E: { compliance: rigid } }
+      edges:
+        - { x: root, y: E, pair: [revolute], b: { kind: eye } }
+  - code: key
+    level: role
+    name: key
+    synonyms: "parallel key | feather key"
+    pattern:
+      root: { compliance: rigid, shape: bar }
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [form], b: { kind: keyway } }
+        - { x: root, y: B, pair: [fixed], closure: [form], b: { kind: keyway } }
+  - code: pulley
+    level: role
+    name: pulley
+    synonyms: "belt pulley | sheave"
+    pattern:
+      root: { not_fiat: "true" }
+      nodes: { T: { compliance: tension }, S: { compliance_not: [elastic, tension, pressure] } }
+      edges:
+        - { x: root, y: T, pair: [wrapping], a: { kind: groove, side: ext } }
+        - { x: root, y: S, pair: [fixed] }
+    wikidata: [Q48378, Q1057381]
+    etim: EC003882
+    cpv: "42141400"
+  - code: pulley-rim
+    level: role
+    name: rim
+    synonyms: "pulley rim"
+    pattern:
+      root: { features: [{ kind: groove, side: ext }] }
+      nodes: { T: { compliance: tension }, H: {}, S: { compliance: rigid } }
+      edges:
+        - { x: root, y: T, pair: [wrapping] }
+        - { x: root, y: H, rel: coupled }
+        - { x: root, y: H, rel: sibling }
+        - { x: H, y: S, pair: [fixed] }
+        - { x: H, y: S, rel: outside }
+  - code: hub
+    level: role
+    name: hub
+    synonyms: boss
+    pattern:
+      root: {}
+      nodes: { R: { features: [{ kind: groove, side: ext }] }, T: { compliance: tension }, S: { compliance: rigid } }
+      edges:
+        - { x: root, y: R, rel: coupled }
+        - { x: root, y: R, rel: sibling }
+        - { x: R, y: T, pair: [wrapping] }
+        - { x: root, y: S, pair: [fixed] }
+        - { x: root, y: S, rel: outside }
+    wikidata: Q101860684
+  - code: idler-pulley
+    level: role
+    name: "idler pulley"
+    synonyms: "idler | idler wheel"
+    pattern:
+      root: { device: "true" }
+      nodes: { W: { compliance: rigid }, B: { fits: deep-groove-ball-bearing }, T: { compliance: tension }, X: { shape: bar } }
+      edges:
+        - { x: root, y: W, rel: part }
+        - { x: root, y: B, rel: part }
+        - { x: W, y: T, pair: [wrapping] }
+        - { x: W, y: B, pair: [fixed] }
+      not:
+        - { x: W, y: X, pair: [fixed] }
+    wikidata: Q5989142
+    etim: EC003882
+    cpv: "42141400"
+  - code: crankshaft-pulley
+    level: role
+    name: "crankshaft pulley"
+    synonyms: "crank pulley | damper pulley"
+    pattern:
+      root: { fits: pulley }
+      nodes: { S: { use: crankshaft } }
+      edges:
+        - { x: root, y: S, pair: [fixed] }
+    etim: EC003882
+    cpv: "42141400"
+  - code: power-steering-pump-pulley
+    level: role
+    name: "power steering pump pulley"
+    pattern:
+      root: { fits: pulley }
+      nodes: { S: { use: power-steering-pump } }
+      edges:
+        - { x: root, y: S, pair: [fixed] }
+  - code: water-pump-pulley
+    level: role
+    name: "water pump pulley"
+    pattern:
+      root: { fits: pulley }
+      nodes: { S: { use: water-pump } }
+      edges:
+        - { x: root, y: S, pair: [fixed] }
+  - code: torsional-vibration-damper
+    level: role
+    name: "torsional vibration damper"
+    synonyms: "harmonic damper | crankshaft damper"
+    pattern:
+      root: { device: "true" }
+      nodes: { H: { compliance: rigid }, E: { compliance: elastic }, R: { compliance: rigid }, S: { compliance: rigid } }
+      edges:
+        - { x: root, y: H, rel: part }
+        - { x: root, y: E, rel: part }
+        - { x: root, y: R, rel: part }
+        - { x: H, y: E, pair: [fixed] }
+        - { x: E, y: R, pair: [fixed] }
+        - { x: H, y: S, pair: [fixed] }
+        - { x: H, y: S, rel: outside }
+      not:
+        - { x: H, y: R, rel: one-link }
+    wikidata: Q12858436
+    etim: EC011696
+  - code: damper-ring
+    level: role
+    name: "damper ring"
+    synonyms: "rubber element | rubber damper element"
+    pattern:
+      root: { compliance: elastic }
+      nodes: { H: { compliance: rigid }, R: { compliance: rigid } }
+      edges:
+        - { x: root, y: H, pair: [fixed], closure_any: [material, friction] }
+        - { x: root, y: R, pair: [fixed], closure_any: [material, friction] }
+      not:
+        - { x: H, y: R, rel: one-link }
+  - code: retaining-ring
+    level: role
+    name: "retaining ring"
+    synonyms: "snap ring"
+    pattern:
+      root: {}
+      nodes: { G: { compliance: rigid }, R: { compliance: rigid } }
+      edges:
+        - { x: root, y: G, pair: [fixed], closure: [form], b: { kind: groove } }
+        - { x: root, y: R, pair: [fixed], closure: [form] }
+        - { x: R, y: G, pair: [fixed, revolute, prismatic, cylindrical] }
+    wikidata: Q3662575
+    etim: EC002383
+  - code: cap
+    level: role
+    name: cap
+    synonyms: "dust cap | end cover"
+    pattern:
+      root: { compliance: rigid }
+      nodes: { A: { compliance: rigid }, Y: { compliance: rigid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure_any: [friction, form], b: { kind: bore } }
+      not:
+        - { x: root, y: Y, pair: [fixed, helical, revolute, prismatic, cylindrical, rolling, spherical] }
+  - code: shield
+    level: role
+    name: shield
+    synonyms: "bearing shield"
+    pattern:
+      root: { compliance: rigid, shape: disc }
+      nodes: { O: { fits: bearing-outer-ring }, B: { fits: deep-groove-ball-bearing } }
+      edges:
+        - { x: root, y: O, pair: [fixed], closure: [form], b: { kind: groove } }
+        - { x: B, y: root, rel: part }
+  - code: cage
+    level: role
+    name: cage
+    synonyms: "retainer | separator"
+    pattern:
+      root: { compliance: rigid }
+      nodes: { L: { shape: ball }, B: { device: "true" } }
+      edges:
+        - { x: root, y: L, pair: [spherical] }
+        - { x: B, y: root, rel: part }
+  - code: bush
+    level: role
+    name: bush
+    synonyms: "bushing | plain bearing | sleeve bearing"
+    pattern:
+      root: { compliance: rigid, shape: sleeve }
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [friction], b: { kind: bore } }
+        - { x: root, y: B, pair: [revolute, prismatic, cylindrical], a: { kind: bore } }
+    wikidata: Q12832024
+  - code: wear-ring
+    level: role
+    name: "wear ring"
+    synonyms: "guide ring | guide band"
+    pattern:
+      root: { compliance: rigid }
+      nodes: { P: { compliance: rigid }, C: { compliance: rigid } }
+      edges:
+        - { x: root, y: P, pair: [fixed], closure: [form], b: { kind: groove } }
+        - { x: root, y: C, pair: [prismatic, cylindrical], closure: [form] }
+    etim: EC010617
+  - code: slide-ring
+    level: role
+    name: "slide ring"
+    synonyms: "slipper seal ring"
+    pattern:
+      root: { compliance: rigid, shape: ring }
+      nodes: { E: { compliance: elastic }, C: { compliance: rigid } }
+      edges:
+        - { x: root, y: E, pair: [fixed], closure: [force] }
+        - { x: root, y: C, pair: [prismatic, cylindrical], closure: [force] }
+  - code: energizer
+    level: role
+    name: energizer
+    synonyms: "pre-load ring"
+    pattern:
+      root: { compliance: elastic }
+      nodes: { A: { compliance: rigid }, R: { compliance: rigid }, C: { compliance: rigid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [form], b: { kind: groove } }
+        - { x: root, y: R, pair: [fixed], closure: [force] }
+        - { x: R, y: C, pair: [prismatic, cylindrical], closure: [force] }
+      not:
+        - { x: A, y: R, rel: one-link }
+  - code: ptfe-seal
+    level: role
+    name: "PTFE seal"
+    synonyms: "glyd ring | slipper seal"
+    pattern:
+      root: { device: "true" }
+      nodes: { S: { fits: slide-ring, material: ptfe }, E: { fits: energizer } }
+      edges:
+        - { x: root, y: S, rel: part }
+        - { x: root, y: E, rel: part }
+  - code: static-seal
+    level: role
+    name: "static seal"
+    pattern:
+      root: {}
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid }, F: { compliance: pressure, use: working-fluid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [form], b: { kind: groove } }
+        - { x: root, y: B, pair: [fixed], closure: [force] }
+        - { x: A, y: B, rel: one-link }
+        - { x: root, y: F, pair: [pressing] }
+  - code: piston-seal
+    level: role
+    name: "piston seal"
+    pattern:
+      root: {}
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid }, F: { compliance: pressure, use: working-fluid }, G: { compliance: pressure, use: working-fluid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [form], b: { kind: groove, side: ext } }
+        - { x: root, y: B, pair: [prismatic, cylindrical], closure: [force], b: { kind: bore } }
+        - { x: root, y: F, pair: [pressing] }
+        - { x: root, y: G, pair: [pressing] }
+  - code: rod-seal
+    level: role
+    name: "rod seal"
+    pattern:
+      root: {}
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid }, F: { compliance: pressure, use: working-fluid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [form], b: { kind: groove, side: int } }
+        - { x: root, y: B, pair: [prismatic, cylindrical], closure: [force], b: { kind: seat } }
+        - { x: root, y: F, pair: [pressing] }
+    wikidata: Q59630201
+  - code: wiper-seal
+    level: role
+    name: "wiper seal"
+    synonyms: "wiper | scraper | scraper seal"
+    pattern:
+      root: {}
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid }, F: { compliance: pressure, use: ambient }, W: { compliance: pressure, use: working-fluid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [form], b: { kind: groove, side: int } }
+        - { x: root, y: B, pair: [prismatic, cylindrical], closure: [force], b: { kind: seat } }
+        - { x: root, y: F, pair: [pressing] }
+      not:
+        - { x: root, y: W, pair: [pressing] }
+    wikidata: Q8026705
+  - code: blind-plug
+    level: role
+    name: "blind plug"
+    synonyms: "blanking plug | expander plug"
+    pattern:
+      root: { compliance: rigid }
+      nodes: { A: { compliance: rigid }, F: { compliance: pressure, use: working-fluid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure_any: [friction, form, material], b: { kind: port } }
+        - { x: root, y: F, pair: [pressing] }
+  - code: piston
+    level: role
+    name: piston
+    pattern:
+      root: { compliance: rigid }
+      nodes: { W: {}, T: { compliance: rigid, shape: tube }, F: { compliance: pressure, use: working-fluid }, R: { compliance: rigid, shape: bar } }
+      edges:
+        - { x: root, y: W, pair: [fixed], closure: [form], a: { kind: groove, side: ext } }
+        - { x: W, y: T, pair: [prismatic, cylindrical] }
+        - { x: root, y: F, pair: [pressing] }
+        - { x: root, y: R, rel: one-link }
+    wikidata: Q45227
+    cpv: "34312400"
+  - code: cylinder-tube
+    level: role
+    name: "cylinder tube"
+    synonyms: "cylinder barrel | barrel"
+    pattern:
+      root: { compliance: rigid, shape: tube }
+      nodes: { P: { fits: piston } }
+      edges:
+        - { x: root, y: P, link: [prismatic, cylindrical] }
+  - code: cylinder-end-cap
+    level: role
+    name: "cylinder end cap"
+    synonyms: "cylinder head | end cap | cap end"
+    pattern:
+      root: { compliance: rigid }
+      nodes: { T: { fits: cylinder-tube }, F: { compliance: pressure, use: working-fluid }, R: { shape: bar } }
+      edges:
+        - { x: root, y: T, pair: [fixed] }
+        - { x: root, y: F, pair: [pressing] }
+      not:
+        - { x: root, y: R, pair: [prismatic, cylindrical] }
+  - code: gland
+    level: role
+    name: gland
+    synonyms: "rod gland | cylinder gland | head gland"
+    pattern:
+      root: { compliance: rigid }
+      nodes: { T: { fits: cylinder-tube }, R: { shape: bar }, S: { fits: rod-seal } }
+      edges:
+        - { x: root, y: T, pair: [fixed, helical] }
+        - { x: root, y: R, link: [prismatic, cylindrical] }
+        - { x: root, y: S, pair: [fixed], closure: [form], a: { kind: groove, side: int } }
+  - code: piston-rod
+    level: role
+    name: "piston rod"
+    synonyms: "rod | ram"
+    pattern:
+      root: { compliance: rigid, shape: bar }
+      nodes: { P: { fits: piston }, G: { fits: gland } }
+      edges:
+        - { x: root, y: P, rel: one-link }
+        - { x: root, y: G, link: [prismatic, cylindrical] }
+    wikidata: Q788143
+  - code: cylinder-mount
+    level: role
+    name: mount
+    synonyms: "mounting eye | rod eye | clevis | cylinder mount"
+    pattern:
+      root: {}
+      nodes: { P: { compliance: rigid, shape: bar } }
+      edges:
+        - { x: root, y: P, pair: [revolute], a: { kind: eye } }
+  - code: hydraulic-cylinder
+    level: role
+    name: "hydraulic cylinder"
+    synonyms: "hydraulic ram"
+    pattern:
+      root: { device: "true" }
+      nodes: { T: { fits: cylinder-tube }, P: { fits: piston }, R: { fits: piston-rod } }
+      edges:
+        - { x: root, y: T, rel: part }
+        - { x: root, y: P, rel: part }
+        - { x: root, y: R, rel: part }
+    wikidata: Q2318337
+    etim: EC012253
+    cpv: "42121100"

@@ -215,7 +215,9 @@ def _columns_problems(files):
     return out + (_spelling(systems) if systems else []) + (_checks_problems(checks) if checks is not None else [])
 
 
-FITS = ('namespace', 'type', 'system', 'holds')          # what `fits` fits a value to (core/law/lines.yaml comparisons)
+FITS = ('namespace', 'type', 'system', 'holds', 'concept')   # what `fits` fits a value to (core/law/lines.yaml
+                                                             # comparisons): a concept's pattern, a being (core 4.2)
+MECH_TABLES = {'compliances': 'compliance', 'pairs': 'pair', 'closures': 'closure'}   # verbs.yaml (core 4.2)
 CHECK_READS = ('name', 'position', 'designation')         # what a check reads (core/law/checks.yaml)
 GENERAL = re.compile(r'^[A-Z][a-z]?$')                    # a Unicode general category, or its major class: `Cc`, `L`
 
@@ -365,6 +367,12 @@ class Law:
             self._put(self.verbs, v['verb'], v, 'core.yaml verbs')
         for t, vals in (rows.get('tables') or {}).items():
             self._put(self.tables, t, listed(vals), 'verbs.yaml tables')
+        self.mech_rows = {}                                 # core 4.2: the mechanics' tables, each row by its name
+        for t, key in MECH_TABLES.items():
+            got = [r for r in listed(rows.get(t)) if isinstance(r, dict) and r.get(key) is not None]
+            self.mech_rows[t] = {str(r[key]): r for r in got}
+            self._put(self.tables, t, [str(r[key]) for r in got], f"verbs.yaml {t}")
+        self._concepts = self._matcher = None
         for v in rows.get('verbs') or []:
             self._put(self.verbs, v['verb'], v, 'verbs.yaml verbs')
         self.replaces = []
@@ -824,9 +832,14 @@ class Law:
         `{holds: <Unicode property>}` (its property as the row) — or ValueError, saying why it names none a value fits."""
         if not (isinstance(spec, dict) and len(spec) == 1 and next(iter(spec)) in FITS):
             raise ValueError("`fits` takes one of `{namespace: <row>}`, `{type: <row>}`, `{system: <row>}`, "
-                             "`{holds: <Unicode property>}`")
+                             "`{holds: <Unicode property>}`, `{concept: <code>}`")
         what, name = next(iter(spec.items()))
         name = str(name)
+        if what == 'concept':
+            if name not in self.concepts():
+                raise ValueError(f"`{name}` is no concept of the law: a code of a scheme of the form `concept`, "
+                                 f"written with its scheme (`made:rod-seal`)")
+            return what, name
         if what == 'holds':
             if name != 'Bidi_Control' and not GENERAL.match(name):
                 raise ValueError(f"`{name}` is no Unicode property a value is fitted to: Bidi_Control, or a general "
@@ -839,14 +852,20 @@ class Law:
             raise ValueError(f"the {what} `{name}` states no form a value is fitted to")
         return what, row
 
-    def fits(self, spec, value):
+    def fits(self, spec, value, drawing=None):
         """Whether `value` is in the one form of the row `spec` names (`fits_row`): its pattern, its `holds_no` (but
         what `but` lets through, and a line feed where `lines_in` names a style), and the check its `checked_by` names
-        (core/law/checks.yaml) — or, for `{holds: <property>}`, whether it holds a character of that property. One
-        judge of a form, for the reader's typing, the readings and the store's SQL. CheckUnavailable where a check's
-        library is not installed here."""
+        (core/law/checks.yaml) — or, for `{holds: <property>}`, whether it holds a character of that property; or, for
+        `{concept: <code>}`, whether the being `value` names fits the concept in `drawing`, the drawing of its garden
+        (core/mechanics.py): said to be of it, or its pattern read of it. One judge of a form, for the reader's typing,
+        the readings and the store's SQL. CheckUnavailable where a check's library is not installed here."""
         import parse as dmparse
         what, row = self.fits_row(spec)
+        if what == 'concept':
+            if drawing is None:
+                raise ValueError("a being fits a concept in the drawing of its garden: `{concept: <code>}` is read "
+                                 "over a garden")
+            return isinstance(value, str) and value in drawing.nodes and bool(self.matcher().fits(drawing, value, row))
         if what == 'holds':
             return holds_property(value, row)
         if not isinstance(value, str):
@@ -867,6 +886,56 @@ class Law:
     def checks_problems(self):
         """[(where, message)] of the law's table of checks (`_checks_problems`), as this law holds it."""
         return _checks_problems(self.checks)
+
+    def concepts(self):
+        """{`<scheme>:<code>`: row} of every scheme of the form `concept` this law reads (core 4.2): the release's made
+        scheme, and a garden's own."""
+        if self._concepts is None:
+            out = {}
+            K = self.std.knowledge if self.std else None
+            for scheme, srow in sorted((K.schemes if K else {}).items()):
+                if not isinstance(srow, dict) or srow.get('form') != 'concept':
+                    continue
+                try:
+                    rows = K.rows(str(scheme))
+                except (KeyError, OSError, ValueError):
+                    continue
+                for r in rows:
+                    if isinstance(r, dict) and r.get('code') and isinstance(r.get('pattern'), dict):
+                        out.setdefault(f"{scheme}:{r['code']}", dict(r))
+            self._concepts = out
+        return self._concepts
+
+    def matcher(self):
+        """The one matcher of the law's concepts (core/mechanics.py), for the gate, the readings and the store."""
+        if self._matcher is None:
+            from core import mechanics
+            self._matcher = mechanics.Matcher(self.concepts())
+        return self._matcher
+
+    def garden_drawing(self, G):
+        """The drawing of a garden read by core/engine.py (`G`, its beans), made once for it."""
+        d = getattr(G, '_mech_drawing', None)
+        if d is None:
+            d = self.drawing([(b.id, b.kind, [(v, r) for _, v, r in b.items]) for b in G.beans.values()
+                              if not getattr(b, 'unread', None)])
+            G._mech_drawing = d
+        return d
+
+    def drawing(self, beans):
+        """The drawing of the bodies a garden's statements join (core/mechanics.py `drawing`): `beans`, [(bean id,
+        kind, [(verb, roles)])]."""
+        from core import mechanics
+        codes = self.concepts()
+
+        def kind_of(kind):
+            row = self.kinds.get(kind) if isinstance(kind, str) else None
+            return (row.get('nature'), row.get('organisation')) if isinstance(row, dict) else (None, None)
+
+        def said_of(code):
+            return code if isinstance(code, str) and code in codes else None
+
+        return mechanics.drawing(beans, kind_of, said_of, codes)
 
     @property
     def slots(self):
@@ -1266,9 +1335,44 @@ class Law:
                     out.append((f"scheme {scheme} {code or '(no code)'}",
                                 f"{', '.join(odd)}: no column of a {form} ({', '.join(sorted(cols))})"))
             judge = {'chart': self._chart_rows, 'pattern': self._pattern_rows, 'class': self._class_rows,
-                     'keep': self._keep_rows, 'schema': self._schema_rows}.get(str(form))
+                     'keep': self._keep_rows, 'schema': self._schema_rows, 'concept': self._concept_rows}.get(str(form))
             if judge:
                 out += judge(scheme, rows)
+        return out + self._signature_problems(released)
+
+    def _concept_rows(self, scheme, rows):
+        """A scheme of concepts (the knowledge profile's form `concept`, core 4.2): each row a form or a role (`level`),
+        its pattern in its form (core/mechanics.py `pattern_problems`): in the core's compliances, pairs and closures,
+        each `fits` a concept of the law."""
+        from core import mechanics
+        out, codes = [], set(self.concepts())
+        tables = {t: list(self.mech_rows.get(t) or {}) for t in MECH_TABLES}
+        for r in rows:
+            code = str(r.get('code') or '')
+            at = f"scheme {scheme} {code or '(no code)'}"
+            if str(r.get('level') or '') not in ('form', 'role'):
+                out.append((at, "level: a concept is a form, what a body is by its own form, or a role, what it does "
+                                "among its neighbours: `form` or `role`"))
+            out += [(at, m) for m in mechanics.pattern_problems(r, str(scheme), codes, tables)]
+        return out
+
+    def _signature_problems(self, released):
+        """ONE SIGNATURE, ONE ROW (core 4.2): two concepts whose patterns are one up to the names of their nodes, their
+        limits equal, are one concept — the second refused, a release's row standing before a garden's own."""
+        from core import mechanics
+        out, first = [], {}
+        concepts = sorted(self.concepts().items(), key=lambda kv: (kv[0].split(':', 1)[0] not in released, kv[0]))
+        for code, r in concepts:
+            try:
+                sig = mechanics.signature(r['pattern'])
+            except (TypeError, AttributeError):
+                continue                                  # a pattern out of its form, which its judge names
+            if sig in first:
+                out.append((f"scheme {code.split(':', 1)[0]} {code.split(':', 1)[1]}",
+                            f"its pattern and limits are {first[sig]}'s: one signature is one concept, and its words "
+                            f"go on the first row"))
+            else:
+                first[sig] = code
         return out
 
     def _chart_rows(self, scheme, rows):

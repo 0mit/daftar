@@ -396,3 +396,22 @@ them (rule bearer).
   (`python3 bin/knowledge.py propose`) reads only the schemes held here: it sends no being's words to Wikidata.
 - **Its licence:** "All structured data (i.e. the main, Property, Lexeme, and EntitySchema namespaces) is released into
   the public domain under Creative Commons Zero" (https://www.wikidata.org/wiki/Wikidata:Licensing).
+
+## made.yaml — the made scheme: made bodies by their form and their role (shipped)
+
+- **Daftar's own words**, CC BY 4.0, with daftar's law. Each row is a concept: a pattern in the core's basic set — a
+  body of a compliance, its features, `part` and `join`, the core's pairs and closures (core/law/verbs.yaml) — with its
+  limits. Its ground is Reuleaux, *The Kinematics of Machinery* (1876; A. B. W. Kennedy's translation, public domain):
+  pairs of elements, links, chains and mechanisms, the pairs kept by their shapes, a force or the chain, and the
+  flexible tension- and pressure-organs; the pairs are named as ISO 10303-105:2019 (STEP kinematics) names its pair
+  entities, and the features after ISO/TS 10303-1814's machining features where one fits — names only, no text of
+  either standard copied; a feature as a dependent part of its body, and a fiat part of one body, after Smith (1996)
+  and Smith and Varzi (2000). No published topological definition of a part's type was found: the patterns are
+  daftar's own.
+- **Its 46 rows** are machine-elements.tsv of the beings' design (2026-10-24, daftar's own words) rewritten as patterns:
+  the mechanics design's 47 concepts, measured on a generic seed of six assemblies and a held-out water pump
+  (test/mechanics-seed.yaml), less the radial shaft seal, which no part of the seed exercises. The draft's families
+  (transmission, bearing, seal, fastener, fluid power, damping) are roles, what bodies do, and are not rows.
+- **Its crosswalk** — the columns `wikidata`, `etim` and `cpv` — is the draft's: each concept's Wikidata item (CC0),
+  and the codes ETIM (ODC-By 1.0) and the CPV (Commission Decision 2011/833/EU) give it, cited and never their texts;
+  their own tables are each machine's fetched copy (`etim`, `cpv` above).

@@ -142,6 +142,7 @@ verbs:pin	تثبیت	ث-ب-ت (to stand fast): fixing the moment and the commit 
 verbs:classify	رده‌بندی	رده (rade: a row, a rank) + بندی: setting in its class	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 verbs:concern	مربوط‌بودن	ر-ب-ط (to tie): being tied to a person — whom a record is about	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 verbs:about	دربارهٔ	در + باره (on the matter of): what a record speaks of — a host, a product, a procedure; a person it is personal to is مربوط‌بودن	proposed	agent (claude opus-5.5), by hand
+verbs:join	پیوستن	پیوستن (peyvastan, to join, to be joined): two bodies at a feature of each; پیوند (peyvand), the joint they make	proposed	agent (claude opus-5.5), by hand
 verbs:rate	درجهٔ حساسیت	درجه (daraje: a step, a degree) + حساسیت (hassāsiyat: sensitivity)	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 verbs:fail	خرابی	خراب (kharāb: ruined): a way a being breaks, or is breaking	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)
 verbs:repair	تعمیر	ع-م-ر (to inhabit, to build up): mending	confirmed	agent (claude opus-5.5), by hand; confirmed by 0mit (2026-10-11)

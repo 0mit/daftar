@@ -142,6 +142,7 @@ verbs:pin	Festschreiben	fest (fast) + schreiben (to write): to fix in writing th
 verbs:classify	Einordnen	ein + ordnen (to set in order): a being set in its class by a code of a scheme	proposed	agent (claude opus-5.5), by hand
 verbs:concern	Betreffen	betreffen (to hit upon, to concern): the person a record is about — die betroffene Person, the data subject of German data protection	proposed	agent (claude opus-5.5), by hand
 verbs:about	handeln von	handeln von (to deal with): wovon ein Text handelt — a host, a product, a procedure; die betroffene Person is Betreffen	proposed	agent (claude opus-5.5), by hand
+verbs:join	verbinden	ver + binden (to bind): zwei Körper, an je einem Formelement verbunden, in einem Elementenpaar	proposed	agent (claude opus-5.5), by hand
 verbs:rate	Einstufen	Stufe (a step): to grade how much harm a being can do a person if it leaves the garden	proposed	agent (claude opus-5.5), by hand
 verbs:fail	Ausfallen	aus + fallen (to fall out): a way a being can fail, or is failing — Ausfallart, a failure mode	proposed	agent (claude opus-5.5), by hand
 verbs:repair	Beheben	beheben (to lift off, to remove): einen Fehler beheben, to remedy a failure, where the fix lives	proposed	agent (claude opus-5.5), by hand

@@ -5045,6 +5045,41 @@ procedure for a product: each is about beings, and none is any person's data. Sa
 record personal that was not, and hid the few that were among them. `about` holds the rest, and derives nothing: a
 person a sayable speaks of, it concerns, and that is said with `concern`.
 
+## core/law/verbs.yaml: verbs[join]
+
+A MACHINE IS BODIES JOINED IN PAIRS, AND A PART'S TYPE IS A PATTERN OF THEM (core 4.2). Asked for a description of
+mechanics from its basic elements up, searched for before one was invented, the design found it 150 years old:
+Reuleaux's *Kinematics of Machinery* (1876, public domain) builds every machine from pairs of elements, the two surfaces
+by which two bodies touch and constrain each other; a link is the body where two pairs' elements join, a chain is links
+in pairs, a mechanism a closed chain with one link fixed. A pair is kept by its shapes, by a force or by the rest of the
+chain; beside the rigid elements stand the tension-organs (a belt) and the pressure-organs (a fluid), and springs. ISO
+10303-105 keeps his words and splits a connection into its joint, the topology of two and only two links, and its
+pair, the geometry; mereotopology (Smith 1996, Smith and Varzi 2000) grounds the feature — a groove exists only as part
+of the body it bounds — and the fiat boundary — a one-piece wheel's rim and hub are parts of one body. So the law takes a
+body of a compliance, a feature as a position of its body's own frame, `part`, and one new verb, `join`, its pairs and
+closures tables of the core and no profile's: a synovial joint is a revolute or a spherical pair, a tendon a tension
+body, blood a pressure body, and anatomy takes no mechanics profile to say them. A welded joint and a bonded rubber are
+told apart only by closure, which is why a pair alone was not enough; a chamber was not made a node, since every seal of
+the seed was read by the fluid body it touches. The six simple machines were set aside as a basis, as Reuleaux §64 sets
+them aside — a pulley here is a role — and so was function first: one O-ring seals, energizes or damps, so function is a
+limit on a pattern, never its ground. A link, a coupling and the least whole are read, never stated: they follow from
+the joints already written.
+
+## core/law/registries.yaml: knowledge_schemes[made]
+
+A WORKSHOP WORD NAMES A PATTERN, NOT A KIND (core 4.2). Reuleaux §128 read the workshop's "constructive elements" —
+screws, keys, pins, couplings, bearings, belts, stuffing-boxes — and found some elements, some links, some whole pairs,
+some chains used "simply as fastenings". No standard read gives a part's type its topology: ETIM, the CPV and Wikidata
+name a circlip, a gland, a hub without it. So the made scheme defines each by its pattern with its limits, on two axes,
+the two ways the operator said a word is unique: by its own shape and form (a form: an O-ring, a circlip, said of a
+body) and by the job it does among its neighbours (a role: a rod seal, a gland, read from the joints and never stored,
+so it is said once). The families of the draft catalogue — transmission, bearing, seal, fastener, fluid power, damping —
+are what bodies do, so they went; its codes stayed beside each concept, so the measured crosswalk was not redone. A
+word is a row of its own only where its pattern or its limits differ, and the law refuses a second row of one
+signature, so two names for one thing stay one concept. Three groups of the seed are one topology told apart by limits
+alone, which is why limits are part of a signature. The matcher never guesses: a body's compliance or a feature's kind
+no statement says fits no constraint on it, and a pattern with a `not` is read only of a body drawn whole.
+
 ## core/law/verbs.yaml: verbs[grant]
 
 (std-vocab 32: `terms[grants]`)

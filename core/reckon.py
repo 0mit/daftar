@@ -253,6 +253,7 @@ class Garden:
         from core import engine, lines, read
         if self.pin is None:
             G = engine.Garden.read(self.root)
+            self.G = G                                   # the beans as read, whose joints a concept is fitted in (4.2)
             kept = _VIEWED.get(self.root)
             check = os.environ.get('DAFTAR_HELD_CHECK') == '1'
             if kept is not None and G.held is not None and kept[0] is G.held:
@@ -279,6 +280,7 @@ class Garden:
                 except read.Unread as e:
                     beans[bid] = engine.Bean(bid, p, unread=str(e))
             G = engine.Garden(beans, root=self.root)
+        self.G = G
         for bid, b in G.beans.items():
             if not b.unread:
                 self.fm[bid] = lines.view(b, G)
@@ -682,9 +684,11 @@ def _cond_check(where, conds, env, comps):
             continue
         op = c[cs[0]]
         if cs[0] == 'fits' and not (isinstance(op, dict) and len(op) == 1 and next(iter(op)) in
-                                    ('namespace', 'type', 'system', 'holds') and isinstance(next(iter(op.values())), str)):
+                                    ('namespace', 'type', 'system', 'holds', 'concept')
+                                    and isinstance(next(iter(op.values())), str)):
             out.append(('error', f"{w}: `fits` names one row of the law, `{{namespace: <row>}}`, `{{type: <row>}}` or "
-                                 f"`{{system: <row>}}`, or a Unicode property, `{{holds: <property>}}`"))
+                                 f"`{{system: <row>}}`, a Unicode property, `{{holds: <property>}}`, or a concept, "
+                                 f"`{{concept: <code>}}`"))
             continue
         if isinstance(op, dict) and ('step' in op or 'input' in op):
             if op.get('step', op.get('input')) not in env:
@@ -1130,9 +1134,16 @@ class Reckoner:
         return any(self._one_cond(x, comp, operand) for x in vals)
 
     def _fits(self, x, spec):
-        """Whether the value `x` is in the one form of the row `spec` names (core/law.py `Law.fits`, core 3.2, I.3)."""
+        """Whether the value `x` is in the one form of the row `spec` names (core/law.py `Law.fits`, core 3.2, I.3); for
+        a concept, whether the being it names fits it in the drawing of this garden (core 4.2)."""
         import parse as _p
         try:
+            if isinstance(spec, dict) and 'concept' in spec:
+                G = getattr(self.g, 'G', None) or getattr(getattr(self.g, 'J', None), 'G', None)
+                if G is None:
+                    raise Refused(f"`fits: {spec}`: a concept is fitted in a garden of the core")
+                L = self._core_law()
+                return L.fits(spec, x, L.garden_drawing(G))
             return self._core_law().fits(spec, x)
         except ValueError as e:
             raise Refused(f"`fits: {spec}`: {e}")
