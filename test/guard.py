@@ -9,7 +9,7 @@ grown from it, every replay a PreToolUse event on bin/hook.py's standard input.
 
 Run: python3 test/guard.py   (0 = green; under a minute)
 """
-import json, os, re, shutil, subprocess, sys, tempfile
+import json, os, re, shlex, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -88,6 +88,35 @@ def hook(verb, command='', tool='Bash', env=None):
     return run(PY, os.path.join(G, 'bin', 'hook.py'), verb, stdin=json.dumps(ev), env=dict(SHELL_ENV, **(env or {})))
 
 
+def event(verb, tool, inp, sid='abc123def456', cwd=None, env=None):
+    ev = {'session_id': sid, 'cwd': cwd or G, 'hook_event_name': verb, 'tool_name': tool, 'tool_input': inp}
+    return run(PY, os.path.join(G, 'bin', 'hook.py'), verb, stdin=json.dumps(ev), env=dict(SHELL_ENV, **(env or {})))
+
+
+def sh(path):
+    """A path as the garden's shell takes it whole, on every system."""
+    return shlex.quote(str(path).replace('\\', '/'))
+
+
+# THE GARDENER'S CLAUSES naming the guards that take an operand, as a gardener would write them (operands of this test's
+# own garden), the guard own-worktree, and a clause no guard reads
+EXTRA = (
+    "  - can:        { id: command-lines, by: { someone: session }, of: \"print another process's command line\" }\n"
+    "  - forbidden:  { id: process-command-line, of: command-lines, through: self, clause: { guard: process-command-line, "
+    "operand: { hosts: [db1] } } }\n"
+    "  - can:        { id: secret-columns, by: { someone: session }, of: \"select a column that holds a secret\" }\n"
+    "  - forbidden:  { id: secret-column, of: secret-columns, through: self, clause: { guard: secret-column, operand: "
+    "{ columns: [password] } } }\n"
+    "  - can:        { id: credential-files, by: { someone: session }, of: \"print a file that holds credentials\" }\n"
+    "  - forbidden:  { id: credential-file, of: credential-files, through: self, clause: { guard: credential-file, "
+    "operand: { files: [/root/rdp-launch] } } }\n"
+    "  - can:        { id: other-copies, by: { someone: session }, of: \"write the garden only in its own session's "
+    "worktree\" }\n"
+    "  - obligatory: { id: own-worktree, of: other-copies, through: self, clause: { guard: own-worktree } }\n"
+    "  - can:        { id: tmux-exact, by: { someone: session }, of: \"name a tmux target exactly\" }\n"
+    "  - obligatory: { id: tmux-targets-exact, of: tmux-exact, through: self }\n")
+
+
 def agreement(text=None):
     p = os.path.join(G, 'beans', 'agents-work.md')
     if text is None:
@@ -101,11 +130,13 @@ try:
     # ---- THE LAW: the table closed, each row held to its vectors
     law = Law.load()
     rows = guards.table(law)
-    check("the law's table of guards holds one-text-one-parser and shell-is, each its stance, what it reads and takes",
-          list(rows) == ['one-text-one-parser', 'shell-is']
-          and [rows[g]['stance'] for g in rows] == ['forbidden', 'obligatory']
-          and [rows[g]['reads'] for g in rows] == ['command', 'shell'], {g: (r.get('stance'), r.get('reads'))
-                                                                          for g, r in rows.items()})
+    check("the law's table of guards holds its seven rows, each its stance and what it reads (core 3.6: III.1, III.2)",
+          list(rows) == ['one-text-one-parser', 'shell-is', 'process-command-line', 'secret-column', 'credential-file',
+                         'own-worktree', 'no-memory-write']
+          and [rows[g]['stance'] for g in rows] == ['forbidden', 'obligatory', 'forbidden', 'forbidden', 'forbidden',
+                                                    'obligatory', 'forbidden']
+          and [rows[g]['reads'] for g in rows] == ['command', 'shell', 'command', 'command', 'command', 'path', 'path'],
+          {g: (r.get('stance'), r.get('reads')) for g, r in rows.items()})
     check("every guard has its function and every function its row, and each row's vectors hold (the law's self-check)",
           not guards.problems(law) and not [p for p in law.problems() if 'guards' in p[1]], guards.problems(law))
     vec = rows['one-text-one-parser']['vectors']
@@ -130,8 +161,9 @@ try:
     if not os.path.isdir(G):
         raise RuntimeError("no garden grew, so nothing more can be judged")
     ins, bad = judge.instructions(None, judge.Scope.tree(G))
-    check("the one judge reads the gardener's two instructions from it, and nothing it cannot read",
+    check("the one judge reads the gardener's three instructions from it, and nothing it cannot read",
           sorted((i.guard, i.stance, i.where) for i in ins) == [
+              ('no-memory-write', 'forbidden', 'agents-work#no-memory-write'),
               ('one-text-one-parser', 'forbidden', 'agents-work#one-text-one-parser'),
               ('shell-is', 'obligatory', 'agents-work#shell-is')] and not bad and not any(i.seed for i in ins),
           (ins, bad))
@@ -251,10 +283,159 @@ try:
                else 'lifted by the gardener: shell-is' in said), r.out)
     r = hook('guard', RECORDED["design conversation: an append to log/pending.md"])
     r2 = hook('guard', "git -C ../release commit -q -m x")
-    r3 = hook('pre', "git -C ../release commit -q -m x")
-    check("guard: the guards alone — a recorded case refused, a commit in another repository let through, which `pre` "
-          "refuses as a commit by hand in the garden", r.returncode == 2 and 'agents-work#one-text-one-parser' in r.out
-          and r2.returncode == 0 and r3.returncode == 2, (r.out, r2.out, r3.out))
+    check("guard: the guards alone — a recorded case refused, a commit in another repository let through",
+          r.returncode == 2 and 'agents-work#one-text-one-parser' in r.out and r2.returncode == 0, (r.out, r2.out))
+
+    # ---- III.3: A COMMIT IS JUDGED BY THE REPOSITORY THE COMMAND NAMES, not by the folder the session stands in
+    other = os.path.join(T, 'other-repo')
+    run('git', 'init', '-q', other, cwd=T)
+    for c, refused, what in (
+            (f"git -C {sh(other)} commit -q --allow-empty -m x", False, "a commit in another repository, named by -C"),
+            (f"cd {sh(other)} && git commit -q --allow-empty -m x", False, "a commit after a cd into another repository"),
+            (f"git -C {sh(other)} push --no-verify origin main", False, "--no-verify in another repository"),
+            ("git -C ../release commit -q -m x", False, "a commit in a folder that is no garden"),
+            ("git commit -qm x", True, "a commit by hand in the garden the session stands in"),
+            (f"cd {sh(other)} && git -C {sh(G)} commit -qm x", True, "a commit in the garden, named by -C from elsewhere"),
+            (f"cd {sh(other)} && cd {sh(G)} && git commit --no-verify -qm x", True, "--no-verify in the garden, two cds on"),
+            ("git -c core.hooksPath=/dev/null commit -qm x", True, "a hooks path of its own, in the garden"),
+            ("git commit -nqm x", True, "a commit's -n in a cluster, in the garden"),
+            ("git push --no-ver origin master", True, "--no-verify abbreviated, in the garden"),
+            ("python3 bin/save.py sam \"fix\" --body \"- action: git commit by hand is refused\"", False,
+             "a `git commit` inside another's text, which runs no git"),
+            ("git commit -m \"--no-verify is the name of the flag\"", True, "a message that says --no-verify is a commit")):
+        r = hook('pre', c)
+        check(f"III.3 pre: {'refused' if refused else 'let through'} — {what}",
+              (r.returncode == 2 and 'bin/save.py' in r.out) if refused else r.returncode == 0, (c, r.out))
+
+    # ---- THE GARDENER'S CLAUSES naming the other guards, each with its operand, and one naming none
+    W = os.path.join(T, 'sessions', 's1')
+    run('git', 'worktree', 'add', '-q', '-b', 'session/s1', W)
+    more = base.replace("---\nWhat every agent", EXTRA + "---\nWhat every agent")
+    agreement(more)
+    with open(os.path.join(W, 'beans', 'agents-work.md'), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(more)
+    g = run(PY, os.path.join(G, 'bin', 'check.py'))
+    check("the gardener's clauses naming the five new guards, each with its operand, and a clause naming none, pass "
+          "the gate", g.returncode == 0 and '0 error(s)' in g.out, g.out[-1200:])
+    ins, bad = judge.instructions(None, judge.Scope.tree(G))
+    cl = judge.clauses(None, judge.Scope.tree(G))
+    check("...the one judge reads seven instructions from it, and the clause no guard reads among the agreement's other "
+          "clauses", len(ins) == 7 and not bad and [c.where for c in cl] == ['agents-work#tmux-targets-exact']
+          and cl[0].says == 'name a tmux target exactly', (ins, bad, cl))
+    for wrong, says in ((more.replace("hosts: [db1]", "hosts: []"), "names none"),
+                        (more.replace("columns: [password]", "columns: [\"pass word\"]"), "is not written as"),
+                        (more.replace("files: [/root/rdp-launch]", "files: [rdp-launch]"), "is not written as"),
+                        (more.replace("hosts: [db1]", "hosts: [{ name: db1 }]"), "is one value, written as text"),
+                        (more.replace("clause: { guard: own-worktree }", "clause: { guard: own-worktree, operand: "
+                                      "{ hosts: [db1] } }"), "no attribute")):
+        agreement(wrong)
+        g = run(PY, os.path.join(G, 'bin', 'check.py'))
+        check(f"the gate refuses a new guard's operand out of its form: {says}", g.returncode != 0 and says in g.out,
+              g.out[-800:])
+    agreement(more)
+
+    # ---- III.4: START gives every clause, and where the work stands
+    r = hook('start')
+    try:
+        said = json.loads(r.out)['hookSpecificOutput']['additionalContext']
+    except (ValueError, KeyError, TypeError):
+        said = ''
+    check("III.4 start: every clause of the agreement — those a guard checks, and the one the session keeps itself — "
+          "and then now: the open session, the decisions, the courses, the latest handover",
+          r.returncode == 0 and all(f'agents-work#{x}' in said for x in (
+              'one-text-one-parser', 'no-memory-write', 'process-command-line', 'secret-column', 'credential-file',
+              'own-worktree', 'tmux-targets-exact')) and 'no guard reads it: the session keeps it' in said
+          and 'now — where the work stands' in said and 'open sessions: 1' in said and 'session-s1' in said
+          and 'waiting on the gardener (sam)' in said and 'the latest handover' in said, r.out[-3000:])
+    r = run(PY, os.path.join(G, 'bin', 'now.py'))
+    check("ledger step 3: `now` is a tool of the garden, read and never stored, and says the same as start gave",
+          r.returncode == 0 and r.out.strip() and r.out.strip() in said, r.out[-1500:])
+    r = run(PY, os.path.join(G, 'bin', 'daftar.py'), 'now', '--json')
+    try:
+        nj = json.loads(r.out)
+    except ValueError:
+        nj = {}
+    check("...`daftar now --json` gives it as data", r.returncode == 0 and nj.get('gardener') == 'sam'
+          and [s['slug'] for s in nj.get('sessions') or []] == ['s1'], r.out[-1500:])
+
+    # ---- C9: the journal's recorded breaches refused before they run, each naming the gardener's instruction
+    CASES = {
+        "2026-10-11: a process's command line printed on a host, `pgrep -af`": ("ssh db1 pgrep -af erp",
+                                                                               'process-command-line'),
+        "2026-10-10: a password column printed by a substring meant to keep its scheme":
+            ("mysql mail -N -e \"SELECT username, SUBSTRING_INDEX(password, '$', 3) FROM mailbox\"", 'secret-column'),
+        "2026-10-21: a credential file printed through a keyword filter":
+            ("ssh db1 grep -v -i -E 'pass|token|secret|key|auth' /root/rdp-launch", 'credential-file'),
+    }
+    for name, (c, g_) in CASES.items():
+        r = hook('pre', c)
+        check(f"C9: refused before it runs, naming the instruction and what to do instead — {name}",
+              r.returncode == 2 and f'agents-work#{g_}' in r.out and 'Instead,' in r.out, r.out)
+    os.environ.update(SHELL_ENV)
+    RG = os.path.realpath(G)
+    OPERANDS = {'process-command-line': {'hosts': ['db1']}, 'secret-column': {'columns': ['password']},
+                'credential-file': {'files': ['/root/rdp-launch']}}
+    for g_, op in OPERANDS.items():
+        vs = [v for v in rows[g_]['vectors'] if v.get('operand') == op and 'host' not in v]
+        got = [(v, dmhook.guarded(RG, v['command'], [], {'session_id': 'abc123def456', 'cwd': RG})) for v in vs]
+        wrong = [(v['command'], why) for v, why in got
+                 if (bool(why) and f'agents-work#{g_}' in why) != (v['refused'] == 'true')]
+        check(f"the door gives each of the law's {len(vs)} vectors of {g_} under the gardener's operand the verdict "
+              f"the law gives it", vs and not wrong, wrong)
+
+    # ---- III.2 and ledger step 5: A WRITE'S PATH — the harness's memory folder
+    conf = os.path.join(T, 'claude-config')
+    mem = os.path.join(conf, 'projects', '-x-garden', 'memory')
+    os.makedirs(mem)
+    ENV = {'CLAUDE_CONFIG_DIR': conf}
+    r = event('pre', 'Write', {'file_path': os.path.join(mem, 'job-search.md')}, env=ENV)
+    check("ledger step 5: a write into the harness's memory folder is refused, naming the instruction and the garden "
+          "to write in instead", r.returncode == 2 and 'agents-work#no-memory-write' in r.out and 'bin/now.py' in r.out
+          and 'bin/save.py' in r.out, r.out)
+    for c, what in ((f"echo x >> {sh(os.path.join(mem, 'MEMORY.md'))}", "a shell's redirection into it"),
+                    (f"cd {sh(mem)} && printf x > note.md", "a redirection a cd before it places there")):
+        r = hook('pre', c, env=ENV)
+        check(f"III.2: ...and so is {what}", r.returncode == 2 and 'agents-work#no-memory-write' in r.out, r.out)
+    r = event('guard', 'Edit', {'file_path': os.path.join(mem, 'x.md')}, env=ENV)
+    check("III.2 guard: the guards alone judge a write tool's path too", r.returncode == 2
+          and 'agents-work#no-memory-write' in r.out, r.out)
+    r = event('pre', 'Write', {'file_path': os.path.join(T, 'notes.md')}, env=ENV)
+    check("...a write outside it passes", r.returncode == 0, r.out)
+    cfg = json.load(open(settings, encoding='utf-8'))
+    with open(settings, 'w', encoding='utf-8') as fh:
+        json.dump(dict(cfg, autoMemoryDirectory=os.path.join(T, 'kept-by-the-harness')), fh)
+    r = event('pre', 'Write', {'file_path': os.path.join(T, 'kept-by-the-harness', 'a.md')}, env=ENV)
+    check("...and so is a write into the folder its autoMemoryDirectory setting names", r.returncode == 2
+          and 'agents-work#no-memory-write' in r.out, r.out)
+    with open(settings, 'w', encoding='utf-8') as fh:
+        json.dump(cfg, fh)
+
+    # ---- III.1 own-worktree: a session writes the garden only in its own worktree
+    r = event('pre', 'Write', {'file_path': os.path.join(W, 'beans', 'x.md')})
+    check("a write into a worktree of this garden is no write into another garden: one git directory",
+          r.returncode == 0, r.out)
+    claimed = dmhook.claim(RG, 's1', env={'CLAUDE_CODE_SESSION_ID': 'abc123def456'})
+    r = event('pre', 'Write', {'file_path': os.path.join(G, 'beans', 'x.md')})
+    check("own-worktree: the session's write into the main copy is refused, naming its own worktree", claimed ==
+          ['claude-code'] and r.returncode == 2 and 'agents-work#own-worktree' in r.out and 's1' in r.out, r.out)
+    for c, refused, what in (("printf x > beans/y.md", True, "a redirection into the main copy"),
+                             (f"cd {sh(W)} && printf x > beans/y.md", False, "a redirection into its own worktree")):
+        r = hook('pre', c)
+        check(f"own-worktree: {'refused' if refused else 'let through'} — {what}",
+              (r.returncode == 2 and 'agents-work#own-worktree' in r.out) if refused else r.returncode == 0, r.out)
+    for inp, sid, cwd, refused, what in (
+            ({'file_path': os.path.join(W, 'beans', 'x.md')}, 'abc123def456', G, False, "its write in its own worktree"),
+            ({'file_path': os.path.join(T, 'scratch.txt')}, 'abc123def456', G, False, "a write outside every copy"),
+            ({'file_path': os.path.join(G, 'beans', 'x.md')}, 'zzz999', G, False,
+             "an agent the door knows no session of, writing the main copy"),
+            ({'file_path': os.path.join(G, 'beans', 'x.md')}, 'zzz999', W, True,
+             "an agent standing in a session's worktree is that session")):
+        r = event('pre', 'Write', inp, sid=sid, cwd=cwd)
+        check(f"own-worktree: {'refused' if refused else 'let through'} — {what}",
+              (r.returncode == 2 and 'agents-work#own-worktree' in r.out) if refused else r.returncode == 0, r.out)
+    dmhook.claim(RG, 's1', release=True)
+    r = event('pre', 'Write', {'file_path': os.path.join(G, 'beans', 'x.md')})
+    check("own-worktree: released as the session closes, the record no longer holds", r.returncode == 0, r.out)
     r = run(PY, os.path.join(G, 'bin', 'hook.py'), 'uninstall', 'claude-code')
     cfg = json.load(open(settings, encoding='utf-8'))
     check("uninstall takes the hooks out and keeps the shell it set", r.returncode == 0 and 'hooks' not in cfg

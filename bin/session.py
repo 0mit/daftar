@@ -182,14 +182,29 @@ def cmd_open(a):
         with open(bean, 'w', encoding='utf-8', newline='\n') as f:       # LF on every platform: a bean is one text
             f.write(_bean_statements(a.slug, a.purpose, owner, host) if runs_core()
                     else _bean_template(a.slug, a.purpose, owner, host))
+    claimed = claim(a.slug)
     print(f"opened  {branch}\n"
           f"  at    {path}\n"
+          + (f"  agent the {', '.join(claimed)} session that opened it works in it: its door reads its writes against "
+             f"this worktree (the guard own-worktree)\n" if claimed else "") +
           f"  bean  beans/session-{a.slug}.md (skeleton — "
           + ("fill its summary and body, and save it with your first entry, which names it" if runs_core()
              else "fill `owns.opened_with` before working") + ")\n"
           f"  gate  shared hook confirmed present\n\n"
           f"  cd {shown(path)}\n"
           f"  {PY} bin/check.py")
+
+
+def claim(slug, release=False):
+    """The harness sessions this session is the work of, as bin/hook.py records them for its door: the one whose
+    command opens it (its id in the environment the harness gives its commands), recorded; on close, released.
+    [harness]: those recorded. A door that cannot be read records nothing, and says so."""
+    try:
+        import hook
+        return hook.claim(ROOT, slug, release=release)
+    except Exception as e:      # noqa: BLE001 — the session opens or closes whether or not its door can be told
+        print(f"  agent not recorded for the door ({type(e).__name__}: {e})", file=sys.stderr)
+        return []
 
 
 def _bean_statements(slug, purpose, owner, host):
@@ -360,6 +375,7 @@ def cmd_close(a):
                  f"additive close conflicted for that reason alone.")
     git('worktree', 'remove', path)
     git('branch', '-d', branch)
+    claim(a.slug, release=True)
     print(f"closed {branch}: merged into master, worktree removed, branch deleted.\n"
           "The session BEAN survives — it is the record. Only its working copy is gone.")
 

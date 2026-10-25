@@ -21,7 +21,7 @@ core, the pin moved and the entry a RULE-CHANGE, a refused one put back, an olde
 
 Run: python3 test/core_write.py   (0 = green; about a minute)
 """
-import os, re, shutil, subprocess, sys, tempfile
+import json, os, re, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -48,9 +48,9 @@ class R:
         self.returncode, self.out = p.returncode, p.stdout + p.stderr
 
 
-def run(*a, cwd=None, stdin=None):
+def run(*a, cwd=None, stdin=None, env=None):
     e = dict(os.environ, GIT_AUTHOR_NAME='sam', GIT_AUTHOR_EMAIL='sam@x', GIT_COMMITTER_NAME='sam',
-             GIT_COMMITTER_EMAIL='sam@x')
+             GIT_COMMITTER_EMAIL='sam@x', **(env or {}))
     return R(subprocess.run(a, capture_output=True, text=True, encoding='utf-8', errors='replace', cwd=cwd or G, env=e,
                             input=stdin))
 
@@ -270,7 +270,13 @@ try:
     # ---- SESSION: opened in statements, saved, closed with its presence, merged back through the save
     run('git', 'config', 'daftar.host', 'laptop')
     run('git', 'config', 'daftar.owner', 'sam')
-    r = run(PY, 'bin/session.py', 'open', 'tidy-the-laptop', '--purpose', 'tidy the laptop')
+    r = run(PY, 'bin/session.py', 'open', 'tidy-the-laptop', '--purpose', 'tidy the laptop',
+            env={'CLAUDE_CODE_SESSION_ID': 'c0ffee-1'})
+    CLAIM = os.path.join(G, '.git', 'daftar', 'agents', 'claude-code-c0ffee-1.json')
+    claim = json.load(open(CLAIM, encoding='utf-8')) if os.path.isfile(CLAIM) else {}
+    check("session: `open` records for the agent's door which harness session works in it (off git, the guard "
+          "own-worktree's reading)", claim.get('slug') == 'tidy-the-laptop' and 'agent the claude-code session' in r.out
+          and not run('git', 'status', '--porcelain').out.strip(), (claim, r.out))
     W = os.path.join(T, 'daftar-sessions', 'tidy-the-laptop')
     SB = os.path.join(W, 'beans', 'session-tidy-the-laptop.md')
     sb = read.document(SB)[0] if os.path.isfile(SB) else {}
@@ -291,6 +297,7 @@ try:
                            '  - say: { by: sam, at: now }\n---\nA note written on the main copy meanwhile.\n')
     r = save('a note', '- action: wrote [[note]]')
     r = run(PY, 'bin/session.py', 'close', 'tidy-the-laptop', cwd=G)
+    check("session: `close` releases the record", not os.path.exists(CLAIM), CLAIM)
     sb = read.document(os.path.join(G, 'beans', 'session-tidy-the-laptop.md'))[0] \
         if os.path.isfile(os.path.join(G, 'beans', 'session-tidy-the-laptop.md')) else {}
     pres = [s['be'] for s in sb.get('statements') or [] if 'be' in s and s['be'].get('as') == 'presence']
