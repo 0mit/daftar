@@ -91,13 +91,13 @@ def _names(root, space):
 
 
 def kind_row(g):
-    """A row of `gene` (or a garden's `local_gene`) as a row of the core's kinds."""
+    """A row of `gene` (or a garden's `local_gene`) as a row of the core's kinds, by its positions (core 4.0)."""
     row = {'kind': str(g['genos']), 'nature': NATURES.get(str(g.get('of_nature')), str(g.get('of_nature')))}
     if g.get('level'):
         row['level'] = RENAMED.get(str(g['level']), str(g['level']))
     if g.get('rung'):
         row['rung'] = RENAMED.get(str(g['rung']), str(g['rung']))
-    return row
+    return ladder_kind(row)
 
 
 SIGNS = {'is': '=', 'in': '∈', 'at_least': '≥', 'at_most': '≤', 'exists': '∃', 'absent': '∄'}   # today's comparator
@@ -2048,7 +2048,124 @@ def url_remotes(root):
     return changed
 
 
-BETWEEN = (('3.2', url_remotes),)
+# THE LADDER BY ITS LINES (core 4.0, the ladder's design): a kind named one level and a rung; now a position on each
+# facet. The core's lines up to 3.7, and the line each of its levels was on — what a garden's own rows were written against
+OLD_LINES = {'matter': 'matter', 'gravitation': 'organisation', 'living': 'organisation', 'made': 'organisation',
+             'said': 'organisation', 'reason': 'rung', 'frame': 'frame'}
+OLD_LEVELS = dict([(lv, 'matter') for lv in ('force-field', 'matter-field', 'elementary-particle', 'hadron', 'nucleus',
+                                              'atom', 'molecule', 'material')]
+                  + [(lv, 'gravitation') for lv in ('celestial-body', 'planetary-system', 'galaxy')]
+                  + [(lv, 'living') for lv in ('cell', 'tissue', 'organ', 'organism', 'population', 'community',
+                                               'ecosystem')]
+                  + [(lv, 'made') for lv in ('component', 'device')] + [(lv, 'said') for lv in ('name', 'statement',
+                                                                                              'discourse')]
+                  + [('reason', 'reason'), ('space-time', 'frame'), ('taxis', 'frame')])
+
+
+def ladder_kind(row, own_levels=None):
+    """A kind's row of the core up to 3.7 — `line`, `level`, `rung` — as the core 4.0 writes it: its level a position on
+    the line the level is on now (gravitation, the living, the made and the said merged into organisation), a level of
+    the living line also `bios: living` (life is given along it), a line named with no level `bios: living` where it was
+    the living's, and its rung on the rung line. What else the row holds stays, in its order."""
+    old = dict(own_levels or {}, **OLD_LEVELS)
+    out = {k: row[k] for k in ('kind', 'nature') if k in row}
+    lv = row.get('level')
+    was = old.get(str(lv)) if lv is not None else row.get('line')
+    if lv is not None:
+        out[OLD_LINES.get(str(was), 'organisation')] = str(lv)
+    if str(was) == 'living' or (lv is None and row.get('line') == 'living'):
+        out['bios'] = 'living'
+    if row.get('rung') is not None:
+        out['rung'] = str(row['rung'])
+    out.update({k: v for k, v in row.items() if k not in ('kind', 'nature', 'line', 'level', 'rung')})
+    return out
+
+
+def _flow_row(row):
+    """A row of VOCAB.md written as the seed writes one, on one line: `{ kind: hive, nature: body, meaning: "…" }`."""
+    def one(v):
+        if isinstance(v, str) and re.match(r'^[a-z0-9][a-z0-9-]*$', v) and v not in ('true', 'false', 'null', 'yes', 'no',
+                                                                                      'on', 'off', 'y', 'n'):
+            return v
+        if isinstance(v, str):
+            return json.dumps(v, ensure_ascii=False)
+        return yaml.safe_dump(v, default_flow_style=True, width=10 ** 9, allow_unicode=True, sort_keys=False).strip()
+    return '{ ' + ', '.join(f"{k}: {one(v)}" for k, v in row.items()) + ' }'
+
+
+def ladder_vocab(root):
+    """[path]: VOCAB.md's own kinds and levels in the core 4.0's ladder, in place — each kind by its positions
+    (`ladder_kind`), each level on its line now; a kind the law holds as the garden wrote it is the law's now, and its row
+    goes, which would declare it twice. A row written another way stays, for the gate to name."""
+    p = os.path.join(root, 'VOCAB.md')
+    if not os.path.isfile(p):
+        return []
+    with open(p, encoding='utf-8', newline='') as fh:
+        text = fh.read()
+    fm, _body = dmparse.split_front_matter(text)
+    if fm is None:
+        return []
+    start = text.index(fm)
+    try:
+        node = yaml.compose(fm)
+    except yaml.YAMLError:
+        return []
+    if not isinstance(node, yaml.MappingNode):
+        return []
+    from core import read
+    from core.law import LAW_DIR
+    law_kinds = {str(r.get('kind')): r for r in read.data(os.path.join(LAW_DIR, 'kinds.yaml')).get('kinds') or []
+                 if isinstance(r, dict)}
+    data = yaml.safe_load(fm) or {}
+    own_levels = {str(r['level']): str(r.get('line')) for r in data.get('levels') or []
+                  if isinstance(r, dict) and r.get('level') and r.get('line') in OLD_LINES}
+    edits = []                                        # (start, end, text) in the front matter, the last first
+    for k, v in node.value:
+        if k.value not in ('kinds', 'levels') or not isinstance(v, yaml.SequenceNode):
+            continue
+        rows = data.get(k.value) or []
+        for item, row in zip(v.value, rows):
+            if not isinstance(row, dict):
+                continue
+            if k.value == 'kinds':
+                if not ({'line', 'level'} & set(row)):    # a rung alone is written as the core 4.0 writes it
+                    continue
+                new = ladder_kind(row, own_levels)
+                held = law_kinds.get(str(new.get('kind')))
+                drop = held is not None and all(str(held.get(c) or '') == str(new.get(c) or '')
+                                                for c in set(held) | set(new) if c not in ('meaning', 'vacant'))
+            else:
+                if row.get('line') not in OLD_LINES or OLD_LINES[row['line']] == row['line']:
+                    continue
+                new, drop = dict(row, line=OLD_LINES[row['line']]), False
+            a, b = item.start_mark.index, item.end_mark.index
+            line_start = fm.rfind('\n', 0, a) + 1
+            dash = fm.rfind('-', line_start, a)
+            if dash < 0:
+                continue
+            last = b                                  # the item's last character: a block item ends where the next begins
+            while last > a and fm[last - 1] in ' \t\r\n':
+                last -= 1
+            end = fm.find('\n', last)
+            end = len(fm) if end < 0 else end
+            tail = fm[b:end] if isinstance(item, yaml.MappingNode) and item.flow_style else ''
+            if drop:
+                edits.append((line_start, end + 1 if end < len(fm) else end, ''))
+            else:
+                edits.append((dash, end, '- ' + _flow_row(new) + (tail if tail.strip().startswith('#') else '')))
+    if not edits:
+        return []
+    was = fm
+    for a, b, s in sorted(edits, reverse=True):
+        fm = fm[:a] + s + fm[b:]
+    if fm == was:
+        return []
+    with open(p, 'w', encoding='utf-8', newline='') as fh:
+        fh.write(text[:start] + fm + text[start + len(was):])
+    return ['VOCAB.md']
+
+
+BETWEEN = (('3.2', url_remotes), ('4.0', ladder_vocab))
 
 
 def between(have, gives, root):

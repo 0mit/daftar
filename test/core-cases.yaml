@@ -7,11 +7,14 @@ zone: Asia/Tehran                  # GARDEN.md's: the bearer's zone, where a day
 
 vocab:                             # the garden's own rows, as its VOCAB.md would hold them
   kinds:                           # beside the law's own (person, org, contract, document, garden, host, …)
-    - { kind: cell,      nature: body,    line: living, level: cell, vacant: "the cases use it, not the garden" }
-    - { kind: clause,    nature: sayable, line: said,   level: statement }
-    - { kind: part,      nature: body,    line: made,   level: component }
-    - { kind: rack,      nature: body,    line: made,   level: device }
-    - { kind: grain,     nature: body,    line: matter, level: molecule, vacant: "the cases use it: one molecule, no ensemble" }
+    - { kind: clause,    nature: sayable, organisation: statement }
+    - { kind: part,      nature: body,    organisation: component }
+    - { kind: rack,      nature: body,    organisation: device }
+    - { kind: grain,     nature: body,    matter: molecule, vacant: "the cases use it: one molecule, no ensemble" }
+    - { kind: lump,      nature: body,    matter: material, vacant: "the cases use it: matter in bulk" }
+    - { kind: bird,      nature: body,    organisation: organism, bios: living, rung: sensitive, vacant: "the cases use it: a maker that is no hands" }
+    - { kind: nest,      nature: body,    matter: material, bios: organic, vacant: "the cases use it: what the living make" }
+    - { kind: herd,      nature: body,    organisation: population, bios: living, vacant: "the cases use it: a collection of its members" }
   namespaces:
     - { namespace: hpe,      once: true }
     - { namespace: garden-a, once: true }
@@ -127,6 +130,9 @@ good:
   - { name: "a document states a person's mass and a machine's temperature: what it is about bears them", bean: y30, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: ada, as: mass, value: { count: "62", unit: kg } } }, { measure: { of: nas, as: temperature-difference, value: { count: "12", unit: K } } } ] }
   - { name: "a part's 220 ohms, a rack's power and its illuminance: made of material, a body measured", bean: y31, kind: part, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: resistance, value: { count: "220", unit: Ohm } } }, { measure: { of: home-rack, as: power, value: { count: "450", unit: W } } }, { measure: { of: home-rack, as: illuminance, value: { count: "300", unit: lx } } } ] }
   - { name: "a document's size is its own, and the machine that carries it says what it can hold", bean: y33, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: information, value: { count: "2", unit: MBy } } }, { hold: { by: nas, of: { count: "2", unit: TBy } } } ] }
+  # the ladder (core 4.0): matter in an organisation, an animal's work, a code of a scheme at its positions
+  - { name: "matter in bulk is part of a machine: its organisation is made of it", bean: y46, kind: host, statements: [ { say: { by: sam, at: now } }, { part: { by: { someone: lump }, of: self } } ] }
+  - { name: "a nest comes through its bird: what the living make comes through the living", bean: y47, kind: nest, statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [ { someone: bird } ] } } ] }
   - { name: "a contract's amount, and a person's weight in newtons", bean: y32, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "100", unit: XTS } } }, { measure: { of: ben, as: weight, value: { count: "690", unit: N } } } ] }
   - { name: "a required role nobody said is `unknown`", bean: y1, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: unknown, of: { count: "1", unit: XTS } } } ] }
   - { name: "the payer who bears beside another bearer says more than the default", bean: y2, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: p, by: ada, of: { count: "2", unit: XTS } } }, { bear: { by: ada, of: p } }, { bear: { by: ben, of: p } } ] }
@@ -171,6 +177,7 @@ good:
   - { name: "a pin through another garden: its commit that garden's, which no gate here refuses", bean: y36, kind: document, statements: [ { say: { by: sam, at: now } }, { classify: { id: c, of: self, as: "isco-08:2511" } }, { pin: { id: p, by: sam, of: [c], through: garden-a, at: ["2026-10-01 10:00+03:30", "garden-a@0123456789abcdef0123456789abcdef01234567"] } } ] }
 bad:
   # rule bearer (2026-10-10): what a quantity holds for, reached through `made-of` alone
+  - { rule: bearer, name: "a herd has no temperature: it stands on its members, not made of them", says: "it holds for material and what is made of it", bean: x12h, kind: herd, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: temperature-difference, value: { count: "3", unit: K } } } ] }
   - { rule: bearer, name: "one molecule has no temperature", says: "it holds for material and what is made of it", bean: x12b, kind: grain, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: temperature-difference, value: { count: "3", unit: K } } } ] }
   - { rule: bearer, name: "a contract has no voltage", says: "a contract is a sayable", bean: x12c, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: potential-difference, value: { count: "5", unit: V } } } ] }
   - { rule: bearer, name: "a machine has no money of its own: an agreement about it does", says: "it holds for a sayable", bean: x12d, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "100", unit: XTS } } } ] }
@@ -204,6 +211,7 @@ bad:
   - { rule: form,        bean: x1e, kind: document, statements: [ { say: { by: sam, at: now } }, { do: { by: nas, as: web, while: sunshine } } ] }
   - { rule: form,        bean: x1f, kind: spaceship, statements: [ { say: { by: sam, at: now } } ] }
   - { rule: form,        bean: x1g, kind: document, header: { status: active }, statements: [ { say: { by: sam, at: now } } ] }
+  - { rule: valency, name: "a bird gives no word: `say` takes a body at reason", says: "only at reason", bean: x3s, kind: document, statements: [ { say: { by: { someone: bird }, at: now } } ] }
   - { rule: valency,     bean: x2, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { of: { count: "1", unit: XTS } } } ] }
   - { rule: valency,     bean: x3, kind: document, statements: [ { say: { by: nas, at: now } } ] }
   - { rule: valency,     bean: x3b, kind: document, statements: [ { say: { by: sam, at: now } }, { pay: { by: [ada, ben], of: "1" } } ] }
@@ -228,8 +236,13 @@ bad:
   - { rule: placeholder, bean: x6b, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: p, by: ada, of: { count: "2", unit: XTS } } }, { bear: { by: ada, of: p, share: 1 } } ] }
   - { rule: order,       bean: x7, kind: document, statements: [ { say: { by: sam, at: now } }, { stand: { by: atom, at: organism, as: made-of } } ] }
   - { rule: order,       bean: x7b, kind: rack,    statements: [ { say: { by: sam, at: now } }, { part: { by: self, of: disk } } ] }
+  - { rule: order, name: "one molecule is no part of a machine", says: "molecule is not device", bean: x7m, kind: grain, statements: [ { say: { by: sam, at: now } }, { part: { by: self, of: nas } } ] }
+  - { rule: order, name: "a made part is no part of one molecule", says: "component is not molecule", bean: x7n, kind: grain, statements: [ { say: { by: sam, at: now } }, { part: { by: disk, of: self } } ] }
+  - { rule: order, name: "matter in bulk is no part of one molecule", says: "material is not molecule", bean: x7o, kind: grain, statements: [ { say: { by: sam, at: now } }, { part: { by: { someone: lump }, of: self } } ] }
   - { rule: life,        bean: x8, kind: person,   statements: [ { say: { by: x8, at: now } }, { come: { by: self, through: [nas] } } ] }
   - { rule: life,        bean: x9, kind: host,     statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [pot] } } ] }
+  - { rule: life, name: "a nest comes through the living, never through a machine", says: "what is organic comes through the living", bean: x8b, kind: nest, statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [nas] } } ] }
+  - { rule: life, name: "a bird is no hands: a made body comes through a being at reason", says: "comes through hands", bean: x8c, kind: host, statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [ { someone: bird } ] } } ] }
   - { rule: life,        bean: x9b, kind: host,    statements: [ { say: { by: sam, at: now } }, { come: { by: self, through: [x9b] } } ] }
   - { rule: necessity,   bean: x10, kind: document, statements: [ { say: { by: sam, at: now } }, { necessary: { of: ada } } ] }
   - { rule: squares,     bean: x11, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { forbidden: { of: r, through: pot } } ] }
@@ -309,7 +322,7 @@ clauses:
     - { says: "once the garden holds a bean, it names its gardener", garden: [no-gardener] }
     - { says: "A grant is to a being or to every member of a reading", bad: [x65, x66, x67] }
   valency:
-    - { says: "each required role is filled", bad: [x2, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
+    - { says: "each required role is filled", bad: [x2, x3s, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
     - { says: "a role takes a list only where its row says `many`", bad: [x3b] }
   knowing:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
@@ -323,10 +336,10 @@ clauses:
     - { says: "a `bear` by the one who paid, alone", bad: [x6b] }
   order:
     - { says: "nothing stands on itself through others", bad: [x7, x27] }
-    - { says: "a part never stands above", bad: [x7b] }
+    - { says: "a part never stands above", bad: [x7b, x7m, x7n, x7o], good: [y46] }
   life:
-    - { says: "a living being comes through the living", bad: [x8] }
-    - { says: "a made or said being comes through hands", bad: [x9] }
+    - { says: "a living or organic being comes through the living", bad: [x8, x8b], good: [y47] }
+    - { says: "a made or said being comes through hands", bad: [x9, x8c] }
     - { says: "every chain ends at the crown", bad: [x9b] }
   necessity:
     - { says: "a `necessary` statement names", bad: [x10] }
@@ -335,9 +348,10 @@ clauses:
     - { says: "subcontraries may both stand", good: [y4] }
     - { says: "One observer gives one verdict", bad: [x63, x64] }
   bearer:
-    - { says: "a quantity is stated only of what", bad: [x12c, x12e, x12f] }
+    - { says: "a quantity is stated only of what", bad: [x12c, x12e, x12f, x12h] }
     - { says: "A mass is a body's", bad: [x12, x12b] }
     - { says: "information and money are what is carried", bad: [x12d, x12g] }
+    - { says: "A code of a scheme that names the positions its codes classify", suite: [test/cases.py] }
   frame:
     - { says: "a position is in a declared system", bad: [x13, x13b, x13c, x13d, x13e] }
     - { says: "a day is reckoned in the garden's `zone`, and `now` is written at `at` alone", bad: [x13f] }

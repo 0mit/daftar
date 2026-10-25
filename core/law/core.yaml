@@ -6,7 +6,7 @@
 
 # The law's version. A garden that runs this law pins it in GARDEN.md, `extends: core@<version>`, and the gate holds the
 # pin to it; it moves with a change to the law, a RULE-CHANGE.
-version: "3.7"
+version: "4.0"
 
 # ---------------------------------------------------------------------------------------------------------------- roles
 # The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ὡς.
@@ -67,30 +67,28 @@ figures:
 natures:
   - { nature: body,     law: soma,   frame: space-time, meaning: "takes room in its frame, space∞time" }
   - { nature: sayable,  law: lekton, frame: taxis,      meaning: "takes a place in its frame, the taxis: an order; stands on reason" }
-lines:                                     # the ladder's lines; a line is any ordered run of positions. `holds` is the nature
-  - { line: frame,       holds: [] }       # of the beings a line's levels hold: none, for the frames and for reason
-  - { line: matter,      holds: [body] }
-  - { line: gravitation, holds: [body] }
-  - { line: living,      holds: [body], given: true }     # life comes through the living
-  - { line: reason,      holds: [], law: logos }
-  - { line: made,        holds: [body] }
-  - { line: said,        holds: [sayable] }  # what is said, in the order it takes a place in
+lines:                                     # the ladder: the frame, the ground of every line, and four lines, each a facet — a
+  - { line: frame,        holds: [] }      # run of positions of which a being holds at most one, its kind naming it. `holds`
+  - { line: matter,       holds: [body] }  # is the nature of the beings a line's positions hold: none, for the frame and for
+  - { line: organisation, holds: [body, sayable] }   # the rung; organisation's are each nature's, in its own frame
+  - { line: bios,         holds: [body], given: true }   # life, and what life makes or leaves, comes through the living
+  - { line: rung,         holds: [], law: logos }        # a body's powers: they take no room
 conditions:
   - { condition: balance,    meaning: "the mean, a steady state, never equilibrium: what life is possible on" }
   - { condition: proportion, meaning: "what reason is possible on, in a living organisation" }
   - { condition: ensemble,   meaning: "many parts sharing energy, near a balance of it (thermal equilibrium, at least locally): what a temperature is possible on. A step held `while: ensemble` is reached only by a being made of it in number, never by the step itself" }
 foundations:
   - { foundation: weight, holds_for: body, property: mass, meaning: "every body has weight; a sayable has none of its own" }
-levels:                                    # the face's own steps; the bodies' other 20 are rows of our knowledge tree
+levels:                                    # the face's own steps; the bodies' other 23 are rows of our knowledge tree
   # THE TWO FRAMES: where a being takes its place, one for each nature, neither prior (thesis 10)
   - { level: space-time, line: frame, frame_of: body,    stands: [], meaning: "the frame of bodies: one structure, seen as place and as time; a body takes room in it. It is itself a field, the gravitational one — it bends and it waves — and the only field that is the frame: every other takes its where and when from it, it couples to every energy alike, and it can be neither absent, nor screened, nor located" }
   - { level: taxis,      line: frame, frame_of: sayable, stands: [ { at: reason, as: possible-on } ], meaning: "the frame of sayables: the order a sayable takes its place in. Its positions are the ordinal line's — which: the first clause, article 12, a name in its namespace — no time and no place" }
-  - { level: reason,     line: reason, stands: [ { at: organism, as: possible-on, while: proportion } ] }
-  # THE SAID: the sayable beings, each made of the one below, all taking their place in the taxis
-  - { level: name,      line: said, stands: [ { at: taxis, as: possible-on } ],   meaning: "a word that picks a being out: the least sayable (ὄνομα)" }
-  - { level: statement, line: said, stands: [ { at: name, as: made-of } ],        meaning: "a complete sayable, true or false (the Stoics' ἀξίωμα): the core's unit" }
-  - { level: discourse, line: said, stands: [ { at: statement, as: made-of } ],   meaning: "statements gathered into one: a document, a contract, a design, a work — or discourses gathered into one order, a law, a language, a garden" }
-ways: [made-of, possible-on]               # the two ways of standing, the `as` of `stand`
+  - { level: reason,     line: rung,  stands: [ { at: sensitive, as: possible-on, while: proportion } ] }
+  # THE SAID: the sayables' organisation, each made of the one below, all taking their place in the taxis
+  - { level: name,      line: organisation, stands: [ { at: taxis, as: possible-on } ], meaning: "a word that picks a being out: the least sayable (ὄνομα)" }
+  - { level: statement, line: organisation, stands: [ { at: name, as: made-of } ],     meaning: "a complete sayable, true or false (the Stoics' ἀξίωμα): the core's unit" }
+  - { level: discourse, line: organisation, stands: [ { at: statement, as: made-of } ], meaning: "statements gathered into one: a document, a contract, a design, a work — or discourses gathered into one order, a law, a language, a garden" }
+ways: [made-of, possible-on, member-of]    # the three ways of standing, the `as` of `stand`
 crown:
   - { crown: theone, law: "the Necessary Existent (wājib al-wujūd)", faces: [love, wisdom] }
 complements: [stated, bearer, system]      # how a position finds its other half
@@ -202,19 +200,25 @@ rules:
     reading:
       inputs:
         - { name: stands, origin: { act: say, nature: sayable, by: law } }
-        - { name: kinds, origin: { act: say, nature: sayable, by: law } }
       steps:
         - { id: stand, op: select, entries: stand }
         - { id: stands-on-itself, op: cycle, of: stand, with: stands, from: by, to: at }
         - { id: part, op: select, entries: part }
         - { id: piece, op: describe, of: part, at: by, as: piece }
         - { id: whole, op: describe, of: piece, at: of, as: whole }
-        - { id: piece-kind, op: join, of: whole, with: kinds, on: { piece.kind: kind }, keep: both, as: [p, piece-row] }
-        - { id: whole-kind, op: join, of: piece-kind, with: kinds, on: { p.whole.kind: kind }, keep: both, as: [q, whole-row] }
-        - { id: levelled, op: select, of: whole-kind, where: [ { path: q.piece-row.level, "∃": "true" }, { path: whole-row.level, "∃": "true" } ] }
         - { id: made-of, op: select, of: stands, where: [ { path: as, "=": made-of } ] }
-        - { id: made-of-reached, op: reach, of: levelled, at: whole-row.level, through: made-of, from: by, to: at }
-        - { id: above, op: join, of: levelled, with: made-of-reached, on: { whole-row.level: start, q.piece-row.level: reached }, keep: unmatched }
+        - { id: organised, op: select, of: whole, where: [ { path: piece.organisation, "∃": "true" }, { path: whole.organisation, "∃": "true" } ] }
+        - { id: made-of-reached, op: reach, of: organised, at: whole.organisation, through: made-of, from: by, to: at }
+        - { id: above, op: join, of: organised, with: made-of-reached, on: { whole.organisation: start, piece.organisation: reached }, keep: unmatched }
+        - { id: matter-in-one, op: select, of: whole, where: [ { path: piece.organisation, "∄": "true" }, { path: piece.matter, "∃": "true" }, { path: whole.organisation, "∃": "true" } ] }
+        - { id: matter-in-one-reached, op: reach, of: matter-in-one, at: whole.organisation, through: made-of, from: by, to: at }
+        - { id: matter-above, op: join, of: matter-in-one, with: matter-in-one-reached, on: { whole.organisation: start, piece.matter: reached }, keep: unmatched }
+        - { id: in-matter, op: select, of: whole, where: [ { path: whole.organisation, "∄": "true" }, { path: whole.matter, "∃": "true" } ] }
+        - { id: in-matter-reached, op: reach, of: in-matter, at: whole.matter, through: made-of, from: by, to: at }
+        - { id: one-in-matter, op: select, of: in-matter, where: [ { path: piece.organisation, "∃": "true" } ] }
+        - { id: one-above, op: join, of: one-in-matter, with: in-matter-reached, on: { whole.matter: start, piece.organisation: reached }, keep: unmatched }
+        - { id: matter-in-matter, op: select, of: in-matter, where: [ { path: piece.organisation, "∄": "true" }, { path: piece.matter, "∃": "true" } ] }
+        - { id: matter-in-matter-above, op: join, of: matter-in-matter, with: in-matter-reached, on: { whole.matter: start, piece.matter: reached }, keep: unmatched }
         - { id: beans, op: select }
         - { id: owned, op: select, entries: own, where: [ { path: held, "∄": "true" } ] }
         - { id: own-loop, op: cycle, of: owned, from: of, to: [by, from], within: beans }
@@ -230,33 +234,34 @@ rules:
         - { id: needs-itself, op: first, of: need-loop, by: [start, next], groups: values }
       refuse:
         - { of: stands-on-itself, message: "{start} stands at {way}, which stands on {start}: nothing stands on itself through others" }
-        - { of: above, message: "a part never stands above its whole: {q.piece-row.level} is not {whole-row.level} and not a level {whole-row.level} is made of" }
+        - { of: above, message: "a part never stands above its whole: {piece.organisation} is not {whole.organisation} and not a level {whole.organisation} is made of" }
+        - { of: matter-above, message: "a part never stands above its whole: {piece.matter} is not {whole.organisation} and not a level {whole.organisation} is made of" }
+        - { of: one-above, message: "a part never stands above its whole: {piece.organisation} is not {whole.matter} and not a level {whole.matter} is made of" }
+        - { of: matter-in-matter-above, message: "a part never stands above its whole: {piece.matter} is not {whole.matter} and not a level {whole.matter} is made of" }
         - { of: owns-itself, message: "{loop}: nothing owns itself through others" }
         - { of: part-of-itself, message: "{loop}: nothing is part of itself through others" }
         - { of: at-itself, message: "{loop}: nothing is at itself through others" }
         - { of: needs-itself, message: "{loop}: nothing needs itself through others" }
   - rule: life
-    says: "a living being comes through the living; a made or said being comes through hands, a being at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded"
+    says: "a living or organic being comes through the living; a made or said being comes through hands, a being at reason, or through tools whose own coming goes on; every chain ends at the crown, and none is demanded"
     reading:
       inputs:
         - { name: crown, origin: { act: say, nature: sayable, by: law } }
-        - { name: lines, origin: { act: say, nature: sayable, by: law } }
       steps:
         - { id: come, op: select, entries: come, where: [ { path: by, "∃": "true" } ] }
         - { id: who, op: describe, of: come, at: by, as: who }
         - { id: through, op: describe, of: who, at: through, as: via }
         - { id: short-of-the-crown, op: join, of: through, with: crown, on: { via.being: crown }, keep: unmatched }
-        - { id: given, op: select, of: lines, where: [ { path: given, "=": "true" } ] }
-        - { id: of-a-given-line, op: join, of: short-of-the-crown, with: given, on: { who.line: line }, keep: matched }
-        - { id: not-of-its-line, op: join, of: of-a-given-line, with: given, on: { who.line: line, via.line: line }, keep: unmatched }
-        - { id: made-or-said, op: minus, of: short-of-the-crown, with: of-a-given-line }
+        - { id: of-life, op: select, of: short-of-the-crown, where: [ { path: who.bios, "∃": "true" } ] }
+        - { id: not-through-the-living, op: select, of: of-life, where: [ { path: via.bios, "≠": living } ] }
+        - { id: made-or-said, op: minus, of: short-of-the-crown, with: of-life }
         - { id: no-hands, op: select, of: made-or-said, where: [ { path: via.rung, "≠": reason } ] }
         - { id: neither, op: join, of: no-hands, with: come, on: { via.being: by }, keep: unmatched }
         - { id: comes-round, op: cycle, of: come, from: by, to: through }
         - { id: on-a-circle, op: join, of: come, with: comes-round, on: { by: start }, keep: both, as: [come, circle] }
         - { id: circle, op: first, of: on-a-circle, by: come.by }
       refuse:
-        - { of: not-of-its-line, message: "a being of the line {who.line} comes through the {who.line}: {via} is not" }
+        - { of: not-through-the-living, message: "what is {who.bios} comes through the living: {via} is not" }
         - { of: neither, message: "a made or said being comes through hands (a being at reason), or through a tool whose own coming goes on: {via} is neither" }
         - { of: circle, message: "{circle.start} comes through itself: every chain ends at the crown, and a circle never ends" }
   - rule: necessity
@@ -270,7 +275,7 @@ rules:
       refuse:
         - { of: not-the-crown, message: "only the crown is necessary by itself: say what this is necessary `through`" }
   - { rule: squares,    says: "two positions that cannot both stand — contraries or contradictories — on one statement through one source are refused; subcontraries may both stand. One observer gives one verdict on one statement (`respond` with an `as`) — confirms, disputes or abstains —, and a `rule` on statements is given once every speaker of them has responded" }
-  - { rule: bearer,     says: "a quantity is stated only of what its dimensions and its kind hold for (`holds_for`): a nature, or a level the being is or is made of — through `made-of` alone, never `possible-on`. A mass is a body's (the foundation `weight`), a temperature an ensemble's; information and money are what is carried — a document's, an agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a mass of its own, a single molecule a temperature, a machine its bytes or a body money of its own is refused" }
+  - { rule: bearer,     says: "a quantity is stated only of what its dimensions and its kind hold for (`holds_for`): a nature, or a position the being's kind holds or is made of — through `made-of` alone, never `possible-on` or `member-of`. A mass is a body's (the foundation `weight`), a temperature an ensemble's; information and money are what is carried — a document's, an agreement's — and their carrier says what it holds (`hold`): a statement giving a sayable a mass of its own, a single molecule a temperature, a machine its bytes or a body money of its own is refused. A code of a scheme that names the positions its codes classify (`at`) is said only of a being whose kind holds one of them, each on its own line: a taxon of an organism, never of a host" }
   - { rule: frame,      says: "a position is in a declared system, in its one form, and finds its other half by its complement; a day is reckoned in the garden's `zone`, and `now` is written at `at` alone" }
   - { rule: names,      says: "a name its namespace gives once names one being. A garden's id is twelve hexadecimal digits, and never this garden's own: a `garden` bean is another garden. A name a garden gave, qualified to cross, is `<garden_id>/<kind>:<name>`, by this garden or one a `garden` bean here is named by; an identifier someone else assigned is never qualified. A name a namespace gives holds no bidi control character (Unicode's Bidi_Control), which would make it read as another" }
   - { rule: layers,     says: "a file stands in one layer; a `pass` from a layer to a layer through a method stands only where the flow table grants it: of the rows that hold it the nearest decide, by the keys and the tie of their use (core/law/lines.yaml `nearest`, `flows`) — one that names the act what it carries is known by there (`as`) is nearer than one that names only layers, and rows as near stand together, one that refuses refusing it; `ratified` is granted only to the party a garden's own row names, with the basis it grants on (core/law/flows.yaml); a session's pass log, a file under the folder the flow law names (core/law/flows.yaml `pass_logs`) which its bean names in `details`, only grows, and a commit that stages one claims the session: each pass the log gains, `{from, to, through, as?, metadata}`, stands where the table grants it, each said value the commit adds has a granted pass into it, and a `say` by a person it adds has one from `words` or `instructions` into its bean" }

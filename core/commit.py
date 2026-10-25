@@ -680,7 +680,7 @@ def claimed(root, law, changes, garden=None):
     flows = dmpass.CoreFlows(law)
     ids = set(garden.beans) if garden is not None else set()
     person = lambda x: garden is not None and x in garden.beans and \
-        (law.kinds.get(garden.beans[x].kind) or {}).get('rung') == 'reason'                # noqa: E731
+        law.at_rung(garden.beans[x].kind, 'reason')                                         # noqa: E731
     for status, path in changes:                              # what the claim owes, of every bean the commit stages
         if status == 'D' or not (path.startswith(tuple(d + '/' for d in engine.DOCUMENTS)) and path.endswith('.md')):
             continue

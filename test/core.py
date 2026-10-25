@@ -70,8 +70,8 @@ except frame.Refused as e:
     check("a day with no zone to be reckoned in is refused: its place half is the bearer's", 'names none' in str(e), e)
 
 # ------------------------------------------------------------------------------------------------ the law
-check("the law is whole: the face's 21 verbs, the 42 rows and the 20 levels of bodies, 0 problems",
-      not LAW0.problems() and len(LAW0.verbs) == 64 and len(LAW0.levels) == 26, LAW0.problems())
+check("the law is whole: the face's 21 verbs, the 42 rows and the 23 levels of bodies, 0 problems",
+      not LAW0.problems() and len(LAW0.verbs) == 64 and len(LAW0.levels) == 29, LAW0.problems())
 CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
@@ -143,8 +143,8 @@ check("...a passkey is named by its credential id and its COSE public key, each 
 check("...a unit written by its English name is refused, naming its code; a currency is ISO 4217's",
       "English name of `kg`" in LAW0.has('units', 'kilogram') and not LAW0.has('units', 'XTS')
       and LAW0.has('units', 'dB/m'), LAW0.has('units', 'kilogram'))
-bad_law = Law.load(('VOCAB.md', {'kinds': [{'kind': 'poem', 'nature': 'sayable', 'line': 'made', 'level': 'device'},
-                                            {'kind': 'stone', 'nature': 'body', 'line': 'said', 'level': 'discourse'}],
+bad_law = Law.load(('VOCAB.md', {'kinds': [{'kind': 'poem', 'nature': 'sayable', 'organisation': 'device'},
+                                            {'kind': 'stone', 'nature': 'body', 'organisation': 'discourse'}],
                                  'verbs': [{'verb': 'pay', 'roles': {}}],
                                  'tables': {'modes': ['grudging'], 'units': ['furlong']},
                                  'units': [{'unit': 'fur', 'name': 'furlong', 'quantity': 'distance'}]}))
@@ -154,6 +154,41 @@ check("the law refuses a sayable placed on the made and a body on the said, a ve
       sum('a kind' in m for _r, _w, m in probs) == 2 and any('declared already' in m for _r, _w, m in probs)
       and any('a table of the face' in m for _r, _w, m in probs) and any('a row of `units`' in m for _r, _w, m in probs)
       and any("'distance' is no quantity" in m for _r, _w, m in probs), probs)
+# A KIND BY ITS POSITIONS (core 4.0): each on its line, a power a body's reaching its organisation, none read from another
+ladder_law = Law.load(('VOCAB.md', {'kinds': [
+    {'kind': 'k-off-line', 'nature': 'body', 'organisation': 'living'},
+    {'kind': 'k-sayable-power', 'nature': 'sayable', 'organisation': 'statement', 'rung': 'reason'},
+    {'kind': 'k-unreached', 'nature': 'body', 'organisation': 'device', 'rung': 'reason'},
+    {'kind': 'k-twice', 'nature': 'body', 'organisation': 'device', 'matter': 'material'},
+    {'kind': 'k-level', 'nature': 'body', 'level': 'organism'},
+    {'kind': 'k-animal', 'nature': 'body', 'organisation': 'organism', 'bios': 'living', 'rung': 'sensitive'},
+    {'kind': 'k-nest', 'nature': 'body', 'matter': 'material', 'bios': 'organic'}],
+    'levels': [{'level': 'l-groundless', 'line': 'organisation', 'stands': [], 'meaning': 'x', 'vacant': 'a case'}],
+    'schemes': [{'scheme': 's-frame', 'classifies': 'x', 'publisher': 'x', 'url': 'x', 'levels': [{'level': 'x'}],
+                 'neighbours': 'none', 'sources': 'x', 'holding': 'at-authority', 'at': ['taxis']},
+                {'scheme': 's-twice', 'classifies': 'x', 'publisher': 'x', 'url': 'x', 'levels': [{'level': 'x'}],
+                 'neighbours': 'none', 'sources': 'x', 'holding': 'at-authority', 'at': ['organ', 'organ']}]}))
+lp = [(w, m) for _r, w, m in ladder_law.problems()]
+check("a kind by its positions: one off its line, a power of a sayable, a rung that reaches no organisation of its own, "
+      "a matter its organisation is made of already, and the old `level` are refused; an animal (organism, living, "
+      "sensitive) and a nest (material, organic) stand; a scheme's `at` names no frame and a position once; a "
+      "position that reaches no frame is refused, the frame the ground of every line",
+      any(w == 'kind k-off-line' and 'no position of the line organisation' in m for w, m in lp)
+      and any(w == 'kind k-sayable-power' and "a body's power" in m for w, m in lp)
+      and any(w == 'kind k-unreached' and 'stands on none of its other positions' in m for w, m in lp)
+      and any(w == 'kind k-twice' and 'made of already' in m for w, m in lp)
+      and any('kinds[4]' in w and 'level: no field' in m for w, m in lp)
+      and not any(w in ('kind k-animal', 'kind k-nest') for w, m in lp)
+      and any("s-frame" in w and "'taxis' is no position" in m for w, m in lp)
+      and any("s-twice" in w and 'a position twice' in m for w, m in lp)
+      and any(w == 'level l-groundless' and 'stands on no frame' in m for w, m in lp), lp)
+check("...and the law's own kinds: a person holds organism, living and reason, and stands at sensitive, as the rungs "
+      "nest; a host holds device alone, and is at no rung",
+      LAW0.positions('person') == {'organisation': 'organism', 'bios': 'living', 'rung': 'reason'}
+      and LAW0.at_rung('person', 'reason') and LAW0.at_rung('person', 'sensitive')
+      and LAW0.positions('host') == {'organisation': 'device'} and not LAW0.at_rung('host', 'reason')
+      and LAW0.natures_of('statement') == ['sayable'] and LAW0.natures_of('device') == ['body'],
+      (LAW0.positions('person'), LAW0.positions('host')))
 
 
 # ------------------------------------------------------------------------------------------------ a garden

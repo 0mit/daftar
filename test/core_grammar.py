@@ -183,6 +183,40 @@ try:
           "`uri:<URL>`, an ssh remote and the body as they were, once",
           first == ['beans/r.md'] and "'uri:https://example.org/r.git'" in text and "'git-remote:me@host-a:r'" in text
           and 'says git-remote:https://example.org/r.git' in text and again == [] and later == [], (first, text, again))
+    # THE LADDER BY ITS LINES (core 4.0): a garden's own kinds and levels of an earlier core, rewritten by positions
+    vocab = ("---\nkinds:\n"
+             "  - { kind: hive, nature: body, level: population, meaning: \"a colony of bees\" }   # its bees\n"
+             "  - { kind: cell, nature: body, line: living, level: cell, vacant: \"a case\" }\n"
+             "  - kind: boat\n    nature: body\n    line: made\n    level: device\n"
+             "  - { kind: component, nature: body, level: device }\n"
+             "  - { kind: grain, nature: body, line: matter, level: molecule }\n"
+             "  - { kind: clause, nature: sayable, line: said, level: statement }\n"
+             "  - { kind: mind, nature: body, level: colony, rung: reason }\n"
+             "  - { kind: helper, nature: sayable }\n"
+             "levels:\n  - { level: colony, line: living, stands: [ { at: organism, as: made-of } ], meaning: \"x\" }\n"
+             "---\n# the garden's own rows\n")
+    with open(os.path.join(T, 'VOCAB.md'), 'w', encoding='utf-8', newline='') as fh:
+        fh.write(vocab)
+    moved = translate.between('3.7', '4.0', T)
+    text = open(os.path.join(T, 'VOCAB.md'), encoding='utf-8').read()
+    rows = dmparse.loads(dmparse.split_front_matter(text)[0])
+    kinds = {str(r['kind']): r for r in rows['kinds']}
+    again = translate.between('3.7', '4.0', T)
+    check("the translator moves a garden's own kinds to core 4.0: each level a position on its line now, a level of the "
+          "living also bios living, a rung on the rung line, a block row written on one line, its comment kept; one the "
+          "law holds as written (cell) is the law's; one written otherwise (component at device) stays for the gate to "
+          "name; a level of its own on organisation; once",
+          moved == ['VOCAB.md'] and 'cell' not in kinds
+          and kinds['hive'] == {'kind': 'hive', 'nature': 'body', 'organisation': 'population', 'bios': 'living',
+                                'meaning': 'a colony of bees'} and '# its bees' in text
+          and kinds['boat'] == {'kind': 'boat', 'nature': 'body', 'organisation': 'device'}
+          and kinds['component'] == {'kind': 'component', 'nature': 'body', 'organisation': 'device'}
+          and kinds['grain'] == {'kind': 'grain', 'nature': 'body', 'matter': 'molecule'}
+          and kinds['clause'] == {'kind': 'clause', 'nature': 'sayable', 'organisation': 'statement'}
+          and kinds['mind'] == {'kind': 'mind', 'nature': 'body', 'organisation': 'colony', 'bios': 'living',
+                                'rung': 'reason'}
+          and kinds['helper'] == {'kind': 'helper', 'nature': 'sayable'}
+          and rows['levels'][0]['line'] == 'organisation' and again == [], (moved, text, again))
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

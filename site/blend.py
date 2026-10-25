@@ -244,7 +244,7 @@ def by_line(line):
 def stands_text(lid):
     parts = []
     for s in LV[lid]['stands']:
-        way = 'l_made_of' if s.get('as') == 'made-of' else 'l_possible_on'
+        way = {'made-of': 'l_made_of', 'member-of': 'l_member_of'}.get(s.get('as'), 'l_possible_on')
         e, f = w(way)
         wh = ''
         if s.get('while'):
@@ -288,7 +288,7 @@ def place(line, mechs):
                           for mid in mechs) + '</div>')
     return (f'<section class="place line-{line}" id="place-{line}" data-line="{line}">'
             + both('h3', le, lf, raw=True)
-            + f'<details class="steps-of"{" open" if line in ("frame", "said") else ""}><summary>{both("span", se, sf)} '
+            + f'<details class="steps-of"{" open" if line in (W.get("ladders") or {}).get("open", ()) else ""}><summary>{both("span", se, sf)} '
             f'<span class="n" dir="ltr">{len(by_line(line))}</span></summary><ol class="lvs">' + ''.join(steps) + '</ol></details>'
             + body + '</section>')
 
@@ -296,7 +296,7 @@ def place(line, mechs):
 def movement_ladder():
     ke, kf = w('l_kicker')
     he, hf = w('l_head')
-    le, lf = w('l_lede')
+    le, lf = w(((W.get('ladders') or {}).get('lede') or {}).get(' '.join(LINE_ORDER), 'l_lede'))   # this ladder's lede
     ce, cf = w('l_crown')
     crown = CORE['crown'][0]
     places = ''.join(place(line, W['movements']['ladder'].get(line, [])) for line in LINE_ORDER)

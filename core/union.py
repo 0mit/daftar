@@ -172,12 +172,11 @@ class Union:
                         f"JOIN {K.schema}.{q(K.tables[verb])} t ON t.being = b.n"):
                     if n not in skip:
                         self.extra.setdefault(bid, set()).add(sid)
-        rows = []
+        rows = []                            # a kind's nature, and its position on each facet, a column a line (core 4.0)
         for kind, r in self.L.kinds.items():
-            r = r or {}
-            line = r.get('line') or (self.L.level_line(r['level']) if r.get('level') else None)
-            rows.append((kind, enc(r.get('nature')), enc(line), enc(r.get('rung'))))
-        self._temp('u_kinds', ('kind', 'nature', 'line', 'rung'), rows, [('kind',)])
+            held = self.L.positions(kind)
+            rows.append((kind, enc((r or {}).get('nature'))) + tuple(enc(held.get(ln)) for ln in self.L.facets))
+        self._temp('u_kinds', ('kind', 'nature') + tuple(f"f_{k}" for k in range(len(self.L.facets))), rows, [('kind',)])
 
     def _bean_kind(self, x):
         """The SQL of the kind of the being an id (an SQL expression) names in the union, or NULL."""
@@ -736,8 +735,8 @@ class Union:
             want = st.kind == 'statement' and self._wants(name)
             got = {c: (f"dm_stmt(m._src, m._bean, m._verb, m._i, {_lit(c)})" if want else 'NULL')
                    for c in STATEMENT_COLUMNS}
-            sel = ', '.join(f"{got.get(c, 'NULL')} AS {q(f'd{n}_{c}')}" for c in reckon._DESCRIBED)
-            for c in reckon._DESCRIBED:
+            sel = ', '.join(f"{got.get(c, 'NULL')} AS {q(f'd{n}_{c}')}" for c in reckon.described(self.L))
+            for c in reckon.described(self.L):
                 cols[f"{name}.{c}"] = (f"d{n}_{c}", f"d{n}_{c}", None)
             return self._view(f"SELECT {mcols}, {sel} FROM {q(st.name)} m", cols, st.keys, st.seq, st.kind,
                               st.lineage + ('describe', s['id']), table=self._shared(s['id']), foreign=st.foreign,
@@ -788,10 +787,12 @@ class Union:
         else:
             said = ', '.join(f"NULL AS {q(f'd{n}_{c}')}" for c in STATEMENT_COLUMNS)
             pos = ', '.join(f"NULL AS {q(f'd{n}_{c}')}" for c in POSITION_COLUMNS)
-        sql = (f"SELECT y.*, k.nature AS nat{n}, k.line AS lin{n}, k.rung AS run{n}, {said}, {pos} FROM "
+        facets = ''.join(f", k.f_{k} AS {q(f'fac{n}_{k}')}" for k in range(len(self.L.facets)))
+        sql = (f"SELECT y.*, k.nature AS nat{n}{facets}, {said}, {pos} FROM "
                f"(SELECT x.*, {kd} AS {kind} FROM ({union}) x) y LEFT JOIN u_kinds k ON k.kind = y.{kind}")
         cols[f"{name}.being"] = (being, named, kind)
-        for key, c in (('kind', kind), ('nature', f"nat{n}"), ('line', f"lin{n}"), ('rung', f"run{n}")):
+        for key, c in (('kind', kind), ('nature', f"nat{n}"),
+                       *((ln, f"fac{n}_{k}") for k, ln in enumerate(self.L.facets))):
             cols[f"{name}.{key}"] = (c, c, None)
         for c in STATEMENT_COLUMNS + POSITION_COLUMNS:
             cols[f"{name}.{c}"] = (f"d{n}_{c}", f"d{n}_{c}", None)
@@ -804,11 +805,10 @@ class Union:
         want = getattr(self, '_want', None)
         return want is None or name in want
 
-    @staticmethod
-    def _described(st, name, cols):
+    def _described(self, st, name, cols):
         """The nodes of a description's members: the member's, and under `name` its columns, each held even where it is
-        None, in the order the reckoner writes them (core/reckon.py `_DESCRIBED`)."""
-        return list(st.nodes) + [(f"{name}.{c}", cols[f"{name}.{c}"][0]) for c in reckon._DESCRIBED]
+        None, in the order the reckoner writes them (core/reckon.py `described`)."""
+        return list(st.nodes) + [(f"{name}.{c}", cols[f"{name}.{c}"][0]) for c in reckon.described(self.L)]
 
     # join, minus
     def _on(self, s, left, right, la='l', ra='r'):

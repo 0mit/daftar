@@ -6,6 +6,7 @@
   --refused: #a3261b; --refused-bg: #fbecea; --passed: #1d6b3a; --passed-bg: #e9f5ec; --accent: #3b4f8f;
   --by: #b5482a; --of: #2f6f8f; --through: #7a5a9a; --to: #2f7d55; --from: #9a6b16; --at: #3b4f8f; --as: #8a3c6c;
   --frame: #6b6b6b; --matter: #8a5a2b; --gravitation: #34507a; --living: #2f7d4f; --reason: #7a4f8a; --made: #5a6b2f; --said: #a3402a;
+  --organisation: #34507a; --bios: #2f7d4f; --rung: #7a4f8a;
   --mono: ui-monospace, "SFMono-Regular", "DejaVu Sans Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Vazirmatn", "Noto Sans Arabic", Tahoma, sans-serif;
   --serif: Georgia, "Noto Serif", "Vazirmatn", "Noto Naskh Arabic", serif;
@@ -130,6 +131,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
 .place h3 { font: 600 1.4rem var(--serif); margin: 0 0 6px; color: var(--lc); }
 .line-frame { --lc: var(--frame); } .line-matter { --lc: var(--matter); } .line-gravitation { --lc: var(--gravitation); }
 .line-living { --lc: var(--living); } .line-reason { --lc: var(--reason); } .line-made { --lc: var(--made); } .line-said { --lc: var(--said); }
+.line-organisation { --lc: var(--organisation); } .line-bios { --lc: var(--bios); } .line-rung { --lc: var(--rung); }
 .steps-of summary { cursor: pointer; color: var(--soft); font-size: 0.9rem; }
 .lvs { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 6px; }
 .lv { padding: 4px 8px; background: var(--hl); border-radius: 4px; scroll-margin-block-start: 140px; }
@@ -149,6 +151,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
 .rung { --lc: var(--rule); }
 .rung.line-frame { --lc: var(--frame); } .rung.line-matter { --lc: var(--matter); } .rung.line-gravitation { --lc: var(--gravitation); }
 .rung.line-living { --lc: var(--living); } .rung.line-reason { --lc: var(--reason); } .rung.line-made { --lc: var(--made); } .rung.line-said { --lc: var(--said); }
+.rung.line-organisation { --lc: var(--organisation); } .rung.line-bios { --lc: var(--bios); } .rung.line-rung { --lc: var(--rung); }
 @media (max-width: 860px) {
   .climb { grid-template-columns: 1fr 64px; gap: 10px; }
   .ladder .here, .rung .steps, .rung[data-here] .steps { display: none; }

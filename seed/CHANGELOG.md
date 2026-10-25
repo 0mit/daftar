@@ -251,6 +251,34 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.0** (2026-10-25, daftar v4.0.0, human-ratified rule-change) — **the ladder by its frame and four lines**
+  (the ladder's design, ratified by the operator on 2026-10-25, every need as recommended, an animal's work as he
+  amended it: "Nature and organic has privilege"). MAJOR: a kind's row and `describe`'s columns change their form, and
+  a garden's own rows are rewritten when it moves (core/translate.py `between`). The frame — space-time and the taxis —
+  stays the ground of every line, never a rung, and every position reaches it through its stands (the law's proof);
+  where, when and how large are its quantities. The ladder's lines are
+  facets: `matter` (its eight steps), `organisation` (the steps of gravitation, the living, the made and the said
+  merged, its degree of complexity the made-of order, partial; each nature's in its own frame), `bios` (`living`,
+  possible on a celestial body while balance, and `organic`, what the living make or leave — a nest, a comb, wood, a
+  shell — both given through the living) and `rung` (`sensitive`, on organism, and `reason`, now on sensitive while
+  proportion); the lines gravitation, living, made, said and reason are retired, and a cell stands possible-on living.
+  A third way of standing, `member-of`: a population stands on its organisms and a community on its populations as
+  members, so rule bearer, which follows made-of alone, gives a herd no temperature; an ecosystem is made of its
+  community and its matter. A kind names its position on each facet, a column a line (`person`: organisation organism,
+  bios living, rung reason; `host`: organisation device): at most one a line, each on a line that holds its nature, a
+  rung a body's whose chain reaches its organisation, none it can read from another through made-of. The body kinds
+  `component`, `organ`, `tissue`, `cell`, `ecosystem` and `celestial-body` are universal vacancies; `organism` and
+  `material` wait to be proved first as a garden's own rows, as ratified on 2026-09-25. A component is one body, made
+  of material and holding no made part; a device bodies joined, and may be part of a device while mounted (a camera's
+  lens); a feature is no position. The six quantities a perceiver's response weighs stand on `sensitive`. The rules:
+  `life` — a living or organic being comes through the living, a bird is no hands; `order` — a part's organisation
+  position against what its whole's is made of, or its matter's where it holds none; `bearer` — a position the kind
+  holds, never through member-of, and a code of a scheme naming the positions its codes classify (`knowledge_schemes`
+  `at`, on any line but the frame) said only of a being whose kind holds one of them; `valency` — a role's rung held by
+  the kind's rung or one above it, as the rungs nest. `describe` gives `<as>.matter`, `<as>.organisation`, `<as>.bios`
+  and `<as>.rung` in place of `<as>.line`. In code: core/law.py (a kind's positions, its rung, a position's nature, the
+  kinds' proof, `at`'s proof), core/engine.py, core/reckon.py and core/union.py (`describe`), core/commit.py,
+  bin/waiting.py, bin/rules.py; core/translate.py's step for 4.0; site/blend.py draws whichever ladder its release has.
 - **core 3.7** (2026-10-25, daftar v3.7.0, human-ratified rule-change) — **what waits is a need** (the next machinery's
   design, body IV: IV.1 to IV.4, option B with the mapping the operator ratified). MINOR. What waits is a `need` on the
   bean it concerns — `need: { id, by: self, of: <what>, from: <whose>, note: "class <letter>" }`, its neighbourhood and

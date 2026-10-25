@@ -264,7 +264,7 @@ try:
             ('no-gardener', {'GARDEN.md': manifest.replace('gardener: sam', 'gardener: nobody', 1)}, 'form', 'GARDEN.md'),
             ('two-layers', {'VOCAB.md': VOCAB.replace('\n---\n', '\nstanding:\n- { layer: history, holds: ["beans/sam.md"] }\n---\n', 1)},
              'layers', 'beans/sam.md'),
-            ('unused-row', {'VOCAB.md': VOCAB.replace('kinds:\n', 'kinds:\n- { kind: kiln, nature: body, line: made, level: device }\n', 1)},
+            ('unused-row', {'VOCAB.md': VOCAB.replace('kinds:\n', 'kinds:\n- { kind: kiln, nature: body, organisation: device }\n', 1)},
              'vacancy', 'VOCAB.md')):
         for rel, text in files.items():
             write(rel, text)
@@ -282,7 +282,7 @@ try:
     WHY = open(os.path.join(G, 'bin', 'why.py'), encoding='utf-8').read()
     DIGESTS = open(os.path.join(G, 'seed', 'LANGUAGE.sha256'), encoding='utf-8').read()
     for name, files, setup, entry, rule, says in (
-            ('law-unsaid', {'VOCAB.md': VOCAB.replace('kinds:\n', 'kinds:\n- { kind: kiln, nature: body, line: made, level: device, vacant: "a case" }\n', 1)},
+            ('law-unsaid', {'VOCAB.md': VOCAB.replace('kinds:\n', 'kinds:\n- { kind: kiln, nature: body, organisation: device, vacant: "a case" }\n', 1)},
              None, '- action: VOCAB.md adds the kind kiln', 'ratify', 'RULE-CHANGE'),
             ('future-whereabouts', {'beans/e1.md': doc('e1', {'kind': 'event', 'statements': [
                 say, {'be': {'by': 'self', 'at': '2099-06-01 18:00+03:30/2099-06-01 22:00+03:30'}},

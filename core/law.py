@@ -4,7 +4,9 @@ The face is `core/law/core.yaml`: the seven roles, the shapes, the grammar's wor
 lines, levels, conditions, the crown), the face's verbs and the twenty-one rules. The verbs beyond the face are rows,
 `core/law/verbs.yaml`. A garden adds rows of its own in its VOCAB.md, under these keys only:
 
-  kinds         { kind, nature, line?, level?, rung?, meaning? }       what a bean records
+  kinds         { kind, nature, <line>?, meaning? }                    what a bean records: its position on each line of
+                                                                       the ladder but the frame, named by the line
+                                                                       (`organisation: organism`), at most one a line
   levels        { level, line, stands: [{ at, as, while? }], meaning? } the detailed steps of the lines (our knowledge tree)
   namespaces    { namespace, once?, meaning? }                         who gives names, and whether once (beside the
                                                                        standards' own, core/law/namespaces.yaml)
@@ -52,7 +54,7 @@ ROW_KEYS = {'kinds': 'kind', 'levels': 'level', 'namespaces': 'namespace', 'flow
             'groupings': 'grouping', 'risks': 'risk'}
 NAME_IN = re.compile(r'^name_[a-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$')    # a code's name in a language: `name_fa`, `name_pt-BR`
 ROW_FIELDS = {
-    'kinds': {'kind', 'nature', 'line', 'level', 'rung', 'meaning', 'vacant'},
+    'kinds': {'kind', 'nature', 'meaning', 'vacant'},          # and a position on each facet, named by its line
     'levels': {'level', 'line', 'stands', 'meaning', 'frame_of', 'vacant'},
     'namespaces': {'namespace', 'once', 'pattern', 'checked_by', 'kept', 'meaning', 'vacant'},
     'flows': {'flow', 'from', 'to', 'through', 'as', 'grant', 'keeper', 'party', 'basis', 'why'},
@@ -66,7 +68,7 @@ ROW_FIELDS = {
                 'overlay', 'meaning', 'why', 'vacant'},
     'schemes': {'scheme', 'classifies', 'publisher', 'url', 'levels', 'neighbours', 'sources', 'holding', 'licence',
                 'release', 'sensitive', 'code_pattern', 'relations', 'labels', 'crosswalk', 'same_ground_as', 'within',
-                'file', 'key', 'format', 'meaning', 'units', 'form', 'vacant'},
+                'file', 'key', 'format', 'meaning', 'units', 'form', 'at', 'vacant'},
     'files': {'registry', 'file', 'key', 'format'},
     'groupings': {'grouping', 'home', 'meaning', 'steps', 'line', 'inputs', 'weighs', 'vacant'},
     'risks': {'risk', 'meaning', 'resolved_by', 'vacant'},
@@ -88,6 +90,9 @@ MEASURES = 'measures.yaml'                                 # the forms of a meas
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
 SPEC_KEYS = {'shape', 'table', 'nature', 'rung', 'many', 'keyed', 'form'}
 FACE_TABLES = ('ways', 'modes', 'acquisitions', 'placements', 'complements', 'knowing')
+# THE COLUMNS `describe` GIVES OF ITS OWN (core/reckon.py `described`): beside them, one a facet, named by its line — so
+# no line takes one of these names
+DESCRIBED_BUILT_IN = ('being', 'kind', 'nature', 'bean', 'verb', 'index', 'place', 'id', 'system', 'point', 'from', 'to')
 TRUE = 'true'
 MANIFEST_FORMS = ('pin', 'bean', 'zone', 'text', 'texts')   # the manifest's forms the engine knows by name; a pattern's
                                                             # are core.yaml's `manifest_forms`
@@ -314,6 +319,9 @@ class Law:
         self.crown = {c['crown']: c for c in F.get('crown') or []}
         self.natures = {n['nature']: n for n in F.get('natures') or []}
         self.lines = {ln['line']: ln for ln in F.get('lines') or []}
+        # THE FACETS (core 4.0): every line but the frame, the ground of them all — a run of positions of which a being
+        # holds at most one, its kind naming it in a column named by the line
+        self.facets = [ln for ln in self.lines if ln != 'frame']
         self.conditions = {c['condition'] for c in F.get('conditions') or []}
         self.foundations = list(F.get('foundations') or [])
         self.figures = list(F.get('figures') or [])
@@ -624,10 +632,11 @@ class Law:
                     else:
                         self.garden_crosswalks.append((at, row))
                     continue
-                extra = set(row) - ROW_FIELDS[key]
+                fields = ROW_FIELDS[key] | (set(self.facets) if key == 'kinds' else set())
+                extra = set(row) - fields
                 if extra:
                     self.found.append(('law', at, f"{', '.join(sorted(extra))}: no field of a row of `{key}`, whose "
-                                                  f"fields are {', '.join(sorted(ROW_FIELDS[key]))}"))
+                                                  f"fields are {', '.join(sorted(fields))}"))
                 name_key = ROW_KEYS[key]
                 if name_key and not row.get(name_key):
                     self.found.append(('law', at, f"a row of `{key}` names itself in `{name_key}`"))
@@ -886,6 +895,8 @@ class Law:
             return list(self.verbs) + self.tables.get('methods', [])
         if name == 'namespaces':
             return list(self.namespaces)
+        if name == 'kinds':
+            return list(self.kinds)
         return self.tables.get(name)
 
     def has(self, name, value):
@@ -926,13 +937,47 @@ class Law:
     def holds(self, line):
         return listed((self.lines.get(line) or {}).get('holds'))
 
-    def below(self, level, ways=('made-of', 'possible-on')):
-        """Every level `level` stands on, through any number of steps, by the ways given: itself among them where the
-        ladder leads back to it."""
+    def below(self, level, ways=None):
+        """Every level `level` stands on, through any number of steps, by the ways given (every way of `ways`, where none
+        is named): itself among them where the ladder leads back to it."""
         from core import reach
+        ways = tuple(self.tables.get('ways') or ()) if ways is None else ways
         r = reach.Reach(level, lambda lv: [s.get('at') for s in listed((self.levels.get(lv) or {}).get('stands'))
                                            if isinstance(s, dict) and s.get('as') in ways])
         return {x for x, _via in r} | {x for x, _via in r.again if x == level}
+
+    # ------------------------------------------------------------------------------------- a kind's positions (core 4.0)
+    def positions(self, kind):
+        """{line: position} a kind holds, in the ladder's order: at most one a facet, named by the line."""
+        row = self.kinds.get(kind) or {}
+        return {ln: str(row[ln]) for ln in self.facets if row.get(ln) is not None}
+
+    def position(self, kind, line):
+        """The position a kind holds on a line of the ladder, or None."""
+        return self.positions(kind).get(line)
+
+    def powers(self):
+        """The lines of a body's powers: a facet that holds no being — the rung, which takes no room."""
+        return [ln for ln in self.facets if not self.holds(ln)]
+
+    def at_rung(self, kind, rung):
+        """Whether a being of `kind` is at the rung `rung`, a position on a line of powers: its own position there is it,
+        or stands on it — the rungs nest, each holding the ones below it (reason holds sensitive)."""
+        line = self.level_line(rung)
+        mine = self.position(kind, line) if line in self.powers() else None
+        return mine is not None and (mine == rung or rung in self.below(mine))
+
+    def natures_of(self, level):
+        """The natures whose beings a position holds: its line's — of a line that holds both (organisation), the one in
+        whose frame it stands, the nearest frame it reaches: a sayable's steps stand on the taxis, which stands on reason
+        and so on the bodies' space-time beneath it."""
+        holds = self.holds(self.level_line(level))
+        if len(holds) <= 1:
+            return holds
+        frames = {row.get('frame'): n for n, row in self.natures.items()}
+        reached = [f for f in frames if f == level or f in self.below(level)]
+        nearest = [f for f in reached if not any(g != f and f in self.below(g) for g in reached)]
+        return [frames[f] for f in nearest if frames[f] in holds]
 
     def given_twice(self, dim_rows):
         """ONE PATH, ONE STATEMENT: [(where, message)] for a stand that another of the row's stands already gives through
@@ -981,7 +1026,7 @@ class Law:
             if a == b:
                 return True
             if isinstance(a, dict) and isinstance(b, str):
-                return b in self.holds(self.level_line(a.get('level')))
+                return b in self.natures_of(a.get('level'))
             if isinstance(a, dict) and isinstance(b, dict):
                 return b.get('level') in self.below(a.get('level'), ways=('made-of',)) or \
                     (b.get('level') == a.get('level') and b.get('while') in (None, a.get('while')))
@@ -1496,8 +1541,7 @@ class Law:
             for f in listed(r.get('format')):
                 if str(f) not in self.formats:
                     out.append((f"core/law/formats.yaml readers {name!r}", f"reads {f!r}, which is no format of the law"))
-        reg = os.path.join(getattr(self, 'dir', None) or LAW_DIR, 'registries.yaml')
-        for row in listed((read.data(reg) if os.path.isfile(reg) else {}).get('knowledge_schemes')):
+        for row in listed(self._registries().get('knowledge_schemes')):
             fetch = row.get('fetch') if isinstance(row, dict) else None
             if isinstance(fetch, dict) and fetch.get('reader') is not None:
                 rd = self.readers.get(str(fetch['reader']))
@@ -1505,6 +1549,38 @@ class Law:
                     out.append((f"core/law/registries.yaml knowledge_schemes {row.get('scheme')!r}",
                                 f"fetch.reader {fetch['reader']!r} is no reader of core/law/formats.yaml `readers` the "
                                 f"release reads with"))
+        return out
+
+    def _registries(self):
+        """core/law/registries.yaml of this law, read once for every proof that asks (kept with its path, so a law
+        pointed at another directory reads its own)."""
+        reg = os.path.join(getattr(self, 'dir', None) or LAW_DIR, 'registries.yaml')
+        kept = getattr(self, '_registries_read', None)
+        if kept is None or kept[0] != reg:
+            kept = (reg, read.data(reg) if os.path.isfile(reg) else {})
+            self._registries_read = kept
+        return kept[1]
+
+    def scheme_at_problems(self):
+        """[(where, message)]: the positions a scheme says its codes classify (`at`, core 4.0) — the release's
+        `knowledge_schemes` and a garden's own `schemes` — each a position of the law on a facet of the ladder, never
+        the frame, named once."""
+        out = []
+        released = [(f"core/law/registries.yaml knowledge_schemes {r.get('scheme')!r}", r)
+                    for r in listed(self._registries().get('knowledge_schemes')) if isinstance(r, dict)]
+        own = [(f"VOCAB.md schemes {r.get('scheme')!r}", r) for r in listed(self.own.get('schemes')) if isinstance(r, dict)]
+        for where, row in released + own:
+            if 'at' not in row:
+                continue
+            at = [str(x) for x in listed(row.get('at'))]
+            if not at:
+                out.append((where, "`at` names the positions its codes classify: one at least, or no `at`"))
+            for lv in at:
+                if self.level_line(lv) not in self.facets:
+                    out.append((where, f"`at`: {lv!r} is no position on a line of the ladder but the frame "
+                                       f"({', '.join(self.facets)})"))
+            if len(set(at)) != len(at):
+                out.append((where, "`at` names a position twice"))
         return out
 
     def _carried_row_problems(self, where, r):
@@ -1852,19 +1928,47 @@ class Law:
                     bad(f"level {lv}", f"stands on {s!r}: a level that exists, by a way of `ways`, while a condition")
             if lv in self.below(lv):
                 bad(f"level {lv}", "stands on itself through the levels beneath it: the ladder is never a circle")
+            elif row.get('line') != 'frame' and frames and not set(frames.values()) & self.below(lv):
+                bad(f"level {lv}", f"stands on no frame through the levels beneath it ({', '.join(frames.values())}): "
+                                   f"the frame is the ground of every line")
+        for ln in self.facets:
+            if ln in DESCRIBED_BUILT_IN:
+                bad(f"line {ln}", f"a line names a column `describe` gives a being, and `{ln}` is one of its own "
+                                  f"({', '.join(DESCRIBED_BUILT_IN)})")
+        powers = self.powers()
+        declared = set((self.row_columns.get('kinds') or ('', {}))[1] or {}) - {'kind', 'nature', 'meaning'}
+        if self.row_columns.get('kinds') and declared != set(self.facets):
+            bad('core/law/kinds.yaml columns', f"a kind names a position on each facet of the ladder, a column a line: "
+                                               f"its columns {', '.join(sorted(declared))} are not the facets "
+                                               f"{', '.join(self.facets)}")
         for k, row in self.kinds.items():
             if row.get('nature') not in self.natures:
                 bad(f"kind {k}", f"its nature {row.get('nature')!r} is none of {', '.join(self.natures)}")
                 continue
-            if row.get('level') is not None:
-                ln = self.level_line(row['level'])
-                if ln is None:
-                    bad(f"kind {k}", f"its level {row['level']!r} is no level of the law")
-                elif row['nature'] not in self.holds(ln) or (row.get('line') and row['line'] != ln):
-                    bad(f"kind {k}", f"a kind's level is on a line that holds its nature: {row['level']} is on {ln}, "
-                                     f"which holds {', '.join(self.holds(ln)) or 'no being'}, and {k} is a {row['nature']}")
-            if row.get('rung') is not None and (self.level_line(row['rung']) is None or self.holds(self.level_line(row['rung']))):
-                bad(f"kind {k}", f"its rung {row['rung']!r} is a level on a line that holds no being (reason)")
+            # A KIND BY ITS POSITIONS (core 4.0): at most one a line — a column a line —, each on a line that holds its
+            # nature or, a body's, on a line of its powers; its rung's chain reaching its organisation position; and none
+            # it can read from another of them, through `made-of` (a body's matter is read through its organisation)
+            mine = self.positions(k)
+            for ln, lv in mine.items():
+                if self.level_line(lv) != ln:
+                    bad(f"kind {k}", f"its {ln} {lv!r} is no position of the line {ln}: one of "
+                                     f"{', '.join(x for x, r in self.levels.items() if r.get('line') == ln)}")
+                elif ln in powers:
+                    if row['nature'] != 'body':
+                        bad(f"kind {k}", f"its {ln} {lv!r} is a body's power, and {k} is a {row['nature']}")
+                    elif not any(o in self.below(lv) for l2, o in mine.items() if l2 not in powers):
+                        bad(f"kind {k}", f"its {ln} {lv!r} stands on none of its other positions "
+                                         f"({', '.join(o for l2, o in mine.items() if l2 not in powers) or 'none'}): a "
+                                         f"power is a body's whose organisation it reaches")
+                elif row['nature'] not in self.natures_of(lv):
+                    bad(f"kind {k}", f"a kind's position is on a line that holds its nature: {lv} is on {ln}, which "
+                                     f"holds {', '.join(self.natures_of(lv)) or 'no being'} there, and {k} is a "
+                                     f"{row['nature']}")
+            for ln, lv in mine.items():
+                given = [o for l2, o in mine.items() if l2 != ln and lv in self.below(o, ways=('made-of',))]
+                if given:
+                    bad(f"kind {k}", f"its {ln} {lv!r} is what its {given[0]} is made of already: one path, one "
+                                     f"statement")
         for ns, row in self.namespaces.items():
             if row.get('once') not in (None, TRUE, 'false'):
                 bad(f"namespace {ns}", "`once` is true or false")
@@ -1942,6 +2046,8 @@ class Law:
         for where, msg in self.crosswalk_problems():
             bad(where, msg)
         for where, msg in self.formats_problems():
+            bad(where, msg)
+        for where, msg in self.scheme_at_problems():
             bad(where, msg)
         for where, msg in self.units_crosswalk_problems():
             bad(where, msg)

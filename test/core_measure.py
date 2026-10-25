@@ -84,7 +84,7 @@ REL, G = os.path.join(T, 'release'), os.path.join(T, 'garden')
 VOCAB = """---
 profiles: [knowledge]
 kinds:
-  - { kind: hive, nature: body, level: population, meaning: "a colony of bees, and the box it lives in" }
+  - { kind: hive, nature: body, organisation: population, bios: living, meaning: "a colony of bees, and the box it lives in" }
 systems:
   - system: apiary-site
     dimension: place

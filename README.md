@@ -80,22 +80,22 @@ sessions, and time:
 
 ## Any thing, and the rules for it, as data
 
-The example is a machine because machines are where this began. The notebook is not about machines. A thing
-is first a **nature**, one of two — a **body**, which takes room in space, or the **sayable**, what exists by being said
-and agreed, placed in an order — and then a **kind** that refines it: a host and a person are bodies, each standing at
-its level among bodies (a device, an organism); a domain, a product, a codebase, a design, an agreement between people,
-a document, a dinner where something was agreed, a running instance of a program are sayable. Life is no nature: a
-thing lives while its kind says it does — a machine while it is powered, an agreement while it holds, a person while
-they live — and a life comes from a life, a chain the ledger walks. Money is measured, like a length: an amount in the
-currency it was paid in, exact and never rounded, and what one person owes another is read from what was paid and what
-was agreed — never written down beside them, where it could drift. The rules for what a
-thing may say attach to its nature and every kind beneath inherits them, so a new kind arrives with a coherent
-identity policy for free. The same is true of ownership: every thing has exactly one owner, and every chain ends at
-a person, at someone outside the notebook, or at the crown. Who answers for a thing is its own fact, facet by facet —
-before the law its owner, unless someone else is named; who runs it, who designs how people meet it, who pays — written
-only where someone does. An agreement between two people may be owned by neither of them, and then both answer for it.
-And every thing came to be through someone — a person, the hands at a maker, the one it was born of — which is said as
-a `via` where it is known, never demanded where it is not.
+The example is a machine because machines are where this began. The notebook is not about machines. A thing is first a
+**nature**, one of two — a **body**, which takes room in space, or the **sayable**, what exists by being said and
+agreed, placed in an order — and then a **kind** that refines it: a host and a person are bodies, each holding its
+positions on the ladder's lines (a device; an organism, living, at reason); a domain, a product, a codebase, a design,
+an agreement between people, a document, a dinner where something was agreed, a running instance of a program are
+sayable. Life is no nature: a thing lives while its kind says it does — a machine while it is powered, an agreement
+while it holds, a person while they live — and a life comes from a life, a chain the ledger walks. Money is measured,
+like a length: an amount in the currency it was paid in, exact and never rounded, and what one person owes another is
+read from what was paid and what was agreed — never written down beside them, where it could drift. The rules for what a
+thing may say attach to its nature and every kind beneath inherits them, so a new kind arrives with a coherent identity
+policy for free. The same is true of ownership: every thing has exactly one owner, and every chain ends at a person, at
+someone outside the notebook, or at the crown. Who answers for a thing is its own fact, facet by facet — before the law
+its owner, unless someone else is named; who runs it, who designs how people meet it, who pays — written only where
+someone does. An agreement between two people may be owned by neither of them, and then both answer for it. And every
+thing came to be through someone — a person, the hands at a maker, the one it was born of — which is said as a `via`
+where it is known, never demanded where it is not.
 
 The vocabulary that says all this is a document, versioned, read by the gate on every commit; the gate itself
 names no term. A garden adds what it needs — its own terms, its own values, its own profiles — and a local
@@ -217,7 +217,7 @@ Inside the notebook the parts have names. You will meet them in the agent's answ
 | **gate** | `bin/check.py`, run as a pre-commit hook: a commit that breaks a rule is refused |
 | **journal** | `log/journal.md`: every change, who made it and why. The gate refuses an unrecorded change |
 | **name** | a name a giver gives a thing (a serial, a domain name), in a namespace; one given once identifies it, so two gardens recognise the same thing |
-| **nature / kind** | what sort of being it is: a body, taking room in space, or the sayable, what exists by being said and agreed — refined by its kind, such as `host`, which for a body names its level among bodies. `MODEL.md` gives each |
+| **nature / kind** | what sort of being it is: a body, taking room in space, or the sayable, what exists by being said and agreed — refined by its kind, such as `host`, which for a body names its positions on the ladder's lines. `MODEL.md` gives each |
 | **facet** | a way of answering for a thing, e.g. `legal` or `technical`: who answers for it before the law, who runs it. Ownership has none: a thing has one owner |
 | **via** | who a thing came to be through: a person, the one it was born of, or someone reached through a maker. Every such chain ends at the crown |
 | **crown** | where every chain ends: `theone`, the Necessary Existent, whom no bean names, with two faces, love and wisdom. A being that states no chain is held at the crown all the same |

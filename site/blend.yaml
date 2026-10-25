@@ -38,6 +38,8 @@ ui:
     l_stands: stands on
     l_made_of: made of
     l_possible_on: possible on
+    l_member_of: a member of
+    l_lede_facets: 'From the frame every being takes its place in, along four lines — matter, organisation, bios and the rung. A being holds at most one step on each — a person is an organism, living, at reason; a machine is a device, and nothing more. Each step stands on the one below it — made of it, possible on it, or a member of it — and the law keeps every joint. Scroll down the page and you climb.'
     l_while: while
     l_crown: Above every step
     l_mechs: What the notebook keeps here
@@ -83,6 +85,8 @@ ui:
     l_stands: می‌ایستد بر
     l_made_of: ساخته از
     l_possible_on: ممکن بر
+    l_member_of: عضوِ
+    l_lede_facets: 'از چارچوبی که هر هستی جایش را در آن می‌گیرد، در چهار رشته: ماده، سازمان‌یافتگی، حیات و مرتبه. هر هستی بر هر رشته دست‌بالا یک پله دارد: انسان سازواره است، زنده، در مرتبه‌ی خرد؛ یک ماشین دستگاه است و بس. هر پله بر پله‌ی زیرینش می‌ایستد (ساخته از آن، ممکن بر آن، یا عضوِ آن) و قانون هر پیوند را نگه می‌دارد. صفحه را پایین بروید تا بالا بروید.'
     l_while: تا وقتی
     l_crown: بالاتر از هر پله
     l_mechs: آنچه دفتر اینجا نگه می‌دارد
@@ -111,6 +115,9 @@ lines:
     reason: Reason
     made: The made
     said: The said
+    organisation: Organisation
+    bios: Bios
+    rung: The rung
   fa:
     frame: چارچوب
     matter: ماده
@@ -119,6 +126,9 @@ lines:
     reason: خرد
     made: ساخته‌ها
     said: گفته‌ها
+    organisation: سازمان‌یافتگی
+    bios: حیات
+    rung: مرتبه
 movements:
   sentence:
   - who
@@ -131,6 +141,10 @@ movements:
     made:
     - where
     said:
+    - money
+    - pages
+    organisation:
+    - where
     - money
     - pages
   time:
@@ -261,3 +275,7 @@ moments:
   fa:
     title: باغِ شما
     line: لحظه‌ی بعد از آنِ این باغ نیست. به یک عاملِ برنامه‌نویس با پوسته و git نیاز دارید، و جایی برای یک مخزنِ خصوصی. دفتر از آنِ شماست.
+ladders:                       # the words a ladder of the release takes, by its lines in the law's order
+  lede:
+    frame matter organisation bios rung: l_lede_facets
+  open: [frame, said, rung]    # the lines whose steps are shown open
