@@ -36,14 +36,14 @@ show.
       each filler has the shape and nature its role takes, and no role is filled that the verb does not take; a role
       takes a list only where its row says `many`.
 - [ ] **knowing** — Every statement of a bean is the `of` of a knowing act in it, or the bean holds a knowing act with
-      no `of`, which covers every statement no other act names; a knowing act's `at` is `now` until the save writes the
-      moment, and a moment typed there is refused — but where the act was known in another garden: its `at` then holds
-      that garden's bean beside the moment it was known at there, and the commit that brings it takes it from that
-      garden (`take`). A bean renamed — taken out and added under another name by one commit, whose entry says `-
-      renamed: [[<old>]] → [[<new>]]` — keeps the statements it held, known as they were. An entry a commit adds names
-      who wrote it in its heading: a being the garden holds, by its bean (a person, or the session an agent works in). A
-      row of a store names the act or acts that know it instead, each a knowing act kept in git or a store, and the
-      store's check judges it where the store is kept.
+      no `of`, which covers every statement no other act names; a need a person meets (`meet`) is known by that person's
+      own `say`; a knowing act's `at` is `now` until the save writes the moment, and a moment typed there is refused —
+      but where the act was known in another garden: its `at` then holds that garden's bean beside the moment it was
+      known at there, and the commit that brings it takes it from that garden (`take`). A bean renamed — taken out and
+      added under another name by one commit, whose entry says `- renamed: [[<old>]] → [[<new>]]` — keeps the statements
+      it held, known as they were. An entry a commit adds names who wrote it in its heading: a being the garden holds,
+      by its bean (a person, or the session an agent works in). A row of a store names the act or acts that know it
+      instead, each a knowing act kept in git or a store, and the store's check judges it where the store is kept.
 - [ ] **placeholder** — A statement the engine derives (a verb's default) is never written: written, it is refused (an
       `answer` `as: law` by the owner; a `bear` by the one who paid, alone).
 - [ ] **order** — Nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or
@@ -241,6 +241,10 @@ cannot tell. Give each session its own copy.
 - [ ] **Close from the main copy:** `python3 bin/session.py close <slug>`. It refuses when the session's gate fails,
       when either copy has uncommitted changes, or when the main copy is mid-merge.
 - [ ] **A conflicting close stops and says so.** Settle it in the main copy (`MERGE.md`) and close again.
+- [ ] **Park what you may not decide as a need on the bean it concerns** (`MODEL.md`, the Contract of Parts), its
+      neighbourhood and your recommendation in that bean's `details.waiting`, and carry on. What waits is read, never
+      kept: `python3 bin/waiting.py`, and `python3 bin/now.py` as a session begins. `log/pending.md` is a view written
+      from the needs; an entry written there by hand is no need.
 
 ### How agents here treat one another
 Agents in a garden seldom meet: one leaves, and another — perhaps of another make — arrives later with none of its

@@ -1,15 +1,5 @@
-# @@GARDEN@@ — pending-decisions queue
+# @@GARDEN@@ — what waits
 
-Async ratification queue (MERGE.md §10). An agent that meets a decision it may **not** enact — the classes are defined once in MODEL.md, section Contract of Parts — **parks it here as `status: proposed`**, does everything safe around it, and continues. The human ratifies the queue; on `acked` the decision applies and its precedent auto-applies to matching cases.
+What waits is a need on the bean it concerns (MODEL.md, the Contract of Parts): an agent that meets what it may not decide writes it there, `need … from:` whose it is and `note:` its class, its neighbourhood and recommendation in that bean's `details.waiting`, does everything safe around it, and carries on; the person whose it is meets it with their `say`. `python3 bin/waiting.py` reads what waits. This file is a view written from the needs, and below it the queue as it stood, history.
 
-Entry shape:
-```
-## <slug> · <what needs deciding> · proposed <YYYY-MM-DD> by <actor>
-- class: F-identity | E-safety | G-vocab-law | J-merge-conflict
-- neighborhood: <the related + sibling vocab/bean records the agent would show>
-- proposal: <the agent's recommended resolution>
-- status: proposed        # proposed | acked
-- acked_by:
-```
-
----
+<!-- what waits, written by `python3 bin/waiting.py --write` from the needs on the beans: each entry `## <bean>#<need>` is the view, changed by changing the needs and never here; the entries below them, whose headings hold no `#`, are the queue as it stood, history -->

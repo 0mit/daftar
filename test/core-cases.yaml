@@ -147,6 +147,7 @@ good:
   - { name: "subcontraries may both stand", bean: y4, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { permitted: { of: r, through: pot } }, { omissible: { of: r, through: pot } } ] }
   - { name: "a contrary through another source stands beside", bean: y5, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: r, by: ben, of: { count: "1", unit: XTS } } }, { obligatory: { of: r, through: pot } }, { forbidden: { of: r, through: garden-a } } ] }
   - { name: "a knowing act with `of` covers what it names, and another act the rest", bean: y6, kind: document, statements: [ { say: { by: sam, of: [a], at: now } }, { read: { by: ben, at: now } }, { do: { id: a, by: nas, as: web } }, { do: { by: nas, as: router } } ] }
+  - { name: "a need met by a person, known by that person's own `say`, and one met by a machine, known as any statement is", bean: y6b, kind: document, statements: [ { make: { by: ada, at: now } }, { need: { id: n, by: self, of: "a shelf for the rack", from: sam } }, { meet: { id: m, by: sam, of: n } }, { say: { by: sam, of: [m], at: now } }, { need: { id: n2, by: self, of: "a backup", from: sam } }, { meet: { by: nas, of: n2 } } ] }
   - { name: "a part at its whole's own level", bean: y7, kind: host, statements: [ { say: { by: sam, at: now } }, { part: { by: self, of: nas } } ] }
   - { name: "a document may say", bean: y8, kind: document, statements: [ { say: { by: pot, at: now } } ] }
   - { name: "a statement of another bean is `<bean>#<id>`", bean: y9, kind: document, statements: [ { say: { by: sam, at: now } }, { meet: { by: nas, of: "nas#needs-rack" } } ] }
@@ -221,6 +222,7 @@ bad:
   - { rule: valency,     bean: x3h, kind: document, statements: [ { say: { by: sam, at: now } }, { serve: { by: nas, at: ["192.0.2.10"], through: carrier-pigeon } } ] }
   - { rule: knowing,     bean: x4, kind: document, statements: [ { pay: { by: ada, of: { count: "1", unit: XTS } } } ] }
   - { rule: knowing,     bean: x5, kind: document, statements: [ { say: { by: sam, at: 2026-10-01 } } ] }
+  - { rule: knowing,     bean: x5c, kind: document, statements: [ { make: { by: ada, at: now } }, { need: { id: n, by: self, of: "a shelf for the rack", from: sam } }, { meet: { id: m, by: sam, of: n } } ] }
   - { rule: knowing,     bean: x5b, kind: document, statements: [ { say: { by: sam, of: [a], at: now } }, { do: { id: a, by: nas, as: web } }, { do: { by: nas, as: router } } ] }
   - { rule: placeholder, bean: x6, kind: host,     statements: [ { say: { by: sam, at: now } }, { own: { by: sam, of: self } }, { answer: { by: sam, of: self, as: law } } ] }
   - { rule: placeholder, bean: x6b, kind: contract, statements: [ { say: { by: sam, at: now } }, { pay: { id: p, by: ada, of: { count: "2", unit: XTS } } }, { bear: { by: ada, of: p, share: 1 } } ] }
@@ -311,6 +313,7 @@ clauses:
     - { says: "a role takes a list only where its row says `many`", bad: [x3b] }
   knowing:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
+    - { says: "a need a person meets (`meet`) is known by that person's own `say`", bad: [x5c] }
     - { says: "a knowing act's `at` is `now` until the save", bad: [x5] }
     - { says: "A bean renamed", commit: [renamed-unsaid] }
     - { says: "An entry a commit adds names who wrote it", commit: [who-no-being] }

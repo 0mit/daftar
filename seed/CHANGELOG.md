@@ -251,6 +251,21 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 3.7** (2026-10-25, daftar v3.7.0, human-ratified rule-change) — **what waits is a need** (the next machinery's
+  design, body IV: IV.1 to IV.4, option B with the mapping the operator ratified). MINOR. What waits is a `need` on the
+  bean it concerns — `need: { id, by: self, of: <what>, from: <whose>, note: "class <letter>" }`, its neighbourhood and
+  recommendation in that bean's `details.waiting.<id>` —, met by a `meet` its person's `say` knows: the rule `knowing`
+  refuses a `meet` by a person that person's own `say` does not know (no garden of the corpus holds one). How pressing it
+  is is its strength on the necessity square (`contingent` of it: it waits without blocking); a need whose `of` names
+  another need waits on that one first. The tools gain `waiting` (family read): every need not met that waits on someone
+  — it names whose it is, or asks words, an amount or another need, never beings alone —, by whose, by class and by the
+  being it concerns. MODEL.md's Contract of Parts, CHECKLIST.md Part E and AGENTS.md say an agent parks what it may not
+  decide as a need on the bean it concerns. In code: bin/leads.py's decisions and bin/now.py's waiting read the needs,
+  never the queue; log/pending.md, where it holds the view's mark, is a view `bin/waiting.py --write` writes from the
+  needs, which bin/save.py writes again in each save, the queue as it stood kept below it as history; and `bin/waiting.py
+  migrate` moves a queue's open entries to needs, each read by its last mark (acked a need still open, parked a lower
+  strength, blocked a need of a need, partly split into parts) and placed on the bean its neighbourhood names, else the
+  session that parked it, its words carried whole — a count unless `--write`, and the gardener's act at adoption.
 - **core 3.6** (2026-10-25, daftar v3.6.0, human-ratified rule-change) — **the agent's door: the rest of the
   gardener's instructions** (the next machinery's design, body III: III.1 to III.4; ledger, not memory, steps 3 to 5).
   MINOR. The table of guards gains five rows, each held to its recorded cases as vectors: `process-command-line`

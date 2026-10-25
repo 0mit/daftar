@@ -307,8 +307,9 @@ When someone says the prices, each `unknown` gives way to the amount, and the no
 
 What a bean has not answered is its `unknown`s and the roles it leaves out, each statement's `note` saying what is
 missing, and its body saying so in prose. A key of your own is refused: the gate takes only the header, the
-statements, and `details` for what fits no verb yet. A question that needs a person's decision goes to the queue,
-`log/pending.md`.
+statements, and `details` for what fits no verb yet. A question that needs a person's decision is a need on the bean
+it concerns, `from` the person whose it is, `note:` its class (MODEL.md, the Contract of Parts); `python3 bin/waiting.py`
+reads what waits.
 
 ### A currency
 

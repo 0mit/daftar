@@ -49,7 +49,7 @@ Then read where the work stands, and what the gardener asks of every agent:
 
     python3 bin/now.py
 
-It prints the open sessions, the decisions waiting on the gardener, the open courses and the latest handover, read
+It prints the open sessions, the needs waiting on the gardener, the open courses and the latest handover, read
 each time and never stored: a handover is its session bean's body, not a loose file. A harness that runs daftar's hooks
 gave you this as the session began (`bin/hook.py start`), with every clause of the agents' work agreement
 (`beans/agents-work.md`, or the seed's where the garden has none); one that runs none reads both first.
@@ -99,9 +99,10 @@ refuses a bean whose change the entry does not name. After a refusal, fix what i
 --again`. A change to the law must say RULE-CHANGE distinctly.
 
 **When you meet a case the law does not cleanly cover:** stop, show the person the nearest verb with its siblings, and
-decide together — or, working alone, park it in `log/pending.md` as `status: proposed` with the neighbourhood you would
-have shown, keep the fact whole in `details` meanwhile, do everything safe around it, and carry on. Never silently
-generalise.
+decide together — or, working alone, park it as a need on the bean it concerns (`need … from:` whose it is, `note:` its
+class), with the neighbourhood you would have shown in that bean's `details.waiting`, keep the fact whole in `details`
+meanwhile, do everything safe around it, and carry on. Never silently generalise. `python3 bin/waiting.py` reads what
+waits.
 
 **Growing the standard:** a garden's own row — a verb, a kind, a namespace, a table's row — that proves general is
 promoted into `core/law/` by a pull request to the daftar repository. That is a rule-change: propose, show the
@@ -112,5 +113,5 @@ neighbourhood, a person ratifies, and the garden adopts it by moving its pin.
 Another agent comes after you — maybe made by another company, knowing nothing of this session, with no way to ask you
 (manifesto: after).
 Leave the journal entry that says what you did and why, your own mistakes recorded where they will be found, and
-anything unfinished parked in `log/pending.md` or a handover. `CHECKLIST.md` Part E says how agents here treat one
+anything unfinished parked as a need on the bean it concerns, or in a handover. `CHECKLIST.md` Part E says how agents here treat one
 another.

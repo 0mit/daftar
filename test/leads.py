@@ -2,8 +2,9 @@
 """Leads: what waits, and for whom — a reading of the garden for each person, never stored, read from what the garden
 already says (bin/leads.py). Who is told is never configured.
 
-Grows a garden of the core and writes in it: a decision parked for the gardener (`status: proposed`, class G), beside
-the queue's own example of an entry in a fenced block, which is none; one of
+Grows a garden of the core and writes in it: a decision parked for the gardener, a need on the bean it concerns (class
+G), beside one met by the gardener's word, which is none, and an entry written by hand in log/pending.md, which is none
+(core 3.7: the queue is a view of the needs); one of
 class F, which a `grant … as: ratify, class: F` of the gardener's opens to another person; a bicycle repair on a walk,
 waiting at a step whose `by` names the part the repairer took in its agreement, and past the step's `usually`; a step
 whose part nobody took; a case at a final step; and an agent session left open. Then each lead is for whom the garden
@@ -93,19 +94,26 @@ A repair.
     write(G, 'beans/sam.md', text(G, 'beans/sam.md').replace(
         '---\nSam', '  - grant: { id: ratify-f, by: self, as: ratify, class: F, to: [p-1a2b3c4d] }\n'
                     '  - say: { by: sam, of: [ratify-f], at: now }\n---\nSam', 1))
+    write(G, 'beans/hive-plan.md', '''---
+bean: hive-plan
+kind: design
+title: "hive-plan — what the hives need decided"
+statements:
+  - make: { by: session-open, at: now }
+  - own:  { by: sam, of: self }
+  - need: { id: rows-for-hives, by: self, of: "a garden row for hives", from: sam, note: "class G" }
+  - need: { id: a-new-name, by: self, of: "a name that establishes an identity", from: sam, note: "class F (a name)" }
+  - need: { id: settled-already, by: self, of: "a decision taken", from: sam, note: "class G" }
+  - meet: { id: settled, by: sam, of: settled-already }
+  - say:  { by: sam, of: [settled], at: now }
+---
+What the hives need decided.
+''')
     write(G, 'log/pending.md', text(G, 'log/pending.md').rstrip('\n') + '''
 
-## rows-for-hives · a garden row for hives · proposed 2026-10-09 by agent (a session)
+## by-hand · a decision written in the queue by hand · proposed 2026-10-09 by agent (a session)
 - class: G
 - status: proposed
-
-## a-new-name · a name that establishes an identity · proposed 2026-10-09 by agent (a session)
-- class: F (a name)
-- status: proposed
-
-## settled-already · a decision taken · proposed 2026-10-01 by agent (a session)
-- class: G
-- status: ratified
 ''')
     write(G, 'beans/session-open.md', '''---
 bean: session-open
@@ -204,6 +212,7 @@ A print job.
     r = grow.run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: a repair walk, three repairs, a ratify grant and an open session',
                  '--body', '- action: RULE-CHANGE — VOCAB.md adds the kind procedure; wrote [[p-1a2b3c4d]], [[walk-repair]], '
                  '[[repair-waiting]], [[repair-nobody]], [[repair-done]], [[sam]], [[session-open]], [[session-closed]], [[flat-lease]], '
+                 '[[hive-plan]], '
                  '[[box-slow]], [[box-mended]], [[box-finding]], [[walk-print]], [[print-slow]] and [[print-now]]', '- ratified_by: sam', cwd=G)
     check("the garden holds them, through its gate", r.returncode == 0, r.out[-900:])
 
@@ -214,14 +223,14 @@ A print job.
     except ValueError:
         leads = []
     by = lambda kind, about: [x for x in leads if x.get('kind') == kind and x.get('about') == about]
-    check("leads: a decision parked for the gardener is the gardener's, its class said",
-          [x['for'] for x in by('decision', 'rows-for-hives')] == ['sam'] and by('decision', 'rows-for-hives')[0]['class'] == 'G',
-          leads)
+    need = lambda n: [x for x in leads if x.get('kind') == 'decision' and x.get('need') == n]
+    check("leads: a decision parked for the gardener — a need on the bean it concerns — is the gardener's, its class said",
+          [(x['for'], x['about'], x['class']) for x in need('rows-for-hives')] == [('sam', 'hive-plan', 'G')], leads)
     check("...one of a class a ratify grant opens is the grant's holder's too",
-          sorted(x['for'] for x in by('decision', 'a-new-name')) == ['p-1a2b3c4d', 'sam'], by('decision', 'a-new-name'))
-    check("...and one taken already is nobody's", not by('decision', 'settled-already'), leads)
-    check("...and the queue's own example of an entry (the seed's `## <slug>`, in a fenced block) is no decision of "
-          "anyone's", not [x for x in leads if x['kind'] == 'decision' and '<' in x['about']],
+          sorted(x['for'] for x in need('a-new-name')) == ['p-1a2b3c4d', 'sam'], need('a-new-name'))
+    check("...and one the gardener met, by their own word, is nobody's", not need('settled-already'), leads)
+    check("...and an entry written in log/pending.md by hand is no decision of anyone's: the queue is a view of the needs",
+          not [x for x in leads if x['kind'] == 'decision' and 'by-hand' in (x['about'], x.get('need'))],
           [x for x in leads if x['kind'] == 'decision'])
     w = by('case', 'repair-waiting')
     check("leads: a case at a step is the party's whose part the step names — the repairer's — and overdue past its usual",

@@ -57,6 +57,10 @@ save that waits for the next second where this one's moment is taken (below). Th
 (core/law/flows.yaml, v1 part 8): a said value is a role of a statement a `say` knows, at `<verb>#<id>.<role>`, and its
 pass is logged in the core's form, `{from, to, through, as, metadata}` (bin/launch.py, v1 part 10).
 
+WHAT WAITS IS WRITTEN WITH THE SAVE (core 3.7): where log/pending.md holds the mark of the view bin/waiting.py writes,
+the save writes that view again from the needs before it stages, so the commit that parks a need on a bean, or meets
+one, carries what waits as it now stands. A view that cannot be written is told, and the save goes on.
+
 It reaches a garden by `seed/LANGUAGE`, which names it (`bin/save.py`, the verb's tool) and its old name, `bin/save.py`,
 which runs it until v1's part 13; nothing installs it. It is called "save" because that is the whole act — journal, stage, commit — where "commit" names its last
 step.
@@ -304,6 +308,22 @@ def log_traced():
                 fh.write(line + '\n')
 
 
+def view():
+    """log/pending.md's view written again from the needs, where it holds the view's mark (bin/waiting.py)."""
+    try:
+        with open(os.path.join(ROOT, 'log', 'pending.md'), encoding='utf-8') as fh:
+            content = fh.read()
+    except OSError:
+        return
+    try:
+        import waiting as dmwaiting
+        if dmwaiting.MARK in content:
+            dmwaiting.write_view(ROOT)
+    except Exception as e:   # noqa: BLE001 — the view is a reading's: a save is never refused for it
+        print(dmparse.said(f"save: log/pending.md's view is not written ({e}); `python3 bin/waiting.py --write` "
+                           f"says why"), file=sys.stderr)
+
+
 def commit(message, again):
     """Stage everything and commit, the hook judging the index. 0 when saved; 1, with the way on, when not."""
     def not_saved(why):
@@ -321,6 +341,7 @@ def commit(message, again):
     if pend:
         journal.stamp_now(pend[-1], _text)
     log_traced()
+    view()
     add = git('add', '-A')
     if add.returncode != 0:
         print(add.stderr.rstrip(), file=sys.stderr)
