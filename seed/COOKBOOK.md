@@ -59,7 +59,8 @@ setting the registry does not show, and may be left out. How far ahead a warning
 form (`clause`): ninety days before a name lapses, read by `python3 bin/daftar.py stale`.
 
 A domain is the `domain` profile's, so the garden takes the profile first, by its name in `VOCAB.md` — a line of the
-law, which a person ratifies (RULE-CHANGE):
+law, which a person ratifies: the commit that changes `VOCAB.md` says RULE-CHANGE in its journal entry, or the gate
+refuses it:
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml

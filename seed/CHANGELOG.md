@@ -251,6 +251,12 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.4** (2026-10-25, daftar v4.4.0, human-ratified rule-change) — **the law's words** (body VIII of the next
+  version's machinery): the sixteen face verbs and square positions given their meaning; `division_form` said in
+  words; `lines`' `went` corrected; a currency nobody named written `XXX`; a person written by the name they give for
+  the record (CHECKLIST Part B); the cookbook saying that editing VOCAB.md makes the entry a RULE-CHANGE; and the rest
+  of the words drafted by the second build run's S1 and placed on v4.3.0 by its S11. No verdict moves. Ratified by the
+  operator after reading the diff.
 - **core 4.3** (2026-10-25, daftar v4.3.0, human-ratified rule-change) — **monitoring as needs** (body VII of the next
   machinery's design, VII.1 to VII.4 and VII.6, ratified as written by the operator on 2026-10-24, its rows designed in
   the build). MINOR. A probe is a reading of a being's need, and whether it read is apart from what it reads: `fail`'s

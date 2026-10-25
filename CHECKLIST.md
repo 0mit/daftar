@@ -191,6 +191,8 @@ never-guesses). `python3 core/check.py --law` proves the law itself consistent.
       day it said so. A party with no `agree` has no acceptance on record, which is not a refusal. One person's report
       of another's yes is known by the reporter's act, not the other's.
 - [ ] **The name is true.** A name given once really names this being, and its namespace really gave it.
+- [ ] **A person is written by the name they give for the record.** What others call them goes in the title; a
+      qualified name, once it travels, is not taken back cheaply.
 - [ ] **External truth is referenced, not paraphrased** into a second copy.
 - [ ] **It reads correctly cold:** plain words, explicit units, absolute positions.
 - [ ] **No silent generalisation.** A case the law does not cover was proposed, not quietly written as an old one.
