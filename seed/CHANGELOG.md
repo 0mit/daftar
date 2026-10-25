@@ -251,6 +251,26 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 3.6** (2026-10-25, daftar v3.6.0, human-ratified rule-change) — **the agent's door: the rest of the
+  gardener's instructions** (the next machinery's design, body III: III.1 to III.4; ledger, not memory, steps 3 to 5).
+  MINOR. The table of guards gains five rows, each held to its recorded cases as vectors: `process-command-line`
+  (forbidden: a command that prints another process's command line — a `ps` that does not name its columns, or names the
+  command line among them; `pgrep -a`, or `-l` with `-f`; a read of `/proc/<pid>/cmdline` — on a host its operand names,
+  this machine or the host an `ssh` gives the command to), `secret-column` (forbidden: a query whose `SELECT` names a
+  column its operand names, or every column, outside a `COUNT( )`), `credential-file` (forbidden: a command that names a
+  file its operand names and does more than describe its shape), `own-worktree` (obligatory: a session writes the garden
+  only in its own worktree) and `no-memory-write` (forbidden: a write into a harness's memory folder). A guard may read
+  the path a write targets (`reads: path`): a write tool's file, or a shell redirection's target, beside the command and
+  the shell; a guard's operand may take a list (`many`). The operands are the gardener's to name, in the clauses of the
+  agents' work agreement; the seed's default holds `no-memory-write`, which takes none. The tools gain `now` (family
+  read): the open sessions, the decisions waiting on the gardener, the open courses and the latest handover, read each
+  time and never stored. In code: bin/hook.py judges a commit and `--no-verify` by the repository the command names — its
+  `git -C`, a `cd` before it on the line — so another repository's commit is that repository's (III.3); its guards
+  judge every write tool's path and every redirection, in `pre` and in `guard`, which `install --guard` hooks before
+  each tool that writes (III.2); its `start` gives every clause of the agreement, those no guard reads among them, and
+  then `now` (III.4); a worktree of the garden is no other garden; and bin/session.py records which harness session
+  opened a session, so the door knows whose worktree is whose (released at its close). AGENTS.md tells an agent whose
+  harness runs no hooks to read `now` first.
 - **core 3.5** (2026-10-25, daftar v3.5.0, human-ratified rule-change) — **a commit judged the same everywhere, and who
   said it** (the next machinery's design, bodies II and V: II.1 to II.4, V.1 and V.4). MINOR. A bean renamed — taken out
   and added under another name by one commit, whose entry says `- renamed: [[<old>]] → [[<new>]]` — keeps the statements

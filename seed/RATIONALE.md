@@ -5427,6 +5427,15 @@ into the rows its file holds; the save's entry says which copy the codes were re
 publisher states no terms of redistribution, and serves its structure as a spreadsheet anyone may fetch. A scheme
 whose provider publishes no machine-readable table (ISCED-F 2013, a PDF) stays shipped where its licence allows it.
 
+## core/law/tools.yaml: tools[now]
+
+WHERE THE WORK STANDS IS READ, NEVER STORED (manifesto once; 2026-10-22): two dozen snapshots of the state of the work
+sat in an agent's memory and two dozen handover files at a garden's top, each true the day it was written. `now` reads it
+from what the garden says — its sessions' worktrees, the decisions in log/pending.md, the courses on their walks, the
+latest session's bean — through the reader of what waits (bin/leads.py), so it cannot disagree with the garden, and a
+handover is its session bean's body. A harness that runs the hooks gives it at a session's start; an agent whose harness
+runs none reads it first (AGENTS.md).
+
 ## core/law/tools.yaml: tools[run]
 
 (ratified by the operator, 2026-10-18: runs into daftar, "yes we move them to reduce the technical debt", the third of
@@ -6408,6 +6417,51 @@ the garden chooses; the seed's default is bash. Its floor is 5.0, the gardener's
 on run 5.1 or later, Git for Windows ships 5, and Apple's /bin/bash is 3.2, below it, so on macOS the install finds
 Homebrew's or says what to install. The harness's own rule picks the shell, not the agent, and is read where it runs
 (bin/hook.py's table of harnesses), never in the law.
+
+## core/law/guards.yaml: guards[process-command-line]
+
+A COMMAND LINE CAN CARRY A PASSWORD (2026-10-11): a server started with its database's password on its command line
+showed it to `pgrep -af`, run on that host to learn what ran there, and the password went into the session's transcript.
+The guard refuses the forms that print a command line on the hosts the gardener names and lets through those that count
+or name: a process's name says what runs, its command line is the program's input. A `ps` passes only where it names its
+columns, because which it prints by default is the system's (Linux's procps prints the name, BSD's the whole command
+line), and a door cannot know another host's system. The hosts are the gardener's operand: on a machine where every
+command line is the agent's own, nothing needs refusing.
+
+## core/law/guards.yaml: guards[secret-column]
+
+A SUBSTRING MEANT TO KEEP A SCHEME KEPT THE HASH (2026-10-10): reading which scheme each mailbox's password hash used, a
+query cut each value at a `$` that unsalted hashes do not hold, and printed every hash whole. A door cannot read what a
+function does to a column without running it, so the guard reads only whether the column is selected: a count shows no
+value, and any other expression of it may. The schemes are learned by counting each (`COUNT(*) … WHERE password LIKE
+'{SHA512}%'`). A label made from the column (`CASE WHEN … THEN 'SHA512'`) prints no hash either, and is refused all the
+same: the words are "unless it only counts", and a label is not a count.
+
+## core/law/guards.yaml: guards[credential-file]
+
+A KEYWORD FILTER IS NOT A MASK (2026-10-21): a launcher script, read to learn what it was with every line holding "pass",
+"token", "secret", "key" or "auth" filtered out, printed nine administrator passwords, because its client takes one as
+`/p:`. What may be learned of such a file is its shape: its listing, size, kind, mode and checksum, the count of its lines
+or of a word's matches. Every other command that names it is refused, whatever it would print, since no door can tell a
+filter that hides everything from one that hides nothing; a search of a folder above it reads it as surely as naming it.
+
+## core/law/guards.yaml: guards[own-worktree]
+
+TWO SESSIONS IN ONE COPY SHARE ONE INDEX (2026-08-08): one session's `git add` stages another's half-finished work, which
+is why the session tool gives each its own worktree; nothing stopped a session from working in the main copy all the
+same. The guard holds a session to the worktree its bean names once the door knows the session: the one its harness
+session opened (bin/session.py records it, off git), or the worktree it stands in. A write outside every copy of the
+garden is not the garden's — a release built in another repository, a scratch file — and is left to the other guards.
+
+## core/law/guards.yaml: guards[no-memory-write]
+
+EVERYTHING IN THE GARDEN, NOTHING IN AN AGENT'S PRIVATE MEMORY (the operator, 2026-10-22, ratifying a home in the garden
+for each kind of thing a harness's memory held): it held some forty of the gardener's standing instructions and the
+state of the work, read by one maker's agent on one machine and recorded by no commit. Each now has its home here — a
+fact as a statement, an instruction as a clause the gardener says, where the work stands as `now` — so the write the
+memory took is refused at the door and the refusal names that home. The memory's folders are the harness's to name, so
+its rule is read where it runs (bin/hook.py's table of harnesses); the seed holds the guard by default, which takes no
+operand.
 
 ## core/law/measures.yaml: forms.clause.attrs.guard
 

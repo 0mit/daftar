@@ -3,9 +3,10 @@
 
     python3 bin/hook.py install claude-code      # this clone's hooks and the harness's shell, in .claude/settings.local.json,
                                                  # kept off git (bin/install.py runs it in a garden's clone)
+    python3 bin/hook.py install claude-code --guard   # `start`, and the guards alone before each tool that writes
     python3 bin/hook.py uninstall claude-code
     python3 bin/hook.py start|prompt|pre|post|end   # what the harness calls, its event on standard input
-    python3 bin/hook.py guard                    # the guards alone, before a shell command (below)
+    python3 bin/hook.py guard                    # the guards alone, before a shell command or a write (below)
 
 (`python` on Windows; `bin/hook.py`, today's name, runs this too until v1's part 13, and a hook installed by either
 name is the other's to remove.) Where daftar does not run the loop (`bin/launch.py` does), the harness that does may call a
@@ -13,26 +14,35 @@ hook before and after each tool. What a hook can see is the harness's to give, s
 that skips its hooks skips them, and the gate at the commit is what holds. Where they run, they FAIL CLOSED — a hook that
 cannot read its event, or breaks, refuses (exit 2) rather than let a tool through unjudged.
 
-  start   the session begins: the gardener's standing instructions to agents, read from the garden, given to the model
-          as context, each guard with whether this harness meets it (the shell it runs commands in, found by its rule).
+  start   the session begins: every standing instruction the gardener gave agents, read from the garden — each clause
+          of the agents' work agreement, those a guard checks with whether this harness meets it (the shell it runs
+          commands in, found by its rule), and those no guard reads, which the session keeps itself — and then where the
+          work stands (bin/now.py), given to the model as context.
   prompt  keeps the person's prompt as the session's `instructions` material, per clone and off git (bin/launch.py's
           store), so the save can trace a said value to it.
-  pre     refuses (exit 2, the reason to the model): a commit made past the save (bin/save.py), or with --no-verify; a write into
-          another garden (CHECKLIST.md Part F — what you would give it is a proposal); a read of a file of this garden in
-          no layer (R4). A file read again only warns: the harness may have dropped it from its context. And before each
-          shell command, each GUARD the gardener's instructions hold (core/law/guards.yaml): a clause of the agents' work
-          agreement, the gardener's own word, read through the one judge (core/judge.py `instructions`), or, for a guard
-          no instruction of the garden names, the seed's default (seed/agents-work.md.template). The refusal names the
-          instruction, what was found, and the file to write instead.
-  guard   the guards of `pre` alone, before each shell command: for a session that starts in a garden and does work
-          beyond it — a release built in a worktree of daftar, committed and pushed there — where the garden's own
-          checks of a commit and of a read would refuse acts that are not the garden's.
+  pre     refuses (exit 2, the reason to the model): a commit made past the save (bin/save.py), or with --no-verify, in a
+          garden — the repository the command names (its `git -C`, a `cd` before it on the line), not the folder the
+          session stands in, so a commit in another repository is that repository's; a write into another garden
+          (CHECKLIST.md Part F — what you would give it is a proposal); a read of a file of this garden in no layer (R4).
+          A file read again only warns: the harness may have dropped it from its context. And before each shell command
+          and each write, each GUARD the gardener's instructions hold (core/law/guards.yaml): a clause of the agents'
+          work agreement, the gardener's own word, read through the one judge (core/judge.py `instructions`), or, for a
+          guard no instruction of the garden names, the seed's default (seed/agents-work.md.template). A guard reads
+          the command, the harness's shell, or the path a write targets — a write tool's file, or a shell redirection's
+          target. The refusal names the instruction, what was found, and what to do instead.
+  guard   the guards of `pre` alone, before each shell command and each write: for a session that starts in a garden
+          and does work beyond it — a release built in a worktree of daftar, committed and pushed there — where the
+          garden's own checks of a read would refuse acts that are not the garden's. `install --guard` hooks it before
+          every tool that writes.
   post    keeps what a read returned as material, in its layer; looks at a shell's or a search's output by content for a
           line of a file a request may not carry, and warns the model, recording it (POST warns until it is measured).
   end     the session is over: a save here is no longer traced against it.
 
 A harness's names for its events and tools are that harness's, so its table is here, in this tool, and written into a
-clone's own settings — never into the law. So is its rule for the shell it runs commands in, and install writes the
+clone's own settings — never into the law. So are its memory folders (claude-code's: `projects/*/memory` in its
+configuration folder, and the folder its `autoMemoryDirectory` setting names), and the variable by which it tells the
+commands it runs which of its sessions runs them (`bin/session.py open` records the garden session that session works
+in, off git: `claim`). So is its rule for the shell it runs commands in, and install writes the
 shell the gardener's `shell-is` names, per system: on Linux the first bash at or above the floor (CLAUDE_CODE_SHELL); on
 macOS Homebrew's, since Apple's /bin/bash is below it, or a refusal saying what to install; on Windows Git for Windows'
 bash, its version checked (CLAUDE_CODE_GIT_BASH_PATH).
@@ -70,7 +80,15 @@ HARNESSES = {
                    'PreToolUse': ('pre', 'Bash|Read|Write|Edit|MultiEdit|NotebookEdit'),
                    'PostToolUse': ('post', 'Read|Bash|Grep'),
                    'SessionEnd': ('end', None)},
+        'guard_events': {'SessionStart': ('start', None),
+                         'PreToolUse': ('guard', 'Bash|Write|Edit|MultiEdit|NotebookEdit')},
         'shell': 'Bash', 'read': 'Read', 'search': 'Grep', 'writes': ('Write', 'Edit', 'MultiEdit', 'NotebookEdit'),
+        # ITS MEMORY, by its own rule (Claude Code 2.1, read from its build): `projects/<folder>/memory` in its
+        # configuration folder (CLAUDE_CONFIG_DIR, else ~/.claude), and the folder `autoMemoryDirectory` names in its
+        # settings — the user's, and the clone's shared and own; and the variable naming its session to the commands
+        # it runs
+        'config': 'CLAUDE_CONFIG_DIR', 'memory': ('projects', '*', 'memory'), 'memory_setting': 'autoMemoryDirectory',
+        'session_env': 'CLAUDE_CODE_SESSION_ID',
         # THE SHELL ITS BASH TOOL RUNS, by its own rule (Claude Code 2.1, read from its build): the override where it
         # names an executable bash or zsh; else $SHELL where it is one, else of the two zsh first unless $SHELL names
         # bash, in these folders; on Windows Git for Windows' bash, at the path its variable names or beside git
@@ -80,18 +98,64 @@ HARNESSES = {
     },
 }
 H = HARNESSES['claude-code']
-COMMIT = re.compile(r'\bgit\b(?:\s+-[cC]\s+\S+|\s+--?[\w-]+(?:=\S+)?)*\s+commit\b')
-# --no-verify as git takes it, abbreviated too (`--no-ver`); a commit's `-n` alone or in a cluster (`-nm`); and a
-# hooks path pointed away from the garden's own, which runs no hook at all
-NO_VERIFY = re.compile(r'\bgit\b[^|;&\n]*\s--no-v(?:e(?:r(?:i(?:fy?)?)?)?)?\b'
-                       r'|\bcommit\b[^|;&\n]*\s-[A-Za-z]*n[A-Za-z]*\b'
-                       r'|\bgit\b[^|;&\n]*core\.hooks[Pp]ath')
+GIT_VALUED = ('-C', '-c', '--git-dir', '--work-tree', '--namespace', '--exec-path', '--config-env', '--super-prefix')
 
 
-def unquoted(cmd):
-    """The command with every quoted argument emptied: what a message says is not what runs (`save.py "w" --body
-    "…git commit…"` commits nothing by hand), and a word that only mentions the save is not the save."""
-    return re.sub(r"'[^']*'|\"(?:[^\"\\]|\\.)*\"", '""', cmd)
+def git_acts(command, cwd):
+    """[(folder, what)]: each git a command line runs on this machine that steps past a gate or commits by hand — `what`
+    is `no-verify` (--no-verify as git takes it, abbreviated too; a commit's `-n`, alone or in a cluster; a hooks path
+    of its own, which runs no hook at all) or `commit` — and the repository it names: its `-C` (or `--work-tree`),
+    made whole against the folder a `cd` before it on the line leaves, else the session's own folder; None where that
+    cannot be placed without running the shell. A word in quotes is the word git is given: a message that says
+    `--no-verify` is a message, and a `git commit` inside another's text (`save.py "w" --body "…"`) runs no git."""
+    from core import guards
+    home = os.path.expanduser('~')
+    out = []
+    for act in guards.acts(command, None, cwd, home):
+        ws = act.cmd.words
+        at = next((n for n, w in enumerate(ws) if guards._name(w) == 'git'), None)
+        if act.remote or at is None:
+            continue
+        texts = [guards.text(w) for w in ws]
+        where, n, sub = act.cwd, at + 1, None
+        while n < len(ws):
+            t = texts[n]
+            key = t.split('=', 1)[0]
+            if key in GIT_VALUED:
+                value = t.split('=', 1)[1] if '=' in t else (texts[n + 1] if n + 1 < len(ws) else '')
+                if key in ('-C', '--work-tree'):
+                    where = guards.place(value, where, home)
+                elif key == '--git-dir':
+                    top = guards.place(value, where, home)
+                    where = os.path.dirname(top) if top and os.path.basename(top) == '.git' else top
+                n += 1 if '=' in t else 2
+                continue
+            if t.startswith('-'):
+                n += 1
+                continue
+            sub = t
+            break
+        after = texts[n + 1:] if sub else []
+        if any('hookspath' in t.lower() for t in texts[at + 1:]) or any(
+                len(t) >= 6 and '--no-verify'.startswith(t) for t in texts[at + 1:]) or (
+                sub == 'commit' and any(re.fullmatch(r'-[A-Za-z]*n[A-Za-z]*', t) for t in after)):
+            out.append((where, 'no-verify'))
+        elif sub == 'commit':
+            out.append((where, 'commit'))
+    return out
+
+
+def written(command, cwd):
+    """The paths a shell command's redirections write here, each as the system resolves it — on Windows a drive Git
+    for Windows' bash writes `/c/…` read as `c:/…`, and a short name (`RUNNER~1`) as the long one."""
+    from core import guards
+    out = []
+    for p in guards.written(command, cwd, os.path.expanduser('~')):
+        if os.name == 'nt':
+            m = re.match(r'^/([A-Za-z])(/.*)?$', p)
+            p = f"{m.group(1)}:{m.group(2) or '/'}" if m else p
+        out.append(os.path.realpath(p))
+    return out
 
 
 def _q(path):
@@ -118,6 +182,107 @@ def is_garden(top):
     (GARDEN.md, or today's VOCAB.md)."""
     return bool(top) and any(os.path.exists(os.path.join(top, 'bin', g)) for g in ('check.py', 'dmcheck.py')) and any(
         os.path.exists(os.path.join(top, f)) for f in ('GARDEN.md', 'VOCAB.md'))
+
+
+def common_dir(top):
+    """The git directory every working copy of the repository at `top` shares, made whole, or None."""
+    r = launch.git(top, 'rev-parse', '--git-common-dir')
+    d = r.stdout.strip() if r is not None and r.returncode == 0 else ''
+    return os.path.realpath(os.path.join(top, d)) if d else None
+
+
+def copies(root):
+    """[(path, branch)] of every working copy of the garden at `root`, its main copy first, as git lists them."""
+    r = launch.git(root, 'worktree', 'list', '--porcelain')
+    out = []
+    for block in (r.stdout if r is not None and r.returncode == 0 else '').split('\n\n'):
+        p = re.search(r'(?m)^worktree (.+)$', block)
+        b = re.search(r'(?m)^branch refs/heads/(.+)$', block)
+        if p:
+            out.append((os.path.realpath(p.group(1)), b.group(1) if b else ''))
+    return out
+
+
+def _sid(value):
+    return re.sub(r'[^A-Za-z0-9-]', '', str(value or ''))[:64]
+
+
+def _claims(root):
+    """The folder where the garden sessions harness sessions work in are recorded: off git, shared by its copies."""
+    d = common_dir(root)
+    return os.path.join(d, 'daftar', 'agents') if d else None
+
+
+def claim(root, slug, env=None, release=False):
+    """Record that the harness session whose command runs this works in the garden session `slug` — each harness by
+    the variable it names its session in (`session_env`) — or, with `release`, forget every record of `slug`.
+    [harness]: the harnesses recorded (none on release)."""
+    env = os.environ if env is None else env
+    d = _claims(root)
+    if not d:
+        return []
+    if release:
+        for p in glob.glob(os.path.join(d, '*.json')):
+            try:
+                with open(p, encoding='utf-8') as fh:
+                    mine = json.load(fh).get('slug') == slug
+                if mine:                             # closed first: Windows removes no file that is open
+                    os.remove(p)
+            except (OSError, ValueError, AttributeError):
+                pass
+        return []
+    out = []
+    for name, h in HARNESSES.items():
+        sid = _sid(env.get(h.get('session_env') or ''))
+        if sid:
+            os.makedirs(d, exist_ok=True)
+            with open(os.path.join(d, f"{name}-{sid}.json"), 'w', encoding='utf-8') as fh:
+                json.dump({'slug': slug, 'harness': name, 'session': sid}, fh)
+            out.append(name)
+    return out
+
+
+def agent_session(root, ev, wts=None):
+    """The worktree of the garden session this agent works in, or None: the one its harness session opened (`claim`),
+    while its worktree stands; else the session's worktree its event's folder lies in."""
+    wts = copies(root) if wts is None else wts
+    d, sid = _claims(root), _sid(ev.get('session_id'))
+    slug = None
+    if d and sid:
+        try:
+            with open(os.path.join(d, f"claude-code-{sid}.json"), encoding='utf-8') as fh:
+                slug = json.load(fh).get('slug')
+        except (OSError, ValueError, AttributeError):
+            slug = None
+    if slug:
+        return next((p for p, b in wts if b == f"session/{slug}"), None)
+    from core import guards
+    here = guards.norm(os.path.realpath(ev.get('cwd') or os.getcwd()))
+    return next((p for p, b in wts if b.startswith('session/') and guards.under(here, guards.norm(p))), None)
+
+
+def memory_folders(root, env=None):
+    """The folders the harness keeps as its memory, by its own rule (the table's `memory`, `memory_setting`)."""
+    env = os.environ if env is None else env
+    config = env.get(H['config']) or os.path.join(os.path.expanduser('~'), '.claude')
+    out = [os.path.join(os.path.realpath(config), *H['memory'])]
+    for p in (os.path.join(config, 'settings.json'), os.path.join(root, '.claude', 'settings.json'),
+              os.path.join(root, '.claude', 'settings.local.json')):
+        try:
+            with open(p, encoding='utf-8') as fh:
+                v = json.load(fh).get(H['memory_setting'])
+        except (OSError, ValueError, AttributeError):
+            continue
+        if isinstance(v, str) and v.strip():
+            out.append(os.path.realpath(os.path.expanduser(v.strip())))
+    return out
+
+
+def path_context(root, ev):
+    """What a guard that reads a path is given beside it: the garden's copies, the agent's own session's worktree and
+    the harness's memory folders."""
+    wts = copies(root)
+    return {'copies': [p for p, _b in wts], 'worktree': agent_session(root, ev, wts), 'memory': memory_folders(root)}
 
 
 def tool_of(root, verb):
@@ -288,9 +453,10 @@ def _kept_at(root):
 
 
 def standing(root):
-    """(holding, table, bad): {guard: [Instruction]} the guards the garden at `root` holds, the law's rows of them, and
-    [(rule, where, message)] what keeps an instruction from being read — read through the one judge, with the seed's
-    default for each guard no instruction of the garden names; kept for the garden as it stands (`_kept_at`)."""
+    """(holding, table, bad, clauses): {guard: [Instruction]} the guards the garden at `root` holds, the law's rows of
+    them, [(rule, where, message)] what keeps an instruction from being read, and [Instruction] the gardener's other
+    clauses to agents, which no guard reads — read through the one judge, with the seed's default for each guard no
+    instruction of the garden names; kept for the garden as it stands (`_kept_at`)."""
     from core import guards, judge
     keep = _kept_at(root)
     if keep and os.path.isfile(keep):
@@ -298,12 +464,13 @@ def standing(root):
             with open(keep, encoding='utf-8') as fh:
                 d = json.load(fh)
             return ({g: [guards.Instruction(**i) for i in ins] for g, ins in d['holding'].items()}, d['table'],
-                    [tuple(x) for x in d['bad']])
+                    [tuple(x) for x in d['bad']], [guards.Instruction(**i) for i in d['clauses']])
         except (OSError, ValueError, KeyError, TypeError):
             pass
     law = judge.garden_law(root)
-    ins, bad = judge.instructions(law, judge.Scope.tree(root), seed=SEED_AGENTS)
-    holding, table = guards.holding(law, ins), guards.table(law)
+    scope = judge.Scope.tree(root)
+    ins, bad = judge.instructions(law, scope, seed=SEED_AGENTS)
+    holding, table, clauses = guards.holding(law, ins), guards.table(law), judge.clauses(law, scope)
     if keep:
         try:
             os.makedirs(os.path.dirname(keep), exist_ok=True)
@@ -312,11 +479,11 @@ def standing(root):
             tmp = f"{keep}.{os.getpid()}"
             with open(tmp, 'w', encoding='utf-8') as fh:
                 json.dump({'holding': {g: [i._asdict() for i in v] for g, v in holding.items()}, 'table': table,
-                           'bad': bad}, fh, ensure_ascii=False)
+                           'bad': bad, 'clauses': [i._asdict() for i in clauses]}, fh, ensure_ascii=False)
             os.replace(tmp, keep)
         except OSError:
             pass
-    return holding, table, bad
+    return holding, table, bad, clauses
 
 
 def said_of(i):
@@ -324,6 +491,8 @@ def said_of(i):
     whose = (f"the gardener's instruction {i.where}" if not i.seed else
              f"the seed's default instruction {i.where}, which holds while the gardener of this garden has said none "
              f"naming `{i.guard}`")
+    if i.guard is None:
+        return f"{whose} ({i.stance}: {i.says or 'as its clause says'}; no guard reads it: the session keeps it)"
     return f"{whose} ({i.stance}: {i.says or i.guard}; guard `{i.guard}`, core/law/guards.yaml)"
 
 
@@ -336,34 +505,58 @@ def shell_fix(operand):
     return why
 
 
-def guarded(root, command):
-    """Why the command may not run, by the guards the garden holds, or None."""
+def ev_cwd(ev):
+    """The folder the harness's shell stands in for this event."""
+    return os.path.realpath(ev.get('cwd') or os.getcwd())
+
+
+def this_host():
+    """This machine's name, as it says it: the host a command run here runs on."""
+    import platform
+    return platform.node()
+
+
+def guarded(root, command=None, paths=(), ev=None):
+    """Why the act may not happen, by the guards the garden holds, or None: a shell command (`command`, its shell and
+    the paths its redirections write), or a write tool's write (`paths` alone)."""
     from core import guards
-    holding, table, bad = standing(root)
+    holding, table, bad = standing(root)[:3]
     if bad:
         where, msg = bad[0][1], bad[0][2]
         return (f"the gardener's instructions to agents cannot be read, so no command is judged and none runs: {where}: "
                 f"{msg} — correct the clause (a file edit), then run the command again")
     law = types.SimpleNamespace(guards=table)
-    shell = None
+    shell, ctx, ev = None, None, ev or {}
     for name in sorted(holding, key=lambda g: (table.get(g, {}).get('reads') != 'shell', g)):
+        reads = table.get(name, {}).get('reads')
         for i in holding[name]:
-            if table.get(name, {}).get('reads') == 'shell':
+            if reads == 'shell':
+                if command is None:
+                    continue                         # the shell is the commands' guard; a write tool runs none
                 shell = shell or harness_shell() or ()
                 r = guards.refusal(law, name, i.operand, shell=shell)
                 if r:
                     return f"{said_of(i)}: {r.found}. Every command is refused until it is met: {shell_fix(i.operand)}"
-            else:
-                r = guards.refusal(law, name, i.operand, command=command)
+            elif reads == 'path':
+                if paths and ctx is None:
+                    ctx = path_context(root, ev)
+                for p in paths:
+                    r = guards.refusal(law, name, i.operand, path=p, **ctx)
+                    if r:
+                        return f"{said_of(i)}: {r.found}. Instead, {r.instead}"
+            elif command is not None:
+                r = guards.refusal(law, name, i.operand, command=command, host=this_host(), cwd=ev_cwd(ev),
+                                   home=os.path.expanduser('~'))
                 if r:
                     return f"{said_of(i)}: {r.found}. Instead, {r.instead}"
     return None
 
 
 def on_start(ev, root):
-    """The gardener's standing instructions, given to the model as the session begins, each with whether it is met."""
+    """Every standing instruction the gardener gave agents, given to the model as the session begins — those a guard
+    checks, each with whether it is met, and those the session keeps itself — and where the work stands (bin/now.py)."""
     from core import guards
-    holding, table, bad = standing(root)
+    holding, table, bad, clauses = standing(root)
     lines = []
     for name in sorted(holding):
         for i in holding[name]:
@@ -374,17 +567,24 @@ def on_start(ev, root):
                 line += (f": NOT MET — {r.found}; every shell command will be refused until {shell_fix(i.operand)}" if r
                          else f": met, {shell[0]} {shell[1]} ({shell[2]})")
             lines.append(line)
+    lines += [f"- {said_of(i)}" for i in clauses]
     lifted = sorted(g for g, v in holding.items() if not v)
     if lifted:
         lines.append(f"- lifted by the gardener: {', '.join(lifted)}")
     for _rule, where, msg in bad:
         lines.append(f"- an instruction cannot be read, and every shell command will be refused until it is corrected: "
                      f"{where}: {msg}")
+    say = []
     if lines:
-        say = ("The standing instructions to agents in this garden — its gardener's, read from it, or the seed's "
-               "default where the gardener has said none; bin/hook.py checks each before every shell command and refuses "
-               "what it forbids:\n" + '\n'.join(lines))
-        print(json.dumps({'hookSpecificOutput': {'hookEventName': 'SessionStart', 'additionalContext': say}}))
+        say.append("The standing instructions to agents in this garden — its gardener's, read from it, or the seed's "
+                   "default where the gardener has said none; bin/hook.py checks each that names a guard before every "
+                   "shell command and write, and refuses what it forbids:\n" + '\n'.join(lines))
+    try:
+        import now as dmnow
+        say.append(dmnow.text(dmnow.read(root)))
+    except Exception as e:      # noqa: BLE001 — the session still begins, told that where the work stands was not read
+        say.append(f"now: where the work stands could not be read ({type(e).__name__}: {e}); run `{PY} bin/now.py`")
+    print(json.dumps({'hookSpecificOutput': {'hookEventName': 'SessionStart', 'additionalContext': '\n\n'.join(say)}}))
 
 
 def on_prompt(ev, root):
@@ -394,27 +594,39 @@ def on_prompt(ev, root):
         s.add(str(ev['prompt']), {'layer': 'instructions'}, 'instructions')
 
 
+def write_of(a):
+    """The path a write tool targets, as the system resolves it, or None."""
+    path = a.get('file_path') or a.get('notebook_path') or ''
+    return os.path.realpath(path) if path else None
+
+
 def on_pre(ev, root):
     tool, a = ev.get('tool_name'), ev.get('tool_input') or {}
     if tool == H['shell']:
-        cmd = unquoted(str(a.get('command') or ''))
-        if NO_VERIFY.search(cmd):
-            deny(f"--no-verify (or -n, or a hooks path of its own) steps past the gate; a garden's commit is judged by "
-                 f"it — save through {tool_of(root, 'save')}")
-        # the save commits from inside its own process, so no command line the model runs is ever its commit: a
-        # `git commit` in one is by hand, whatever else the line mentions
-        if COMMIT.search(cmd):
-            deny(f"a commit here is made by the save, which journals and is traced: {PY} {tool_of(root, 'save')} \"<who>\" "
-                 f"\"<what>\" < entry.md")
-        why = guarded(root, str(a.get('command') or ''))
+        command, cwd = str(a.get('command') or ''), ev_cwd(ev)
+        for where, what in git_acts(command, cwd):
+            top = top_of(where) if where else root      # a repository the line names; else, unread, the session's own
+            if not (top and is_garden(top)):
+                continue                                 # another repository's commit is that repository's
+            if what == 'no-verify':
+                deny(f"--no-verify (or -n, or a hooks path of its own) steps past the gate; a garden's commit is judged "
+                     f"by it — save through {tool_of(root, 'save')}")
+            # the save commits from inside its own process, so no command line the model runs is ever its commit: a
+            # `git commit` in one is by hand, whatever else the line mentions
+            deny(f"a commit here is made by the save, which journals and is traced: {PY} {tool_of(root, 'save')} "
+                 f"\"<who>\" \"<what>\" < entry.md")
+        why = guarded(root, command, written(command, cwd), ev)
         if why:
             deny(why)
     elif tool in H['writes']:
-        path = a.get('file_path') or a.get('notebook_path') or ''
+        path = write_of(a)
         top = top_of(path) if path else None
-        if top and top != root and is_garden(top):
+        if top and top != root and is_garden(top) and common_dir(top) != common_dir(root):
             deny(f"{path} is in another garden ({top}); it is not yours to write — what you would give it is a proposal "
                  f"(CHECKLIST.md Part F: {tool_of(root, 'propose')})")
+        why = guarded(root, None, [path] if path else [], ev)
+        if why:
+            deny(why)
     elif tool == H['read']:
         rel = rel_in(root, str(a.get('file_path') or ''))
         if rel and not rel.startswith('.git/') and os.path.isfile(os.path.join(root, rel)):
@@ -428,10 +640,17 @@ def on_pre(ev, root):
 
 
 def on_guard(ev, root):
-    if ev.get('tool_name') == H['shell']:
-        why = guarded(root, str((ev.get('tool_input') or {}).get('command') or ''))
-        if why:
-            deny(why)
+    tool, a = ev.get('tool_name'), ev.get('tool_input') or {}
+    if tool == H['shell']:
+        command = str(a.get('command') or '')
+        why = guarded(root, command, written(command, ev_cwd(ev)), ev)
+    elif tool in H['writes']:
+        path = write_of(a)
+        why = guarded(root, None, [path] if path else [], ev)
+    else:
+        return
+    if why:
+        deny(why)
 
 
 def on_post(ev, root):
@@ -454,7 +673,9 @@ def on_post(ev, root):
         print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PostToolUse', 'additionalContext': say}}))
 
 
-def install(root, harness, on=True):
+def install(root, harness, on=True, guard=False):
+    """This clone's hooks for the harness, in its own settings, kept off git: every event's (`events`), or with
+    `guard` the session's start and the guards alone before each tool that writes (`guard_events`); off, none."""
     h = HARNESSES.get(harness)
     if h is None:
         sys.exit(f"hook: no harness `{harness}` — {', '.join(HARNESSES)}")
@@ -468,10 +689,12 @@ def install(root, harness, on=True):
         sys.exit(f"hook: {h['settings']} is not JSON; nothing changed")
     me = os.path.abspath(__file__)
     hooks = cfg.setdefault('hooks', {})
-    for event, (verb, matcher) in h['events'].items():
+    wanted = h['guard_events'] if guard else h['events']
+    for event in h['events']:
         keep = [g for g in hooks.get(event, []) if not any(re.search(r'\b(?:dm)?hook\.py\b', str(x.get('command', '')))
                                                             for x in g.get('hooks', []))]
-        if on:
+        if on and event in wanted:
+            verb, matcher = wanted[event]
             g = {'hooks': [{'type': 'command', 'command': f'{_q(sys.executable)} {_q(me)} {verb}'}]}
             if matcher:
                 g['matcher'] = matcher
@@ -512,7 +735,7 @@ def install(root, harness, on=True):
 def shell_setting(root, cfg):
     """The shell the garden's `shell-is` names, written into the harness's settings for this system: on Windows Git for
     Windows' bash (CLAUDE_CODE_GIT_BASH_PATH), else CLAUDE_CODE_SHELL. None, or why it could not be."""
-    holding, _table, bad = standing(root)
+    holding, _table, bad = standing(root)[:3]
     if bad:
         return f"the gardener's instructions cannot be read: {bad[0][1]}: {bad[0][2]}"
     for i in holding.get('shell-is') or []:
@@ -530,10 +753,11 @@ def main(argv):
         root = launch.git(os.getcwd(), 'rev-parse', '--show-toplevel').stdout.strip()
         if not root:
             sys.exit("hook: not inside a garden's git working copy")
-        return install(root, argv[1] if len(argv) > 1 else 'claude-code', argv[0] == 'install')
+        names = [x for x in argv[1:] if not x.startswith('--')]
+        return install(root, names[0] if names else 'claude-code', argv[0] == 'install', guard='--guard' in argv)
     verbs = {'start': on_start, 'prompt': on_prompt, 'pre': on_pre, 'guard': on_guard, 'post': on_post, 'end': None}
     if argv[:1] == [] or argv[0] not in verbs:
-        sys.exit(f"hook: install|uninstall <harness>, or {'|'.join(verbs)} with the event on standard input")
+        sys.exit(f"hook: install [--guard]|uninstall <harness>, or {'|'.join(verbs)} with the event on standard input")
     try:
         ev = json.loads(sys.stdin.read() or '{}')
         if not isinstance(ev, dict):

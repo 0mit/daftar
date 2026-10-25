@@ -10,8 +10,10 @@ statements:
   - forbidden:  { id: one-text-one-parser, of: quoted-text, through: self, clause: { guard: one-text-one-parser } }
   - can:        { id: commands-in-bash, by: { someone: session }, of: "run its commands in bash, 5.0 or later" }
   - obligatory: { id: shell-is, of: commands-in-bash, through: self, clause: { guard: shell-is, operand: { shell: bash, floor: "5.0" } } }
+  - can:        { id: memory-writes, by: { someone: session }, of: "write into a harness's memory folder what belongs in the garden" }
+  - forbidden:  { id: no-memory-write, of: memory-writes, through: self, clause: { guard: no-memory-write } }
 ---
-What every agent working in this garden is bound by, as its gardener says it. These two clauses are the seed's: a new
+What every agent working in this garden is bound by, as its gardener says it. These three clauses are the seed's: a new
 garden starts with them.
 
 - **One text, one parser.** A command is read by one shell, the garden's. Text meant for another interpreter, such as
@@ -19,6 +21,11 @@ garden starts with them.
   or as one argument. It is never carried inside another interpreter's quotes.
 - **The shell is bash, 5.0 or later.** The agent's harness runs its commands in bash. `python3 bin/hook.py install
   claude-code` sets it in this clone's own settings.
+- **Nothing in a harness's memory.** What an agent learns goes into the garden, where every agent after it reads it: a
+  fact as a statement on the bean it is about, a standing instruction as a clause here that the gardener says. Where
+  the work stands is read, never stored: `python3 bin/now.py`. A write into the harness's memory folder is refused.
 
-To lift a clause, say its contradictory: `permitted` of `quoted-text`, or `omissible` of `commands-in-bash`, each a
-clause naming the same guard. To change one, change its operand, for example another shell or another floor.
+To lift a clause, say its contradictory: `permitted` of `quoted-text` or of `memory-writes`, or `omissible` of
+`commands-in-bash`, each a clause naming the same guard. To change one, change its operand, for example another shell or
+another floor. The law's other guards (core/law/guards.yaml) hold where the gardener names them in a clause here, with
+the operand each takes: the hosts, the columns, the files.

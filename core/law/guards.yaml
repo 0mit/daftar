@@ -2,9 +2,11 @@
 # gardener — a clause of the agents' work agreement on the permission square, whose `guard` is a row here and whose
 # `operand` is what the row `takes` (core/law/measures.yaml `clause`) — and holds while such an instruction says its
 # `stance`; one that says the stance's contradictory lifts it. It reads one thing of the act (`reads`): the `command` a
-# shell is given, or the `shell` the agent's harness runs its commands in. Each row is applied by core/guards.py, one
-# function a row and none without one, and held there to its `vectors`: what it refuses and what it lets through, each
-# with the operand it is judged under where the row takes one.
+# shell is given, the `shell` the agent's harness runs its commands in, or the `path` a write targets — a write tool's
+# file, or a shell redirection's target. Each row is applied by core/guards.py, one function a row and none without one,
+# and held there to its `vectors`: what it refuses and what it lets through, each with the operand it is judged under
+# where the row takes one, and what the door gives beside the act: the machine it runs on (`host`), the garden's working
+# copies (`copies`), the worktree of the agent's own session (`worktree`) and the harness's memory folders (`memory`).
 # The table is closed. These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 guards:
   - guard: one-text-one-parser
@@ -71,5 +73,101 @@ guards:
       - { operand: { shell: bash, floor: "5.0" }, shell: "", version: "", refused: "true" }
       - { operand: { shell: bash }, shell: bash, version: "3.2.57", refused: "false" }
       - { operand: { shell: zsh }, shell: zsh, version: "5.9", refused: "false" }
+  - guard: process-command-line
+    stance: forbidden
+    reads: command
+    takes:
+      hosts: { required: "true", many: "true", in: { pattern: "^[A-Za-z0-9][A-Za-z0-9._-]*$" }, meaning: "the hosts on which no other process's command line is printed: each by the name a command gives it (the host `ssh` is given, its user and port aside), or this machine's own, by its whole name or its first label" }
+    meaning: "a command that prints another process's command line — `ps` with full arguments, `pgrep -a`, /proc/<pid>/cmdline — on a host its operand names. Refused before it runs, on such a host (this machine, where the door runs, or the host an `ssh` gives the command to): a `ps` but one that names its columns, none of them the command line (`args`, `cmd`, `command`); a `pgrep` that lists in full (`-a`, or `-l` with `-f`, as BSD's reads them); and a read of a process's `/proc/<pid>/cmdline`"
+    vectors:
+      - { operand: { hosts: [db1] }, command: "ssh db1 pgrep -af erp", refused: "true" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 'pgrep -af erp'", refused: "true" }
+      - { operand: { hosts: [db1] }, command: "ssh -J gw1 admin@db1 ps auxww", refused: "true" }
+      - { operand: { hosts: [db1] }, command: "ssh -p 2222 db1.example.com sudo ps -ef", refused: "true" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 ps -eo pid,args", refused: "true" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 ps -C erp", refused: "true" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 pgrep -lf erp", refused: "true" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 cat /proc/1234/cmdline", refused: "true" }
+      - { operand: { hosts: [ws1] }, command: "ps aux", host: ws1, refused: "true" }
+      - { operand: { hosts: [ws1] }, command: "pgrep -a model-server", host: ws1.example.com, refused: "true" }
+      - { operand: { hosts: [ws1] }, command: "for p in $(pgrep erp); do tr '\\0' ' ' < /proc/$p/cmdline; done", host: ws1, refused: "true" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 pgrep -c erp", refused: "false" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 pgrep -l erp", refused: "false" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 pgrep -f erp", refused: "false" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 ps -o pid,etime,comm -C erp", refused: "false" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 cat /proc/cmdline", refused: "false" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 systemctl status erp", refused: "false" }
+      - { operand: { hosts: [db1] }, command: "ssh db1 grep -c pgrep /etc/crontab", refused: "false" }
+      - { operand: { hosts: [db1] }, command: "ssh web1 ps aux", refused: "false" }
+      - { operand: { hosts: [db1] }, command: "ps aux", host: ws1, refused: "false" }
+  - guard: secret-column
+    stance: forbidden
+    reads: command
+    takes:
+      columns: { required: "true", many: "true", in: { pattern: "^[A-Za-z_][A-Za-z0-9_$]*(\\.[A-Za-z_][A-Za-z0-9_$]*)?$" }, meaning: "the columns no query selects but to count them: each a column of any table (`password`), or of one (`<table>.<column>`)" }
+    meaning: "a query that selects a column its operand names, unless it only counts. Refused before it runs: a `SELECT` in the command's text whose list names such a column, or every column (`*`) of a table that may hold it, outside a `COUNT( )`; a column given with its table is that table's, read where the statement names the table"
+    vectors:
+      - { operand: { columns: [password] }, command: "mysql mail -N -e \"SELECT username, SUBSTRING_INDEX(password, '$', 3) FROM mailbox\"", refused: "true" }
+      - { operand: { columns: [mailbox.password] }, command: "ssh db1 mysql mail -e 'SELECT * FROM mailbox'", refused: "true" }
+      - { operand: { columns: [password] }, command: "psql -d erp -c 'select login, password from res_users'", refused: "true" }
+      - { operand: { columns: [password] }, command: "ssh db1 mysql mail -e 'SELECT m.username, m.password FROM mailbox m'", refused: "true" }
+      - { operand: { columns: [password] }, command: "mysql mail -e \"SELECT CASE WHEN password LIKE '{SHA512}%' THEN 'SHA512' END FROM mailbox\"", refused: "true" }
+      - { operand: { columns: [token] }, command: "sqlite3 app.db 'SELECT id, token FROM sessions'", refused: "true" }
+      - { operand: { columns: [password] }, command: "mysql mail -N -e \"SELECT COUNT(*) FROM mailbox WHERE password LIKE '{SHA512}%'\"", refused: "false" }
+      - { operand: { columns: [password] }, command: "mysql mail -e 'SELECT COUNT(DISTINCT password) FROM mailbox'", refused: "false" }
+      - { operand: { columns: [password] }, command: "mysql mail -e 'SELECT username, active FROM mailbox'", refused: "false" }
+      - { operand: { columns: [password] }, command: "mysql mail -e 'SELECT username, password_expiry FROM mailbox'", refused: "false" }
+      - { operand: { columns: [mailbox.password] }, command: "mysql mail -e 'SELECT * FROM alias'", refused: "false" }
+      - { operand: { columns: [mailbox.password] }, command: "mysql mail -e 'SELECT password FROM admin'", refused: "false" }
+  - guard: credential-file
+    stance: forbidden
+    reads: command
+    takes:
+      files: { required: "true", many: "true", in: { pattern: "^(~/|/|[A-Za-z]:[\\\\/]).+" }, meaning: "the files no command prints: each by its path, from the root or from the home folder (`~/`)" }
+    meaning: "a command that prints a file its operand names, whose shape alone may be described. Refused before it runs: a command that names such a file — by its path, by its name, or by a pattern that matches it, or a folder above it that it searches whole — unless it only describes it: `ls`, `stat`, `wc`, `file`, `du`, `test`, a checksum, or a search that only counts or names (`grep -c`, `-l`, `-L`, `-q`); on whichever host it runs"
+    vectors:
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 grep -v -i -E 'pass|token|secret|key|auth' /root/rdp-launch", refused: "true" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 sudo cat /root/rdp-launch", refused: "true" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 'cd /root && head -5 rdp-launch'", refused: "true" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 awk '{print $1}' /root/rdp-launch", refused: "true" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 cat /root/rdp-*", refused: "true" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 grep -rn xfreerdp /root", refused: "true" }
+      - { operand: { files: [/root/rdp-launch] }, command: "scp db1:/root/rdp-launch .", refused: "true" }
+      - { operand: { files: ["~/.netrc"] }, command: "cat ~/.netrc", refused: "true" }
+      - { operand: { files: ["~/.netrc"] }, command: "less /home/u/.netrc", refused: "true" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 ls -l /root/rdp-launch", refused: "false" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 wc -l /root/rdp-launch", refused: "false" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 sudo sha256sum /root/rdp-launch", refused: "false" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 stat -c %s /root/rdp-launch", refused: "false" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 grep -c xfreerdp /root/rdp-launch", refused: "false" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 cat /root/other-script", refused: "false" }
+      - { operand: { files: [/root/rdp-launch] }, command: "ssh db1 grep -rn xfreerdp /etc", refused: "false" }
+      - { operand: { files: [/root/rdp-launch] }, command: "cat /tmp/rdp-launch", refused: "false" }
+  - guard: own-worktree
+    stance: obligatory
+    reads: path
+    takes: {}
+    meaning: "a session writes only under the worktree its session bean names: once the door knows the session an agent works in (it opened it, or works in its worktree), a write whose path lies in another working copy of the garden — its main copy, or another session's worktree — is refused; a write outside every copy of the garden is not this guard's"
+    vectors:
+      - { path: /home/u/garden/beans/x.md, worktree: /home/u/garden-sessions/s1, copies: [/home/u/garden, /home/u/garden-sessions/s1, /home/u/garden-sessions/s2], refused: "true" }
+      - { path: /home/u/garden-sessions/s2/beans/x.md, worktree: /home/u/garden-sessions/s1, copies: [/home/u/garden, /home/u/garden-sessions/s1, /home/u/garden-sessions/s2], refused: "true" }
+      - { path: /home/u/garden-sessions/s10/x.md, worktree: /home/u/garden-sessions/s1, copies: [/home/u/garden, /home/u/garden-sessions/s1, /home/u/garden-sessions/s10], refused: "true" }
+      - { path: "C:\\Users\\u\\garden\\beans\\x.md", worktree: "C:/Users/u/garden-sessions/s1", copies: ["c:/users/u/garden", "C:/Users/u/garden-sessions/s1"], refused: "true" }
+      - { path: /home/u/garden-sessions/s1/beans/x.md, worktree: /home/u/garden-sessions/s1, copies: [/home/u/garden, /home/u/garden-sessions/s1], refused: "false" }
+      - { path: /tmp/scratch/notes.txt, worktree: /home/u/garden-sessions/s1, copies: [/home/u/garden, /home/u/garden-sessions/s1], refused: "false" }
+      - { path: /home/u/garden/beans/x.md, copies: [/home/u/garden, /home/u/garden-sessions/s1], refused: "false" }
+  - guard: no-memory-write
+    stance: forbidden
+    reads: path
+    takes: {}
+    meaning: "a write into a harness's memory folder, which no other agent reads and no commit records: what an agent learns goes into the garden — a fact as a statement, a standing instruction as a clause the gardener says — and where the work stands is read, never stored. Refused before it is made: a write whose path lies in a folder the harness keeps as its memory, by the harness's own rule (bin/hook.py's table of harnesses)"
+    vectors:
+      - { path: /home/u/.claude/projects/-home-u-garden/memory/job-search.md, memory: ["/home/u/.claude/projects/*/memory"], refused: "true" }
+      - { path: /home/u/.claude/projects/-home-u-garden/memory/MEMORY.md, memory: ["/home/u/.claude/projects/*/memory"], refused: "true" }
+      - { path: "C:\\Users\\u\\.claude\\projects\\C--Users-u-garden\\memory\\x.md", memory: ["C:/Users/u/.claude/projects/*/memory"], refused: "true" }
+      - { path: /home/u/notes/kept-by-the-harness/a.md, memory: ["/home/u/.claude/projects/*/memory", /home/u/notes/kept-by-the-harness], refused: "true" }
+      - { path: /home/u/.claude/projects/-home-u-garden/b5455475.jsonl, memory: ["/home/u/.claude/projects/*/memory"], refused: "false" }
+      - { path: /home/u/garden/beans/x.md, memory: ["/home/u/.claude/projects/*/memory"], refused: "false" }
+      - { path: /home/u/garden/memory/notes.md, memory: ["/home/u/.claude/projects/*/memory"], refused: "false" }
 columns:
   guards: { guard: required, stance: required, reads: required, takes: required, meaning: required, vectors: required }

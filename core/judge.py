@@ -176,6 +176,44 @@ def instructions(law, scope, seed=None):
     return out, bad
 
 
+AGENTS_WORK = 'agents-work'     # the agents' work agreement as the seed plants it (seed/agents-work.md.template)
+
+
+def clauses(law, scope):
+    """[guards.Instruction]: the gardener's other standing instructions — each clause on the permission square, said by
+    the garden's gardener and in force, of the agents' work agreement (the bean `agents-work`, or a bean holding a clause
+    that names a guard), that names no guard, so no door refuses by it and the session is given it to keep. Its `guard`
+    is None. Read by this judge's reader and law, as `instructions` reads the rest."""
+    from core import guards, inforce
+    if scope.garden is None:
+        scope.garden = engine.Garden.read(scope.root)
+    if law is None:
+        law = garden_law(scope.root)
+    G = scope.garden
+    J = engine.Judge(law, G)
+    F = inforce.InForce(scope.root, G=G, law=law)
+    out = []
+    for b in G.beans.values():
+        square = [(i, verb, r) for i, verb, r in b.items if verb in guards.CONTRADICTORY and 'held' not in r]
+        named = any(isinstance(r.get('clause'), dict) and r['clause'].get('guard') is not None for _i, _v, r in square)
+        if b.id != AGENTS_WORK and not named:
+            continue
+        for i, verb, r in square:
+            c = r.get('clause')
+            if isinstance(c, dict) and c.get('guard') is not None:
+                continue
+            said = G.gardener is not None and any(v == 'say' and rr.get('by') == G.gardener
+                                                  for v, rr in J._acts_of(b, i, r))
+            state = c.get('state') if isinstance(c, dict) else None
+            if not said or str(state or 'in-force') != 'in-force' or F.holds(b.id, r) is False:
+                continue
+            hit = J.statement(r.get('of'), b)
+            says = hit[3].get('of') if hit and isinstance(hit[3].get('of'), str) else None
+            out.append(guards.Instruction(None, verb, {}, f"{b.id}#{r['id']}" if isinstance(r.get('id'), str)
+                                          else f"{b.id}[{i}]", says, False))
+    return out
+
+
 def _staged(law, scope):
     """The index, copied into a temporary directory and judged there with the law it stages; then the commit's own
     rules, between the index and the last commit."""

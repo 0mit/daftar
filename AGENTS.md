@@ -36,6 +36,15 @@ an agent may only propose (manifesto: parts; `MODEL.md`, the Contract of Parts).
 Do not assume which you are. Find out. And another garden — even one on this machine, even one your shell can reach — is
 not yours to write: what you would give it is a proposal (`CHECKLIST.md` Part F).
 
+Then read where the work stands, and what the gardener asks of every agent:
+
+    python3 bin/now.py
+
+It prints the open sessions, the decisions waiting on the gardener, the open courses and the latest handover, read
+each time and never stored: a handover is its session bean's body, not a loose file. A harness that runs daftar's hooks
+gave you this as the session began (`bin/hook.py start`), with every clause of the agents' work agreement
+(`beans/agents-work.md`, or the seed's where the garden has none); one that runs none reads both first.
+
 ## Before writing: the forms
 
 `seed/FORMS.md` — what an agent writes most, written the way the gate accepts it: the gardener, another person and the

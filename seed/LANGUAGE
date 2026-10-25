@@ -21,6 +21,7 @@ bin/garden.py
 bin/where.py
 bin/stale.py
 bin/leads.py
+bin/now.py
 bin/act.py
 bin/walktool.py
 bin/routines.py
