@@ -32,6 +32,13 @@ something; a reader shown a path that does not resolve has been misled with the 
 
 THIS TOOL NEVER WRITES. It reports.
 
+A PIN NAMING ANOTHER REPOSITORY (core 3.5, V.4) — `pin: { …, through: <a garden or a codebase>, at: [<moment>,
+"<root>@<commit>"] }` — is read here, never by the gate: its commit against the clone this host keeps at that root.
+
+  PINNED        the commit is in that repository's history, the clone here
+  NOT-IN-CLONE  the clone here does not reach it: fetch it there, or the pin names a wrong commit
+  HOPED         this host holds no clone of it: the commit is hoped, not judged — never refused
+
 Usage:
   python3 bin/where.py                 # every located_at position in the garden, resolved for this host
   python3 bin/where.py <bean>          # just that bean
@@ -253,6 +260,35 @@ def reachable_in_git(repo_path, oid):
                               capture_output=True, timeout=15).returncode == 0
     except (OSError, subprocess.SubprocessError):
         return False
+
+
+def pins(root=ROOT):
+    """[(bean, the pin's id or index, the repository it is `through`, its `<root>@<object>`)] of each pin of a garden of
+    the core that names another repository (core 3.5, V.4): another garden's commit, or a codebase's."""
+    if not dmgarden.runs_core(root):
+        return []
+    out = []
+    for bid, b in sorted(dmgarden.core_garden(root).beans.items()):
+        for i, v, r in b.items:
+            if v != 'pin' or 'held' in r or not isinstance(r.get('through'), str):
+                continue
+            ats = r.get('at') if isinstance(r.get('at'), list) else [r.get('at')]
+            out += [(bid, r.get('id') if isinstance(r.get('id'), str) else i, r['through'], a) for a in ats
+                    if isinstance(a, str) and OBJECT_FORM.match(a)]
+    return out
+
+
+def pinned(position, through, roots, names=()):
+    """A pin's commit in another repository, read against a clone of it ON THIS HOST — its `<root>@<object>`, the root
+    one this host declares (`roots`): PINNED where the commit is reachable there, NOT-IN-CLONE where the clone does not
+    reach it (fetch it, or the pin is wrong), HOPED where this host holds no clone. Never a failure: whether a
+    repository's history holds a commit is a fact only a host with a clone can read, so no gate refuses it."""
+    path, oid, why = on_host(position, roots, names)
+    if path is None or not os.path.isdir(path):
+        return 'HOPED', f"{position} — {through}'s commit, not judged here: {why or path + ' is not on this host'}"
+    if reachable_in_git(path, oid):
+        return 'PINNED', f"{oid} is in {through}'s history, the clone at {path}"
+    return 'NOT-IN-CLONE', f"{oid} is not in the clone of {through} at {path}: fetch it there, or the pin names a wrong commit"
 
 
 def classify(entry, roots, names=None, bound=None):
@@ -619,6 +655,13 @@ def main():
             if zv:
                 counts[zv[0]] = counts.get(zv[0], 0) + 1
                 rows.append((zv[0], bid, path, zv[1]))
+
+    for bid, sid, through, pos in pins():
+        if only and bid != only:
+            continue
+        verdict, detail = pinned(pos, through, roots, names)
+        counts[verdict] = counts.get(verdict, 0) + 1
+        rows.append((verdict, bid, f"pin {sid}", detail))
 
     for v, bid, sysname, detail in rows:
         print(f"  {v:10s} {bid:14s} {str(sysname):19s} {detail}")

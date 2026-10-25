@@ -569,10 +569,25 @@ def _pin_problems(where, r, b, G):
         return [(f"{where}.at", "holds the moment the reading was read at (`now`, which the save writes) and the commit "
                                 "it was read in, `<repo>@<object id>` (git-object-graph)")]
     sha = GRAPH.match(commits[0]).group(2)
-    if G.root and 'through' not in r and os.path.isdir(os.path.join(G.root, '.git')) and subprocess.run(
+    # A PIN NAMING ANOTHER REPOSITORY (core 3.5, V.4): `through` the garden or the codebase whose commit it is — its
+    # `<root>@<object>` a root of the host that holds a clone of it, which bin/where.py reads where one does (HOPED where
+    # none does); no gate here refuses another repository's commit, since its verdict would be the machine's
+    there = r.get('through')
+    if there is not None:
+        b2 = G.beans.get(there) if isinstance(there, str) else None
+        if b2 is None or b2.kind not in ('garden', 'codebase'):
+            out.append((f"{where}.through", f"`through: {there}` names the repository the commit is of — a `garden` "
+                                            f"bean, another garden, or a `codebase` bean — and {there} is neither"))
+        return out + _pin_from(where, r, b, G)
+    if G.root and os.path.isdir(os.path.join(G.root, '.git')) and subprocess.run(
             ['git', '-C', G.root, 'merge-base', '--is-ancestor', sha, 'HEAD'], capture_output=True).returncode:
         out.append((f"{where}.at", f"the commit {sha} is not an ancestor of HEAD: a reading is pinned to a commit this "
                                    f"garden has"))
+    return out + _pin_from(where, r, b, G)
+
+
+def _pin_from(where, r, b, G):
+    out = []
     for f in _listed(r.get('from')):
         bid, _, sid = str(f).rpartition('#')
         other = G.beans.get(bid) if bid else b

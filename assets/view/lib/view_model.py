@@ -1676,7 +1676,8 @@ def import_selection(path, who=None):
     e, _w = check()
     if e:
         print("view: WARNING — the written page does not pass check:\n  - " + "\n  - ".join(e), file=sys.stderr)
-    who = who or subprocess.run(["git", "config", "user.name"], capture_output=True, text=True, encoding="utf-8", cwd=ROOT).stdout.strip() or "view"
+    import importlib
+    who = who or importlib.import_module('pass').gardener_of(ROOT) or "view"   # a being the garden holds (core 3.5, V.1)
     what = "the page [[%s]] written from an author-mode selection" % PAGE
     body = ("- action: `view import %s` wrote %s of [[%s]] through safe, read back as intended.\n"
             "- order: %s" % (os.path.basename(path), ", ".join("`%s`" % c for c in changed), PAGE, " → ".join(order)))
@@ -1720,7 +1721,7 @@ def _import_statements(path, who, bean, before, order, new_view, new_views, new_
         return "nothing to write: the selection says what the page already says"
     import importlib
     dmpass = importlib.import_module('pass')
-    who = who or subprocess.run(["git", "config", "user.name"], capture_output=True, text=True, encoding="utf-8", cwd=ROOT).stdout.strip() or "view"
+    who = who or dmpass.gardener_of(ROOT) or "view"               # a being the garden holds (core 3.5, V.1)
     author = who if who in CORE.G.beans else dmpass.gardener_of(ROOT)
     safe.add_statements(bean, "  - say: { by: %s, of: [%s], at: now, note: \"written from an author-mode selection (view "
                               "import)\" }\n" % (author, ", ".join(changed)))

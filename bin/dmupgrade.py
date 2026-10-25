@@ -374,6 +374,8 @@ def main():
     ap.add_argument('tag', help='the release tag, e.g. v0.3.0')
     ap.add_argument('--from', dest='src', default=UPSTREAM, help=f'repository URL or path (default {UPSTREAM})')
     ap.add_argument('--allow-downgrade', action='store_true', help='adopt a tag older than the one GARDEN.md records')
+    ap.add_argument('--by', metavar='BEAN', help="who writes the upgrade's journal entry: a being the garden holds "
+                                                 "(default: its gardener)")
     ap.add_argument('--garden', help='the garden to upgrade (default: the one this tool lives in)')
     ap.add_argument('--keep-on-failure', action='store_true', help='leave the files in place when the gate fails, to repair by hand')
     ap.add_argument('--zone', help='crossing into std-vocab 31.0: the civil time zone this garden reckons its days in, as the '
@@ -455,6 +457,8 @@ def main():
                 args += ['--gardener-genos', a.gardener_genos]
             if getattr(a, 'zone', None) and "'--zone'" in open(tool, encoding='utf-8').read():
                 args += ['--zone', a.zone]
+            if a.by and "'--by'" in open(tool, encoding='utf-8').read():
+                args += ['--by', a.by]
             for _p in a.extend:
                 args += ['--extend', _p]
             for _p in a.retract:
@@ -774,7 +778,10 @@ def recorded(a, gpath, gtext, gform, title, lines):
     write_text(gpath, gtext, gform)
     install()
     sys.path.insert(0, os.path.join(ROOT, 'bin')); import journal as _journal   # the release's own tool, just applied
-    _who = run('git', 'config', 'user.name', check=False).stdout.strip() or '(fill in who ran it)'
+    # WHO WROTE IT IS A BEING (core 3.5, V.1): `--by <bean>`, else the gardener GARDEN.md names, whose word the change
+    # is to ratify — never git's user name, which the gate refuses as no being the garden holds
+    g = re.search(r'(?m)^gardener:\s*["\']?([^\s"\'#]+)', gtext)
+    _who = getattr(a, 'by', None) or (g.group(1) if g else '(fill in who ran it)')
     lines = ['\n' + _journal.stamp(_who, title, ROOT),
              "- ratified_by: (fill in who ratified — the gardener's word, given here)"] + lines
     jpath = os.path.join(ROOT, 'log', 'journal.md')

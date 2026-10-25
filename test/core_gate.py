@@ -580,9 +580,13 @@ flows:
               "someone who can sign it", r.returncode != 0 and 'diverged' in r.out
               and 'while the gardener wrote too' not in run('git', 'log', '--format=%s', '-4').out, r.out[-600:])
         r = run(PY, 'bin/sync.py', 'peer')
+        check("sync: where both moved, the merge waits for whose it is — its entry names a being (core 3.5, V.1): "
+              "`--by <bean>`", r.returncode != 0 and 'waits for whose it is' in r.out and '--by <bean>' in r.out
+              and 'while the gardener wrote too' not in run('git', 'log', '--format=%s', '-4').out, r.out[-600:])
+        r = run(PY, 'bin/sync.py', '--by', 'sam', 'peer')
         log = run('git', 'log', '--format=%s', '-4').out
-        check("sync: where both moved, what the peer brings is judged and merged by the garden's driver, saved through the "
-              "gate with its entry", r.returncode == 0 and "merged peer's" in log and 'while the gardener wrote too' in log,
+        check("sync --by: where both moved, what the peer brings is judged and merged by the garden's driver, saved through "
+              "the gate with its entry", r.returncode == 0 and "merged peer's" in log and 'while the gardener wrote too' in log,
               r.out[-800:] + log)
         run('git', 'remote', 'remove', 'peer')
         # A MERGE IS JUDGED FOR WHAT IT CHANGED ITSELF: the view host, granted the notes alone, merges the gardener's

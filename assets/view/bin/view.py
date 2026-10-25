@@ -77,6 +77,11 @@ def main():
     if probs:
         die("nothing done:\n  - " + "\n  - ".join(probs))
     if cmd == "check":
+        copy = os.path.dirname(os.path.dirname(HERE))     # the copy of daftar this asset runs in (core 3.5, II.2)
+        if os.path.isfile(os.path.join(copy, "bin", "check.py")):
+            sys.path[:0] = [copy, os.path.join(copy, "bin")]
+            import check as dmcheck
+            dmcheck.differs(copy, "view")                    # said first, on stderr, where it differs from its release
         errs, warns = vm.check()
         for w in warns:
             print("  warn: " + w)

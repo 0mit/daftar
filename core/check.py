@@ -3,6 +3,8 @@
 
     python3 core/check.py [<garden>]      # every bean of the garden at <garden> (here, if none is named)
     python3 core/check.py --staged        # what a commit would hold: the INDEX, and the commit's own rules
+    python3 core/check.py --replay        # the commit's own rules alone, its index against HEAD: a hub's replay of a
+                                          # commit it checked out, the clone's register of headings aside (core 3.5)
     python3 core/check.py --law           # the law alone: the face, the verbs' rows and the levels, proved together
     python3 core/check.py ... --json      # the same verdict as one JSON document: {found, printed}
 
@@ -69,15 +71,16 @@ def grouped(found):
     return out
 
 
-def staged(root, as_json=False):
-    """The index, judged as the commit would hold it (core/judge.py, the scope `staged`)."""
-    scope = Scope.staged(root)
+def staged(root, as_json=False, replaying=False):
+    """The index, judged as the commit would hold it (core/judge.py, the scope `staged`); `replaying`, the commit's own
+    rules alone, as a hub replays them."""
+    scope = Scope.staged(root, replaying=replaying)
     found = judge(None, scope)
     if scope.unread is not None:
         print(f"form        index: {scope.unread}")
         return 1
     g = scope.garden
-    line = "core check --staged" + (f": {len(g.beans)} beans, {sum(len(b.statements) for b in g.beans.values())} "
+    line = f"core check --{'replay' if replaying else 'staged'}" + (f": {len(g.beans)} beans, {sum(len(b.statements) for b in g.beans.values())} "
                                     f"statements" if g is not None else '')
     return verdict(found, line, as_json)
 
@@ -106,9 +109,9 @@ def main(argv):
         law = Law.load()
         return verdict(law.problems(), f"core law: {len(law.verbs)} verbs, {len(law.levels)} levels, {len(law.rules)} "
                                        f"rules", as_json)
-    if argv[:1] == ['--staged']:
+    if argv[:1] in (['--staged'], ['--replay']):
         top = subprocess.run(['git', 'rev-parse', '--show-toplevel'], capture_output=True, text=True)
-        return staged(top.stdout.strip() if top.returncode == 0 else os.getcwd(), as_json)
+        return staged(top.stdout.strip() if top.returncode == 0 else os.getcwd(), as_json, argv[:1] == ['--replay'])
     root = os.path.abspath(argv[0] if argv else '.')
     try:
         law = garden_law(root)

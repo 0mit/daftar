@@ -251,6 +251,26 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 3.5** (2026-10-25, daftar v3.5.0, human-ratified rule-change) — **a commit judged the same everywhere, and who
+  said it** (the next machinery's design, bodies II and V: II.1 to II.4, V.1 and V.4). MINOR. A bean renamed — taken out
+  and added under another name by one commit, whose entry says `- renamed: [[<old>]] → [[<new>]]` — keeps the statements
+  it held, known as they were: the commit's knowing reads the bean it was at HEAD as a merge reads a parent. An entry a
+  commit adds names who wrote it in its heading, by a being the garden holds (rule `knowing`); bin/save.py refuses any
+  other writer before a word is written, and each tool that writes an entry names one — germinate the gardener it
+  plants, bin/dmupgrade.py and bin/propose.py the gardener (dmupgrade's `--by` another), bin/sync.py the being its
+  `--by` names, waiting for one where a merge is needed, bin/launch.py its session. The release carries the SHA-256 of
+  every file its seed/LANGUAGE ships (`seed/LANGUAGE.sha256`, written by `bin/pass.py --digests --write`), and a file the
+  release keeps is as its release made it: a commit that adds or changes one is refused where it does not hold its
+  digest, RULE-CHANGE or not, and the digests change only with the release GARDEN.md records, in the adoption's own
+  commit (rule `kept`); the gate, the view asset's check and the hub say first, on stderr, where the copy they run
+  differs. A pin may be `through` another garden or a codebase, its commit that repository's: the gate holds `through`
+  to a `garden` or a `codebase` bean and refuses none of its commits, and bin/where.py reads each against the clone the
+  host keeps at its root — PINNED, NOT-IN-CLONE, or HOPED where it keeps none (rule `line`, the verb `pin`). In code:
+  the hub replays each commit's own rules against its parent, by the code the commit carries (the one judge's scope
+  `replay`, `bin/check.py --replay`), all but the clock's register of headings, so it refuses what a hook refused; and
+  the merge driver leaves an absent `of` absent where an act covered nothing its side added. `via` on whole beans (V.5)
+  is not built: in the core a relayed act holds the garden it was known in in its `at`, and a hop appended there would
+  move what rule knowing's "takes it from that garden" reads — parked.
 - **core 3.4** (2026-10-25, daftar v3.4.0, human-ratified rule-change) — **the reading grammar, part three** (the next
   machinery's design, body I: I.9, and the forms' typing). MINOR. A rule's refusal may be told at a path inside its
   statement: `refuse: {of, at, message}`, `at` a path of the statement's keys, told at `<bean>[<i>] <verb>.<at>`; a

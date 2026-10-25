@@ -452,7 +452,7 @@ def grow(target, root, seed, ver, garden, release, gid, gname, ggenos, gform, la
         env = dict(os.environ, GIT_AUTHOR_NAME='germinate', GIT_AUTHOR_EMAIL='germinate@localhost',
                    GIT_COMMITTER_NAME='germinate', GIT_COMMITTER_EMAIL='germinate@localhost')
         planted = os.path.isfile(os.path.join(target, 'beans', AGENTS + '.md'))
-        r = subprocess.run([sys.executable, os.path.join(target, 'bin', 'save.py'), 'germinate',
+        r = subprocess.run([sys.executable, os.path.join(target, 'bin', 'save.py'), gid,
                             f'the gardener: [[{gid}]]', '--body',
                             f"- action: planted [[{gid}]], the {'person who keeps' if ggenos == 'person' else 'organisation that keeps'} "
                             f"this garden, and named them in GARDEN.md `gardener:` — a RULE-CHANGE, as every change to the "

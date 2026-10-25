@@ -80,6 +80,7 @@ parts, changes).
    python3 test/core_ported.py
    python3 test/core_exact.py
    python3 test/core_conformance.py
+   python3 test/core_commit.py
    python3 test/guard.py
    python3 test/save.py
    python3 test/converge.py
@@ -194,6 +195,10 @@ steward's own. CI refuses a pull request with a commit that carries no sign-off.
   reason whose law is gone); the changelog entry says what changed and why; the commits are the record.
 - Bump its `version:` in the same change — minor for additive, major for a changed rule — and nothing else:
   gardens move their own pins when they adopt a release.
+- **A file the release ships changed** (any that `seed/LANGUAGE` names, code or law): write its digests again,
+  `python3 bin/pass.py --digests --write`, in the same change. A garden holds each such file to the SHA-256 its release
+  carries for it (rule `kept`, core 3.5), and a tree whose digests are not its own is said to differ by every gate run in
+  a garden grown from it; `python3 bin/pass.py --digests --check` and CI's guard job hold them to the tree.
 - `python3 bin/rules.py` inside a garden prints every rule as the gate reads it; use it to check that your
   term says what you meant.
 - `python3 bin/why.py <name>` shows why an existing rule is the way it is (`seed/RATIONALE.md`); `HISTORY.md` has

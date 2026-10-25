@@ -39,8 +39,11 @@ show.
       no `of`, which covers every statement no other act names; a knowing act's `at` is `now` until the save writes the
       moment, and a moment typed there is refused — but where the act was known in another garden: its `at` then holds
       that garden's bean beside the moment it was known at there, and the commit that brings it takes it from that
-      garden (`take`). A row of a store names the act or acts that know it instead, each a knowing act kept in git or a
-      store, and the store's check judges it where the store is kept.
+      garden (`take`). A bean renamed — taken out and added under another name by one commit, whose entry says `-
+      renamed: [[<old>]] → [[<new>]]` — keeps the statements it held, known as they were. An entry a commit adds names
+      who wrote it in its heading: a being the garden holds, by its bean (a person, or the session an agent works in). A
+      row of a store names the act or acts that know it instead, each a knowing act kept in git or a store, and the
+      store's check judges it where the store is kept.
 - [ ] **placeholder** — A statement the engine derives (a verb's default) is never written: written, it is refused (an
       `answer` `as: law` by the owner; a `bear` by the one who paid, alone).
 - [ ] **order** — Nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or
@@ -103,15 +106,20 @@ show.
 - [ ] **kept** — What is kept is not damaged: the journal is appended to, never rewritten, and a line a commit adds to
       it holds no character a reader takes for a line break, and no template's `(fill in`; a series' part, once written,
       stays as it is; a commit that takes a header key or a statement out of a bean names it in its entry (the key, the
-      statement's id, or its verb), empties none it keeps, and leaves every bean it writes a body; and what an entity's
-      closed books read (a `pin` of a reading whose step is `books`, at a commit) — a payment, a booking or a match
-      there at that commit, on a day on or before the closed one — is not taken out or changed.
+      statement's id, or its verb), empties none it keeps, and leaves every bean it writes a body; a file the release
+      keeps is as its release made it — after each commit but the one that adopts a release, a file it adds or changes
+      holds the SHA-256 its release carries for it (`seed/LANGUAGE.sha256`), which changes only with the release
+      GARDEN.md records; and what an entity's closed books read (a `pin` of a reading whose step is `books`, at a
+      commit) — a payment, a booking or a match there at that commit, on a day on or before the closed one — is not
+      taken out or changed.
 - [ ] **line** — What holds a line holds its form: a series' rows are read by its channels, and nothing else is in it; a
       walk's ways on lead to steps of the walk, and none leads on from a final step or a pause; a course is a being
       placed on a walk (`be` as order), and each move reaches a step of that walk at a moment, by a way on or saying
       why, never after a final step and never back in time, citing only a reason the step lists; a reading's steps are
       each one operation of the closed list, taking what its row takes and naming only what came before it, its paths
-      read over statements; a pin names a commit this garden has, at a moment not still to come.
+      read over statements; a pin names a commit this garden has, at a moment not still to come, or one of the
+      repository it is `through` — another garden, or a codebase — which no gate refuses, since only a host that holds a
+      clone of it can read its history.
 - [ ] **measured** — What is measured is in its form: a quantity's uncertainty is one of `u` (a positive count in a unit
       of its own quantity, or of ratio) and `accuracy` (with a kind of the table); a region lies on a line that has
       regions, bounded at an end or by its length — a length in the unit its line meters, or cells of a level of the

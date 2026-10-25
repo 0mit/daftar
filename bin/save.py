@@ -122,6 +122,11 @@ def what_of(heading):
     return parts[2] if len(parts) == 3 else heading[3:]
 
 
+def is_being(who):
+    """Whether `who` is the id of a bean this garden holds (bin/garden.py, the one model of where its documents are)."""
+    return bool(who) and who in set(dmgarden.ids(ROOT, 'beans'))
+
+
 def who_of(heading):
     """The <who> of `## <when> · <who> · <what>`."""
     parts = heading[3:].split(' · ', 2)
@@ -402,6 +407,12 @@ def main(argv):
         except SystemExit as e:
             refuse(str(e.code).replace('journal: ', '', 1))
     pending = ready(again=False, body=body)
+    if not is_being(who.strip()):
+        # WHO WROTE IT IS A BEING (core 3.5, V.1): the gate refuses a heading whose writer the garden holds no bean for,
+        # and a heading is never typed — so the save refuses it first, before the clock has written one
+        refuse(f"{who.strip()!r} is no being this garden holds, and nothing written: an entry names who wrote it by a "
+               f"bean's id — a person's, or the session an agent works in (`session-<slug>`, bin/session.py open). "
+               f"{PY} bin/save.py <bean> \"{what}\" --body \"- action: …\"")
     if pending and who_of(pending[-1]).strip() == who.strip() and what_of(pending[-1]).strip() == what.strip():
         # THE SAME CALL AGAIN: its entry is written already — finish that save, and write the entry no second time
         print(dmparse.said(f"save: this entry is written already, and waiting — committing it, as --again does"),

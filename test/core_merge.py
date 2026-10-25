@@ -169,6 +169,12 @@ try:
     out, said = merge(BASE, a3, b, 'knowing-two')
     check("...refused where one side added two acts with no `of`: which knew what cannot be told from the three sides",
           out is None and any('2 knowing acts' in p for p, *_ in said), said)
+    a4 = add(BASE, 'read: { by: cy, at: "2026-09-21 10:00+03:30" }')
+    out, said = merge(BASE, a4, b, 'knowing-nothing-added')
+    back, _ = merge(BASE, b, a4, 'knowing-nothing-added-swapped')
+    check("...and an act whose side added nothing it covers keeps its `of` absent: never `of: []`",
+          out is not None and '- read: { by: cy, at: "2026-09-21 10:00+03:30" }' in out and 'of: []' not in out
+          and 'make: { by: ada, of: [gift]' in out and not said.get('acts given their `of`') and back == out, out)
 
     # THE HEADER, KEY BY KEY
     a = BASE.replace('title: "The pot"', 'title: "The pot ada keeps"')
@@ -461,6 +467,23 @@ try:
     check("a merge that merged no bean both sides changed is committed by git itself, through the gate: what the other "
           "side committed comes as it was, judged then", t.returncode == 0 and o.returncode == 0 and m.returncode == 0
           and len(run('git', 'log', '-1', '--format=%P').stdout.split()) == 2, t.out + o.out + m.out)
+
+    # AN ACT WITH NO `of` THAT COVERS NOTHING ITS SIDE ADDED (merge-driver-empty-of, 2026-10-22): the role stays absent
+    def theirs():
+        write('beans/pot.md', text('beans/pot.md').replace('\n---\nWhat', '\n  - read: { by: sam, at: now }\n---\nWhat'))
+        return commit('theirs: the pot read again', '- action: [[pot]] read again')
+
+    def ours():
+        write('beans/pot.md', text('beans/pot.md').replace('\n---\nWhat', '\n  - make: { by: sam, of: [jar], at: now }\n  - pay: { id: jar, by: '
+                                          'sam, of: { count: "3.00", unit: XTS } }\n---\nWhat'))
+        return commit('ours: a jar', '- action: [[pot]] holds a jar')
+    t, o, m = branch_and_merge('reread', theirs, ours, merge=('merge', '--no-commit'))
+    pot = text('beans/pot.md')
+    r = run(PY, 'bin/save.py', 'sam', 'merged the reading', '--body', '- action: merged [[pot]]: read again, and the jar')
+    check("two branches each add a statement, theirs a `read` with no `of`: merged, the read keeps its `of` absent, never "
+          "`of: []`, and the merge is committed through the gate", t.returncode == 0 and o.returncode == 0
+          and re.search(r'- read: \{ by: sam, at: [^,}]+ \}', pot) and 'of: []' not in pot and 'id: jar' in pot
+          and r.returncode == 0, t.out + o.out + m.out + pot + r.out[-600:])
 
     # A TRUE CONFLICT, SETTLED BY A PERSON
     def theirs():

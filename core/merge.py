@@ -470,6 +470,8 @@ def merge(base, ours, theirs, knowing):
         named = {x for i in held[s].items if i.verb in knowing
                  for x in ([i.roles['of']] if isinstance(i.roles.get('of'), str) else i.roles.get('of') or [])}
         covered = [i for i in added[s] if i.verb not in knowing and (i.id is None or i.id not in named)]
+        if not covered:                                      # it covered nothing its side added: its `of` stays absent
+            continue
         if len(blanket) > 1:
             conflict(f"statements: {s} added {len(blanket)} knowing acts with no `of`",
                      f"({', '.join(i.verb for i in blanket)})",

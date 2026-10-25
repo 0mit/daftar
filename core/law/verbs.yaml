@@ -201,7 +201,7 @@ verbs:
     replaces: [selections]
     home: core
   - verb: pin
-    meaning: "to fix what rests on a reading: the moment it was read at and the commit of the garden it was read in"
+    meaning: "to fix what rests on a reading: the moment it was read at and the commit of the garden it was read in, or of the repository it is `through`: another garden, or a codebase"
     roles:
       by:      { shape: being }
       of:      { shape: statement, many: true }

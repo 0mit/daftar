@@ -497,7 +497,7 @@ class Launch:
                 fh.write(str(a.get('content', '')))
             return f"wrote {rel} ({len(str(a.get('content', '')))} characters)", {'file': ME}, None
         if name == 'save':
-            who = f"agent ({self.c['model']}, session {self.slug})"
+            who = f"session-{self.slug}"          # a heading names a being (core 3.5, V.1): the session's bean
             save = 'bin/save.py' if os.path.isfile(os.path.join(self.root, 'bin', 'save.py')) else 'bin/save.py'
             r = subprocess.run([sys.executable, os.path.join(self.root, *save.split('/')), who,
                                 str(a.get('what', '')).strip() or 'a save', '--body', str(a.get('body', ''))],

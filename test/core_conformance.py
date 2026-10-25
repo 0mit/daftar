@@ -11,9 +11,11 @@ grown on disk from the cases, as test/core_save.py grows one, and each fault is 
     propose       bin/propose.py's read of a proposal, here one that takes nothing
     store         bin/store.py's check, the union of git and no store: the tree's verdict, and what the keepings add
     hub           bin/hub.py's gate and the one judge's scope `commits`: the commit checked out, judged by its own gate
+    replay        the one judge's scope `replay`, which the hub runs after its gate: the commit's own rules replayed against
+                  its parent, all but the clock's register (core 3.5, II.3) — the commit's doors' verdict, there
 
 A fault of the tree is the same finding at every door. A fault of a commit (`commit`) is refused at the commit's
-doors alike and passes the tree's, whose rules it does not break. Every clause names a fault, and every fault is
+doors alike, the hub's replay among them, and passes the tree's, whose rules it does not break. Every clause names a fault, and every fault is
 refused by the clause's rule, naming the bean it breaks. (`python` on Windows.)"""
 import os
 import re
@@ -114,6 +116,9 @@ def doc(bid, c, body='\nWords.\n'):
 
 
 def write(rel, text):
+    if text is None:                                # a file the case takes out
+        os.remove(os.path.join(G, rel))
+        return
     os.makedirs(os.path.dirname(os.path.join(G, rel)) or G, exist_ok=True)
     with open(os.path.join(G, rel), 'w', encoding='utf-8', newline='') as fh:
         fh.write(text)
@@ -167,6 +172,7 @@ def doors(what, body):
     git('commit', '-q', '--no-verify', '-m', 'the faults, past the gate')
     head = git('rev-parse', 'HEAD').stdout.strip()
     out['judge'] = dmjudge.judge(None, dmjudge.Scope.commits([head], dict(os.environ, GIT_DIR=os.path.join(G, '.git'))))
+    out['replay'] = dmjudge.judge(None, dmjudge.Scope.replay([head], dict(os.environ, GIT_DIR=os.path.join(G, '.git'))))
     out['hub'] = run(PY, '-c', DRIVER, 'hub')
     git('reset', '-q', '--hard', before)            # the garden as it was: what the save or the hub's commit made, undone
     git('clean', '-qfd')
@@ -189,6 +195,8 @@ def agree(name, d, tree_rules=True):
           found_lines(d['propose'][1]) == tree and lines_of(d['judge']) == tree and d['store'] == union
           and d['hub'][1].startswith('REFUSED' if tree else 'ACCEPTED'),
           (found_lines(d['propose'][1])[:3], lines_of(d['judge'])[:3], d['hub'][1][:300], tree[:3]))
+    check(f"{name}: the hub's replay of the commit's own rules against its parent gives the commit's verdict",
+          lines_of(d['replay']) == lines_of(d['commit']), (lines_of(d['replay'])[:3], lines_of(d['commit'])[:3]))
     if not tree_rules:
         check(f"{name}: the tree's doors pass what only a commit breaks", not tree, tree)
 
@@ -269,6 +277,10 @@ try:
     j = open(os.path.join(G, 'log', 'journal.md'), encoding='utf-8').read()
     say = {'say': {'by': 'sam', 'at': 'now'}}
     pem = '-----BEGIN ' + 'OPENSSH PRIVATE KEY-----\nb3BlbnNzaA==\n'       # in two parts, so this file never holds one
+    renamed = {'kind': 'document', 'statements': [{'say': {'by': 'sam', 'at': '2026-10-01 10:00+03:30'}},
+                                                  {'do': {'id': 'job', 'by': 'sam', 'as': 'workstation'}}]}
+    WHY = open(os.path.join(G, 'bin', 'why.py'), encoding='utf-8').read()
+    DIGESTS = open(os.path.join(G, 'seed', 'LANGUAGE.sha256'), encoding='utf-8').read()
     for name, files, setup, entry, rule, says in (
             ('law-unsaid', {'VOCAB.md': VOCAB.replace('kinds:\n', 'kinds:\n- { kind: kiln, nature: body, line: made, level: device, vacant: "a case" }\n', 1)},
              None, '- action: VOCAB.md adds the kind kiln', 'ratify', 'RULE-CHANGE'),
@@ -291,7 +303,18 @@ try:
                                                                             {'do': {'id': 'job', 'by': 'sam', 'as': 'workstation'}}]})},
              '- action: [[k2]] tidied', 'kept', 'the statement `job` is taken out'),
             ('no-body', {'beans/k1.md': doc('k1', {'kind': 'document', 'statements': [say]}, body='')}, None,
-             '- action: [[k1]]', 'kept', 'no body')):
+             '- action: [[k1]]', 'kept', 'no body'),
+            ('renamed-unsaid', {'beans/r1.md': None, 'beans/r2.md': doc('r2', renamed)}, {'beans/r1.md': doc('r1', renamed)},
+             '- action: [[r1]] is [[r2]] now', 'knowing', 'is no moment this commit'),
+            ('who-no-being', {'beans/w1.md': doc('w1', {'kind': 'document', 'statements': [say]})}, None,
+             '- action: [[w1]], and the entry before it by nobody', 'knowing', "names its writer 'nobody'"),
+            ('language-patched', {'bin/why.py': WHY + "# a line of this garden's own\n"}, None,
+             "- action: RULE-CHANGE, bin/why.py patched here; ratified by sam", 'kept', "differs from the release's own"),
+            ('digests-moved', {'seed/LANGUAGE.sha256': DIGESTS.replace(DIGESTS[:64], '0' * 64, 1)}, None,
+             "- action: RULE-CHANGE, the digests moved by hand; ratified by sam", 'kept', 'the digests of the release change')):
+        if name == 'who-no-being':                  # a heading the clock wrote, its writer no being: a save never writes one
+            code, out = run(PY, 'bin/journal.py', 'nobody', 'a note', '--body', '- action: [[w1]] noted')
+            check("(the heading by nobody is written by the clock, as bin/journal.py writes any)", code == 0, out)
         if setup:
             for rel, text in setup.items():
                 write(rel, text)
@@ -305,6 +328,23 @@ try:
               d['commit'][:4])
         if setup:
             git('reset', '-q', '--hard', 'HEAD~1')
+
+    # ---- A BEAN RENAMED, ITS ENTRY SAYING SO (core 3.5, II.1): read as a merge reads a parent, its acts known as they were
+    write('beans/r1.md', doc('r1', renamed))
+    git('add', '-A')
+    git('commit', '-q', '--no-verify', '-m', 'the case, before it')
+    write('beans/r1.md', None)
+    write('beans/r2.md', doc('r2', renamed))
+    code, out = run(PY, 'bin/save.py', 'sam', 'r1 renamed', '--body', '- renamed: [[r1]] → [[r2]]')
+    head = git('rev-parse', 'HEAD').stdout.strip()
+    sys.path[:0] = [G, os.path.join(G, 'bin')]
+    from core import judge as dmjudge
+    replayed = dmjudge.judge(None, dmjudge.Scope.replay([head], dict(os.environ, GIT_DIR=os.path.join(G, '.git'))))
+    del sys.path[:2]
+    check("a bean renamed by a commit whose entry says `- renamed: [[r1]] → [[r2]]` keeps the moments its acts were known "
+          "at: saved through the gate, and the hub's replay of the commit refuses nothing", code == 0 and not replayed,
+          (out[-900:], replayed))
+    git('reset', '-q', '--hard', 'HEAD~2')
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

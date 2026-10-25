@@ -15,7 +15,8 @@ entry in one command, which writes the entry (its heading read from the clock), 
 python3 bin/save.py "<who>" "<what you did>" --body "- action: added [[<id>]]."
 ```
 
-`log/journal.md` is never edited by hand. When the gate refuses, its message says what to write: fix it, then run
+`<who>` is a being the garden holds, by its bean's id: the person writing, or the session an agent works in
+(`session-<slug>`, the bean `bin/session.py open` makes). `log/journal.md` is never edited by hand. When the gate refuses, its message says what to write: fix it, then run
 `python3 bin/save.py --again`. For a question this page does not answer, `AGENTS.md` says where the law is. Every
 command here is written `python3`; on Windows it is `python`.
 
