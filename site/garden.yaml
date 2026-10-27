@@ -9,7 +9,7 @@ profiles: [view, knowledge]
 files:
   drawings/home.py: assets/view/templates/drawings.py
 save:
-  who: "agent for sam"
+  who: sam
   what: "the NAS, the rack and its servers, a dinner, a shared rent, a counter and a page"
   body: "- action: wrote [[hallway-nas]], [[rack-a]], [[web-1]], [[web-2]], [[dinner-at-sams]], [[ali]], [[ali-consent]], [[garden-ali]], [[storage-rent]], [[front-door]] and [[home-page]]"
 beans:

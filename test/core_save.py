@@ -371,6 +371,40 @@ try:
     r = run(PY, 'bin/save.py', '--again')
     check("...and saved once it says `now`", r.returncode == 0
           and (head_bean('memo').get('statements') or [{}])[0].get('say', {}).get('at') == m, r.stdout + r.stderr)
+
+    # A MOVE'S REWRITES KNOWN (T1 of the second build run): the release's translator rewrites a bean at a move between
+    # two releases of the core, and the gate judges that commit as any commit's — refused until an act of it knows the
+    # rewrite and its entry names what was taken out; bin/dmupgrade.py `known_rewrites` writes both
+    reset()
+    bean('note', 'document', [{'say': {'by': 'sam', 'at': 'now'}}, {'about': {'of': ['memo']}}])
+    r = save('sam', 'a note of the memo', '- action: wrote [[note]], about the memo')
+    said = head_bean('note')['statements'][0]
+    rewrite = lambda: bean('note', 'document', [said, {'concern': {'of': ['sam']}}])
+    act = ("- action: RULE-CHANGE: the release's translator rewrote 1 bean(s) for the later core (core/translate.py "
+           "`between`): beans/note.md.")
+    rewrite()
+    r = save('sam', 'the note rewritten by a move', act)
+    check("a move's rewrite with no act that knows it, and its taken-out verb unnamed, is refused (rules knowing, kept)",
+          r.returncode == 1 and 'knowing' in r.out and 'about' in r.out, r.out[-900:])
+    reset()
+    rewrite()
+    k = run(PY, '-c', "import sys; sys.path.insert(0, 'bin'); import dmupgrade as d; "
+                      "print(d.known_rewrites('.', ['beans/note.md'], 'sam', 'v9.9.9'))")
+    line = k.stdout.strip()
+    sts = read.loads(text('beans/note.md').split('---\n')[1])['statements']
+    check("known_rewrites adds one `make` by the gardener at `now`, with no `of`, and returns the entry's line naming "
+          "what was taken out", k.returncode == 0 and len(sts) == 3 and sts[:2] == [said, {'concern': {'of': ['sam']}}]
+          and sts[2]['make'].get('by') == 'sam' and sts[2]['make'].get('at') == 'now' and 'of' not in sts[2]['make']
+          and line.startswith('- translated:') and 'verb `about`' in line and 'note' in line, (k.stdout + k.stderr)[-900:])
+    r = run(PY, 'bin/save.py', 'sam', 'the note rewritten by a move', '--body', act, line)
+    r.out = r.stdout + r.stderr
+    m = last_heading()[3:].split(' · ', 1)[0]
+    check("...and the move's commit, with them, passes the gate, the act stamped at the entry's moment",
+          r.returncode == 0 and (head_bean('note').get('statements') or [{}, {}, {}])[2].get('make', {}).get('at') == m,
+          r.out[-900:])
+    k = run(PY, '-c', "import sys; sys.path.insert(0, 'bin'); import dmupgrade as d; "
+                      "print(repr(d.known_rewrites('.', [], 'sam', 'v9.9.9')))")
+    check("...and a move that rewrote nothing adds no line", k.stdout.strip() == "''", k.stdout + k.stderr)
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

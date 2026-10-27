@@ -22,6 +22,7 @@ own session, as bin/run.py says, and the suite says which it tested.
 """
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -144,9 +145,12 @@ try:
           b.returncode == 3 and 'holder' in b.out and step(q) == 'done', (b.out, step(q)))
 
     # ---- stop, a script
-    tree = rid(R('start', '--name', 'a tree', '--', 'sh', '-c', 'setsid sleep 60 & sleep 60 & wait'))
+    # a length no other process on the machine sleeps for, so the check gathers only this run's own (nb-s3-open 9)
+    nap = f"60.{os.getpid() % 1000:03d}"
+    tree = rid(R('start', '--name', 'a tree', '--', 'sh', '-c', f'setsid sleep {nap} & sleep {nap} & wait'))
     time.sleep(1)
-    kids = [int(p) for p in subprocess.run(['pgrep', '-f', f'^sleep 60$'], capture_output=True, text=True, encoding='utf-8').stdout.split()]
+    kids = [int(p) for p in subprocess.run(['pgrep', '-f', f'^sleep {re.escape(nap)}$'], capture_output=True, text=True,
+                                           encoding='utf-8').stdout.split()]
     R('stop', tree or '-', '--why', 'a test', '--grace', '2')
     time.sleep(0.5)
     with open(f'{T}/script.sh', 'w') as fh:

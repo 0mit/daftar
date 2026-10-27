@@ -698,6 +698,65 @@ def core_version(root):
     return m.group(1) if m else ''
 
 
+def known_rewrites(root, paths, by, tag):
+    """Each bean the release's translator rewrote (`paths`, as git spells them) given one knowing act, in place, and the
+    entry's `- translated:` line returned ('' where nothing was rewritten). The gate grants the knowing of a rewrite, and
+    the naming of what it takes out, only to THE adoption (core/commit.py `adopting`): a move between two releases of
+    the core is judged as any commit (T1 of the second build run). So each bean gains a `make` by `by` at `now` with no
+    `of`, which knows every statement this commit changes in it — the form bin/waiting.py migrate writes for its own move
+    — and the line names each verb, statement and key the rewrite took out (rule kept). Each edit is proved: the front
+    matter parses to the translator's with one statement added, and nothing else."""
+    load = lambda t: dmparse.loads(t) or {}
+    note = (f"rewritten by daftar {tag}'s translator at this move (core/translate.py between): this act knows each "
+            f"statement the rewrite changed")
+    line = 'make: { by: %s, at: now, note: "%s" }' % (by, note)
+    names, out = [], set()
+    for p in paths:
+        path = os.path.join(root, p)
+        text, form = read_text(path)
+        fm, _body = dmparse.split_front_matter(text)
+        old_fm, _ = dmparse.split_front_matter(run('git', 'show', f'HEAD:{p}', cwd=root, check=False).stdout)
+        if fm is None:
+            raise RuntimeError(f"{p}: the translator wrote no front matter")
+        lines = fm.split('\n')
+        if 'statements:' not in lines:
+            raise RuntimeError(f"{p}: the translator rewrote it, and it holds no block `statements:` list to know it in")
+        i = lines.index('statements:')
+        j, last, indent = i + 1, i, None
+        while j < len(lines) and (lines[j].startswith((' ', '-')) or lines[j] == ''):
+            if lines[j].strip():
+                last = j
+                if indent is None and lines[j].lstrip().startswith('- '):
+                    indent = lines[j][:len(lines[j]) - len(lines[j].lstrip())]
+            j += 1
+        new_fm = '\n'.join(lines[:last + 1] + [f"{'  ' if indent is None else indent}- {line}"] + lines[last + 1:])
+        before, after = load(fm), load(new_fm)
+        sts_b, sts_a = before.get('statements') or [], after.get('statements') or []
+        if sts_a[:len(sts_b)] != sts_b or len(sts_a) != len(sts_b) + 1 or \
+                {k: v for k, v in after.items() if k != 'statements'} != {k: v for k, v in before.items() if k != 'statements'}:
+            raise RuntimeError(f"{p}: the knowing act is not one statement added")
+        k = text.index(fm)
+        write_text(path, text[:k] + new_fm + text[k + len(fm):], form)
+        names.append(os.path.basename(p)[:-3] if p.endswith('.md') else p)
+        # WHAT THE REWRITE TOOK OUT, as the gate's rule `kept` reads it: a key, a statement's id, or a verb with fewer
+        # statements that carry no id
+        was = load(old_fm) if old_fm is not None else {}
+        sts_w = was.get('statements') or []
+        out.update(f"key `{x}`" for x in set(was) - set(before))
+        ids = lambda sts: {next(iter(s.values()), {}).get('id') for s in sts if isinstance(s, dict) and s
+                           and isinstance(next(iter(s.values())), dict)} - {None}
+        out.update(f"statement `{x}`" for x in ids(sts_w) - ids(sts_b))
+        bare = lambda sts, v: sum(1 for s in sts if isinstance(s, dict) and s and next(iter(s)) == v
+                                  and not (isinstance(s[v], dict) and isinstance(s[v].get('id'), str)))
+        out.update(f"verb `{v}`" for v in {next(iter(s)) for s in sts_w if isinstance(s, dict) and s}
+                   if bare(sts_b, v) < bare(sts_w, v))
+    if not names:
+        return ''
+    return (f"- translated: the release's translator rewrote {len(names)} bean(s), and in each a `make` by {by} at this "
+            f"moment knows the rewrite (rule knowing): {', '.join(names)}."
+            + (f" Taken out and written anew: {', '.join(sorted(out))}." if out else ''))
+
+
 def move(a, rel, sha, source, current):
     """A garden of the core moves to another release of the core, in place: planned first, touching nothing; then the
     release's files, the pin and the release recorded, the hooks, the entry and the release's gate — or everything back.
@@ -735,6 +794,8 @@ def move(a, rel, sha, source, current):
             if tr.returncode not in (0, 2):
                 raise RuntimeError(f"the release's translator stopped: {(tr.stdout + tr.stderr).strip()[-400:]}")
             rewritten = [ln.strip() for ln in tr.stdout.splitlines() if ln.strip()] if tr.returncode == 0 else []
+        g = re.search(r'(?m)^gardener:\s*["\']?([^\s"\'#]+)', read_text(os.path.join(ROOT, 'GARDEN.md'))[0])
+        translated = known_rewrites(ROOT, rewritten, getattr(a, 'by', None) or (g.group(1) if g else 'unknown'), a.tag)
         changed = changed + rewritten
         if profiles != before:
             vpath = os.path.join(ROOT, 'VOCAB.md')
@@ -755,6 +816,7 @@ def move(a, rel, sha, source, current):
                "The beans are as they were: no step rewrites them between these versions of the core.")
             + (f" The profiles it takes: {', '.join(before) or 'none'} -> {', '.join(profiles) or 'none'}"
                f" (VOCAB.md `profiles`)." if profiles != before else ''),
+            *([translated] if translated else []),
             f"- changed: {', '.join(changed + ['GARDEN.md']) or 'none'}",
             f"- added: {', '.join(added) or 'none'}",
             f"- removed: {', '.join(removed) or 'none'}",

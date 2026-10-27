@@ -182,7 +182,10 @@ section 11. You keep your copyright: nothing is assigned.
 **Sign each commit** (`git commit -s`). The sign-off is the Developer Certificate of Origin 1.1
 (https://developercertificate.org), and the licence it names is the one `REUSE.toml` gives the file. It is added by a
 person, never by an agent on its own: that person has read the change, has the right to give it (an employer's right
-included), and answers for it. The agent is named in its own trailer (`Co-Authored-By:` or `Assisted-by:`). A sign-off
+included), and answers for it. The agent is named in its own trailer (`Co-Authored-By:` or `Assisted-by:`). An agent's
+release of a change the steward ratified carries the steward's sign-off (`Signed-off-by: 0mit`), under the steward's
+standing word of 2026-10-24: the steward answers for what was ratified, and an agent never signs off a change the
+steward did not ratify. A sign-off
 may use the name the contributor is known by, and an address the leak guard does not refuse: an account's
 no-reply address is one. Commits made before this section was added carry none; they are the
 steward's own. CI refuses a pull request with a commit that carries no sign-off.

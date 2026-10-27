@@ -317,8 +317,15 @@ def install(repo=None, quiet=False, sign=False):
     # 4) THE AGENT'S OWN DOOR, in a garden: the guards before each act of an agent in another maker's loop, and the shell
     #    its harness runs commands in, in the clone's own settings (bin/hook.py install), named from the main working
     #    tree as the merge driver is. A shell it cannot set leaves the guards refusing every command until it is set.
+    #    From a session's copy it installs nothing: the main tree's bin/hook.py may be an older release's, and the settings
+    #    it writes are the main copy's, which other sessions read at once (T1 of the second build run: an upgrade in a
+    #    session copy wrote four older hooks there). The main copy installs its own door after the merge.
     main = main_worktree(repo)
-    if os.path.isfile(os.path.join(main, 'GARDEN.md')) and os.path.isfile(os.path.join(main, 'bin', 'hook.py')):
+    top = git('rev-parse', '--show-toplevel', cwd=repo).stdout.strip() or repo
+    if os.path.realpath(main) != os.path.realpath(top):
+        say(f"the agent's door is not installed from a session's copy: run `python3 bin/install.py` in {main} after the "
+            f"merge")
+    elif os.path.isfile(os.path.join(main, 'GARDEN.md')) and os.path.isfile(os.path.join(main, 'bin', 'hook.py')):
         r = subprocess.run([py, os.path.join(main, 'bin', 'hook.py'), 'install', 'claude-code'], cwd=main,
                            capture_output=True, text=True, encoding='utf-8', errors='replace', env={**os.environ, **CHILD_ENV})
         for line in r.stdout.splitlines():
