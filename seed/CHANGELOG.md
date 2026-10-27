@@ -251,6 +251,16 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v4.5.1** (2026-10-28, code, core 4.5) — **a move's rewrites known, and the agent's door installed from the
+  main copy only** (T1 of the second build run, step 7's code releases). bin/dmupgrade.py's move between two releases
+  of the core writes, in each bean the release's translator rewrote, one `make` by the gardener at `now` with no `of`,
+  and the entry's `- translated:` line naming each verb, statement and key the rewrite took out: the gate grants that
+  knowing and naming only to the adoption from std-vocab, so a move's commit was refused as the tool left it.
+  bin/install.py run from a session's copy installs no agent's door, since the main tree's bin/hook.py may be an older
+  release's and its settings are the main copy's. site/board.py grows its scratch garden with DAFTARD_STATE in its own
+  folder, saves as `sam`, a being, and the site follows v4.5.0. test/run.py's stop check gathers only its own
+  processes. CONTRIBUTING.md: an agent's release of a change the steward ratified carries the steward's sign-off. No
+  file of the law changed.
 - **core 4.5** (2026-10-28, daftar v4.5.0, human-ratified rule-change) — **the rest of the law's words** (T1 of the
   second build run, step 1): MODEL.md's words for the ladder (a being by its frame and four facets, kinds by
   positions); MERGE.md §6, an agent that may not decide parks a need on the bean it concerns, with the neighbourhood in

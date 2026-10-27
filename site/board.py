@@ -177,8 +177,10 @@ for i, a in enumerate(_ids):
 
 
 def _run(args, cwd):
+    # DAFTARD_STATE in the page's own folder: the release's installer makes a machine's agent key where none is, and a
+    # scratch garden's must never be this account's (T1 of the second build run: a stage's site build made one)
     return subprocess.run([sys.executable] + args, capture_output=True, text=True, encoding='utf-8', errors='replace',
-                          cwd=cwd, env=dict(os.environ, PYTHONUTF8='1'))
+                          cwd=cwd, env=dict(os.environ, PYTHONUTF8='1', DAFTARD_STATE=os.path.join(TMP, 'daftard-state')))
 
 
 def _shown(text, keys, verbs):

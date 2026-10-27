@@ -310,6 +310,12 @@ try:
     # ---- THE GARDENER'S CLAUSES naming the other guards, each with its operand, and one naming none
     W = os.path.join(T, 'sessions', 's1')
     run('git', 'worktree', 'add', '-q', '-b', 'session/s1', W)
+    settings = os.path.join(G, '.claude', 'settings.local.json')
+    was = open(settings, encoding='utf-8').read() if os.path.isfile(settings) else None
+    r = run(PY, 'bin/install.py', cwd=W)
+    check("install from a session's copy installs no agent's door: the main copy's settings stay as they were, and it "
+          "says where the door is installed", r.returncode == 0 and "not installed from a session's copy" in r.out and
+          (open(settings, encoding='utf-8').read() if os.path.isfile(settings) else None) == was, r.out[-800:])
     more = base.replace("---\nWhat every agent", EXTRA + "---\nWhat every agent")
     agreement(more)
     with open(os.path.join(W, 'beans', 'agents-work.md'), 'w', encoding='utf-8', newline='\n') as fh:
