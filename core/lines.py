@@ -303,7 +303,7 @@ def law_view(L, root=None):
         return out
     own = {'operations': flagged(ll.get('operations')), 'comparators': ll.get('comparisons'), 'aggregates': ll.get('aggregates'),
            'ordering_keys': ll.get('ordering_keys'), 'selection_form': ll.get('selection_form'),
-           'pin_form': ll.get('pin_form'), 'units': list(units.values()),
+           'units': list(units.values()),
            'compatibility': _typed_compat((getattr(L, 'measure_law', None) or {}).get('compatibility')),
            'mechanism_form': (getattr(L, 'measure_law', None) or {}).get('mechanism_form'),
            'coefficient_form': (getattr(L, 'measure_law', None) or {}).get('coefficient_form'),

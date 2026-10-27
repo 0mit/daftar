@@ -251,6 +251,13 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.5** (2026-10-28, daftar v4.5.0, human-ratified rule-change) — **the rest of the law's words** (T1 of the
+  second build run, step 1): MODEL.md's words for the ladder (a being by its frame and four facets, kinds by
+  positions); MERGE.md §6, an agent that may not decide parks a need on the bean it concerns, with the neighbourhood in
+  that bean's `details.waiting`, where it said `log/pending.md`, which is a view since core 3.7; and
+  seed/PUBLIC-ALLOW naming RFC 1918's three private blocks and RFC 4193's, so a reason or a test may name a standard's
+  range; and `pin_form` retired from lines.yaml, whose words the verb `pin` has carried since v1 (its `garden` is the
+  verb's `through`, checked since core 3.5, V.4). No verdict moves.
 - **core 4.4** (2026-10-25, daftar v4.4.0, human-ratified rule-change) — **the law's words** (body VIII of the next
   version's machinery): the sixteen face verbs and square positions given their meaning; `division_form` said in
   words; `lines`' `went` corrected; a currency nobody named written `XXX`; a person written by the name they give for

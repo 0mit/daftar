@@ -35,6 +35,10 @@ git@github.com   # GitHub's SSH user and host, the same for every repository the
 192.168.0.0/24   # RFC 1918's private range, the default network of countless routers: it identifies no estate,
                  # and the law's reasons take it as their example of one network inside another.
 192.168.0.0      # the same range's network address.
+10.0.0.0/8       # RFC 1918's three private blocks, as the RFC itself names them: a reason or a test that says which
+172.16.0.0/12    # addresses are private names a standard, not an estate (T1 of the second build run: the leak guard
+192.168.0.0/16   # refused the third, and a stage wrote it as a number instead).
+fc00::/7         # RFC 4193's unique local addresses, the same for IPv6.
 std-vocab@2.0    # the law's own versions, as this repository's history names them: a garden that records the
                  # version it ran names the law, not itself. The address pattern reads `name@version` as an
                  # email address.

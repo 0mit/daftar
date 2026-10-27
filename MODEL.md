@@ -10,15 +10,17 @@ it. The words the gate knows are the core, `core/law/core.yaml`, and every other
 - **Two frames.** A body takes room in **space∞time**: one structure with two faces, place and time, neither without
   the other. A sayable takes a place in the **taxis** (τάξις, an order): its positions say *which* — the third clause,
   article 12, a name in its namespace — and are no time and no place. Neither frame is prior.
-- **The ladder.** What stands on what, from the frames to the crown, on seven lines: the frame; matter; gravitation;
-  the living, possible on a world in **balance**; reason (λόγος), possible on a living organism in **proportion**; the
-  made; and the said, which runs name → statement → discourse. Each step stands on another `made-of` (the
-  lower is in it) or `possible-on` (the lower is its condition, `while` the condition holds). A part never stands above
-  what its whole is made of, and nothing stands on itself through others.
+- **The ladder.** What stands on what, from the frames to the crown: the frame, the ground of every line, and four lines,
+  each a facet of which a being holds at most one step — matter; organisation, by degree of complexity, from the
+  celestial body and the cell to the device and, in the taxis, name → statement → discourse; bios, life, possible on a
+  world in **balance**, and the organic, what the living make or leave; and the rung, a body's powers: sensitive, then
+  reason (λόγος), possible on sensitive in **proportion**. Each step stands on another `made-of` (the lower is in it),
+  `possible-on` (the lower is its condition, `while` the condition holds) or `member-of` (a collection on its members).
+  A part never stands above what its whole is made of, and nothing stands on itself through others.
 - **Weight.** What holds at a step holds for all that stands on it. Every body has weight; a sayable has none of its
   own.
-- **The life chain.** A being came to be through others (`come`): born of, made, said, started. A living being comes
-  through the living; a made or said one through hands — a being at reason — or through a tool whose own coming goes
+- **The life chain.** A being came to be through others (`come`): born of, made, said, started. A living or organic
+  being comes through the living; a made or said one through hands — a being at reason — or through a tool whose own coming goes
   on. Every chain ends at the crown, `theone`, the Necessary Existent, with two faces, love and wisdom. Nothing demands
   a chain: a being that states none is held at the crown all the same. A happening, a failure, comes through
   happenings alone: its causes.
@@ -132,14 +134,15 @@ and the default it derives where it has one.
 ## The order
 - **being**: what is. Its record is a bean.
 - **nature**: **body** (takes room in space∞time) or the **sayable** (takes a place in the taxis, and stands on reason).
-- **kind**: a row of `core/law/kinds.yaml`, or of the garden's VOCAB.md: its nature, and its line and level, or its
-  rung. `host` and `person` are bodies — a host a device, a person an organism at reason; `codebase`, `product`, `org`,
+- **kind**: a row of `core/law/kinds.yaml`, or of the garden's VOCAB.md: its nature, and its position on each line of
+  the ladder where it holds one. `host` and `person` are bodies — a host a device, a person an organism, living, at
+  reason; `codebase`, `product`, `org`,
   `instance`, `virtual-host`, `domain`, `service`, `program`, `design`, `session`, `contract`, `garden`, `document`
-  and `event` are sayables. A kind's level is on a line that holds its nature.
+  and `event` are sayables. A kind holds at most one position a line, each on a line that holds its nature.
 - **stand**: the one relation of the order, `stand: { by: cell, at: molecule, as: made-of }`.
 - **part**: `part: { by: wheel, of: car }`. A part never stands above what its whole is made of.
 - **line**: an ordered run of positions. Time is a line, and so is a walk.
-- **level**: a step of a line. The face keeps the two frames, reason and the said's three levels; the bodies' other 20
+- **level**: a step of a line. The face keeps the two frames, reason and the said's three levels; the bodies' other 23
   are rows of our knowledge tree (`core/law/levels.yaml`).
 - **The squares.** A figure is a square of opposition whose four positions are verbs over a statement:
 

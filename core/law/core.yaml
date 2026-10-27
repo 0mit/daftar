@@ -6,7 +6,7 @@
 
 # The law's version. A garden that runs this law pins it in GARDEN.md, `extends: core@<version>`, and the gate holds the
 # pin to it; it moves with a change to the law, a RULE-CHANGE.
-version: "4.4"
+version: "4.5"
 
 # ---------------------------------------------------------------------------------------------------------------- roles
 # The seven roles a statement fills. Six are Pāṇini's kārakas (Aṣṭādhyāyī 1.4.23–55); the seventh is Aristotle's ὡς.
