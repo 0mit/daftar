@@ -81,5 +81,5 @@ merge: they meet by proposal (`MODEL.md`, Between gardens).
 - **A person decides** (class J): they write the bean as it should stand, and the commit that settles it says so in its
   journal entry. Where both values should stand, they are written as two statements, each with its own id, and a
   `rule` says which holds.
-- **An agent that may not decide parks it**: the question goes to `log/pending.md` as `status: proposed`, with the
-  neighbourhood a person needs to see, and the agent does everything safe around it.
+- **An agent that may not decide parks it**: a need on the bean it concerns (MODEL.md, the Contract of Parts), with the
+  neighbourhood a person needs to see in that bean's `details.waiting`, and the agent does everything safe around it.

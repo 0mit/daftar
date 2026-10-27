@@ -18,7 +18,7 @@ A COMMIT IS READ ONLY WHEN IT IS
              garden is owned by — this garden's gardener as that garden knows them (`pass.may`, the grant question,
              asked of the other garden's own beans at that commit) (`NotGranted`).
 
-The act that fixes such a reading records `pin: {commit, at, garden}` (`pin_form`), so the reading can be read again.
+The act that fixes such a reading records `pin: {commit, at, garden}` (the verb `pin`), so the reading can be read again.
 
 IN A GARDEN OF THE CORE (v1 part 8) the other garden is a bean of the kind `garden`, named by its id (`name: { by:
 garden-id }`), found where its `be` as location says; a garden is met by the `garden` bean that names this one's id;

@@ -19,7 +19,7 @@ uncertainty cannot resolve is not known, and never rounded to either.
 
 IT WRITES NOTHING, and extrapolates nothing: a series is never read beyond its first or last row. A reading is never
 written back as a fact (manifesto: once). An act that fixes a reading records the commit and the moment it was read at
-(`pin_form`); `--at` reads every bean as it stood at that commit, and takes the clock as `--moment`.
+(the verb `pin`); `--at` reads every bean as it stood at that commit, and takes the clock as `--moment`.
 
 NOT HERE YET, and refused by name rather than guessed: a position in another reference system where PROJ is absent;
 `rotate` until a pole's published rows are held (a vacancy: PLACE carried none); an input read from another garden until AGREE's
@@ -849,7 +849,7 @@ def check_weighing(where, entry, form=None):
 def check_pin(where, pin, *, root=ROOT, days=()):
     """A pin names a commit this garden has, an ancestor of HEAD, and a moment no later than the day it is recorded."""
     if not isinstance(pin, dict):
-        return [('error', f"{where}: a pin is `{{commit, at}}` (pin_form)")]
+        return [('error', f"{where}: a pin is `{{commit, at}}` (the verb `pin`)")]
     out = []
     c, at = pin.get('commit'), pin.get('at')
     if not isinstance(c, str) or not COMMIT.match(c):

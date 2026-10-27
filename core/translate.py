@@ -1643,7 +1643,7 @@ def rewrite_drawings(b, rmap):
 
 
 def pin_of(b, base, sid, ctx):
-    """A pin today's entry carries (`pin_form`: commit, at, garden) as a `pin` statement of what rests on the reading:
+    """A pin today's entry carries (today's `pin`: commit, at, garden) as a `pin` statement of what rests on the reading:
     `at` its moment and the commit, `<garden>@<commit>` in the garden's object graph, `through` the garden read."""
     p = at_path(b.old, base)
     if not (isinstance(p, dict) and isinstance(p.get('commit'), str) and isinstance(p.get('at'), str)):
