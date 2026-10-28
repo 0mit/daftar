@@ -225,8 +225,23 @@ units:
   - { unit: "{set}", name: set, quantity: number, why: "a count of sets: counts of different things never convert into one another" }
   - { unit: "IRT", name: toman, quantity: money, factor: ["10", "1"], per: IRR, ucum: "false", why: "the toman, the unit the Iranian rial is counted in every day and ISO 4217 does not name: exactly ten rials. A unit of IRR, never a currency of its own" }
 
+# UNITS MADE BY A RULE, never listed one by one: a code no row above holds, and no currency, is a unit of the law where
+# one of these makes it — its `pattern` the code's form, and `form` what it is made as, one of the two the law knows
+# (bin/units.py `composed`, read alike by the gate and by every conversion). A row above is read as it is written, and a
+# code a rule makes is never a garden's own row. These rows are the law itself: a change to them is a RULE-CHANGE.
+composed:
+  - form: count
+    pattern: '^\{[a-z][a-z0-9]*(-[a-z0-9]+)*\}$'
+    quantity: number
+    meaning: "a count of the things its annotation names, as UCUM writes an annotation alone, which is the unity, 1, — `{crate}`, `{share}`, `{seat}`, its word in lowercase, words joined by a hyphen. Counts of different things never convert into one another, so it has no factor; its name is its word"
+  - form: price
+    pattern: '^[^/{}]+/[^/]+$'
+    quantity: "money/<the quantity of the unit under the line>"
+    meaning: "a unit of money over a unit of the law — a listed one, or a count this table makes — so much money for each one of it: `USD/{crate}`, `EUR/kg`, `EUR/kW.h`. Its quantity is money over the quantity of the unit under the line, and its name the two names joined by `-per-`. Two prices convert where their units under the line do, at the factor between them, in one currency; between two currencies only at a rate someone observed, as money converts. A unit of money under the line is no price: two currencies meet only through a rate"
+
 # The columns of each table of rows above: which every row holds (`required`) and which it may (`optional`); a row holds
 # the required ones and no other (core/law.py, `columns`). A reading names a table they declare as an input said by
 # the law (core/law/lines.yaml `selection_form.inputs`).
 columns:
   units: { unit: required, name: required, quantity: required, factor: optional, per: optional, ucum: optional, why: optional }
+  composed: { form: required, pattern: required, quantity: required, meaning: required }

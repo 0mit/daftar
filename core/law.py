@@ -98,6 +98,15 @@ MANIFEST_FORMS = ('pin', 'bean', 'zone', 'text', 'texts')   # the manifest's for
                                                             # are core.yaml's `manifest_forms`
 
 
+def _units():
+    """bin/units.py, the one maker of a unit the law's rules make (units.yaml `composed`), imported once."""
+    bin_dir = os.path.join(os.path.dirname(HERE), 'bin')
+    if bin_dir not in sys.path:
+        sys.path.insert(0, bin_dir)
+    import units as dmunits
+    return dmunits
+
+
 def listed(x):
     """A value that may be written as one or as a list, as a list."""
     if x is None:
@@ -339,6 +348,7 @@ class Law:
         self.forms = {}                                     # the forms a `form` role names, by name
         self.added_forms = {}                               # core/law/forms.yaml: the forms part 12b adds, by name
         self.levels, self.kinds, self.namespaces, self.verbs, self.units = {}, {}, {}, {}, {}
+        self.unit_rules = []                                # core/law/units.yaml `composed`: units made by a rule
         self.namespace_shape = {}                           # core/law/namespaces.yaml: where its names are kept
         self.checks = {}                                    # core/law/checks.yaml: what a value is held to, by name
         self.row_columns = {}                               # the columns the rows' files declare (kinds, levels, …)
@@ -509,6 +519,26 @@ class Law:
         h = (self.verbs.get(verb) or {}).get('home')
         return h if h in self.profiles else None
 
+    def unit(self, code):
+        """The row of a unit of the law: listed (core/law/units.yaml, the garden's own `units`), a currency of ISO 4217
+        (quantity money, factor one), or made by a rule of `composed` (bin/units.py `composed`); None where it is none."""
+        code = str(code)
+        if code in self.units:
+            return self.units[code]
+        if self.std and code in self.std.currencies:
+            return {'unit': code, 'name': self.std.currencies[code], 'quantity': 'money', 'factor': ['1', '1']}
+        if not self.unit_rules or ('{' not in code and '/' not in code):
+            return None
+        return _units().composed(code, lambda c: self.units.get(c) or (
+            {'unit': c, 'name': self.std.currencies[c], 'quantity': 'money', 'factor': ['1', '1']}
+            if self.std and c in self.std.currencies else None), self.unit_rules)
+
+    def home_of(self, table, name):
+        """The profile a row of the law's `kinds` or `namespaces` is the profile's own, or None for the core's."""
+        row = {'kinds': self.kinds, 'namespaces': self.namespaces}[table].get(name)
+        h = row.get('home') if isinstance(row, dict) else None
+        return h if h in self.profiles else None
+
     def form_attr(self, form, path):
         """The record of an attribute of a form (`walk.exit`: an attribute of what `walk` holds), or None."""
         rec = {'in': self.forms.get(form)} if form in self.forms else None
@@ -582,6 +612,9 @@ class Law:
                 for t, cols in (val.items() if isinstance(val, dict) else ()):
                     self.row_columns.setdefault(str(t), (os.path.basename(str(where).split()[0]), cols))
                 continue
+            if key == 'composed' and where != GARDEN:          # the units the law makes by a rule (units.yaml)
+                self.unit_rules = [r for r in listed(val) if isinstance(r, dict)]
+                continue
             if key == 'namespace_shape' and where != GARDEN:   # what a namespace may name beside its pattern
                 self.namespace_shape = val if isinstance(val, dict) else {}
                 continue
@@ -640,7 +673,8 @@ class Law:
                     else:
                         self.garden_crosswalks.append((at, row))
                     continue
-                fields = ROW_FIELDS[key] | (set(self.facets) if key == 'kinds' else set())
+                fields = ROW_FIELDS[key] | (set(self.facets) if key == 'kinds' else set()) \
+                    | ({'home'} if where != GARDEN and key in ('kinds', 'namespaces') else set())   # a profile's own
                 extra = set(row) - fields
                 if extra:
                     self.found.append(('law', at, f"{', '.join(sorted(extra))}: no field of a row of `{key}`, whose "
@@ -978,12 +1012,14 @@ class Law:
             if name == 'protocols':
                 return '' if value in self.std.protocols else f"{value!r} is no protocol of `net_protocols` (IANA)"
             if name == 'units':
-                if value in self.units or value in self.std.currencies:
+                if value in self.units or value in self.std.currencies or self.unit(value):
                     return ''
                 named = next((u for u, r in self.units.items() if r.get('name') == value), None)
                 if named:
                     return f"{value!r} is the English name of `{named}`: a unit is written in UCUM, its name the law's"
-                return f"{value!r} is no unit of the law in UCUM (core/law/units.yaml) and no currency of ISO 4217"
+                return (f"{value!r} is no unit of the law in UCUM (core/law/units.yaml) and no currency of ISO 4217, "
+                        f"nor one its rules make (`composed`): a count, `{{<word>}}` in lowercase; a price, a unit of "
+                        f"money over a unit of the law, `<currency>/<unit>`")
             if name == 'knowledge':
                 return self.std.code(value)
             if name == 'properties':
@@ -1988,6 +2024,15 @@ class Law:
             if self.profiles and v.get('home') not in (None, 'core') and v.get('home') not in self.profiles:
                 bad(f"verb {name}", f"its home `{v.get('home')}` is the core or a profile of the law "
                                     f"({', '.join(self.profiles)})")
+        for table, rows in (('kinds', self.kinds), ('namespaces', self.namespaces)):
+            for name, row in rows.items():
+                h = row.get('home') if isinstance(row, dict) else None
+                if h is not None and (h not in self.profiles or name not in listed(self.profiles[h].get(table))):
+                    bad(f"{table[:-1]} {name}", f"its home `{h}` is a profile of the law whose row lists it in `{table}`")
+            for p, prow in self.profiles.items():
+                for name in listed(prow.get(table)):
+                    if (rows.get(name) or {}).get('home') != p:
+                        bad(f"profile {p}", f"lists `{name}` in `{table}`, whose row names no `home: {p}`")
         for p in self.taken:
             if p not in self.profiles:
                 bad(f"{self.taken_where} profiles", f"`{p}` is no profile the law offers: one of "
@@ -2040,7 +2085,7 @@ class Law:
                 bad(f"line {ln}", f"a line names a column `describe` gives a being, and `{ln}` is one of its own "
                                   f"({', '.join(DESCRIBED_BUILT_IN)})")
         powers = self.powers()
-        declared = set((self.row_columns.get('kinds') or ('', {}))[1] or {}) - {'kind', 'nature', 'meaning'}
+        declared = set((self.row_columns.get('kinds') or ('', {}))[1] or {}) - {'kind', 'nature', 'meaning', 'home'}
         if self.row_columns.get('kinds') and declared != set(self.facets):
             bad('core/law/kinds.yaml columns', f"a kind names a position on each facet of the ladder, a column a line: "
                                                f"its columns {', '.join(sorted(declared))} are not the facets "
@@ -2177,6 +2222,15 @@ class Law:
         for n, us in names.items():
             if len(us) > 1:
                 bad('units', f"the name {n!r} is attached to {', '.join(us)}: one name, one unit")
+        for r in self.unit_rules:                              # the units the law makes by a rule (units.yaml)
+            if r.get('form') not in _units().COMPOSED_FORMS:
+                bad(f"composed {r.get('form')}", f"a unit is made as one of {', '.join(_units().COMPOSED_FORMS)}")
+            try:
+                re.compile(str(r.get('pattern')))
+            except re.error as e:
+                bad(f"composed {r.get('form')}", f"its pattern does not compile: {e}")
+            if r.get('form') == 'count' and r.get('quantity') not in self.std.quantities:
+                bad(f"composed {r.get('form')}", f"{r.get('quantity')!r} is no quantity of the law")
         seen = {}
         for w, who in self.replaces:
             seen.setdefault(w, []).append(who)

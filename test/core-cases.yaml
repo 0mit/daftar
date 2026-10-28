@@ -188,6 +188,9 @@ good:
   - { name: "an attendance kept in view takes none of the hours: two that overlap, one transparent", bean: y34, kind: document, statements: [ { say: { by: sam, at: now } }, { attend: { by: ben, of: pot, at: 2026-12-02/2026-12-06 } }, { attend: { by: ben, of: ladder, at: 2026-12-05/2026-12-09, transparency: transparent } } ] }
   - { name: "an attendance said to take its hours is as one that says nothing", bean: y35, kind: document, statements: [ { say: { by: sam, at: now } }, { attend: { by: ben, of: ladder, at: 2026-12-20/2026-12-21, transparency: opaque } } ] }
   - { name: "a pin through another garden: its commit that garden's, which no gate here refuses", bean: y36, kind: document, statements: [ { say: { by: sam, at: now } }, { classify: { id: c, of: self, as: "isco-08:2511" } }, { pin: { id: p, by: sam, of: [c], through: garden-a, at: ["2026-10-01 10:00+03:30", "garden-a@0123456789abcdef0123456789abcdef01234567"] } } ] }
+  - { name: "a legal entity by its LEI, and a filer by its codes at four regulators", bean: y58, kind: org, statements: [ { say: { by: sam, at: now } }, { name: { by: lei, of: self, as: "506700GE1G29325QX363" } }, { name: { by: sec-cik, of: self, as: "0000000042" } }, { name: { by: edinet, of: self, as: "E00042" } }, { name: { by: dart, of: self, as: "00000042" } }, { name: { by: twse, of: self, as: "4242" } } ] }
+  - { name: "a market by its MIC", bean: y59, kind: org, statements: [ { say: { by: sam, at: now } }, { name: { by: mic, of: self, as: "ABCD" } } ] }
+  - { name: "a count of what an annotation names, and prices over a count, a mass and an energy, none a row", bean: y60, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { id: crates, of: self, as: number, value: { count: "300", unit: "{crate}" }, at: "2026-10-01" } }, { measure: { id: per-crate, of: self, as: money, value: { count: "1200", unit: "USD/{crate}" }, at: "2026-10-01" } }, { measure: { id: per-kg, of: self, as: money, value: { count: "3.20", unit: "EUR/kg" }, at: "2026-10-01" } }, { measure: { id: per-kwh, of: self, as: money, value: { count: "0.25", unit: "EUR/kW.h" }, at: "2026-10-01" } } ] }
 bad:
   # rule bearer (2026-10-10): what a quantity holds for, reached through `made-of` alone
   - { rule: bearer, name: "one body is no hydraulic cylinder: a device's concept is said of a device", says: "is a device, bodies joined, and this is one body", bean: x12i, kind: component, statements: [ { say: { by: sam, at: now } }, { classify: { of: self, as: "made:hydraulic-cylinder" } } ] }
@@ -335,6 +338,14 @@ bad:
   - { rule: measured, name: "a clause naming no guard of the law", says: "is no guard of the law", bean: x91, kind: contract, statements: [ { say: { by: sam, at: now } }, { can: { id: quoted, by: { someone: session }, of: "quote" } }, { forbidden: { of: quoted, through: self, clause: { guard: one-text-two-parsers } } } ] }
   - { rule: measured, name: "a guard said by a stance that neither holds nor lifts it", says: "is neither", bean: x92, kind: contract, statements: [ { say: { by: sam, at: now } }, { can: { id: shell, by: { someone: session }, of: "run in bash" } }, { permitted: { of: shell, through: self, clause: { guard: shell-is, operand: { shell: bash } } } } ] }
   - { rule: measured, name: "a guard's operand out of what it takes", says: "no code of `technology`", bean: x93, kind: contract, statements: [ { say: { by: sam, at: now } }, { can: { id: shell, by: { someone: session }, of: "run in tcsh" } }, { obligatory: { of: shell, through: self, clause: { guard: shell-is, operand: { shell: tcsh } } } } ] }
+  - { rule: names, name: "an LEI whose check digits do not hold", says: "not a name lei gives", bean: x102, kind: org, statements: [ { say: { by: sam, at: now } }, { name: { by: lei, of: self, as: "506700GE1G29325QX364" } } ] }
+  - { rule: names, name: "a MIC in lowercase", says: "not a name mic gives", bean: x103, kind: org, statements: [ { say: { by: sam, at: now } }, { name: { by: mic, of: self, as: "abcd" } } ] }
+  - { rule: names, name: "a Central Index Key without its zeros before", says: "not a name sec-cik gives", bean: x104, kind: org, statements: [ { say: { by: sam, at: now } }, { name: { by: sec-cik, of: self, as: "42" } } ] }
+  - { rule: profile, name: "an instrument, where the garden takes no markets profile", says: "markets profile's", bean: x105, kind: instrument, statements: [ { say: { by: sam, at: now } } ] }
+  - { rule: profile, name: "an ISIN, where the garden takes no markets profile", says: "markets profile's", bean: x106, kind: document, statements: [ { say: { by: sam, at: now } }, { name: { by: isin, of: self, as: "US0378331005" } } ] }
+  - { rule: valency, name: "a count whose annotation is capitalised", says: "no unit of the law", bean: x107, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: number, value: { count: "3", unit: "{Wafer}" } } } ] }
+  - { rule: valency, name: "a currency over a currency: a rate, no price", says: "no unit of the law", bean: x108, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "1.1", unit: "USD/EUR" } } } ] }
+  - { rule: valency, name: "a price in no currency of ISO 4217", says: "no unit of the law", bean: x109, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "1", unit: "XYZ/kg" } } } ] }
 
 # Faults judged only as files: what the gate reads from a bean's own text, which a bean made in memory does not have.
 disk:
@@ -356,7 +367,7 @@ clauses:
     - { says: "once the garden holds a bean, it names its gardener", garden: [no-gardener] }
     - { says: "A grant is to a being or to every member of a reading", bad: [x65, x66, x67] }
   valency:
-    - { says: "each required role is filled", bad: [x2, x3s, x3u, x3v, x3w, x3x, x3y, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55] }
+    - { says: "each required role is filled", bad: [x2, x3s, x3u, x3v, x3w, x3x, x3y, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55, x107, x108, x109], good: [y60] }
     - { says: "a role takes a list only where its row says `many`", bad: [x3b] }
   knowing:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
@@ -393,7 +404,7 @@ clauses:
     - { says: "a position is in a declared system", bad: [x13, x13b, x13c, x13d, x13e] }
     - { says: "a day is reckoned in the garden's `zone`, and `now` is written at `at` alone", bad: [x13f] }
   names:
-    - { says: "a name its namespace gives once names one being", bad: [x14, x50, x51, x51b, x52] }
+    - { says: "a name its namespace gives once names one being", bad: [x14, x50, x51, x51b, x52, x102, x103, x104], good: [y58, y59] }
     - { says: "A garden's id is twelve hexadecimal digits", bad: [x28] }
     - { says: "A name a garden gave, qualified to cross", bad: [x29] }
     - { says: "an identifier someone else assigned is never qualified", bad: [x87] }
@@ -454,7 +465,7 @@ clauses:
     - { says: "a need's `interval` is a length of time", bad: [x53b, x53c], good: [y50] }
     - { says: "a possible's `chance` is a ratio from 0 to 1", bad: [x99, x100, x101], good: [y56, y57] }
   profile:
-    - { says: "what a profile gives is used only where the garden takes the profile", bad: [x60] }
+    - { says: "what a profile gives is used only where the garden takes the profile", bad: [x60, x105, x106] }
     - { says: "and what its forms hold is in its form", bad: [x61, x62] }
     - { says: "and each attribute in its domain", bad: [x75, x76] }
     - { says: "and a sheet, and a being of each kind a drawing makes", suite: [test/core_view.py] }

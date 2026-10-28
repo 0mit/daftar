@@ -595,7 +595,7 @@ class Carry:
             else:
                 vals[fname] = v
         being = vals.get(self._bean_field) if self._bean_field else None
-        if not being:
+        if not being or being == 'unknown':                       # looked up, and no being has the name: none
             return None, [], listed, notes, {}, {}
         header = {}
         groups = {}                                                 # (verb, filters) -> roles

@@ -906,7 +906,7 @@ class Judge:
                     and as_role.get('table') == 'properties' else None
                 if qname is None and isinstance(r.get('value'), dict) and r['value'].get('unit'):
                     u = str(r['value']['unit'])
-                    qname = (self.L.units.get(u) or {}).get('quantity') or ('money' if self.L.std and u in self.L.std.currencies else None)
+                    qname = (self.L.unit(u) or {}).get('quantity')
                 if qname in q:
                     row = q[qname]
                     rules.append((row.get('holds_for'), qname))

@@ -127,7 +127,202 @@ def exiftool(records, volume, root, find=None, model='image', **_):
         yield out
 
 
-IMPORTED = {'file-tree': file_tree, 'copies': copies, 'exiftool': exiftool}
+def _first(v):
+    return v[0] if isinstance(v, list) and v else v
+
+
+def _text_of(v):
+    """An element's text as the `xml` format reads it (the text alone, or its `#text`), or a JSON value's own."""
+    v = _first(v)
+    if isinstance(v, dict):
+        v = v.get('#text')
+    return str(v).strip() if v not in (None, '') else None
+
+
+def _atom_link(v):
+    """An Atom entry's link: the href of the one whose rel is `alternate` or none; None where it has no such link."""
+    for x in (v if isinstance(v, list) else [v]):
+        if isinstance(x, dict) and x.get('@href') and x.get('@rel', 'alternate') == 'alternate':
+            return x['@href']
+    return None
+
+
+FEED_TAKES = ('guid', 'id', 'link', 'url', 'title', 'description', 'summary', 'pubDate', 'published', 'updated',
+              'date_published', 'date_modified', 'author', 'creator', 'authors', 'category', 'tags', 'encoded',
+              'content', 'content_html', 'content_text')
+
+
+def feed(records, **_):
+    """A feed's items or entries, read alike in RSS, Atom and JSON Feed (formats.yaml, reader `feed`): each an `item`,
+    its id minted from its own id or its link, its moment of publication in ISO 8601, its site its link's host."""
+    import hashlib
+    from email.utils import parsedate_to_datetime
+    from urllib.parse import urlsplit
+    for rec in records:
+        atom = isinstance(_first(rec.get('link')), dict)
+        link = _atom_link(rec.get('link')) if atom else (_text_of(rec.get('url')) or _text_of(rec.get('link')))
+        own = _text_of(rec.get('guid')) or _text_of(rec.get('id'))
+        out = Record({}, at=rec.at, model='item')
+        if own or link:
+            out['id'] = 'i-' + hashlib.sha256((own or link).encode('utf-8')).hexdigest()[:16]
+        for field, keys in (('title', ('title',)), ('summary', ('summary', 'description'))):
+            got = next((_text_of(rec.get(k)) for k in keys if _text_of(rec.get(k))), None)
+            if got:
+                out[field] = got
+        if link:
+            out['link'] = link
+            host = urlsplit(link).hostname
+            if host:
+                out['site'] = host
+        if _text_of(rec.get('pubDate')):
+            try:
+                out['published'] = parsedate_to_datetime(_text_of(rec.get('pubDate'))).isoformat()
+            except (TypeError, ValueError):
+                out['pubDate'] = _text_of(rec.get('pubDate'))      # no date RFC 5322 writes: kept, and listed
+        else:
+            got = _text_of(rec.get('published')) or _text_of(rec.get('date_published')) or _text_of(rec.get('updated'))
+            if got:
+                out['published'] = got
+        if _text_of(rec.get('published')) and _text_of(rec.get('updated')) or _text_of(rec.get('date_modified')):
+            out['updated'] = _text_of(rec.get('updated')) or _text_of(rec.get('date_modified'))
+        for field, keys in (('author', ('author', 'creator', 'authors')), ('categories', ('category', 'tags')),
+                            ('content', ('encoded', 'content', 'content_html', 'content_text'))):
+            got = [rec[k] for k in keys if rec.get(k) not in (None, '', [])]
+            if got:
+                out[field] = got[0] if len(got) == 1 else got
+        yield out
+
+
+ISO4217 = 'http://www.xbrl.org/2003/iso4217'
+XBRLI = 'http://www.xbrl.org/2003/instance'
+XBRL_TAKES = ('concept', 'contextRef', 'context', 'unitRef', 'unit', 'decimals', 'precision', 'id', 'nil', '#text',
+              'prefixes')
+
+
+def _xbrl_measure(q, prefixes):
+    """The law's unit of one XBRL measure, or None: a currency of ISO 4217, a share, a pure number."""
+    p, _, local = str(q).rpartition(':')
+    ns = prefixes.get(p)
+    return local if ns == ISO4217 else '{share}' if (ns, local) == (XBRLI, 'shares') else \
+        '1' if (ns, local) == (XBRLI, 'pure') else None
+
+
+def _xbrl_unit(u, prefixes):
+    """A fact's unit as the law writes it, or its measures as written where the law has none."""
+    if not isinstance(u, dict):
+        return None
+    if 'measure' in u:
+        ms = [_xbrl_measure(m, prefixes) for m in u['measure']]
+        if len(ms) == 1 and ms[0]:
+            return ms[0]
+        return '*'.join(u['measure']) or None
+    num = [_xbrl_measure(m, prefixes) for m in u.get('numerator') or []]
+    den = [_xbrl_measure(m, prefixes) for m in u.get('denominator') or []]
+    if len(num) == 1 and len(den) == 1 and num[0] and den[0]:
+        return f"{num[0]}/{den[0]}"
+    return '*'.join(u.get('numerator') or []) + '/' + '*'.join(u.get('denominator') or [])
+
+
+def xbrl_facts(records, **_):
+    """An instance's facts (formats.yaml, reader `xbrl-facts`): each a `fact`, its concept a coding, its period, its
+    value and its unit the law's; its entity only where it is a number of the entity as a whole."""
+    for rec in records:
+        ctx, prefixes = rec.get('context') or {}, rec.get('prefixes') or {}
+        c = rec.get('concept') or {}
+        out = Record({'concept': {'system': c.get('namespace'), 'code': c.get('name')}}, at=rec.at, model='fact')
+        if ctx.get('instant'):
+            out['at'] = ctx['instant']
+        else:
+            for k, f in (('startDate', 'start'), ('endDate', 'end')):
+                if ctx.get(k):
+                    out[f] = ctx[k]
+        if rec.get('decimals') is not None:
+            out['decimals'] = rec['decimals']
+        unit = _xbrl_unit(rec.get('unit'), prefixes) if rec.get('unitRef') is not None else None
+        if unit:
+            out['unit'] = unit
+        text = rec.get('#text')
+        dims = list(ctx.get('segment') or []) + list(ctx.get('scenario') or [])
+        if dims:
+            out['dimensions'] = dims
+        ent = ctx.get('entity') or {}
+        if rec.get('unitRef') is not None and text is not None:
+            out['value'] = text
+            if not dims and ent.get('identifier'):
+                out['entity'], out['scheme'] = ent['identifier'], ent.get('scheme')
+        else:
+            if text is not None:
+                out['text'] = text
+            if rec.get('nil'):
+                out['nil'] = rec['nil']
+        if 'entity' not in out and ent.get('identifier'):
+            out['of'] = ent['identifier']                   # whose it is, given and listed: it is not carried
+        yield out
+
+
+SDMX_TAKES = ('structure', 'dimension', 'key', 'obs', 'series')
+
+
+def sdmx_period(p):
+    """An SDMX time period as the law's position: a day or a moment as written; a year, a half, a quarter, a month (ISO
+    8601's `2026-08`, or SDMX's `2026-A1`, `2026-S2`, `2026-Q3`, `2026-M08`) as the days from its first to its last; a
+    week (`2026-W05`) as its days in the ISO week calendar. None for a period of any other form."""
+    import calendar
+    p = str(p or '')
+    if re.fullmatch(r'\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)?)?', p):
+        return p
+    m = re.fullmatch(r'(\d{4})(?:-A1)?', p)
+    if m:
+        return f"{m.group(1)}-01-01/{m.group(1)}-12-31"
+    m = re.fullmatch(r'(\d{4})-(?:M)?(\d{2})', p) or None
+    months = None
+    if m and 1 <= int(m.group(2)) <= 12:
+        months = (int(m.group(2)), int(m.group(2)))
+    m2 = re.fullmatch(r'(\d{4})-([SQ])([1-4])', p)
+    if m2 and not (m2.group(2) == 'S' and int(m2.group(3)) > 2):
+        n, size = int(m2.group(3)), 6 if m2.group(2) == 'S' else 3
+        months, m = ((n - 1) * size + 1, n * size), m2
+    if months:
+        y = int(m.group(1))
+        last = calendar.monthrange(y, months[1])[1]
+        return f"{y}-{months[0]:02d}-01/{y}-{months[1]:02d}-{last:02d}"
+    m = re.fullmatch(r'(\d{4})-W(\d{2})', p)
+    if m and 1 <= int(m.group(2)) <= 53:
+        return f"{p}-1/{p}-7"
+    return None
+
+
+def sdmx_observations(records, **_):
+    """A generic data message's observations (formats.yaml, reader `sdmx-observations`): each an `observation` of the
+    series its key names, its measure a coding of the structure the message names."""
+    for rec in records:
+        key, obs, attrs = dict(rec.get('key') or {}), dict(rec.get('obs') or {}), dict(rec.get('series') or {})
+        dim = rec.get('dimension') or 'TIME_PERIOD'
+        out = Record({}, at=rec.at, model='observation')
+        value = obs.pop('OBS_VALUE', None)
+        number = value is not None and re.fullmatch(r'-?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?', str(value))
+        placed = sdmx_period(obs.get(dim)) if obs.get(dim) is not None else None
+        if key and number and placed:
+            out['series'] = '.'.join(str(v) for v in key.values())
+        elif key:
+            out['key'] = '.'.join(str(v) for v in key.values())    # no number, or no period placed: no being, listed
+        if rec.get('structure'):
+            out['measure'] = {'system': rec['structure'], 'code': 'OBS_VALUE'}
+        if placed:
+            out['at'] = placed
+            obs.pop(dim)
+        if value is not None:
+            out['value' if number else 'OBS_VALUE'] = value
+        unit = obs.pop('UNIT_MEASURE', None) or attrs.pop('UNIT_MEASURE', None)
+        if unit:
+            out['unit'] = unit
+        for k, v in list(attrs.items()) + list(obs.items()):
+            out[k] = v
+        yield out
+
+
+IMPORTED = {'file-tree': file_tree, 'copies': copies, 'exiftool': exiftool, 'feed': feed, 'xbrl-facts': xbrl_facts,
+            'sdmx-observations': sdmx_observations}
 
 
 def file_tree_sql(db, src, volume, carrier=None, **_):

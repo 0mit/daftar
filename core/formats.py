@@ -315,41 +315,216 @@ def undeclared(raw, what='a record'):
         raise Refused(f"it declares a document type or an entity: {what} is data, refused before it is parsed")
 
 
-def _xml(source, spec):
+def _local(tag):
+    return tag.rsplit('}', 1)[-1]
+
+
+def _namespace(tag):
+    return tag[1:].split('}', 1)[0] if tag.startswith('{') else ''
+
+
+def _xml_root(source):
+    """(the root element, {prefix: namespace} the document declares) of an XML source, after the `xml` guard."""
     import xml.etree.ElementTree as ET
     raw = _bytes(source)
     undeclared(raw)
+    prefixes, root = {}, None
     try:
-        root = ET.fromstring(raw)
+        for event, item in ET.iterparse(io.BytesIO(raw), events=('start-ns', 'start')):
+            if event == 'start-ns':
+                prefixes.setdefault(item[0], item[1])
+            elif root is None:
+                root = item
     except ET.ParseError as e:
         raise Refused(f"not XML: {e}") from None
+    return root, prefixes
 
-    def local(tag):
-        return tag.rsplit('}', 1)[-1]
 
-    def as_record(el):
-        out = {f"@{local(k)}": v for k, v in el.attrib.items()}
-        for child in el:
-            v = as_record(child)
-            name = local(child.tag)
-            if name in out:
-                out[name] = out[name] if isinstance(out[name], list) else [out[name]]
-                out[name].append(v)
-            else:
-                out[name] = v
-        text = (el.text or '').strip()
-        if text and not out:
-            return text
-        if text:
-            out['#text'] = text
-        return out
+def _element(el):
+    """An element as a record: its attributes as `@<name>`, its children by local name (a list where one repeats), its
+    text alone where it has nothing else, or as `#text`."""
+    out = {f"@{_local(k)}": v for k, v in el.attrib.items()}
+    for child in el:
+        v = _element(child)
+        name = _local(child.tag)
+        if name in out:
+            out[name] = out[name] if isinstance(out[name], list) else [out[name]]
+            out[name].append(v)
+        else:
+            out[name] = v
+    text = (el.text or '').strip()
+    if text and not out:
+        return text
+    if text:
+        out['#text'] = text
+    return out
+
+
+def _xml(source, spec):
+    root, _p = _xml_root(source)
     path = [s for s in str((spec or {}).get('path') or '').split('/') if s]
     found = [root]
     for step in path:
-        found = [c for el in found for c in el if local(c.tag) == step]
+        found = [c for el in found for c in el if _local(c.tag) == step]
     for i, el in enumerate(found):
-        r = as_record(el)
+        r = _element(el)
         yield Record(r if isinstance(r, dict) else {'#text': r}, at=f"element {i + 1}")
+
+
+# ------------------------------------------------------------------------------------------------ feeds, filings, series
+def _rss(source, spec):
+    root, _p = _xml_root(source)
+    if _local(root.tag) not in ('rss', 'RDF'):
+        raise Refused(f"not RSS: its root is <{_local(root.tag)}>, where RSS's is <rss>")
+    items = [el for el in root.iter() if _local(el.tag) == 'item']
+    for i, el in enumerate(items):
+        r = _element(el)
+        yield Record(r if isinstance(r, dict) else {'#text': r}, at=f"item {i + 1}")
+
+
+def _atom(source, spec):
+    root, _p = _xml_root(source)
+    if _local(root.tag) != 'feed' or _namespace(root.tag) != 'http://www.w3.org/2005/Atom':
+        raise Refused(f"not Atom: its root is <{_local(root.tag)}>, where Atom's is <feed> in its namespace")
+    for i, el in enumerate(c for c in root if _local(c.tag) == 'entry'):
+        r = _element(el)
+        yield Record(r if isinstance(r, dict) else {'#text': r}, at=f"entry {i + 1}")
+
+
+def _json_feed(source, spec):
+    try:
+        data = _number_json(_named_text(source))
+    except ValueError as e:
+        raise Refused(f"not JSON: {e}") from None
+    if not isinstance(data, dict) or not str(data.get('version', '')).startswith('https://jsonfeed.org/version/'):
+        raise Refused("not a JSON Feed: its `version` is no URL of jsonfeed.org's versions")
+    for i, item in enumerate(data.get('items') or []):
+        if isinstance(item, dict):
+            yield Record(item, at=f"item {i + 1}")
+
+
+XBRLI = 'http://www.xbrl.org/2003/instance'
+XBRLDI = 'http://xbrl.org/2006/xbrldi'
+XSI = 'http://www.w3.org/2001/XMLSchema-instance'
+
+
+def _xbrl(source, spec):
+    root, prefixes = _xml_root(source)
+    if _local(root.tag) != 'xbrl' or _namespace(root.tag) != XBRLI:
+        raise Refused(f"not an XBRL instance: its root is <{_local(root.tag)}>, where an instance's is <xbrli:xbrl>")
+
+    def kids(el, name, ns=XBRLI):
+        return [c for c in el if c.tag == f'{{{ns}}}{name}']
+
+    def text(el, name, ns=XBRLI):
+        got = kids(el, name, ns)
+        return (got[0].text or '').strip() if got else None
+
+    def members(el):
+        out = []
+        for m in el or []:
+            if m.tag == f'{{{XBRLDI}}}explicitMember':
+                out.append({'dimension': m.get('dimension'), 'member': (m.text or '').strip()})
+            elif m.tag == f'{{{XBRLDI}}}typedMember':
+                out.append({'dimension': m.get('dimension'), 'typed': _element(m)})
+            else:
+                out.append({'element': _local(m.tag), 'value': _element(m)})
+        return out
+    contexts, units = {}, {}
+    for c in kids(root, 'context'):
+        ctx, ent = {}, (kids(c, 'entity') or [None])[0]
+        if ent is not None:
+            ident = (kids(ent, 'identifier') or [None])[0]
+            if ident is not None:
+                ctx['entity'] = {'identifier': (ident.text or '').strip(), 'scheme': ident.get('scheme')}
+            seg = (kids(ent, 'segment') or [None])[0]
+            if seg is not None:
+                ctx['segment'] = members(seg)
+        per = (kids(c, 'period') or [None])[0]
+        if per is not None:
+            for k in ('instant', 'startDate', 'endDate'):
+                if text(per, k):
+                    ctx[k] = text(per, k)
+            if kids(per, 'forever'):
+                ctx['forever'] = 'true'
+        sc = (kids(c, 'scenario') or [None])[0]
+        if sc is not None:
+            ctx['scenario'] = members(sc)
+        contexts[c.get('id')] = ctx
+
+    def measures(el):
+        return [(m.text or '').strip() for m in el.iter(f'{{{XBRLI}}}measure')]
+    for u in kids(root, 'unit'):
+        div = (kids(u, 'divide') or [None])[0]
+        if div is not None:
+            units[u.get('id')] = {'numerator': measures((kids(div, 'unitNumerator') or [div])[0]),
+                                  'denominator': measures((kids(div, 'unitDenominator') or [div])[0])}
+        else:
+            units[u.get('id')] = {'measure': measures(u)}
+    n = 0
+    for el in root.iter():
+        ref = el.get('contextRef')
+        if ref is None:
+            continue
+        n += 1
+        rec = {'concept': {'namespace': _namespace(el.tag), 'name': _local(el.tag)}, 'contextRef': ref,
+               'context': contexts.get(ref, {})}
+        for k in ('unitRef', 'decimals', 'precision', 'id'):
+            if el.get(k) is not None:
+                rec[k] = el.get(k)
+        if el.get('unitRef') is not None:
+            rec['unit'] = units.get(el.get('unitRef'), {})
+        if el.get(f'{{{XSI}}}nil') in ('true', '1'):
+            rec['nil'] = 'true'
+        elif (el.text or '').strip():
+            rec['#text'] = (el.text or '').strip()
+        rec['prefixes'] = {p: u for p, u in prefixes.items() if p}
+        yield Record(rec, at=f"fact {n}")
+
+
+SDMX_MESSAGE = 'http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message'
+SDMX_GENERIC = 'http://www.sdmx.org/resources/sdmxml/schemas/v2_1/data/generic'
+SDMX_COMMON = 'http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common'
+
+
+def _sdmx(source, spec):
+    root, _p = _xml_root(source)
+    if _namespace(root.tag) != SDMX_MESSAGE:
+        raise Refused(f"not an SDMX-ML 2.1 message: its root <{_local(root.tag)}> is in no namespace of SDMX-ML 2.1's")
+    if _local(root.tag) != 'GenericData':
+        raise Refused(f"<{_local(root.tag)}> names its key and its attributes alike, and only its structure tells them "
+                      f"apart: ask its provider for generic data (GenericData), which names each")
+    structure, at_obs = None, 'TIME_PERIOD'
+    for st in root.iter(f'{{{SDMX_MESSAGE}}}Structure'):
+        at_obs = st.get('dimensionAtObservation') or at_obs
+        urn = next((u.text.strip() for u in st.iter() if _local(u.tag) == 'URN' and (u.text or '').strip()), None)
+        ref = next((r for r in st.iter() if _local(r.tag) == 'Ref'), None)
+        structure = urn or (f"{ref.get('agencyID')}:{ref.get('id')}({ref.get('version') or '1.0'})" if ref is not None
+                            else st.get('structureID'))
+        break
+
+    def values(el, name):
+        box = next((c for c in el if c.tag == f'{{{SDMX_GENERIC}}}{name}'), None)
+        return {v.get('id'): v.get('value') for v in box if v.get('id')} if box is not None else {}
+    n = 0
+    for ds in root.iter(f'{{{SDMX_MESSAGE}}}DataSet'):
+        for series in [c for c in ds if c.tag == f'{{{SDMX_GENERIC}}}Series'] or [ds]:
+            key, attrs = values(series, 'SeriesKey'), values(series, 'Attributes')
+            for obs in [c for c in series if c.tag == f'{{{SDMX_GENERIC}}}Obs']:
+                n += 1
+                dim = next((c for c in obs if c.tag == f'{{{SDMX_GENERIC}}}ObsDimension'), None)
+                val = next((c for c in obs if c.tag == f'{{{SDMX_GENERIC}}}ObsValue'), None)
+                o = {}
+                if dim is not None and dim.get('value') is not None:
+                    o[dim.get('id') or at_obs] = dim.get('value')
+                if val is not None and val.get('value') is not None:
+                    o['OBS_VALUE'] = val.get('value')
+                o.update(values(obs, 'Attributes'))
+                o.update({f"key.{k}": v for k, v in values(obs, 'ObsKey').items()})
+                rec = {'structure': structure, 'dimension': at_obs, 'key': key, 'obs': o}
+                if attrs:
+                    rec['series'] = attrs
+                yield Record(rec, at=f"observation {n}")
 
 
 def read(fmt, source, records=None):
@@ -486,10 +661,11 @@ def write(fmt, records, fields=None, **opts):
     raise Refused(f"the format {fmt!r} is written by none of this release's writers ({', '.join(WRITE)})")
 
 
-READ = {'tsv': _tsv, 'csv': _csv, 'json': _json, 'jsonl': _jsonl, 'sqlite': _sqlite, 'xml': _xml, 'checksums': _checksums}
+READ = {'tsv': _tsv, 'csv': _csv, 'json': _json, 'jsonl': _jsonl, 'sqlite': _sqlite, 'xml': _xml, 'checksums': _checksums,
+        'rss': _rss, 'atom': _atom, 'json-feed': _json_feed, 'xbrl': _xbrl, 'sdmx': _sdmx}
 WRITE = ('tsv', 'csv', 'json', 'jsonl', 'sqlite', 'ics', 'checksums')
 EXTENSIONS = {'.tsv': 'tsv', '.csv': 'csv', '.json': 'json', '.jsonl': 'jsonl', '.ndjson': 'jsonl', '.sqlite': 'sqlite',
-              '.sqlite3': 'sqlite', '.db': 'sqlite', '.xml': 'xml'}
+              '.sqlite3': 'sqlite', '.db': 'sqlite', '.xml': 'xml', '.rss': 'rss', '.atom': 'atom', '.xbrl': 'xbrl'}
 
 
 def format_of(path, allowed):

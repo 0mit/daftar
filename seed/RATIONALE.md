@@ -6729,3 +6729,118 @@ already take, rather than a new kind of statement: `forbidden` or `obligatory` h
 it, and what the guard takes is the clause's `operand`. Only a clause the gardener's `say` covers is an instruction
 (CHECKLIST Part D), so no text in a bean commands an agent; and a new garden starts at the safe default, the seed's
 agreement, each clause the gardener's to change by their own word.
+
+## core/law/namespaces.yaml: namespaces[lei]
+
+(core 4.8, ratified on 2026-10-28) Six namespaces come together (lei, mic, sec-cik, edinet, dart, twse): the names a
+legal entity, a market and a filer are given by those who keep a register of them, so that two gardens that meet at one
+of them meet at one being. They are the core's and not a profile's: an entity, a market and a filer at a regulator are
+beings any garden may keep — a supplier, a bank, an employer — and the registers that name them are no market's own.
+Each is written in the one form its register writes it, the Central Index Key with its zeros before, as a filing's
+header writes it, so that two gardens never hold one filer under two spellings. None is kept `held`: a company's number
+is published by its register, and is no person's secret.
+
+## core/law/namespaces.yaml: namespaces[mic]
+
+(core 4.8) A MIC is given once: its registration authority writes that a MIC, once allocated, is never changed, and
+that no MIC is deactivated to make another for the same market. An operating MIC names the entity that runs a market, a
+segment MIC a section of it, each its own being, the segment `part` of the market it is a section of.
+
+## core/law/namespaces.yaml: namespaces[twse]
+
+(core 4.8) A listed company's code names and does not establish. The code is the one by which the exchange's
+disclosures name a company, so a garden needs it to read them; but whether a code is given again once its company
+leaves the list is not published where the law could read it, and a namespace that gives once where its register does
+not would join two companies into one being. The safer reading is the one that can be widened: a garden that learns the
+register's practice proposes the change.
+
+## core/law/checks.yaml: checks[lei-checksum]
+
+(core 4.8) An LEI's, an ISIN's and a FIGI's check digits are checked as the law checks a ROR id's or an ORCID iD's: by the
+well-used validator the release already calls (python-stdnum), never by a second copy of its arithmetic, and each
+measured against its publisher's own example and an altered copy — GLEIF's own LEI, as GLEIF publishes it; the ISIN of
+ISO 6166's worked example; the FIGI OpenFIGI works its check digit out on. No dependency is new. A machine where the
+validator is not installed refuses the name, and says why, as it refuses a ROR id there.
+
+## core/law/kinds.yaml: kinds[instrument]
+
+(core 4.8) A financial instrument is a contract — a share, a bond, a future, an option, a unit of a fund — and so a
+sayable, as the law's other agreements are: it carries information and no mass. It is the `markets` profile's, not the
+core's: a garden that keeps a contract it signed has the kind `contract`; a garden that follows what a market lists
+and deals in, contracts it is no party to, takes the profile. Its names are the profile's namespaces: its ISIN and FIGI
+establish it, and its symbol at a market names it while the market lists it.
+
+## core/law/namespaces.yaml: namespaces[ticker]
+
+(core 4.8) A symbol is qualified by its market's MIC, because one symbol names different instruments at different
+markets; and it names and does not establish, because a market gives a symbol again once its instrument leaves, and
+changes it when its instrument's name changes. What establishes an instrument is its ISIN or its FIGI.
+
+## core/law/profiles.yaml: profiles[markets]
+
+(core 4.8, ratified on 2026-10-28) What only a garden that follows markets needs is a profile, and nothing of it is in
+the core: the kind `instrument` and the names of what a market lists and deals in — the ISIN, the FIGI, a symbol at a market.
+What any garden may need stays in the core: the names of legal entities, markets and filers, and the formats of feeds,
+filings and published series. A profile gives a kind and a namespace as it gives a verb, by the row that names it its
+`home`, listed on the profile's row; a garden that does not take the profile is refused a being of its kind and a name in
+its namespace, as it is refused its verb (rule `profile`), and the refusal says the one line that takes it.
+
+## core/law/formats.yaml: formats[rss]
+
+(core 4.8) A site's feed is read in the three forms sites publish one in — RSS, Atom and JSON Feed — and one reader
+gives their items alike, so that the same item read from any of them is one document: its id minted from the item's own
+id, or its link where it has none. A feed is XML or JSON that a stranger wrote, so it is read as `xml` and `json` are:
+a document that declares a document type or an entity is refused before it is parsed, and nothing in it is expanded,
+fetched or run.
+
+## core/law/crosswalks.yaml: crosswalks[feed-item]
+
+(core 4.8) An item of a feed becomes a document with the statements the law already has for one: produced by its
+publisher at the moment it was published, and found at its link, a position in the `uri` system. Its publisher is the
+being the domain name system names by its link's site, which a garden names once and every item of the site reaches.
+Three things are not carried, each for its reason: its author, because a person is kept in a garden only on their own
+word; its text, because it is its publisher's and is read at its link; and the site's categories, because they are the
+site's own words in no scheme, and a garden classifies the document in its own.
+
+## core/law/formats.yaml: formats[xbrl]
+
+(core 4.8) A filing's facts are an entity's values, each for a period and by a concept of a taxonomy, and XBRL writes
+them apart from their context and their unit; the format reads each fact with both, so a record is whole. A fact inside
+a page (inline XBRL) is read once it is extracted into an instance, since a page is no container of facts the release
+reads.
+
+## core/law/crosswalks.yaml: crosswalks[xbrl-fact]
+
+(core 4.8) A fact is a `measure` of its entity: its concept the property read, a code of the scheme whose url is the
+concept's namespace, so that a garden declares the taxonomy it reads once and every fact of it is a code the gate can
+hold. Its entity is looked up by its identifier in the namespace the import is told, since a filer's identifier is in
+a register's namespace and the URI a filing names it by is the filer's own choice of spelling. A fact of a member of a
+dimension is a part of the entity's value, a region's or a product's, and is listed rather than written as the entity's
+whole; a fact of words is a document's text, and is listed too. Its unit is the law's: a currency of ISO 4217, a count of
+shares, a pure number, a currency over a share.
+
+## core/law/formats.yaml: formats[sdmx]
+
+(core 4.8) A series' observations are read from SDMX-ML's generic data, which names each value as a dimension or an
+attribute. A structure-specific message writes both alike, as attributes of one element, and only the structure it
+was made from tells them apart: read without it, a series' key would be guessed. So it is refused, saying to ask for
+generic data, which SDMX's providers serve beside it.
+
+## core/law/crosswalks.yaml: crosswalks[sdmx-observation]
+
+(core 4.8) An observation is a `measure` of the series its key names, as a `series` holds its values. The key is looked
+up in a namespace of the garden's own, since a provider's keys are its own and no standard's. A period is placed as the
+law writes a position: a month, a quarter or a year the days from its first to its last, a week its days in the ISO
+week calendar; an observation with no number — a value missing, `NaN` — names no being and is listed, never written as a
+value it does not have.
+
+## core/law/units.yaml: composed
+
+(core 4.8, ratified on 2026-10-28) A count of something and a price per unit of something are written in units no list
+can hold: a garden counts crates, seats or shares, and prices each. Listing each as a row made a garden change its law
+for every new thing it counted, and a price could not be written at all, since a currency is no UCUM unit. So the law
+makes them by two rules. A count is an annotation alone, as UCUM writes one: the unity, `{crate}`, its quantity number,
+and since counts of different things never convert into one another it has no factor. A price is a unit of money over a
+unit of the law: its quantity money over the quantity under the line, and it converts as both parts do — at the factor
+between its units under the line, and between currencies only at a rate someone observed. A currency over a currency is
+no price: two currencies meet only through a rate, which is a reading, recorded with its source.

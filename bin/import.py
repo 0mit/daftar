@@ -54,7 +54,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, ROOT)
 import parse as dmparse  # noqa: E402,F401 — its import sets UTF-8 on stdout and stderr
 
-from core import formats  # noqa: E402
+from core import formats, readers  # noqa: E402
 from core.crosswalk import Carry, Refused  # noqa: E402
 
 THROUGH = {'read': ('record',), 'say': ('record', 'say'), 'derive': ('derive',), 'make': ('make', 'edit')}
@@ -899,7 +899,9 @@ class Import:
 
 
 TAKES = {'file-tree': {'path', 'type', 'size', 'hash'},
-         'copies': {'h', 'dest', 'size', 'class', 'src_vol', 'src_path', 'day', 'day_from', 'at'}}
+         'copies': {'h', 'dest', 'size', 'class', 'src_vol', 'src_path', 'day', 'day_from', 'at'},
+         'feed': set(readers.FEED_TAKES), 'xbrl-facts': set(readers.XBRL_TAKES),
+         'sdmx-observations': set(readers.SDMX_TAKES)}
 
 
 def _arg(argv, flag, default=None, many=False):

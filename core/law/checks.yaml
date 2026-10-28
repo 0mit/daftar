@@ -42,6 +42,21 @@ checks:
     calls: "python-stdnum (tr.tckimlik)"
     meaning: "a T.C. Kimlik No's two last digits, its check"
     vectors: { holds: ["17291716060"], refuses: ["17291716050"] }
+  - check: lei-checksum
+    reads: name
+    calls: "python-stdnum (lei)"
+    meaning: "an LEI's two last digits: the ISO/IEC 7064 MOD 97-10 check of the whole, its letters read as numbers (A as 10 … Z as 35)"
+    vectors: { holds: ["506700GE1G29325QX363"], refuses: ["506700GE1G29325QX364"] }
+  - check: isin-checksum
+    reads: name
+    calls: "python-stdnum (isin)"
+    meaning: "an ISIN's last digit: the check ISO 6166 computes over the eleven characters before it, its letters read as numbers (A as 10 … Z as 35) and every other digit of them doubled, the rightmost first, and the digits summed; and its first two letters a country's, or a code ISO 6166 gives"
+    vectors: { holds: ["US0378331005"], refuses: ["US0378331006"] }
+  - check: figi-checksum
+    reads: name
+    calls: "python-stdnum (figi)"
+    meaning: "a FIGI's last digit: the check its standard computes over the eleven characters before it, its letters read as numbers (A as 10 … Z as 35), every other one doubled, the second from the right first, and the digits summed; and its first two letters none of the prefixes the standard keeps out"
+    vectors: { holds: ["BBG000BLNQ16"], refuses: ["BBG000BLNQ17"] }
   - check: rolling-bearing
     reads: designation
     pattern: '^(?:[1-8]|N|NU|NJ|NUP|NN|QJ)[0-9]{1,4}(?:/[0-9]+(?:\.[0-9]+)?)?$'

@@ -1,6 +1,6 @@
 # The profiles (v1 part 11): what a garden takes up beside the core, each by its name in its VOCAB.md (`profiles:
-# [<name>, …]`, a RULE-CHANGE). A profile gives the verbs whose row names it as their `home` (core/law/verbs.yaml), its
-# tables, the forms its verbs hold, the attributes it adds to a form of the core (`adds`), and its asset
+# [<name>, …]`, a RULE-CHANGE). A profile gives the verbs, the kinds and the namespaces whose row names it as their
+# `home` (core/law/verbs.yaml, kinds.yaml, namespaces.yaml), each listed on its row, its tables, the forms its verbs hold, the attributes it adds to a form of the core (`adds`), and its asset
 # (`assets/<profile>/`, which a garden receives while it takes the profile). A garden that does not take a profile uses
 # none of it: rule `profile`. Each of today's terms and overlays of a profile is named where it went (`went`), and each
 # of its vacancies is at its place in the core.
@@ -20,6 +20,11 @@ profiles:
         position: tax
         reason: universal
         why: "a tax owed or claimable is held in an account of this role, and the clause form already says a tax — an `obligatory` payment to the authority occurring `each` time a sale is made, its `amount` a share of the sale's; no tool computes tax lines yet, and a jurisdiction's codes and return grids are a scheme a garden takes, none privileged"
+  - profile: markets
+    meaning: "for a garden that follows what markets list and deal in: the instruments — a share, a bond, a future, an option, a unit of a fund — and the names they are given, a security's ISIN, an instrument's FIGI and its symbol at a market, qualified by the market's MIC. What every garden may need stays in the core: a legal entity's LEI, a market's MIC, a filer's code at a regulator, and the feeds, filings and series they publish (core/law/formats.yaml)"
+    kinds: [instrument]
+    namespaces: [isin, figi, ticker]
+    went: {}
   - profile: storage
     meaning: "for a garden that keeps data on carriers: where each content is kept, which risks its keepings leave open and what would close each, which folders hold one dataset, and what each transfer still has to do. A content is one being, named by its digest, whatever holds it; a copy is a holding made from the holding it copies; a tree is a dataset, the content of its manifest (core/law/formats.yaml `checksums`). Data is not conserved as a stock is — a copy leaves its source whole — so nothing is booked from one keeping to another: what is kept is read from the holdings, never stored. A risk is a row of `risks`, the properties of keepings that resolve it; what a content must be safe against is a code of a scheme of the form `keep`, read by `inherit`. The profile's asset, `assets/storage/`, reads them at a store's scale and carries transfers as courses on its walk `walk-transfer`"
     tables: [keeping_properties, risks, layout_slots]
@@ -1030,6 +1035,8 @@ forms:
     profile: required
     meaning: required
     verbs: optional
+    kinds: optional
+    namespaces: optional
     tables: optional
     forms: optional
     adds: optional
