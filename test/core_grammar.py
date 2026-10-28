@@ -436,8 +436,9 @@ J = judge([SAY, {'pay': {'by': 'w', 'of': {'count': '3', 'unit': 'XTS'}}},
            {'pay': {'by': 'w', 'of': {'count': '1', 'unit': 'USD'}}}])
 got = [(w, m) for w, m, _p in reckon.refusals(J, RULE)]
 check("a refusal told at a path (`at`): at that path inside its statement, `<bean>[<i>] <verb>.<at>`; one with none at "
-      "its statement; a member that is no statement has no place, and none is made for it",
-      got == [('v[1] pay.of.unit', '3 XTS'), ('v[1] pay', 'XTS'), (None, 'w')], got)
+      "its statement; a member that is a bean at its bean, and at the path inside it (core 4.10: the place of a bean's "
+      "refusal)",
+      got == [('v[1] pay.of.unit', '3 XTS'), ('v[1] pay', 'XTS'), ('w.title', 'w')], got)
 view = lines.law_view(LAW).registry
 check("...and the law's check takes `{of, at, message}`, `at` a path of the statement's keys",
       not [t for lv, t in reckon.check_rule('r', RULE, view, LAW) if lv == 'error'],

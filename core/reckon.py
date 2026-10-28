@@ -361,7 +361,8 @@ def known_items(b, until, knowing):
         if v in knowing:
             continue
         sid = r.get('id') if isinstance(r.get('id'), str) else None
-        named = [j for j, rr in acts if sid is not None and sid in _listed(rr.get('of'))]
+        named = [j for j, rr in acts if sid is not None and sid in {x.split('#', 1)[1] if x.startswith(f"{b.id}#") else x
+                                                                     for x in _listed(rr.get('of')) if isinstance(x, str)}]
         if any(j in on for j in (named or [j for j, rr in acts if 'of' not in rr])):
             out.add(i)
     return out
@@ -2351,6 +2352,56 @@ class Reckoner:
     def op_last(self, s):
         return self.op_first(s, last=True)
 
+    def op_gather(self, s):
+        """`gather` (core 4.10, the gathering step): one member of each group of the members whose values at `by` are one
+        — its first in the order the garden is read in, or its last (`last: "true"`), told at its place — and beside it,
+        under `as`, what the group's members hold at `path`: `<as>.values`, each value read as the being it names, every
+        one once, in the order the members are read in and a list's items in theirs; `<as>.count`, how many, in `item`.
+        With no `by`, every member is of one group. Its proof is every member's."""
+        ms = self.arg(s, 'of', 'set')
+        by, name, last = _paths(s.get('by')), s['as'], str(s.get('last')) == 'true'
+        groups, keys = {}, []
+        for k, m in enumerate(ms):
+            key = tuple(self._one(m, p) for p in by)
+            if key not in groups:
+                groups[key] = []
+                keys.append(key)
+            seq = as_row(m).seq
+            groups[key].append(((seq if seq is not None else -1, k), m))
+        if s.get('groups') == 'values':
+            keys = sorted(keys, key=lambda k: tuple((x is not None, x or '') for x in k))
+        out = []
+        for key in keys:
+            g = sorted(groups[key], key=lambda e: e[0])
+            vals = []
+            for _at, m in g:
+                for _w, n in self._named(m, s['path']):
+                    if n is not None and n not in vals:
+                        vals.append(n)
+            one = as_row(g[-1][1] if last else g[0][1])
+            node = dict(one.node if isinstance(one.node, dict) else {},
+                        **{name: {'values': vals, 'count': {'count': str(len(vals)), 'unit': 'item'}}})
+            out.append(Row(one.id, node, one.bean, one.place, one.seq, dict(one.beans, **{name: one.bean}),
+                           _proof(*(as_row(m).proof for _at, m in g))))
+        return out
+
+    def op_either(self, s):
+        """`either` (core 4.10): each member with, under `as`, what the first of `paths` that holds a value holds there —
+        an attendance's own time, else its happening's; none where no path holds one."""
+        name, paths = s['as'], _paths(s.get('paths'))
+        out = []
+        for m in self.arg(s, 'of', 'set'):
+            mr = as_row(m)
+            node, beans = dict(mr.node if isinstance(mr.node, dict) else {}), dict(mr.beans)
+            for p in paths:
+                found = [x for x, _w in walk(self.g, mr.node, p, at=mr.bean) if x is not None]
+                if found:
+                    node[name] = found[0] if len(found) == 1 else found
+                    beans[name] = self._bean_at(m, p)
+                    break
+            out.append(Row(mr.id, node, mr.bean, mr.place, mr.seq, beans, mr.proof))
+        return out
+
     def op_overlap(self, s):
         """`overlap` (core 3.3, I.8): the pairs of members whose spans overlap — one starting before the other ends,
         and ending after it starts — within each group of the members whose values at `by` are one; each pair a member
@@ -2427,6 +2478,8 @@ class Reckoner:
                 said = self._statement_named(v, bid)          # a value that names a statement: that statement (I.1)
                 cols.update(self._statement_cols(said))
                 cols.update(self._position_cols(v, kind is not None or bean is not None or said is not None))
+                cols.update(code_cols(v, self._schemes()) if kind is None and bean is None and said is None
+                            else dict.fromkeys(CODE_COLUMNS))
                 proof = _proof(mr.proof, (f"{bean}:kind",) if bean else (),
                                (f"law:kinds[{kind}]",) if isinstance(kind, str) and kind in L.kinds else (),
                                (said[3],) if said else ())
@@ -2456,6 +2509,15 @@ class Reckoner:
         J = getattr(self.g, 'J', None)
         return position_cols(v, J.systems if J is not None else self._core_law().systems,
                              J.G.zone if J is not None else self.zone)
+
+    def _schemes(self):
+        """The schemes a code may be of: the law's and the garden's own (core/law.py `std.knowledge`)."""
+        if getattr(self, '_schemes_read', None) is None:
+            try:
+                self._schemes_read = frozenset(self._core_law().std.knowledge.schemes)
+            except Exception:       # noqa: BLE001 — a law that holds no schemes holds no code
+                self._schemes_read = frozenset()
+        return self._schemes_read
 
     def _statement_at(self, place):
         """(bean, index, verb, place, roles) of the statement told at `place` (`<bean>[<i>] <verb>`), or None."""
@@ -3296,6 +3358,12 @@ def law_table(L, name, manifest=None):
     marked `garden: true`, each a member: its id and its proof `law:<table>[<row>]`; `stands`, each level's stands with
     its level as `by`; `manifest`, the manifest's keys, each with the value the garden's GARDEN.md gives it (`value`)."""
     from core.law import listed
+    if name == 'rows':                 # THE GARDEN'S OWN ROWS (core 4.10): each it adds to the law, whatever its table,
+        out = []                       # told at the place it is written
+        for key, nm, r in getattr(L, 'garden_rows', None) or []:
+            node = dict(r if isinstance(r, dict) else {}, table=key, row=nm)
+            out.append(Row(f"VOCAB.md {key}[{nm}]", node, None, place=f"VOCAB.md {key}", proof=(f"VOCAB.md {key}",)))
+        return out
     if name == 'stands':               # the law's own ladder: each level stands at what its rows say, as they say
         out = []
         for lv, r in L.levels.items():
@@ -3367,15 +3435,18 @@ class Judged:
         return self.fm[i]
 
 
-_SLOT = re.compile(r'\{([a-z0-9_][a-z0-9_.-]*)(:set)?\}')
+_SLOT = re.compile(r'\{([a-z0-9_][a-z0-9_.-]*)(:set|:list)?\}')
 STATEMENT_COLUMNS = ('bean', 'verb', 'index', 'place', 'id')       # of a statement (core 3.2, I.1)
-POSITION_COLUMNS = ('system', 'point', 'from', 'to')               # of a position (core 3.3, I.2)
+POSITION_COLUMNS = ('system', 'point', 'from', 'to', 'unit')       # of a position (core 3.3, I.2; its unit, 4.10)
+CODE_COLUMNS = ('scheme',)                                          # of a code (core 4.10)
+_COARSE = ('millisecond', 'second', 'minute', 'day')
 
 
 def described(L):
     """describe's columns, in the order it writes them: a being's, its kind's position on each facet of the ladder, one
     column a line, named by the line (core 4.0), then a statement's and a position's."""
-    return ('being', 'kind', 'nature') + tuple(getattr(L, 'facets', ()) or ()) + STATEMENT_COLUMNS + POSITION_COLUMNS
+    return ('being', 'kind', 'nature') + tuple(getattr(L, 'facets', ()) or ()) + STATEMENT_COLUMNS + POSITION_COLUMNS \
+        + CODE_COLUMNS
 
 
 def position_cols(v, systems, zone):
@@ -3395,7 +3466,32 @@ def position_cols(v, systems, zone):
     sp = frame.span(p)
     return {'system': p.system, 'point': 'true' if frame.covers_point(p, systems) else 'false',
             'from': dmcal.write_moment(sp[0], 'gregorian-civil', 'Z', 'millisecond') if sp else None,
-            'to': dmcal.write_moment(sp[1], 'gregorian-civil', 'Z', 'millisecond') if sp else None}
+            'to': dmcal.write_moment(sp[1], 'gregorian-civil', 'Z', 'millisecond') if sp else None,
+            'unit': written_unit(p, v) if sp else None}
+
+
+def written_unit(p, text):
+    """The unit a position of time is written to (core 4.10, `<as>.unit`): `day` for a day, else the finest field its
+    clock writes — `minute`, `second`, `millisecond`; of an extent, the coarser of its two ends'. None where an end is
+    neither."""
+    def one(q, t):
+        if q.moment is None:
+            return 'day' if q.day is not None else None
+        try:
+            return dmcal.moment(t).resolution
+        except (ValueError, dmcal.NotByRule):
+            return None
+    ends = [one(p, text.split('/', 1)[0] if p.end is not None else text)] + \
+        ([one(p.end, p.end.text)] if p.end is not None else [])
+    return None if None in ends else max(ends, key=_COARSE.index)
+
+
+def code_cols(v, schemes):
+    """The columns of a code (core 4.10): `scheme`, the scheme a text `<scheme>:<code>` is a code of — one of `schemes`,
+    the law's and the garden's own — as it is written; None for any other value. The reckoner's `describe` and the
+    store's SQL call it."""
+    head = v.split(':', 1)[0] if isinstance(v, str) and ':' in v else None
+    return {'scheme': head if head in schemes else None}
 
 
 def span_end(found, end, zone, notes):
@@ -3420,9 +3516,12 @@ def _writ(v):
 def written(message, m, garden=None):
     """A refusal's words: `message`, each `{<path>}` in it the value at that path of the member `m`, as text — and each
     `{<path>:set}` the values at the path, a list's items each, every one once and written as text, in the order of
-    their characters, with `, ` between them (core 3.2, I.9). Nothing in it is evaluated."""
+    their characters, with `, ` between them (core 3.2, I.9) — and each `{<path>:list}` the same in their order, as
+    the member holds them (core 4.10). Nothing in it is evaluated."""
     def one(mo):
         found = walk(garden, m.node, mo.group(1), at=m.bean)
+        if mo.group(2) == ':list':        # the values in their order, a list's items each (core 4.10)
+            return ', '.join(_writ(x) for v, _w in found for x in (v if isinstance(v, list) else [v]) if x is not None)
         if mo.group(2):
             return ', '.join(sorted({_writ(x) for v, _w in found for x in (v if isinstance(v, list) else [v])
                                      if x is not None}))
@@ -3432,7 +3531,8 @@ def written(message, m, garden=None):
 
 def refusals(J, reading, rule=None):
     """[(place, words, proof)]: what a rule's reading refuses in the garden the engine's Judge `J` judges, by `J`'s law —
-    each refusal at the place of its statement, in the order of the reading's `refuse` and of each step's members. Its
+    each refusal at the place of its statement, or of its bean (core 4.10), in the order of the reading's `refuse` and
+    of each step's members. Its
     steps are kept on `J` under `rule`, for a later rule that takes one as an input (core 3.2, I.5)."""
     g = getattr(J, '_judged', None)
     if g is None:
@@ -3448,7 +3548,8 @@ def refusals(J, reading, rule=None):
     for ref in reading.get('refuse') or []:
         for m in rk.env.get(ref.get('of')) or []:
             mr = as_row(m)
-            out.append((told_at(mr.place, ref), written(str(ref.get('message') or ''), mr, g), mr.proof))
+            place = mr.place or (mr.bean if mr.id == mr.bean and isinstance(mr.bean, str) else None)   # a bean's (4.10)
+            out.append((told_at(place, ref), written(str(ref.get('message') or ''), mr, g), mr.proof))
     return out
 
 

@@ -50,6 +50,7 @@ parts, changes).
    python3 test/core_readings.py
    python3 test/core_nearest.py
    python3 test/core_grammar.py
+   python3 test/core_gather.py
    python3 test/core_beings.py
    python3 test/core_mechanics.py
    python3 test/core_monitoring.py

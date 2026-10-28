@@ -88,11 +88,12 @@ CHECKS = 'checks.yaml'                                     # what a value is hel
 MEASURES = 'measures.yaml'                                 # the forms of a measure: a region, a repetition, a clause's
                                                            # terms and a placement's, how well a value is known (part 7)
 GARDEN = 'VOCAB.md'                                        # where a garden's own rows are read from
-SPEC_KEYS = {'shape', 'table', 'nature', 'rung', 'many', 'keyed', 'form'}
+SPEC_KEYS = {'shape', 'table', 'nature', 'rung', 'below', 'verb', 'many', 'keyed', 'form'}
 FACE_TABLES = ('ways', 'modes', 'acquisitions', 'placements', 'complements', 'knowing')
 # THE COLUMNS `describe` GIVES OF ITS OWN (core/reckon.py `described`): beside them, one a facet, named by its line — so
 # no line takes one of these names
-DESCRIBED_BUILT_IN = ('being', 'kind', 'nature', 'bean', 'verb', 'index', 'place', 'id', 'system', 'point', 'from', 'to')
+DESCRIBED_BUILT_IN = ('being', 'kind', 'nature', 'bean', 'verb', 'index', 'place', 'id', 'system', 'point', 'from', 'to',
+                      'unit', 'scheme')
 TRUE = 'true'
 MANIFEST_FORMS = ('pin', 'bean', 'zone', 'text', 'texts')   # the manifest's forms the engine knows by name; a pattern's
                                                             # are core.yaml's `manifest_forms`
@@ -817,7 +818,7 @@ class Law:
     def declares(self, table):
         """Whether the law's columns declare a table of that name (`declared_tables`): the face's and the rows' files
         read already, so a gate reads no file again for the tables its rules read; any other by the law's files."""
-        if table == 'stands' or table in (self.face.get('columns') or {}) or table in self.row_columns:
+        if table in ('stands', 'rows') or table in (self.face.get('columns') or {}) or table in self.row_columns:
             return True
         return table in self.declared_tables()
 
@@ -2285,8 +2286,17 @@ class Law:
             for n in listed(spec.get('nature')):
                 if n not in self.natures:
                     bad(where, f"`{r}`: no nature {n!r}")
-            if spec.get('rung') is not None and spec['rung'] not in self.levels:
-                bad(where, f"`{r}`: no level {spec['rung']!r}")
+            for key in ('rung', 'below'):
+                if spec.get(key) is not None and spec[key] not in self.levels:
+                    bad(where, f"`{r}`: no level {spec[key]!r}")
+            if spec.get('below') is not None and spec.get('rung') is not None:
+                bad(where, f"`{r}`: a role takes a body at a rung (`rung`) or below one (`below`), not both")
+            if spec.get('verb') is not None:      # A STATEMENT ROLE NARROWED BY ITS VERB (core 4.10): one key, every role
+                if 'statement' not in shapes_of(spec):
+                    bad(where, f"`{r}`: `verb` narrows a role that takes a statement, by the verb it is of")
+                for w in listed(spec['verb']):
+                    if w not in self.verbs:
+                        bad(where, f"`{r}`: `verb` names {w!r}, no verb of the law")
             for flag in ('many', 'keyed'):
                 if spec.get(flag) not in (None, TRUE):
                     bad(where, f"`{r}`: `{flag}` is written `true`, or not at all")

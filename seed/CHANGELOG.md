@@ -251,6 +251,27 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.10** (2026-10-28, daftar v4.10.0, human-ratified rule-change) — **the grammar's packet: several
+  statements' values gathered into one member's words, the garden's own rows as one input, a position's unit and a
+  code's scheme, a statement role narrowed by its verb, a role that refuses a rung, and an act's own bean named in
+  full.** MINOR. The reading grammar gains `gather` — one member of each group of the members whose values at `by` are
+  one, its first or its last, with what the group's members hold at a path beside it (`<as>.values`, every one once,
+  in the order read; `<as>.count`, in `item`) — and `either`, each member with what the first of several paths that
+  holds a value holds there. A refusal's words write a list in its order, `{<path>:list}`, beside a set's
+  `{<path>:set}`; a refusal of a bean is told at its bean. `describe` gives a position's `<as>.unit` (`day`, `minute`,
+  `second` or `millisecond`, the unit it is written to; of an extent the coarser end's) and a code's `<as>.scheme` (the
+  scheme a `<scheme>:<code>` of the law's or the garden's is a code of), each with its SQL form over a store. A rule's
+  reading takes `rows`, every row a garden adds to the law whatever its table, each told at `VOCAB.md <table>`; the
+  store's SQL names it as having no form there. A role's spec takes `verb`, the verbs a statement filling it may be
+  of, judged by rule valency: `fail`'s `by` and `meet`'s `by`, where a statement fills them, are a `reckon`. A role's
+  spec takes `below`, a rung a body filling it stands below: `about`'s `of` takes no person (a person a sayable speaks
+  of, it concerns, `concern`). The law's proof refuses `verb` on a role that takes no statement or naming no verb, and
+  `below` beside `rung` or at no level. A knowing act's `of` naming a statement of its own bean as `<bean>#<id>` covers
+  it, as its id does (the gardener's word, the second build run's T1). Whether material may come from a layer to a
+  layer at all is a use of the nearest (core/law/lines.yaml `nearest.uses`, `directions`); the older vocabulary's flow
+  table, which no reader reached, is gone from bin/pass.py. test/core_gather.py, a new suite. A refusal of an
+  operation the law does not hold lists the law's operations, now with `gather` and `either` (test/core-cases.yaml's
+  x41); every other verdict stands but knowing's, ratified.
 - **daftar v4.9.1** (2026-10-28, code, core 4.9) — **a store at size, judged as its rows were put.** A large store's
   check judged its rows' own form, valency and frame at their put, and a bulk load judges one row in ten thousand there:
   it now judges every row as its put judges one (bin/store.py `row_findings`), the rows its put may refuse found

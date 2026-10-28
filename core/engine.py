@@ -300,6 +300,12 @@ def _files(root):
         return sorted(files)
 
 
+def own_ids(of, bid):
+    """The ids of its own bean's statements a knowing act's `of` names: by its id, or as `<bean>#<id>` (core 4.10, the
+    gardener's word on nb-s1-open 1) — what it covers in the bean it is in."""
+    return {x.split('#', 1)[1] if x.startswith(f"{bid}#") else x for x in listed(of) if isinstance(x, str)}
+
+
 class Finding(tuple):
     """One refusal, `(rule, where, message)`, and beside it `proof`: the statements and the law's rows it rests on, as a
     rule's reading gives them (`daftar why <rule> <where>` prints them) — none yet for a rule still stated in code."""
@@ -410,8 +416,11 @@ class Judge:
         if shape == 'being':
             return self._being(x, spec, b)
         if shape == 'statement':
-            if self.statement(x, b) is not None:
-                return ''
+            hit = self.statement(x, b)
+            if hit is not None:
+                verbs = listed(spec.get('verb'))       # a statement role narrowed by its verb (core 4.10)
+                return '' if not verbs or hit[2] in verbs else \
+                    f"{x!r} is a `{hit[2]}`, and this role takes a statement of {' or '.join(f'`{v}`' for v in verbs)}"
             m = self.stored(x)
             if m and m[2]:                      # a statement of a being kept in a store: its shape here, the rest there
                 return self._stored_kind(m)
@@ -467,6 +476,9 @@ class Judge:
         if spec.get('rung') and nat == 'body' and not self.L.at_rung(kind, spec['rung']):
             return f"a body fills this role only at {spec['rung']} (a person); {x if isinstance(x, str) else kind} is a " \
                    f"{kind}"
+        if spec.get('below') and nat == 'body' and self.L.at_rung(kind, spec['below']):
+            return f"a body fills this role only below {spec['below']}; {x if isinstance(x, str) else kind} is a " \
+                   f"{kind}, at {spec['below']}"
         return ''
 
     def _stored_kind(self, m):
@@ -619,7 +631,7 @@ class Judge:
             if verb not in self.L.knowing:
                 continue
             if 'of' in r:
-                covered |= {x for x in listed(r['of']) if isinstance(x, str)}
+                covered |= own_ids(r['of'], b.id)
             else:
                 blanket = True
             at, where = r.get('at'), f"{b.id}[{i}] {verb}"
@@ -1003,7 +1015,7 @@ class Judge:
     def _acts_of(self, b, i, r):
         """The knowing acts that cover statement [i] of bean b: those whose `of` names its id, else those with no `of`."""
         sid = r.get('id') if isinstance(r.get('id'), str) else None
-        named = [(v, rr) for _j, v, rr in b.items if v in self.L.knowing and sid is not None and sid in listed(rr.get('of'))]
+        named = [(v, rr) for _j, v, rr in b.items if v in self.L.knowing and sid is not None and sid in own_ids(rr.get('of'), b.id)]
         return named or [(v, rr) for _j, v, rr in b.items if v in self.L.knowing and 'of' not in rr]
 
     def _declined(self):

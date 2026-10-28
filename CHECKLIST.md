@@ -33,17 +33,19 @@ show.
       organisation it holds a bean for. A grant is to a being or to every member of a reading, and its cover names parts
       a bean has — a key of its header, `body`, a verb's statements, or a verb's narrowed by their `as`.
 - [ ] **valency** — Each required role is filled (`unknown` where nobody said, and in no role that is not required),
-      each filler has the shape and nature its role takes, and no role is filled that the verb does not take; a role
-      takes a list only where its row says `many`.
-- [ ] **knowing** — Every statement of a bean is the `of` of a knowing act in it, or the bean holds a knowing act with
-      no `of`, which covers every statement no other act names; a need a person meets (`meet`) is known by that person's
-      own `say`; a knowing act's `at` is `now` until the save writes the moment, and a moment typed there is refused —
-      but where the act was known in another garden: its `at` then holds that garden's bean beside the moment it was
-      known at there, and the commit that brings it takes it from that garden (`take`). A bean renamed — taken out and
-      added under another name by one commit, whose entry says `- renamed: [[<old>]] → [[<new>]]` — keeps the statements
-      it held, known as they were. An entry a commit adds names who wrote it in its heading: a being the garden holds,
-      by its bean (a person, or the session an agent works in). A row of a store names the act or acts that know it
-      instead, each a knowing act kept in git or a store, and the store's check judges it where the store is kept.
+      each filler has the shape and nature its role takes — a statement of a verb the role names (`verb`), a body at a
+      rung it names (`rung`) or below one (`below`) —, and no role is filled that the verb does not take; a role takes a
+      list only where its row says `many`.
+- [ ] **knowing** — Every statement of a bean is the `of` of a knowing act in it — by its id, or as `<bean>#<id>` —, or
+      the bean holds a knowing act with no `of`, which covers every statement no other act names; a need a person meets
+      (`meet`) is known by that person's own `say`; a knowing act's `at` is `now` until the save writes the moment, and
+      a moment typed there is refused — but where the act was known in another garden: its `at` then holds that garden's
+      bean beside the moment it was known at there, and the commit that brings it takes it from that garden (`take`). A
+      bean renamed — taken out and added under another name by one commit, whose entry says `- renamed: [[<old>]] →
+      [[<new>]]` — keeps the statements it held, known as they were. An entry a commit adds names who wrote it in its
+      heading: a being the garden holds, by its bean (a person, or the session an agent works in). A row of a store
+      names the act or acts that know it instead, each a knowing act kept in git or a store, and the store's check
+      judges it where the store is kept.
 - [ ] **placeholder** — A statement the engine derives (a verb's default) is never written: written, it is refused (an
       `answer` `as: law` by the owner; a `bear` by the one who paid, alone).
 - [ ] **order** — Nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or

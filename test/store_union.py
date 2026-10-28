@@ -118,8 +118,15 @@ GRAMMAR = {
                   {'id': 'pt', 'op': 'select', 'of': 'p', 'where': [{'path': 'p.system', '∃': 'true'}]},
                   {'id': 'a', 'op': 'select', 'entries': 'attend'},
                   {'id': 't', 'op': 'describe', 'of': 'a', 'at': 'at', 'as': 't'}],
-        'refuse': [{'of': 'pt', 'at': 'at', 'message': "{p.being}: {p.system} {p.point} {p.from} {p.to}"},
-                   {'of': 't', 'message': "{t.being}: {t.system} {t.point} {t.from} {t.to} {t.kind} {t.place}"}]},
+        'refuse': [{'of': 'pt', 'at': 'at', 'message': "{p.being}: {p.system} {p.point} {p.from} {p.to} {p.unit}"},
+                   {'of': 't', 'message': "{t.being}: {t.system} {t.point} {t.from} {t.to} {t.unit} {t.kind} {t.place}"}]},
+    'codes': {                     # a code's scheme (core 4.10), beside a value that is no code
+        'steps': [{'id': 'c', 'op': 'select', 'entries': 'classify'},
+                  {'id': 'd', 'op': 'describe', 'of': 'c', 'at': 'as', 'as': 'd'},
+                  {'id': 'all', 'op': 'select', 'entries': 'be'},
+                  {'id': 'e', 'op': 'describe', 'of': 'all', 'at': 'at', 'as': 'e'}],
+        'refuse': [{'of': 'd', 'message': "{d.being}: {d.scheme} {d.system}"},
+                   {'of': 'e', 'message': "{e.being}: {e.scheme}"}]},
     'overlap': {
         'steps': [{'id': 'a', 'op': 'select', 'entries': 'attend'},
                   {'id': 't', 'op': 'describe', 'of': 'a', 'at': 'at', 'as': 't'},
@@ -281,7 +288,8 @@ try:
         for x in stores:
             x.close()
     check("...and over a bean whose header holds a summary, tags and a text deep in its details, kept five ways: a "
-          "bean's header, and a text at any depth of it, read alike", not hdiffer and deep == [None], (hdiffer[:2], deep))
+          "bean's header, and a text at any depth of it, read alike, a bean's refusal told at its bean (core 4.10)",
+          not hdiffer and deep == ['g-1'], (hdiffer[:2], deep))
     rules = {c['rule'] for c in CASES['bad']}
     check("...and the cases hold a refusal of each rule that is a reading (order, life, necessity)",
           set(LAW.readings) <= rules, set(LAW.readings) - rules)

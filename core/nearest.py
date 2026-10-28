@@ -2,9 +2,10 @@
 use's row of core/law/lines.yaml `nearest` names, read in order, and — at each use — what a tie of the nearest does,
 as that row declares: `refuse` (none of them decides), `both` (every one of them stands) or `order` (the first of them).
 
-Four uses read it, each the code of its own keys' measures: the flow table's rows that hold a pass (core/law.py
+Five uses read it, each the code of its own keys' measures: the flow table's rows that hold a pass (core/law.py
 `decide`), a scheme's pattern rows a name fits and the wholes a member inherits a code from (core/groupings.py `fit`,
-`inherit`), and the beans whose location covers a path (bin/cursor.py). Which keys a use ranks by, in which order, and
+`inherit`), the beans whose location covers a path (bin/cursor.py), and the methods' decisions on whether material may
+come from a layer to a layer at all (bin/pass.py `CoreFlows.direction`). Which keys a use ranks by, in which order, and
 what its tie does, are the law's; a key's measure is its use's.
 
     use(law, name)                      -> (keys, tie), from the law's row (a core.law.Law, or lines.yaml's data)
@@ -21,6 +22,7 @@ USES = {                        # each use, and the keys it has a measure for: t
     'patterns': ('literal', 'slots'),
     'wholes': ('way',),         # the walk up is the measure: a whole met before another on its way is nearer
     'locations': ('length',),
+    'directions': ('grant',),   # whether material may come from a layer to a layer at all, by any method (core 4.10)
 }
 TIES = ('refuse', 'both', 'order')
 _RELEASED = []                  # the release's own rows, read once: for a law older than these rows
