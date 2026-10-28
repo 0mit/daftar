@@ -251,6 +251,11 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.6** (2026-10-28, daftar v4.6.0, human-ratified rule-change) — **two words made public** (seed/PUBLIC-ALLOW).
+  `agents-work`, the law's own name for the bean of the gardener's standing instructions, which the seed's template
+  makes and the guards and the judge read by name: a garden that holds the bean took the name from the law, and the
+  leak guard read it as the garden's own; and the ILO's published address for the rights in its works, in
+  seed/knowledge/SOURCES.md alone, where ISCO-08's source names it. No verdict moves.
 - **daftar v4.5.1** (2026-10-28, code, core 4.5) — **a move's rewrites known, and the agent's door installed from the
   main copy only** (T1 of the second build run, step 7's code releases). bin/dmupgrade.py's move between two releases
   of the core writes, in each bean the release's translator rewrote, one `make` by the gardener at `now` with no `of`,
