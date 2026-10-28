@@ -445,6 +445,24 @@ def _pointers(fm):
 def check(*, root=ROOT, host=None, beans=None):
     """[(level, text)]: each pointer resolves here, or is erased, or is another host's; each record is the entry the bean
     says it is; an `until` passed is warned. Where the store is, and nowhere else."""
+    return [(lv, f"{bid}: {place} — {msg}" if place else msg) for lv, _rule, bid, place, msg in findings(root=root, host=host,
+                                                                                                   beans=beans)]
+
+
+def held_keepings(root=ROOT, host=None):
+    """HELD'S CHECK UNDER A RULE (nv-s1-open 1): the held store as a keeping beside git, for the one judge's scope
+    `union` (core/judge.py) — each error of `check` a finding of the rule it breaks: `harm` where a sealed statement's
+    material is not here to read (its pointer resolves to nothing), `knowing` where the record it resolves to is
+    another place's (another bean, term or statement than the one that says it holds it), each told at the bean. The
+    warnings — another host's material, a record's mode, what is due, a store in cleartext — stay the tool's."""
+    def keepings(_law, garden, _base):
+        return [(rule, bid, f"{place} — {msg}") for lv, rule, bid, place, msg in findings(root=root, host=host)
+                if lv == 'error']
+    return keepings
+
+
+def findings(*, root=ROOT, host=None, beans=None):
+    """[(level, rule, bean, place, message)] of `check`: an error's rule is the one it breaks, a warning's None."""
     out = []
     for bid, fm in sorted((beans or dmpass.beans_here(root)).items()):
         for t, label, e in _pointers(fm):
@@ -453,32 +471,33 @@ def check(*, root=ROOT, host=None, beans=None):
             except Erased:
                 continue
             except NotHere as x:
-                out.append(('warn', f"{bid}: {t}[{label}] — {x}"))
+                out.append(('warn', None, bid, f"{t}[{label}]", str(x)))
                 continue
             except ValueError as x:
-                out.append(('error', f"{bid}: {t}[{label}] — {x}"))
+                out.append(('error', 'harm', bid, f"{t}[{label}]", str(x)))
                 continue
             if not isinstance(rec, dict) or rec.get('bean') != bid or rec.get('term') != t or \
                     (t == 'statements' and f"{rec.get('verb')}#{rec.get('key')}" != label):
-                out.append(('error', f"{bid}: {t}[{label}] points at material held for another place "
-                                     f"({rec.get('bean') if isinstance(rec, dict) else '?'})"))
+                out.append(('error', 'knowing', bid, f"{t}[{label}]", f"points at material held for another place "
+                                                                  f"({rec.get('bean') if isinstance(rec, dict) else '?'})"))
             try:
                 _path, _key = _file(e['held'], root, host, None)
                 _mode = os.stat(os.path.join(_path, _key + '.yaml')).st_mode
             except (OSError, ValueError, NotHere):
                 _mode = None
             if os.name != 'nt' and _mode is not None and _mode & 0o077:
-                out.append(('warn', f"{bid}: {t}[{label}] — its record here may be read by others than its owner "
+                out.append(('warn', None, bid, f"{t}[{label}]", f"its record here may be read by others than its owner "
                                     f"(mode {oct(_mode & 0o777)}): chmod 600 it; a store is plain text, kept by its files"))
     for bid, t, label, days in due(root=root, beans=beans, days=0):
-        out.append(('warn', f"{bid}: {t}[{label}] was to be erased {-days} day(s) ago — bin/held.py erase"))
+        out.append(('warn', None, bid, f"{t}[{label}]", f"was to be erased {-days} day(s) ago — bin/held.py erase"))
     # A STORE IN CLEARTEXT, READABLE FROM ANOTHER PARTY (today's gate warned of it; the core's gate has no warnings, so
     # the tool that keeps the store says it, where the store is — v1 part 12b)
     for name, (path, row) in sorted(stores(root, host, beans).items()):
         far = row.get('readable_from')
         if row.get('keeps') == 'special-category' and far not in (None, 'this-host') and not row.get('encrypted'):
-            out.append(('warn', f"root:{name} keeps special-category material in cleartext and is readable from {far}: "
-                                f"a store is plain text, kept by its files — keep it on this host, or encrypted"))
+            out.append(('warn', None, None, None, f"root:{name} keeps special-category material in cleartext and is "
+                                f"readable from {far}: a store is plain text, kept by its files — keep it on this host, "
+                                f"or encrypted"))
     return out
 
 
@@ -614,11 +633,23 @@ def main(argv):
             print(f"erased {len(gone)} held record(s) for {argv[0]}; each pointer now resolves to Erased — git "
                   f"is unchanged, and a journal line, if any, says only `- held: {argv[0]} erased`")
         elif cmd == 'check':
+            # UNDER A RULE (nv-s1-open 1): the one judge over the garden and its held store together, then the warnings
             found = check(host=host)
+            if dmpass.runs_core(ROOT):
+                sys.path.insert(0, ROOT)
+                from core import engine as core_engine, judge as dmjudge
+                verdict = dmjudge.judge(None, dmjudge.Scope.union(core_engine.Garden.read(ROOT),
+                                                                 held_keepings(ROOT, host), root=ROOT))
+                for rule, where, msg in verdict:
+                    print(f"{rule:<11} {where}: {msg}")
+                found = [f for f in found if f[0] != 'error']
+                errors = len(verdict)
+            else:
+                errors = sum(1 for f in found if f[0] == 'error')
             for lv, t in found:
                 print(f"{lv.upper()}: {t}")
-            print(f"held: {sum(1 for f in found if f[0] == 'error')} error(s), {sum(1 for f in found if f[0] == 'warn')} warning(s)")
-            return 1 if any(f[0] == 'error' for f in found) else 0
+            print(f"held: {errors} error(s), {sum(1 for f in found if f[0] == 'warn')} warning(s)")
+            return 1 if errors else 0
         elif cmd == 'new' and argv == ['--staged']:
             bad = unresolved_new(staged=True)
             if bad:

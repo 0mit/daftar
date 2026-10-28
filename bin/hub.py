@@ -57,12 +57,22 @@ installed again without `--report` refuses. In either mode:
     directory) — when, the mode, the ref, each commit with its writer, key and refusal, the gate, the verdict (taken,
     would refuse, refused). `report` counts it, and lists what was not simply taken.
   - THE RECEIPTS: for each commit a push that lands brought, its post-receive writes a note on refs/notes/daftar: the
-    commit, the verdict and why, the writer and its key, what was judged and what not (the Contract's classes C, D, E
-    and J are not judged at the hub), the gate that judged the garden it leaves, the law it was judged by (its pin and
+    commit, the verdict and why, the writer and its key, what was judged and what not (the Contract's classes C and J
+    are not judged at the hub), what it reports and does not yet refuse (below), the gate that judged the garden it
+    leaves, the law it was judged by (its pin and
     the SHA-256 of core/law/, VOCAB.md and GARDEN.md at the commit), the judge (this code's release and commit), the
     mode and the moment — signed by the hub's own key in the namespace `daftar-receipt`, so no commit's signature is
     one. `receipts` lists each commit with its receipt and whose key signed it, and each commit with none, which no door
     of this hub judged. The receipts' ref is the hub's alone: a push to it is refused in either mode.
+
+WHAT A HUB REPORTS BEFORE IT REFUSES (P3), in either mode, for every commit let in at steps 1-3, refusing nothing:
+the receipt's `reported`, the log's, and `report` counts them. THE SIGNER (V.1, D17): each heading the commit adds to
+the journal names the being its key names, or a session that comes through it (`come: { by: self, through: [<that
+being>] }` on the session's bean — an agent's session, through the harness whose key signs its commits). THE CONTRACT'S
+CLASSES D AND E: a `say` by a person it adds or changes is written by that person, the gardener, or one granted to
+ratify class D on the bean; a `rate` or a `forbidden` it adds, changes or takes out, or a `fail` it changes or takes
+out, by the gardener or one granted to ratify class E — read at the parent, as the rights are. A person's own words are
+refused only once a person can sign them (daftard's passkey); until then the hub reports them.
 
 A HUB HAS ITS OWN KEY, made when it is initialized for a garden (the operator's word, 2026-10-13: every commit the hub
 itself writes — a merge with no conflict, its own records — is signed with it). `install <repository>` is that init:
@@ -389,6 +399,91 @@ def rights(writer, commit, parent, env, tmp, others=()):
     return missing
 
 
+JOURNAL = 'log/journal.md'
+SAFETY = ('rate', 'forbidden')         # class E: a sensitivity, a prohibition — added, changed or taken out; and a `fail`
+                                       # changed or taken out, a failure in progress
+
+
+def reported(writer, commit, parent, env, tmp, others=()):
+    """WHAT THE HUB REPORTS AND DOES NOT YET REFUSE (P3: a hub first reports, then refuses): [str], each a finding the
+    receipt and the log carry, in either mode, refusing nothing.
+      - THE SIGNER (V.1, D17): each heading the commit adds to the journal (`## <moment> · <who> · <what>`) names the
+        being its key names, or a session that comes through it — a bean the commit leaves saying `come: { by: self,
+        through: [<that being>] }`, as an agent's session bean names the harness whose key signs its commits.
+      - CLASS D (the Contract of Parts): a `say` by a person the commit adds or changes is a person's own word — its
+        writer is that person, the gardener, or one a grant to ratify of class D opens on the bean, as the garden stood
+        at the parent. Refused once a person signs their own words (daftard's passkey); until then reported.
+      - CLASS E: a `rate` or a `forbidden` it adds, changes or takes out, or a `fail` it changes or takes out (a failure
+        in progress), is the gardener's, or one a grant to ratify of class E opens on the bean."""
+    out = []
+    after = Tree(commit, env)
+    before = Tree(parent, env)
+    # THE SIGNER: what the commit's own entries name, a merge's brought entries aside
+    _c, j, _e = git('show', f'{commit}:{JOURNAL}', env=env)
+    _c, jp, _e = git('show', f'{parent}:{JOURNAL}', env=env)
+    brought = set(jp.split('\n'))
+    for o in others:
+        brought |= set(git('show', f'{o}:{JOURNAL}', env=env)[1].split('\n'))
+    sessions = {}
+    for h in [ln.rstrip() for ln in j.split('\n') if ln.startswith('## ') and ln not in brought]:
+        parts = h[3:].split(' · ')
+        who = parts[1].strip() if len(parts) >= 3 else ''
+        if who == writer:
+            continue
+        if who not in sessions:
+            fm = _fm(after.text(f'beans/{who}.md'), after.core) if who and re.fullmatch(r'[a-z0-9][a-z0-9-]*', who) else None
+            sessions[who] = any(v == 'come' and 'held' not in r and r.get('by') in ('self', who)
+                                and writer in (r.get('through') if isinstance(r.get('through'), list) else [r.get('through')])
+                                for v, r in _statements(fm))
+        if not sessions[who]:
+            out.append(f"signer: the heading {h[:72]!r} names {who or 'nobody'}, and the commit is signed by {writer}'s key: "
+                       f"a heading names the being whose key signs it, or a session that comes through it (`come: {{ by: "
+                       f"self, through: [{writer}] }}` on the session's bean)")
+    # CLASSES D AND E: the statements the commit adds and takes out, a statement changed being both
+    gardener = before.gardener()
+    if writer == gardener:
+        return out
+    _c, names, _e = git('diff', '--name-only', '--no-renames', parent, commit, '--', 'beans', env=env)
+    asked, beans_at = [], {}
+    for p in [x for x in names.split('\n') if x.startswith('beans/') and x.endswith('.md')]:
+        if others and all(git('rev-parse', '-q', '--verify', f'{o}:{p}', env=env)[1].strip() ==
+                          git('rev-parse', '-q', '--verify', f'{commit}:{p}', env=env)[1].strip() for o in others):
+            continue                                           # the other side's bean, as it committed it
+        bid = p[6:-3]
+        was = [json.dumps([v, r], sort_keys=True, ensure_ascii=False) for v, r in
+               _statements(_fm(before.text(p), before.core))]
+        now = [json.dumps([v, r], sort_keys=True, ensure_ascii=False) for v, r in
+               _statements(_fm(after.text(p), after.core))]
+        for s, added in [(s, True) for s in now if s not in was] + [(s, False) for s in was if s not in now]:
+            v, r = json.loads(s)
+            if 'held' in r:
+                continue
+            if v == 'say' and added:
+                for x in (r.get('by') if isinstance(r.get('by'), list) else [r.get('by')]):
+                    who = bid if x == 'self' else x
+                    if not isinstance(who, str) or who == writer or not re.fullmatch(r'[a-z0-9][a-z0-9-]*', who):
+                        continue
+                    if who not in beans_at:
+                        beans_at[who] = (_fm(after.text(f'beans/{who}.md'), after.core) or
+                                         _fm(before.text(f'beans/{who}.md'), before.core) or {}).get('kind')
+                    if beans_at[who] == 'person':
+                        asked.append(('D', bid, f"a `say` by {who}, a person's word, written by {writer}"))
+            elif v in SAFETY or (v == 'fail' and not added):
+                asked.append(('E', bid, f"a `{v}` {'added or changed' if added else 'changed or taken out'} by {writer}"))
+    if asked:
+        root = os.path.join(tmp, 'parent-reported')
+        if os.path.isdir(root):
+            shutil.rmtree(root)
+        os.makedirs(root)
+        before.checkout(root)
+        beans = before.beans()
+        for cls, bid, what in dict.fromkeys(asked):
+            if not dmpass.may(writer, f'ratify:{cls}', bid, root=root, beans=beans).granted:
+                out.append(f"class {cls}: {bid} — {what}: the Contract of Parts asks a person's ratification (the "
+                           f"gardener's, or a grant to ratify of class {cls}), which this commit does not carry")
+    return out
+
+
 def gate(commit, env, tmp):
     """The gate on `commit`: the one judge's scope `commits` (core/judge.py) — the commit checked out in a fresh
     repository that borrows the hub's objects, the pushed ones still in quarantine among them, so no ref of the hub is
@@ -442,7 +537,7 @@ def verdicts(old, new, only=None, each=False, env=None, known=('--exclude=refs/d
     unrun = "not run: a commit before it was refused at steps 1-3, and the hub runs no code the gardener did not let in"
     with tempfile.TemporaryDirectory(prefix='hub-') as tmp:
         for c in commits:
-            v = {'commit': c, 'writer': None, 'key': None, 'refused': None,
+            v = {'commit': c, 'writer': None, 'key': None, 'refused': None, 'reported': [],
                  'gate': 'this commit' if each else f'the push\'s tip, {new}'}
             _r, raw, _e = git('cat-file', 'commit', c, env=env, text=False)
             payload, sig = split_signature(raw)
@@ -473,6 +568,8 @@ def verdicts(old, new, only=None, each=False, env=None, known=('--exclude=refs/d
                 miss = rights(who, c, parent, env, tmp, others)
                 if miss:
                     raise Refused(f"{who} may not make it: " + '; '.join(f"{p} needs a grant of `{a}`" for p, a in miss))
+                if parent is not None:
+                    v['reported'] = reported(who, c, parent, env, tmp, others)
             except Refused as x:
                 v['refused'], let_in = str(x), False
             if each and not v['refused']:
@@ -551,7 +648,7 @@ def custom_verdicts(person, old, new, env=None, whole=False):
     found = []
     with tempfile.TemporaryDirectory(prefix='hub-') as tmp:
         for c in [x for x in out.split('\n') if x]:
-            v = {'commit': c, 'writer': None, 'key': None, 'refused': None,
+            v = {'commit': c, 'writer': None, 'key': None, 'refused': None, 'reported': [],
                  'gate': "none: a person's labels, nothing there the garden's"}
             _r, raw, _e = git('cat-file', 'commit', c, env=env, text=False)
             payload, sig = split_signature(raw)
@@ -638,8 +735,9 @@ def install(repo, only=None, each=False, report=False):
 NOTES = 'refs/notes/daftar'        # the hub's receipts, one note to a commit, written by the hub alone
 SIGNED_AS = 'daftar-receipt'       # the namespace a receipt is signed in, so no signature over one is a commit's
 WHOLE = ("the signature, the writer, the rights (`write`, `ratify:F`, `ratify:G`), the commit's own rules replayed "
-         "against its parent where its gate replays them (`replay`: all but the clock's register of headings); not "
-         "judged at the hub: the Contract's classes C, D, E and J")
+         "against its parent where its gate replays them (`replay`: all but the clock's register of headings); "
+         "reported and not refused (`reported`): each heading's writer against the key (V.1), and the Contract's "
+         "classes D and E; not judged at the hub: the Contract's classes C and J")
 
 
 def _gitdir(env=None):
@@ -734,7 +832,7 @@ def pre_receive(lines, only=None, each=False, report=False, env=None):
             said = refusals(found, tip)
         verdict = 'taken' if not said else 'would refuse' if report else 'refused'
         _log(gitdir, {'at': at, 'mode': mode, 'ref': ref, 'old': old, 'new': new, 'verdict': verdict,
-                      'commits': [{k: v[k] for k in ('commit', 'writer', 'key', 'refused')} for v in found],
+                      'commits': [{k: v[k] for k in ('commit', 'writer', 'key', 'refused', 'reported')} for v in found],
                       'gate': {'at': tip[0], 'said': tip[1]}, 'refusals': said})
         shown += [f"hub: {'WOULD REFUSE' if report else 'REFUSED'} {ref} {r}" for r in said]
         refused = refused or bool(said)
@@ -763,6 +861,7 @@ def receipt_text(rec, v, env=None):
     lines += [f"why: {' '.join(why.split())[:1500]}"] if why else []
     lines += [f"writer: {v['writer'] or 'none'}, by the key {v['key'] or 'none'}", f"judged: {WHOLE}",
               f"gate: {gate}", f"replay: {' '.join(str(v.get('replay') or 'not run: the gate did not run').split())[:300]}",
+              f"reported: {'; '.join(' '.join(x.split()) for x in v.get('reported') or [])[:1500] or 'nothing'}",
               f"law: {law_of(v['commit'], env)}", f"judge: {release()}", f"mode: {rec['mode']}",
               f"at: {rec['at']}"]
     return '\n'.join(lines) + '\n'
@@ -946,6 +1045,11 @@ def report(repo, since=None):
     for r in rows:
         if r.get('verdict') != 'taken':
             lines += [f"{r.get('at')} {r.get('verdict')} {r.get('ref')} {x}" for x in r.get('refusals') or []]
+    told = [(r, c, x) for r in rows for c in r.get('commits') or [] for x in c.get('reported') or []]
+    if told:
+        lines.append(f"hub: {len(told)} finding{'s' if len(told) != 1 else ''} reported and not refused (the signer, "
+                     f"classes D and E), in {len({c.get('commit') for _r, c, _x in told})} commit(s):")
+        lines += [f"{r.get('at')} reported {r.get('ref')} {str(c.get('commit'))[:10]}: {x}" for r, c, x in told]
     return 0, lines
 
 

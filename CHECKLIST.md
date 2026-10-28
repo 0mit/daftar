@@ -40,12 +40,14 @@ show.
       the bean holds a knowing act with no `of`, which covers every statement no other act names; a need a person meets
       (`meet`) is known by that person's own `say`; a knowing act's `at` is `now` until the save writes the moment, and
       a moment typed there is refused — but where the act was known in another garden: its `at` then holds that garden's
-      bean beside the moment it was known at there, and the commit that brings it takes it from that garden (`take`). A
-      bean renamed — taken out and added under another name by one commit, whose entry says `- renamed: [[<old>]] →
-      [[<new>]]` — keeps the statements it held, known as they were. An entry a commit adds names who wrote it in its
-      heading: a being the garden holds, by its bean (a person, or the session an agent works in). A row of a store
-      names the act or acts that know it instead, each a knowing act kept in git or a store, and the store's check
-      judges it where the store is kept.
+      bean beside the moment it was known at there, and after it each garden it came through, oldest first; the commit
+      that brings it takes it from the last of them, the garden it came through (`take`). A bean renamed — taken out and
+      added under another name by one commit, whose entry says `- renamed: [[<old>]] → [[<new>]]` — keeps the statements
+      it held, known as they were. An entry a commit adds names who wrote it in its heading: a being the garden holds,
+      by its bean (a person, or the session an agent works in); at a hub, the being whose key signed the commit, or a
+      session that comes through it (`come`), which the hub reports before it refuses. A row of a store names the act or
+      acts that know it instead, each a knowing act kept in git or a store, and the store's check judges it where the
+      store is kept.
 - [ ] **placeholder** — A statement the engine derives (a verb's default) is never written: written, it is refused (an
       `answer` `as: law` by the owner; a `bear` by the one who paid, alone).
 - [ ] **order** — Nothing stands on itself through others, and nothing owns itself, is part of itself, is at itself or
@@ -95,7 +97,9 @@ show.
       holds, or owns a `garden` bean here, the garden they keep, met here. A commit places no such person somewhere in
       the future, in git: a happening wholly ahead of the commit that one attends and that is at a location seals that
       location. A `decline` is the word of the one the statement it declines names, of nobody else; one who `represent`s
-      another acts for someone else — never only itself — and in an agreement for a party of it.
+      another acts for someone else — never only itself — and in an agreement for a party of it. A person's consent may
+      forbid the gardens their facts reach: a `forbidden` of an agreement they agree to, its clause naming `gardens`,
+      refuses a `propose` to one of them of a bean that is theirs or `concern`s them.
 - [ ] **harm** — What harm can come of is kept out of git: a private-key block is refused in any file a commit stages; a
       code of a scheme marked special-category is written only sealed, and so is a name a namespace keeps `held` (a
       government number); a sealed statement holds a pointer and nothing of what it said, has an id, and is held `while`
@@ -115,11 +119,13 @@ show.
       it holds no character a reader takes for a line break, and no template's `(fill in`; a series' part, once written,
       stays as it is; a commit that takes a header key or a statement out of a bean names it in its entry (the key, the
       statement's id, or its verb), empties none it keeps, and leaves every bean it writes a body; a file the release
-      keeps is as its release made it — after each commit but the one that adopts a release, a file it adds or changes
-      holds the SHA-256 its release carries for it (`seed/LANGUAGE.sha256`), which changes only with the release
-      GARDEN.md records; and what an entity's closed books read (a `pin` of a reading whose step is `books`, at a
-      commit) — a payment, a booking or a match there at that commit, on a day on or before the closed one — is not
-      taken out or changed.
+      keeps is as its release made it — after each commit, a file it adds or changes holds the SHA-256 its release
+      carries for it (`seed/LANGUAGE.sha256`), which changes only with the release GARDEN.md records, in the commit that
+      adopts it, whose entry names that release, its commit and those digests' own SHA-256 as they were proved against
+      its tag when it was laid (`- release: <tag> at <commit>, its digests sha256:<…>`); no commit takes out a file the
+      garden receives from its release; and what an entity's closed books read (a `pin` of a reading whose step is
+      `books`, at a commit) — a payment, a booking or a match there at that commit, on a day on or before the closed one
+      — is not taken out or changed.
 - [ ] **line** — What holds a line holds its form: a series' rows are read by its channels, and nothing else is in it; a
       walk's ways on lead to steps of the walk, and none leads on from a final step or a pause; a course is a being
       placed on a walk (`be` as order), and each move reaches a step of that walk at a moment, by a way on or saying
@@ -294,8 +300,9 @@ proposal (`MODEL.md`, Between gardens).
       `take` and commits it: the ratification. A proposal is taken once.
 - [ ] **Taking is not accepting.** If your gardener says yes to an agreement taken in, that is their own `agree`,
       known by their own act, journalled and committed as a change of its own.
-- [ ] **Pass on only what was said here, or by the garden you propose to.** Of what a third garden said, only the
-      names it gave travel.
+- [ ] **Pass on nothing a person's consent forbids the garden you propose to.** What a third garden said passes on
+      as it was known — each act's `at` keeps the garden it was known in and each it came through — and that
+      garden travels as a stub by its id; a person's consent may name the gardens their facts may not reach.
 - [ ] **A name that is to cross is given once.** Before a bean crosses, each name this garden gave it and the beans it
       refers to is qualified by this garden's id (`name: { by: garden, … }`); choosing it is your gardener's (class F).
       A name another garden gave is kept byte for byte, and an identifier someone else assigned crosses as it is.

@@ -635,16 +635,18 @@ class Judge:
             else:
                 blanket = True
             at, where = r.get('at'), f"{b.id}[{i}] {verb}"
-            # KNOWN IN ANOTHER GARDEN (v1 part 8): the act's `at` holds that garden's bean beside its moment there
+            # KNOWN IN ANOTHER GARDEN (v1 part 8): the act's `at` holds that garden's bean beside its moment there, and
+            # after it each garden it came through, oldest first (V.5)
             gardens = [x for x in listed(at) if isinstance(x, str) and x in self.G.beans]
             for x in gardens:
                 if self.G.beans[x].kind != 'garden':
                     self.err('knowing', where, f"`at` holds {x}, which is no `garden` bean: an act's `at` is its moment, "
                                                f"and the garden it was known in where that is another")
             moments = [x for x in listed(at) if x not in gardens]
-            if len(moments) != 1 or len(gardens) > 1:
+            if len(moments) != 1 or len(set(gardens)) != len(gardens):
                 self.err('knowing', where, f"`at: {at}` — a knowing act's `at` is one moment, and beside it the garden "
-                                           f"it was known in, where that is another")
+                                           f"it was known in, where that is another, then each garden it came through, "
+                                           f"oldest first, each once")
                 continue
             if moments[0] != 'now':
                 try:
@@ -1237,6 +1239,49 @@ class Judge:
                                      "here (a `garden` bean they `own`) — or write them under an opaque id, as `python3 "
                                      "bin/held.py person` mints one, their name held off git")
         self.declining_and_acting_for()
+        for b in sorted(self.G.beans.values(), key=lambda x: x.id):
+            for i, verb, r in b.items:
+                if verb == 'propose' and 'held' not in r:
+                    for bean, person, garden, agreement in self.barred(self._beans_in(r.get('of'), b),
+                                                                       self._beans_in(r.get('to'), b)):
+                        self.err('consent', f"{b.id}[{i}] propose", f"offers {bean} to {garden}, a garden {person}'s "
+                                                                    f"consent forbids ({agreement}): what is {person}'s, "
+                                                                    f"or concerns them, does not reach it")
+
+    def reach(self):
+        """CONSENT'S SCOPE BETWEEN GARDENS (V.3): ({person: {garden: agreement}}, {bean: {person}}) — the gardens each
+        person's consent forbids their facts to reach: a `forbidden` of an agreement they agree to (not declined), in
+        force, whose clause names `gardens`, for each party that is a person and not the gardener; and the persons each
+        bean concerns (`concern`)."""
+        if getattr(self, '_reach', None) is None:
+            g, declined, barred, concerns = self.G.gardener, self._declined(), {}, {}
+            for b in sorted(self.G.beans.values(), key=lambda x: x.id):
+                parties = [x for i, v, r in b.items if v == 'agree' and 'held' not in r and (b.id, i) not in declined
+                           for x in self._beans_in(r.get('by'), b) if x != g and self._is_person(x)]
+                for _i, v, r in b.items:
+                    if 'held' in r:
+                        continue
+                    c = r.get('clause')
+                    if v == 'forbidden' and parties and isinstance(c, dict) and c.get('gardens') is not None \
+                            and str(c.get('state') or 'in-force') == 'in-force':
+                        for garden in self._beans_in(c['gardens'], b):
+                            for p in parties:
+                                barred.setdefault(p, {}).setdefault(garden, b.id)
+                    if v == 'concern':
+                        for p in self._beans_in(r.get('of'), b):
+                            concerns.setdefault(b.id, set()).add(p)
+            self._reach = (barred, concerns)
+        return self._reach
+
+    def barred(self, offered, to):
+        """[(bean, person, garden, agreement)]: each bean of `offered` that is a person's, or concerns them, offered to a
+        garden of `to` their consent forbids (`reach`) — what a `propose` may not offer, and bin/propose.py may not make."""
+        barred, concerns = self.reach()
+        out = []
+        for bean in offered:
+            for p in sorted(({bean} if bean in barred else set()) | concerns.get(bean, set())):
+                out += [(bean, p, garden, barred[p][garden]) for garden in to if garden in barred.get(p, {})]
+        return out
 
     def declining_and_acting_for(self):
         """A `decline` is the own no of the one a statement offered names (an `agree`, a booking); one who `represent`s another acts for someone

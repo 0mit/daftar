@@ -273,6 +273,7 @@ try:
                                               "The harness agents work in on the box, whose key signs their commits.",
                                               '  - say: { by: sam, at: now }\n  - own: { by: sam, of: self }\n'
                                               '  - be: { by: self, at: box, as: habitat }\n'
+                                              '  - come: { by: self, through: [sam] }\n'
                                               f'  - name: {{ id: key, by: ssh, of: self, as: "{agf}" }}', 'The harness.'),
           root=H)
     dmsafe.add_statements(os.path.join(H, 'beans', 'sam.md'),
@@ -301,6 +302,36 @@ try:
     r2 = run('git', 'push', '-q', 'origin', 'HEAD:master', cwd=H, env=as_agent)
     check("an agent's commit that makes a session bean is taken: the bean is in the grant's reading as the commit leaves "
           "the garden", r.returncode == 0 and r2.returncode == 0, r.out[-400:] + r2.out[-800:])
+    # THE SIGNER (V.1, rule knowing's sentence at a hub) and CLASSES D AND E, reported before they are refused (P3)
+    first = run('git', 'rev-parse', 'HEAD', cwd=H).out.strip()
+    note = run('git', 'notes', '--ref', 'refs/notes/daftar', 'show', first, cwd=HUB).out
+    rep = run(PY, os.path.join(G, 'bin', 'hub.py'), 'report', HUB).out
+    check("knowing at a hub (V.1): the session's heading names session-box-1, whose bean does not come through "
+          "claude-code-box, the being whose key signed it — reported on the receipt and by `report`, the push taken",
+          'reported: signer: the heading' in note and "signed by claude-code-box's key" in note
+          and 'reported and not refused' in rep and first[:10] in rep, note[-900:] + rep[-900:])
+    dmsafe.add_statements(os.path.join(H, 'beans', 'session-box-1.md'),
+                          '- come: { id: came, by: self, through: [claude-code-box] }\n'
+                          '- make: { by: self, of: [came], at: now }\n')
+    r = save("the session comes through its harness", '- action: [[session-box-1]] comes through [[claude-code-box]]',
+             root=H, who='session-box-1', env=as_agent)
+    r2 = run('git', 'push', '-q', 'origin', 'HEAD:master', cwd=H, env=as_agent)
+    note = run('git', 'notes', '--ref', 'refs/notes/daftar', 'show', run('git', 'rev-parse', 'HEAD', cwd=H).out.strip(),
+               cwd=HUB).out
+    check("...and once the session's bean says it comes through the harness, its heading names a being the key may "
+          "name: nothing reported", r.returncode == 0 and r2.returncode == 0 and 'reported: nothing' in note,
+          r.out[-300:] + r2.out[-300:] + note[-900:])
+    dmsafe.add_statements(os.path.join(H, 'beans', 'notes.md'), '- use: { id: by-agent, by: self, of: box }\n'
+                                                                '- forbidden: { id: not-by-agent, of: by-agent, through: sam }\n'
+                                                                '- say: { by: sam, of: [by-agent, not-by-agent], at: now }\n')
+    r = save("the agent writes the gardener's word", '- action: [[notes]]', root=H, who='session-box-1', env=as_agent)
+    r2 = run('git', 'push', '-q', 'origin', 'HEAD:master', cwd=H, env=as_agent)
+    note = run('git', 'notes', '--ref', 'refs/notes/daftar', 'show', run('git', 'rev-parse', 'HEAD', cwd=H).out.strip(),
+               cwd=HUB).out
+    check("the Contract's classes D and E at a hub: an agent's commit that writes a `say` by sam, a person, and a "
+          "`forbidden` is taken, and both reported — a person's word, and a statement safety rests on, ratified by none",
+          r.returncode == 0 and r2.returncode == 0 and 'class D: notes' in note and 'class E: notes' in note
+          and 'judged at the hub: the Contract\'s classes C and J' in note, r.out[-300:] + r2.out[-300:] + note[-1200:])
     write('beans/p-0a1b2c3d.md', '---\nbean: p-0a1b2c3d\nkind: person\ntitle: "p-0a1b2c3d"\nsummary: "a person whose '
                                  'name and contacts are held off git"\nstatements:\n  - say: { by: sam, at: now }\n'
                                  '---\nA person.\n', root=H)

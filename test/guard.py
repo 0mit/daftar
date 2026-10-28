@@ -439,6 +439,22 @@ try:
         r = event('pre', 'Write', inp, sid=sid, cwd=cwd)
         check(f"own-worktree: {'refused' if refused else 'let through'} — {what}",
               (r.returncode == 2 and 'agents-work#own-worktree' in r.out) if refused else r.returncode == 0, r.out)
+    # A SHELL NO ADAPTER READS (nv-s2-open 8): the harness's PowerShell tool goes unguarded — let through, said, and
+    # recorded for the session it works in, whose close holds its bean to saying so
+    r = event('pre', 'PowerShell', {'command': 'Get-Content secrets.txt | Write-Output'})
+    r2 = event('guard', 'PowerShell', {'command': 'Remove-Item beans/x.md'})
+    sys.path.insert(0, os.path.join(G, 'bin'))
+    import session as dmsession
+    dmsession.ROOT = RG
+    went = dmsession.unguarded('s1')
+    check("a PowerShell command, whose grammar no adapter reads, goes UNGUARDED at `pre` and at `guard` — let through, "
+          "said to the model, and recorded for the session it works in", r.returncode == 0 and r2.returncode == 0
+          and 'UNGUARDED' in r.out and 'UNGUARDED' in r2.out and len(went) == 2
+          and {w.get('slug') for w in went} == {'s1'}, (r.out, r2.out, went))
+    check("...and the session's close is held to its bean saying so (`details.unguarded`)",
+          not dmsession.said_unguarded(W, 's1'), W)
+    dmsession.unguarded('s1', release=True)
+    check("...and forgotten once the session closes", dmsession.unguarded('s1') == [])
     dmhook.claim(RG, 's1', release=True)
     r = event('pre', 'Write', {'file_path': os.path.join(G, 'beans', 'x.md')})
     check("own-worktree: released as the session closes, the record no longer holds", r.returncode == 0, r.out)

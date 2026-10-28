@@ -245,6 +245,9 @@ forms:
       operand:
         in: any
         meaning: "with `guard`: what the guard takes, as its row's `takes` declares it — the shell and its floor, for `shell-is`"
+      gardens:
+        in: any
+        meaning: "of a `forbidden` in a person's consent agreement: the gardens their facts may not reach — a list of `garden` beans. A `propose` to one of them of a bean that is the person's, or concerns them, is refused (rule `consent`)"
   placement:
     meaning: "Where this being is found: a list of positions, each in a named anchor system, each stating how far it is known to reach. A being may be located in several systems at once, and a location that is not known is STATED as unknown rather than left out.\n"
     replaces: located_at

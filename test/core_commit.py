@@ -147,13 +147,36 @@ try:
     undo()
     write('bin/why.py', why + "# the next release's line\n")
     write(dmpass.DIGESTS, dmpass.digests_text(G))
+    os.remove(os.path.join(G, 'bin', 'why.py'))
+    r = run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: why taken out', '--body',
+            '- action: RULE-CHANGE, bin/why.py taken out of the garden; ratified by sam')
+    check("a commit that takes out a file the garden receives from its release is refused (II.2), though it says "
+          "RULE-CHANGE", r.returncode != 0 and 'receives it from its release' in r.out and head() == before, r.out[-800:])
+    undo()
     g0 = text('GARDEN.md')
-    write('GARDEN.md', re.sub(r'(?m)^daftar_release:.*$', 'daftar_release: "v9.9.9"', g0, count=1)
-          if re.search(r'(?m)^daftar_release:', g0) else g0.replace('\nextends:', '\ndaftar_release: "v9.9.9"\nextends:', 1))
-    r = run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: adopted v9.9.9', '--body',
-            '- action: RULE-CHANGE, the release v9.9.9 adopted, its files and digests with it; ratified by sam')
-    check("the adoption's own commit — GARDEN.md's `daftar_release` moved, RULE-CHANGE said — brings a file and its digest "
-          "together", r.returncode == 0 and head() != before and dmpass.diverged(G) == [], r.out[-800:])
+
+    def adoption(line=''):
+        """v9.9.9 adopted by hand: a file and its digest together, GARDEN.md recording the release, and the entry."""
+        undo()
+        write('bin/why.py', why + "# the next release's line\n")
+        write(dmpass.DIGESTS, dmpass.digests_text(G))
+        write('GARDEN.md', re.sub(r'(?m)^daftar_release:.*$', 'daftar_release: "v9.9.9"', g0, count=1)
+              if re.search(r'(?m)^daftar_release:', g0) else g0.replace('\nextends:', '\ndaftar_release: "v9.9.9"\nextends:', 1))
+        return run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: adopted v9.9.9', '--body',
+                   '- action: RULE-CHANGE, the release v9.9.9 adopted, its files and digests with it; ratified by sam'
+                   + line)
+    r = adoption()
+    check("the adoption's own commit — GARDEN.md's `daftar_release` moved, RULE-CHANGE said — is refused where its entry "
+          "does not name the release as it was laid: a file and its digest patched together are no release (II.2)",
+          r.returncode != 0 and 'does not name them as the release laid them' in r.out and head() == before, r.out[-800:])
+    laid = dmpass.sha256_of(os.path.join(G, *dmpass.DIGESTS.split('/')))
+    r = adoption(f'\n- release: v9.9.9 at {"9" * 40}, its digests sha256:{"0" * 64}')
+    check("...and where it names other digests than it brings", r.returncode != 0 and 'it names v9.9.9' in r.out
+          and head() == before, r.out[-800:])
+    r = adoption(f'\n- release: v9.9.9 at {"9" * 40}, its digests sha256:{laid}')
+    check("...and taken where it names them — the tag GARDEN.md records and these digests' own SHA-256, as "
+          "bin/dmupgrade.py writes it, having proved the laid files against the tag",
+          r.returncode == 0 and head() != before and dmpass.diverged(G) == [], r.out[-800:])
     write('bin/why.py', text('bin/why.py').replace('\n', '\r\n'), newline='')
     check("a line end a checkout turned (CRLF, as Git for Windows writes text) is no divergence",
           b'\r\n' in open(os.path.join(G, 'bin', 'why.py'), 'rb').read() and dmpass.diverged(G) == [], dmpass.diverged(G))

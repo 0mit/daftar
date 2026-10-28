@@ -596,13 +596,14 @@ known by its id, and two that deal with each other peers, each configured at its
 - **What passes is a proposal, never a write** (`propose`, `take`). A proposal is one file, laid outside every garden,
   for one garden, made under an agreement both gardeners `agree` to. It carries whole beans as the proposing garden
   committed them, a stub of each bean they refer to, and the journal entry that would take them in. It passes on what
-  was said in the proposing garden or by the garden proposed to, and of what a third garden said only the names it
-  gave: `python3 bin/propose.py make`, `read` and `take`. A being is known beyond its garden by a name a namespace
+  was said in the proposing garden, by the garden proposed to, or in a third garden it came through, and nothing a
+  person's consent forbids the garden proposed to (rule `consent`): `python3 bin/propose.py make`, `read` and `take`. A being is known beyond its garden by a name a namespace
   gives once, and a stub carries those names; nothing is stamped on what crosses.
 - **Knowing crosses unchanged.** A statement travels with the act that knows it, and a person's word arrives as that
   person's word. An act known in another garden keeps the moment it was known at there, and holds that garden's bean
-  beside it in its `at`; the commit that brings it takes it from that garden (`take`, by the gardener, `through` the
-  proposal's fingerprint), stamped by the gardener's save.
+  beside it in its `at`, then each garden it came through, oldest first; the commit that brings it takes it from the
+  last of them, the garden it came through (`take`, by the gardener, `through` the proposal's fingerprint), stamped
+  by the gardener's save.
 - **Taking in is a write like any other.** What a proposal brings is another person's word (class D), a name another
   garden gave (F), and every disagreement or uncertain identity (J). Reading a proposal writes nothing; taking it in
   writes in the working tree and never commits; the gardener's commit is the ratification. A proposal is taken once.

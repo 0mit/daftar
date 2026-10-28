@@ -31,7 +31,8 @@ bean's file. The statements added or changed are known by a `say` of the writer'
 writer read it from a source (`read: {from, through}`: a place a lookup found, from the map or the gazetteer that has
 it), by a `read` of the writer's from that source, so the ledger says where the value came from (design §12). The bean
 is read again,
-each statement written is read back as intended and judged by the gate's own judge (core/engine.py `Judge.one`), and
+each statement written is read back as intended and judged by the one judge, a statement alone (core/judge.py
+`statement`), and
 then bin/save.py saves it — ONE journal entry naming each statement added, changed or removed — and the gate judges the
 whole commit. A REFUSAL UNDOES EVERYTHING: the working tree and the index as they were, every store record this write
 made taken out; and each message is returned tied to the op whose statement it names (`op`: its index; `fact`: its
@@ -129,7 +130,7 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
             sys.path.insert(0, p)
     import safe
     import held as dmheld
-    from core import engine
+    from core import engine, judge as dmjudge
     from core.check import garden_law
     refusals, made, unseal_after = [], [], []
 
@@ -464,9 +465,7 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
             refuse(n, key or f"{verb}#{x['id']}", f"`{verb}#{x['id']}` reads back otherwise than it was written: "
                                                   f"{_flow({k: y for k, y in r.items() if k != 'id'})}")
             continue
-        J.out = []
-        J.one(b2, i, v, r)
-        for rule, _where, msg in J.out:
+        for rule, _where, msg in dmjudge.statement(L, G2, b2, i, v, r, by=J):
             refuse(n, key or f"{verb}#{x['id']}", f"{rule}: {msg}")
     if refusals:
         _undo(root, made)

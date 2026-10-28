@@ -29,8 +29,10 @@ TAKES it into the working tree (nothing is committed), and the receiving gardene
 A BEING IS KNOWN BEYOND ITS GARDEN by a NAME a namespace gives once (`name: { by, of: self, as }`): the name its
 garden gave it, qualified to cross (`garden`, `<garden_id>/<kind>:<name>`), a garden's id, a domain, a digest.
 NOTHING IS STAMPED ON THE COPY. An act KNOWN IN ANOTHER GARDEN keeps the moment it was known at there, and holds that
-garden's bean, as the receiving garden knows it, in its `at`: `take` adds the sending garden's bean to each act it
-brings, and an act that comes home (its `at` this garden itself) is this garden's own again. Each bean taken holds
+garden's bean, as the receiving garden knows it, in its `at`, and after it each garden it came through, oldest first
+(V.5: the hops): `take` adds the sending garden's bean, the last hop, to each act it brings; each garden an `at` names
+travels as a stub, by its id; and an act whose path reaches this garden is known here as it was when it left — the
+gardens before this one, and none where it was said here, this garden's own again. Each bean taken holds
 `take: { by: <the gardener>, of: self, from: <the sending garden's bean>, through: <the fingerprint>, at: now }`, which
 the gardener's save stamps and commits, and by which rule `knowing` grants the acts it brings their moments there.
 
@@ -619,12 +621,8 @@ def core_make(argv):
         if not core_names(fm, law):
             refusals.append((f"{b} has no name beyond this garden (a `name` a namespace gives once)",
                              MINT_HINT.format(b=b)))
-        for _i, v, r in dmpass.statements(fm):
-            far = [x for x in listed(r.get('at')) if v in law.knowing and x in here and x != to]
-            far = [x for x in far if (core_head(x) or [{}])[0].get('kind') == 'garden']
-            if far:
-                refusals.append((f"{b}: a {v} known in {far[0]}, a third garden — only what was said here, or by the "
-                                 f"garden proposed to, passes on", "leave it out, or let that garden propose it"))
+        # AN ACT KNOWN IN A THIRD GARDEN PASSES ON as it is (V.5): its `at` holds the garden it was known in and each it
+        # came through, and each of those travels as a stub, by its id; the receiving garden adds this one as the last
         fms[b], texts[b] = fm, hb[2]
     for b in offered:
         for r in core_refs(fms.get(b) or {}, law, here):
@@ -653,6 +651,14 @@ def core_make(argv):
                          f"{under}, nor a party to an agreement offered with them",
                          f"offer the agreement they agreed to, or leave them out; a person who has not consented crosses "
                          f"only opaque (`{PY} bin/held.py person`)"))
+    # CONSENT'S SCOPE BETWEEN GARDENS (V.3): what a person's consent forbids to reach a garden is not proposed to it, as
+    # rule `consent` refuses a `propose` of it — read by the core's own judge
+    if to_id:
+        sys.path.insert(0, ROOT)
+        from core import engine as core_engine
+        for b, p_, g_, agreement in core_engine.Judge(law, core_engine.Garden.read(ROOT)).barred(offered, [to]):
+            refusals.append((f"{b} is {p_}'s, or concerns them, and {p_}'s consent ({agreement}) forbids {to}",
+                             f"leave {b} out: what a person's consent forbids a garden does not reach it"))
     out_dir = os.path.realpath(out) if out else os.path.dirname(os.path.realpath(ROOT))
     g_in = inside_a_garden(out_dir)
     if g_in:
@@ -837,12 +843,15 @@ def core_analyse(path, as_test=False):
         for _i, v, r in dmpass.statements(fm):
             r = core_rewrite(v, r, m, law)
             if v in law.knowing:
+                # THE HOPS (V.5): the moment, the garden it was known in, then each it came through, oldest first; the
+                # sender is the last. An act whose path reaches this garden is known here as it was when it left:
+                # the gardens before this one, none where it was said here
                 ats = listed(r.get('at'))
-                home = HOME in ats
-                far = [x for x in ats if x != HOME and x in local and local[x][0].get('kind') == 'garden']
-                if far:
-                    refusals.append((f"{bid}: a {v} known in {far[0]}, a third garden", None))
-                ats = [x for x in ats if x != HOME] + ([] if home or not sender else [sender])
+                hops = [x for x in ats if x == HOME or (isinstance(x, str) and (
+                    (x in local and local[x][0].get('kind') == 'garden') or (skeletons.get(x) or {}).get('kind') == 'garden'))]
+                rest = [x for x in ats if x not in hops]
+                hops = hops[:hops.index(HOME)] if HOME in hops else hops + ([sender] if sender else [])
+                ats = rest + hops
                 r['at'] = ats[0] if len(ats) == 1 else ats
             sts.append((v, r))
         # WHAT CAME FROM HERE COMES HOME AS NOTHING: the sending garden's `take` of this garden's own word records

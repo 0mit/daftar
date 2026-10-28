@@ -488,6 +488,13 @@ def clause_problems(J, M, b, where, r, verb=None):
                        "holds it (a `pay`, a `hold`)"))
     if c.get('of') is not None and c.get('each') is None:
         out.append((w, "`of` is read from each occurrence: with `each`, the reading it occurs for"))
+    if c.get('gardens') is not None:
+        if verb != 'forbidden':
+            out.append((f"{w}.gardens", "names the gardens a person's facts may not reach: a clause of a `forbidden`"))
+        for x in listed(c['gardens']):
+            g = J.G.beans.get(x) if isinstance(x, str) else None
+            if g is None or g.kind != 'garden':
+                out.append((f"{w}.gardens", f"{x!r} is no `garden` bean of this garden: a garden is named by its bean"))
     out += guard_problems(J, w, c, verb)
     return out
 

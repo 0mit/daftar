@@ -300,6 +300,17 @@ A reading.
     r = run(PY, 'bin/held.py', 'check', cwd=A)
     check("held: `check` finds the record where the store is, as the bean says", r.returncode == 0 and '0 error(s)' in
           r.out, r.out)
+    # held's check under a rule (nv-s1-open 1): the one judge over the garden and its held store, each error a finding
+    # of the rule it breaks — a record of another place, `knowing`; a pointer that resolves to nothing, `harm`
+    lap = os.path.join(A, 'beans', 'laptop.md')
+    keep = text(lap)
+    dmsafe.add_statements(lap, f'- name: {{ id: tag, held: "{ptr.group(0) if ptr else "x"}" }}\n')
+    r = run(PY, 'bin/held.py', 'check', cwd=A)
+    write(lap, keep)
+    check("held: `check` is the one judge's union of the garden and its held store — a pointer to another bean's record "
+          "is rule knowing's finding, told at the bean", r.returncode == 1 and re.search(
+              r'(?m)^knowing\s+laptop: statements\[name#tag\] — points at material held for another place \(ada\)', r.out)
+          and '1 error(s)' in r.out, r.out[-900:])
     dmsafe.add_statements(os.path.join(A, 'beans', 'notes.md'),
                           '- name: { id: fax, held: "root:vault/0123456789abcdef0123456789abcdef" }\n'
                           '- say: { by: ada, of: [fax], at: now }\n')
@@ -492,11 +503,49 @@ statements:
     r2 = save(C, 'cem', 'met garden-b', '- action: recorded [[garden-b]] and [[ben]]')
     check("propose: a third garden on the same machine meets ben's: each records the other, two gardens of one machine "
           "apart", r1.returncode == 0 and r2.returncode == 0 and IDC not in (IDA, IDB), r1.out[-600:] + r2.out[-600:])
-    r = run(PY, 'bin/propose.py', 'make', '--to', 'garden-c', '--under', 'pact-c', 'notes', 'pact-c', '--out', T, cwd=B)
+    # ...and what a third garden said passes on as a relay (V.5): ben's notes hold acts known in ada's garden, which
+    # reach cem's with their hops — the moment, ada's garden, then ben's, the last, which cem's take names
+    r = run(PY, 'bin/propose.py', 'make', '--to', 'garden-c', '--under', 'pact-c', 'notes', 'pact', 'pact-c', '--out', T,
+            cwd=B)
     prop4 = re.search(r'proposal \S+: (\S+)', r.out)
-    r = run(PY, 'bin/propose.py', 'read', prop4.group(1), cwd=C) if prop4 else r
-    check("propose: what a third garden said is not passed on — ben's notes hold acts known in ada's garden, refused "
-          "before they reach cem's", r.returncode != 0 and 'third garden' in r.out, r.out[-900:])
+    check("propose: what a third garden said passes on — ben's notes, holding acts known in ada's garden, are proposed "
+          "to cem's, ada's garden a stub by its id", prop4 is not None and 'daftar-stub garden-a' in text(prop4.group(1)),
+          r.out[-900:])
+    run('git', 'add', '-A', cwd=B)
+    save(B, 'ben', 'proposed the notes on', '- action: proposed [[notes]], [[pact]] and [[pact-c]] to [[garden-c]]')
+    add(C, 'cem', f'name: {{ id: crossing, by: garden, of: self, as: "{IDC}/person:cem" }}', 'cem')
+    save(C, 'cem', 'cem named to cross', '- action: [[cem]] named as garden-c names them, to cross')
+    r = run(PY, 'bin/propose.py', 'take', prop4.group(1), cwd=C) if prop4 else r
+    entry = '\n'.join(ln[4:] for ln in r.out.split('with the entry:\n', 1)[-1].split('\n') if ln.startswith('    '))
+    r2 = run(PY, 'bin/save.py', 'cem', 'took the notes from ben', cwd=C, stdin=entry + '\n')
+    nc = text(os.path.join(C, 'beans', 'notes.md')) if os.path.isfile(os.path.join(C, 'beans', 'notes.md')) else ''
+    check("propose: ...and taken in cem's, each act known in ada's garden holds its hops, oldest first — the moment, "
+          "ada's garden, ben's — and the gate takes it from the last, by cem's save",
+          r.returncode == 0 and r2.returncode == 0 and clean(C)
+          and re.search(r"say: \{ ?by: ada, at: \['?[0-9T:+ -]+'?, garden-a, garden-b\]", nc)
+          and re.search(r"take: \{ ?id: taken-[0-9]+, by: cem, of: self, from: garden-b", nc), r.out[-900:] + r2.out[-900:] + nc)
+    # consent's scope between gardens (V.3): ada's consent forbids cem's garden, and the notes concern ada — make refuses
+    # them to garden-c, as rule consent refuses a `propose` of them
+    write(os.path.join(B, 'beans', 'ada-consent.md'), """---
+bean: ada-consent
+kind: contract
+title: "ada-consent — what ben's garden may do with ada's facts"
+summary: "ada agrees her facts are kept here, and forbids them garden-c."
+statements:
+  - say:       { by: ben, at: now }
+  - agree:     { id: ada-agrees, by: [ada], of: self, through: spoken, at: 2026-09-01 }
+  - can:       { id: not-c, by: ben, of: "passing ada's facts to garden-c", to: ada }
+  - forbidden: { of: not-c, through: ada-agrees, clause: { gardens: [garden-c] } }
+---
+Ada's consent.
+""")
+    add(B, 'notes', 'concern: { id: of-ada, of: [ada] }', 'ben')
+    r1 = save(B, 'ben', "ada's consent", "- action: [[ada-consent]] recorded; [[notes]] concern ada")
+    r = run(PY, 'bin/propose.py', 'make', '--to', 'garden-c', '--under', 'pact-c', 'notes', 'pact', 'pact-c', '--out', T,
+            cwd=B)
+    check("propose: what a person's consent forbids a garden is not proposed to it (V.3) — make refuses the notes that "
+          "concern ada to garden-c", r1.returncode == 0 and r.returncode != 0 and "ada's consent (ada-consent) forbids "
+          "garden-c" in r.out, r1.out[-600:] + r.out[-900:])
     # held: an erasure per subject, every pointer to it then `Erased`; a store in cleartext read from afar, warned
     r = run(PY, 'bin/held.py', 'erase', 'ada', cwd=A)
     rec = run(PY, 'bin/held.py', 'resolve', ptr.group(0) if ptr else 'x', cwd=A)

@@ -239,8 +239,8 @@ retired:
         held: ["test/core_between.py: propose: a second proposal FUSES", "test/core_between.py: propose: a proposal is taken once", "test/core_between.py: propose: a garden refuses a proposal not made for it"]
       - promise: "a name a garden gives is bare until qualified by its id"
         held: ["test/core-cases.yaml: rule: names", "test/core-cases.yaml: a garden met here, and the name it gave, qualified"]
-      - promise: "a third garden, two on one machine; what a third garden said not passed on; names used as file names only in the form of one"
-        held: ["test/core_between.py: propose: a third garden on the same machine meets ben's", "test/core_between.py: propose: what a third garden said is not passed on", "test/core_between.py: propose: a name a proposal carries is used as a file name only in the form of one"]
+      - promise: "a third garden, two on one machine; what a third garden said passed on with its hops (V.5, core 4.11); names used as file names only in the form of one"
+        held: ["test/core_between.py: propose: a third garden on the same machine meets ben's", "test/core_between.py: propose: what a third garden said passes on", "test/core_between.py: propose: a name a proposal carries is used as a file name only in the form of one"]
   - suite: test/place.py
     promises:
       - promise: "a position names its host; a network segment is a place"
