@@ -165,7 +165,8 @@ _leak = [(f, w) for f in _AFILES for w in dmpublic.hits(_text(f), _words)]
 # way of reading as a bean of the core (`kind: document`, the form `reader_preferences`)
 CORE_ONLY = ("view_engraved.py", "view_write.py", "view_engraved.js", "view_queue.js", "view_timeline.js",
              "view_flows.js", "view_sheet.js", "books.py", "books_walks.py", "view_prefs.py",
-             "storage.py", "transfer.py")    # the storage profile's readings and its walk's setup, of a garden of the core
+             "storage.py", "transfer.py",    # the storage profile's readings and its walk's setup, of a garden of the core
+             "view_board.py")                # the board, the archetype `cursor`, read over a garden of the core
 _retired = [(f, n) for f in _AFILES if f.endswith(CODE_EXT)
             and not f.endswith("_core.py")     # an asset's reader of the core (v1 part 11) writes the core's words, and
             # `kind` is the core's name of today's genos (core/law/kinds.yaml), not the word 22.0 retired

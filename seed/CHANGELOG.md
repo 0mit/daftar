@@ -251,6 +251,24 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.14** (2026-10-28, daftar v4.14.0, human-ratified rule-change) — **the board, the scan, and a cold start.**
+  MINOR. The view profile's archetype `cursor` is read and drawn: a board of one being or several, kept still while the
+  aspect around it turns. The view asset reads it (`assets/view/lib/view_board.py`, `view.py board`): the law's
+  `aspects` of the core and of the profiles a garden takes, each followed through the cursor over the garden's beans and
+  every store its host keeps, in one snapshot a question — what a volume or a folder holds and what several hold in
+  common by the folders it sits in, what carries a being, where a content is held and copied, the place it was backed up
+  in, the run of names it is one of, the dataset its folder's tree is and every folder holding the same tree, and its
+  keepings. daftard draws it as its page `/board?g=<garden>`, with three.js 0.186.1 (MIT, vendored unchanged, NOTICE)
+  beneath the beings' HTML, and asks the garden's own release through its worker (`board_aspects`, `board_lens`,
+  `board_being`, `board_find`); its answers are never held, since a store changes without a commit, and it only reads.
+  The storage asset scans a mounted tree into the index `import file-tree` takes (`assets/storage/bin/scan.py`): each
+  file's BLAKE3, the names of one inode read once, a checklist `b3sum --check` reads, a second scan reading only what
+  changed. A new suite, `test/view_board.py`, holds the board to a store made from two scanned trees and an archive's
+  copies, and through daftard's worker; another, `test/cold_start.py`, meets a garden with no memory: the commands its
+  AGENTS.md names first, run as written, say where the work stands and what waits, and the landing's one action meets
+  it, the home as empty after as before. The law: `seed/PUBLIC-ALLOW` makes one word of three.js's own comment public
+  in its vendored `three.core.js` alone, which is kept unchanged; no rule and no row of the law's tables changed.
+
 - **core 4.13** (2026-10-28, daftar v4.13.0, human-ratified rule-change) — **daftard in daftar's repository.** MINOR.
   daftard, the daemon one per machine that serves the gardens it holds, is the Go module `daftard/`
   (`github.com/0mit/daftar/daftard`), with its Python worker, its pages and their tests beside it: built, tested and

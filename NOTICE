@@ -103,6 +103,11 @@ What daftard (daftard/) carries of others', each under its own terms:
     Place names from OpenStreetMap, in the answers the place search's tests are held to. © OpenStreetMap contributors,
     under the Open Database Licence 1.0 (LICENSES/ODbL-1.0.txt; https://www.openstreetmap.org/copyright).
 
+  daftard/web/vendor/three-0.186.1/
+    three.js 0.186.1, its build/three.module.js and build/three.core.js unchanged, from the npm registry's tarball
+    (SOURCE.txt beside them names it and its integrity). Copyright © 2010-2026 three.js authors, under the MIT License
+    (daftard/web/vendor/three-0.186.1/LICENSE, LICENSES/MIT.txt); built into daftard with the board's page.
+
 daftar's own curated tables (seed/knowledge/technology.tsv, crosswalk-isco-08-isced-f-2013.tsv, and each
 seed/knowledge/units-<scheme>.tsv, a standard's codes crossed into the law's units) are CC BY 4.0.
 daftar's own tables of facts (seed/knowledge/substances.tsv, mechanisms.yaml, coefficients.yaml) are CC0 1.0.

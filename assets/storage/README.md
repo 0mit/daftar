@@ -68,6 +68,20 @@ or stopped), of the being it fills, needing the dataset it is to hold and meetin
 whole there. Its work is done by runs (`daftar run`); the course outlives them, and a page shows its step and how far
 it has come.
 
+## A tree scanned
+
+    python3 assets/storage/bin/scan.py --root <mounted dir> --index <out.sqlite> [--progress <out.json>] [--walk-only]
+    python3 bin/import.py file-tree <out.sqlite> --volume <its id> --carrier <the disk that holds it> --into store:<name>
+
+A scan reads a mounted tree into the index `import file-tree` takes as a volume: every entry beneath the root, never
+crossing into another filesystem, its path as the filesystem's own bytes, its type, size, time, inode and how many names
+it has, and each file's BLAKE3 read front to back by one reader (the `blake3` module); the names of one inode are read
+once. It reads the tree and writes only its index, a progress file where one is named, and a checklist beside the
+index, `<index>.b3`, which `b3sum --check` reads in the root with no code of daftar's. Run again, it keeps each digest
+whose file is unchanged and reads only what is left, so a disk unplugged mid-scan carries on where it stopped; with
+`--walk-only` it lists a failing disk before reading it whole. Exit 3 is fifty read errors in a row, 4 the tree gone.
+Which disk is which, where it is mounted and how it is opened are the host's, never the scan's.
+
 ## Containers
 
     python3 assets/storage/bin/container.py list <archive> --index <out.sqlite> [--passphrase-stdin]
@@ -79,5 +93,5 @@ passphrase comes on standard input from a pipe — a wallet's query — never on
 that needs one none was given for is listed without its digest, and the exit code 3 says so. A path that climbs out of
 the container is kept by its name alone, and said.
 
-Dependencies: none beyond the release's for the readings; `python-libarchive-c` and `blake3` (pip) for a container,
-and 7-Zip for an encrypted 7z or a rar 5.
+Dependencies: none beyond the release's for the readings; `blake3` (pip) for a scan; `python-libarchive-c` and
+`blake3` for a container, and 7-Zip for an encrypted 7z or a rar 5.

@@ -527,6 +527,8 @@ func (s *Server) get(w http.ResponseWriter, r *http.Request) {
 		s.pass(w, g, "action", map[string]any{"id": q.Get("id")})
 	case "/api/courses": // a being's courses as its garden's release reads them (bin/seq.py courses): a lead's own page
 		s.pass(w, g, "courses", map[string]any{"id": q.Get("id")})
+	case "/api/board/aspects", "/api/board/lens", "/api/board/being", "/api/board/find": // the board (board.go)
+		s.board(w, r, g)
 	case "/api/probe": // the latest readings of each tool this machine holds, and the routines' last tick (CONTRACT §3)
 		if g.Routines == nil {
 			reply(w, 200, map[string]any{"garden": g.Conf.Name, "tools": map[string]any{}, "off": true})
@@ -1137,6 +1139,8 @@ func (s *Server) asset(w http.ResponseWriter, r *http.Request) {
 		name = "app/index.html" // the handplace on the toolbox
 	case "old":
 		name = "index.html" // the earlier pages, kept while the new ones settle
+	case "board":
+		name = "board/index.html" // the board: a cursor kept while the aspect turns (board.go)
 	}
 	if name == "go" || strings.HasPrefix(name, "go/") { // a landing address: the handplace, which reads its case
 		if !GoRe.MatchString(r.URL.Path) {

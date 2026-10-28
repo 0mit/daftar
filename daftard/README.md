@@ -33,6 +33,13 @@ version, and what was asked lately is asked again in the background. This is the
   garden stays `legacy` (the pages above) until its gardener moves it, and keeps exactly that surface: a view garden's
   addresses (`/api/view/page`, `/api/view/write`, `/api/prefs`, `/release/<garden>/…`) answer a legacy garden 404, and
   its `/view` is the dashboard's own page, as before.
+- **The board (`/board?g=<garden>`):** one being or several, the cursor, kept still while the aspect around it turns —
+  the view profile's archetype `cursor`. The page is daftard's (`web/board/`), drawn with three.js beneath the beings'
+  HTML; what it shows is read by the garden's own release (`assets/view/lib/view_board.py`) through the worker's
+  `board_aspects`, `board_lens`, `board_being` and `board_find`: the law's aspects of the profiles the garden takes,
+  over its beans and every store its host keeps. Its answers are never held, since a store changes without the garden's
+  version moving; it only reads, and a bean's statements on a sheet are shown to its gardener, or to a reader the
+  garden's own grants open the bean to. A garden that takes no view profile has no board.
 - **Sync and exchange:** each garden kept in step with its hub, with its exchange rounds run where the gardener has
   consented. This takes over from the old dashboard's loop.
 - **Guided errors:** every refusal or failure gets a reference, a message, and whom to follow it up with. The whole
@@ -141,7 +148,10 @@ released, at the same commit as the law and the tools its worker runs. From this
 Go's standard library, and one package beside it: `golang.org/x/text/unicode/norm` (with `x/text/transform`, which it
 imports), v0.42.0, vendored in `vendor/` and pinned by `go.mod`, `go.sum` and `vendor/modules.txt`. Place search folds
 what a person types by Unicode's NFKC and NFKD, which the standard library does not have (`internal/places`; design
-§12, decided 2026-10-11). It is the one exception: nothing else is taken from outside, and nothing is fetched to build.
+§12, decided 2026-10-11). It is the one exception in Go. The board's page carries three.js 0.186.1 (MIT), its
+`build/three.module.js` and `build/three.core.js` unchanged in `web/vendor/three-0.186.1/` with its licence and where it
+came from (`SOURCE.txt`), built into the binary beside the pages. Nothing else is taken from outside, and nothing is
+fetched to build.
 
 ## Use
 

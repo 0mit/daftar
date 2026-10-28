@@ -69,6 +69,8 @@ parts, changes).
    python3 test/io.py
    python3 test/group.py
    python3 test/storage.py
+   python3 test/view_board.py
+   python3 test/cold_start.py
    python3 test/courses.py
    python3 test/core_translate.py
    python3 test/core_standards.py
