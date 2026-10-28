@@ -144,7 +144,8 @@ show.
       occurrences lasts a length of time, in cells of a day or more of a calendar reckoned by rule whose day begins at
       midnight, each of its places written as a place of its cell, with its time of day `hh:mm` where it names one, and
       counted from its `from` where it strides, by a length of time, or counts its times; a need's `interval` is a
-      length of time, with no ends.
+      length of time, with no ends; a possible's `chance` is a ratio from 0 to 1, and its `within` an extent in its
+      form.
 - [ ] **profile** — What a profile gives is used only where the garden takes the profile (VOCAB.md `profiles`): a verb
       whose home it is, and an attribute it adds to a form of the core; and what its forms hold is in its form — a page
       draws the drawings of its bean, each once and all of them, a drawing's values are named once on its page, and what

@@ -45,6 +45,8 @@ jobs:
         run: python3 test/core_mechanics.py
       - name: "core_monitoring: monitoring as needs (core 4.3) — a probe a reading of a being's need, its failure the probe's and not the being's, a need's silence its interval, a failure found benign until its review falls due, a cause a `come` between two happenings, a board member's line of prose, and a probed name resolved where it is served on the LAN"
         run: python3 test/core_monitoring.py
+      - name: "core_score: a forecast scored against what came (core 4.7) — a `possible` with a `chance` within an extent, what came said on the necessity square through another source, and the reading's `score`: the Brier and the log score, the base rate and the skill against it, and calibration by bins, on an invented set scored by hand"
+        run: python3 test/core_score.py
       - name: "core_save: the save commits a garden of statements, the core's gate at the commit — the moment the save's, the law ratified"
         run: python3 test/core_save.py
       - name: "core_translate: a garden of today's beans (v0.49.0's law) written in statements, into a copy — every value placed, VOCAB.md the core's rows, the engine passing"

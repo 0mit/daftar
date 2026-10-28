@@ -23,6 +23,8 @@ What is measured is held in the core in these places, each in its form (core/law
                 counted from midnight (`5T08:30`), so that what the gate accepts `bin/pass.py may` reads.
   an interval   `need: { …, interval: <form extent> }` — how long the reading that meets a need may be silent before
                 the need is not met: a length of time with no ends, as a step's `usually` (core 4.3).
+  a chance      `possible: { of, chance: <quantity>, within: <form extent> }` — how likely what it names is to come, a
+                ratio from 0 to 1, within the extent it speaks of (core 4.7).
 
 Rule `measured` judges each of them by the tables the release carries — the lines a region lies on (`lines`), the
 systems (the standards' and the garden's own), the units in UCUM with their factors, the quantities and their
@@ -348,6 +350,22 @@ class Measures:
         return [(where, f"holds {', '.join(ends)}: how long a reading may be silent has no ends — a `measure`, or a "
                         f"`level` and a `count`")] if ends else []
 
+    def chance(self, where, x):
+        """[problem] of `x` as a possible's chance (core/law/core.yaml `possible.chance`): a probability, a ratio from 0
+        to 1 — a bare number a count of the unit one, or `{ count, unit }` in a unit of ratio. Its form is rule
+        valency's (the shape `quantity`)."""
+        q = {'count': x, 'unit': '1'} if isinstance(x, str) else x
+        if not isinstance(q, dict) or exact(q.get('count')) is None or unit_row(self.L, q.get('unit')) is None:
+            return []
+        kind = unit_row(self.L, q['unit']).get('quantity')
+        if kind != 'ratio':
+            return [(where, f"its unit {q['unit']} measures {kind}: a chance is a ratio, from 0 to 1")]
+        v = exact(q['count']) * (factor(self.L, q['unit']) or Fraction(1))
+        if not 0 <= v <= 1:
+            shown = str(v.numerator) if v.denominator == 1 else f"{v.numerator}/{v.denominator}"
+            return [(where, f"{q['count']} {q['unit']} is {shown}: a chance is from 0 to 1")]
+        return []
+
     def window(self, where, x):
         """[problem] of `x` as a grant's window (core/law/verbs.yaml `grant.window`): a recurrence each of whose
         occurrences lasts a length of time, opening on days of a calendar reckoned by rule at a time of day counted from
@@ -596,6 +614,10 @@ def problems(J, b):
             out += M.window(f"{where}.window", r['window'])
         if verb == 'need' and r.get('interval') is not None:
             out += M.interval(f"{where}.interval", r['interval'])
+        if verb == 'possible' and r.get('chance') is not None:
+            out += M.chance(f"{where}.chance", r['chance'])
+        if verb == 'possible' and r.get('within') is not None:
+            out += M.extent(f"{where}.within", r['within'])
         if (verb == 'can' or verb in FIGURE_PERMISSION) and isinstance(r.get('clause'), dict) and \
                 isinstance(r['clause'].get('by_role'), str):
             roles = {rr.get('as') for _j, v, rr in b.items if v == 'agree' and 'held' not in rr}

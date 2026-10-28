@@ -251,6 +251,20 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.7** (2026-10-28, daftar v4.7.0, human-ratified rule-change) — **four kinds, a chance, and its score.** MINOR.
+  The kinds `procedure` (a way a thing is done, step by step: a walk), `site` (a built place where work is done, a body at
+  device beside host), `series` (a published series of values) and `model` (a fitted model, what it gives derived
+  through it), each placed by its frame and its positions; `site`, `series` and `model` vacant, `universal`. A garden's
+  own row of `procedure` (or of any kind the law now holds as the garden wrote it, its meaning aside) is the law's, and
+  core/translate.py `between` takes it out as the garden moves to 4.7; bin/run.py `setup`, the accounting asset's
+  `books.py setup` and the storage asset's `transfer.py setup` no longer ask a garden for it, and the translator from
+  today's words writes no row the law holds. A probability is a degree of `possible`: the qualifiers `chance`, a ratio
+  from 0 to 1, and `within`, the extent it speaks of, which rule `measured` holds to their forms; a `possible` without
+  them means what it meant, and no verb is new. What came is said on the same square, `necessary` of what came and
+  `impossible` of what did not, each through what makes it so. The reading's operation `score` reads each `possible`
+  with a `chance` against what came, said through another source than its own: the Brier score, the log score, the base
+  rate with its scores and the skill against it, and calibration by bins, read each time and never stored; an outcome
+  nobody said is never read as one that did not come. test/core_score.py, a new suite. Every other verdict stands.
 - **daftar v4.6.1** (2026-10-28, code, core 4.6) — **a new bean inside a grant's reading at the hub, and the report's
   day in the garden's zone.** bin/hub.py read every grant's reading at a commit's parent, and a bean the commit makes
   is in no garden before it, so a writer granted `write` through a reading was refused every commit that made a bean:

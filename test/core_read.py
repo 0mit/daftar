@@ -94,8 +94,6 @@ T = tempfile.mkdtemp(prefix='core-read-')
 REL, G = os.path.join(T, 'release'), os.path.join(T, 'garden')
 
 VOCAB = """---
-kinds:
-  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }
 namespaces:
   - { namespace: anchor-hostname, meaning: "what a machine calls itself" }
 ---

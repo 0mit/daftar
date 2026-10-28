@@ -88,21 +88,13 @@ try:
                  '---\nA machine, invented.\n')
 
     # ---- setup
-    r0 = R('setup', '--by', 'session-t')
-    check("setup: refused until the garden has a kind for a walk, naming the line to add",
-          r0.returncode == 2 and 'kind: procedure' in r0.out, r0.out)
-    v = open(f'{G}/VOCAB.md', encoding='utf-8').read()
-    head, sep, body = v[4:].partition('\n---')
-    head = ('kinds:\n- { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\n'
-            + head) if 'kinds:' not in head else head.replace('kinds:\n', 'kinds:\n- { kind: procedure, nature: sayable, '
-                                                              'meaning: "a way a thing is done, step by step: a walk" }\n', 1)
-    open(f'{G}/VOCAB.md', 'w', encoding='utf-8').write('---\n' + head + sep + body)
     r = R('setup', '--by', 'session-t')
-    s = grow.run(PY, 'bin/save.py', 'sam', 'RULE-CHANGE: the kind procedure, and the walk of a run', '--body',
-                 '- action: RULE-CHANGE: the kind `procedure` in VOCAB.md; wrote [[session-t]], [[box-a]] and [[walk-run]]',
-                 '- ratified_by: sam', cwd=G)
-    check("setup: the walk written into the garden's mappings, and the gate passes it",
-          r.returncode == 0 and os.path.isfile(f'{G}/mappings/walk-run.md') and s.returncode == 0, r.out + s.out[-600:])
+    s = grow.run(PY, 'bin/save.py', 'sam', 'the walk of a run', '--body',
+                 '- action: wrote [[session-t]], [[box-a]] and [[walk-run]]', cwd=G)
+    check("setup: the walk written into the garden's mappings, of the law's kind `procedure` with no row of the "
+          "garden's own, and the gate passes it",
+          r.returncode == 0 and os.path.isfile(f'{G}/mappings/walk-run.md') and s.returncode == 0
+          and 'procedure' not in open(f'{G}/VOCAB.md', encoding='utf-8').read(), r.out + s.out[-600:])
     r = R('setup')
     check("...setup again finds the garden's walk the standard's", r.returncode == 0 and "the standard's" in r.out, r.out)
     w = open(f'{G}/mappings/walk-run.md', encoding='utf-8').read()

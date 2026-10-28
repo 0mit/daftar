@@ -128,8 +128,7 @@ try:
     B = os.path.join(T, 'heart')
     r = grow.garden(REL, B, 'pat', '--gardener-name', 'Pat')
     os.makedirs(B + '-vault')
-    write(B, 'VOCAB.md', '---\nprofiles: [knowledge]\nkinds:\n'
-          '  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\n'
+    write(B, 'VOCAB.md', '---\nprofiles: [knowledge]\n'
           'namespaces:\n' + HOSTNAME_NS + 'schemes:\n'
           + at_authority('icd-10-pcs', 'procedures, as ICD-10-PCS codes them', 'Centers for Medicare & Medicaid Services',
                          'https://www.cms.gov/medicare/coding-billing/icd-10-codes', '^[0-9A-HJ-NP-Z]{7}$') + LOINC
@@ -264,8 +263,8 @@ try:
     # ---- A PRODUCTION LINE WITH ACCOUNTS
     D = os.path.join(T, 'bracket-line')
     r = grow.garden(REL, D, 'sam', '--gardener-name', 'Sam')
-    write(D, 'VOCAB.md', '---\nprofiles: [accounting]\nkinds:\n'
-          '  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\nschemes:\n'
+    write(D, 'VOCAB.md', '---\nprofiles: [accounting]\n'
+          'schemes:\n'
           '  - { scheme: tdhp, classifies: "where an amount belongs, by the Turkish uniform chart of accounts", '
           'holding: extract, publisher: "the Ministry of Finance (Resmi Gazete 21447)", url: "file:extracts/tdhp.tsv", '
           'levels: [ { level: group }, { level: class }, { level: account } ], neighbours: none, sources: extracts/tdhp.tsv }\n'

@@ -251,6 +251,8 @@ OVERRIDE = {('pass', 'from'): 'world', ('pass', 'to'): 'history', ('pass', 'thro
             ('grant', 'window'): {'of': 'time', 'in': 'iso-week', 'each': 'week', 'at': ['1T08:30', '5T08:30'],
                                   'lasts': {'of': 'time', 'measure': {'count': '10', 'unit': 'h'}}}, ('mark', 'of'): 'ics:Meghalayan',
             ('need', 'interval'): {'of': 'time', 'measure': {'count': '10', 'unit': 'min'}},
+            ('possible', 'chance'): {'count': '0.3', 'unit': '1'},
+            ('possible', 'within'): {'of': 'time', 'from': '2026-11-01', 'to': '2026-11-30'},
             ('weigh', 'weighing'): {'criteria': [{'name': 'a', 'what': 'x'}, {'name': 'b', 'what': 'y'}],
                                     'pairwise': [{'a': 'a', 'b': 'b', 'judged': '3'}]}}   # forms whole (v1 part 12b)
 CONTEXT = [bean('pat', 'person', [{'say': {'by': 'pat', 'at': 'now'}}]),

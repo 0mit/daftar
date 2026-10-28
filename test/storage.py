@@ -67,8 +67,6 @@ def reading(name, body, *args):
 
 VOCAB = """---
 profiles: [storage, knowledge]
-kinds:
-  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }
 risks:
   - { risk: disk-fault, meaning: "a disk stops reading", resolved_by: [ { disk: 2 }, { array: 1 } ] }
   - { risk: site-loss, meaning: "a place is lost to fire, flood or theft", resolved_by: [ { place: 2 } ] }

@@ -247,6 +247,32 @@ try:
           and got['d5'] == ['- concern: { of: [{ someone: person }] }', '- about: { of: [self] }']
           and 'It concerns: h1, as words' in open(os.path.join(T, 'beans', 'd1.md'), encoding='utf-8').read()
           and again == [], (moved, got, again))
+    # THE KINDS THE LAW TOOK (core 4.7): a garden's own row of a kind the law now holds goes
+    vocab = ("---\n# == THE CORE'S ROWS ==\nkinds:\n- kind: checklist\n  nature: sayable\n- kind: procedure\n"
+             "  nature: sayable\n"
+             "- { kind: series, nature: sayable, meaning: \"the garden's own words\", vacant: \"a case\" }\n"
+             "- { kind: site, nature: sayable }   # written otherwise: the law's site is a body\n"
+             "- { kind: model, nature: body, organisation: device }\n"
+             "flows:\n- flow: sent-out\n  from: estate\n  to: remote\n---\n# the garden's own rows\n")
+    with open(os.path.join(T, 'VOCAB.md'), 'w', encoding='utf-8', newline='') as fh:
+        fh.write(vocab)
+    moved = translate.between('4.6', '4.7', T)
+    text = open(os.path.join(T, 'VOCAB.md'), encoding='utf-8').read()
+    kinds = {str(r['kind']): r for r in dmparse.loads(dmparse.split_front_matter(text)[0])['kinds']}
+    again = translate.between('4.6', '4.7', T)
+    with open(os.path.join(T, 'VOCAB.md'), 'w', encoding='utf-8', newline='') as fh:
+        fh.write("---\nkinds:\n  - { kind: procedure, nature: sayable, meaning: \"a way a thing is done, step by step: "
+                 "a walk\" }\nnamespaces:\n  - { namespace: anchor-hostname, once: \"false\" }\n---\n# rows\n")
+    alone = translate.between('4.6', '4.7', T)
+    left = open(os.path.join(T, 'VOCAB.md'), encoding='utf-8').read()
+    check("the translator moves a garden's own kinds to core 4.7: a row of a kind the law now holds with the same nature "
+          "and positions is the law's and goes (procedure in a block, series on one line, its meaning and `vacant` "
+          "aside); one written otherwise (site a sayable, model a body) stays for the gate to name, its comment kept; "
+          "the rest of the file as it was; once; and a list left with no row goes with its key",
+          moved == ['VOCAB.md'] and sorted(kinds) == ['checklist', 'model', 'site']
+          and '# written otherwise' in text and 'flows:\n- flow: sent-out\n' in text and "# == THE CORE'S ROWS ==" in text
+          and again == [] and alone == ['VOCAB.md'] and 'kinds' not in left
+          and 'namespaces:\n  - { namespace: anchor-hostname' in left, (moved, text, again, left))
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

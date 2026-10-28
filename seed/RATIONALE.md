@@ -4992,6 +4992,37 @@ holding, a folder holding a content under a name.
 (ratified with `volume`, 2026-10-18) Bytes, named once by a digest (`blake3`, `sha-256`); its size is a measure of the
 information it carries, never of its carrier.
 
+## core/law/kinds.yaml: kinds[procedure]
+
+(core 4.7, ratified by the operator on 2026-10-28) A way a thing is done, step by step: a walk. Every garden that walks
+— a repair, a run of a tool, the books' operations, a copy between disks — wrote the same row in its own VOCAB.md, and
+each tool that writes a walk asked for it before it would. A row every garden writes alike is the law's: it is said once,
+here, and a garden's own row of it is the law's as the garden moves to 4.7, which the translator takes out (core/
+translate.py `between`), since one name has one row. A procedure is a sayable, as the law's other discourses are — a
+document, a contract, a design — and, as they do, it names no position on organisation.
+
+## core/law/kinds.yaml: kinds[site]
+
+(core 4.7, ratified on 2026-10-28) A built place where work is done: a plant, a workshop, a data centre, a farm. It
+takes room, so it is a body; it is devices and structure assembled at one place, which the levels' own words put at
+device — a rack, a room of machines, a building — so device is its position, as it is a host's. Two kinds at one position
+are kept apart by what each is: a host is a machine, a site the place machines stand at, and a host is `part` of a site,
+or `be` at it as a location. What a site is beyond its kind — a foundry, a dairy — is a code of a scheme whose `at`
+names device.
+
+## core/law/kinds.yaml: kinds[series]
+
+(core 4.7, ratified on 2026-10-28) A published series of values: an index, a statistics office's series, the counts a
+feed gives each day. The being is the series as its publisher names and revises it; its values are `measure`s of it, or
+what it `record`s in the form `series`, a line and what each of its positions holds. It is a sayable: it carries
+information, and no mass of its own.
+
+## core/law/kinds.yaml: kinds[model]
+
+(core 4.7, ratified on 2026-10-28) A fitted model: its form, its parameters and what it was fitted on. What it gives —
+a chance, a class it suggests — is derived through it, and never anyone's word: a model is no body at reason, so it says
+nothing (rule valency) and reads nothing, and its output is known by the tool or the session that ran it, `derive`.
+
 ## core/law/verbs.yaml: verbs[hold]
 
 (`as` ratified by the operator, 2026-10-18: "Ratify as proposed")
@@ -5164,6 +5195,24 @@ in a store that a host names in its `roots`. No hash is kept in git, because a h
 number to anyone who can count to fifteen digits. The gate never reads a store — a gate that passes on one machine
 and fails on another is a gate people turn off — so a store is checked where it is, by the save. A sealed entry is
 journalled in one line that says only that it was sealed.
+
+## core/law/core.yaml: verbs[possible]
+
+A PROBABILITY IS A DEGREE OF `possible` (core 4.7, ratified by the operator on 2026-10-28), not a verb of its own: the
+necessity square already holds what may be, and a new verb would say it twice. A `chance` says how much, and `within`
+the extent it speaks of — a day, a month, a region of any line that has regions. A weather service's chance of rain
+tomorrow, a delivery estimate's chance that a parcel comes late, a risk's chance in a year: each is `possible` of what it
+names, its degree beside it. Without them a `possible` means what it always meant. A chance is a ratio from 0 to 1,
+written as a bare number, a count of the unit one, or in another unit of ratio, a percent; rule `measured` refuses
+another quantity and a value outside it. Whoever expects it writes it: a person's estimate is said, a model's derived
+through the model.
+
+WHAT CAME IS SAID ON THE SAME SQUARE. Once its time has passed, what was possible in itself is necessary through what
+made it so, or impossible — Ibn Sina's possible, necessary through another. So the outcome is no new verb either:
+`necessary` of what came, through what makes it so (a receipt, a gauge's reading), and `impossible` of what did not.
+Rule squares already lets a `possible` stand beside the `impossible` of the same statement through another source — the
+forecaster's and the observer's — and refuses the two through one. A forecast nobody resolves stays open: an outcome
+nobody said is never read as one that did not come.
 
 ## core/law/core.yaml: verbs[pass]
 
@@ -6516,6 +6565,20 @@ two folders of two codes holds both ("multiple relations for possible concepts s
 WHAT SEVERAL CURSORS SHARE IS A COMPUTATION OF ITS OWN (the board's finding 4, ratified 2026-10-19): the contents two
 disks both hold, by the pair of folders they sit in, is not the intersection of each disk's neighbours on the board but a
 reading per relation, which the aspect names.
+
+## core/law/lines.yaml: operations[score]
+
+HOW GOOD A FORECASTER'S CHANCES ARE IS READ, NEVER STORED (core 4.7, ratified by the operator on 2026-10-28): the scores
+change as outcomes are said, so they are read from the chances and from what came each time they are asked. The Brier
+score (Brier, 1950) is the mean of the squared differences between chance and outcome, exact in fractions. The log score
+is the mean of the negative natural logarithm of the chance given to what came; it punishes a confident miss without
+bound, so a chance of 0 or 1 given against what came makes it unbounded, and the reading names that forecast. A score
+alone says little: the base rate, the share that came, is what one who knows nothing else would say each time, and its
+scores are what a forecaster must beat; the skill is one less the Brier score over the base rate's, a skill score
+against that reference. Calibration says whether the chances mean what they say — of the forecasts near 0.7, about
+seven in ten should have come — read in bins of equal width, the last holding 1, so every forecaster is binned alike.
+A forecast is resolved only by an outcome said through a source other than its own: a model that says what came of its
+own forecast is not read as having been right, and the reading names that outcome.
 
 ## core/law/lines.yaml: slots
 
