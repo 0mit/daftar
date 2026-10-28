@@ -724,16 +724,55 @@ class Store:
                 out.append((verb, dict(roles, id=sid), acts))
         return out
 
-    def statements_of(self, verb):
+    def statements_of(self, verb, acts=False):
         """(being, id, roles) of every statement of `verb` this store keeps, in the order they were put: what a reading
-        selects as entries (bin/reckon.py `select … store`). A verb the store keeps none of gives none."""
+        selects as entries (bin/reckon.py `select … store`). A verb the store keeps none of gives none. Read as known
+        at a moment (`known_at`), only the rows known then. With `acts`, each with the refs of the acts that know it."""
         if verb not in self.verbs():
             return
         cur = self.db.execute(f"SELECT * FROM {_q('v_' + _col(verb))} ORDER BY n")
         names = [d[0] for d in cur.description]
-        for row in cur:
-            sid, roles, _known, _n, being = self._decode(verb, row, names)
-            yield being, sid, roles
+        until = getattr(self, '_until', None)
+        for row in cur.fetchall() if until is not None else cur:
+            sid, roles, known, n, being = self._decode(verb, row, names)
+            if until is None or self._row_known(verb, n, known, roles):
+                yield (being, sid, roles, self._row_acts(verb, n, known)) if acts else (being, sid, roles)
+
+    def _row_acts(self, verb, n, known):
+        return ([self._act_ref(known)] if known is not None else []) + [self._act_ref(a) for (a,) in self.db.execute(
+            'SELECT act FROM known_also WHERE verb=? AND row=? ORDER BY act', (verb, n)).fetchall()]
+
+    # A STORE AS KNOWN AT A MOMENT (core 4.9): a row is known where one of the acts that know it — its `known`, and each
+    # of `known_also` — is at or before the moment, wherever the act is kept; a knowing act's own row, at its own `at`.
+    # The reckoner reads a reading that names its `known` input so (core/reckon.py `known_garden`, the beans alike).
+    def known_at(self, until, moment):
+        """Read from now on as known at `until` (UNIX ms); `moment` reads an act's `at` as UNIX ms, or None."""
+        self._until, self._moment, self._act_on, self._beings_on = until, moment, {}, None
+
+    def _act_known(self, n):
+        if n not in self._act_on:
+            ref = self._act_ref(n)
+            hit = self.resolve(ref) if ref else None
+            m = self._moment(hit[2].get('at')) if hit else None
+            self._act_on[n] = m is not None and m <= self._until
+        return self._act_on[n]
+
+    def _row_known(self, verb, n, known, roles):
+        if verb in self.law.knowing:
+            m = self._moment(roles.get('at'))
+            return m is not None and m <= self._until
+        if known is not None and self._act_known(known):
+            return True
+        return any(self._act_known(a) for (a,) in self.db.execute(
+            'SELECT act FROM known_also WHERE verb=? AND row=?', (verb, n)).fetchall())
+
+    def known_beings(self):
+        """Read as known at a moment, the beings one of whose rows was known then; else None."""
+        if getattr(self, '_until', None) is None:
+            return None
+        if self._beings_on is None:
+            self._beings_on = {b for v in self.verbs() for b, _sid, _r in self.statements_of(v)}
+        return self._beings_on
 
     def count(self):
         return sum(self.db.execute(f"SELECT COUNT(*) FROM {_q('v_' + _col(v))}").fetchone()[0] for v in self.verbs())

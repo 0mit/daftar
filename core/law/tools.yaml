@@ -66,6 +66,7 @@ tools:
   - { tool: store, family: between }
   - { tool: import, family: between }
   - { tool: export, family: between }
+  - { tool: intake, family: between }
   - { tool: run, family: run }
   - { tool: relay, family: between }
   - { tool: launch, family: launch }

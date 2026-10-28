@@ -49,6 +49,12 @@ jobs:
         run: python3 test/core_score.py
       - name: "core_markets: names of entities, markets and registers, the profile markets, feeds, filings and series, and units made by a rule (core 4.8) — an LEI, a MIC and a filer's codes held to their forms and check digits, an instrument taken and refused by the profile, RSS, Atom, JSON Feed, XBRL and SDMX read from small invented files and imported, a count and a price that are no row converted exactly"
         run: python3 test/core_markets.py
+      - name: "core_asof: a reading read over the garden as known at a moment (core 4.9) — what was said, read, made or derived at or before it, in a bean or a store, whatever moment its statements speak of; a backtest never reads what was said after its moment"
+        run: python3 test/core_asof.py
+      - name: "classifier: a classifier measured against a person's responses to its suggestions (core 4.9) — per scheme, precision beside recall at k over the latest N responses, read over the beans and a store, and its graduation a need whose probe is that reading"
+        run: python3 test/classifier.py
+      - name: "intake: a source's feeds read into a store, and only what the source permits (core 4.9) — on the loopback, never the internet: its course admitted, its terms, its robots rules, a rate per host, an honest user agent, conditional requests, redirects judged again, Retry-After kept; the walks of an intake, a source and a design"
+        run: python3 test/intake.py
       - name: "core_save: the save commits a garden of statements, the core's gate at the commit — the moment the save's, the law ratified"
         run: python3 test/core_save.py
       - name: "core_translate: a garden of today's beans (v0.49.0's law) written in statements, into a copy — every value placed, VOCAB.md the core's rows, the engine passing"

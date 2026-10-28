@@ -13,12 +13,27 @@ candidates, and a person picks the code (a model's pick is `inferred`).
     python3 bin/knowledge.py find tile setter [--scheme S]   # candidates ranked, each with its ancestry
     python3 bin/knowledge.py label <scheme> <code> <language>   # a label in another language, with its attribution
     python3 bin/knowledge.py at <position>              # COMPUTED anchors (bin/where.py): the cells it is in, its nearest
-    python3 bin/knowledge.py gold <file.tsv>            # recall@k of `find` against a gold set a person chose
+    python3 bin/knowledge.py gold <file.tsv> [--k 1,3,5]   # `find` against a gold set a person chose, per scheme
+    python3 bin/knowledge.py gold --by <person> [--of <classifier>] [--latest N] [--k 1,3,5] [--store <name>]
+                                                        # a classifier against the latest N responses a person gave
+    python3 bin/knowledge.py probe --json               # each classifier's measure, as its graduation need reads it
     python3 bin/knowledge.py resolve <scheme> <code>    # a lookup at the authority — refused until the flow law grants it
     python3 bin/knowledge.py bean <bean-id>             # a bean's `knowledge:` entries, resolved
     python3 bin/knowledge.py crosswalk 2522             # the fields an occupation draws on
     python3 bin/knowledge.py propose <bean>             # codes for a being: by its kind's positions, its title
     python3 bin/knowledge.py propose --at organ heart   # … for words, at a position of the ladder
+
+THE GOLD MEASURE gives, per scheme, precision beside recall at k: of a gold set a person chose (`<query> <scheme>
+<code>` a line, `find` measured), or of the latest N responses a person gave a classifier's suggestions. A suggestion is
+a `classify` by the classifier; a response, a `respond` by the person whose `of` names it (`confirms`, `disputes`,
+`abstains`). Of each being the person reviewed, the codes the person holds are those they confirmed and those they
+classed it by themselves; the classifier's suggestions are ranked as it wrote them, its first the one it ranks first.
+At k, precision is the share right of its first k suggestions that the person judged (confirmed, disputed, or holds by
+their own classify), and recall the share of the codes the person holds that are among its first k. A classifier's
+graduation is a need of its bean — `of` the responses it needs, `{ count: "<N>", unit: "{response}" }`, `from` the
+person who gives them — met by a reading whose inputs `precision-at-<k>-<scheme>`, `recall-at-<k>-<scheme>` and
+`responses-<scheme>` this tool reads (`probe --json`, the probe protocol of bin/routines.py). Read each time, never
+stored.
 
 `propose` reads only the schemes whose `at` names a position the being's kind holds — no taxon is proposed for a host —
 and, of a scheme of millions, streams its rows; `find` passes such schemes over unless one is named. It asks no
@@ -348,17 +363,262 @@ class Knowledge:
         return [r for r in self.rows("crosswalk-isco-08-isced-f-2013") if r.get("isco_08") == str(isco)]
 
 
-def _gold(k, path, at=5):
-    """recall@k of `find` against a gold set: rows `query<TAB>scheme<TAB>code` a person chose, `#` lines are comments."""
+def _tally(items, ks):
+    """{scheme: {k: [right, judged, held found, held]}} of items `(scheme, codes held, codes ranked, codes judged wrong)`,
+    and the whole under None: precision at k is right/judged of the first k ranked, recall at k held found/held."""
+    out = {}
+    for scheme, held, ranked, wrong in items:
+        for key in (scheme, None):
+            t = out.setdefault(key, {k: [0, 0, 0, 0] for k in ks})
+            for k in ks:
+                first = ranked[:k]
+                t[k][0] += sum(1 for c in first if c in held)
+                t[k][1] += sum(1 for c in first if c in held or c in wrong)
+                t[k][2] += len(set(first) & held)
+                t[k][3] += len(held)
+    return out
+
+
+def _ratio(n, d):
+    return "%d/%d = %.3f" % (n, d, n / d) if d else "not known (%d/0)" % n
+
+
+def _print_tally(t, ks, indent="  "):
+    for k in ks:
+        pn, pd, rn, rd = t[k]
+        print("%sat %d: precision %s   recall %s" % (indent, k, _ratio(pn, pd), _ratio(rn, rd)))
+
+
+def _ks(argv, default=(5,)):
+    v = _flag(argv, "--k")
+    try:
+        ks = sorted({int(x) for x in v.split(",") if x.strip()}) if v else list(default)
+    except ValueError:
+        ks = []
+    if not ks or min(ks) < 1:
+        raise SystemExit("knowledge: --k is one or more whole numbers above 0, `1,3,5`")
+    return ks
+
+
+def _flag(argv, name):
+    return argv[argv.index(name) + 1] if name in argv and argv.index(name) + 1 < len(argv) else None
+
+
+def _gold(k, path, ks=(5,)):
+    """`find` against a gold set: rows `query<TAB>scheme<TAB>code` a person chose, `#` lines are comments — each query's
+    one code right and every other candidate wrong — per scheme, precision and recall at each k."""
     rows = [l.rstrip("\n").split("\t") for l in open(path, encoding="utf-8") if l.strip() and not l.startswith("#")]
     rows = [r for r in rows if len(r) >= 3 and r[0] != "query"]
-    hit = 0
+    at, items = max(ks), []
     for q, s, c in (r[:3] for r in rows):
         top = [(x[1], x[2].get(k.decl[x[1]].get("key", "code"))) for x in k.find(q, k=at)]
         ok = (s, c) in top
-        hit += ok
+        items.append((s, {(s, c)}, top, set(top) - {(s, c)}))
         print("%s  %-32s %s %s%s" % ("hit " if ok else "MISS", q, s, c, "" if ok else "   got: " + ", ".join("%s %s" % t for t in top[:3])))
-    print("recall@%d = %d/%d" % (at, hit, len(rows)))
+    t = _tally(items, ks)
+    for s in sorted(x for x in t if x is not None):
+        print("%s (%d):" % (s, sum(1 for i in items if i[0] == s)))
+        _print_tally(t[s], ks)
+    for kk in ks:
+        print("recall@%d = %d/%d" % (kk, t.get(None, {kk: [0, 0, 0, 0]})[kk][2], len(rows)))
+
+
+# THE CLASSIFIER'S MEASURE (core 4.9, M9): its suggestions and a person's responses to them, read from the beans and the
+# stores this host keeps — one universe — each time it is asked.
+def _ref(x, here):
+    """(being, id) a statement reference names: `<being>#<id>`, a store's pointer to one, or an id of this bean."""
+    if not isinstance(x, str):
+        return None
+    if x.startswith("store:"):
+        x = x.split(":", 2)[-1]
+    return tuple(x.split("#", 1)) if "#" in x else (here, x)
+
+
+def _own(x, here):
+    return here if x == "self" else x.split(":", 2)[-1] if isinstance(x, str) and x.startswith("store:") else x
+
+
+def classifications(root, stores=None):
+    """([suggestion], [response]) of every `classify` and `respond` the garden's beans and the stores this host keeps
+    (or those named) hold: a suggestion {ref, being, by, scheme, code, rank}, a response {by, of, verdict, moment}, the
+    moment in UNIX ms — the response's own `at`, else the earliest act that knows it — or None."""
+    sys.path.insert(0, root)
+    from core import engine
+    from core.reckon import moment_ms
+    G = engine.Garden.read(root)
+    knowing = ("say", "read", "derive", "make")
+    sugg, resp, rank = [], [], 0
+    for bid in sorted(G.beans):
+        b = G.beans[bid]
+        if b.unread:
+            continue
+        acts = [(r.get("of"), moment_ms(r.get("at"))) for _i, v, r in b.items if v in knowing]
+        for _i, verb, r in b.items:
+            if "held" in r:
+                continue
+            if verb == "classify" and isinstance(r.get("as"), str):
+                rank += 1
+                sugg.append({"ref": (bid, r["id"]) if isinstance(r.get("id"), str) else None, "being": _own(r.get("of"), bid),
+                             "by": _own(r.get("by"), bid), "scheme": dmparse.split_coding(r["as"])[0], "code": r["as"],
+                             "rank": rank})
+            elif verb == "respond":
+                m = moment_ms(r.get("at"))
+                if m is None:
+                    sid = r.get("id")
+                    cover = [ms for of, ms in acts if sid is not None and sid in _listed(of)] or \
+                        [ms for of, ms in acts if of is None]
+                    m = min((x for x in cover if x is not None), default=None)
+                for x in _listed(r.get("of")):
+                    resp.append({"by": _own(r.get("by"), bid), "of": _ref(x, bid), "verdict": r.get("as"), "moment": m})
+    try:
+        import store as dmstore
+        kept = dmstore.kept_here(root)
+    except Exception:                      # noqa: BLE001 — a garden that records no host here keeps no store here
+        kept = {}
+    for name in sorted(kept if stores is None else stores):
+        try:
+            st = dmstore.open_store(name, root=root, create=False)
+        except Exception as e:             # noqa: BLE001 — a store not kept here is said, and read as empty
+            print("knowledge: the store %s is not read here: %s" % (name, e), file=sys.stderr)
+            continue
+        try:
+            verbs = st.verbs()
+            for being, sid, r in (st.statements_of("classify") if "classify" in verbs else ()):
+                if isinstance(r.get("as"), str):
+                    rank += 1
+                    sugg.append({"ref": (being, sid), "being": _own(r.get("of"), being), "by": _own(r.get("by"), being),
+                                 "scheme": dmparse.split_coding(r["as"])[0], "code": r["as"], "rank": rank})
+            for being, sid, r, refs in (st.statements_of("respond", acts=True) if "respond" in verbs else ()):
+                m = moment_ms(r.get("at"))
+                if m is None:
+                    found = [st.resolve(a) for a in refs]
+                    m = min((x for x in (moment_ms(h[2].get("at")) for h in found if h) if x is not None), default=None)
+                for x in _listed(r.get("of")):
+                    resp.append({"by": _own(r.get("by"), being), "of": _ref(x, being), "verdict": r.get("as"), "moment": m})
+        finally:
+            st.close()
+    return sugg, resp
+
+
+def gold_responses(root, person, classifier=None, latest=None, ks=(1, 3, 5), stores=None, read=None):
+    """{(classifier, scheme): {n, counts, tally: {k: [right, judged, held found, held]}}} — each classifier measured
+    against the latest `latest` responses `person` gave its suggestions in a scheme (every one, where None)."""
+    import collections
+    sugg, resp = read or classifications(root, stores)
+    by_ref = {s["ref"]: s for s in sugg if s["ref"]}
+    held_own = collections.defaultdict(set)
+    ranked = collections.defaultdict(list)
+    for s in sorted(sugg, key=lambda s: s["rank"]):
+        if s["by"] == person:
+            held_own[(s["being"], s["scheme"])].add(s["code"])
+        elif s["code"] not in ranked[(s["by"], s["being"], s["scheme"])]:
+            ranked[(s["by"], s["being"], s["scheme"])].append(s["code"])
+    groups = collections.defaultdict(list)
+    for order, r in enumerate(resp):
+        s = by_ref.get(r["of"])
+        if r["by"] != person or s is None or s["by"] == person or (classifier and s["by"] != classifier):
+            continue
+        groups[(s["by"], s["scheme"])].append((r["moment"], order, r["verdict"], s["being"], s["code"]))
+    out = {}
+    for (by, scheme), rs in sorted(groups.items()):
+        rs.sort(key=lambda x: (x[0] is not None, x[0] or 0, x[1]))   # the oldest first; a moment nobody knows, oldest
+        rs = rs[-latest:] if latest else rs
+        said = collections.defaultdict(dict)                         # being -> code -> the person's last verdict
+        for _m, _o, verdict, being, code in rs:
+            said[being][code] = verdict
+        items = []
+        for being, codes in said.items():
+            held = {c for c, v in codes.items() if v == "confirms"} | held_own[(being, scheme)]
+            wrong = {c for c, v in codes.items() if v == "disputes"} - held
+            items.append((scheme, held, ranked[(by, being, scheme)], wrong))
+        t = _tally(items, ks)
+        out[(by, scheme)] = {"n": len(rs), "counts": collections.Counter(v for _m, _o, v, _b, _c in rs),
+                             "tally": t.get(scheme, {k: [0, 0, 0, 0] for k in ks})}
+    return out
+
+
+def _gold_responses(root, argv):
+    person = _flag(argv, "--by")
+    latest = _flag(argv, "--latest")
+    if latest is not None and not (latest.isdigit() and int(latest) > 0):
+        print("knowledge: --latest is a whole number above 0"); return 2
+    ks = _ks(argv, (1, 3, 5))
+    stores = [x for i, x in enumerate(argv) if i and argv[i - 1] == "--store"] or None
+    got = gold_responses(root, person, _flag(argv, "--of"), int(latest) if latest else None, ks, stores)
+    if not got:
+        print("gold: %s gave no response to another's suggestion here%s" % (person, (" — of " + _flag(argv, "--of")) if _flag(argv, "--of") else ""))
+        return 1
+    for (by, scheme), g in got.items():
+        c = g["counts"]
+        print("gold: %s in %s — %s's latest %d response(s) to its suggestions (confirms %d, disputes %d, abstains %d)"
+              % (by, scheme, person, g["n"], c.get("confirms", 0), c.get("disputes", 0), c.get("abstains", 0)))
+        _print_tally(g["tally"], ks)
+    print("  (read now, never stored: a person's verdicts are the gold, and the classifier's own order its ranks)")
+    return 0
+
+
+PROBE_KEY = re.compile(r"^(precision|recall)-at-([1-9][0-9]*)-(.+)$|^responses-(.+)$")
+
+
+def _decimal(n, d):
+    """n/d as a decimal, cut (never rounded up) after twelve places: a reading never says more than was measured."""
+    from fractions import Fraction
+    from decimal import Decimal, ROUND_DOWN
+    v = Fraction(n, d)
+    return str((Decimal(v.numerator) / Decimal(v.denominator)).quantize(Decimal("1e-12"), rounding=ROUND_DOWN).normalize())
+
+
+def probe(root):
+    """The readings a classifier's graduation need is read against: for each bean whose `need` is `of` a count of
+    `{response}` and `from` a being, each input of a reading that meets it named `precision-at-<k>-<scheme>`,
+    `recall-at-<k>-<scheme>` or `responses-<scheme>`, read over the latest N responses that being gave."""
+    import datetime
+    sys.path.insert(0, root)
+    from core import engine
+    G = engine.Garden.read(root)
+    now = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
+    out, read = [], None
+    for bid in sorted(G.beans):
+        b = G.beans[bid]
+        if b.unread:
+            continue
+        reck = {r.get("id"): r for _i, v, r in b.items if v == "reckon"}
+        meets = {}
+        for _i, v, r in b.items:
+            if v == "meet":
+                meets.setdefault(str(r.get("of")), []).append(str(r.get("by")))
+        for _i, v, n in b.items:
+            if v != "need" or not isinstance(n.get("of"), dict) or n["of"].get("unit") != "{response}":
+                continue
+            person, count = n.get("from"), str(n["of"].get("count", ""))
+            if not isinstance(person, str) or not count.isdigit():
+                continue
+            keys = []
+            for rid in meets.get(str(n.get("id")), []):
+                for d in ((reck.get(rid) or {}).get("reading") or {}).get("inputs") or []:
+                    m = PROBE_KEY.match(str(d.get("name", ""))) if isinstance(d, dict) else None
+                    if m:
+                        keys.append((d["name"], m))
+            ks = sorted({int(m.group(2)) for _k, m in keys if m.group(2)}) or [1]
+            read = read or classifications(root)
+            got = gold_responses(root, person, bid, int(count), ks, read=read)
+            for key, m in keys:
+                scheme = m.group(3) or m.group(4)
+                g = got.get((bid, scheme))
+                row = {"key": key, "being": bid, "at": now, "instrument": "knowledge-gold",
+                       "detail": "%s's latest %s response(s) to %s's suggestions in %s" % (person, count, bid, scheme)}
+                if m.group(4):
+                    out.append(dict(row, property="number", value={"count": str(g["n"] if g else 0), "unit": "{response}"},
+                                    quality="ok"))
+                    continue
+                pn, pd, rn, rd = g["tally"][int(m.group(2))] if g else (0, 0, 0, 0)
+                num, den = (pn, pd) if m.group(1) == "precision" else (rn, rd)
+                if not den:
+                    out.append(dict(row, property="ratio", value=None, quality="empty",
+                                    why="no suggestion of %s in %s was judged by %s" % (bid, scheme, person)))
+                else:
+                    out.append(dict(row, property="ratio", value={"count": _decimal(num, den), "unit": "1"}, quality="ok"))
+    return {"tool": "knowledge", "version": "1", "at": now, "readings": out}
 
 
 def _at(k, root, position):
@@ -428,6 +688,15 @@ def main():
     a = sys.argv[1:]
     if not a or a[0] in ("-h", "--help"):
         print(__doc__); return
+    if a[0] == "gold" and "--by" in a:
+        sys.exit(_gold_responses(root, a))
+    if a[0] == "probe":
+        import json
+        doc = probe(root)
+        print(json.dumps(doc, ensure_ascii=False, indent=1) if "--json" in a else
+              "\n".join("%s %s = %s" % (r["being"], r["key"], (r["value"] or {}).get("count", r.get("why")))
+                        for r in doc["readings"]) or "knowledge: no classifier's graduation need here")
+        return
     k = Knowledge(root)
     cmd = a[0]
     if cmd == "show" and len(a) >= 3:
@@ -479,7 +748,7 @@ def main():
     elif cmd == "at" and len(a) >= 2:
         sys.exit(_at(k, root, a[1]))
     elif cmd == "gold" and len(a) >= 2:
-        _gold(k, a[1])
+        _gold(k, a[1], _ks(a))
     elif cmd == "propose" and len(a) >= 2:
         sys.exit(_propose(k, root, a[1:]))
     elif cmd == "resolve" and len(a) >= 3:

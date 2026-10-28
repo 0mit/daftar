@@ -251,6 +251,21 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.9** (2026-10-28, daftar v4.9.0, human-ratified rule-change) — **a reading as known at a moment, a
+  classifier's precision, and a polite intake.** MINOR. A reading may name its `known` input (core/law/lines.yaml
+  `selection_form.known`, the reading form's `known`): it is then read over the garden as known at the moment that
+  input gives — the statements one of whose knowing acts is at or before it, in a bean or a store, whatever moment they
+  speak of — the clock at that moment, its own declaration read as it stands; the gate refuses a `known` that names no
+  input. Before, a pinned reading read a store's rows whatever moment they were known, and a reading could not be pinned
+  before its own commit. bin/knowledge.py's gold measure gives precision beside recall at k, per scheme, of the finder
+  against a gold set a person chose and of a classifier against the latest N responses a person gave its suggestions
+  (`gold --by`), over the beans and the stores a host keeps; `probe --json` reads it for a classifier's graduation need.
+  bin/intake.py (`daftar intake`, core/law/tools.yaml): a source's feeds read into a store, and only what the source
+  permits — its course admitted on walk-source, a capability of the reader permitted by its terms, its host's robots
+  rules read by Python's urllib.robotparser — at a rate per host, with a user agent naming the reader, conditional
+  requests, each redirect judged again, and Retry-After kept; the walks walk-intake, walk-source and walk-design written
+  into a garden by `intake.py setup`, as bin/run.py writes walk-run. A unit written `1` in a reading's value is read as
+  the code it is. test/core_asof.py, test/classifier.py and test/intake.py, new suites. Every other verdict stands.
 - **core 4.8** (2026-10-28, daftar v4.8.0, human-ratified rule-change) — **names of entities and markets, a markets
   profile, feeds, filings and series, and units made by a rule.** MINOR. The namespaces `lei` (ISO 17442, its check
   digits held), `mic` (ISO 10383), `sec-cik`, `edinet`, `dart` and `twse` (a listed company's code, which names and does
