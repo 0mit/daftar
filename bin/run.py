@@ -74,8 +74,12 @@ The registry is $DAFTAR_RUNS, else ~/.local/state/daftar-runs (beside daftard's 
 private and holds its key); every command that lists says which. A supervisor writes its moves unjudged, their shapes
 fixed here; `python3 bin/store.py check` judges them where the store is kept, against the walk.
 """
-import argparse, contextlib, fcntl, hashlib, json, os, pwd, re, secrets, select, shutil, signal, socket, subprocess
+import argparse, contextlib, hashlib, json, os, re, secrets, select, shutil, signal, socket, subprocess
 import sys, time
+try:                    # a run is held by what Linux's kernel keeps (/proc, flock): elsewhere only the help is given
+    import fcntl, pwd
+except ImportError:
+    fcntl = pwd = None
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -197,14 +201,18 @@ class Busy(Refused):
 
 # ---- the machine and its processes ----------------------------------------------------------------------------------
 def boot_id():
-    with open('/proc/sys/kernel/random/boot_id') as f:
-        return f.read().strip()
+    """This boot's id, as Linux names it; None where there is no /proc to read it from."""
+    try:
+        with open('/proc/sys/kernel/random/boot_id') as f:
+            return f.read().strip()
+    except OSError:
+        return None
 
 
 BOOT = boot_id()
-HZ = os.sysconf('SC_CLK_TCK')
+HZ = os.sysconf('SC_CLK_TCK') if hasattr(os, 'sysconf') else 100
 HOST = os.environ.get('DAFTAR_HOST') or socket.gethostname().split('.')[0]
-LOGIN = pwd.getpwuid(os.getuid()).pw_name
+LOGIN = pwd.getpwuid(os.getuid()).pw_name if pwd else os.environ.get('USERNAME') or os.environ.get('USER') or ''
 
 
 def stat(pid):
@@ -1568,6 +1576,10 @@ def main(argv=None):
     x.add_argument('run'), x.add_argument('--lockfd', type=int), x.add_argument('--wait-key')
     x.add_argument('--watch', action='store_true')
     a = ap.parse_args(argv)
+    if BOOT is None or fcntl is None:
+        print(f"runs: a run is held by its identity as Linux keeps it (/proc, flock), and {sys.platform} has none: "
+              f"run it on Linux", file=sys.stderr)
+        return 2
     try:
         return command(a)
     except Refused as e:

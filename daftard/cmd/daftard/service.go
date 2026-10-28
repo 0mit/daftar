@@ -121,16 +121,16 @@ func installSystemd() {
 		fmt.Println("daftar: no service written:", err)
 		return
 	}
+	if _, err := exec.LookPath("systemctl"); err != nil { // no unit is written where nothing would read it
+		fmt.Println("daftar: this machine has no systemctl: start daftard with `daftard serve`, by whatever starts this account's programs")
+		return
+	}
 	path := unitPath()
 	if _, err := writeService(path, unitText(self, carried())); err != nil {
 		fmt.Println("daftar: the systemd unit was not written:", err)
 		return
 	}
 	fmt.Println("wrote", path)
-	if _, err := exec.LookPath("systemctl"); err != nil {
-		fmt.Println("daftar: this machine has no systemctl: start daftard with `daftard serve`, by whatever starts this account's programs")
-		return
-	}
 	for _, a := range [][]string{{"--user", "daemon-reload"}, {"--user", "enable", "daftard.service"}, {"--user", "restart", "daftard.service"}} {
 		if out, err := said("systemctl", a...); err != nil {
 			fmt.Printf("daftar: `systemctl %s` did not run (%s): start daftard with `daftard serve`\n", strings.Join(a, " "), firstLine(out, err))

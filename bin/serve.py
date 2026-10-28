@@ -28,20 +28,32 @@ def binary():
     return laid if os.path.isfile(laid) else shutil.which('daftard')
 
 
+def run(exe, args):
+    """daftard run with this process's own standard handles given it by name. On Windows daftard is a windowed program
+    (no console of its own), and what it prints reaches this one's output only through the handles it is given."""
+    sys.stdout.flush()
+    try:
+        std = {'stdin': sys.stdin, 'stdout': sys.stdout, 'stderr': sys.stderr}
+        for f in std.values():
+            f.fileno()
+    except (AttributeError, OSError, ValueError):
+        std = {}
+    return subprocess.run([exe, *args], **std).returncode
+
+
 def main(argv):
     exe = binary()
     if argv and argv[0] in ('-h', '--help'):
         print(__doc__.strip())
         if exe:
             print(f"\ndaftard, at {exe}:\n")
-            sys.stdout.flush()
-            subprocess.run([exe, 'help'])
+            run(exe, ['help'])
         return 0
     if exe is None:
         print("serve: daftard is not installed for this account on this machine: run `python3 bin/install.py --daftard` "
               "in a garden", file=sys.stderr)
         return 2
-    return subprocess.run([exe, *(argv or ['serve'])]).returncode
+    return run(exe, argv or ['serve'])
 
 
 if __name__ == '__main__':

@@ -14,7 +14,6 @@ path; one it does not serve is served by `python3 bin/install.py --daftard`, run
 import argparse
 import json
 import os
-import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -56,7 +55,7 @@ def main(argv):
     if not name:
         print(f"board: {why}: run `python3 bin/install.py --daftard` in it", file=sys.stderr)
         return 2
-    return subprocess.run([exe, 'open', f'/board?g={name}']).returncode
+    return dmserve.run(exe, ['open', f'/board?g={name}'])
 
 
 if __name__ == '__main__':
