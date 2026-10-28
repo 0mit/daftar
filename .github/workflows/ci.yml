@@ -356,3 +356,5 @@ jobs:
         run: go vet ./...
       - name: "daftard: every package tested, its Go reader and core/read.py reading one garden of this commit alike, and its worker's tests against this tree"
         run: python3 test/daftard.py
+      - name: "install: one install and one entry on this system — daftard built and laid by bin/install.py --daftard, a garden served with its routines and a page on its loopback, the release's binary taken by its SHA-256 and its source by its signed tag, `daftar serve`, `daftar board` and `daftar run` each with its help"
+        run: python3 test/install.py

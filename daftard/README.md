@@ -155,9 +155,28 @@ fetched to build.
 
 ## Use
 
-    daftard install --garden <path> --python <python> --title "<title>" --name <n> [--sync] [--exchange] \
-                    [--steward "who:title:reach"]     # daftard.json; on Windows also the logon task and the icon «دفتر»
-    daftard serve | open | status | stop | error <E-XXXX-XXXX> | version
+    daftard install --garden <path> --python <python> --title "<title>" --name <n> [--sync] [--exchange] [--routines] \
+                    [--steward "who:title:reach"] [--no-service]   # daftard.json, and what keeps daftard running
+    daftard serve | open | status | stop | error <E-XXXX-XXXX> | version | help
+
+A garden's own `python3 bin/install.py --daftard` runs this for it (INSTALL.md): it lays the binary in the state folder
+(`bin/daftard`), built from this folder where Go is and taken from the release's assets where it is not, and then asks
+`daftard install` for the garden it is run in, with `--routines`. An install again keeps what `daftard.json` holds —
+the machine's settings, the other gardens, and of this garden all that no flag names — and refuses a file that does not
+read rather than write over it. What keeps daftard running, unless `--no-service`: on Windows the logon task «Daftar»,
+the desktop icon «دفتر» and `daftar:` links; on Linux the systemd user unit `daftard.service` (`systemctl --user`;
+`loginctl enable-linger` to run it with nobody logged in) and `daftar:` links where there is a desktop; on macOS the
+launchd agent `daftar.daftard` in `~/Library/LaunchAgents`, started at login and again whenever it ends other than by
+`daftard stop`. Each carries the PATH and `DAFTARD_STATE` it was installed with. With `routines: true`, daftard asks
+the garden's `bin/routines.py tick` each minute; so on macOS, where a routine was a launchd job of its own, daftard is
+now the one job launchd keeps, and the clock of every routine. A routine another scheduler still runs is that
+scheduler's (`be … as: presence` on its walk), and the tick leaves it alone: its job is retired once daftard ticks it,
+and never runs beside it.
+
+A release's binaries are built by CI from the tagged commit (`.github/workflows/release.yml`) and attached to the tag's
+GitHub release: `daftard-linux-amd64`, `daftard-linux-arm64`, `daftard-darwin-arm64`, `daftard-darwin-amd64` and
+`daftard-windows-amd64.exe`, each with its SHA-256 beside it (`<binary>.sha256`), and `daftard-NOTICE.txt`, the notices
+and licences of what a binary carries.
 
 In `daftard.json`, beside each garden's `path`, `python`, `title` and `lang` (and `kind`: `dashboard`, the default, for
 a garden that carries its own handplace; `board`, served by another tree's board; `core`, a garden of the core alone,

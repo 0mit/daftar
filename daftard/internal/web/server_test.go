@@ -70,6 +70,9 @@ func TestKeyRedirectsOnlyToALanding(t *testing.T) {
 		// a garden's Odoo screens, as `daftard open` passes them on (its door, odoo.go), and in no other form
 		"to=%2Fodoo%3Fg%3Dhome%26series%3D19.0": "/odoo?g=home&series=19.0",
 		"to=%2Fodoo%3Fseries%3D19.0%26g%3Dhome": "/",
+		// a garden's board, as `daftar board` passes it on through `daftard open`
+		"to=%2Fboard%3Fg%3Dhome":                        "/board?g=home",
+		"to=%2Fboard%3Fg%3Dhome%26then%3D%2Fapi%2Fstop": "/",
 	}
 	for in, want := range cases {
 		code, once := door(s, "k")

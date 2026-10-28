@@ -198,9 +198,10 @@ def signing():
     if fmt == 'ssh':
         fpr = dminstall.ssh_fingerprint(key)
         if not fpr:
-            refuse(f"commit.gpgsign is set and the key this clone signs with ({key or 'none: user.signingkey is not '
-                   f'set'}) is no SSH key ssh-keygen reads a fingerprint of — nothing written. Name one: {PY} "
-                   f"bin/install.py --sign signs with this machine's agent key")
+            named = key or 'none: user.signingkey is not set'     # a replacement field on one line: Python 3.11 reads it
+            refuse(f"commit.gpgsign is set and the key this clone signs with ({named}) is no SSH key ssh-keygen reads a "
+                   f"fingerprint of — nothing written. Name one: {PY} bin/install.py --sign signs with this machine's "
+                   f"agent key")
         ratifying = fpr in {dminstall.ssh_fingerprint(t) for t in told}
     else:                       # an OpenPGP key as the clone names it, compared by its long id (its last 16 hex digits)
         def long_id(t):

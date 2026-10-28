@@ -38,6 +38,10 @@ func (s *Server) FrontHandler(daemons []Daemon) http.Handler {
 			if d, ok := byName[strings.SplitN(strings.TrimPrefix(to, "/go/"), "/", 2)[0]]; ok {
 				return d, true
 			}
+		} else if BoardRe.MatchString(to) { // a garden's board, on that garden's own daemon
+			if d, ok := byName[strings.TrimPrefix(to, "/board?g=")]; ok {
+				return d, true
+			}
 		}
 		if len(daemons) > 0 {
 			return daemons[0], true

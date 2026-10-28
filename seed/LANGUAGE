@@ -43,6 +43,8 @@ bin/pass.py
 bin/held.py
 bin/store.py
 bin/run.py
+bin/serve.py
+bin/board.py
 bin/import.py
 bin/group.py
 bin/export.py

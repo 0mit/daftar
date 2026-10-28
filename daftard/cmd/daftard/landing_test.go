@@ -17,6 +17,9 @@ func TestLanding(t *testing.T) {
 		"daftar:/odoo?g=home":                      "/odoo?g=home",
 		"/odoo?g=my-garden&series=19.0":            "/odoo?g=my-garden&series=19.0",
 		"/odoo?g=home&series=17.0&asof=2026-10-01": "/odoo?g=home&series=17.0&asof=2026-10-01",
+		// a garden's board (BoardRe), as its path alone
+		"/board?g=home":      "/board?g=home",
+		"/board?g=my-garden": "/board?g=my-garden",
 	}
 	for in, want := range good {
 		if got, ok := landing(in); !ok || got != want {
@@ -31,6 +34,8 @@ func TestLanding(t *testing.T) {
 		"/odoo?g=home%0d%0aSet-Cookie:a=b", "/odoo/web?g=home", "//evil.example/odoo?g=home", "daftar://odoo/x?g=home",
 		"daftar://odoo?g=home#top", "daftar://evil.example/odoo?g=home", "daftar://user@odoo?g=home",
 		"https://evil.example/odoo?g=home", "daftar://odoo?g=home&series=19", "daftar:odoo/web?g=home",
+		"/board", "/board?g=", "/board?g=home&then=/api/stop", "/board/?g=home", "/board?g=home#l=x", "//evil.example/board?g=home",
+		"daftar://board?g=home", "/board?g=home%0d%0aSet-Cookie:a=b", "/board?g=../x",
 	} {
 		if got, ok := landing(in); ok {
 			t.Errorf("landing(%q) = %q; want refused", in, got)
@@ -46,6 +51,7 @@ func TestOpenAddress(t *testing.T) {
 		"daftar://odoo?g=home&series=19.0": "/?once=c&to=%2Fodoo%3Fg%3Dhome%26series%3D19.0",
 		"daftar://go/home/pending/x":       "/?once=c&to=%2Fgo%2Fhome%2Fpending%2Fx",
 		"home":                             "/?once=c&g=home",
+		"/board?g=home":                    "/?once=c&to=%2Fboard%3Fg%3Dhome",
 	}
 	for in, want := range cases {
 		if got, read := address(base, "c", []string{in}); got != base+want || !read {
