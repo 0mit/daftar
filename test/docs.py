@@ -247,7 +247,26 @@ check("...and every suite test/timings.tsv measures is one the release runs", _t
 # overwrite the gardener's. A copy is a second statement; this holds it equal to the first.
 _lic = {os.path.relpath(f, ROOT).replace(os.sep, "/"): "LICENSES/" + os.path.basename(f)[len("LICENSE-"):]
         for f in glob.glob(os.path.join(ROOT, "seed", "LICENSE-*.txt"))}
-_texts = {"LICENSES/" + os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "LICENSES", "*.txt"))}
+# A LICENCE ONLY daftard/'s FILES ARE UNDER is no garden's: a release lays none of daftard's files in a garden (seed/LANGUAGE),
+# so its terms are the repository's (REUSE.toml, LICENSES/) and not under seed/. Read from REUSE.toml, which gives every path.
+import tomllib  # noqa: E402
+_reuse = tomllib.load(open(os.path.join(ROOT, "REUSE.toml"), "rb")).get("annotations", [])
+_ids = lambda e: set(re.findall(r"[A-Za-z0-9.+-]+", e)) - {"WITH", "AND", "OR"}  # noqa: E731
+
+
+def _licences(daftard):
+    """The licences of REUSE.toml's blocks whose paths are all daftard/'s (True), or not (False)."""
+    out = set()
+    for a in _reuse:
+        paths = a["path"] if isinstance(a["path"], list) else [a["path"]]
+        if all(p.startswith("daftard/") for p in paths) == daftard:
+            out |= _ids(a["SPDX-License-Identifier"])
+    return out
+
+
+_daftard_only = _licences(True) - _licences(False)
+_texts = {"LICENSES/" + os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "LICENSES", "*.txt"))
+          if os.path.basename(f)[:-len(".txt")] not in _daftard_only}
 _differ = [a for a, b in sorted(_lic.items()) if not os.path.isfile(os.path.join(ROOT, b))
            or open(os.path.join(ROOT, a), "rb").read() != open(os.path.join(ROOT, b), "rb").read()]
 check("every licence text a garden receives under seed/ is the repository's own in LICENSES/, byte for byte, and "
@@ -255,8 +274,11 @@ check("every licence text a garden receives under seed/ is the repository's own 
       f"differ: {_differ}; missing from seed/: {sorted(_texts - set(_lic.values()))}")
 # NO DOCUMENT NAMES A LICENCE THE REPOSITORY IS NOT UNDER. A stale line saying another licence is a second statement of the
 # terms, and read against whoever wrote it. NOTICE says, once, what the releases before it were under; the history is
-# the record of what was.
-_other = re.compile(r"Apache[- ]2\.0|Apache License|MIT License|\bGPL-2\.0|\bBSD-[23]-Clause")
+# the record of what was. A licence REUSE.toml gives a path is one the repository is under (daftard/'s vendored module's).
+_under = set().union(*(_ids(a["SPDX-License-Identifier"]) for a in _reuse))
+_other = re.compile("|".join(p for i, p in (("Apache-2.0", r"Apache[- ]2\.0|Apache License"), ("MIT", r"MIT License"),
+                                             ("GPL-2.0", r"\bGPL-2\.0"), ("BSD-2-Clause", r"\bBSD-2-Clause"),
+                                             ("BSD-3-Clause", r"\bBSD-3-Clause")) if i not in _under))
 _where = [f for f in subprocess.run(["git", "-C", ROOT, "ls-files"], capture_output=True, text=True,
                                     encoding="utf-8").stdout.split()
           if f.endswith((".md", ".html", ".py", ".toml")) and f not in ("HISTORY.md", "test/docs.py")

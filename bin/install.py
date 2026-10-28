@@ -128,7 +128,7 @@ def choose_python(repo):
 
 
 def state_dir():
-    """This account's daftar state folder, which is daftard's own (daftar-hub internal/state): DAFTARD_STATE where it
+    """This account's daftar state folder, which is daftard's own (daftard/internal/state): DAFTARD_STATE where it
     is set, %LOCALAPPDATA%\\Daftar on Windows, $XDG_STATE_HOME/daftar (~/.local/state/daftar) elsewhere."""
     if os.environ.get('DAFTARD_STATE'):
         return os.path.normpath(os.environ['DAFTARD_STATE'])

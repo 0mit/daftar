@@ -251,6 +251,22 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.13** (2026-10-28, daftar v4.13.0, human-ratified rule-change) — **daftard in daftar's repository.** MINOR.
+  daftard, the daemon one per machine that serves the gardens it holds, is the Go module `daftard/`
+  (`github.com/0mit/daftar/daftard`), with its Python worker, its pages and their tests beside it: built, tested and
+  released at the commit of the law and the tools its worker runs, so a tag names one daftard. Its tree came as one
+  commit, without the history of the repository it was kept in, and only after an audit: the leak guard
+  (`bin/public.py`), with each garden its maintainers keep, over every file and every commit message it had, and each
+  word a guard found rewritten with an invented one or taken out of a test's data. Its terms are daftar's code terms
+  (REUSE.toml, with the garden exception); what it carries of others' is named in NOTICE, each under its own terms:
+  golang.org/x/text (BSD 3-Clause, its patent grant kept), the Vazirmatn font (OFL 1.1), OpenStreetMap's place names in
+  its tests' answer keys (ODbL 1.0). A new suite, `test/daftard.py`, runs in CI on Linux, macOS and Windows: `go build`,
+  `go vet` and `go test` of every package; its Go reader and this commit's `core/read.py` reading each bean of one
+  garden grown from the tree alike, the guides' worked beans among them, and the reader's hard cases; and the worker's
+  own tests, given this tree. The law: `seed/PUBLIC-ALLOW`'s reason for `daftard` names its folder; no word it allows
+  or refuses changed, and no rule changed. `hub` keeps one meaning, a garden's shared repository that judges each push
+  (`bin/hub.py`).
+
 - **core 4.12** (2026-10-28, daftar v4.12.0, human-ratified rule-change) — **the mechanics' words, a designation's
   check, a need found benign, an expectation, and a session's watermark.** MINOR. A body says what it is by its own make
   in its own bean, once, with a new verb of the core, `specify`: its compliance, its shape (a row of `outlines`), its

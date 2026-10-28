@@ -1,0 +1,1695 @@
+[
+ {
+  "q": "ته",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-tehran-province",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-tehran",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-tehran-varamin-highway-5",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-w209018402",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-tehran-saveh-road-4",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-tehran-saveh-road",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-tehran-saveh-road-2",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-tehran-varamin-hwy",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-taal",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-tabark",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "تهران",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-tehran",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-tehran-blvd",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w256942544",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w303772338",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w313832216",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w1063961817",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w230268268",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w458154135",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w524849522",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w677208159",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "کاخ",
+  "within": "ir-tehran",
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-palestine-street-3",
+    "score": 1.215,
+    "field": "alias",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-palestine-street-4",
+    "score": 1.215,
+    "field": "alias",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-felestin-square",
+    "score": 1.0328,
+    "field": "alias",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n4449329633",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-n1170088572",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n5904531145",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-kakhk",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-mohavate-kakh",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-west-kakh-sa-adat-abad-street",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-east-kakh-sa-adat-abad-street",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "فلسطین",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-w112987868",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w347894184",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-felestin-2",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-felestin",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-felestin-square-4",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w124641404",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w178143265",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-felestin-square-5",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w199212584",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w200464761",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "اندیشه شهریار",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-n3023034615",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n3023036660",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-andisheh-2",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-shahriyar",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-andishe",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-r6557750",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-w1136373393",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-w162271904",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-w174896867",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-w209018397",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "علیشاه عوض",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-n4466315677",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n6290726181",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n9107831107",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n12212668206",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-qeshlaq-e-hajji-avaz",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-alishah",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n4047553852",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-ali-shah",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n4418017262",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n4418017263",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "منطقه ۶",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-district-6-6",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-zone-6-2",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-district-6",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-district-6-5",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-district-6-2",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-district-6-3",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-district-6-4",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-district-6-7",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-quarter-3-of-district-6",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-quarter-2-of-district-6",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "تهرن",
+  "within": null,
+  "kinds": "all",
+  "results": []
+ },
+ {
+  "q": "اصفهن",
+  "within": null,
+  "kinds": "city",
+  "results": [
+   {
+    "code": "ir-esfahak",
+    "score": 0.175,
+    "field": "name",
+    "match": "typo",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "karaj",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-karaj",
+    "score": 0.8,
+    "field": "name_en",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-karaj-e-sofla",
+    "score": 0.68,
+    "field": "name_en",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-karaj-e-olya",
+    "score": 0.68,
+    "field": "name_en",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-karaj-mahdasht-road",
+    "score": 0.68,
+    "field": "name_en",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-karaj-shahriyar-road-3",
+    "score": 0.68,
+    "field": "name_en",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-karaj-no",
+    "score": 0.68,
+    "field": "name_en",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-karaj-bileghan",
+    "score": 0.68,
+    "field": "name_en",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-karaj-shahriyar-road",
+    "score": 0.68,
+    "field": "name_en",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-karaj-bileghan-3",
+    "score": 0.68,
+    "field": "name_en",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-karaj-shahriyar-road-2",
+    "score": 0.68,
+    "field": "name_en",
+    "match": "phrase",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "ولیعصر",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-n12328290475",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-n12560847655",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-n13372167350",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w122807881",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w162110900",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w175074009",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w175884587",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w205615278",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-valie-asre-street",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-valiasr-boulevard-8",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "دانشگاه تهران",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-tehran-university",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-shahrak-daneshgah-tehran",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-r20190319",
+    "score": 0.75,
+    "field": "name",
+    "match": "words",
+    "via": null
+   },
+   {
+    "code": "ir-keshavarz-boulevard-26",
+    "score": 0.35,
+    "field": "parent",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-valiasr-square-12",
+    "score": 0.35,
+    "field": "parent",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-italia-street",
+    "score": 0.35,
+    "field": "parent",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-qods-3",
+    "score": 0.35,
+    "field": "parent",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-north-kargar-street-4",
+    "score": 0.35,
+    "field": "parent",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-nosrat",
+    "score": 0.35,
+    "field": "parent",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-vesal-e-shirazi-street",
+    "score": 0.35,
+    "field": "parent",
+    "match": "exact",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "ری",
+  "within": null,
+  "kinds": "city",
+  "results": [
+   {
+    "code": "ir-rey",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-tehran",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-rey-3"
+   },
+   {
+    "code": "ir-lavar-e-ra-is-gholam",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n4466489553",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n4466489587",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n4466489992",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n4466490065",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n4466490068",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-riz",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-bandar-rig-city",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "قم",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-qom",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-qom-street-5",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w200444348",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-jamkaran",
+    "score": 0.9,
+    "field": "alias",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-qom-province",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-qombovan",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n2016471757",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-qamech-abad",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n4424252080",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-qamsar",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "خيابان كاخ",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-w162790763",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-w243244748",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-w251401465",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-w352055605",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-w884010074",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n1170088572",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-khiaban",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n4449329633",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-khiaban-22aban",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   },
+   {
+    "code": "ir-n5904531145",
+    "score": 0.225,
+    "field": "name",
+    "match": "partial",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "شهرک غرب",
+  "within": null,
+  "kinds": "area",
+  "results": [
+   {
+    "code": "ir-shahrak-e-gharb",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-shahrak-e-gharb-2",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-gharb",
+    "score": 0.75,
+    "field": "name",
+    "match": "words",
+    "via": null
+   },
+   {
+    "code": "ir-n9536299684",
+    "score": 0.75,
+    "field": "name",
+    "match": "words",
+    "via": null
+   },
+   {
+    "code": "ir-arazi-artesh",
+    "score": 0.25,
+    "field": "neighbour",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-elahiyeh-faze-2",
+    "score": 0.25,
+    "field": "neighbour",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-shahrak-e-zagros",
+    "score": 0.25,
+    "field": "neighbour",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-shahrak-e-issar",
+    "score": 0.25,
+    "field": "neighbour",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-shahrak-e-shahrdari",
+    "score": 0.25,
+    "field": "neighbour",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-shahrak-e-mehregan",
+    "score": 0.25,
+    "field": "neighbour",
+    "match": "exact",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "باغ",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-bagh",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-bagh-2",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-n4459618243",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-n4491452674",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-kuchabagh",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-bagh-3",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-n13370414985",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-baghan",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n4466488960",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n4466488973",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "کاخ",
+  "within": null,
+  "kinds": "city",
+  "results": [
+   {
+    "code": "ir-n4449329633",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-tehran",
+    "score": 0.9,
+    "field": "alias",
+    "match": "exact",
+    "via": "ir-palestine-street-3"
+   },
+   {
+    "code": "ir-n1170088572",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n5904531145",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-kakhk",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-isfahan",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": "ir-west-kakh-sa-adat-abad-street"
+   },
+   {
+    "code": "ir-chalus",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": "ir-mohavate-kakh"
+   },
+   {
+    "code": "ir-dul-bakh",
+    "score": 0.765,
+    "field": "alias",
+    "match": "phrase",
+    "via": null
+   },
+   {
+    "code": "ir-n7288499814",
+    "score": 0.6,
+    "field": "name",
+    "match": "compact",
+    "via": null
+   },
+   {
+    "code": "ir-r8199755",
+    "score": 0.6,
+    "field": "name",
+    "match": "compact",
+    "via": "ir-w112987931"
+   }
+  ]
+ },
+ {
+  "q": "فلسطین",
+  "within": null,
+  "kinds": "city",
+  "results": [
+   {
+    "code": "ir-isfahan",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w625783848"
+   },
+   {
+    "code": "ir-r8199755",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w112987868"
+   },
+   {
+    "code": "ir-mahallat",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w347894184"
+   },
+   {
+    "code": "ir-quchan",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-felestin-square-2"
+   },
+   {
+    "code": "ir-neyriz",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w200523199"
+   },
+   {
+    "code": "ir-fasa",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w70842530"
+   },
+   {
+    "code": "ir-gerash",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-felestin-boulevard-7"
+   },
+   {
+    "code": "ir-eghlid",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-felestin-boulevard-5"
+   },
+   {
+    "code": "ir-shahedshahr",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w459527072"
+   },
+   {
+    "code": "ir-sonqor",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w378275892"
+   }
+  ]
+ },
+ {
+  "q": "کرشته",
+  "within": null,
+  "kinds": "city",
+  "results": [
+   {
+    "code": "ir-shahriyar",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-n6264257769"
+   },
+   {
+    "code": "ir-karasht",
+    "score": 0.2,
+    "field": "name",
+    "match": "typo",
+    "via": null
+   },
+   {
+    "code": "ir-pardis-4",
+    "score": 0.2,
+    "field": "name",
+    "match": "typo",
+    "via": "ir-w613132612"
+   },
+   {
+    "code": "ir-n10215155193",
+    "score": 0.07,
+    "field": "parent",
+    "match": "typo",
+    "via": null
+   },
+   {
+    "code": "ir-n8971721257",
+    "score": 0.07,
+    "field": "parent",
+    "match": "typo",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "کیورثیه",
+  "within": null,
+  "kinds": "city",
+  "results": [
+   {
+    "code": "ir-shahriyar",
+    "score": 0.1909,
+    "field": "name",
+    "match": "typo",
+    "via": "ir-n8018890334"
+   }
+  ]
+ },
+ {
+  "q": "فلسطین",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-w112987868",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w347894184",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-felestin-2",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-felestin",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-felestin-square-4",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w124641404",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w178143265",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-felestin-square-5",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w199212584",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w200464761",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "بعثت",
+  "within": null,
+  "kinds": "all",
+  "results": [
+   {
+    "code": "ir-n5022954902",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w118450248",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w162205396",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w211335742",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w235104684",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w313555890",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w318545466",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-besat-boulevard",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-w609925874",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-n4761664410",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   }
+  ]
+ },
+ {
+  "q": "بعثت",
+  "within": null,
+  "kinds": "city",
+  "results": [
+   {
+    "code": "ir-qarchak",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w609925874"
+   },
+   {
+    "code": "ir-zabol",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w118450248"
+   },
+   {
+    "code": "ir-sain-qaleh-city",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w313555890"
+   },
+   {
+    "code": "ir-khorramdarreh",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w235104684"
+   },
+   {
+    "code": "ir-isfahan",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-beasat-4"
+   },
+   {
+    "code": "ir-semnan",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w162205396"
+   },
+   {
+    "code": "ir-khomeyni-shahr",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w374236902"
+   },
+   {
+    "code": "ir-bushehr",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w348453799"
+   },
+   {
+    "code": "ir-borazjan",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-w318545466"
+   },
+   {
+    "code": "ir-parand",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-besat-boulevard"
+   }
+  ]
+ },
+ {
+  "q": "محلات",
+  "within": null,
+  "kinds": "city",
+  "results": [
+   {
+    "code": "ir-mahallat",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": null
+   },
+   {
+    "code": "ir-arak",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-mahallat-boulevard"
+   },
+   {
+    "code": "ir-tehran",
+    "score": 1.0,
+    "field": "name",
+    "match": "exact",
+    "via": "ir-mahallat-blvd"
+   },
+   {
+    "code": "ir-r8199755",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": "ir-mahallati"
+   },
+   {
+    "code": "ir-semnan",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": "ir-n5310343261"
+   },
+   {
+    "code": "ir-qods",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": "ir-w378719278"
+   },
+   {
+    "code": "ir-parand",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": "ir-mahallati-street"
+   },
+   {
+    "code": "ir-izadkhast",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": "ir-w538321152"
+   },
+   {
+    "code": "ir-pakdasht",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": "ir-w406671549"
+   },
+   {
+    "code": "ir-r17581038",
+    "score": 0.85,
+    "field": "name",
+    "match": "phrase",
+    "via": "ir-w178798468"
+   }
+  ]
+ }
+]

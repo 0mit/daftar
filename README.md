@@ -266,6 +266,7 @@ the ratification, so a proposal carries its evidence: see [CONTRIBUTING.md](CONT
 | `bin/daftar.py` | the one entry: `daftar catalog` (the language and its relations), `daftar why`, `daftar rules`, `daftar form` |
 | `bin/<verb>.py` | the other tools — merge, proposals between gardens (`propose`), what is owed (`ledger`), readings computed from what is recorded (`reckon`), upgrade, rules (`rules`), reasons (`why`), safe edits, the journal entry (`journal`), a change saved in one command (`save`), cursors, sessions, staleness, routines (what a machine runs, when, what it waits on and what proves it), calendars, coordinates, units. Each says what it does in its first lines |
 | `assets/<profile>/` | what a profile brings besides its rules — the `view` profile's page drawer and server, `assets/view/README.md` |
+| `daftard/` | daftard, one per machine: it serves the gardens it holds — their pages, their sync with their hubs, what waits and for whom, a machine's routines — through each garden's own tools; a Go module with its Python worker and its pages, `daftard/README.md` |
 | `MODEL.md`, `CHECKLIST.md`, `MERGE.md` | the model, the write procedure, the merge algebra |
 | `seed/RATIONALE.md` | why each rule is as it is, keyed by the law item's own path; `python3 bin/why.py <name>` reads law and reason together |
 | `AGENTS.md`, `.claude/skills/daftar/` | one text, twice: the door for an agent with a shell — a reading order, no rules. The second is one tool's adapter, which loads the door by itself; another tool's adapter would stand beside it |
