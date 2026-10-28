@@ -144,7 +144,7 @@ func TestInstallRunsTheGardensOwnHubInit(t *testing.T) {
 	stand(`import os, sys
 if sys.argv[1] == 'key':
     print('hub: no key yet'); sys.exit(1)
-open(` + "'" + strings.ReplaceAll(ran, `\`, `\\`) + "'" + `, 'w').write(' '.join(sys.argv[1:]) + '\n' + os.environ['DAFTARD_STATE'])
+open(` + "'" + strings.ReplaceAll(ran, `\`, `\\`) + "'" + `, 'w', newline='\n').write(' '.join(sys.argv[1:]) + '\n' + os.environ['DAFTARD_STATE'])
 print('hub: the key of this hub: SHA256:x')
 `)
 	out, err := Install(python, g, state)

@@ -58,7 +58,10 @@ def org(bid, title, *st):
 
 
 def git(*a, stdin=None):
-    return subprocess.run(['git', *a], cwd=G, capture_output=True, text=True, input=stdin, env=grow.ENV).stdout.strip()
+    """git in the garden; what it reads given as bytes, so no system turns its line ends (Windows' text mode writes \\r\\n,
+    and a tree's listing would name `labels.json\\r`)."""
+    return subprocess.run(['git', *a], cwd=G, capture_output=True, env=grow.ENV,
+                          input=None if stdin is None else stdin.encode('utf-8')).stdout.decode('utf-8', 'replace').strip()
 
 
 def favourites(person, favs):

@@ -287,11 +287,14 @@ try:
     check("the register's refusal: said, with the kind of its exception, never its own words",
           isinstance(got, dict) and 'error' in got and MARK not in json.dumps(got) and 'ValidationError' in json.dumps(got),
           got)
-    os.chmod(keys / 'g.key', 0o644)
-    got, sent = ask('ana', 'web_search_read', domain=[], specification={'name': {}})
-    os.chmod(keys / 'g.key', 0o600)
-    check('a key file others may read: refused, nothing asked', isinstance(got, dict) and 'error' in got and not sent,
-          (got, sent))
+    if os.name == 'posix':          # where a file's mode says who may read it, as python/register.py reads it
+        os.chmod(keys / 'g.key', 0o644)
+        got, sent = ask('ana', 'web_search_read', domain=[], specification={'name': {}})
+        os.chmod(keys / 'g.key', 0o600)
+        check('a key file others may read: refused, nothing asked', isinstance(got, dict) and 'error' in got and not sent,
+              (got, sent))
+    else:
+        print("NOTE  a key file others may read: not asked here, where a file's mode says nothing of who may read it")
     w.close()
     w = worker(c=dict(conf, url='http://203.0.113.10:8069'))
     got, sent = ask('ana', 'web_search_read', domain=[], specification={'name': {}})

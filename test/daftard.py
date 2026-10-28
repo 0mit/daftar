@@ -100,10 +100,13 @@ try:
     tests = sorted(glob.glob(os.path.join(D, "test", "worker", "*_test.py"))
                    + glob.glob(os.path.join(D, "test", "importers", "*_test.py")))
     check(f"daftard's worker has its tests ({len(tests)})", len(tests) >= 20, tests)
+    # run as daftard runs its Python (daftard/internal/worker): in UTF-8 mode, whatever the system's own encoding
+    env = dict(os.environ, DAFTARD_NOTIFY="off", PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
     for t in tests:
-        r, out, last = run(py, t, ROOT, env=dict(os.environ, DAFTARD_NOTIFY="off"), last=True)
+        r, out, last = run(py, t, ROOT, env=env, last=True)
         name = os.path.relpath(t, D).replace(os.sep, "/")
-        check(f"{name} against this tree: {last[:140]}", r == 0, out)
+        failed = "\n".join(ln for ln in out.splitlines() if ln.startswith("FAIL"))
+        check(f"{name} against this tree: {last[:140]}", r == 0, (failed + "\n…\n" if failed else "") + out[-1500:])
 except Exception as e:  # noqa: BLE001
     import traceback
     traceback.print_exc()

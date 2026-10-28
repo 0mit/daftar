@@ -241,7 +241,8 @@ try:
             print("NOTE  this tree's bin/act.py starts no run with inputs (--start): view_act not asked")
         else:
             import socket
-            host = socket.gethostname()
+            host = socket.gethostname().lower().split('.')[0]   # a name this machine goes by (bin/where.py `here`) that
+            # a position's host takes: a runner may call itself `Name-1.local`
             v = (G / 'VOCAB.md').read_text(encoding='utf-8')
             law = ''.join(f.read_text(encoding='utf-8') for f in (G / 'core' / 'law').glob('*.yaml'))
             for key, row in (('kinds', '  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\n'),
@@ -259,7 +260,7 @@ try:
             put('beans/box.md', f'---\nbean: box\nkind: host\ntitle: "box — this machine"\nstatements:\n  - read: {{ by: sam, at: now }}\n'
                 f'  - own: {{ by: sam, of: self }}\n  - name: {{ by: anchor-hostname, of: self, as: {host} }}\n---\nThe machine.\n')
             put('beans/stamp-tool.md', f'---\nbean: stamp-tool\nkind: program\ntitle: "stamp-tool — what stamps a receipt"\n'
-                f'statements:\n  - make: {{ by: sam, at: now }}\n  - be: {{ by: self, at: "{host}:{G}/tools/stamp.py", as: location }}\n'
+                f"statements:\n  - make: {{ by: sam, at: now }}\n  - be: {{ by: self, at: '{host}:{G / 'tools' / 'stamp.py'}', as: location }}\n"
                 '---\nThe tool.\n')
             put('mappings/action-stamp.md', WALK)
             put('beans/receipt-1.md', '---\nbean: receipt-1\nkind: document\ntitle: "receipt-1 — a receipt"\nstatements:\n'
