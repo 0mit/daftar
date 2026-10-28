@@ -13,7 +13,10 @@ hook: nothing is pushed into a working copy, and a hook there would be a file of
 shown again, or none said, exit 1. The hub: its key anchored on a bean of kind `instance` by the gardener (class F),
 granted `write` through a reading kept in the gardener's bean that leaves out the beans deciding who may do what; its
 merge of a bean both sides changed, signed with its key as its bean, taken by the bare hub; a hub's key no bean names,
-refused; and the hub refused a grant to itself in the gardener's bean, which the reading leaves out.
+refused; and the hub refused a grant to itself in the gardener's bean, which the reading leaves out. An agents'
+harness granted `write` through a reading: its commit that makes a session bean taken — the grant as the garden stood
+before the commit, its reading over the tree the commit leaves —, one that makes a person's bean refused, and one that
+changes the gardener's bean refused.
 
 Run: python3 test/hubkey.py   (0 = green; about two minutes, since a save waits for the next minute where its bean was
 saved in this one)
@@ -261,6 +264,60 @@ try:
     r = run('git', 'push', '-q', 'origin', 'HEAD:master', cwd=H)
     check("a hub's key no bean names is no writer: its commit is refused", r.returncode != 0 and 'no bean carries' in r.out,
           r.out[-600:])
+
+    # ---- AN AGENT'S NEW BEAN: its grant as the garden stood before the commit, the grant's reading over the tree the
+    # commit leaves — a session bean it makes is in the reading and taken; a person's bean it makes is not, refused
+    run('git', 'reset', '-q', '--hard', 'origin/master', cwd=H)
+    agk, agf = key('agent')
+    write('beans/claude-code-box.md', BEAN % ('claude-code-box', 'instance', "the agents' harness on the box",
+                                              "The harness agents work in on the box, whose key signs their commits.",
+                                              '  - say: { by: sam, at: now }\n  - own: { by: sam, of: self }\n'
+                                              '  - be: { by: self, at: box, as: habitat }\n'
+                                              f'  - name: {{ id: key, by: ssh, of: self, as: "{agf}" }}', 'The harness.'),
+          root=H)
+    dmsafe.add_statements(os.path.join(H, 'beans', 'sam.md'),
+                          '- reckon: { id: agent-writes, reading: { what: "the beans an agent may write: every bean but '
+                          'the gardener\'s, a person\'s, an agreement\'s and the agents\' own, whose statements decide who '
+                          'may do what", steps: [ { id: all, op: select, where: [ { path: bean, "≠": sam }, { path: bean, '
+                          '"≠": claude-code-box } ] }, { id: people, op: select, kind: person }, { id: agreements, op: '
+                          'select, kind: contract }, { id: some, op: minus, of: all, with: people }, { id: these, op: '
+                          'minus, of: some, with: agreements } ] } }\n'
+                          '- grant: { id: agents-write, by: self, as: write, of: [agent-writes], to: [claude-code-box] }\n'
+                          '- say: { by: sam, of: [agent-writes, agents-write], at: now }\n')
+    r = save("the agents' harness, its key and what it may write",
+             "- action: wrote [[claude-code-box]], its key named (class F, the gardener's); [[sam]] grants it `write` "
+             "through the reading `agent-writes`", root=H)
+    r2 = run('git', 'push', '-q', 'origin', 'HEAD:master', cwd=H)
+    check("the gardener names an agents' harness by its key and grants it `write` through a reading", r.returncode == 0
+          and r2.returncode == 0, r.out[-400:] + r2.out)
+    as_agent = {**as_hub, 'GIT_AUTHOR_NAME': 'session-box-1', 'GIT_AUTHOR_EMAIL': 'session-box-1@shop.daftar.invalid',
+                'GIT_COMMITTER_NAME': 'session-box-1', 'GIT_COMMITTER_EMAIL': 'session-box-1@shop.daftar.invalid',
+                'GIT_CONFIG_VALUE_1': agk}
+    write('beans/session-box-1.md', BEAN % ('session-box-1', 'session', "an agent's session on the box",
+                                            "What one agent did on the box, and how the next learns it.",
+                                            '  - make: { by: self, at: now }\n  - own: { by: sam, of: self }', 'Opened.'),
+          root=H)
+    r = save("an agent's session opened", '- action: opened [[session-box-1]]', root=H, who='session-box-1', env=as_agent)
+    r2 = run('git', 'push', '-q', 'origin', 'HEAD:master', cwd=H, env=as_agent)
+    check("an agent's commit that makes a session bean is taken: the bean is in the grant's reading as the commit leaves "
+          "the garden", r.returncode == 0 and r2.returncode == 0, r.out[-400:] + r2.out[-800:])
+    write('beans/p-0a1b2c3d.md', '---\nbean: p-0a1b2c3d\nkind: person\ntitle: "p-0a1b2c3d"\nsummary: "a person whose '
+                                 'name and contacts are held off git"\nstatements:\n  - say: { by: sam, at: now }\n'
+                                 '---\nA person.\n', root=H)
+    r0 = save("a person written by an agent", '- action: wrote [[p-0a1b2c3d]]', root=H, who='session-box-1',
+              env=as_agent)
+    r = run('git', 'push', '-q', 'origin', 'HEAD:master', cwd=H, env=as_agent)
+    check("an agent's commit that makes a person's bean is refused: the reading leaves a person out, read as the commit "
+          "leaves the garden", r0.returncode == 0 and r.returncode != 0
+          and 'beans/p-0a1b2c3d.md needs a grant of `write`' in r.out, r0.out[-600:] + r.out[-600:])
+    run('git', 'reset', '-q', '--hard', 'origin/master', cwd=H)
+    dmsafe.add_statements(os.path.join(H, 'beans', 'sam.md'),
+                          '- grant: { id: agents-all, by: self, as: write, of: [self], to: [claude-code-box] }\n'
+                          '- say: { by: sam, of: [agents-all], at: now }\n')
+    r0 = save("the agent grants itself", '- action: [[sam]]', root=H, who='session-box-1', env=as_agent)
+    r = run('git', 'push', '-q', 'origin', 'HEAD:master', cwd=H, env=as_agent)
+    check("an agent's commit that changes the gardener's bean is refused", r0.returncode == 0 and r.returncode != 0
+          and 'beans/sam.md needs a grant of `write`' in r.out, r0.out[-600:] + r.out[-600:])
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

@@ -251,6 +251,16 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v4.6.1** (2026-10-28, code, core 4.6) — **a new bean inside a grant's reading at the hub, and the report's
+  day in the garden's zone.** bin/hub.py read every grant's reading at a commit's parent, and a bean the commit makes
+  is in no garden before it, so a writer granted `write` through a reading was refused every commit that made a bean:
+  an agent's every session opens by making its own. For a bean the commit makes, the grants are still the parent's and
+  their readings are read over the tree the commit leaves (bin/pass.py `may`, `readings`), so a new bean is in a
+  reading as the reading reads it, and a new person or agreement stays outside one that leaves them out; what a writer
+  may change at the commit it may change at the parent, so the commit reads no reading a second commit after it would
+  not. `hub.py report --since` compared the hub's UTC moments with the text it was given: a day is now the garden's,
+  from its midnight in GARDEN.md's zone (UTC where it names none, said so), a moment is compared as an instant, and the
+  report says the instant it read. No file of the law changed.
 - **core 4.6** (2026-10-28, daftar v4.6.0, human-ratified rule-change) — **two words made public** (seed/PUBLIC-ALLOW).
   `agents-work`, the law's own name for the bean of the gardener's standing instructions, which the seed's template
   makes and the guards and the judge read by name: a garden that holds the bean took the name from the law, and the
