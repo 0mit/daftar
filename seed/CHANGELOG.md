@@ -251,6 +251,24 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.15** (2026-10-28, daftar v4.15.0, human-ratified rule-change) — **one install and one entry.** MINOR. The
+  one installer lays this machine's daftard where it is asked for: `bin/install.py --daftard`, in a garden's main copy,
+  lays its binary in the account's daftar state folder — built from the release's own source where Go is, its tag's
+  signature verified first by a key `seed/RELEASE-SIGNERS` names, or the release's binary for the system where Go is
+  not, taken only when its bytes have the SHA-256 the release gives beside it — then has daftard serve the garden with
+  its routines (`routines: true`: each minute daftard asks the garden's `bin/routines.py tick`), and registers what
+  keeps it running: the logon task on Windows, as before, a systemd user unit on Linux, a launchd agent on macOS, where
+  daftard is now the one job launchd keeps and the clock of every routine. It waits for daftard's answer on the
+  loopback, and refuses another daftard's answer at the same address. Without `--daftard` the install is as it was, so
+  an upgrade starts no daemon. `daftard install` keeps what daftard.json holds and changes only what its flags name
+  (before, a second install lost the machine's settings), takes `--routines` and `--no-service`, and `daftard open`
+  takes a garden's board, `/board?g=<garden>`. Two verbs join the one entry: `daftar serve` runs daftard's own commands
+  (`serve` by default; `daftard help` lists them) in a family of its own, and `daftar board` opens a garden's board
+  among the readings; `daftar run` was one already. Pushing a release's tag builds daftard for Linux, macOS and Windows
+  from the tagged commit, runs each on its own system, and attaches them to the tag's release with their sums and
+  their notices. A new suite, `test/install.py`, runs in CI on the three systems. The law: `core/law/tools.yaml` gains
+  the family `serve` and the tools `serve` and `board`; `seed/LANGUAGE` ships `bin/serve.py` and `bin/board.py`.
+
 - **core 4.14** (2026-10-28, daftar v4.14.0, human-ratified rule-change) — **the board, the scan, and a cold start.**
   MINOR. The view profile's archetype `cursor` is read and drawn: a board of one being or several, kept still while the
   aspect around it turns. The view asset reads it (`assets/view/lib/view_board.py`, `view.py board`): the law's

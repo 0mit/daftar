@@ -1,0 +1,95 @@
+name: release
+# daftard's binaries, built from a release's tagged commit and attached to the tag's GitHub release, each with its SHA-256
+# beside it, for `bin/install.py --daftard` on a machine with no Go. A pull request that touches daftard/ or this file
+# builds them and runs each on its own system, and publishes nothing.
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  pull_request:
+    paths: ['daftard/**', '.github/workflows/release.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: daftard/go.mod
+          cache-dependency-path: daftard/go.sum
+      - name: "daftard for each system, from this commit: no C, no path of the machine that built it, the commit named in it"
+        working-directory: daftard
+        env:
+          CGO_ENABLED: "0"
+          GOFLAGS: -mod=vendor
+        run: |
+          mkdir -p ../dist
+          for t in linux/amd64 linux/arm64 darwin/arm64 darwin/amd64 windows/amd64; do
+            os=${t%/*}; arch=${t#*/}; out=../dist/daftard-$os-$arch; flags="-X main.Build=$GITHUB_SHA"
+            if [ "$os" = windows ]; then out=$out.exe; flags="$flags -H=windowsgui"; fi
+            GOOS=$os GOARCH=$arch go build -trimpath -ldflags "$flags" -o "$out" ./cmd/daftard
+          done
+      - name: "each binary's SHA-256 beside it, and the notices of what a binary carries"
+        working-directory: dist
+        run: |
+          for f in daftard-*; do sha256sum "$f" > "$f.sha256"; done
+          {
+            cat ../NOTICE
+            for l in AGPL-3.0-or-later LicenseRef-daftar-garden-exception BSD-3-Clause MIT OFL-1.1; do
+              printf '\n\n==== LICENSES/%s.txt ====\n\n' "$l"; cat "../LICENSES/$l.txt"
+            done
+            printf '\n\n==== daftard/vendor/golang.org/x/text/PATENTS ====\n\n'; cat ../daftard/vendor/golang.org/x/text/PATENTS
+          } > daftard-NOTICE.txt
+          ls -l
+      - uses: actions/upload-artifact@v4
+        with:
+          name: daftard
+          path: dist/
+  run:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: daftard
+          path: dist
+      - name: "this system's binary: its bytes have the SHA-256 beside it, it runs, and it is this commit"
+        working-directory: dist
+        run: |
+          case "$RUNNER_OS-$RUNNER_ARCH" in
+            Linux-X64) f=daftard-linux-amd64 ;; macOS-ARM64) f=daftard-darwin-arm64 ;; macOS-X64) f=daftard-darwin-amd64 ;;
+            Windows-X64) f=daftard-windows-amd64.exe ;; *) echo "no binary for $RUNNER_OS-$RUNNER_ARCH"; exit 1 ;;
+          esac
+          want=$(cut -d' ' -f1 "$f.sha256")
+          have=$( (sha256sum "$f" 2>/dev/null || shasum -a 256 "$f") | cut -d' ' -f1)
+          echo "$f $have"; [ "$have" = "$want" ]
+          chmod +x "$f"
+          v=$(./"$f" version | tr -d '\r'); echo "$v"; [ "$v" = "daftard $GITHUB_SHA" ]
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: daftard
+          path: dist
+      - name: "the tag's release, its binaries attached"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1 ||
+            gh release create "$TAG" -R "$GITHUB_REPOSITORY" --verify-tag --title "$TAG" \
+              --notes "daftar $TAG. The tag is signed with daftar's release key (seed/RELEASE-SIGNERS). Attached: daftard for Linux, macOS and Windows, built by CI from the tagged commit, each with its SHA-256 beside it, and the notices of what it carries (daftard-NOTICE.txt). \`python3 bin/install.py --daftard\` in a garden lays the one for its system."
+          gh release upload "$TAG" -R "$GITHUB_REPOSITORY" --clobber dist/*

@@ -95,6 +95,24 @@ still yours, and the journal entry says who decided and in what words: `human (n
 agent (…)` is the shape this garden's own journal uses. Before you leave, write the journal entry the next
 agent will need — it may be of another make, with none of your context.
 
+## 6. This machine's daftard, where the garden is to be served
+
+daftard, one per machine, serves the gardens this account holds on its loopback — their pages and board, their sync,
+what waits and for whom — and runs their routines, asking each garden's `bin/routines.py tick` each minute. It is laid
+when it is asked for, from the garden's main copy:
+
+```sh
+python3 bin/install.py --daftard     # its binary, this garden served, its routines, and what keeps it running
+python3 bin/daftar.py board          # the garden's board in the browser
+python3 bin/daftar.py serve status   # daftard's own commands: status, stop, open, leads, help
+```
+
+Where Go is, daftard is built from the source of the release the garden runs, its tag's signature verified first by a
+key the garden's `seed/RELEASE-SIGNERS` names. Where Go is not, the release's binary for this system is taken, and only
+when its bytes have the SHA-256 the release gives beside it. On Windows a logon task starts it, on Linux a systemd user
+unit, on macOS a launchd agent. With `--no-service` nothing is registered, and the install starts it until the machine
+stops. `python3 bin/install.py --help` gives the rest.
+
 ## Upgrading a garden to a newer release
 
 ```sh

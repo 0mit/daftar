@@ -4,10 +4,10 @@
 //	daftard serve                 run (the logon task starts this; nothing shows a window): the machine's daftard,
 //	                              which starts one daemon for each garden and keeps the machine's front door
 //	daftard serve --garden <name> one garden's own daemon (the machine's daftard starts each; by hand: that one alone)
-//	daftard open [garden | daftar://go/<garden>/<kind>/<id> | daftar://odoo?g=<garden>&series=<series>]
+//	daftard open [garden | daftar://go/<garden>/<kind>/<id> | daftar://odoo?g=<garden>&series=<series> | /board?g=<garden>]
 //	                              start it if it is not running, and open the handplace in the browser: at a landing
 //	                              address when given one (a notification's button, a link; registered as daftar:),
-//	                              or at a garden's Odoo screens (the path /odoo?g=… itself is taken too)
+//	                              at a garden's Odoo screens (the path /odoo?g=… itself is taken too), or at its board
 //	daftard leads [garden]        what waits for a person's decision, each with its landing address
 //	daftard links                 register daftar: links and the notifications' app id for this user (install does it too)
 //	daftard notify-test [garden]  ask the running daftard to raise a sample notice, in its user's session
@@ -15,8 +15,10 @@
 //	daftard stop                  stop it; a save under way finishes first
 //	daftard error <E-XXXX-XXXX>   a guided error's whole detail, for whoever looks into it
 //	daftard install --garden <path> --python <python> --title <title> [--name n] [--listen 127.0.0.1:8770]
-//	                              [--sync] [--exchange] [--hub <bean>] [--steward who:title:reach]
-//	                              writes daftard.json (and on Windows the logon task, the desktop icon and daftar:);
+//	                              [--sync] [--exchange] [--routines] [--hub <bean>] [--steward who:title:reach] [--no-service]
+//	                              writes daftard.json, keeping what it holds that no flag names, and what keeps daftard
+//	                              running: on Windows the logon task (with the desktop icon and daftar:), on Linux a
+//	                              systemd user unit, on macOS a launchd agent (service.go); --no-service writes the file alone;
 //	                              with --hub, this machine's hub of the garden is initialized: its own key made by
 //	                              the garden's bin/hub.py install, and the statement for the hub's bean printed
 //	daftard version
@@ -60,6 +62,26 @@ import (
 	assets "github.com/0mit/daftar/daftard/web"
 )
 
+// usage is what `daftard help` prints: each command and what it does.
+const usage = `daftard — this machine's daemon: the gardens it holds, their pages and board, their sync, what waits, their routines
+
+  daftard serve                   run it: one daemon for each garden in daftard.json (the service the install made runs this)
+  daftard open [garden | /board?g=<garden> | daftar://go/<garden>/<kind>/<id> | daftar://odoo?g=<garden>&series=<series>]
+                                  start it if it is not running, and open the page in the browser
+  daftard status                  is it running, on which build, and each garden's daemon
+  daftard stop                    stop it; a save under way finishes first
+  daftard leads [garden]          what waits for a person's decision, each with its landing address
+  daftard error <E-XXXX-XXXX>     a guided error's whole detail
+  daftard install --garden <path> --python <python> [--name n] [--title t] [--listen 127.0.0.1:8770] [--routines]
+                  [--sync] [--exchange] [--hub <bean>] [--steward who:title:reach] [--no-service]
+                                  daftard.json, and what keeps daftard running on this system
+  daftard links                   register daftar: links for this user
+  daftard notify-test [garden]    ask the running daftard to raise a sample notice
+  daftard prefs export <garden> <person> [--out FILE] | daftard prefs import FILE [<garden>]
+                                  a reader's preferences, carried to another machine
+  daftard version                 the daftar commit this binary is
+`
+
 // Build is set at build time (-ldflags "-X main.Build=…"): the daftar commit this binary is.
 var Build = "dev"
 
@@ -100,8 +122,10 @@ func main() {
 		err = prefsCmd(args)
 	case "version":
 		fmt.Println("daftard", Build)
+	case "help", "-h", "--help":
+		fmt.Print(usage)
 	default:
-		err = fmt.Errorf("unknown command %q (serve, open, leads, links, notify-test, status, stop, error, install, prefs, version)", cmd)
+		err = fmt.Errorf("unknown command %q (serve, open, leads, links, notify-test, status, stop, error, install, prefs, version, help)", cmd)
 	}
 	if err != nil {
 		state.Logger().Printf("%s: %v", cmd, err)
@@ -600,7 +624,8 @@ func openCode(c *config.Config, token string) (string, error) {
 // landing reads a lead — daftar://go/<garden>/<kind>/<id> (what the system hands a registered daftar: link) or the
 // path /go/… itself — as the handplace's landing path; and the page of a garden's Odoo screens —
 // daftar://odoo?g=<garden>[&series=…][&asof=…] or the path /odoo?g=… itself — as that page's door, in the one form
-// the handplace takes it (web.OdooRe). Anything else is not one: it is never passed on as given.
+// the handplace takes it (web.OdooRe); and the path of a garden's board, /board?g=<garden> (web.BoardRe). Anything else
+// is not one: it is never passed on as given.
 func landing(lead string) (string, bool) {
 	p := lead
 	if strings.HasPrefix(strings.ToLower(lead), "daftar:") {
@@ -621,7 +646,7 @@ func landing(lead string) (string, bool) {
 			p = u.Path // daftar:/go/…
 		}
 	}
-	if !web.GoRe.MatchString(p) && !web.OdooRe.MatchString(p) {
+	if !web.GoRe.MatchString(p) && !web.OdooRe.MatchString(p) && !web.BoardRe.MatchString(p) {
 		return "", false
 	}
 	return p, true
@@ -876,6 +901,8 @@ func install(args []string) error {
 	doSync := fl.Bool("sync", false, "keep the garden in step with its hub (takes over from another syncing tool)")
 	doExchange := fl.Bool("exchange", false, "run its exchange rounds, where consented")
 	hub := fl.String("hub", "", "the bean of this machine's hub of the garden, which signs what daftard writes on its own")
+	doRoutines := fl.Bool("routines", false, "tick the garden's routines here each minute (bin/routines.py tick)")
+	noService := fl.Bool("no-service", false, "write daftard.json alone: no logon task, service, icon or links")
 	var st stewards
 	fl.Var(&st, "steward", "who:title:reach — someone errors are also followed up with (repeatable)")
 	if err := fl.Parse(args); err != nil {
@@ -890,20 +917,64 @@ func install(args []string) error {
 	if *hub != "" && !hubkey.ValidBean(*hub) {
 		return fmt.Errorf("--hub %q is no bean's id", *hub)
 	}
+	given := map[string]bool{}
+	fl.Visit(func(f *flag.Flag) { given[f.Name] = true })
 	abs, _ := filepath.Abs(*gardenPath)
-	c := &config.Config{Listen: *listen, Gardens: []config.Garden{{Name: *name, Path: abs, Python: *python, Title: *title, Me: *me,
-		Sync: *doSync, Exchange: *doExchange, Hub: *hub, FollowUp: st}}}
-	if old, err := config.Load(); err == nil { // the other gardens it already serves are kept
-		for _, g := range old.Gardens {
-			if g.Path != abs {
-				c.Gardens = append(c.Gardens, g)
-			}
+	// An install again keeps what daftard.json says: the machine's settings, the other gardens, and of this garden all
+	// that no flag here names. Before, it wrote the file anew, and a second install lost `served`, `places` and the
+	// garden's own channels and writers.
+	c, err := config.Load()
+	switch {
+	case err == nil:
+		if given["listen"] {
+			c.Listen = *listen
+		}
+	case errors.Is(err, os.ErrNotExist):
+		c = &config.Config{Listen: *listen}
+	default:
+		// the machine's settings written before any garden (its addresses, its place bundles) are built on
+		var bare config.Config
+		if b, rerr := os.ReadFile(config.Path()); rerr != nil || json.Unmarshal(b, &bare) != nil || len(bare.Gardens) > 0 {
+			return fmt.Errorf("%s is there and does not read (%v): mend it or move it aside, and install again", config.Path(), err)
+		}
+		c = &bare
+		if c.Listen == "" || given["listen"] {
+			c.Listen = *listen
+		}
+	}
+	var g *config.Garden
+	for i := range c.Gardens {
+		if c.Gardens[i].Path == abs {
+			g = &c.Gardens[i]
+		}
+	}
+	if g == nil {
+		c.Gardens = append(c.Gardens, config.Garden{Path: abs, Title: *title})
+		g = &c.Gardens[len(c.Gardens)-1]
+	}
+	g.Python = *python
+	for flagName, set := range map[string]func(){
+		"name": func() { g.Name = *name }, "title": func() { g.Title = *title }, "me": func() { g.Me = *me },
+		"sync": func() { g.Sync = *doSync }, "exchange": func() { g.Exchange = *doExchange }, "hub": func() { g.Hub = *hub },
+		"routines": func() { g.Routines = *doRoutines }, "steward": func() { g.FollowUp = st },
+	} {
+		if given[flagName] {
+			set()
+		}
+	}
+	for _, o := range c.Gardens {
+		if o.Path != g.Path && g.Name != "" && o.Name == g.Name {
+			return fmt.Errorf("daftard.json serves another garden named %s already (%s): give this one another --name", g.Name, o.Path)
 		}
 	}
 	if err := c.Save(); err != nil {
 		return err
 	}
 	fmt.Println("wrote", config.Path())
+	if g.Routines {
+		fmt.Println("routines: each minute daftard asks the garden's bin/routines.py tick; a routine runs here only where the " +
+			"garden grants this machine `enact` of its walk")
+	}
 	if *hub != "" { // the hub's init on this machine: its key, made by the garden's own tool, never here
 		out, err := hubkey.Install(*python, abs, state.Dir())
 		fmt.Print(out)
@@ -914,10 +985,18 @@ func install(args []string) error {
 				"nothing this hub signs\n", *hub)
 		}
 	}
-	if runtime.GOOS == "windows" {
+	if *noService {
+		return nil
+	}
+	switch runtime.GOOS {
+	case "windows":
 		if err := installWindows(); err != nil {
 			return err
 		}
+	case "linux":
+		installSystemd()
+	case "darwin":
+		installLaunchd()
 	}
 	if err := registerLinks(); err != nil {
 		if runtime.GOOS == "windows" {

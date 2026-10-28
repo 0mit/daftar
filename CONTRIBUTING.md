@@ -143,12 +143,13 @@ parts, changes).
    python3 test/catalogue.py
    python3 test/garden.py
    python3 test/daftard.py
+   python3 test/install.py
    reuse lint
    ```
 
    CI runs a brief set of them on every push and pull request — the documents, the manifesto, the journal, the assets,
-   the site and what is public, and the guards' suite and daftard's (`test/daftard.py`, which needs Go, the version
-   `daftard/go.mod` names) on Linux, macOS and Windows — and the whole list only when the
+   the site and what is public, and the guards' suite, daftard's (`test/daftard.py`, which needs Go, the version
+   `daftard/go.mod` names) and the install's (`test/install.py`, Go too) on Linux, macOS and Windows — and the whole list only when the
    workflow is run by hand; before a release, run the
    whole list here with `python3 test/timings.py -j 6` (`reuse lint` is the REUSE tool, `pip install reuse`). `test/site.py` builds the page again with `site/board.py`,
    which clones this repository at the tag `site/RELEASE` names: a clone without its tags cannot run it.
@@ -264,3 +265,6 @@ next release tag, which each garden adopts with `bin/dmupgrade.py` when its own 
 
 Maintainers tag releases `vMAJOR.MINOR.PATCH` on `master`. The law's own version lives in
 `core/law/core.yaml` (`version:`), and its changelog is `seed/CHANGELOG.md`; a release names both.
+Pushing the tag builds daftard's binaries from the tagged commit (`.github/workflows/release.yml`), runs each on its own
+system, and attaches them to the tag's GitHub release, each with its SHA-256 beside it: what `bin/install.py --daftard`
+takes on a machine with no Go. A pull request that touches `daftard/` builds and runs them too, and publishes nothing.

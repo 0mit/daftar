@@ -119,6 +119,9 @@ net = sorted(os.path.basename(f) for f in glob.glob(os.path.join(ROOT, "bin", "*
              if _NET.search(open(f, encoding="utf-8").read()))
 TOOL_NET = {   # each with why: never-sells is "never … anywhere its gardener did not send it"
     "dmupgrade.py": "it fetches a release, from where the gardener's pin says",
+    "install.py": "with --daftard alone, it fetches daftard of the release the garden records — its source at the tag, or "
+                  "its binary and that binary's SHA-256 — from daftar's repository or from where the person names, and "
+                  "asks this machine's loopback whether daftard answers: nothing of the garden is sent",
     "launch.py": "it sends a request only to a party the gardener's own VOCAB.md row grants by name, on a basis",
     "fetch.py": "it downloads a standard's table from the provider the law's row names, when its person asks: a "
                 "request for that file, and nothing else",

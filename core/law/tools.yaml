@@ -15,6 +15,8 @@ families:
     meaning: "between gardens, places and other systems: imports and exports, proposals, merges, readings across, what passes where, what is held"
   - { family: launch, meaning: "daftar's own loop: a model called with every request logged" }
   - { family: run, meaning: "the jobs a tool starts: each a course on the walk of a run, held by its identity, kept in the store `runs`" }
+  - family: serve
+    meaning: "this machine's daftard: the gardens' pages and board, their sync, what waits and for whom, their routines ticked each minute"
 tools:
   - { tool: rules, family: law }
   - { tool: why, family: law }
@@ -51,6 +53,7 @@ tools:
   - { tool: waiting, family: read }
   - { tool: where, family: read }
   - { tool: group, family: read }
+  - { tool: board, family: read }
   - { tool: cal, family: measure }
   - { tool: geo, family: measure }
   - { tool: units, family: measure }
@@ -68,6 +71,7 @@ tools:
   - { tool: export, family: between }
   - { tool: intake, family: between }
   - { tool: run, family: run }
+  - { tool: serve, family: serve }
   - { tool: relay, family: between }
   - { tool: launch, family: launch }
 forms:

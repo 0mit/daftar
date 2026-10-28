@@ -139,6 +139,10 @@ var GoRe = regexp.MustCompile(`^/go/[A-Za-z0-9][A-Za-z0-9._-]{0,40}(/(pending|pr
 var OdooRe = regexp.MustCompile(`^/odoo\?g=[A-Za-z0-9][A-Za-z0-9._-]{0,40}(&series=\d{2}\.\d)?` +
 	`(&asof=([0-9a-f]{4,40}|\d{4}-\d{2}-\d{2}([ T+%:0-9Z-]{0,20})?))?$`)
 
+// BoardRe is a garden's board (board.go), the third address the machine's key may open: the garden alone, the cursor
+// and the aspect travelling in the page's own fragment, which no server reads.
+var BoardRe = regexp.MustCompile(`^/board\?g=[A-Za-z0-9][A-Za-z0-9._-]{0,40}$`)
+
 // csp is the pages' policy: their own scripts, styles and font, their own data calls, nothing else.
 const csp = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; " +
 	"img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
@@ -373,7 +377,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// sent it too (security audit 2.7)
 		http.SetCookie(w, &http.Cookie{Name: s.cookie(), Value: s.page, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})
 		target := "/"
-		if to := r.URL.Query().Get("to"); GoRe.MatchString(to) || OdooRe.MatchString(to) { // this server's own, nothing else
+		if to := r.URL.Query().Get("to"); GoRe.MatchString(to) || OdooRe.MatchString(to) || BoardRe.MatchString(to) { // this server's own, nothing else
 			target = to
 		} else if g := r.URL.Query().Get("g"); g != "" {
 			target = "/?g=" + url.QueryEscape(g)

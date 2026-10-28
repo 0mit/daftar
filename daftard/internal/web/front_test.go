@@ -69,6 +69,14 @@ func TestTheFrontDoorOpensTheGardensOwnDaemon(t *testing.T) {
 	if w := s.frontDo("GET", "/?once="+url.QueryEscape(got.Once)+"&g=bo", nil); w.Code != 403 {
 		t.Fatalf("the front door's code is good once: %d", w.Code)
 	}
+	// a garden's board (`daftar board`) is opened on that garden's daemon, though another garden is the first
+	w = s.frontDo("POST", "/door", map[string]string{keyHeader: "k"})
+	_ = json.Unmarshal(w.Body.Bytes(), &got)
+	w = s.frontDo("GET", "/?once="+url.QueryEscape(got.Once)+"&to="+url.QueryEscape("/board?g=bo"), nil)
+	if loc := w.Header().Get("Location"); w.Code != 303 || !strings.HasPrefix(loc, d.URL+"/?") ||
+		!strings.Contains(loc, "g=bo") || !strings.Contains(loc, "to=%2Fboard%3Fg%3Dbo") {
+		t.Fatalf("the board sent to bo's daemon: %d %s", w.Code, loc)
+	}
 }
 
 // ANY OTHER ADDRESS OF A GARDEN IS SENT ON AS IT IS, to its daemon: by `g`, by /go/<garden> and /release/<garden>; with
