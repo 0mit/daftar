@@ -61,7 +61,7 @@ def grown(tree, tmp):
     import grow
     rel = grow.release(os.path.join(tmp, 'release'))
     root = os.path.join(tmp, 'grown')
-    r = grow.garden(rel, root, 'sam', '--gardener-name', 'Sam')
+    r = grow.garden(rel, root, 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
     assert r.returncode == 0, r.out[-600:]
     if os.path.isfile(os.path.join(root, 'bin', 'waiting.py')):
         p = os.path.join(root, 'beans', 'sam.md')

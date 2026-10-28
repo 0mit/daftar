@@ -36,7 +36,7 @@ T = Path(tempfile.mkdtemp(prefix='worker-odoo19-'))
 try:
     rel = grow.release(str(T / 'release'))
     G = T / 'garden'
-    grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam')
+    grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
     # a capture of one model as importers/odoo/views.py writes it from a 19 instance (invented; no record)
     cap = G / 'captures' / 'views' / 'odoo-19.0'
     (cap / 'shop.need').mkdir(parents=True)

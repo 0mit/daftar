@@ -38,7 +38,7 @@ def check(name, cond, detail=''):
 try:
     rel = grow.release(str(T / 'release'))
     G = T / 'garden'
-    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam')
+    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
     today = time.strftime('%Y-%m-%d')
     (G / 'beans' / 'ana.md').write_text(
         '---\nbean: ana\nkind: person\ntitle: "Ana"\nstatements:\n  - say: { by: sam, at: now }\n'

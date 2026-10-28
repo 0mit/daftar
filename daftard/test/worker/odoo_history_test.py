@@ -81,7 +81,7 @@ def num(model, bean):
 
 try:
     rel = grow.release(str(T / 'release'))
-    r0 = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam')
+    r0 = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
     org('acme', 'Acme', 'represent: { by: sam, of: self, as: "keeps its garden" }')
     org('beta', 'Betamax', 'represent: { by: sam, of: self, as: "keeps its books" }')
     org('eng', 'Engineering', 'part: { by: self, of: acme }')

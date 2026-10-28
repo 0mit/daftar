@@ -34,7 +34,7 @@ T = Path(tempfile.mkdtemp(prefix='worker-records-'))
 try:
     rel = grow.release(str(T / 'release'))
     G = T / 'garden'
-    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam')
+    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
 
 
     def org(bid, title, *st):

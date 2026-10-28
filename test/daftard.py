@@ -71,7 +71,8 @@ try:
         print(f"      {out.strip()} (daftard/go.mod: go {want})")
 
         G = os.path.join(T, "g")
-        g = grow.garden(grow.release(os.path.join(T, "release")), G, "sam")
+        g = grow.garden(grow.release(os.path.join(T, "release")), G, "sam", "--zone", "Europe/Istanbul")  # a runner
+        # may name its zone otherwise (`UTC`)
         check("a garden of the core grows from this tree", g.returncode == 0, g.out)
         beans = worked_beans()
         for name, text in beans.items():

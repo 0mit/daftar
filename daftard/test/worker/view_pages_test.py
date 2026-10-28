@@ -92,7 +92,7 @@ T = Path(tempfile.mkdtemp(prefix='worker-view-pages-'))
 try:
     rel = grow.release(str(T / 'release'))
     G = T / 'garden'
-    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--profile', 'view')
+    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul', '--profile', 'view')
     STORY = ('purpose: "{p}", outcome: "{p}", stages: [{{label: Read, doer: the view}}, {{label: Draw, doer: the view}}, '
              '{{label: Open, doer: the reader}}], questions: [{{lens: orient, ask: "{p}"}}], blind: [{{what: "what nobody wrote down"}}]')
 

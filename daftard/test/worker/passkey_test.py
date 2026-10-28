@@ -36,7 +36,7 @@ b64 = lambda b: base64.urlsafe_b64encode(b).decode().rstrip('=')
 try:
     rel = grow.release(str(T / 'release'))
     G = T / 'garden'
-    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam')
+    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
     (G / 'beans' / 'ana.md').write_text(
         '---\nbean: ana\nkind: person\ntitle: "Ana"\nstatements:\n  - say: { by: sam, at: now }\n'
         '  - own: { by: theone, of: self }\n  - answer: { by: self, of: self, as: law }\n---\nAna.\n', encoding='utf-8')

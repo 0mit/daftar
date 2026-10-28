@@ -131,7 +131,7 @@ w = None
 try:
     rel = grow.release(str(T / 'release'))
     G = T / 'garden'
-    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam')
+    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
     (G / 'beans' / 'people-register.md').write_text(
         '---\nbean: people-register\nkind: instance\ntitle: "The people register"\nstatements:\n'
         '  - say: { by: sam, at: now }\n  - own: { by: sam, of: self }\n---\nAn invented register of people.\n',

@@ -72,7 +72,7 @@ def favourites(person, favs):
 
 try:
     rel = grow.release(str(T / 'release'))
-    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam')
+    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
     org('acme', 'Acme', 'represent: { by: sam, of: self, as: "keeps its garden" }')
     org('beta', 'Betamax', 'represent: { by: sam, of: self, as: "keeps its books" }')
     org('eng', 'Engineering', 'part: { by: self, of: acme }')

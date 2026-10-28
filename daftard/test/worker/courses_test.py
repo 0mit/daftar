@@ -33,7 +33,7 @@ T = Path(tempfile.mkdtemp(prefix='worker-courses-'))
 try:
     rel = grow.release(str(T / 'release'))
     G = T / 'garden'
-    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam')
+    r = grow.garden(rel, str(G), 'sam', '--gardener-name', 'Sam', '--zone', 'Europe/Istanbul')
     check('a garden grows from the tree', r.returncode == 0, r.out[-600:])
     if 'kind: procedure,' not in (G / 'core' / 'law' / 'kinds.yaml').read_text(encoding='utf-8'):   # the law's since 4.7
         (G / 'VOCAB.md').write_text('---\nkinds:\n  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, '
