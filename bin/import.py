@@ -138,6 +138,7 @@ class Import:
         self._garden = None
         self._known_folders = set()
         self.unknown_filled = 0
+        self._unk = {}                                    # (being, verb) -> the rows holding `unknown` (`_unknowns`)
         self._source = None                               # (key, the roles of its reading act) of the source being read
         self.later = collections.OrderedDict()            # what a `derive` knows, kept once every reading is in
         self.already = []                                 # the sources imported already, each by its act
@@ -221,6 +222,7 @@ class Import:
             if self.store.statement(where, sid) is not None:
                 self.already.append((key[1], f"{where}#{sid}"))
             sid = self.store.put(where, verb, roles)
+            self._wrote(where, verb, roles)
             ref = f"{where}#{sid}"
         else:
             ref = None
@@ -522,6 +524,7 @@ class Import:
         """Each group of a row's statements written from the table of its records: the beings first, then one
         INSERT … SELECT a group, known by `ref`."""
         S, db = self.store, self.store.db
+        self._wrote()
         bcol = c._bean_field
         n = db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
         self.account.records += n
@@ -658,6 +661,7 @@ class Import:
         self._declare({being: c.row.get('kind')}, statements)
         for v, r in statements:
             self.store.put(being, v, r, act=ref, judge=False)
+            self._wrote(being, v, r)
 
     def _judge_sample(self, c, g, table, bcol, roles):
         """Every `judge_every`th record's statement judged as a put judges one (`Store._judge_one`)."""
@@ -726,6 +730,7 @@ class Import:
                     if fills:
                         self._unknown_filled(being, v, r)
                     self.store.put(being, v, r, act=ref, judge=bool(self.judge_every and n % self.judge_every == 1))
+                    self._wrote(being, v, r)
             return
         if kind:
             beings[being] = kind
@@ -827,20 +832,49 @@ class Import:
                 n = self.account.records
                 act = S.put(being, verb, roles, judge=False)
                 S.put(being, v, r, act=f"{being}#{act}", judge=(self.judge_every and n % self.judge_every == 1))
+                self._wrote(being, verb, roles)
+                self._wrote(being, v, r)
 
     def _unknown_filled(self, being, verb, roles):
-        """A statement this crosswalk wrote with `unknown` in a role this one fills: taken out, its reason this one."""
+        """A statement this crosswalk wrote with `unknown` in a role this one fills: taken out, its reason this one. Only
+        a row that holds `unknown` can be one, and a being's are found once an import (`_unknowns`): every statement of
+        the being read again at each record made a series' import slower by each observation kept before it."""
         S = self.store
         if verb not in S.verbs():
             return
-        for v2, r2, _acts in S.get(being):
-            if v2 != verb:
-                continue
+        import store as dmstore
+        rows = self._unknowns(being, verb)
+        for n in list(rows):
+            sid = S.db.execute(f"SELECT id FROM {dmstore._q('v_' + dmstore._col(verb))} WHERE n = ?", (n,)).fetchone()
+            _v2, r2 = S.statement(being, sid[0])
             gaps = [k for k, x in r2.items() if x == 'unknown' and roles.get(k) not in (None, 'unknown')]
             same = all(r2.get(k) == x for k, x in roles.items() if k not in gaps and k != 'id')
             if gaps and same:
                 S.gone(being, r2['id'], by=self._host(), why=f"filled: {', '.join(gaps)} named since")
+                rows.remove(n)
                 self.unknown_filled += 1
+
+    def _unknowns(self, being, verb):
+        """The rows (each its `n`, in the order they were put) of `being` and `verb` the store keeps with `unknown` in a
+        role or a qualifier: read once an import, and again after it writes one (`_wrote`)."""
+        key = (being, verb)
+        if key not in self._unk:
+            import store as dmstore
+            S = self.store
+            row = S._being_row(being)
+            cols = [tc for _bc, tc in S.columns(verb).values()]
+            self._unk[key] = [] if not row or not cols else [n for (n,) in S.db.execute(
+                f"SELECT n FROM {dmstore._q('v_' + dmstore._col(verb))} WHERE being = ? AND 'unknown' IN "
+                f"({', '.join(cols)}) ORDER BY n", (row[0],))]
+        return self._unk[key]
+
+    def _wrote(self, being=None, verb=None, roles=None):
+        """A row this import wrote, for `_unknowns`: one holding `unknown` makes its being's rows read again; rows written
+        set-wise (no being given), every being's."""
+        if being is None:
+            self._unk.clear()
+        elif any(x == 'unknown' for x in (roles or {}).values()):
+            self._unk.pop((being, verb), None)
 
     def done(self):
         """What a derive knows, kept now that every reading is in, by one act from them all. Returns the account."""

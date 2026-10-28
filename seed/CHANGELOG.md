@@ -251,6 +251,23 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v4.9.1** (2026-10-28, code, core 4.9) — **a store at size, judged as its rows were put.** A large store's
+  check judged its rows' own form, valency and frame at their put, and a bulk load judges one row in ten thousand there:
+  it now judges every row as its put judges one (bin/store.py `row_findings`), the rows its put may refuse found
+  set-wise — by SQL what a row's columns alone decide, by the engine's own code once for each set of columns and each
+  distinct filler of a column — and each found judged by the put's own judgement, at its place in the union, in its
+  words. A name's form — its namespace's pattern, its validator, a bidi control — is judged at a row's put and so at
+  the check, by the one function the rule `names` asks of a bean (core/engine.py `name_form`). The check names an act
+  only where a row is known by it: an act whose rows were all taken out knew nothing that is kept, and is said nothing
+  of. Every store a check reads is read through one connection, in one transaction, so its queries, its union's SQL
+  and the engine's reading of its rows see one snapshot of each store; a store made under an older law, whose relation
+  lacks a column the law has since added, is read by the columns its file holds (the check of such a store stopped,
+  `no such column`, where it read the law's). Form only, each verdict as before but where the earlier check did not
+  judge a row: an import reads the rows of a being that hold `unknown` once an import, not every row of the being at
+  each record (a series' import took as long again each day it had kept: 25 s for a day of minutes after one day,
+  75 s after three); each being's kind, the overlaps and the acts rows name are read set-wise or by id; the law's one
+  matcher of a pattern compiles each pattern once. The store's help says its limits, as measured. No file of the law
+  changed.
 - **core 4.9** (2026-10-28, daftar v4.9.0, human-ratified rule-change) — **a reading as known at a moment, a
   classifier's precision, and a polite intake.** MINOR. A reading may name its `known` input (core/law/lines.yaml
   `selection_form.known`, the reading form's `known`): it is then read over the garden as known at the moment that

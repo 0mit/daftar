@@ -59,10 +59,27 @@ core's own engine — every rule, over the beans and the stores' beings read as 
 findings is the store's; in a larger one, each store small enough is still judged so, beside git, alone. Over the whole
 union, however large, each rule that is a reading of the law is judged by its reading compiled to SQL (core/union.py),
 by the same operations, with the engine's words and places; a name a namespace gives once by the engine's own code,
-the SQL finding the names given twice; and by queries, each act a row names (a knowing act, here or in git), each
-being's kind against its bean's, the overlaps (one `(being, id)`, one form), and every pointer in git. Each rule judged
-neither way at that size is named, never passed over in silence. The gate never reads a store: a gate that judged one
-machine's disk would pass on one and fail on another.
+the SQL finding the names given twice; by queries, each act a row names (a knowing act, here or in git), each being's
+kind against its bean's, the overlaps (one `(being, id)`, one form), and every pointer in git; and every row of a large
+store as its put judges one (`row_findings`): the rows its put may refuse found set-wise — by SQL what a row's columns
+alone decide, by the engine's own code once for each distinct filler of a column — and each found judged by the put's
+own judgement, told at its place in the union. So a load that judged a sample (`bulk`, an import set-wise) is judged
+whole here. Each rule judged neither way at that size is named, never passed over in silence. Every store is read
+through one connection, in one transaction: one snapshot of each, the same for the queries, the SQL and the engine's
+reading of its rows, so a writer at work is seen before or after, whole. The gate never reads a store: a gate that
+judged one machine's disk would pass on one and fail on another.
+
+AT SIZE, AS MEASURED (daftar v4.9.1, on one machine, the files in memory). The check's time grows with the rows, and
+most with the distinct values of a role that takes a position, a statement or a quantity (a moment is read in about
+40 µs, once a value), and with the rows of a being kept both in a bean and in a store, which making the union reads
+whole (about 17 µs a row: a series with a bean, its observations in the store). An invented store of
+a year of 300 newsrooms' feeds, read each hour something was new, beside three years of one-minute observations of five
+series — 20.8 M rows, 74.9 M second knowings of them, 2.6 M acts, 4.1 M beings, 6.7 GB — was checked in 659 s, holding
+5.0 GB at most; a disk catalogue of 37.7 M rows and 9.2 M beings in 251 s, holding 2.2 GB. A reading that selects from a
+store reads each row of the verb it selects, and holds the members it selects: one newsroom's year of items, among
+2.06 M, in 24 s and 1.9 GB; one series' 1.58 M observations counted in 85 s and 7.5 GB. An import of a series'
+observations takes the same time a day whatever the series held before (0.16 s for 1,440). The gate reads no store:
+its time over the garden beside such a store is the garden's alone.
 
 ROWS IN (`put`, standard input): `{"being": "<id>", "verb": "<verb>", "roles": {...}, "id": "<id>"?, "while"?, "why"?,
 "note"?}`, one a line; `{"being": "<id>", "kind": "<kind>", "title"?, "summary"?}` declares a being first. `--act`
@@ -248,6 +265,7 @@ class Store:
         self._cols = {}                    # verb -> {role: (has b_, ...)}
         self._acts = {}                    # ref -> n
         self._depth = 0
+        self._s = ''                       # the schema its reads name, read through the check's one connection
         if readonly:
             pass
         elif new:
@@ -387,10 +405,10 @@ class Store:
 
     def verbs(self):
         """The verbs this store keeps a relation of (read again when the schema changed: another writer may add one)."""
-        ver = self.db.execute('PRAGMA schema_version').fetchone()[0]
+        ver = self.db.execute(f'PRAGMA {self._s}schema_version').fetchone()[0]
         if getattr(self, '_verbs_at', None) != ver:
             self._verbs = sorted(r[0][2:] for r in self.db.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'v\\_%' ESCAPE '\\'"))
+                f"SELECT name FROM {self._s}sqlite_master WHERE type='table' AND name LIKE 'v\\_%' ESCAPE '\\'"))
             self._verbs_at = ver
         return self._verbs
 
@@ -402,8 +420,8 @@ class Store:
         reader reads them from the file itself, and needs no law: only a writer makes a relation, by its verb's row."""
         if verb in self._cols:
             return self._cols[verb]
-        if self.readonly or (self._law is None and self._stored_shapes(verb) is not None):
-            have = [r[1] for r in self.db.execute(f"PRAGMA table_info({_q('v_' + _col(verb))})")]
+        if self.readonly or self._s or (self._law is None and self._stored_shapes(verb) is not None):
+            have = [r[1] for r in self.db.execute(f"PRAGMA {self._s}table_info({_q('v_' + _col(verb))})")]
             cols = {}
             for c in have:
                 if c[:2] in ('b_', 't_', 'q_'):
@@ -458,13 +476,17 @@ class Store:
         return cols
 
     # -------------------------------------------------------------------------------------------- beings
+    def _t(self, name):
+        """A relation of this store as a read names it: under its schema where the check reads it (`one_snapshot`)."""
+        return self._s + _q(name)
+
     def has_being(self, bid):
         return self._being_row(bid) is not None
 
     def _being_row(self, bid):
         if bid in self._beings:
             return self._beings[bid]
-        r = self.db.execute('SELECT n, kind FROM being WHERE id=?', (bid,)).fetchone()
+        r = self.db.execute(f'SELECT n, kind FROM {self._s}being WHERE id=?', (bid,)).fetchone()
         if r:
             self._beings[bid] = (r[0], r[1])
             return self._beings[bid]
@@ -521,7 +543,7 @@ class Store:
         r = self._being_row(bid)
         if not r:
             return {}
-        return {k: json.loads(v) for k, v in self.db.execute('SELECT key, value FROM detail WHERE being=?', (r[0],))}
+        return {k: json.loads(v) for k, v in self.db.execute(f'SELECT key, value FROM {self._s}detail WHERE being=?', (r[0],))}
 
     # -------------------------------------------------------------------------------------------- fillers
     def _stored_shapes(self, verb):
@@ -529,7 +551,7 @@ class Store:
         none yet)."""
         cache = self.__dict__.setdefault('_shapes', {})
         if verb not in cache:
-            r = self.db.execute("SELECT v FROM meta WHERE k = ?", (f'shapes:{verb}',)).fetchone()
+            r = self.db.execute(f"SELECT v FROM {self._s}meta WHERE k = ?", (f'shapes:{verb}',)).fetchone()
             cache[verb] = json.loads(r[0]) if r else None
         return cache[verb]
 
@@ -651,7 +673,7 @@ class Store:
         return rec['id'], roles, rec.get('known'), rec['n'], self._id_of(rec['being'])
 
     def _id_of(self, n):
-        r = self.db.execute('SELECT id FROM being WHERE n=?', (n,)).fetchone()
+        r = self.db.execute(f'SELECT id FROM {self._s}being WHERE n=?', (n,)).fetchone()
         return r[0] if r else None
 
     # -------------------------------------------------------------------------------------------- acts
@@ -664,7 +686,7 @@ class Store:
         return n
 
     def _act_ref(self, n):
-        r = self.db.execute('SELECT ref FROM act WHERE n=?', (n,)).fetchone()
+        r = self.db.execute(f'SELECT ref FROM {self._s}act WHERE n=?', (n,)).fetchone()
         return r[0] if r else None
 
     def resolve(self, ref):
@@ -677,6 +699,10 @@ class Store:
         st = self.statement(b, sid)
         if st:
             return ('store',) + st
+        return self._in_git(b, sid)
+
+    def _in_git(self, b, sid):
+        """('git', verb, roles) of the statement `<b>#<sid>` of a bean in git, or None."""
         bean = self.bean(b)
         if bean is not None:
             for _i, verb, r in bean.items:
@@ -700,7 +726,7 @@ class Store:
         if not r:
             return None
         for verb in self.verbs():
-            cur = self.db.execute(f"SELECT * FROM {_q('v_' + _col(verb))} WHERE being=? AND id=?", (r[0], sid))
+            cur = self.db.execute(f"SELECT * FROM {self._t('v_' + _col(verb))} WHERE being=? AND id=?", (r[0], sid))
             row = cur.fetchone()
             if row:
                 _id, roles, _k, _n, _b = self._decode(verb, row, [d[0] for d in cur.description])
@@ -714,13 +740,13 @@ class Store:
             return []
         out = []
         for verb in self.verbs():
-            cur = self.db.execute(f"SELECT * FROM {_q('v_' + _col(verb))} WHERE being=? ORDER BY n", (r[0],))
+            cur = self.db.execute(f"SELECT * FROM {self._t('v_' + _col(verb))} WHERE being=? ORDER BY n", (r[0],))
             names = [d[0] for d in cur.description]
             for row in cur.fetchall():
                 sid, roles, known, n, _b = self._decode(verb, row, names)
                 acts = [self._act_ref(known)] if known else []
                 acts += [self._act_ref(a) for (a,) in self.db.execute(
-                    'SELECT act FROM known_also WHERE verb=? AND row=? ORDER BY act', (verb, n))]
+                    f'SELECT act FROM {self._s}known_also WHERE verb=? AND row=? ORDER BY act', (verb, n))]
                 out.append((verb, dict(roles, id=sid), acts))
         return out
 
@@ -730,7 +756,7 @@ class Store:
         at a moment (`known_at`), only the rows known then. With `acts`, each with the refs of the acts that know it."""
         if verb not in self.verbs():
             return
-        cur = self.db.execute(f"SELECT * FROM {_q('v_' + _col(verb))} ORDER BY n")
+        cur = self.db.execute(f"SELECT * FROM {self._t('v_' + _col(verb))} ORDER BY n")
         names = [d[0] for d in cur.description]
         until = getattr(self, '_until', None)
         for row in cur.fetchall() if until is not None else cur:
@@ -740,7 +766,7 @@ class Store:
 
     def _row_acts(self, verb, n, known):
         return ([self._act_ref(known)] if known is not None else []) + [self._act_ref(a) for (a,) in self.db.execute(
-            'SELECT act FROM known_also WHERE verb=? AND row=? ORDER BY act', (verb, n)).fetchall()]
+            f'SELECT act FROM {self._s}known_also WHERE verb=? AND row=? ORDER BY act', (verb, n)).fetchall()]
 
     # A STORE AS KNOWN AT A MOMENT (core 4.9): a row is known where one of the acts that know it — its `known`, and each
     # of `known_also` — is at or before the moment, wherever the act is kept; a knowing act's own row, at its own `at`.
@@ -764,7 +790,7 @@ class Store:
         if known is not None and self._act_known(known):
             return True
         return any(self._act_known(a) for (a,) in self.db.execute(
-            'SELECT act FROM known_also WHERE verb=? AND row=?', (verb, n)).fetchall())
+            f'SELECT act FROM {self._s}known_also WHERE verb=? AND row=?', (verb, n)).fetchall())
 
     def known_beings(self):
         """Read as known at a moment, the beings one of whose rows was known then; else None."""
@@ -775,7 +801,7 @@ class Store:
         return self._beings_on
 
     def count(self):
-        return sum(self.db.execute(f"SELECT COUNT(*) FROM {_q('v_' + _col(v))}").fetchone()[0] for v in self.verbs())
+        return sum(self.db.execute(f"SELECT COUNT(*) FROM {self._t('v_' + _col(v))}").fetchone()[0] for v in self.verbs())
 
     def put(self, being, verb, roles, *, act=None, judge=True):
         """Keep one statement of `being`: judged as the gate judges a bean's, named by its id or its form, known by
@@ -831,22 +857,37 @@ class Store:
         return sid
 
     def _judge_one(self, being, verb, r):
+        out = self.row_findings(being, verb, r)
+        if out:
+            raise StoreError('; '.join(f"{rule} {where}: {msg}" for rule, where, msg in out))
+
+    def row_findings(self, being, verb, r, i=0, place=None):
+        """[(rule, where, message)] of one row as its put judges it: the statement's own form, valency and frame and its
+        fillers' natures (the engine's `one`, the statement alone in its bean, at index `i`), the form of a name it gives
+        (rule `names`, the engine's `name_form`), and the clauses of a row: a control character, a name kept only in the
+        held store, a code of a scheme marked special-category. Each is told at `place` where one is given (the check
+        gives a row's place in the union), else at the row."""
         J = self.judge
         J.out = []
         b = engine.Bean(being, header={'bean': being, 'kind': self.kind_of(being), 'statements': [{verb: r}]})
-        J.one(b, 0, verb, r)
+        J.one(b, i, verb, r)
+        at = place or f"{being}#{r.get('id')} {verb}"
         for k, v in r.items():
             for s in (v if isinstance(v, list) else [v]):
                 if isinstance(s, str) and engine.dmparse.CONTROL.search(s.replace('\t', '')):
-                    J.err('form', f"{being}#{r.get('id')} {verb}", f"`{k}` holds a control character: text holds none "
-                                                                    f"but a tab — a name in bytes is written `escaped`")
+                    J.err('form', at, f"`{k}` holds a control character: text holds none but a tab — a name in bytes "
+                                      f"is written `escaped`")
+        if verb == 'name':
+            why, _bidi = J.name_form(r)
+            if why:
+                J.err('names', at, why)
         if verb == 'name' and isinstance(r.get('by'), str) and (self.law.namespaces.get(r['by']) or {}).get('kept') == 'held':
-            J.err('harm', f"{being}#{r.get('id')} name", f"a name {r['by']} gives is kept only in the held store")
+            J.err('harm', at, f"a name {r['by']} gives is kept only in the held store")
         marked = J._marked()
         if marked and any(s in marked for s in J._codes(r)):
-            J.err('harm', f"{being}#{r.get('id')} {verb}", "holds a code of a scheme marked special-category")
-        if J.out:
-            raise StoreError('; '.join(f"{rule} {where}: {msg}" for rule, where, msg in J.out))
+            J.err('harm', at, "holds a code of a scheme marked special-category")
+        out, J.out = J.out, []
+        return out
 
     def put_many(self, rows, *, act=None, judge=True):
         """Keep many statements in one transaction: `rows` of (being, verb, roles). Returns their ids."""
@@ -1080,32 +1121,49 @@ def check(stores, *, root=ROOT, law=None, garden=None):
     if law is None:
         law = dmjudge.garden_law(root, dmjudge.carried(root))
     for s in stores:
-        s._law, s._garden = law, garden
-        if not s.db.in_transaction:          # one snapshot of each store: a writer at work is seen before or after, whole
-            s.db.execute('BEGIN')
-    try:
+        s._law, s._garden, s._judge = law, garden, None
+    with one_snapshot(stores):
         return dmjudge.judge(law, dmjudge.Scope.union(garden, lambda law, garden, base: _check(stores, garden, law, base),
                                                       root=root))
+
+
+@contextlib.contextmanager
+def one_snapshot(stores):
+    """Every read of `stores` through one connection, each store's file attached to it read-only under `s<k>`, in one
+    transaction begun by reading each: one snapshot of each store for the whole check — its queries, its union's SQL
+    and the engine's reading of its rows alike — so a writer at work is seen before or after, whole, and the same by
+    each. A store with a write of its own open is read through its own connection, which alone sees that write."""
+    if not stores or any(s._depth for s in stores):
+        yield None
+        return
+    db = sqlite3.connect('file::memory:', uri=True, isolation_level=None)
+    was = [(s.db, s._s) for s in stores]
+    try:
+        for k, s in enumerate(stores):
+            db.execute(f"ATTACH DATABASE ? AS s{k}", (_uri(s.path, 'ro'),))
+        db.execute('BEGIN')
+        for k in range(len(stores)):
+            db.execute(f"SELECT COUNT(*) FROM s{k}.sqlite_master").fetchone()
+        for k, s in enumerate(stores):
+            s.db, s._s = db, f"s{k}."
+        yield db
     finally:
-        for s in stores:
-            if s.db.in_transaction and s._depth == 0:
-                s.db.execute('ROLLBACK')     # nothing was written: the check only reads
+        for s, (sdb, sch) in zip(stores, was):
+            s.db, s._s = sdb, sch
+        if db.in_transaction:
+            db.execute('ROLLBACK')         # nothing was written: the check only reads
+        db.close()
 
 
 def _check(stores, garden, law, base):
     """What the stores add to git's own findings (`base`)."""
     out = []
     for s in stores:
-        for (bid, kind) in s.db.execute('SELECT id, kind FROM being'):
-            bean = garden.beans.get(bid)
-            if bean is not None and kind and bean.kind != kind:
-                out.append(('form', f"{s.name}:{bid}", f"kept as `{kind}`, and its bean is a `{bean.kind}`"))
-            if bean is None and kind is None and _has_rows(s, bid):
-                out.append(('form', f"{s.name}:{bid}", "kept with no kind, and no bean gives it one"))
+        out += _kinds(s, garden)
     out += _acts_resolve(stores)
     out += _overlaps(stores, garden, law)
     out += _pointers(stores, garden)
-    size = {s.name: s.count() + s.db.execute('SELECT COUNT(*) FROM being').fetchone()[0] for s in stores}
+    size = {s.name: s.count() + s.db.execute(f'SELECT COUNT(*) FROM {s._s}being').fetchone()[0] for s in stores}
     total = sum(size.values())
     if total <= UNION_ROWS:
         out += _union_judged(stores, garden, law, base)
@@ -1120,6 +1178,9 @@ def _check(stores, garden, law, base):
         found, unjudged = _readings(U, law, base)
         out += found
         out += _names_given(U, garden, law, base)
+        for k, s in enumerate(stores):              # EVERY ROW OF A LARGE STORE, as its put judges one
+            if s in large:
+                out += _rows_judged(U, k, s)
     read = [r for r in (getattr(law, 'readings', None) or {}) if r not in dict(unjudged)]
     rest = [r for r in law.rules if r not in read and r not in QUERIED]
     if rest:
@@ -1127,8 +1188,8 @@ def _check(stores, garden, law, base):
                     f"{sum(size[s.name] for s in large)} rows: judged over the union by their readings, as SQL "
                     f"(core/union.py): {', '.join(read) or 'none'}; by its queries: knowing (each act a row names), "
                     f"names (a name a namespace gives once), form (each being's kind, one form an id, each pointer); "
-                    f"at each row's put (a bulk load's sampled rows): form, valency, frame and harm; not judged over the "
-                    f"union at this size: {', '.join(rest)}"
+                    f"every row as its put judges one (`row_findings`, found set-wise): form, valency and frame, names (a "
+                    f"name's form) and harm (a row's clauses); not judged over the union at this size: {', '.join(rest)}"
                     + ''.join(f"; {r}'s reading has no SQL form here ({why})" for r, why in unjudged)))
     seen, kept = set(), []
     for f in out:                                      # a finding the engine and a query both make is said once
@@ -1138,19 +1199,228 @@ def _check(stores, garden, law, base):
     return kept
 
 
+# EVERY ROW OF A LARGE STORE, AS ITS PUT JUDGES ONE (the next version's nv-s6-open, item 3). A load of many rows judges a
+# sample at its put (`bulk`, an import set-wise); the check judges every row. Which rows the put would refuse is found
+# set-wise, a superset of them: by SQL, what a row's columns alone decide; by the engine's own code, once for each set of
+# columns a relation's rows fill and once for each distinct filler of a column — a being kept in a store by the kind it is
+# kept as, any other value by itself — and each distinct name a namespace gives. Each row so found is judged again by the
+# put's own judgement (`Store.row_findings`), told at its place in the union, in the put's words; a row that passes it
+# is said nothing of. A row the union does not hold (git, or a store before it, holds the same statement) is judged where
+# that statement is held.
+_GLOBS = {}
+
+
+def _glob(name):
+    """A GLOB character class of what a check of the law matches one character at a time — `control`, a control
+    character as core/engine.py's row clause reads it (the tab apart, and NUL, which a GLOB cannot hold), `bidi`, a
+    bidi control — made by asking that check of every character once."""
+    if name not in _GLOBS:
+        if name == 'control':
+            hit = [c for c in range(1, 0x110000) if c != 9 and engine.dmparse.CONTROL.match(chr(c))]
+        else:
+            hit = sorted(ord(c) for c in engine.dmparse.BIDI_CONTROL)
+        ranges, start = [], None
+        for i, c in enumerate(hit):
+            if start is None:
+                start = c
+            if i + 1 == len(hit) or hit[i + 1] != c + 1:
+                ranges.append(chr(start) if start == c else f"{chr(start)}-{chr(c)}")
+                start = None
+        _GLOBS[name] = '*[' + ''.join(ranges) + ']*'
+    return _GLOBS[name]
+
+
+def _rows_judged(U, k, s):
+    """[(rule, where, message)] of every row of store `s` (the union's keeping `k`) its put would refuse: found
+    set-wise (`_suspects`), each judged again as its put judges one (`Store.row_findings`), at its place in the union."""
+    out = []
+    skip = U.K[k].skip
+    for verb in s.verbs():
+        table = s._t('v_' + _col(verb))
+        for n in sorted(_suspects(s, verb, table)):
+            if (verb, n) in skip:
+                continue
+            sid, being = s.db.execute(f"SELECT t.id, b.id FROM {table} t JOIN {s._s}being b ON b.n = t.being "
+                                      f"WHERE t.n = ?", (n,)).fetchone()
+            _v, r = s.statement(being, sid)
+            i = U.index(k + 1, being, verb, n)
+            out += s.row_findings(being, verb, r, i=i, place=f"{being}[{i}] {verb}")
+    return out
+
+
+def _suspects(s, verb, table):
+    """The rows (their `n`) of `verb` in store `s` its put may refuse: every row it refuses, and maybe others."""
+    J, law = s.judge, s.law
+    v = law.verbs.get(verb)
+    rows = lambda where='', args=(): {n for (n,) in s.db.execute(f"SELECT t.n FROM {table} t {where}", args)}  # noqa
+    if v is None:
+        return rows()                                  # no verb of the law: every row
+    cols = s.columns(verb)
+    shapes = {**(v.get('roles') or {}), **(v.get('qualifiers') or {})}
+    required = set(listed(v.get('required'))) | set(listed((v.get('choice') or {}).get('one_of')))
+    filled = {key: (f"({bc} IS NOT NULL OR {tc} IS NOT NULL)" if bc else f"({tc} IS NOT NULL)")
+              for key, (bc, tc) in cols.items()}
+    filled.update({key: f"(c_{key} IS NOT NULL)" for key in BESIDE})
+    out = set()
+    # THE COLUMNS A ROW FILLS: a role its verb's row has not, a required role left out, a choice — the engine's own
+    # `keys`, asked once of each set of columns the rows fill
+    keys = list(filled)
+    sets = s.db.execute(f"SELECT DISTINCT {', '.join(filled[x] for x in keys)} FROM {table}").fetchall()
+    for got in sets:
+        J.out = []
+        held = {x: True for x, on in zip(keys, got) if on}
+        J.keys('x', verb, v, held)
+        J.keys('x', verb, v, held, counted=True)
+        said, J.out = bool(J.out), []
+        if said:
+            out |= rows('WHERE ' + ' AND '.join(filled[x] if on else f"NOT {filled[x]}" for x, on in zip(keys, got)))
+    # PROSE BESIDE IT, AND WHAT IT IS HELD WHILE: `why` and `note` are text; a `while` is read by the engine row by row
+    out |= rows("WHERE (c_why IS NOT NULL AND typeof(c_why) != 'text') OR (c_note IS NOT NULL AND typeof(c_note) != "
+                "'text') OR c_while IS NOT NULL")
+    # A CONTROL CHARACTER in a text it holds, its id among them
+    texts = ['id'] + [tc for _bc, tc in cols.values()] + [f"c_{x}" for x in BESIDE]
+    cond = ' OR '.join(f"(typeof({c}) = 'text' AND ({c} GLOB ? OR instr({c}, char(0)) > 0))" for c in texts)
+    out |= rows('WHERE ' + cond, tuple(_glob('control') for _c in texts))
+    # A CODE OF A SCHEME MARKED SPECIAL-CATEGORY, wherever it holds one
+    for scheme in sorted(J._marked()):
+        out |= rows('WHERE ' + ' OR '.join(f"instr(CAST({tc} AS TEXT), ?) > 0" for _bc, tc in cols.values()),
+                    tuple(scheme + ':' for _c in cols))
+    # EACH FILLER, by the engine's own `fill`: once a kind for a being kept in a store and named nowhere else, once a
+    # value for any other
+    s.db.execute("CREATE TEMP TABLE IF NOT EXISTS rj_named (id TEXT PRIMARY KEY)")    # named elsewhere than here
+    s.db.execute("DELETE FROM temp.rj_named")
+    s.db.executemany("INSERT OR IGNORE INTO temp.rj_named VALUES (?)",
+                     ((x,) for x in set(law.crown) | {'self', 'now', 'unknown'} | set(s.garden.beans)))
+    s.db.execute("CREATE TEMP TABLE IF NOT EXISTS rj_bad (v)")       # the values of a column the put refuses
+
+    def bad_rows(column, values, where=''):
+        """The rows whose `column` holds one of `values`, read in one pass."""
+        s.db.execute("DELETE FROM temp.rj_bad")
+        s.db.executemany("INSERT INTO temp.rj_bad VALUES (?)", ((x,) for x in values))
+        return rows(f"WHERE {where}{column} IN (SELECT v FROM temp.rj_bad)")
+    first = s.db.execute(f"SELECT b.id FROM {table} t JOIN {s._s}being b ON b.n = t.being ORDER BY t.n LIMIT 1").fetchone()
+    if first is None:
+        return out
+    b = engine.Bean(first[0], header={'bean': first[0], 'kind': s.kind_of(first[0]), 'statements': []})
+    for key, (bc, tc) in cols.items():
+        spec = shapes.get(key)
+        if spec is None:
+            continue                                   # a role its row has not: the columns above
+        req = key in required
+
+        def refused(value):
+            """Whether the engine's `fill` refuses `value` in this role: of no row but through `self` or a statement
+            of its own bean, which are read row by row (below)."""
+            J.out = []
+            J.fill('x', key, spec, value, req, b)
+            said, J.out = bool(J.out), []
+            return said
+        if bc:
+            elsewhere = f"(f.id IN (SELECT id FROM temp.rj_named) OR f.id LIKE 'store:%')"
+            for kind, n in s.db.execute(f"SELECT f.kind, MIN(t.n) FROM {table} t JOIN {s._s}being f ON f.n = t.{bc} "
+                                        f"WHERE NOT {elsewhere} GROUP BY f.kind").fetchall():
+                x = s.db.execute(f"SELECT f.id FROM {table} t JOIN {s._s}being f ON f.n = t.{bc} WHERE t.n = ?",
+                                 (n,)).fetchone()[0]
+                if refused(x):                         # kept here alone: as the kind it is kept as
+                    out |= rows(f"JOIN {s._s}being f ON f.n = t.{bc} WHERE f.kind IS ?", (kind,))
+            for (x,) in s.db.execute(f"SELECT DISTINCT f.id FROM {s._s}being f WHERE {elsewhere} AND EXISTS (SELECT 1 "
+                                     f"FROM {table} t WHERE t.{bc} = f.n)").fetchall():
+                if refused(x):                         # a being named elsewhere too: by itself
+                    out |= rows(f"JOIN {s._s}being f ON f.n = t.{bc} WHERE f.id = ?", (x,))
+        any_text = 'text' in shapes_of(spec) and spec.get('keyed') != engine.TRUE
+        if any_text:                                   # any string is text: only `now`, `unknown` and `self` say anything
+            values = s.db.execute(f"SELECT DISTINCT {tc} FROM {table} WHERE typeof({tc}) = 'text' AND {tc} IN "
+                                  f"('now', 'unknown', 'self') UNION SELECT DISTINCT {tc} FROM {table} WHERE {tc} IS "
+                                  f"NOT NULL AND typeof({tc}) != 'text'")
+        else:
+            values = s.db.execute(f"SELECT DISTINCT {tc} FROM {table} WHERE {tc} IS NOT NULL")
+        bad, each = [], {}
+        many = spec.get('many') == engine.TRUE
+
+        def own(x):                                    # its own bean: read row by row (a statement of it written
+            return x == 'self'                         # without `#` is refused below by the bean that holds none)
+
+        def item(x):
+            """Whether a list's item is refused: `fill` refuses a list where it refuses one of its items alone, and a
+            row's clause where an item is a text holding a control character — each item asked once."""
+            key = json.dumps(x, sort_keys=True, ensure_ascii=False)
+            if key not in each:
+                each[key] = own(x) or refused([x]) or (isinstance(x, str) and bool(
+                    engine.dmparse.CONTROL.search(x.replace('\t', ''))))
+            return each[key]
+        for (raw,) in values:
+            value = json.loads(raw) if isinstance(raw, bytes) else raw
+            if isinstance(value, list) and value and many:
+                if any(item(x) for x in value):
+                    bad.append(raw)
+            elif own(value) or refused(value) or (isinstance(value, list) and any(
+                    isinstance(x, str) and engine.dmparse.CONTROL.search(x.replace('\t', '')) for x in value)):
+                bad.append(raw)
+        if bad:
+            out |= bad_rows(tc, bad)
+    # A NAME'S FORM (rule `names`, the engine's `name_form`), and a name kept only in the held store
+    if verb == 'name' and 'by' in cols and 'as' in cols:
+        by, nm = cols['by'][1], cols['as'][1]
+        held = sorted(x for x, r in law.namespaces.items() if (r or {}).get('kept') == 'held')
+        if held:
+            out |= rows(f"WHERE {by} IN ({', '.join('?' * len(held))})", tuple(held))
+        out |= rows(f"WHERE typeof({nm}) = 'text' AND {nm} GLOB ?", (_glob('bidi'),))
+        shaped = sorted(x for x, r in law.namespaces.items() if (r or {}).get('pattern') and x not in ('garden-id', 'garden'))
+        ns_of = f"COALESCE({by}, (SELECT id FROM {s._s}being WHERE n = {cols['by'][0]}))" if cols['by'][0] else by
+        for ns in shaped:
+            bad = [name for (name,) in s.db.execute(f"SELECT DISTINCT {nm} FROM {table} WHERE {ns_of} = ? AND {nm} IS "
+                                                    f"NOT NULL", (ns,))
+                   if J.name_form({'by': ns, 'as': json.loads(name) if isinstance(name, bytes) else name})[0]]
+            if bad:
+                out |= bad_rows(nm, bad, f"{ns_of} = '{ns}' AND ")
+    s.db.execute("DROP TABLE IF EXISTS temp.rj_named")
+    s.db.execute("DROP TABLE IF EXISTS temp.rj_bad")
+    return out
+
+
+def _kinds(s, garden):
+    """Each being a store keeps, its kind against its bean's, and one kept with no kind that no bean gives one and that
+    has rows: found set-wise, in the order the store keeps its beings."""
+    s.db.execute("CREATE TEMP TABLE IF NOT EXISTS rj_git (id TEXT PRIMARY KEY, kind TEXT)")
+    s.db.execute("DELETE FROM temp.rj_git")
+    s.db.executemany("INSERT INTO temp.rj_git VALUES (?, ?)", ((b.id, b.kind) for b in garden.beans.values()))
+    has = ' OR '.join(f"EXISTS (SELECT 1 FROM {s._t('v_' + _col(v))} WHERE being = b.n)" for v in s.verbs()) or '0'
+    out = []
+    for bid, kind, bean, gkind in s.db.execute(
+            f"SELECT b.id, b.kind, g.id IS NOT NULL, g.kind FROM {s._s}being b LEFT JOIN temp.rj_git g ON g.id = b.id "
+            f"WHERE (g.id IS NOT NULL AND b.kind IS NOT NULL AND b.kind != '' AND g.kind IS NOT b.kind) OR "
+            f"(g.id IS NULL AND b.kind IS NULL AND ({has})) ORDER BY b.n").fetchall():
+        if bean:
+            out.append(('form', f"{s.name}:{bid}", f"kept as `{kind}`, and its bean is a `{gkind}`"))
+        else:
+            out.append(('form', f"{s.name}:{bid}", "kept with no kind, and no bean gives it one"))
+    s.db.execute("DROP TABLE temp.rj_git")
+    return out
+
+
 def _has_rows(s, bid):
     n = s._being_row(bid)
-    return n is not None and any(s.db.execute(f"SELECT 1 FROM {_q('v_' + _col(v))} WHERE being=? LIMIT 1",
+    return n is not None and any(s.db.execute(f"SELECT 1 FROM {s._t('v_' + _col(v))} WHERE being=? LIMIT 1",
                                               (n[0],)).fetchone() for v in s.verbs())
 
 
 def _acts_resolve(stores):
+    """Rule `knowing` at a store's rows: each act a row is known by (its `known`, each of `known_also`) is a knowing act
+    kept in a store here or in git. An act no row names — every row it knew taken out (`gone`) — knows nothing here,
+    and is not asked."""
     out = []
     for s in stores:
-        for (ref,) in s.db.execute('SELECT ref FROM act'):
+        named = ' UNION '.join([f"SELECT known FROM {s._t('v_' + _col(v))}" for v in s.verbs()] +
+                               [f"SELECT act FROM {s._s}known_also"])
+        acts = s.db.execute(f"SELECT n, ref FROM {s._s}act WHERE n IN ({named}) ORDER BY n").fetchall()
+        kept = [_kept_as(s, t, acts) for t in stores]
+        for n, ref in acts:
             hit = None
-            for t in stores:
-                hit = t.resolve(ref)
+            for t, k in zip(stores, kept):
+                if k is None:
+                    hit = t.resolve(ref)
+                elif REF.match(ref):              # the store's own statement, found set-wise, else its bean's in git
+                    hit = ('store', k[n]) if n in k else t._in_git(*REF.match(ref).groups())
                 if hit:
                     break
             if hit is None:
@@ -1160,11 +1430,30 @@ def _acts_resolve(stores):
     return out
 
 
+def _kept_as(s, t, acts):
+    """{act n: verb} of each act of store `s` (`acts`, [(n, ref)]) that names a statement store `t` keeps, found
+    set-wise, as `Store.statement` finds one: the first verb, in `t`'s order, whose relation holds `(being, id)`. None
+    where the two are not read through one connection (`one_snapshot`), and each act is asked by itself."""
+    if not acts or not (s._s and t._s and s.db is t.db):
+        return None
+    s.db.execute("CREATE TEMP TABLE IF NOT EXISTS rj_acts (n INTEGER PRIMARY KEY, being TEXT, id TEXT)")
+    s.db.execute("DELETE FROM temp.rj_acts")
+    s.db.executemany("INSERT INTO temp.rj_acts VALUES (?, ?, ?)",
+                     ((n,) + REF.match(ref).groups() for n, ref in acts if isinstance(ref, str) and REF.match(ref)))
+    out = {}
+    for v in t.verbs():
+        for (n,) in s.db.execute(f"SELECT a.n FROM temp.rj_acts a JOIN {t._s}being b ON b.id = a.being JOIN "
+                                 f"{t._t('v_' + _col(v))} r ON r.being = b.n AND r.id = a.id"):
+            out.setdefault(n, v)
+    s.db.execute("DROP TABLE temp.rj_acts")
+    return out
+
+
 def _overlaps(stores, garden, law):
     """One `(being, id)`, one form, across git and every store."""
     out = []
     for s in stores:
-        for (bid,) in s.db.execute('SELECT id FROM being'):
+        for (bid,) in s.db.execute(f'SELECT id FROM {s._s}being'):
             bean = garden.beans.get(bid)
             if bean is None:
                 continue
@@ -1174,7 +1463,7 @@ def _overlaps(stores, garden, law):
                     continue
                 sid = r['id'] if isinstance(r.get('id'), str) else mint(v, s.normalize(bid, v, r))
                 ids[sid] = (v, s.normalize(bid, v, r))
-            for verb, roles, _acts in s.get(bid):
+            for verb, roles in _rows_of_ids(s, bid, ids):
                 sid = roles['id']
                 if sid in ids:
                     gv, gr = ids[sid]
@@ -1210,6 +1499,28 @@ def _pointers(stores, garden):
     return out
 
 
+def _rows_of_ids(s, bid, ids):
+    """[(verb, roles with their id)] of the rows of `bid` a store keeps under one of `ids`, in the order `get` gives
+    them (by verb, then as put): each found by its `(being, id)`, never by reading every row of the being — a series'
+    millions of observations, of which its bean names a few."""
+    r = s._being_row(bid)
+    if not r or not ids:
+        return []
+    out = []
+    for verb in s.verbs():
+        table = s._t('v_' + _col(verb))
+        names = [c[1] for c in s.db.execute(f"PRAGMA {s._s}table_info({_q('v_' + _col(verb))})")]
+        got = []
+        for sid in ids:
+            row = s.db.execute(f"SELECT {', '.join(_q(c) for c in names)} FROM {table} WHERE being=? AND id=?",
+                               (r[0], sid)).fetchone()
+            if row:
+                rid, roles, _known, n, _b = s._decode(verb, row, names)
+                got.append((n, dict(roles, id=rid)))
+        out += [(verb, roles) for _n, roles in sorted(got, key=lambda x: x[0])]
+    return out
+
+
 def _plainid(x):
     """A filler with every pointer read as the plain id it names: in the union every being is one id."""
     if isinstance(x, list):
@@ -1237,7 +1548,7 @@ def _union_garden(stores, garden):
         G.beans[bid] = engine.Bean(bid, path=bean.path, header=dict(bean.header, statements=_plain_statements(
             bean.statements)), raw=None)
     for s in stores:
-        for (bid, kind, title, summary) in s.db.execute('SELECT id, kind, title, summary FROM being').fetchall():
+        for (bid, kind, title, summary) in s.db.execute(f'SELECT id, kind, title, summary FROM {s._s}being').fetchall():
             rows = s.get(bid)
             bean = G.beans.get(bid)
             if not rows and (bean is not None or bid in added):
@@ -1292,7 +1603,7 @@ def _rows_n(s, bid):
         return []
     out = []
     for verb in s.verbs():
-        cur = s.db.execute(f"SELECT * FROM {_q('v_' + _col(verb))} WHERE being=? ORDER BY n", (r[0],))
+        cur = s.db.execute(f"SELECT * FROM {s._t('v_' + _col(verb))} WHERE being=? ORDER BY n", (r[0],))
         names = [d[0] for d in cur.description]
         for row in cur.fetchall():
             sid, roles, _known, n, _b = s._decode(verb, row, names)
@@ -1301,7 +1612,7 @@ def _rows_n(s, bid):
 
 
 def _kept_by(s, bid):
-    return s.db.execute('SELECT 1 FROM being WHERE id=?', (bid,)).fetchone() is not None
+    return s.db.execute(f'SELECT 1 FROM {s._s}being WHERE id=?', (bid,)).fetchone() is not None
 
 
 def _skips(stores, garden):
@@ -1312,8 +1623,8 @@ def _skips(stores, garden):
     both = {bid for bid in garden.beans if any(_kept_by(s, bid) for s in stores)}
     for k, s in enumerate(stores):                    # a being two stores keep: read from the one keeping fewer
         for e in stores[:k]:
-            small, big = sorted((s, e), key=lambda x: x.db.execute('SELECT COUNT(*) FROM being').fetchone()[0])
-            both |= {bid for (bid,) in small.db.execute('SELECT id FROM being') if _kept_by(big, bid)}
+            small, big = sorted((s, e), key=lambda x: x.db.execute(f'SELECT COUNT(*) FROM {x._s}being').fetchone()[0])
+            both |= {bid for (bid,) in small.db.execute(f'SELECT id FROM {small._s}being') if _kept_by(big, bid)}
     for bid in sorted(both):
         bean = garden.beans.get(bid)
         items = None
@@ -1342,18 +1653,21 @@ def _skips(stores, garden):
 
 @contextlib.contextmanager
 def compiled(stores, garden, law):
-    """The union of git and `stores` as core/union.py reads it: each store's file attached read-only to a connection of
-    its own, under `s<k>`, in one transaction; the Union over them."""
+    """The union of git and `stores` as core/union.py reads it: each store's file attached read-only under `s<k>`, in
+    one transaction — the check's one connection where the stores are read through it (`one_snapshot`), else a
+    connection of its own; the Union over them."""
     from core import union as dmunion
-    db = sqlite3.connect('file::memory:', uri=True, isolation_level=None)
+    shared = bool(stores) and all(s._s and s.db is stores[0].db for s in stores)   # the check's one connection
+    db = stores[0].db if shared else sqlite3.connect('file::memory:', uri=True, isolation_level=None)
     try:
-        for k, s in enumerate(stores):
-            db.execute(f"ATTACH DATABASE ? AS s{k}", (_uri(s.path, 'ro'),))
-        db.execute('BEGIN')
+        if not shared:
+            for k, s in enumerate(stores):
+                db.execute(f"ATTACH DATABASE ? AS s{k}", (_uri(s.path, 'ro'),))
+            db.execute('BEGIN')
         keeps = []
         for k, (s, skip) in enumerate(zip(stores, _skips(stores, garden))):
             verbs = s.verbs()
-            keeps.append(dmunion.Keeping(f"s{k}", verbs, {v: 'v_' + _col(v) for v in verbs},
+            keeps.append(dmunion.Keeping(s._s[:-1] if shared else f"s{k}", verbs, {v: 'v_' + _col(v) for v in verbs},
                                          {v: s.columns(v) for v in verbs}, {v: s.shapes(v) for v in verbs}, skip))
         U = dmunion.Union(db, engine.Judge(law, garden), keeps)
         try:
@@ -1361,7 +1675,8 @@ def compiled(stores, garden, law):
         finally:
             U.close()
     finally:
-        db.close()
+        if not shared:
+            db.close()
 
 
 def _readings(U, law, base):
