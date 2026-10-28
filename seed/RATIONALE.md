@@ -660,6 +660,13 @@ row, and so the gate names no verb: every verb but the face's is a row, proposed
 schema language held that type rules live in the law and not in code (`core/law/core.yaml: shapes`). Today's checks of
 today's terms' shapes are this rule and `form` (§16 item 8).
 
+A BODY IS SPECIFIED IN ITS OWN BEAN, ONCE (core 4.12). What a body is by its own make — how it gives under load, its
+shape, its section, its designation — and what kind each feature of it is are facts of that body alone, so they are
+said where the body is, once each: a second `specify` of one body or one feature would let two values stand for one
+fact. A feature is written by its body's bean (`hub#bore`), the spelling `join` already gives it, so one position has
+one spelling. What is the body's is never said of a feature, nor the other way; a device is bodies joined, so it has
+no compliance of its own, and a side or a profile is said only of a kind of feature that has one.
+
 ## core/law/core.yaml: rules[knowing]
 
 EVERY STATEMENT IS KNOWN BY AN ACT (the core spec §3; ratified with the core's engine, daftar #81–#84, 2026-10-01). A
@@ -784,6 +791,12 @@ understood and harmless leaves the leads without leaving the ledger: an observer
 its reasons in its words, and it names the day it is looked at again. That day is an `obligatory` of the response whose
 clause falls due, so the reader of what falls due reads it as it reads every clause, and no second calendar is kept. A
 benign response with no such day would retire a failure for ever, which is forgetting it, so the rule asks for the day.
+
+A NEED MAY BE FOUND BENIGN, NOT ONLY A FAILURE (core 4.12). A crossing writes a new `fail` each time a need stops
+holding, so a defect that recurs — a filter that holds a counter open each time it runs — would need a new response at
+each crossing, and the response is the same judgement each time. Found benign once, of the need, each failure of it is
+no lead until the same review day, when it is looked at again: the judgement is said once, and the failures are still
+written, so the garden keeps what happened and the leads keep only what a person must act on.
 
 ## core/law/core.yaml: rules[bearer]
 
@@ -2937,6 +2950,13 @@ active checks silent from a known minute, and three probes dead for weeks. So a 
 silent before it is not met. Past that, a reading older than the interval, or a probe failing for longer, does not
 hold, and the crossing says the need is silent, as a step's `usually` makes a course overdue. A need with no interval
 reads as before: what is not known is not met, and no crossing is written either way.
+
+AN EXPECTATION IS A DEGREE OF `possible` (core 4.12, VII.5). What a reading that meets a need is expected to show
+is said as the law already says a degree: a `possible` of the need, its `chance` of holding `within` an extent,
+written by whoever expects it. No verb and no table was added for expectations, since a forecast and an expectation
+are one figure; a lead of a failure says the chance it was expected to hold with, so the person who reads it knows
+whether it was expected. A signal is the value its probe reads, already the `measure` a crossing writes; a class of
+noise waits for the cases that would type it.
 
 ## core/law/terms.yaml: terms[refs]
 
@@ -5187,6 +5207,35 @@ them aside — a pulley here is a role — and so was function first: one O-ring
 limit on a pattern, never its ground. A link, a coupling and the least whole are read, never stated: they follow from
 the joints already written.
 
+## core/law/verbs.yaml: verbs[specify]
+
+WHAT A BODY IS BY ITS OWN MAKE, SAID OF THE BODY (core 4.12). A role is read from the joints, but a pattern's nodes ask
+a compliance, a shape, a section, a feature's kind, and no statement said them, so no garden could read a role. Of the
+three ways weighed — a column of the body's kind, a statement of the body, a said form alone — a kind's column
+multiplies kinds (a rigid component, an elastic one) and a form alone leaves the bodies that have none unread (a hub,
+a tube, the oil), so the body says them in its own bean, with one verb whose qualifiers are the pattern's own
+constraints, and a form said of it says the rest of what its root holds. One verb serves the body and each feature of
+it, its `of` naming which, so a garden learns one word for what a body and its features are. A whole drawn whole says
+so (`whole`), since what is not written is not known to be absent unless the whole says it is all written.
+
+## core/law/verbs.yaml: features
+
+A FEATURE'S KIND IS A ROW OF THE CORE (core 4.12). The kinds are the dependent parts of one body the made scheme's
+patterns name — a bore, a seat, a face, a groove, a thread, a keyway, flats, a hole pattern, a port, an eye, a raceway,
+a lug hole, a lip — named after ISO/TS 10303-1814's machining features where one fits (round hole, outer round,
+planar face, groove, thread, slot, circular pattern), so a reader of STEP finds its word beside ours. A side and a
+profile are said only of a kind that has one, and a groove's profile is a row of `sections`, the same rows as a body's
+section, since a groove's profile and a body's section are one geometry.
+
+## core/law/verbs.yaml: outlines
+
+A LIMIT IS A ROW, NOT A WORD (core 4.12). A body's shape and section are what its topology does not say: an O-ring and
+an X-ring are one topology told apart by their section. The made scheme's patterns wrote them as words; as rows of the
+core (`outlines` for the shape, since `shapes` names the shapes of a role's filler, and `sections`), the law's
+self-check holds a pattern to them as it holds a pair or a closure, and a garden adds a row where it needs one, which
+rule vacancy holds to its use. A designation is held by the check that reads it (core/law/checks.yaml), the same rows a
+reading fits a value to; a material, a function and a use wait for their own words.
+
 ## core/law/registries.yaml: knowledge_schemes[made]
 
 A WORKSHOP WORD NAMES A PATTERN, NOT A KIND (core 4.2). Reuleaux §128 read the workshop's "constructive elements" —
@@ -5201,6 +5250,13 @@ word is a row of its own only where its pattern or its limits differ, and the la
 signature, so two names for one thing stay one concept. Three groups of the seed are one topology told apart by limits
 alone, which is why limits are part of a signature. The matcher never guesses: a body's compliance or a feature's kind
 no statement says fits no constraint on it, and a pattern with a `not` is read only of a body drawn whole.
+
+A ROW IS SHIPPED WITH A PART THAT EXERCISES IT (core 4.12). Six rows came in with the assemblies that read them — the
+radial shaft seal with a pump, the gear and the shaft coupling with a gear drive, the gasket with a flange joint, the
+dowel pin and the rivet with a bracket — each concept tried on every node, as the first rows were. The families went
+as roles where a pattern of them reads only what the family names; drafted, a fastener, a seal and a bearing each read
+many bodies of the seed that do other work, so none is a row yet. A word whose pattern is another row's signature is
+that row's, as the law's self-check says, until a limit tells them apart.
 
 ## core/law/verbs.yaml: verbs[grant]
 

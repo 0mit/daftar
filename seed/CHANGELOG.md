@@ -251,6 +251,22 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.12** (2026-10-28, daftar v4.12.0, human-ratified rule-change) — **the mechanics' words, a designation's
+  check, a need found benign, an expectation, and a session's watermark.** MINOR. A body says what it is by its own make
+  in its own bean, once, with a new verb of the core, `specify`: its compliance, its shape (a row of `outlines`), its
+  section (a row of `sections`) and its designation; of each feature of it (`<its bean>#<feature>`), its kind (a row
+  of `features`, thirteen, named after ISO/TS 10303-1814's machining features where one fits), its side (`sides`) and
+  profile where its kind takes them, and its count; and that a whole is drawn whole (`whole: "true"`), so a pattern
+  with a `not` is read of it. A form said of a body says what its root holds where `specify` does not. The drawing reads
+  them, so a garden reads a role; the law's self-check holds a pattern's shapes, sections, feature kinds, sides,
+  profiles and designations to the core's tables and checks, a garden adding a row it needs (rule `valency`: a body is
+  specified in its own bean, once, and each feature of it once). Six rows of the made scheme, each with a seed part
+  that exercises it: the radial shaft seal, the gear, the shaft coupling, the gasket, the dowel pin and the rivet (52
+  concepts). A reading fits a value to a check alone, `fits: {check: <row>}`, and a pattern's designation names one.
+  A response may find a need benign (rule `squares`): each failure of it until its review is no lead. What a need is
+  expected to show is a `possible` of it, its `chance` of holding (`need`'s meaning), and a lead says it. Code: the
+  hook's `end` counts the session's prompts no save traced a value to, keeps the count and says it (`bin/hook.py
+  watermark` reads them back).
 - **core 4.11** (2026-10-28, daftar v4.11.0, human-ratified rule-change) — **identity and the hub: what a person's
   consent lets reach another garden, what passes on through gardens, a release held to its tag, and what a hub reports
   before it refuses.** MINOR. A person's consent may forbid the gardens their facts reach: a `forbidden` of an

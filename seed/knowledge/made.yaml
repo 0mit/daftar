@@ -394,6 +394,18 @@
       not:
         - { x: root, y: W, pair: [pressing] }
     wikidata: Q8026705
+  - code: radial-shaft-seal
+    level: role
+    name: "radial shaft seal"
+    synonyms: "rotary shaft seal | oil seal"
+    pattern:
+      root: {}
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid }, F: { compliance: pressure } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [friction], b: { kind: bore } }
+        - { x: root, y: B, pair: [revolute], closure: [force], b: { kind: seat } }
+        - { x: root, y: F, pair: [pressing] }
+    wikidata: Q1778660
   - code: blind-plug
     level: role
     name: "blind plug"
@@ -483,3 +495,65 @@
     wikidata: Q2318337
     etim: EC012253
     cpv: "42121100"
+  - code: gear
+    level: role
+    name: gear
+    synonyms: "gear wheel | toothed wheel | cogwheel"
+    pattern:
+      root: { compliance: rigid }
+      nodes: { G: { compliance: rigid } }
+      edges:
+        - { x: root, y: G, pair: [meshing] }
+    wikidata: Q143873
+    etim: EC011968
+    cpv: "42141000"
+  - code: shaft-coupling
+    level: role
+    name: "shaft coupling"
+    synonyms: "coupling"
+    pattern:
+      root: {}
+      nodes: { A: { fits: shaft }, B: { fits: shaft } }
+      edges:
+        - { x: root, y: A, pair: [fixed] }
+        - { x: root, y: B, pair: [fixed] }
+    wikidata: Q17992492
+    cpv: "42141700"
+  - code: gasket
+    level: role
+    name: gasket
+    synonyms: "flat gasket | flange gasket"
+    pattern:
+      root: { compliance: elastic }
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure_any: [force, friction], b: { kind: face } }
+        - { x: root, y: B, pair: [fixed], closure_any: [force, friction], b: { kind: face } }
+        - { x: A, y: B, rel: one-link }
+    wikidata: Q1132541
+    cpv: "34312500"
+  - code: dowel-pin
+    level: role
+    name: "dowel pin"
+    synonyms: "dowel | locating pin"
+    pattern:
+      root: { compliance: rigid, shape: bar }
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [friction], b: { kind: bore } }
+        - { x: root, y: B, pair: [fixed], closure: [friction], b: { kind: bore } }
+        - { x: A, y: B, pair: [fixed] }
+    wikidata: Q1365730
+  - code: rivet
+    level: role
+    name: rivet
+    synonyms: "solid rivet"
+    pattern:
+      root: { compliance: rigid, shape: headed-bar }
+      nodes: { A: { compliance: rigid }, B: { compliance: rigid } }
+      edges:
+        - { x: root, y: A, pair: [fixed], closure: [form], b: { kind: bore } }
+        - { x: root, y: B, pair: [fixed], closure: [form], b: { kind: bore } }
+    wikidata: Q212500
+    etim: EC002353
+    cpv: "44532100"

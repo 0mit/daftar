@@ -143,6 +143,7 @@ verbs:classify	classificare	classis + facere: a being set in its class by a code
 verbs:concern	riguardare	re + guardare (to look back at, to regard): the person a record is about — l'interessato, the data subject of Italian data protection	proposed	agent (claude opus-5.5), by hand
 verbs:about	trattare di	trattare (to handle, to treat of): ciò di cui tratta un documento; the person concerned is riguardare	proposed	agent (claude opus-5.5), by hand
 verbs:join	congiungere	con + iungere (to yoke together): due corpi congiunti per un elemento di ciascuno, in una coppia	proposed	agent (claude opus-5.5), by hand
+verbs:specify	specificare	species + facere: ciò che un corpo è per la propria fattura — cedevolezza, forma, sezione — o il genere di un suo elemento	proposed	agent (claude opus-5.5), by hand
 verbs:rate	valutare	valere (to be worth): how much harm a being can do a person if it leaves the garden	proposed	agent (claude opus-5.5), by hand
 verbs:fail	guastarsi	vastare (to lay waste): a way a being can break down, or is breaking down — guasto, a fault	proposed	agent (claude opus-5.5), by hand
 verbs:repair	riparare	reparare (to make ready again): to remedy a failure, where the fix lives	proposed	agent (claude opus-5.5), by hand

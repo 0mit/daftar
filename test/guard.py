@@ -458,6 +458,34 @@ try:
     dmhook.claim(RG, 's1', release=True)
     r = event('pre', 'Write', {'file_path': os.path.join(G, 'beans', 'x.md')})
     check("own-worktree: released as the session closes, the record no longer holds", r.returncode == 0, r.out)
+    # THE WATERMARK (ledger step 5, nb-s5-open 5): at `end`, of the session's prompts, those no save traced a value to,
+    # counted, kept beside its material, said to the person; `watermark` reads them back
+    W2 = os.path.join(T, 'wm')
+    r = grow.garden(rel, W2, 'sam', '--zone', 'Europe/Istanbul')
+    hk = os.path.join(W2, 'bin', 'hook.py')
+
+    def wm(verb, **ev):
+        return run(PY, hk, verb, stdin=json.dumps(dict({'session_id': 'wm0123456789', 'cwd': W2, 'hook_event_name': verb},
+                                                       **ev)), env=dict(SHELL_ENV))
+    r1 = wm('prompt', prompt='the kiosk on the shop floor answers at 192.0.2.77')
+    r2 = wm('prompt', prompt='and keep the notes short')
+    with open(os.path.join(W2, 'beans', 'kiosk.md'), 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write('---\nbean: kiosk\nkind: host\ntitle: "the kiosk"\nstatements:\n  - say: { by: sam, at: now }\n'
+                 '  - be: { by: self, at: 192.0.2.77, as: location }\n---\nThe kiosk on the shop floor.\n')
+    r3 = run(PY, os.path.join(W2, 'bin', 'save.py'), 'sam', 'the kiosk and where it answers', '--body',
+             '- action: [[kiosk]] where it answers', cwd=W2)
+    r4 = wm('end')
+    r5 = run(PY, hk, 'watermark', '--json', cwd=W2)
+    try:
+        ends = json.loads(r5.out)
+    except ValueError:
+        ends = r5.out
+    check("the watermark: at `end`, of the session's two prompts the one no save traced a value to is counted and said "
+          "to the person, and `watermark` reads it back", r.returncode == 0 and r1.returncode == 0 and r2.returncode == 0
+          and r3.returncode == 0 and r4.returncode == 0 and "of this session's 2 prompt(s), 1 reached no save" in r4.out
+          and isinstance(ends, list) and len(ends) == 1 and (ends[0].get('prompts'), ends[0].get('drawn'),
+                                                             ends[0].get('untraced')) == (2, 1, 1),
+          (r3.out[-600:], r4.out, ends))
     r = run(PY, os.path.join(G, 'bin', 'hook.py'), 'uninstall', 'claude-code')
     cfg = json.load(open(settings, encoding='utf-8'))
     check("uninstall takes the hooks out and keeps the shell it set", r.returncode == 0 and 'hooks' not in cfg

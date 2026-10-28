@@ -83,6 +83,7 @@ import install as dminstall  # noqa: E402 — the one reader of an SSH key's fin
 
 ROOT = journal.ROOT
 TRACED = []                 # (log, pass) the SAVE guard found, written in commit()
+DRAWN = []                  # (session, the prompt's sha) a said value was traced to: the watermark's, after the commit
 SIGNED = []                 # the key the commit is signed with, read in ready(), said in commit()
 PY = 'python' if os.name == 'nt' else 'python3'
 AGAIN = f"{PY} bin/save.py --again"
@@ -268,6 +269,8 @@ def trace_said():
                 md['form'] = 'written'
             if t.verdict == 'nowhere':
                 hoped.append(f"{p} {at} = {v[:60]}")
+            if t.verdict == 'words' and isinstance(t.entry, dict) and t.entry.get('layer') == 'instructions':
+                DRAWN.append((s, t.entry.get('sha')))
             TRACED.append((s.state.get('log'), launch.core_pass(t.source, dest, t.method, md, act='say') if core else
                            {'from': t.source, 'to': dest, 'method': t.method, 'metadata': md}))
     if refused:
@@ -353,7 +356,10 @@ def commit(message, again):
     # The hook's lines are the gate's own, and are passed through as it prints them; `-q` leaves out git's summary.
     if subprocess.run(['git', '-C', ROOT, 'commit', '-q', '-m', message]).returncode != 0:
         return not_saved("the commit was refused (above)")
-    print(dmparse.said(f"saved {git('rev-parse', '--short', 'HEAD').stdout.strip()}: {message}"))
+    head = git('rev-parse', '--short', 'HEAD').stdout.strip()
+    for s, sha in DRAWN:                      # THE WATERMARK (ledger step 5): the prompts a saved value came from
+        s.drawn(sha, head)
+    print(dmparse.said(f"saved {head}: {message}"))
     if SIGNED and SIGNED[0]:
         print(dmparse.said(f"save: signed with {SIGNED[0]}"))
     return 0

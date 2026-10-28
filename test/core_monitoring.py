@@ -111,9 +111,13 @@ try:
                           'through': 'the filter never sends QUIT; nothing is lost'}}
     got = found(bean('mx', 'host', F1, benign, REVIEW), rules={'squares', 'valency', 'measured'})
     check("the gate: a failure found benign, its review an obligation of the response falling due, stands", not got, got)
+    got = found(bean('mx', 'host', {'need': {'id': 'f1', 'by': 'self', 'of': 'x'}}, benign, REVIEW), rules={'squares'})
+    check("the gate: a need found benign — each failure of it until its review, a defect that recurs (core 4.12) — "
+          "stands", not got, got)
     for name, st, says in (
-            ("benign said of a need", [{'need': {'id': 'f1', 'by': 'self', 'of': 'x'}}, benign, REVIEW],
-             "benign is said of a failure"),
+            ("benign said of a reading", [{'measure': {'id': 'f1', 'by': 'self', 'of': 'self', 'as': 'number',
+                                                       'value': {'count': '3', 'unit': '{item}'}}}, benign, REVIEW],
+             "benign is said of a failure, a `fail`, or of a `need`"),
             ("benign with no review", [F1, benign], "names no day it is looked at again"),
             ("benign whose review has no day", [F1, benign, {'obligatory': {'of': 'f1-benign', 'through': 'sam'}}],
              "names no day it is looked at again"),
@@ -304,6 +308,50 @@ A mail server.''', 1))
           r.returncode == 0 and any(x.get('fail') == fid for x in L) and any(x['kind'] == 'obligation' and
                                                                               x.get('clause') == 'up-benign-review' for x in L),
           (r.out[-600:], L))
+
+    # a need found benign (core 4.12): a defect that recurs, each crossing of it no lead until the review falls due
+    grow.run('git', 'reset', '-q', '--hard', 'HEAD~1', cwd=G)
+    base_head = grow.run('git', 'rev-parse', 'HEAD', cwd=G).stdout.strip()
+
+    def need_benign(day):
+        write('beans/mailer.md', base.replace('---\nA mail server.', f'''  - respond: {{ id: up-benign, by: sam, of: [up], as: benign, through: "the filter never sends QUIT: each session ends at its timeout, and nothing is lost" }}
+  - obligatory: {{ id: up-benign-review, of: up-benign, through: sam, clause: {{ due: "{day}" }} }}
+  - say: {{ by: sam, of: [up-benign, up-benign-review], at: now }}
+---
+A mail server.''', 1))
+        return save(f'the need up of mailer found benign until {day}', f'- action: [[mailer]] its need up found benign, '
+                                                                    f'each failure of it, looked at again on {day}')
+    r = need_benign(later)
+    r1, d1 = cross(down=0)
+    r2, d2 = cross(down=2)
+    mt = text('beans/mailer.md')
+    ups = [ln for ln in mt.splitlines() if ln.startswith('  - fail: { id: up-')]
+    L = leads()
+    check("leads: a need found benign crosses again, a new failure of it written, and no failure of it is a health "
+          "lead while its review is ahead", r.returncode == 0 and r1.returncode == 0 and r2.returncode == 0
+          and len(ups) >= 2 and 'does not hold' in ups[-1] and isinstance(L, list)
+          and not [x for x in L if x['kind'] == 'health' and str(x.get('fail', '')).startswith('up-')],
+          (r.out[-400:], r2.out[-400:], ups, L))
+    grow.run('git', 'reset', '-q', '--hard', base_head, cwd=G)
+    r = need_benign(sooner)
+    r2, d2 = cross(down=2)
+    L = leads()
+    check("leads: once its review has fallen due, each failure of the need is a health lead again",
+          r.returncode == 0 and isinstance(L, list) and any(x['kind'] == 'health' and str(x.get('fail', '')).startswith('up-')
+                                                            for x in L), (r.out[-400:], L))
+
+    # VII.5, as far as `possible`'s degree says it: an expectation of a need is a `possible` of it, its chance of holding
+    grow.run('git', 'reset', '-q', '--hard', base_head, cwd=G)
+    write('beans/mailer.md', base.replace('---\nA mail server.', '''  - possible: { id: up-expected, of: up, through: sam, chance: { count: "0.9", unit: "1" } }
+  - say: { by: sam, of: [up-expected], at: now }
+---
+A mail server.''', 1))
+    r = save('the need up of mailer expected to hold', '- action: [[mailer]] its need up expected to hold, a chance of 0.9')
+    L = leads()
+    check("leads: a failure of a need with an expectation says it — expected to hold with its chance, by whom; still a "
+          "health lead", r.returncode == 0 and isinstance(L, list)
+          and any(x['kind'] == 'health' and str(x.get('fail', '')).startswith('up-')
+                  and 'expected to hold with a chance of 0.9, by sam' in x['why'] for x in L), (r.out[-400:], L))
 
     # ---- THE VIEW
     sys.path.insert(0, os.path.join(ROOT, 'assets', 'view', 'lib'))

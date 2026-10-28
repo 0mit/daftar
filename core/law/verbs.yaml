@@ -89,7 +89,7 @@ verbs:
 
   # ---------------------------------------------------------------- what a being needs, does and holds
   - verb: need
-    meaning: "to require something to function: how badly is a position on the necessity square — said of none, it blocks: what needs it waits until it is met; `contingent` of it, it does not block; `impossible` of it, it cannot be met. An item of a checklist is one (v1 part 12b): what is asked for (`of`, in words where no being says it, or an amount of what its provider gives: a price, hours, a window's length), who provides it (`from`, a being or the word for a party), needed `while` a reading or a clause holds (absent, always), met by what `meet`s it; the needs of one bean that share an `as` are alternatives, any one of which meets it. Its `interval` is how long the reading that meets it may be silent before it is not met — its last reading older than that, or its probe failing for longer — as a step's `usually` makes a course overdue"
+    meaning: "to require something to function: how badly is a position on the necessity square — said of none, it blocks: what needs it waits until it is met; `contingent` of it, it does not block; `impossible` of it, it cannot be met. An item of a checklist is one (v1 part 12b): what is asked for (`of`, in words where no being says it, or an amount of what its provider gives: a price, hours, a window's length), who provides it (`from`, a being or the word for a party), needed `while` a reading or a clause holds (absent, always), met by what `meet`s it; the needs of one bean that share an `as` are alternatives, any one of which meets it. Its `interval` is how long the reading that meets it may be silent before it is not met — its last reading older than that, or its probe failing for longer — as a step's `usually` makes a course overdue. What the reading that meets it is expected to show, where one says it, is a `possible` of the need: its `chance` of holding `within` an extent, expected by whoever writes it (an expectation)"
     roles:
       by:      { shape: being }
       of:      { shape: [being, statement, text, quantity], many: true }
@@ -258,7 +258,7 @@ verbs:
     replaces: [hearings, ruling]
     home: core
   - verb: respond
-    meaning: "to respond to a statement: an observer's verdict on another's reading — it confirms, disputes or abstains (asked, and would not say), once for each statement — or a speaker's own words at a hearing, in its `through`; a `rule` on statements is given once every speaker of them has responded (v1 part 12b). Of a failure (a `fail`), `benign`: known to do no harm, it leaves the leads until the day an `obligatory` of the response falls due, when it is looked at again"
+    meaning: "to respond to a statement: an observer's verdict on another's reading — it confirms, disputes or abstains (asked, and would not say), once for each statement — or a speaker's own words at a hearing, in its `through`; a `rule` on statements is given once every speaker of them has responded (v1 part 12b). Of a failure (a `fail`), `benign`: known to do no harm, it leaves the leads until the day an `obligatory` of the response falls due, when it is looked at again; of a need, of each failure of it until that day, a defect that recurs found benign once"
     roles: { by: { shape: being }, of: { shape: statement, many: true }, as: { shape: row, table: verdicts }, through: { shape: text }, at: { shape: position } }
     required: [by, of]
     replaces: [answers, heard]
@@ -281,6 +281,23 @@ verbs:
       as: { shape: row, table: pairs }
     qualifiers: { closure: { shape: row, table: closures, many: true } }
     required: [by, to, as]
+    replaces: []
+    home: core
+  - verb: specify
+    meaning: "to say what a body is by its own make, or what a feature of it is, in the body's own bean: of the body (`of`, the bean's own being), how it gives under load (`compliance`), its shape (`shape`, a row of `outlines`), its section (`section`) and its designation (`designation`, written as a check of core/law/checks.yaml reads one: `6203`, `M10x1.25`); of a feature (`of`, a position of the body's own frame, `hub#bore`), its kind (`feature`), and where its kind takes them its side (`side`) and its profile (`profile`, a row of `sections`), and how many alike the position names (`count`). A whole drawn whole (`whole: \"true\"`) has all its parts and joints written, so what is not written of it is known absent. Each body and each feature is specified once; a form said of a body (`classify`) says what its pattern's root holds where no `specify` says it"
+    roles:
+      of: { shape: [being, position], nature: [body] }
+    qualifiers:
+      compliance:  { shape: row, table: compliances }
+      shape:       { shape: row, table: outlines }
+      section:     { shape: row, table: sections }
+      designation: { shape: text }
+      whole:       { shape: text }
+      feature:     { shape: row, table: features }
+      side:        { shape: row, table: sides }
+      profile:     { shape: row, table: sections }
+      count:       { shape: quantity }
+    required: [of]
     replaces: []
     home: core
 
@@ -444,6 +461,49 @@ closures:
   - { closure: material, meaning: "one material across the boundary: a weld, a braze, an adhesive, a vulcanized bond" }
   - { closure: chain,    meaning: "the rest of the chain closes it, as a flexible body must be closed" }
 
+# What `specify` and a concept's pattern say of one body and its features (core 4.12): its shape and its section, the
+# limits a pattern's topology does not say, in the made scheme's words; and a feature's kind — a dependent part of one
+# body, which cannot be apart from it — named after ISO/TS 10303-1814's machining feature where one fits (`machining`),
+# with the side it lies on and the profile of its section where its kind takes them (`side`, `profile`).
+outlines:
+  - { shape: ring,        meaning: "a closed band about an axis, short along it: an O-ring, a bearing's ring, a pulley's rim" }
+  - { shape: split-ring,  meaning: "a ring cut through once, so that it springs open and closes: a circlip" }
+  - { shape: plate-ring,  meaning: "a flat ring cut from a plate: a washer" }
+  - { shape: bar,         meaning: "a long solid about its axis: a shaft, a pin, a key, a rod" }
+  - { shape: headed-bar,  meaning: "a bar with a head at one end: a screw, a bolt, a rivet" }
+  - { shape: tube,        meaning: "a long hollow about its axis: a cylinder's barrel" }
+  - { shape: sleeve,      meaning: "a short hollow about its axis, its wall thin: a bush" }
+  - { shape: disc,        meaning: "a flat round solid, thin along its axis: a flange, a wheel's web" }
+  - { shape: cup,         meaning: "a hollow closed at one end: a cap" }
+  - { shape: plug,        meaning: "a short solid that closes a hole" }
+  - { shape: hex,         meaning: "six flat sides about its axis, short along it: a nut" }
+  - { shape: ball,        meaning: "a sphere: a bearing's rolling body" }
+  - { shape: belt,        meaning: "a long closed band that lies on wheels" }
+sections:
+  - { section: round,      meaning: "a circle: an O-ring's, a round groove's" }
+  - { section: rect,       meaning: "a rectangle: a square ring's, a plain groove's" }
+  - { section: four-lobed, meaning: "four lobes about a centre: an X-ring's" }
+  - { section: lip,        meaning: "a lip that leans on what it seals: a lip seal's" }
+  - { section: v,          meaning: "a trapezium narrowing inward: a V-belt's, its groove's" }
+  - { section: multi-v,    meaning: "several V ribs side by side: a poly-V belt's, its pulley's grooves" }
+sides:
+  - { side: int, meaning: "inside its body, facing its axis: a bore's surface, a nut's thread" }
+  - { side: ext, meaning: "outside its body, facing away from its axis: a shaft's seat, a screw's thread" }
+features:
+  - { feature: bore,         machining: "round hole", meaning: "an internal round surface" }
+  - { feature: seat,         machining: "outer round", meaning: "an external round surface: a journal, where a hub or a ring sits" }
+  - { feature: face,         machining: "planar face", meaning: "a plane face" }
+  - { feature: groove,       machining: "groove", side: "true", profile: "true", meaning: "a revolved groove, internal or external, its profile a section" }
+  - { feature: thread,       machining: "thread", side: "true", meaning: "a thread, internal or external" }
+  - { feature: keyway,       machining: "slot", side: "true", meaning: "a slot along an axis, in a bore or on a shaft, for a key" }
+  - { feature: flats,        meaning: "two plane faces across a round, for a spanner" }
+  - { feature: hole-pattern, machining: "circular pattern", meaning: "holes repeated on a circle" }
+  - { feature: port,         meaning: "a passage into a body, opening on a face" }
+  - { feature: eye,          meaning: "a bore across a body's end, for a pin" }
+  - { feature: raceway,      side: "true", meaning: "a groove a rolling body runs in" }
+  - { feature: lug-hole,     meaning: "a small hole in a lug, for pliers" }
+  - { feature: lip,          meaning: "a sealing edge" }
+
 # The columns of each table of rows above: which every row holds (`required`) and which it may (`optional`); a row holds
 # the required ones and no other (core/law.py, `columns`). A reading names a table they declare as an input said by
 # the law (core/law/lines.yaml `selection_form.inputs`).
@@ -452,3 +512,7 @@ columns:
   compliances: { compliance: required, meaning: required }
   pairs: { pair: required, r: optional, t: optional, coupled: optional, higher: optional, meaning: required }
   closures: { closure: required, meaning: required }
+  outlines: { shape: required, meaning: required }
+  sections: { section: required, meaning: required }
+  sides: { side: required, meaning: required }
+  features: { feature: required, machining: optional, side: optional, profile: optional, meaning: required }

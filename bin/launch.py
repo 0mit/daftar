@@ -179,6 +179,19 @@ class Session:
     def post(self, rec):
         self._append('posts.jsonl', rec)
 
+    def drawn(self, sha, commit):
+        """A save traced a said value to the prompt `sha` and committed it: the watermark's record (`drawn.jsonl`)."""
+        if sha:
+            self._append('drawn.jsonl', {'sha': sha, 'commit': commit})
+
+    def watermark(self):
+        """THE TURN-LEVEL WATERMARK (ledger step 5, nb-s5-open 5): of this session's prompts — the person's words the
+        hook kept as `instructions` material — how many a save traced a said value to (`drawn`), and how many none did
+        (`untraced`), each prompt counted once."""
+        prompts = {e.get('sha') for e in self.index() if e.get('layer') == 'instructions' and e.get('sha')}
+        drawn = {r.get('sha') for r in self._read('drawn.jsonl')}
+        return {'prompts': len(prompts), 'drawn': len(prompts & drawn), 'untraced': len(prompts - drawn)}
+
     def posts(self):
         return list(self._read('posts.jsonl'))
 

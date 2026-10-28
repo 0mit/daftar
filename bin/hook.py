@@ -7,6 +7,7 @@
     python3 bin/hook.py uninstall claude-code
     python3 bin/hook.py start|prompt|pre|post|end   # what the harness calls, its event on standard input
     python3 bin/hook.py guard                    # the guards alone, before a shell command or a write (below)
+    python3 bin/hook.py watermark [--json]       # each ended session of this clone: its prompts, how many reached no save
 
 (`python` on Windows; `bin/hook.py`, today's name, runs this too until v1's part 13, and a hook installed by either
 name is the other's to remove.) Where daftar does not run the loop (`bin/launch.py` does), the harness that does may call a
@@ -36,7 +37,9 @@ cannot read its event, or breaks, refuses (exit 2) rather than let a tool throug
           every tool that writes.
   post    keeps what a read returned as material, in its layer; looks at a shell's or a search's output by content for a
           line of a file a request may not carry, and warns the model, recording it (POST warns until it is measured).
-  end     the session is over: a save here is no longer traced against it.
+  end     the session is over: a save here is no longer traced against it. ITS WATERMARK (ledger step 5): of its prompts,
+          how many no save traced a said value to, counted, kept beside the session's material (`ends.jsonl`) and
+          said to the person; it warns only once a week of them is measured (`watermark` reads them).
 
 A harness's names for its events and tools are that harness's, so its table is here, in this tool, and written into a
 clone's own settings — never into the law. So are its memory folders (claude-code's: `projects/*/memory` in its
@@ -602,6 +605,39 @@ def on_prompt(ev, root):
         s.add(str(ev['prompt']), {'layer': 'instructions'}, 'instructions')
 
 
+def on_end(ev, root):
+    """The session is over: its watermark counted, kept, and said to the person; then no save is traced against it."""
+    s = session(ev, root)
+    w = s.watermark()
+    if w['prompts']:
+        import datetime
+        s._append('ends.jsonl', dict(w, at=datetime.datetime.now().astimezone().isoformat(timespec='seconds')))
+        print(json.dumps({'systemMessage': f"hook: of this session's {w['prompts']} prompt(s), {w['untraced']} reached "
+                                           f"no save — no value said in it was traced into the garden (the watermark, "
+                                           f"counted: `{PY} bin/hook.py watermark`)"}))
+    s.end()
+
+
+def watermark_report(cwd, as_json=False):
+    """Each ended session of this clone, with its watermark as `end` kept it: the measure a warning waits for."""
+    root = launch.git(cwd, 'rev-parse', '--show-toplevel').stdout.strip()
+    if not root:
+        sys.exit("hook: not inside a garden's git working copy")
+    base = os.path.join(launch.Session.gitdir(root), 'daftar', 'sessions')
+    rows = []
+    for slug in sorted(os.listdir(base)) if os.path.isdir(base) else []:
+        for rec in launch.Session(root, slug)._read('ends.jsonl'):
+            rows.append(dict(rec, session=slug))
+    if as_json:
+        print(json.dumps(rows, indent=1))
+    else:
+        for r in rows:
+            print(f"{r.get('at', '')}  {r['session']}: {r.get('prompts')} prompt(s), {r.get('untraced')} reached no save")
+        print(f"{len(rows)} ended session(s); {sum(r.get('untraced') or 0 for r in rows)} of "
+              f"{sum(r.get('prompts') or 0 for r in rows)} prompts reached no save")
+    return 0
+
+
 def write_of(a):
     """The path a write tool targets, as the system resolves it, or None."""
     path = a.get('file_path') or a.get('notebook_path') or ''
@@ -793,6 +829,8 @@ def main(argv):
             sys.exit("hook: not inside a garden's git working copy")
         names = [x for x in argv[1:] if not x.startswith('--')]
         return install(root, names[0] if names else 'claude-code', argv[0] == 'install', guard='--guard' in argv)
+    if argv[:1] == ['watermark']:
+        return watermark_report(os.getcwd(), '--json' in argv)
     verbs = {'start': on_start, 'prompt': on_prompt, 'pre': on_pre, 'guard': on_guard, 'post': on_post, 'end': None}
     if argv[:1] == [] or argv[0] not in verbs:
         sys.exit(f"hook: install [--guard]|uninstall <harness>, or {'|'.join(verbs)} with the event on standard input")
@@ -804,7 +842,7 @@ def main(argv):
         if not is_garden(root):
             return 0                                   # not a garden: nothing of ours to judge
         if argv[0] == 'end':
-            session(ev, root).end()
+            on_end(ev, root)
             return 0
         verbs[argv[0]](ev, root)
         return 0

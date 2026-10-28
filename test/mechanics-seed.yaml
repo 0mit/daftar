@@ -2,7 +2,10 @@
 # positions of their own frame, joints with a pair and its closures, `parts` for a device's parts and `fiat` for the
 # fiat parts of one body. Generic engineering, no maker's facts: a crankshaft pulley with a rubber torsional damper, two
 # idlers on a deep groove ball bearing (metal held by a circlip, polymer moulded on), two pump pulleys, a double-acting
-# hydraulic cylinder; and, held out, an engine's water pump, written after the concepts were tuned on the seed.
+# hydraulic cylinder; an engine's water pump, held out when the concepts were tuned (core 4.2) and moved into the seed
+# with the radial shaft seal it exercises; and, written with the rows they exercise (core 4.12), a gear drive with its
+# coupling, a flange joint with its gasket, a bracket with its dowel and a riveted plate. Held out: none yet — the next
+# is to be drawn by another hand than the concepts'.
 # `expect`: the concepts of the made scheme a node fits; `external`: a neighbour of the machine around the assembly,
 # not drawn whole; `said`: a form said of it and not drawn. test/core_mechanics.py reads it.
 seed:
@@ -73,7 +76,7 @@ seed:
         external: true
         expect: [poly-v-belt]
         features:
-          ribs: {kind: face, profile: multi-v}
+          ribs: {kind: face}
       damper:
         device: true
         parts: [hub, rubber, ring]
@@ -211,7 +214,7 @@ seed:
         external: true
         expect: [v-belt]
         features:
-          flanks: {kind: face, profile: v}
+          flanks: {kind: face}
       idler:
         device: true
         parts: [wheel, bearing, circlip, cap]
@@ -296,7 +299,7 @@ seed:
         external: true
         expect: [v-belt]
         features:
-          flanks: {kind: face, profile: v}
+          flanks: {kind: face}
       idler:
         device: true
         parts: [wheel, bearing]
@@ -347,7 +350,7 @@ seed:
         external: true
         expect: [poly-v-belt]
         features:
-          ribs: {kind: face, profile: multi-v}
+          ribs: {kind: face}
     joints:
     - - p-hub#bore
       - shaft#seat
@@ -399,7 +402,7 @@ seed:
         count: 4
         expect: [v-belt]
         features:
-          flanks: {kind: face, profile: v}
+          flanks: {kind: face}
     joints:
     - - q-hub#face
       - flange#face
@@ -748,7 +751,6 @@ seed:
       - rod#seat
       - pressing
       - [force]
-heldout:
   water-pump:
     nodes:
       housing:
@@ -806,7 +808,7 @@ heldout:
         shape: ring
         section: lip
         material: nbr
-        expect: [lip-seal]
+        expect: [lip-seal, radial-shaft-seal]
         features:
           case: {kind: seat}
           lip: {kind: lip}
@@ -893,3 +895,282 @@ heldout:
       - seal
       - pressing
       - [force]
+  gear-drive:
+    nodes:
+      housing:
+        compliance: rigid
+        expect: []
+        features:
+          b1: {kind: bore}
+          b2: {kind: bore}
+      bush-1:
+        compliance: rigid
+        shape: sleeve
+        expect: [bush]
+        features:
+          out: {kind: seat}
+          bore: {kind: bore}
+      bush-2:
+        compliance: rigid
+        shape: sleeve
+        expect: [bush]
+        features:
+          out: {kind: seat}
+          bore: {kind: bore}
+      shaft-in:
+        compliance: rigid
+        shape: bar
+        expect: [shaft]
+        features:
+          j: {kind: seat}
+          s1: {kind: seat}
+          s2: {kind: seat}
+      shaft-out:
+        compliance: rigid
+        shape: bar
+        expect: [shaft]
+        features:
+          j: {kind: seat}
+          s1: {kind: seat}
+      gear-1:
+        compliance: rigid
+        shape: disc
+        expect: [gear]
+        features:
+          bore: {kind: bore}
+      gear-2:
+        compliance: rigid
+        shape: disc
+        expect: [gear]
+        features:
+          bore: {kind: bore}
+      gearbox:
+        device: true
+        parts: [housing, bush-1, bush-2, shaft-in, shaft-out, gear-1, gear-2]
+        expect: []
+      hub-1:
+        compliance: rigid
+        expect: []
+        features:
+          bore: {kind: bore}
+          jaws: {kind: face}
+      hub-2:
+        compliance: rigid
+        expect: []
+        features:
+          bore: {kind: bore}
+          jaws: {kind: face}
+      spider:
+        compliance: elastic
+        expect: []
+        features:
+          a: {kind: face}
+          b: {kind: face}
+      coupling:
+        device: true
+        parts: [hub-1, hub-2, spider]
+        expect: [shaft-coupling]
+      motor:
+        compliance: rigid
+        external: true
+        expect: []
+        features:
+          b: {kind: bore}
+      motor-shaft:
+        compliance: rigid
+        shape: bar
+        external: true
+        expect: [shaft]
+        features:
+          j: {kind: seat}
+          s: {kind: seat}
+    joints:
+    - - bush-1#out
+      - housing#b1
+      - fixed
+      - [friction]
+    - - bush-2#out
+      - housing#b2
+      - fixed
+      - [friction]
+    - - shaft-in#j
+      - bush-1#bore
+      - revolute
+      - [form]
+    - - shaft-out#j
+      - bush-2#bore
+      - revolute
+      - [form]
+    - - gear-1#bore
+      - shaft-in#s1
+      - fixed
+      - [friction]
+    - - gear-2#bore
+      - shaft-out#s1
+      - fixed
+      - [friction]
+    - - gear-1
+      - gear-2
+      - meshing
+      - [chain]
+    - - hub-1#bore
+      - shaft-in#s2
+      - fixed
+      - [friction]
+    - - hub-1#jaws
+      - spider#a
+      - fixed
+      - [form]
+    - - hub-2#jaws
+      - spider#b
+      - fixed
+      - [form]
+    - - hub-2#bore
+      - motor-shaft#s
+      - fixed
+      - [friction]
+    - - motor-shaft#j
+      - motor#b
+      - revolute
+      - [form]
+  flange-joint:
+    nodes:
+      flange-a:
+        compliance: rigid
+        shape: disc
+        expect: []
+        features:
+          face: {kind: face}
+          back: {kind: face}
+          holes: {kind: hole-pattern, count: 4}
+      flange-b:
+        compliance: rigid
+        shape: disc
+        expect: []
+        features:
+          face: {kind: face}
+          back: {kind: face}
+          holes: {kind: hole-pattern, count: 4}
+      gasket:
+        compliance: elastic
+        expect: [gasket]
+        features:
+          a: {kind: face}
+          b: {kind: face}
+      bolt:
+        compliance: rigid
+        shape: headed-bar
+        expect: [screw]
+        features:
+          thread: {kind: thread, side: ext}
+          head: {kind: face}
+          shank: {kind: seat}
+      nut:
+        compliance: rigid
+        shape: hex
+        expect: [nut]
+        features:
+          thread: {kind: thread, side: int}
+          face: {kind: face}
+      joint:
+        device: true
+        parts: [flange-a, flange-b, gasket, bolt, nut]
+        expect: []
+    joints:
+    - - gasket#a
+      - flange-a#face
+      - fixed
+      - [friction]
+    - - gasket#b
+      - flange-b#face
+      - fixed
+      - [friction]
+    - - bolt#head
+      - flange-a#back
+      - fixed
+      - [force]
+    - - bolt#thread
+      - nut#thread
+      - helical
+      - [friction]
+    - - nut#face
+      - flange-b#back
+      - fixed
+      - [force]
+  bracket:
+    nodes:
+      base:
+        compliance: rigid
+        expect: []
+        features:
+          top: {kind: face}
+          dh: {kind: bore}
+          th: {kind: thread, side: int}
+      arm:
+        compliance: rigid
+        expect: []
+        features:
+          foot: {kind: face}
+          top: {kind: face}
+          dh: {kind: bore}
+          sh: {kind: bore}
+          rh: {kind: bore}
+      dowel:
+        compliance: rigid
+        shape: bar
+        expect: [dowel-pin]
+        features:
+          s1: {kind: seat}
+          s2: {kind: seat}
+      screw:
+        compliance: rigid
+        shape: headed-bar
+        expect: [screw]
+        features:
+          thread: {kind: thread, side: ext}
+          head: {kind: face}
+      plate:
+        compliance: rigid
+        expect: []
+        features:
+          hole: {kind: bore}
+      rivet:
+        compliance: rigid
+        shape: headed-bar
+        expect: [rivet]
+        features:
+          shank: {kind: seat}
+      mount:
+        device: true
+        parts: [base, arm, dowel, screw, plate, rivet]
+        expect: []
+    joints:
+    - - arm#foot
+      - base#top
+      - fixed
+      - [friction]
+    - - dowel#s1
+      - base#dh
+      - fixed
+      - [friction]
+    - - dowel#s2
+      - arm#dh
+      - fixed
+      - [friction]
+    - - screw#thread
+      - base#th
+      - helical
+      - [friction]
+    - - screw#head
+      - arm#top
+      - fixed
+      - [force]
+    - - rivet#shank
+      - plate#hole
+      - fixed
+      - [form]
+    - - rivet#shank
+      - arm#rh
+      - fixed
+      - [form]
+heldout: {}

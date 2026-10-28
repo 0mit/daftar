@@ -19,14 +19,18 @@ what is not drawn is not known to be absent, and a fact the drawing does not hol
 never guesses. The matcher is a bounded subgraph match: each node of a pattern is a distinct body.
 
 A DRAWING is what the matcher reads: bodies with what is known of each, the parts of each whole, and the joints. One is
-drawn from a garden (`drawing`) of what its statements say — a body's kind, its parts, its joints and the concepts it
-is said to be — and a fact no word of the law says yet (a body's compliance, a feature's kind, a limit) is not held. A
-test or a tool may give a drawing whole.
+drawn from a garden (`drawing`) of what its statements say — a body's kind, its parts, its joints, the concepts it is
+said to be, and what `specify` says of it (core 4.12): its compliance, its shape, its section and its designation, each
+feature's kind, side, profile and count, and that a whole is drawn whole; where no `specify` says one of the first
+three, a form said of it says what its pattern's root holds. A fact no word of the law says yet (a body's material,
+function or use) is not held. A test or a tool may give a drawing whole.
 """
 import itertools
 import json
 
 LIMITS = ('shape', 'section', 'material', 'use', 'function', 'designation')
+SAID_LIMITS = ('shape', 'section', 'designation')                  # the limits `specify` says (core 4.12)
+FROM_FORM = ('compliance', 'shape', 'section')                     # what a said form's root says of its body
 NODE_KEYS = ('compliance', 'compliance_not', 'device', 'not_fiat', 'features', 'fits') + LIMITS
 FEATURE_KEYS = ('kind', 'side', 'profile', 'count')
 READ = ('part', 'one-link', 'coupled', 'sibling', 'outside')        # the relations an edge may name beside a pair
@@ -165,8 +169,18 @@ def feature_fits(want, have):
 class Matcher:
     """Every concept of the schemes of the form `concept`, by its code `<scheme>:<code>`; `fits` of a node of a drawing."""
 
-    def __init__(self, concepts):
+    def __init__(self, concepts, checked=None):
         self.c = dict(concepts)
+        self.checked = checked                      # checked(check, value): a designation held to its check, or None
+
+    def designated(self, value, check):
+        """Whether a body's designation holds to the check a pattern names; never, where no check can be applied."""
+        if self.checked is None or not isinstance(value, str):
+            return False
+        try:
+            return bool(self.checked(str(check), value))
+        except Exception:                           # noqa: BLE001 — a check that cannot be applied fits nothing
+            return False
 
     def code(self, scheme_of, name):
         """A pattern's `fits` names a code of its own scheme, or one written with its scheme."""
@@ -217,8 +231,11 @@ class Matcher:
             elif k == 'fits':
                 if depth > DEPTH or not self.fits(d, n, self.code(scheme, v), depth + 1):
                     return False
+            elif k == 'designation':
+                if not self.designated(a.limits.get(k), v):
+                    return False                    # a designation fits the check its pattern names (core 4.12)
             elif a.limits.get(k) is None or str(a.limits.get(k)) != str(v):
-                return False                        # a limit: shape, section, material, use, function, designation
+                return False                        # a limit: shape, section, material, use, function
         return True
 
     def edge_ok(self, d, x, y, e):
@@ -314,7 +331,10 @@ class Matcher:
                 return f"a {code} is not {d.comp(n)}"
             if k == 'not_fiat' and a.fiat_of:
                 return f"a {code} is a body of its own, and this is a fiat part of {a.fiat_of}"
-            if k in LIMITS and a.limits.get(k) is not None and str(a.limits[k]) != str(v):
+            if k == 'designation' and a.limits.get(k) is not None and self.checked is not None \
+                    and not self.designated(a.limits[k], v):
+                return f"a {code}'s designation is written as the check {v} reads one, and this one's is {a.limits[k]}"
+            if k in LIMITS and k != 'designation' and a.limits.get(k) is not None and str(a.limits[k]) != str(v):
                 return f"a {code}'s {k} is {v}, and this one's is {a.limits[k]}"
             if k == 'fits' and depth < DEPTH:
                 why = self.contradicts(d, n, self.code(scheme, v), depth + 1)
@@ -364,7 +384,10 @@ def pattern_problems(row, scheme, codes, tables):
     """[message]: a concept row's pattern held to its form — a root, nodes each a constraint of NODE_KEYS, edges each
     between two of its nodes (or the root) by one pair of the core's `pairs`, a link by pairs, or a relation read
     (READ), with closures of the core's `closures`; a compliance of `compliances`; a `fits` naming a concept of the law;
-    every node reached from the root through the edges that must hold, or named only by an edge that must not."""
+    a shape of `outlines`, a section of `sections`, a designation a check that reads one, a feature's kind of
+    `features`, its side of `sides` and its profile of `sections`, each only of a kind that takes it (core 4.12, where
+    `tables` holds them); every node reached from the root through the edges that must hold, or named only by an edge
+    that must not."""
     out = []
     p = row.get('pattern')
     if not isinstance(p, dict):
@@ -376,6 +399,26 @@ def pattern_problems(row, scheme, codes, tables):
         return out + ["pattern.nodes: a map of each node's name to its constraint"]
     if 'root' in nodes:
         out.append("pattern.nodes: `root` is the pattern's own node, never one of its other nodes")
+
+    def feature(where, f):
+        if not isinstance(f, dict):
+            return
+        kinds = tables.get('features')
+        if kinds is None:
+            return
+        named = listed(f.get('kind'))
+        for x in named:
+            if str(x) not in kinds:
+                out.append(f"{where}: a feature of kind {x!r}, no row of the core's `features`")
+        for k, table in (('side', 'sides'), ('profile', 'sections')):
+            if f.get(k) is None:
+                continue
+            for x in listed(f[k]):
+                if str(x) not in (tables.get(table) or ()):
+                    out.append(f"{where}: {k} {x!r} is no row of the core's `{table}`")
+            bare = [str(x) for x in named if str(x) in kinds and str((kinds[str(x)] or {}).get(k)) != 'true']
+            if bare:
+                out.append(f"{where}: a {k} of a feature of kind {', '.join(bare)}, which takes none")
 
     def node(where, want):
         if not isinstance(want, dict):
@@ -397,6 +440,13 @@ def pattern_problems(row, scheme, codes, tables):
                     bad = sorted(set(f) - set(FEATURE_KEYS)) if isinstance(f, dict) else ['(not a map)']
                     if bad:
                         out.append(f"{where}: a feature is held by {', '.join(FEATURE_KEYS)}, not {', '.join(bad)}")
+                    feature(where, f)
+            elif k == 'shape' and 'outlines' in tables and str(v) not in tables['outlines']:
+                out.append(f"{where}: shape {v!r} is no row of the core's `outlines`")
+            elif k == 'section' and 'sections' in tables and str(v) not in tables['sections']:
+                out.append(f"{where}: section {v!r} is no row of the core's `sections`")
+            elif k == 'designation' and 'designations' in tables and str(v) not in tables['designations']:
+                out.append(f"{where}: designation {v!r} is no check of core/law/checks.yaml that reads a designation")
 
     node('pattern.root', p.get('root') or {})
     for name, want in nodes.items():
@@ -435,6 +485,8 @@ def pattern_problems(row, scheme, codes, tables):
                 f = e.get(k)
                 if f is not None and (not isinstance(f, dict) or set(f) - set(FEATURE_KEYS)):
                     out.append(f"{where}: {k} is a feature's constraint, of {', '.join(FEATURE_KEYS)}")
+                elif f is not None:
+                    feature(f"{where}.{k}", f)
     reached, todo = {'root'}, ['root']
     edges = [e for e in listed(p.get('edges')) if isinstance(e, dict)]
     while todo:
@@ -457,13 +509,16 @@ def pattern_problems(row, scheme, codes, tables):
 # ------------------------------------------------------------------------------------------------ a garden's drawing
 def drawing(beans, kind_of, said_of, concept_codes):
     """The drawing a garden's statements make. `beans`: [(bean id, kind, [(verb, roles)])]; `kind_of(kind)`: (nature,
-    organisation) of a kind; `said_of`: the code of a `classify`'s `as` where it is a concept's, else None.
+    organisation) of a kind; `said_of`: the code of a `classify`'s `as` where it is a concept's, else None;
+    `concept_codes`: the law's concepts, by code (a map of each to its row, or the codes alone).
 
     A node is each bean of a body's kind, and each `{ someone: <kind> }` a joint names; a device is a being whose kind
     stands at device on organisation; a part of a component is a fiat part of it (a component holds no made part); a
-    feature is each `<body>#<feature>` a joint names at its body, its kind not drawn; what is said of a body is each
-    concept code it is classified by. No body of a garden is drawn whole: no word of the law says one is."""
-    nodes, joints, parts, said = {}, [], [], {}
+    feature is each `<body>#<feature>` a joint names at its body, its kind, side, profile and count as `specify` says
+    them (core 4.12); what is said of a body is each concept code it is classified by. A body's compliance, shape,
+    section and designation are what its own `specify` says, and where it says none of the first three, what the root
+    of a form said of it holds; a whole is drawn whole where its `specify` says `whole: "true"`."""
+    nodes, joints, parts, said, spec, featured = {}, [], [], {}, {}, {}
 
     def add(nid, kind):
         if nid in nodes:
@@ -506,6 +561,16 @@ def drawing(beans, kind_of, said_of, concept_codes):
                 who = being(r.get('of'), bid, f"{bid}[{i}].of")
                 if code and who:
                     said.setdefault(who, set()).add(code)
+            elif verb == 'specify':
+                of = r.get('of')
+                frame, _, feat = (bid if of == 'self' else str(of)).partition('#') if isinstance(of, str) else ('', '', '')
+                if frame == 'self':
+                    frame = bid
+                if feat:
+                    featured.setdefault((frame, feat), {k: str(r[k]) for k in ('feature', 'side', 'profile', 'count')
+                                                     if r.get(k) is not None})
+                elif frame:
+                    spec.setdefault(frame, r)
     for p, w in parts:
         if p in nodes and w in nodes:
             if nodes[w].device is False:
@@ -517,7 +582,28 @@ def drawing(beans, kind_of, said_of, concept_codes):
         for end, f in (('x', 'xf'), ('y', 'yf')):
             if j[f] and j[end] in nodes:
                 nodes[j[end]].features = dict(nodes[j[end]].features or {}, **{j[f]: {}})
+    for (nid, feat), f in featured.items():
+        if nid in nodes:
+            got = {'kind' if k == 'feature' else k: v for k, v in f.items()}
+            nodes[nid].features = dict(nodes[nid].features or {}, **{feat: got})
+    rows = concept_codes if isinstance(concept_codes, dict) else {}
     for nid, codes in said.items():
         if nid in nodes:
             nodes[nid].said |= codes & set(concept_codes)
+    for nid, n in nodes.items():
+        r = spec.get(nid) or {}
+        if r.get('compliance') is not None:
+            n.compliance = str(r['compliance'])
+        n.limits.update({k: str(r[k]) for k in SAID_LIMITS if r.get(k) is not None})
+        n.whole = str(r.get('whole')).lower() == 'true'
+        for code in sorted(n.said):                 # a said form says what its root holds, where nothing else says it
+            row = rows.get(code) or {}
+            if row.get('level') != 'form':
+                continue
+            root = (row.get('pattern') or {}).get('root') or {}
+            if n.compliance is None and root.get('compliance') is not None and n.device is not True:
+                n.compliance = str(root['compliance'])
+            for k in FROM_FORM[1:]:
+                if n.limits.get(k) is None and root.get(k) is not None:
+                    n.limits[k] = str(root[k])
     return Drawing(list(nodes.values()), joints)

@@ -70,8 +70,8 @@ except frame.Refused as e:
     check("a day with no zone to be reckoned in is refused: its place half is the bearer's", 'names none' in str(e), e)
 
 # ------------------------------------------------------------------------------------------------ the law
-check("the law is whole: the face's 21 verbs, the 45 rows and the 23 levels of bodies, 0 problems",
-      not LAW0.problems() and len(LAW0.verbs) == 66 and len(LAW0.levels) == 29, LAW0.problems())
+check("the law is whole: the face's 21 verbs, the 46 rows and the 23 levels of bodies, 0 problems",
+      not LAW0.problems() and len(LAW0.verbs) == 67 and len(LAW0.levels) == 29, LAW0.problems())
 CASES = read.data(os.path.join(ROOT, 'test', 'core-cases.yaml'))
 LAW = Law.load(('VOCAB.md', CASES['vocab']))
 check(f"...and with the cases' own rows ({len(LAW.kinds)} kinds, {len(LAW.namespaces)} namespaces, {len(LAW.flows)} "
@@ -254,6 +254,7 @@ OVERRIDE = {('pass', 'from'): 'world', ('pass', 'to'): 'history', ('pass', 'thro
                                   'lasts': {'of': 'time', 'measure': {'count': '10', 'unit': 'h'}}}, ('mark', 'of'): 'ics:Meghalayan',
             ('need', 'interval'): {'of': 'time', 'measure': {'count': '10', 'unit': 'min'}},
             ('possible', 'chance'): {'count': '0.3', 'unit': '1'},
+            ('specify', 'of'): 'self', ('specify', 'whole'): 'true', ('specify', 'count'): '1',
             ('possible', 'within'): {'of': 'time', 'from': '2026-11-01', 'to': '2026-11-30'},
             ('weigh', 'weighing'): {'criteria': [{'name': 'a', 'what': 'x'}, {'name': 'b', 'what': 'y'}],
                                     'pairwise': [{'a': 'a', 'b': 'b', 'judged': '3'}]}}   # forms whole (v1 part 12b)
@@ -292,7 +293,8 @@ def made(verb, roles):
 
 
 def verdict(verb, roles):
-    return [f for f in judge(garden(CONTEXT + [bean('t', 'document', made(verb, roles))], base=False))
+    kind = 'component' if verb == 'specify' else 'document'     # a body is specified in its own bean (core 4.12)
+    return [f for f in judge(garden(CONTEXT + [bean('t', kind, made(verb, roles))], base=False))
             if f[0] not in ('vacancy', 'line', 'profile')]   # a garden's rows are judged in a whole garden, and a line's form in a
     #                                               whole line (a walk, a course: test/core_read.py), not in this fragment
 
@@ -306,6 +308,8 @@ for verb, v in LAW.verbs.items():
     for k in listed((v.get('choice') or {}).get('one_of'))[:1]:
         minimal[k] = filler(verb, k, specs[k])
     full = {k: filler(verb, k, s) for k, s in specs.items() if k not in left_out}
+    if verb == 'specify':              # of the body here: what a feature is (feature, side, profile, count) is said of a
+        full = {k: x for k, x in full.items() if k not in ('feature', 'side', 'profile', 'count')}   # position of it
     problems = []
     got = verdict(verb, minimal)
     if verb == 'necessary':            # the rule `necessity`: only the crown is necessary by itself

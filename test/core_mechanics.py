@@ -3,8 +3,8 @@
 matcher `fits` calls for a concept, and the law's refusal of a second row of one signature.
 
 - the law: the core's compliances (4), pairs (13, each lower pair with the freedoms it leaves) and closures (5); `join`'s
-  row; the made scheme, shipped, at device and component, of the knowledge profile's form `concept`: 46 rows, 13 forms
-  and 33 roles, each pattern in its form and no two of one signature; the codes of machine-elements.tsv (0mit/daftar#264)
+  row; the made scheme, shipped, at device and component, of the knowledge profile's form `concept`: 52 rows, 13 forms
+  and 39 roles, each pattern in its form and no two of one signature; the codes of machine-elements.tsv (0mit/daftar#264)
   kept on the rows of the same concepts; the law's proof reads no problem of them;
 - the signature: a copy of a row under new names of its nodes is the row; one limit more is another concept of the same
   topology; three groups of one topology are told apart by their limits alone;
@@ -18,7 +18,11 @@ matcher `fits` calls for a concept, and the law's refusal of a second row of one
   drawn contradicts it stands; a reading's `fits: {concept: ...}` selects the beings said to be of it, as the store's
   SQL does, and a drawing of the garden reads a role a garden cannot draw yet nowhere (no compliance, no feature's kind
   is said); a garden's own scheme of concepts is held to the form beside the release's, a row of the release's
-  signature refused by rule profile.
+  signature refused by rule profile;
+- `specify` (core 4.12): a body's compliance, shape, section and designation and a feature's kind, side, profile and
+  count, said in the body's own bean, and a whole drawn whole — read by the drawing, a said form saying what its root
+  holds, so a garden reads a role; rule valency's refusals of it; the seed sayable in the core's tables; six rows each
+  exercised by a seed part written with it (the pump moved into the seed), and the one misreading found, parked.
 
 Run: python3 test/core_mechanics.py   (0 = green)
 """
@@ -112,8 +116,10 @@ try:
           made['holding'] == 'shipped' and made['licence'] == 'CC-BY-4.0' and made['at'] == ['device', 'component']
           and made['levels'] == [{'level': 'form'}, {'level': 'role'}] and made['form'] == 'concept', made)
     C = LAW.concepts()
-    check("its 46 concepts: 13 forms and 33 roles", len(C) == 46
-          and sum(r['level'] == 'form' for r in C.values()) == 13 and sum(r['level'] == 'role' for r in C.values()) == 33,
+    check("its 52 concepts: 13 forms and 39 roles — the radial shaft seal, the gear, the shaft coupling, the gasket, the "
+          "dowel pin and the rivet among them (core 4.12)", len(C) == 52
+          and sum(r['level'] == 'form' for r in C.values()) == 13 and sum(r['level'] == 'role' for r in C.values()) == 39
+          and {f"made:{x}" for x in ('radial-shaft-seal', 'gear', 'shaft-coupling', 'gasket', 'dowel-pin', 'rivet')} <= set(C),
           len(C))
     p = subprocess.run([PY, 'core/check.py', '--law'], cwd=ROOT, capture_output=True, text=True, encoding='utf-8')
     check("the law's proof reads no problem of them", p.returncode == 0 and '0 error(s)' in p.stdout, p.stdout[-800:])
@@ -132,7 +138,7 @@ try:
     ren = {'G': 'Q', 'R': 'Z'}
     renamed = {'root': rr['root'], 'nodes': {ren[k]: v for k, v in rr['nodes'].items()},
                'edges': [dict(e, x=ren.get(e['x'], e['x']), y=ren.get(e['y'], e['y'])) for e in reversed(rr['edges'])]}
-    limited = dict(rr, root={'shape': 'wire-ring'})
+    limited = dict(rr, root={'shape': 'split-ring'})
     check("a copy of a row under new names of its nodes, its edges in another order, is the row: one signature",
           mechanics.signature(renamed) == mechanics.signature(rr))
     check("one limit more is another concept, of the same topology",
@@ -145,7 +151,7 @@ try:
     check("three groups of one topology, told apart by their limits alone: seals by section, belts by section, pulleys "
           "by what they are on", groups == [['crankshaft-pulley', 'power-steering-pump-pulley', 'water-pump-pulley'],
                                             ['lip-seal', 'o-ring', 'x-ring'], ['poly-v-belt', 'v-belt']], groups)
-    check("46 distinct signatures", len({mechanics.signature(r['pattern']) for r in C.values()}) == 46)
+    check("52 distinct signatures", len({mechanics.signature(r['pattern']) for r in C.values()}) == 52)
 
     # ---- THE SELF-CHECK, planted in a copy of the release
     tree = os.path.join(T, 'tree')
@@ -156,8 +162,8 @@ try:
                  "        - { x: Z, y: Q, pair: [fixed, revolute, prismatic, cylindrical] }\n"
                  "        - { x: root, y: Z, pair: [fixed], closure: [form] }\n"
                  "        - { x: root, y: Q, pair: [fixed], closure: [form], b: { kind: groove } }\n"
-                 "  - code: wire-snap-ring\n    level: role\n    name: \"wire snap ring\"\n    pattern:\n"
-                 "      root: { shape: wire-ring }\n      nodes: { G: { compliance: rigid }, R: { compliance: rigid } }\n"
+                 "  - code: split-snap-ring\n    level: role\n    name: \"split snap ring\"\n    pattern:\n"
+                 "      root: { shape: split-ring }\n      nodes: { G: { compliance: rigid }, R: { compliance: rigid } }\n"
                  "      edges:\n        - { x: root, y: G, pair: [fixed], closure: [form], b: { kind: groove } }\n"
                  "        - { x: root, y: R, pair: [fixed], closure: [form] }\n"
                  "        - { x: R, y: G, pair: [fixed, revolute, prismatic, cylindrical] }\n"
@@ -171,7 +177,7 @@ try:
     out = p.stdout
     check("--law refuses a second row of one signature, naming the first; a limit more stands",
           p.returncode != 0 and "snap-ring-copy: its pattern and limits are made:retaining-ring's" in out
-          and 'wire-snap-ring' not in out, out[-1500:])
+          and 'split-snap-ring' not in out, out[-1500:])
     for what, says in (("a level that is neither form nor role", "bad-one: level: a concept is a form"),
                        ("a compliance the core has not", "compliance 'soft' is no row of the core's `compliances`"),
                        ("a constraint no node takes", "`colour` is no constraint of a node"),
@@ -193,18 +199,37 @@ try:
     M, codes = LAW.matcher(), sorted(C)
     bodies = sum(1 for a in SEED['seed'].values() for n in a['nodes'].values() if n.get('compliance'))
     joints = sum(len(a['joints']) for a in SEED['seed'].values())
-    check("the seed in the basic set alone: 6 assemblies, 49 bodies, 70 joints, each pair and closure the core's",
-          (len(SEED['seed']), bodies, joints) == (6, 49, 70)
+    check("the seed in the basic set alone: 10 assemblies, 82 bodies, 107 joints, each pair and closure the core's",
+          (len(SEED['seed']), bodies, joints) == (10, 82, 107)
           and all(j[2] in pairs and set(j[3]) <= set(LAW.tables['closures']) for a in SEED['seed'].values()
                   for j in a['joints'])
           and all(n.get('compliance') in (None, *LAW.tables['compliances']) for a in SEED['seed'].values()
                   for n in a['nodes'].values()), (len(SEED['seed']), bodies, joints))
+    feats = mechanics.FEATURE_KEYS
+    kinds = LAW.mech_rows['features']
+    off = [f"{a}.{n}.{fn}" for a, asm in SEED['seed'].items() for n, x in asm['nodes'].items()
+           for fn, f in (x.get('features') or {}).items()
+           if f.get('kind') not in kinds or set(f) - set(feats)
+           or any(k in f and (kinds[f['kind']].get(k) != 'true' or LAW.has(t, str(f[k])))
+                  for k, t in (('side', 'sides'), ('profile', 'sections')))]
+    off += [f"{a}.{n}.{k}" for a, asm in SEED['seed'].items() for n, x in asm['nodes'].items()
+            for k, t in (('shape', 'outlines'), ('section', 'sections')) if k in x and LAW.has(t, str(x[k]))]
+    check("...and sayable with `specify` (core 4.12): each shape, section and feature's kind, side and profile a row of "
+          "the core's tables, a side or a profile only where its kind takes one", not off, off[:8])
     tp, said, extra, miss = fits_all(SEED['seed'], M, codes)
-    check("the seed: every concept tried on every node, 67 fits expected found (3 of them said), none unexpected, none "
-          "missed", (tp, said, extra, miss) == (67, 3, [], []), (tp, said, extra[:8], miss[:8]))
-    tp, said, extra, miss = fits_all(SEED['heldout'], M, codes)
-    check("the held-out pump, written after the concepts: 7 fits expected found (1 said), none unexpected, none missed",
-          (tp, said, extra, miss) == (7, 1, [], []), (tp, said, extra, miss))
+    check("the seed: every concept tried on every node, 89 fits expected found (4 of them said), none missed, and one "
+          "unexpected, parked: a jaw coupling read as a torsional vibration damper, whose pattern does not say its ring "
+          "is fixed to nothing outside it", (tp, said, extra, miss) == (89, 4, ['gear-drive.coupling: '
+                                                                                'made:torsional-vibration-damper'], []),
+          (tp, said, extra[:8], miss[:8]))
+    check("each new row exercised by a seed part written with it: the pump's radial shaft seal, the gear drive's gears "
+          "and coupling, the flange joint's gasket, the bracket's dowel and rivet",
+          all(M.fits(drawing_of(SEED['seed'][a]), n, f"made:{c}") == 'read' for a, n, c in (
+              ('water-pump', 'seal', 'radial-shaft-seal'), ('gear-drive', 'gear-1', 'gear'), ('gear-drive', 'gear-2', 'gear'),
+              ('gear-drive', 'coupling', 'shaft-coupling'), ('flange-joint', 'gasket', 'gasket'),
+              ('bracket', 'dowel', 'dowel-pin'), ('bracket', 'rivet', 'rivet'))))
+    check("held out: none, until another hand draws one (the pump, held out at core 4.2, is in the seed)",
+          not SEED.get('heldout'), SEED.get('heldout'))
     d = drawing_of(SEED['seed']['damper-pulley'])
     check("a role is read of the least whole that bears it: the damper is a pulley, its ring is a pulley's rim, never "
           "a pulley itself", M.fits(d, 'damper', 'made:pulley') == 'read' and M.fits(d, 'ring', 'made:pulley') is False
@@ -253,8 +278,85 @@ try:
           and D.nodes['w-rim'].fiat_of == 'wheel' and len(D.joints) == 3
           and D.joints[0]['xf'] == 'seat' and D.joints[0]['yf'] == 'bore' and D.nodes['rubber'].said == {'made:x-ring'}
           and any(n.startswith('{someone: component}') for n in D.nodes), (sorted(D.nodes), D.joints[:1]))
-    check("a role a garden cannot draw yet is read of nothing: no word says a body's compliance or a feature's kind",
-          not [n for n in D.nodes for c in codes if M.fits(D, n, c) == 'read'])
+    check("its said form says what its root holds of the body (core 4.12): the X-ring elastic, a ring of four-lobed "
+          "section; and with no body's compliance or feature's kind specified, a role is read of nothing",
+          (D.nodes['rubber'].compliance, D.nodes['rubber'].limits) == ('elastic', {'shape': 'ring', 'section': 'four-lobed'})
+          and D.nodes['hub'].compliance is None and not [n for n in D.nodes for c in codes if M.fits(D, n, c) == 'read'],
+          (D.nodes['rubber'].compliance, D.nodes['rubber'].limits))
+
+    # ---- SPECIFY (core 4.12): a body's compliance, shape, section, designation; a feature's kind, side, profile, count
+    clip = [bean('asm', 'host', {'specify': {'of': 'self', 'whole': 'true'}},
+                 {'join': {'by': 'clip', 'to': 'axle', 'at': ['clip#bore', 'axle#g'], 'as': 'fixed', 'closure': ['form']}},
+                 {'join': {'by': 'clip', 'to': 'wheel', 'at': ['clip#face', 'wheel#face'], 'as': 'fixed',
+                           'closure': ['form']}},
+                 {'join': {'by': 'wheel', 'to': 'axle', 'at': ['wheel#bore', 'axle#seat'], 'as': 'revolute'}}),
+            bean('axle', 'component', {'part': {'by': 'self', 'of': 'asm'}},
+                 {'specify': {'of': 'self', 'compliance': 'rigid', 'shape': 'bar', 'designation': 'C45'}},
+                 {'specify': {'of': 'axle#g', 'feature': 'groove', 'side': 'ext', 'profile': 'rect', 'count': '1'}},
+                 {'specify': {'of': 'axle#seat', 'feature': 'seat'}}),
+            bean('clip', 'component', {'part': {'by': 'self', 'of': 'asm'}},
+                 {'classify': {'of': 'self', 'as': 'made:circlip'}}),
+            bean('wheel', 'component', {'part': {'by': 'self', 'of': 'asm'}},
+                 {'specify': {'of': 'self', 'compliance': 'rigid', 'shape': 'disc'}},
+                 {'specify': {'of': 'wheel#bore', 'feature': 'bore'}})]
+    J, g = judged(*clip)
+    found = [f for f in J.run() if f[0] in ('valency', 'bearer', 'profile', 'frame', 'measured')]
+    check("specify stands: a body's compliance, shape and designation, a feature's kind, side, profile and count, a "
+          "whole drawn whole", not found, found[:6])
+    D = LAW.garden_drawing(g)
+    check("the drawing reads what specify says: compliance, limits, each feature with its kind, the whole drawn whole",
+          D.nodes['axle'].compliance == 'rigid' and D.nodes['axle'].limits == {'shape': 'bar', 'designation': 'C45'}
+          and D.nodes['axle'].features == {'g': {'kind': 'groove', 'side': 'ext', 'profile': 'rect', 'count': '1'},
+                                           'seat': {'kind': 'seat'}}
+          and D.nodes['wheel'].features == {'bore': {'kind': 'bore'}, 'face': {}} and D.nodes['asm'].whole is True
+          and D.nodes['clip'].compliance == 'elastic' and D.nodes['clip'].limits == {'shape': 'split-ring'},
+          (D.nodes['axle'].__dict__, D.nodes['wheel'].features, D.nodes['clip'].limits))
+    check("a garden now reads a role of what it specifies: the circlip held in the axle's groove is a retaining ring, "
+          "said a circlip", M.fits(D, 'clip', 'made:retaining-ring') == 'read' and M.fits(D, 'clip', 'made:circlip') == 'said'
+          and M.fits(D, 'axle', 'made:retaining-ring') is False, (M.fits(D, 'clip', 'made:retaining-ring'),))
+    rk = reckon.Reckoner(reckon.Judged(J), rules_law=LAW)
+    rk.run(lines.worded({'steps': [{'id': 'b', 'op': 'select', 'beans': 'all'},
+                                   {'id': 'out', 'op': 'select', 'of': 'b',
+                                    'where': [{'path': 'bean', 'fits': {'concept': 'made:retaining-ring'}}]}]}))
+    check("...and a reading's `fits: {concept: ...}` selects it, read and never stored",
+          [m.bean for m in rk.env['out']] == ['clip'], [getattr(m, 'bean', m) for m in rk.env['out']])
+    for bid, st, says in (
+            ('wheel', {'specify': {'of': 'axle', 'compliance': 'rigid'}}, "specified in its own bean"),
+            ('wheel', {'specify': {'of': 'self#bore', 'feature': 'bore'}}, "written by its bean, `wheel#<feature>`"),
+            ('wheel', {'specify': {'of': 'wheel#bore', 'feature': 'bore', 'compliance': 'rigid'}}, "the body's, and `of` "
+                                                                                                    "names a feature"),
+            ('wheel', {'specify': {'of': 'self', 'feature': 'bore'}}, "a feature's, and `of` names the body"),
+            ('wheel', {'specify': {'of': 'wheel#web', 'side': 'ext'}}, "`feature` is required of a feature"),
+            ('wheel', {'specify': {'of': 'wheel#web', 'feature': 'face', 'side': 'ext'}}, "a feature of kind face "
+                                                                                          "takes none"),
+            ('wheel', {'specify': {'of': 'self', 'compliance': 'elastic'}}, "is specified at [2] already"),
+            ('wheel', {'specify': {'of': 'wheel#bore', 'feature': 'seat'}}, "is specified at [3] already"),
+            ('wheel', {'specify': {'of': 'wheel#web', 'feature': 'web'}}, "`feature`: 'web' is not a row of `features`"),
+            ('wheel', {'specify': {'of': 'wheel#web', 'feature': 'groove', 'profile': 'square'}}, "`profile`: 'square'"),
+            ('axle', {'specify': {'of': 'axle#k', 'feature': 'keyway', 'side': 'out'}}, "`side`: 'out' is not a row"),
+            ('asm', {'specify': {'of': 'asm#x', 'feature': 'face'}}, None),
+            ('clip', {'specify': {'of': 'self', 'shape': 'blob'}}, "`shape`: 'blob' is not a row of `outlines`"),
+            ('clip', {'specify': {'of': 'self', 'whole': 'yes'}}, "a whole is drawn whole, `whole: \"true\"`"),
+            ('asm', {'specify': {'of': 'self', 'compliance': 'rigid'}}, "is specified at [1] already"),
+            ('dev', {'specify': {'of': 'self', 'compliance': 'rigid'}}, "a device, bodies joined, with no compliance"),
+            ('doc', {'specify': {'of': 'self'}}, "takes a being that is body")):
+        base = [x for x in clip if x.id != bid]
+        old = next((x for x in clip if x.id == bid), None)
+        kind = {'dev': 'host', 'doc': 'document'}.get(bid, old.kind if old else 'component')
+        mine = bean(bid, kind, *([s for s in old.header['statements'][1:]] if old else []), st)
+        J, _ = judged(*base, mine)
+        got = [f for f in J.run() if f[0] in ('valency', 'frame') and bid in f[1]]
+        if says is None:
+            check(f"specify stands: {st['specify']}", not got, got)
+        else:
+            check(f"rule valency refuses specify: {st['specify']}", any(says in f[2] for f in got), got)
+    clip_c = [x for x in clip if x.id != 'clip'] + [bean('clip', 'component', {'part': {'by': 'self', 'of': 'asm'}},
+                                                         {'classify': {'of': 'self', 'as': 'made:circlip'}},
+                                                         {'specify': {'of': 'self', 'compliance': 'rigid'}})]
+    J, _ = judged(*clip_c)
+    got = [f for f in J.run() if f[0] == 'bearer' and 'clip' in f[1]]
+    check("rule bearer refuses a form said of a body its specify contradicts: a circlip specified rigid",
+          got and "a made:circlip is elastic, and this is rigid" in got[0][2], got)
     for bid, kind, st, says in (
             ('d-sayable', 'document', {'join': {'by': 'self', 'to': 'hub', 'as': 'fixed'}}, "takes a being that is body"),
             ('d-glued', 'host', {'join': {'by': 'hub', 'to': 'ring', 'as': 'glued'}}, "glued"),
@@ -312,14 +414,16 @@ try:
     write('VOCAB.md', "---\nprofiles: [knowledge]\nschemes:\n  - { scheme: shop, classifies: \"the seals this shop "
                       "cuts\", holding: extract, licence: CC0-1.0, publisher: the gardener, url: "
                       "\"https://example.org/shop\", levels: [ { level: form }, { level: role } ], neighbours: none, "
-                      "sources: extracts/shop.yaml, at: [component], form: concept }\nfiles:\n  - { registry: shop, file: "
+                      "sources: extracts/shop.yaml, at: [component], form: concept }\ntables:\n  sections: [square]\n"
+                      "files:\n  - { registry: shop, file: "
                       "extracts/shop.yaml, key: code, format: yaml }\n---\n# the garden's own rows\n")
     write('extracts/shop.yaml', "- code: ring-seal\n  level: form\n  name: \"a ring seal\"\n  pattern:\n    root: { "
                                 "compliance: elastic, shape: ring, section: round }\n- code: square-ring\n  level: form\n"
                                 "  name: \"a square ring\"\n  pattern:\n    root: { compliance: elastic, shape: ring, "
                                 "section: square }\n")
     write('beans/seal-a.md', "---\nbean: seal-a\nkind: component\ntitle: \"a seal\"\nstatements:\n  - read: { by: sam, "
-                             "at: now }\n  - classify: { of: self, as: \"shop:square-ring\" }\n---\nA seal.\n")
+                             "at: now }\n  - classify: { of: self, as: \"shop:square-ring\" }\n  - specify: { of: self, "
+                             "section: square }\n---\nA seal.\n")
     p = grow.run(PY, 'core/check.py', '.', cwd=G)
     found = [ln for ln in p.out.splitlines() if ln and not ln.startswith('core check')]
     check("rule profile: a garden's own concept of the release's signature is refused, the release's row standing "

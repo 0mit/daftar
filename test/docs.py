@@ -214,7 +214,7 @@ _wrong = law_counts(text["MODEL.md"], text["CHECKLIST.md"], text["AGENTS.md"], _
 check("MODEL.md, CHECKLIST.md and AGENTS.md count the verbs and the rules as the law has them, and list the rules in "
       "its order: the face's verbs, verbs.yaml's rows and each in their table, the gate's rules and Part A's items",
       not _wrong, _wrong)
-_planted = {"a count of rows": (text["MODEL.md"].replace("**The 45 rows**", "**The 46 rows**"), text["CHECKLIST.md"]),
+_planted = {"a count of rows": (text["MODEL.md"].replace("**The 46 rows**", "**The 47 rows**"), text["CHECKLIST.md"]),
             "a count of rules": (text["MODEL.md"], text["CHECKLIST.md"].replace("Twenty-one rules, each", "Twenty rules, each")),
             "a rule's name": (text["MODEL.md"], text["CHECKLIST.md"].replace("**bearer** —", "**weight** —")),
             "a rule's words typed by hand": (text["MODEL.md"], text["CHECKLIST.md"].replace(
