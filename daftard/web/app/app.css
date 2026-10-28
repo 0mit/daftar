@@ -1,0 +1,103 @@
+/* The handplace's own parts on the toolbox (forms, dialogs, guided errors); the base look is /style.css. */
+.w-dialog{border:0;border-radius:18px;padding:0;max-width:min(920px,96vw);width:640px;box-shadow:0 24px 64px #0003}
+.w-dialog::backdrop{background:#1d2b2966}
+.w-dialog-form{padding:22px 24px;display:flex;flex-direction:column;gap:14px}
+.w-dialog-form.wide{width:min(880px,92vw)}
+.w-dialog:has(.w-dialog-form.wide){width:auto}
+.w-dialog .dialog-top{display:flex;justify-content:space-between;align-items:center}
+.w-dialog .dialog-top button{background:none;border:0;font-size:24px;cursor:pointer}
+.w-dialog-note{color:var(--muted);margin:0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.form-grid .wide,.form-grid .facts,.form-grid .detail-section,.form-grid .actions{grid-column:1/-1}
+.w-field{display:flex;flex-direction:column;gap:4px}
+.w-label{font-size:13px;color:var(--muted)}
+.w-input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:inherit}
+textarea.w-input{min-height:80px;resize:vertical}
+.w-invalid .w-input{border-color:#c0603a;background:#fff8f4}
+.w-field-error{color:#a0522d}
+.w-hint{color:var(--muted)}
+.w-check{display:flex;flex-direction:row;align-items:center;gap:8px}
+.dialog-actions{display:flex;gap:10px;justify-content:flex-start}
+.w-guided{border:1px solid #e8c9b8;background:#fbf1ec;border-radius:12px;padding:10px 14px;color:#6b3a22}
+.w-guided p{margin:2px 0}
+.w-guided-detail{white-space:pre-wrap;direction:ltr;text-align:left;font-size:12px;max-height:240px;overflow:auto;background:#fff;border-radius:8px;padding:8px}
+.w-ref{font-family:ui-monospace,monospace}
+.w-lines{white-space:pre-wrap}
+.w-none{color:var(--muted)}
+.notice.error{background:none;padding:0}
+th[data-sort-col]{cursor:pointer}
+th[aria-sort=ascending]::after{content:" ▲";font-size:10px}
+th[aria-sort=descending]::after{content:" ▼";font-size:10px}
+.w-admin .w-label-edit{outline:1px dashed #b98a3a;outline-offset:2px;border-radius:4px}
+.w-label-edit.changed{background:#fff6dd}
+.w-label-pen{border:0;background:none;color:#b98a3a;cursor:pointer;font-size:12px;padding:0 3px}
+.w-label-edit.stale{outline-color:#c0392b;background:#fdecea}
+.attention td{background:#fdecea}
+.w-block{display:block;white-space:pre-wrap}.w-block[dir=ltr],.w-block:dir(ltr){text-align:left}
+/* calendar */
+.cal-head{flex-wrap:wrap;gap:10px}
+.cal-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cal-label small{display:block;font-size:11px;font-weight:normal;color:var(--muted)}
+.cal-panel,.cal-panel>*{min-width:0}
+.timetable,.month-grid{max-width:100%}
+.w-dialog [hidden],.w-dialog fieldset[hidden]{display:none}
+fieldset.recurrence>.w-field,fieldset.move>.w-field{min-width:0}
+.cal-row-actions{display:flex;flex-wrap:wrap;gap:2px 8px}
+.cal-series td small,.cal-agenda td small{display:block}
+.w-time-range{white-space:nowrap}
+.tt-hour{text-align:left}
+/* books */
+.pad-0{padding-inline-start:8px}.pad-1{padding-inline-start:26px}.pad-2{padding-inline-start:44px}.pad-3{padding-inline-start:62px}.pad-4{padding-inline-start:80px}.pad-5{padding-inline-start:98px}
+.books-period{align-items:end}.books-period .w-field{display:grid;gap:4px;font-size:12px}.books-period .w-moment-input{width:9em}
+.filters .w-field{display:grid;gap:4px;font-size:12px}
+tr.total td{font-weight:bold;border-top:2px solid var(--line)}
+td.actions{white-space:nowrap}td.actions button{margin-inline-end:4px}
+.voucher-head span.num{text-align:end}
+.journal-lines td{min-width:0;padding:6px}.journal-lines .w-input{width:100%;min-width:80px}
+.jl-error:empty{display:none}
+@media(max-width:700px){.voucher-head{grid-template-columns:1fr 1fr}.books-period .w-moment-input{width:100%}}
+.panel-head>button,.panel-head .header-actions button{white-space:nowrap;flex:none}
+td.code{text-align:left}
+
+/* THE SEVEN PAGES (pages/seven.js): a page made of parts, each under its own heading; logical properties only, so the
+   right-to-left page and a left-to-right one read the same rules */
+.page-intro{color:var(--muted);margin:0 0 18px}
+.part{scroll-margin-block-start:24px}
+.part+.part{margin-block-start:34px}
+.part-h{font-size:15px;color:#86917e;letter-spacing:.04em;margin:0 0 12px;padding-block-end:6px;border-block-end:1px solid var(--line)}
+/* who owes whom: a flow from the one who owes to the one owed, its arrow the glyph of `next` (a flow runs with the line) */
+.flows{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.flow{display:grid;grid-template-columns:minmax(80px,auto) auto minmax(80px,auto) 1fr;align-items:center;gap:6px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fbfcf9}
+.flow .who{font-weight:bold}
+.flow .arrow{font-size:20px;color:var(--green);line-height:1}
+.flow.out .arrow{color:#a15834}
+.flow .amount{justify-self:end;font-size:17px}
+.flow .on{grid-column:1/-1;font-size:11px}
+.owes .net{display:flex;flex-wrap:wrap;gap:8px 24px;margin-block-start:14px;padding-block-start:12px;border-block-start:1px dashed var(--line)}
+@media(max-width:700px){.flow{grid-template-columns:auto auto auto;}.flow .amount{grid-column:1/-1;justify-self:start}}
+/* a page's parts, one at a time: the switch at the top */
+.part-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;padding-block-end:10px;border-block-end:1px solid var(--line)}
+.part-tabs button{border:1px solid var(--line);background:#fff;padding:8px 16px;border-radius:999px;font-size:13px}
+.part-tabs button.active{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* A view page (view.js): the release's drawings in the chrome. The runtime's lens line names a lens this handplace does
+   not switch, and its title block the page, the garden and the commit the chrome already shows, so neither is shown
+   here (the view's own page, /view?page=, keeps both); a page of several drawings switches between them. */
+.vp .vp-drawing .vw-head .vw-lv,.vp .vp-drawing .vw-tblock{display:none}   /* above the kit's own rules, loaded after */
+.vp-parts{display:flex;gap:6px;flex-wrap:wrap;margin-block-end:12px}
+.vp-parts .active{border-color:var(--accent,#c45f00);color:var(--accent,#c45f00)}
+.prefs-open{margin:10px 0 0;width:100%}
+#prefsdlg{border:1px solid var(--line);border-radius:12px;padding:18px}
+.core-front a.primary{display:inline-block;padding:10px 17px;border-radius:10px;text-decoration:none;white-space:nowrap}
+/* the archetype `course` (lead.js courseLine): one course in one line, its steps along the reader's line, the one it
+   stands at marked, the ways out and pauses apart after them */
+.courses{list-style:none;margin:0;padding:0}
+.courses>li{margin-block-end:8px}
+.course-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:6px 10px;border-inline-start:3px solid var(--line)}
+.course-line.late{border-inline-start-color:#a15834}
+.course-line.done{opacity:.75}
+.steps{display:flex;flex-wrap:wrap;gap:3px;list-style:none;margin:0;padding:0}
+.steps.off{padding-inline-start:6px;border-inline-start:1px dashed var(--line)}
+.steps .step{font-size:11px;padding:1px 8px;border:1px solid var(--line);border-radius:9px;color:var(--muted)}
+.steps .step.here{background:var(--green);border-color:var(--green);color:#fff;font-weight:bold}
+.steps .step.exit{border-style:dotted}

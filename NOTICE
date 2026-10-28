@@ -89,7 +89,19 @@ A font, distributed alongside daftar's widgets as a separate work:
   assets/view/lib/widgets/Vazirmatn.woff2
     Vazirmatn, Copyright 2015 The Vazirmatn Project Authors (https://github.com/rastikerdar/vazirmatn), under the
     SIL Open Font License 1.1 (assets/view/lib/widgets/Vazirmatn-OFL.txt, LICENSES/OFL-1.1.txt), served with the widgets
-    unchanged.
+    unchanged. daftard carries the same file, and its licence beside it, in daftard/web/widgets/.
+
+What daftard (daftard/) carries of others', each under its own terms:
+
+  daftard/vendor/golang.org/x/text/
+    The Go Authors' golang.org/x/text, v0.42.0: its packages unicode/norm and transform, vendored unchanged as Go's
+    `go mod vendor` writes them. Copyright 2009 The Go Authors, under the BSD 3-Clause licence
+    (daftard/vendor/golang.org/x/text/LICENSE, LICENSES/BSD-3-Clause.txt), with Google's patent grant kept beside it
+    (daftard/vendor/golang.org/x/text/PATENTS).
+
+  daftard/internal/places/testdata/*.json, daftard/internal/web/testdata/photon-*.json
+    Place names from OpenStreetMap, in the answers the place search's tests are held to. © OpenStreetMap contributors,
+    under the Open Database Licence 1.0 (LICENSES/ODbL-1.0.txt; https://www.openstreetmap.org/copyright).
 
 daftar's own curated tables (seed/knowledge/technology.tsv, crosswalk-isco-08-isced-f-2013.tsv, and each
 seed/knowledge/units-<scheme>.tsv, a standard's codes crossed into the law's units) are CC BY 4.0.

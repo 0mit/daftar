@@ -140,11 +140,13 @@ parts, changes).
    python3 test/view_prefs_bean.py
    python3 test/catalogue.py
    python3 test/garden.py
+   python3 test/daftard.py
    reuse lint
    ```
 
    CI runs a brief set of them on every push and pull request — the documents, the manifesto, the journal, the assets,
-   the site and what is public, and the guards' suite on Linux, macOS and Windows — and the whole list only when the
+   the site and what is public, and the guards' suite and daftard's (`test/daftard.py`, which needs Go, the version
+   `daftard/go.mod` names) on Linux, macOS and Windows — and the whole list only when the
    workflow is run by hand; before a release, run the
    whole list here with `python3 test/timings.py -j 6` (`reuse lint` is the REUSE tool, `pip install reuse`). `test/site.py` builds the page again with `site/board.py`,
    which clones this repository at the tag `site/RELEASE` names: a clone without its tags cannot run it.

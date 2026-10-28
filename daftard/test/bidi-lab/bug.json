@@ -1,0 +1,3 @@
+[{"name": "tonight's span: ltr, «۲۷٬۹۶۶ و ۱/۶»", "dir": "rtl", "html": "<span dir=\"ltr\">۲۷٬۹۶۶ و ۱/۶</span> TRY"},
+ {"name": "same text with no span, rtl paragraph", "dir": "rtl", "html": "۲۷٬۹۶۶ و ۱/۶"},
+ {"name": "negative, tonight's form", "dir": "rtl", "html": "<span dir=\"ltr\">\u200E−۱٬۹۵۰</span> TRY"}]

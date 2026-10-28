@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>دفتر</title><link rel="stylesheet" href="/served.css"><script type="module" src="/served.js"></script></head>
+<body><main>
+<header><h1 id="title">دفتر</h1><p id="who"></p><button id="out" hidden>خروج</button></header>
+<div id="notice" role="status"></div>
+<section id="signin" hidden>
+  <h2>ورود</h2>
+  <p>نام دفتر و شناسهٔ خود در آن را بنویسید؛ اگر دفتر شما را بشناسد، پیوندی برای ورود به رایانامهٔ شما می‌آید.</p>
+  <form id="ask"><label>دفتر <input name="g" required autocomplete="off" dir="ltr"></label>
+  <label>شناسهٔ شما <input name="person" required autocomplete="username" dir="ltr" pattern="[a-z0-9][a-z0-9\-]{0,63}"></label>
+  <button>پیوند ورود را بفرست</button></form>
+  <p><button id="pk-in" type="button">ورود با کلید (passkey)</button></p>
+</section>
+<section id="mine" hidden>
+  <h2>آنچه منتظر شماست</h2><ul id="leads"></ul>
+  <div id="forms"></div>
+  <p><button id="pk-new" type="button">ساختن کلید ورود برای این دستگاه</button></p>
+  <h2>خواندن</h2>
+  <form id="read"><label>شناسهٔ مورد <input name="id" required autocomplete="off" dir="ltr"></label><button>بخوان</button></form>
+  <article id="bean"></article>
+</section>
+</main></body></html>
