@@ -5,7 +5,8 @@
     python3 bin/hub.py key <repository>                               # the hub's key, shown again
     python3 bin/hub.py pre-receive [--report] [--only <person>] [--each]   # what the installed hook runs, reading stdin
     python3 bin/hub.py post-receive                                   # after a push is taken: each commit's receipt
-    python3 bin/hub.py report <repository> [--since <moment>]         # what the hub judged, from its log
+    python3 bin/hub.py report <repository> [--since <day or moment>]  # what the hub judged, from its log; a day is
+                                                                      # the garden's, read in GARDEN.md's zone
     python3 bin/hub.py receipts <repository> [<rev>]                  # each commit's receipt, and those with none
     python3 bin/hub.py receive <ref> [--each]                         # a peer judges what a fetch brought, as a hub
 
@@ -19,7 +20,10 @@ again, commit by commit, oldest first:
      THE GARDEN STOOD AT THE PARENT COMMIT. A key no bean carries is refused. A key anchor added is itself a class-F
      change, so trust grows only through the gardener.
   3. THE RIGHTS, read at the parent: the gardener may do anything; any other writer needs `write` for every bean or
-     mapping it changes (and for a bean's series files), `ratify:F` for an identity anchor it adds or changes, and
+     mapping it changes (and for a bean's series files) — for one the commit makes, which is in no garden before it,
+     the grants as they stood at the parent and their readings over the tree the commit leaves, so a grant over a
+     reading holds a new bean as the reading reads it, and a new person or agreement stays outside a reading that
+     leaves them out —, `ratify:F` for an identity anchor it adds or changes, and
      `ratify:G` for a file in the `law` or `manifesto` layer — and for CODE: a file in the `gate` layer, one a release
      keeps (`seed/LANGUAGE`), any Python or shell file, the drawing module a page names (`view.drawings`) and the
      name itself, and a captured view of another program (`captures/views/`), whose templates its client compiles into
@@ -306,7 +310,10 @@ def rights(writer, commit, parent, env, tmp, others=()):
     writer needs grants for — is a path that differs from every parent (MERGE.md §5, as the gate reads a merge). And
     within such a path, an identity anchor or a page's drawing module is the merge's own only where it is not what the
     merge of its parents makes of it (MERGE.md §3): an anchor one side added is the side's, judged then, whichever parent
-    is first; one a side took out and the merge keeps, the merge decided."""
+    is first; one a side took out and the merge keeps, the merge decided. A BEAN THE COMMIT MAKES is in no garden at the
+    parent, so no reading read there holds it: its grants are the parent's, each reading of what they cover read over
+    the tree the commit leaves (`made`) — what a writer may change there it may change at the parent, so the commit
+    reads no reading a second commit after it would not."""
     before = Tree(parent, env) if parent else None
     if before is None or writer == before.gardener():
         return []
@@ -316,6 +323,20 @@ def rights(writer, commit, parent, env, tmp, others=()):
     os.makedirs(root)
     before.checkout(root)
     beans = before.beans()
+    was_there = set(before.files)
+    left = []                                            # the commit's own tree, checked out once a bean it makes needs it
+
+    def made(p):
+        """The tree the commit leaves, for a bean or mapping at `p` it makes; None for one the parent holds."""
+        if p in was_there:
+            return None
+        if not left:
+            left.append(os.path.join(tmp, 'commit'))
+            if os.path.isdir(left[0]):
+                shutil.rmtree(left[0])
+            os.makedirs(left[0])
+            after.checkout(left[0])
+        return left[0]
     _c, out, _e = git('diff', '--name-only', '--no-renames', parent, commit, env=env)
     paths = [x for x in out.split('\n') if x]
     if others:
@@ -346,7 +367,8 @@ def rights(writer, commit, parent, env, tmp, others=()):
         if p.startswith(('beans/', 'mappings/')) and p.endswith('.md'):
             bid = p.split('/', 1)[1][:-3]
             was, now = _fm(before.text(p), before.core), _fm(after.text(p), after.core)
-            if not dmpass.may(writer, 'write', bid, root=root, beans=beans).granted:
+            over = made(p) if now is not None else None
+            if not dmpass.may(writer, 'write', bid, root=root, beans=beans, readings=over).granted:
                 missing.append((p, 'write'))
             if sides:
                 ours = [side(t, p) for t in sides]
@@ -355,13 +377,14 @@ def rights(writer, commit, parent, env, tmp, others=()):
                 redrawn = _decided(_drawn(now), _drawn(side(under, p)), [_drawn(fm) for fm in ours])
             else:
                 anchored, redrawn = _anchors(was, once) != _anchors(now, once), _drawn(was) != _drawn(now)
-            if anchored and not dmpass.may(writer, 'ratify:F', bid, root=root, beans=beans).granted:
+            if anchored and not dmpass.may(writer, 'ratify:F', bid, root=root, beans=beans, readings=over).granted:
                 missing.append((p, 'ratify:F'))
             if redrawn and not ratify_g():
                 missing.append((p, 'ratify:G'))
         elif p.startswith('series/') and p.count('/') >= 2:
             bid = p.split('/')[1]
-            if not dmpass.may(writer, 'write', bid, root=root, beans=beans).granted:
+            over = made(f'beans/{bid}.md') if after.text(f'beans/{bid}.md') is not None else None
+            if not dmpass.may(writer, 'write', bid, root=root, beans=beans, readings=over).granted:
                 missing.append((p, 'write'))
     return missing
 
@@ -865,9 +888,38 @@ def _gitdir_of(repo):
     return os.path.abspath(git('-C', repo, 'rev-parse', '--absolute-git-dir', env=env)[1].strip() or repo)
 
 
+def _since(repo, since):
+    """(the instant `since` names, in UNIX milliseconds, and how it was read) — a moment by its offset, or a day or a
+    clock reading with none in the garden's zone (GARDEN.md `zone` at the repository's HEAD), the day from its midnight
+    there; in UTC where the garden names no zone, and said so. ValueError for what names neither."""
+    import stale as dmstale
+    env = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
+    c, text, _e = git('-C', repo, 'show', 'HEAD:GARDEN.md', env=env)
+    g = _fm(text, dmcheck.pin_of(text).startswith('core@')) if c == 0 else None
+    zone = g.get('zone') if isinstance(g, dict) and isinstance(g.get('zone'), str) else None
+    s, where = str(since).strip(), f"in {zone}, the garden's zone" if zone else "in UTC: GARDEN.md names no zone"
+    try:
+        try:
+            ms = dmstale.instant(s, zone or 'UTC')
+            said = '' if re.search(r'(Z|[+-]\d{2}:\d{2})$', s) else f" ({where})"
+        except dmstale.Unreckoned:                       # a day: from its midnight in the garden's zone
+            dmstale.day_of(s)
+            ms, said = dmstale.instant(f"{s} 00:00", zone or 'UTC'), f" (the day {where})"
+    except (dmstale.Unreckoned, ValueError) as x:
+        raise ValueError(f"`{s}` is no day or moment: give a day (2026-10-24, read {where}) or a moment "
+                         f"(2026-10-24T09:00+03:00) — {x}") from None
+    import datetime
+    utc = datetime.datetime.fromtimestamp(ms / 1000, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    return ms, f"{s}{said}, from {utc}"
+
+
 def report(repo, since=None):
-    """(exit code, lines): what the hub's log holds — each ref update judged since `since` (a moment, `2026-10-24`, or
-    all), how many were taken, would have been refused, and were refused, and each that was not simply taken."""
+    """(exit code, lines): what the hub's log holds — each ref update judged since `since` (or all), how many were
+    taken, would have been refused, and were refused, and each that was not simply taken. `since` is a moment
+    (`2026-10-24T09:00+03:00`), or a day (`2026-10-24`) or a clock reading with no offset read in the garden's zone
+    (GARDEN.md `zone`; UTC where it names none), and the first line says the instant it was read as; the log keeps each
+    moment in UTC (`Z`)."""
+    import stale as dmstale
     try:
         with open(os.path.join(_gitdir_of(repo), 'daftar', 'hub.log'), encoding='utf-8') as fh:
             rows = [json.loads(l) for l in fh if l.strip()]
@@ -875,9 +927,20 @@ def report(repo, since=None):
         return 1, [f"hub: {repo} keeps no log: no push has been judged here since a release that writes one"]
     except ValueError as x:
         return 2, [f"hub: the log is not one JSON object to a line: {x}"]
-    rows = [r for r in rows if not since or str(r.get('at', '')) >= since]
+    if since:
+        try:
+            at, read_as = _since(repo, since)
+        except ValueError as x:
+            return 2, [f"hub: --since {x}"]
+
+        def after(r):
+            try:
+                return dmstale.instant(str(r.get('at', ''))) >= at
+            except dmstale.Unreckoned:
+                return False
+        rows = [r for r in rows if after(r)]
     count = {k: sum(1 for r in rows if r.get('verdict') == k) for k in ('taken', 'would refuse', 'refused')}
-    lines = [f"hub: {len(rows)} ref update{'s' if len(rows) != 1 else ''} judged{f' since {since}' if since else ''}: "
+    lines = [f"hub: {len(rows)} ref update{'s' if len(rows) != 1 else ''} judged{f' since {read_as}' if since else ''}: "
              f"{count['taken']} taken, {count['would refuse']} would have been refused (reporting), "
              f"{count['refused']} refused"]
     for r in rows:

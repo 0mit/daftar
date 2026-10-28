@@ -1329,18 +1329,21 @@ def shares(holder, hfm, bid, fm):
     return bool(accepted & (_owners(fm) | _subjects(bid, fm)))
 
 
-def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None, held=False):
+def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None, held=False,
+        readings=None):
     """Whether `actor` may `act` (read, write, act:<tool>, ratify:<class>) on `bean` — at `positions`, or the whole bean;
     with `held`, at positions that hold a value held off git, which only a grant naming them opens (`may_core`).
     CLOSED BY DEFAULT: the gardener is granted; nobody is granted what no grant opens. A grant counts when its holder may
     decide it — the gardener; the person the bean is of or `about`; an agreement, over its own bean and what a party who
     accepted it owns or is the record of (`shares`) — and it matches the act, holds the bean (`over`, or the bean holding
     it), covers the positions, names the actor and holds at `at` (a day or a moment; now where it names none). A
-    `forbidden` one refuses whatever a `permitted` one opens."""
+    `forbidden` one refuses whatever a `permitted` one opens. `readings` is the garden a grant's reading of the beans it
+    covers is read over, where it is not `root`'s: a hub's, the tree a commit leaves for a bean the commit makes, whose
+    grants are still `beans`' (bin/hub.py `rights`)."""
     gardener = gardener if gardener is not None else gardener_of(root)
     if runs_core(root):
         return may_core(actor, act, bean, positions=positions, at=at, reason=reason, root=root, beans=beans,
-                        gardener=gardener, held=held)
+                        gardener=gardener, held=held, readings=readings)
     if actor is None:
         return Answer(False, "nobody named: an actor no one can name is granted nothing")
     if actor == gardener:
@@ -1359,7 +1362,7 @@ def may(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, be
         for key, g in sorted(gs.items()):
             if not isinstance(g, dict) or g.get('act') != act or not may_decide:
                 continue
-            over = {holder} if g.get('over') is None else _select(holder, g['over'], root)
+            over = {holder} if g.get('over') is None else _select(holder, g['over'], readings or root)
             if over is None:
                 notes.append(f"{holder}:grants[{key}] — its `over` could not be read, so it opens nothing")
                 continue
@@ -1685,7 +1688,8 @@ def _marked_schemes(root=ROOT):
         return set()
 
 
-def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None, held=False):
+def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROOT, beans=None, gardener=None, held=False,
+             readings=None):
     """`may` in a garden of the core. A `grant` statement opens an act — `as` read, write, enact or ratify; `of` the
     beans or the statements it covers (an id in its own bean, `<bean>#<id>` in another; none: its own bean); `to` whom;
     `at` the extent it holds over — where its holder may decide it: the gardener; the person the bean is, or concerns;
@@ -1695,7 +1699,9 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
     A grant `of` a reading (a `reckon` statement) covers each bean the reading holds, and one `to` a reading opens to
     each member it holds, read each time it is asked; its `cover` (v1 part 12b) opens only the parts it names — a key of
     the header, `body`, a verb's statements, a verb's narrowed by their `as` — so the whole bean, asked, is not opened by
-    it, and a part asked is, as is a statement of a verb it names; `reason: asked` asks each use its reason.
+    it, and a part asked is, as is a statement of a verb it names; `reason: asked` asks each use its reason. A reading
+    `of` is read over `readings` where it is given (a hub's, for a bean the commit makes), the grants themselves and a
+    reading `to` over `root` still.
 
     A grant with a `window` (a recurrence each of whose occurrences lasts: office hours on working days) holds at a
     MOMENT that lies in its `at` and in an occurrence of its window, both read in the garden's zone (GARDEN.md `zone`):
@@ -1728,11 +1734,12 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
     read, forbid, permit, asks, notes, zone = [], [], [], set(), [], False
     verbs_of = {str(r.get('id')): (v, r) for _i, v, r in sts if isinstance(r.get('id'), str)}
 
-    def members(b_, sid):
-        """The beans a reading holds, or None where the statement is no reading or cannot be read."""
+    def members(b_, sid, over=root):
+        """The beans a reading holds over the garden at `over`, or None where the statement is no reading or cannot be
+        read."""
         if not any(v == 'reckon' and r.get('id') == sid for _i, v, r in statements(beans.get(b_) or {})):
             return None
-        return _select(b_, sid, root)
+        return _select(b_, sid, over)
 
     def part_holds(p, parts):
         """Whether the asked position `p` — a part's name, or a statement of the bean by its id — is among `parts`."""
@@ -1759,7 +1766,7 @@ def may_core(actor, act, bean, *, positions=None, at=None, reason=None, root=ROO
                     b_, sid = (holder if x == 'self' else x), ''
                 else:                                       # a statement of the holder's own bean, by its id
                     b_, sid = holder, x
-                held_by = members(b_, sid) if sid else None
+                held_by = members(b_, sid, readings or root) if sid else None
                 if held_by is not None:                     # a reading: each bean it holds, read now
                     cover = cover or bean in held_by
                 elif b_ == bean:

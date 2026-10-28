@@ -19,7 +19,8 @@ change to the law reported for `ratify:G`; a forced push over the receipts' ref 
 `receipts` naming the commits no receipt is on. Refusing: the gate's refusal and the agent's change to the law refused,
 no receipt written, a good commit taken. A merge the agent makes whose second parent brought the gardener's anchor,
 taken (#195), each commit of that push given its own receipt. A receipt where the hub keeps no key, written and said to
-be unsigned.
+be unsigned. The report's day: `--since <day>` the garden's day, from its midnight in GARDEN.md's zone, and a moment
+compared as an instant, each said with the instant it was read as; in UTC where the garden names no zone, said so.
 
 Run: python3 test/hubreport.py   (0 = green; about three minutes)
 """
@@ -384,6 +385,36 @@ try:
     check("a hub whose account keeps no key of it writes the receipt unsigned, and says so",
           r.returncode == 0 and 'unsigned' in r.out and 'signed: no' in receipt(head())
           and '-----BEGIN SSH SIGNATURE-----' not in receipt(head()), r.out + receipt(head()))
+
+    # ---- THE REPORT'S DAY: a day is the garden's, from its midnight in GARDEN.md's zone; the log's moments are UTC
+    Z = os.path.join(T, 'zoned')
+    run('git', 'init', '-q', Z, cwd=T)
+    write('GARDEN.md', '---\ngarden: zoned\ngardener: sam\nzone: Asia/Tokyo\n---\n', root=Z)
+    run('git', 'add', '-A', cwd=Z)
+    run('git', 'commit', '-q', '--no-verify', '-m', 'a garden in Tokyo', cwd=Z)
+    write('.git/daftar/hub.log', ''.join(json.dumps({'at': at, 'mode': 'refusing', 'ref': 'refs/heads/master',
+                                                      'verdict': 'taken', 'refusals': []}) + '\n'
+                                         for at in ('2026-10-23T14:59:00Z', '2026-10-23T15:00:00Z',
+                                                    '2026-10-24T10:00:00Z')), root=Z)
+    hub = os.path.join(G, 'bin', 'hub.py')
+    r = run(PY, hub, 'report', Z, '--since', '2026-10-24', cwd=Z)
+    check("report --since <day>: the garden's day in its zone, from its midnight there (15:00 UTC the day before), "
+          "said with the instant it was read as", r.returncode == 0 and '2 ref updates judged since 2026-10-24 (the '
+          "day in Asia/Tokyo, the garden's zone), from 2026-10-23T15:00:00Z" in r.out, r.out)
+    r = run(PY, hub, 'report', Z, '--since', '2026-10-23T23:59:30+09:00', cwd=Z)
+    r2 = run(PY, hub, 'report', Z, '--since', '2026-10-23 23:59:30', cwd=Z)
+    check("report --since <moment>: by its offset, compared as an instant and not as text; a clock reading with none "
+          "in the garden's zone", r.returncode == 0 and '2 ref updates judged since 2026-10-23T23:59:30+09:00, from '
+          '2026-10-23T14:59:30Z' in r.out and r2.returncode == 0 and "2 ref updates judged since 2026-10-23 23:59:30 "
+          "(in Asia/Tokyo, the garden's zone), from 2026-10-23T14:59:30Z" in r2.out, r.out + r2.out)
+    write('GARDEN.md', '---\ngarden: zoned\ngardener: sam\n---\n', root=Z)
+    run('git', 'commit', '-q', '--no-verify', '-am', 'no zone said', cwd=Z)
+    r = run(PY, hub, 'report', Z, '--since', '2026-10-24', cwd=Z)
+    r2 = run(PY, hub, 'report', Z, '--since', 'yesterday', cwd=Z)
+    check("report --since <day> where GARDEN.md names no zone: the day in UTC, and said so; what names no day or moment, "
+          "exit 2", r.returncode == 0 and '1 ref update judged since 2026-10-24 (the day in UTC: GARDEN.md names no '
+          'zone), from 2026-10-24T00:00:00Z' in r.out and r2.returncode == 2 and 'no day or moment' in r2.out,
+          r.out + r2.out)
 finally:
     shutil.rmtree(T, ignore_errors=True)
 
