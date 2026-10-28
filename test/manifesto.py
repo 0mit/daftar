@@ -124,6 +124,9 @@ TOOL_NET = {   # each with why: never-sells is "never … anywhere its gardener 
                 "request for that file, and nothing else",
     "clock.py": "it asks the time servers this host was given, or those its keeper names, for the time: a request of 48 "
                 "bytes whose only content is a random nonce, nothing of the garden or of this clock",
+    "intake.py": "it asks a source a person admitted for the feeds its bean names, and its hosts for their robots rules, "
+                 "only where its terms permit: a request naming the reader, carrying nothing of the garden but what the "
+                 "host's own last answer gave (its ETag, its Last-Modified)",
 }
 check("a tool opens a network path only where it is declared to, each with why (manifesto: never-sells)",
       set(net) <= set(TOOL_NET), f"found {net}; declared {sorted(TOOL_NET)}")

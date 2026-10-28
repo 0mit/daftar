@@ -6844,3 +6844,44 @@ and since counts of different things never convert into one another it has no fa
 unit of the law: its quantity money over the quantity under the line, and it converts as both parts do — at the factor
 between its units under the line, and between currencies only at a rate someone observed. A currency over a currency is
 no price: two currencies meet only through a rate, which is a reading, recorded with its source.
+
+## core/law/lines.yaml: selection_form.known
+
+(core 4.9, ratified on 2026-10-28) A reading reads the garden as it stands, and a pin reads it at a commit; neither
+reads it as it was known at a moment. A pin takes a commit, so the reading itself must already be in it; and a store's
+rows, kept off git, are read whatever moment they were known. A backtest asks another question: what could have been
+read at a moment in the past, and nothing learned after it. Reading what was not yet known is wrong in one direction —
+every forecast scored so looks better than it was — so a reading names the input whose moment it is read at, and the
+reckoner reads only the statements one of whose knowing acts is at or before it. The knowing acts already say when each
+statement came into the ledger (the rule knowing), a row of a store by the acts that know it: no moment is written for
+this, and none is guessed. The moment a statement speaks of — the day a report says a mill reopened — is another
+moment, and is never read for it. The reading's own declaration is read as it stands, so a backtest written today can be
+asked of last year; and the clock is the moment asked, as a pin's is its moment.
+
+## core/law/lines.yaml: forms.reading.attrs.known
+
+(core 4.9) `known` names an input rather than holding a moment, so that one reading is asked at each moment of a
+backtest, each answer read over what was known then; the gate refuses a `known` that names no input of the reading, and
+the reckoner a moment not given, or a day where a moment is asked.
+
+## core/law/tools.yaml: tools[intake]
+
+(core 4.9, ratified on 2026-10-28) The intake reads a source's feeds, and only what the source permits. Its terms are
+an agreement about it, each permission a position of the permission square on a capability of the reader — the square
+the law already has — and their standing is read as core/inforce.py reads any statement's, so no second reading of a
+clause can disagree with the first. What no capability covers is not read: a reader that reads whatever it was not
+refused reads too much. A host's robots rules are read by Python's own urllib.robotparser, the reader of RFC 9309 every
+Python already holds, never by a second parser of them. The reader names itself and how to reach whoever runs it, so a
+publisher can see who reads and say so; it asks each feed with what its last answer said (ETag, Last-Modified), keeps a
+host's rate, and waits when a host asks it to, so that it costs a publisher as little as it can. What it reads goes into
+a store, never git: a feed's items are many, and what a site publishes is its own, kept on the host that read it. A
+source is admitted by a person, on its walk, before anything is read of it; the walks of an intake, a source and a
+design are shipped as the walk of a run is, written into a garden by their tool and checked against it there.
+
+## core/law/tools.yaml: tools[knowledge]
+
+(core 4.9) A classifier is measured against what a person said of its suggestions, per scheme: precision beside recall
+at k, over the latest responses, because a classifier is trusted on what it does now and a scheme's classes are learned
+apart. A suggestion is a `classify` and a response a `respond`, both statements the law already has, so the measure is
+a reading of the ledger and no store of scores; and a classifier's graduation is a need of its bean whose probe reads
+that measure (core 4.3's monitoring as needs), so no new concept is opened — its thresholds are the garden's.

@@ -223,14 +223,18 @@ def _viewprint(fm):
 
 
 class Garden:
-    """The front matter of every bean and mapping of one garden, as it stands now or at a commit."""
+    """The front matter of every bean and mapping of one garden, as it stands now or at a commit — and, with `known`
+    (UNIX milliseconds), as it was known at that moment."""
 
-    def __init__(self, root=ROOT, pin=None):
-        self.root, self.pin = root, pin
+    def __init__(self, root=ROOT, pin=None, known=None):
+        self.root, self.pin, self.known = root, pin, known
         self.fm, self.kind = {}, {}
         if dmseq.runs_core(root):
             self._core()
             return
+        if known is not None:
+            raise Refused("a reading is read as known at a moment in a garden of the core: its statements' knowing acts "
+                          "say when each was known")
         if pin is not None:
             self._check_pin()
             for p in dmgarden.listed(root, ('beans', 'mappings'), at=pin.commit):
@@ -251,7 +255,7 @@ class Garden:
         changes a view it shares."""
         sys.path.insert(0, ROOT)
         from core import engine, lines, read
-        if self.pin is None:
+        if self.pin is None and self.known is None:
             G = engine.Garden.read(self.root)
             self.G = G                                   # the beans as read, whose joints a concept is fitted in (4.2)
             kept = _VIEWED.get(self.root)
@@ -269,6 +273,8 @@ class Garden:
             if G.held is not None:
                 _VIEWED[self.root] = (G.held, dict(self.fm), dict(self.kind), _viewprint(self.fm) if check else None)
             return
+        elif self.pin is None:
+            G = engine.Garden.read(self.root)
         else:
             self._check_pin()
             beans = {}
@@ -280,6 +286,8 @@ class Garden:
                 except read.Unread as e:
                     beans[bid] = engine.Bean(bid, p, unread=str(e))
             G = engine.Garden(beans, root=self.root)
+        if self.known is not None:
+            G = known_garden(G, self.known, dmseq.core(self.root)[0].knowing)
         self.G = G
         for bid, b in G.beans.items():
             if not b.unread:
@@ -317,8 +325,63 @@ class Garden:
 
     def bean(self, i):
         if i not in self.fm:
-            raise Refused(f"no bean or mapping '{i}' here" + (f" at {self.pin.commit}" if self.pin else ''))
+            raise Refused(f"no bean or mapping '{i}' here" + (f" at {self.pin.commit}" if self.pin else '')
+                          + (f" as known at {_shown_ms(self.known)}" if self.known is not None else ''))
         return self.fm[i]
+
+
+# A GARDEN AS KNOWN AT A MOMENT (core 4.9, M10): what was said, read, made or derived at or before it, whatever moment
+# its statements speak of. A statement is known at a moment where one of the knowing acts that cover it — those whose
+# `of` names it, else those with no `of` (the rule knowing) — is at or before it; a knowing act, at its own moment. A
+# bean none of whose statements was known then was not known, and is not read; a store's row is read by the acts that
+# know it alike (bin/store.py `known_at`). A backtest read so never sees what was said after its moment.
+def moment_ms(at):
+    """UNIX milliseconds of a knowing act's `at` — its one moment, beside the garden it was known in where that is
+    another — or None: `now` (not saved yet), and what is no moment."""
+    for x in (at if isinstance(at, list) else [at]):
+        if isinstance(x, str) and x != 'now':
+            try:
+                return dmcal.moment(x).ms - dmcal.UNIX_DAY * dmcal.DAY_MS
+            except (ValueError, TypeError):
+                continue
+    return None
+
+
+def _shown_ms(ms):
+    import datetime
+    return datetime.datetime.fromtimestamp(ms / 1000, datetime.timezone.utc).isoformat(timespec='milliseconds')
+
+
+def known_items(b, until, knowing):
+    """The indexes of bean b's statements known at `until` (UNIX ms)."""
+    acts = [(i, r) for i, v, r in b.items if v in knowing]
+    on = {i for i, r in acts if (m := moment_ms(r.get('at'))) is not None and m <= until}
+    out = set(on)
+    for i, v, r in b.items:
+        if v in knowing:
+            continue
+        sid = r.get('id') if isinstance(r.get('id'), str) else None
+        named = [j for j, rr in acts if sid is not None and sid in _listed(rr.get('of'))]
+        if any(j in on for j in (named or [j for j, rr in acts if 'of' not in rr])):
+            out.add(i)
+    return out
+
+
+def _listed(x):
+    return x if isinstance(x, list) else [] if x is None else [x]
+
+
+def known_garden(G, until, knowing):
+    """The garden G as known at `until`: each bean with only its statements known then; a bean with none, left out."""
+    from core import engine
+    beans = {}
+    for bid, b in G.beans.items():
+        if b.unread:
+            continue
+        keep = known_items(b, until, set(knowing))
+        if keep:
+            beans[bid] = engine.Bean(bid, b.path, dict(b.header, statements=[b.statements[i] for i in sorted(keep)]))
+    return engine.Garden(beans, G.zone, files=G.files, root=G.root, manifest=G.manifest, gid=G.gid)
 
     def parts(self, bean, key):
         """A series' parts, `series/<bean>/<key>/*.tsv`, as they stand here."""
@@ -441,7 +504,10 @@ def value_of(node, where, notes):
         x = dmseq.exact(node.get('count'))
         if x is None:
             raise Refused(f"{where}: {node.get('count')!r} is not a count read exactly")
-        return V(x, node['unit'], _u_of(node, node['unit'], where, notes))
+        unit = node['unit']
+        if isinstance(unit, int) and not isinstance(unit, bool):
+            unit = str(unit)                # a unit is a code: `1`, the ratio's, typed a number by the line reader
+        return V(x, unit, _u_of(node, unit, where, notes))
     if _long(node):
         node = _text(node)                  # a position written long is read as its short form (27.0)
         node = str(node) if node is not None and not isinstance(node, str) else node
@@ -708,6 +774,9 @@ def check_selection(where, entry, law_, extra_inputs=()):
     for i in entry.get('inputs') or []:
         if isinstance(i, dict) and isinstance(i.get('name'), str):
             env.add(i['name'])
+    if entry.get('known') is not None and entry['known'] not in env:
+        out.append(('error', f"{where}: `known: {entry['known']}` names no input of the reading — it names the input "
+                             f"whose moment the reading is read as known at"))
     steps = entry.get('steps')
     if not isinstance(steps, list) or not steps:
         return out + [('error', f"{where}: `steps` is a list of one step or more, each `{{id, op, ...}}`")]
@@ -1075,6 +1144,8 @@ class Reckoner:
                 except Exception as e:          # noqa: BLE001 — a store not kept here is said, and read as empty
                     self.notes.append(f"the store {n} is not read here: {e}")
                     self._opened[n] = None
+                if self._opened[n] is not None and getattr(self.g, 'known', None) is not None:
+                    self._opened[n].known_at(self.g.known, moment_ms)     # its rows as known then, as the beans are
             if self._opened[n] is not None:
                 out.append(self._opened[n])
         if name != 'any' and not out:
@@ -1090,6 +1161,8 @@ class Reckoner:
             if of is None:                       # each being with what the store says of it: its kind, title, summary
                 q = "SELECT id, kind, title, summary FROM being" + (" WHERE kind = ?" if s.get('kind') else "")
                 rows = st.db.execute(q, (s['kind'],) if s.get('kind') else ()).fetchall()
+                if st.known_beings() is not None:      # read as known at a moment: a being none of whose rows was, not
+                    rows = [r for r in rows if r[0] in st.known_beings()]
             else:
                 rows = [(i, None, None, None) for i in of]
             ids = [r[0] for r in rows]
@@ -3514,10 +3587,24 @@ def _result(kind, value, rk, pin):
 
 
 def evaluate(ref, *, root=ROOT, inputs=None, pin=None, entry=None, bean=None, now=None):
-    """The reading `ref` (`<bean>:<key>`, or `ordering_keys:<key>`), read now — or at `pin`."""
+    """The reading `ref` (`<bean>:<key>`, or `ordering_keys:<key>`), read now — or at `pin`. A reading that names its
+    `known` input is read over the garden as known at the moment that input gives, the clock at that moment."""
     g = Garden(root, pin)
     if entry is None:
         bean, entry = _find(g, ref)
+    if isinstance(entry, dict) and entry.get('known') is not None:
+        name = str(entry['known'])
+        given = (inputs or {}).get(name)
+        if given is None:
+            raise Refused(f"the reading is read as known at the moment its input `{name}` gives, and none was given "
+                          f"(`--input {name}=<moment>`)")
+        until = moment_ms(str(given))
+        if until is None:
+            raise Refused(f"`{name}` is {given!r}: a reading is read as known at a moment — a day, a clock reading to "
+                          f"the minute or finer, and its offset (`2026-03-01T00:00:00+00:00`)")
+        g = Garden(root, pin, known=until)
+        now = str(given)
+        pin = Pin(pin.commit, now, pin.garden) if pin else None      # the clock at that moment, pinned or not
     rk = Reckoner(g, bean, inputs, pin, now=now)
     op, v = rk.run(entry)
     kind = next((r.get('gives') for o, r in rk.ops.items() if o == op), 'value')

@@ -46,6 +46,7 @@ bin/run.py
 bin/import.py
 bin/group.py
 bin/export.py
+bin/intake.py
 bin/rules.py
 bin/why.py
 bin/form.py

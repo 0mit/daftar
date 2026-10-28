@@ -55,6 +55,9 @@ parts, changes).
    python3 test/core_monitoring.py
    python3 test/core_score.py
    python3 test/core_markets.py
+   python3 test/core_asof.py
+   python3 test/classifier.py
+   python3 test/intake.py
    python3 test/core_save.py
    python3 test/core_speed.py
    python3 test/core_held.py
