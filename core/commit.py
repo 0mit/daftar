@@ -242,15 +242,17 @@ def findings(root, law, changes=None, garden=None, register=True):
                 continue
             if verb in law.knowing:
                 # KNOWN IN ANOTHER GARDEN (v1 part 8): its moment is that garden's, and this commit takes it from there
+                # — from the last garden its `at` names, the one it came through (V.5: the hops, oldest first)
                 there = [x for x in listed(at) if isinstance(x, str) and garden is not None and x in garden.beans
                          and garden.beans[x].kind == 'garden']
                 if there:
-                    if not any(v == 'take' and rr.get('from') == there[0] for _j, v, rr in fresh):
-                        out.append(('knowing', where, f"known in {there[0]}, another garden, at {at[0] if isinstance(at, list) else at}: "
-                                                      f"what a garden knew comes here only taken from it, in the commit "
-                                                      f"that takes it — `take: {{ by: <the gardener>, of: self, from: "
-                                                      f"{there[0]}, through: <the proposal's fingerprint>, at: now }}` "
-                                                      f"(python3 bin/propose.py take)"))
+                    if not any(v == 'take' and rr.get('from') == there[-1] for _j, v, rr in fresh):
+                        out.append(('knowing', where, f"known in {there[0]}, another garden, at {at[0] if isinstance(at, list) else at}"
+                                                      + (f", and come through {', '.join(there[1:])}" if there[1:] else '')
+                                                      + f": what a garden knew comes here only taken from the garden it "
+                                                      f"came through, in the commit that takes it — `take: {{ by: <the "
+                                                      f"gardener>, of: self, from: {there[-1]}, through: <the proposal's "
+                                                      f"fingerprint>, at: now }}` (python3 bin/propose.py take)"))
                     continue
                 if at not in moments and not (adopting and at in past):
                     out.append(('knowing', where, f"`at: {at}` is no moment this commit's entry was written at ({said}): "
@@ -417,30 +419,58 @@ def _release(root, ref):
     return str(fm.get('daftar_release') or '') if isinstance(fm, dict) else ''
 
 
+RELEASED = re.compile(r'(?m)^- release: (\S+) at ([0-9a-f]{40,64}), its digests sha256:([0-9a-f]{64})\s*$')
+
+
 def held_to_pin(root, changes, entry, others=()):
     """KEPT, the language held to its pin (core 3.5, II.2): after a commit, each file the release keeps that the commit
     adds or changes holds the SHA-256 its release carries for it (seed/LANGUAGE.sha256, bin/pass.py `digests_of`), and
-    the digests themselves change only with the release — save in the commit that adopts one, which moves GARDEN.md's
-    `daftar_release` and says RULE-CHANGE (bin/dmupgrade.py writes it). A garden's first commit brings the release, and
-    a garden whose release carries no digests has none to be held to. Only what the commit stages is read: the commits
-    before it were judged when they were made, and a hub replays each (bin/hub.py); and a merge brings a file as the other
-    side committed it, judged then."""
+    the digests themselves change only with the release, in the commit that adopts one — it moves GARDEN.md's
+    `daftar_release` and says RULE-CHANGE — whose entry names the release it lays, as bin/dmupgrade.py proved it against
+    its tag (`- release: <tag> at <commit>, its digests sha256:<…>`): the tag GARDEN.md records, and these digests' own
+    SHA-256. So the adoption brings the release as its tag holds it, and no file and digest patched together (II.2's
+    second edge). No commit takes out a file the garden receives from its release — what seed/LANGUAGE gives a garden of
+    its profiles; what a release no longer gives it, the adoption or a move of its profiles removes (II.2's first edge).
+    A garden's first commit brings the release, and a garden whose release carries no digests has none to be held to.
+    Only what the commit stages is read: the commits before it were judged when they were made, and a hub replays each
+    (bin/hub.py); and a merge brings a file as the other side committed it, judged then."""
     text = git(root, 'show', ':' + dmpass.DIGESTS)
     if text is None or git(root, 'rev-parse', '-q', '--verify', 'HEAD') is None:
         return []
-    if _release(root, 'HEAD') != _release(root, '') and RULE_CHANGE.search(entry):
-        return []                                             # the adoption's own commit: the release comes in whole
+    adopting = _release(root, 'HEAD') != _release(root, '') and bool(RULE_CHANGE.search(entry))
     blob = lambda ref, p: (git(root, 'rev-parse', '-q', '--verify', f"{ref}:{p}") or '').strip()   # noqa: E731
     changes = [(s, p) for s, p in changes if not (others and any(blob(h, p) == blob('', p) for h in others))]
     out = []
     if any(p == dmpass.DIGESTS for _s, p in changes):
-        out.append(('kept', dmpass.DIGESTS, f"the digests of the release change, and this commit adopts no release: they "
-                                            f"are the release's, and change only with the release GARDEN.md records "
-                                            f"(bin/dmupgrade.py <tag>) — restore them (`git checkout HEAD -- "
-                                            f"{dmpass.DIGESTS}`)"))
+        tag, m = _release(root, ''), RELEASED.search(entry)
+        own = dmpass.sha256_of(data=subprocess.run(['git', '-C', root, 'show', ':' + dmpass.DIGESTS],
+                                                   capture_output=True).stdout)
+        if not adopting:
+            out.append(('kept', dmpass.DIGESTS, f"the digests of the release change, and this commit adopts no release: "
+                                                f"they are the release's, and change only with the release GARDEN.md "
+                                                f"records (bin/dmupgrade.py <tag>) — restore them (`git checkout HEAD -- "
+                                                f"{dmpass.DIGESTS}`)"))
+        elif not m or m.group(1) != tag or m.group(3) != own:
+            out.append(('kept', dmpass.DIGESTS, f"the digests change with the release this commit adopts ({tag}), and its "
+                                                f"entry does not name them as the release laid them: the adoption brings "
+                                                f"the release as its tag holds it, which bin/dmupgrade.py proves as it "
+                                                f"lays it and writes in the entry — `- release: {tag} at <its commit>, "
+                                                f"its digests sha256:{own}`" + (f" (it names {m.group(1)}, sha256:"
+                                                                                f"{m.group(3)[:12]}…)" if m else '')))
     want = dmpass.digests_of(text)
+    gets = None
     for status, path in changes:
-        if status == 'D' or path not in want:
+        if path not in want:
+            continue
+        if status == 'D':
+            if gets is None:
+                gets = _received(root)
+            if path in gets(path):
+                out.append(('kept', path, f"is taken out, and the garden receives it from its release "
+                                          f"({_release(root, '') or 'the release'}): a file the release keeps is as its "
+                                          f"release made it — restore it (`git checkout HEAD -- {path}`); what a "
+                                          f"release no longer gives a garden, the commit that adopts it, or moves the "
+                                          f"profiles the garden takes, removes (bin/dmupgrade.py)"))
             continue
         r = subprocess.run(['git', '-C', root, 'show', f":{path}"], capture_output=True)
         if r.returncode == 0 and dmpass.sha256_of(data=r.stdout) != want[path]:
@@ -448,6 +478,16 @@ def held_to_pin(root, changes, entry, others=()):
                                       f"the release keeps is as its release made it — restore it (`git checkout HEAD -- "
                                       f"{path}`), and bring a change to it through a release of daftar"))
     return out
+
+
+def _received(root):
+    """A function of a path giving [path] where the garden, as the commit leaves it, receives that file from its release
+    — seed/LANGUAGE's lines, the placeholder read as each profile VOCAB.md takes that the law offers — else []."""
+    read = lambda p: git(root, 'show', ':' + p)   # noqa: E731
+    lines = dmpass.language(read('seed/LANGUAGE') or '')
+    vocab = _front(root, '', 'VOCAB.md')[0]
+    takes, offers = dmpass.extended(vocab if isinstance(vocab, dict) else {}), dmpass.offered_in(read)
+    return lambda path: dmpass.received([path], lines, takes, offers)
 
 
 def _closes(garden):

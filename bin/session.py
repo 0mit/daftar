@@ -178,9 +178,10 @@ def cmd_open(a):
     os.makedirs(SESSIONS_DIR, exist_ok=True)
     git('worktree', 'add', '-b', branch, path)
     bean = os.path.join(path, 'beans', f'session-{a.slug}.md')
+    through, comes = harness() if runs_core() else (None, False)
     if not os.path.exists(bean):
         with open(bean, 'w', encoding='utf-8', newline='\n') as f:       # LF on every platform: a bean is one text
-            f.write(_bean_statements(a.slug, a.purpose, owner, host) if runs_core()
+            f.write(_bean_statements(a.slug, a.purpose, owner, host, through if comes else None) if runs_core()
                     else _bean_template(a.slug, a.purpose, owner, host))
     claimed = claim(a.slug)
     print(f"opened  {branch}\n"
@@ -190,6 +191,9 @@ def cmd_open(a):
           f"  bean  beans/session-{a.slug}.md (skeleton — "
           + ("fill its summary and body, and save it with your first entry, which names it" if runs_core()
              else "fill `owns.opened_with` before working") + ")\n"
+          + (f"  signs as {through}, whose own coming its bean does not say: the session does not come through it, "
+             f"and a hub reports its headings (V.1) until the gardener says how {through} came (`come: {{ by: self, "
+             f"through: [<who set it up>] }}` on its bean)\n" if runs_core() and through and not comes else '') +
           f"  gate  shared hook confirmed present\n\n"
           f"  cd {shown(path)}\n"
           f"  {PY} bin/check.py")
@@ -207,8 +211,42 @@ def claim(slug, release=False):
         return []
 
 
-def _bean_statements(slug, purpose, owner, host):
-    """The session bean in statements (a garden of the core): opened at the clock's reading, to the second."""
+def harness(root=ROOT):
+    """THE BEING THIS CLONE SIGNS AS (V.1): the bean that names, by `ssh`, the key this clone signs its commits with
+    (`user.signingkey`, `gpg.format` ssh) — an agents' harness, whose key signs every agent's commit here; None where
+    the clone signs with no SSH key, or no bean names it, or it is the gardener's own. A hub reads each heading against
+    the key (bin/hub.py `reported`): a session's heading passes where its bean comes through that being — which rule
+    `life` takes only where the harness's own coming is said (a made being comes through hands, or through a tool
+    whose own coming goes on): (the harness, whether its bean says its own `come`)."""
+    if git('config', 'gpg.format', check=False) != 'ssh':
+        return None, False
+    k = git('config', 'user.signingkey', check=False)
+    k = os.path.expanduser(k[5:] if k.startswith('file:') else k) if k and not k.startswith('key::') else None
+    pub = k if k and k.endswith('.pub') else (k + '.pub' if k and os.path.isfile(k + '.pub') else k)
+    if not pub or not os.path.isfile(pub):
+        return None, False
+    r = subprocess.run(['ssh-keygen', '-l', '-E', 'sha256', '-f', pub], capture_output=True, text=True,
+                       encoding='utf-8', errors='replace')
+    m = re.search(r'(SHA256:[A-Za-z0-9+/]{43})', r.stdout) if r.returncode == 0 else None
+    if not m:
+        return None, False
+    import importlib
+    dmpass = importlib.import_module('pass')
+    beans = dmpass.beans_here(root)
+    for bid, fm in sorted(beans.items()):
+        for _i, v, r in dmpass.statements(fm):
+            if v == 'name' and 'held' not in r and r.get('by') == 'ssh' and str(r.get('as')) == m.group(1) \
+                    and r.get('of') in (None, 'self', bid):
+                if bid == dmpass.gardener_of(root):
+                    return None, False
+                return bid, any(vv == 'come' and 'held' not in rr and rr.get('by') in ('self', bid)
+                                for _j, vv, rr in dmpass.statements(fm))
+    return None, False
+
+
+def _bean_statements(slug, purpose, owner, host, through=None):
+    """The session bean in statements (a garden of the core): opened at the clock's reading, to the second; and where
+    the clone signs as a harness (`harness`), the session comes through it."""
     opened = datetime.datetime.now().astimezone().isoformat(timespec='seconds')
     return f"""---
 bean: session-{slug}
@@ -220,7 +258,7 @@ statements:
   - open: {{ id: opened, of: self, at: "{opened}" }}
   - own: {{ id: own, by: {owner}, of: self }}
   - be: {{ id: lives-in, by: self, at: {host}, as: habitat }}
-details:
+{f'  - come: {{ id: came, by: self, through: [{through}] }}' + chr(10) if through else ''}details:
   status: active
   workspace:
     system: {'windows-filesystem' if os.name == 'nt' else 'unix-filesystem'}
@@ -336,6 +374,13 @@ def cmd_close(a):
     if git('status', '--porcelain', cwd=path):
         sys.exit("REFUSING to close: the worktree has uncommitted changes. A session closes on a commit, "
                  "not on a working tree — otherwise what merges back is whatever happened to be saved.")
+    went = unguarded(a.slug)
+    if went and not said_unguarded(path, a.slug):
+        sys.exit(f"REFUSING to close: {len(went)} command(s) of {', '.join(sorted({w.get('tool') or '?' for w in went}))} "
+                 f"went unguarded in this session — no adapter of bin/hook.py reads that shell's grammar, so no guard of "
+                 f"the gardener's judged them. The session's bean says so before it closes: `details: {{ unguarded: "
+                 f"\"{len(went)} command(s) of the PowerShell tool, which no guard read\" }}` in "
+                 f"beans/session-{a.slug}.md, saved; then close again.")
     core = runs_core()
     if core:
         present(a.slug, path)
@@ -376,8 +421,36 @@ def cmd_close(a):
     git('worktree', 'remove', path)
     git('branch', '-d', branch)
     claim(a.slug, release=True)
+    unguarded(a.slug, release=True)
     print(f"closed {branch}: merged into master, worktree removed, branch deleted.\n"
           "The session BEAN survives — it is the record. Only its working copy is gone.")
+
+
+def unguarded(slug, release=False):
+    """[record] of each command a shell no adapter reads ran in this session, as bin/hook.py records it beside the
+    claims (`unguarded`, nv-s2-open 8); with `release`, the record forgotten, the session closed."""
+    try:
+        import hook
+        d = hook._claims(ROOT)
+        f = os.path.join(d, hook.UNGUARDED.format(slug=hook._sid(slug))) if d else None
+    except Exception:        # noqa: BLE001 — a door that cannot be read records nothing
+        return []
+    if not f or not os.path.isfile(f):
+        return []
+    if release:
+        os.remove(f)
+        return []
+    with open(f, encoding='utf-8') as fh:
+        return [json.loads(ln) for ln in fh if ln.strip()]
+
+
+def said_unguarded(path, slug):
+    """Whether the session's bean, as committed in its worktree, says its unguarded commands (`details.unguarded`)."""
+    try:
+        head = dmparse.loads(dmparse.read(os.path.join(path, 'beans', f'session-{slug}.md'))[0] or '') or {}
+    except Exception:        # noqa: BLE001
+        return False
+    return bool(isinstance(head.get('details'), dict) and head['details'].get('unguarded'))
 
 
 def present(slug, path):

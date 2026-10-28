@@ -647,8 +647,10 @@ It writes one file, `PROPOSAL-<this garden>-<YYYYMMDD-HHMM>.md`, beside this gar
 carries each offered bean as committed; a stub of each bean they refer to, its kind, its title and the names that
 establish it, and nothing more; the journal entry that would take them in; and a fingerprint, the SHA-256 of the whole.
 The fingerprint tells a damaged proposal from the one that was made; it is not a signature, since whoever rewrites a
-proposal can compute it again. `make` refuses to pass on what a third garden said: only the names a third garden gave
-travel, with the things they name. A stub is a bean the other garden may not hold: offer it too, and it arrives whole.
+proposal can compute it again. What a third garden said passes on as it was known: each act's `at` keeps the garden
+it was known in and each it came through, that garden travels as a stub by its id, and `take` adds this garden as the
+last. `make` refuses what a person's consent forbids the garden proposed to (a `forbidden` of their agreement whose
+clause names `gardens`). A stub is a bean the other garden may not hold: offer it too, and it arrives whole.
 
 **Read, then take.** In Ali's garden:
 

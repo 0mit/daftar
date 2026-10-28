@@ -306,12 +306,34 @@ try:
              '- action: [[k1]]', 'kept', 'no body'),
             ('renamed-unsaid', {'beans/r1.md': None, 'beans/r2.md': doc('r2', renamed)}, {'beans/r1.md': doc('r1', renamed)},
              '- action: [[r1]] is [[r2]] now', 'knowing', 'is no moment this commit'),
+            ('relay-taken-from-origin', {'beans/r3.md': doc('r3', {'kind': 'document', 'statements': [
+                {'say': {'by': 'ben', 'at': ['2026-10-01 10:00+03:30', 'garden-a', 'garden-z']}},
+                {'take': {'id': 't', 'by': 'sam', 'of': 'self', 'from': 'garden-a', 'through': 'sha256:' + '0' * 64,
+                          'at': 'now'}}, {'say': {'by': 'sam', 'of': ['t'], 'at': 'now'}}]})},
+             {'beans/garden-z.md': doc('garden-z', {'kind': 'garden', 'statements': [say]})},
+             '- action: [[r3]], come from garden-a through garden-z', 'knowing', 'come through garden-z'),
             ('who-no-being', {'beans/w1.md': doc('w1', {'kind': 'document', 'statements': [say]})}, None,
              '- action: [[w1]], and the entry before it by nobody', 'knowing', "names its writer 'nobody'"),
             ('language-patched', {'bin/why.py': WHY + "# a line of this garden's own\n"}, None,
              "- action: RULE-CHANGE, bin/why.py patched here; ratified by sam", 'kept', "differs from the release's own"),
             ('digests-moved', {'seed/LANGUAGE.sha256': DIGESTS.replace(DIGESTS[:64], '0' * 64, 1)}, None,
-             "- action: RULE-CHANGE, the digests moved by hand; ratified by sam", 'kept', 'the digests of the release change')):
+             "- action: RULE-CHANGE, the digests moved by hand; ratified by sam", 'kept', 'the digests of the release change'),
+            ('pass-log-unnamed', {'captures/passes/nobody.jsonl': '{"from": {"layer": "instructions"}, "to": '
+                                  '{"bean": "sam", "at": "say"}, "through": "say", "as": "say", '
+                                  '"metadata": {"quoted": 1}}\n'}, None,
+             '- action: a pass log, claimed by no session', 'layers', 'no session bean names'),
+            ('language-deleted', {'bin/why.py': None}, None,
+             "- action: RULE-CHANGE, bin/why.py taken out here; ratified by sam", 'kept', 'receives it from its release'),
+            ('adoption-unproved', {'bin/why.py': WHY + "# a line of the next release's\n",
+                                   'seed/LANGUAGE.sha256': re.sub(r'(?m)^[0-9a-f]{64}(?=  bin/why\.py$)', lambda m: __import__(
+                                       'hashlib').sha256((WHY + "# a line of the next release's\n").encode()).hexdigest(),
+                                       DIGESTS),
+                                   'GARDEN.md': None}, None,
+             "- action: RULE-CHANGE, the release v9.9.9 adopted by hand, a file and its digest together; ratified by sam",
+             'kept', 'does not name them as the release laid them')):
+        if name == 'adoption-unproved':             # GARDEN.md records the release this commit would adopt
+            files['GARDEN.md'] = open(os.path.join(G, 'GARDEN.md'), encoding='utf-8').read().replace(
+                'gardener:', 'daftar_release: "v9.9.9"\ngardener:', 1)
         if name == 'who-no-being':                  # a heading the clock wrote, its writer no being: a save never writes one
             code, out = run(PY, 'bin/journal.py', 'nobody', 'a note', '--body', '- action: [[w1]] noted')
             check("(the heading by nobody is written by the clock, as bin/journal.py writes any)", code == 0, out)

@@ -675,7 +675,7 @@ def adopt_apply(a, rel, sha, source, current, before, copy, count):
             f"- added: {', '.join(added) or 'none'}",
             f"- removed: {', '.join(removed) or 'none'}",
             "- why: (fill in — what adopting the core brings this garden)",
-            f"- beans: {', '.join(beans) or 'none'}"])
+            f"- beans: {', '.join(beans) or 'none'}"], release_line(rel, a.tag, sha))
     except BaseException as e:
         stopped(e, "NOT ADOPTED: the adoption stopped midway", added, was_hooks)
         raise
@@ -820,7 +820,7 @@ def move(a, rel, sha, source, current):
             f"- changed: {', '.join(changed + ['GARDEN.md']) or 'none'}",
             f"- added: {', '.join(added) or 'none'}",
             f"- removed: {', '.join(removed) or 'none'}",
-            "- why: (fill in — what this release brings the garden)"])
+            "- why: (fill in — what this release brings the garden)"], release_line(rel, a.tag, sha))
     except BaseException as e:
         stopped(e, "NOT UPGRADED: the move stopped midway", added, was_hooks)
         raise
@@ -829,8 +829,29 @@ def move(a, rel, sha, source, current):
                  f"{len(added)} added, {len(removed)} removed.")
 
 
+def release_line(rel, tag, sha):
+    """THE ADOPTION HELD TO ITS RELEASE (core 3.5, II.2): the entry's line naming the release laid — its tag, its commit,
+    and the SHA-256 of its digests (seed/LANGUAGE.sha256) — once what was laid is proved to be the tag's: the clone at
+    `rel` is the commit `sha`, nothing in it changed, and every file of the garden its digests name holds its digest.
+    Rule `kept` holds the adoption's commit to this line, so the release comes in as its tag holds it. None for a
+    release that carries no digests (one before core 3.5): it has none to be held to."""
+    d = os.path.join(rel, *dmpass.DIGESTS.split('/'))
+    if not os.path.isfile(d):
+        return None
+    head = run('git', 'rev-parse', 'HEAD', cwd=rel).stdout.strip()
+    dirty = run('git', 'status', '--porcelain', cwd=rel, check=False).stdout.strip()
+    if head != sha or dirty:
+        raise RuntimeError(f"the release's clone is not {tag} ({sha[:12]}) as fetched: nothing laid from it is proved")
+    want = dmpass.digests_of(read_text(d)[0])
+    bad = [f for f, h in sorted(want.items())
+           if os.path.isfile(os.path.join(ROOT, f)) and dmpass.sha256_of(os.path.join(ROOT, f)) != h]
+    if bad:
+        raise RuntimeError(f"what was laid from {tag} is not its release's: {', '.join(bad[:6])}")
+    return f"- release: {tag} at {sha}, its digests sha256:{dmpass.sha256_of(d)}"
+
+
 # THE END OF AN UPGRADE, ADOPTED OR MOVED: one way, in three steps, each given its own words by its caller
-def recorded(a, gpath, gtext, gform, title, lines):
+def recorded(a, gpath, gtext, gform, title, lines, release=None):
     """The release recorded in GARDEN.md (`daftar_release` moved, or written after the pin) and the text written, the
     release's hooks installed, its journal entry appended — stamped by the release's own journal tool, then who
     ratified, then `lines` — and the gate run over the garden; returns that run."""
@@ -845,7 +866,8 @@ def recorded(a, gpath, gtext, gform, title, lines):
     g = re.search(r'(?m)^gardener:\s*["\']?([^\s"\'#]+)', gtext)
     _who = getattr(a, 'by', None) or (g.group(1) if g else '(fill in who ran it)')
     lines = ['\n' + _journal.stamp(_who, title, ROOT),
-             "- ratified_by: (fill in who ratified — the gardener's word, given here)"] + lines
+             "- ratified_by: (fill in who ratified — the gardener's word, given here)"] + lines + \
+        ([release] if release else [])
     jpath = os.path.join(ROOT, 'log', 'journal.md')
     with open(jpath, 'a', encoding='utf-8', newline=read_text(jpath)[1].nl) as j:
         j.write('\n'.join(lines) + '\n')

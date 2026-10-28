@@ -99,7 +99,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 sys.path.insert(0, ROOT)
 
-from core import engine  # noqa: E402
+from core import engine, judge as dmjudge  # noqa: E402
 from core.engine import listed, shapes_of  # noqa: E402
 
 FORMS = ('sqlite',)                       # the occupants of a store's `form` (core/law/layers.yaml `store_shape`)
@@ -868,9 +868,8 @@ class Store:
         held store, a code of a scheme marked special-category. Each is told at `place` where one is given (the check
         gives a row's place in the union), else at the row."""
         J = self.judge
-        J.out = []
         b = engine.Bean(being, header={'bean': being, 'kind': self.kind_of(being), 'statements': [{verb: r}]})
-        J.one(b, i, verb, r)
+        J.out = dmjudge.statement(self.law, self.garden, b, i, verb, r, by=J)    # the one judge's door of a statement
         at = place or f"{being}#{r.get('id')} {verb}"
         for k, v in r.items():
             for s in (v if isinstance(v, list) else [v]):

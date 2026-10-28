@@ -82,6 +82,14 @@ def release(dst, tag='v1.0.0'):
     return dst
 
 
+def digests(dst):
+    """The digests of the release at `dst` written for its files as they stand (bin/pass.py --digests --write, the
+    release's own step), so a release a suite changes is still its own: an adoption is held to them (II.2)."""
+    r = run(sys.executable, os.path.join(dst, 'bin', 'pass.py'), '--digests', '--write', cwd=dst)
+    if r.returncode:
+        raise RuntimeError(f"the release's digests at {dst}: {r.out}")
+
+
 TODAY = 'v0.49.0'          # the last release in today's words (std-vocab 32): what a garden that adopts the core runs
 
 

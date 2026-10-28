@@ -17,8 +17,10 @@ A door is where a write enters a garden. Each asks this, with what it holds as t
                                     code it carries: its index the
                                     commit's tree, its HEAD the first
                                     parent, the clock's register aside
-    Scope.union(garden, keepings)   git and what a host keeps beside it,  bin/store.py's check
-                                    judged together
+    Scope.union(garden, keepings)   git and what a host keeps beside it,  bin/store.py's check; bin/held.py check, the
+                                    judged together                       held store beside git (`held_keepings`)
+    statement(law, garden, bean,    one statement alone, in its bean      daftard's read-back of a write, and a store's
+              i, verb, roles)                                             put of a row
 
 `law` is the law to judge by; None judges by the law the scope holds — the tree's (its VOCAB.md on the release it
 carries, or on this one), the index's, each commit's own. A verdict is the law's own problems first, then the garden's,
@@ -119,6 +121,19 @@ def judge(law, scope):
         if f not in seen:
             seen.add(f)
             out.append(f)
+    return out
+
+
+def statement(law, garden, bean, i, verb, roles, by=None):
+    """[(rule, where, message)]: ONE STATEMENT, judged alone in its bean as the gate's judge judges each statement there
+    — its form, its valency and frame, its fillers' natures (core/engine.py `Judge.one`). The door of a statement: what
+    daftard's read-back of a write asks before its save (assets/view/lib/view_write.py), and a store's put of a row
+    (bin/store.py `row_findings`, by its own judge, which reads a being the store keeps as one). `by`: the engine's
+    judge the door keeps, else one of `law` over `garden`. Nothing but this judges a statement alone (D13)."""
+    J = by if by is not None else engine.Judge(law, garden)
+    J.out = []
+    J.one(bean, i, verb, roles)
+    out, J.out = list(J.out), []
     return out
 
 

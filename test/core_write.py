@@ -155,6 +155,7 @@ try:
     grow.release(REL)                                       # v1.0.0, tagged
 
     def tag(t, msg):
+        grow.digests(REL)
         run('git', 'add', '-A', cwd=REL)
         run('git', 'commit', '-qm', msg, cwd=REL)
         run('git', 'tag', t, cwd=REL)

@@ -702,6 +702,16 @@ in the six gardens of the corpus, no `meet` by a person lacked that person's `sa
 statement exactly. The gardener's word on the second build run's measure: it covers it, as its id does. One reader of
 what an act covers holds it — the rule, the meet's own word, a reading as known at a moment, a said value's pass.
 
+(core 4.11) A fact passes from garden to garden as it was known: the act keeps the moment it was known at, in the garden
+it was known in, and each garden that hands it on is added to the act's `at`. Refusing what a third garden said kept
+every exchange to two gardens: a garden that took a fact in could not pass it on, though everyone it concerned had
+agreed. Read as hops, the path is the record — oldest first, each garden once, the last the one it came through, which
+is the garden the taking commit names, since it took it from there. A heading's writer is a being the garden holds; at a
+hub, the key that signed the commit names a being too, and an agent's session is not the key's being but works through
+it: a session that `come`s through the harness whose key signs is the bridge, and the hub reads one against the other.
+It reports first, because a check that refuses every commit of a session whose coming is not yet written is measured
+before it refuses.
+
 ## core/law/core.yaml: rules[placeholder]
 
 WHAT THE LAW DERIVES IS NOT WRITTEN (the core spec §4; ratified with the core's engine, daftar #81–#84, 2026-10-01). A
@@ -852,6 +862,13 @@ in git. Why, and why taking a proposal is not accepting it: `core/law/verbs.yaml
 of the one the statement it declines names, and one who `represent`s another acts for someone else (§16 item 19, daftar
 #103).
 
+(core 4.11) A person's consent is to a garden keeping their facts, and gardens meet only by proposal; so the consent may
+say which gardens it does not reach, in the agreement the person agreed to, as a prohibition the law can read: a
+`forbidden` whose clause names `gardens`. What it keeps from them is what is the person's or concerns them, the two ways
+a bean is a person's. The refusal is of the `propose`, the act of offering, and the tool that makes a proposal asks the
+same judge, so a forbidden garden is not offered what it may not have, whether the offer is written as a statement or
+made as a file.
+
 ## core/law/core.yaml: rules[harm]
 
 WHAT HARM CAN COME OF IS KEPT OUT OF GIT (taken over from today's gate in v1 part 2, §16 item 8, 2026-10-01: "do the
@@ -963,6 +980,21 @@ adopts a release, which moves `daftar_release` and says RULE-CHANGE, and a merge
 them. Only what a commit stages is read: what came before was judged when it was made, and a hub replays every commit.
 The tools that judge say first where the copy they run differs, so their verdict is read as that copy's. A digest is of
 a file as git keeps it — in text a CRLF is read as LF — so a checkout that turned its line ends holds the release's file.
+
+(core 4.11) The language held to its pin left two edges. A file the release keeps could be taken out, since only a file
+added or changed was read; and the commit that adopts a release was exempt whole, so a file patched together with a
+digest to match came in with it. A deletion is refused where the garden still receives the file from its release; what a
+release no longer gives a garden — by a later release, or a profile left — the commit that adopts it, or moves the
+profiles, removes. The adoption is held to the release it names: the tool that lays a release proves every laid file
+against the tag's digests, and the tag's commit, as it lays them, and writes what it proved in the entry — the tag, the
+commit, the digests' own SHA-256 — so the commit brings the digests it names and every file it changes holds its digest.
+The gate cannot fetch the tag; the entry names what any reader holding the release can check.
+
+## core/law/measures.yaml: forms.clause.attrs.gardens
+
+(core 4.11) The gardens a prohibition in a person's consent agreement keeps their facts from. A list of `garden` beans,
+because another garden is known here only by its bean, named by its id; of a `forbidden`, because reaching a garden
+under an agreement is what proposing already is, and what a person may forbid is the exception.
 
 ## core/law/core.yaml: rules[line]
 

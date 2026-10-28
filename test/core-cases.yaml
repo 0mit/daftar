@@ -203,6 +203,7 @@ bad:
   - { rule: bearer, name: "a value's unit says its kind where the statement names none of the law's", says: "a contract is a sayable", bean: x12f, kind: contract, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: "isco-08:2511", value: { count: "220", unit: Ohm } } } ] }
   - { rule: consent,     bean: x60, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { id: a, by: [ada], of: self } }, { decline: { by: ben, of: a } } ] }
   - { rule: consent,     bean: x61, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { by: [ada, ben], of: self } }, { represent: { by: ada, of: ada } } ] }
+  - { rule: consent, name: "a proposal of a person's bean to a garden their consent forbids", says: "a garden ben's consent forbids", bean: x110, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { id: a, by: [ben], of: self } }, { can: { id: not-a, by: sam, of: "passing ben's facts to garden-a" } }, { forbidden: { of: not-a, through: a, clause: { gardens: [garden-a] } } }, { propose: { by: sam, of: [ben], to: garden-a } } ] }
   - { rule: consent,     bean: x62, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { by: [ada], of: self } }, { represent: { by: ada, of: ben } } ] }
   - { rule: squares,     bean: x63, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { id: m1, by: ada, of: self, as: mass, value: { count: "4", unit: kg } } }, { respond: { by: ben, of: [m1], as: confirms } }, { respond: { by: ben, of: [m1], as: disputes } } ] }
   - { rule: squares,     bean: x64, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { id: m1, by: ada, of: self, as: mass, value: { count: "4", unit: kg } } }, { measure: { id: m2, by: ben, of: self, as: mass, value: { count: "5", unit: kg } } }, { respond: { by: ada, of: [m1, m2], through: "I weighed it twice" } }, { rule: { by: sam, of: [m1, m2] } } ] }
@@ -373,8 +374,10 @@ clauses:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
     - { says: "a need a person meets (`meet`) is known by that person's own `say`", bad: [x5c] }
     - { says: "a knowing act's `at` is `now` until the save", bad: [x5] }
+    - { says: "the commit that brings it takes it from the last of them", commit: [relay-taken-from-origin] }
     - { says: "A bean renamed", commit: [renamed-unsaid] }
     - { says: "An entry a commit adds names who wrote it", commit: [who-no-being] }
+    - { says: "at a hub, the being whose key signed the commit", suite: [test/hubkey.py] }
     - { says: "A row of a store names the act", suite: [test/store.py] }
   placeholder:
     - { says: "a statement the engine derives", bad: [x6] }
@@ -413,7 +416,7 @@ clauses:
     - { says: "a file stands in one layer", garden: [two-layers] }
     - { says: "a `pass` from a layer to a layer", bad: [x15, x15b, x15c] }
     - { says: "`ratified` is granted only to the party", bad: [x15d] }
-    - { says: "a session's pass log", suite: [test/core_gate.py] }
+    - { says: "a session's pass log", commit: [pass-log-unnamed], suite: [test/core_gate.py] }
   ratify:
     - { says: "a change to the core, to a verb's row", commit: [law-unsaid] }
     - { says: "A grant to ratify is the gardener's own act", bad: [x30] }
@@ -422,6 +425,7 @@ clauses:
     - { says: "A commit places no such person somewhere in the future", commit: [future-whereabouts] }
     - { says: "A `decline` is the word of the one", bad: [x60] }
     - { says: "one who `represent`s another acts for someone else", bad: [x61, x62] }
+    - { says: "A person's consent may forbid the gardens their facts reach", bad: [x110] }
   harm:
     - { says: "what harm can come of is kept out of git", commit: [private-key] }
     - { says: "a code of a scheme marked special-category is written only sealed", bad: [x89] }
@@ -440,7 +444,8 @@ clauses:
     - { says: "what is kept is not damaged", commit: [journal-rewritten, journal-line-break] }
     - { says: "a series' part, once written", commit: [part-rewritten] }
     - { says: "a commit that takes a header key or a statement out", commit: [statement-taken, no-body] }
-    - { says: "a file the release keeps is as its release made it", commit: [language-patched, digests-moved] }
+    - { says: "a file the release keeps is as its release made it", commit: [language-patched, digests-moved, adoption-unproved] }
+    - { says: "no commit takes out a file the garden receives from its release", commit: [language-deleted] }
     - { says: "and what an entity's closed books read", suite: [test/books.py] }
   line:
     - { says: "what holds a line holds its form", bad: [x84] }

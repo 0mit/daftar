@@ -251,6 +251,32 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.11** (2026-10-28, daftar v4.11.0, human-ratified rule-change) — **identity and the hub: what a person's
+  consent lets reach another garden, what passes on through gardens, a release held to its tag, and what a hub reports
+  before it refuses.** MINOR. A person's consent may forbid the gardens their facts reach: a `forbidden` of an
+  agreement they agree to, its clause naming `gardens` (core/law/measures.yaml `clause.gardens`, a list of `garden`
+  beans), refuses a `propose` to one of them of a bean that is theirs or `concern`s them (rule `consent`), and
+  `bin/propose.py make` refuses to make it. What a third garden said passes on: a knowing act's `at` holds the garden
+  it was known in and then each garden it came through, oldest first, each once; the commit that brings it takes it
+  from the last of them (rule `knowing`); `make` carries each garden an `at` names as a stub, and `take` adds the
+  sending garden as the last hop, an act whose path reaches the taking garden being its own again as it left. A file
+  the release keeps is as its release made it in the commit that adopts a release too: its entry names the release,
+  its commit and its digests' own SHA-256 as `bin/dmupgrade.py` proved them against the tag while laying it (`-
+  release: <tag> at <commit>, its digests sha256:<…>`), and no commit takes out a file the garden receives from its
+  release (rule `kept`); the suites' own releases write their digests, as a release does. A hub reports, in either
+  mode and refusing nothing, each heading a commit adds that names neither the being its key names nor a session
+  that comes through it (`come`), and the Contract's classes D (a person's `say` written by another) and E (a `rate`,
+  a `forbidden`, or a `fail` taken out, by no ratifier) — on the receipt (`reported`), in the log and in `report`;
+  `bin/session.py open` writes a session's `come` through the harness its clone signs as, where the harness's own
+  coming is said. One statement is judged alone by the one judge (core/judge.py `statement`): daftard's read-back of a
+  write and a store's put ask it. `bin/held.py check` is the one judge's union of the garden and its held store: a
+  pointer that resolves to nothing is rule `harm`'s finding, a record of another place rule `knowing`'s; the warnings
+  stay the tool's. A command of a harness's shell no adapter reads (Claude Code's PowerShell tool) goes unguarded —
+  let through, recorded for its session, and said on its session's bean before `bin/session.py close` closes it. The
+  conformance corpus gains a relay taken from its origin, a proposal of a person's bean to a garden their consent
+  forbids, a file of the release taken out, an adoption that names no laid release, and a pass log no session names,
+  each at every door. Every other verdict of the corpus stands; an act's `at` that names several gardens, refused
+  before, is taken.
 - **core 4.10** (2026-10-28, daftar v4.10.0, human-ratified rule-change) — **the grammar's packet: several
   statements' values gathered into one member's words, the garden's own rows as one input, a position's unit and a
   code's scheme, a statement role narrowed by its verb, a role that refuses a rung, and an act's own bean named in

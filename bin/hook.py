@@ -42,7 +42,11 @@ A harness's names for its events and tools are that harness's, so its table is h
 clone's own settings — never into the law. So are its memory folders (claude-code's: `projects/*/memory` in its
 configuration folder, and the folder its `autoMemoryDirectory` setting names), and the variable by which it tells the
 commands it runs which of its sessions runs them (`bin/session.py open` records the garden session that session works
-in, off git: `claim`). So is its rule for the shell it runs commands in, and install writes the
+in, off git: `claim`). So are its shells no adapter here reads (`unread`: Claude Code's PowerShell tool, since the
+guards read bash's grammar alone): a command of one goes UNGUARDED — let through, said to the model, recorded beside
+the claims for the garden session it works in, and said on that session's bean (`details.unguarded`) before
+bin/session.py closes it. Another harness gets its table, the same checks behind it, as it is used (nv-s2-open 8). So
+is its rule for the shell it runs commands in, and install writes the
 shell the gardener's `shell-is` names, per system: on Linux the first bash at or above the floor (CLAUDE_CODE_SHELL); on
 macOS Homebrew's, since Apple's /bin/bash is below it, or a refusal saying what to install; on Windows Git for Windows'
 bash, its version checked (CLAUDE_CODE_GIT_BASH_PATH).
@@ -77,12 +81,16 @@ HARNESSES = {
         'settings': '.claude/settings.local.json',
         'events': {'SessionStart': ('start', None),
                    'UserPromptSubmit': ('prompt', None),
-                   'PreToolUse': ('pre', 'Bash|Read|Write|Edit|MultiEdit|NotebookEdit'),
+                   'PreToolUse': ('pre', 'Bash|PowerShell|Read|Write|Edit|MultiEdit|NotebookEdit'),
                    'PostToolUse': ('post', 'Read|Bash|Grep'),
                    'SessionEnd': ('end', None)},
         'guard_events': {'SessionStart': ('start', None),
-                         'PreToolUse': ('guard', 'Bash|Write|Edit|MultiEdit|NotebookEdit')},
+                         'PreToolUse': ('guard', 'Bash|PowerShell|Write|Edit|MultiEdit|NotebookEdit')},
         'shell': 'Bash', 'read': 'Read', 'search': 'Grep', 'writes': ('Write', 'Edit', 'MultiEdit', 'NotebookEdit'),
+        # ITS SHELLS NO ADAPTER HERE READS (nv-s2-open 8): the guards read bash's grammar alone, so a command of its
+        # PowerShell tool (CLAUDE_CODE_USE_POWERSHELL_TOOL) goes unguarded — let through, recorded for the garden
+        # session it works in (`unguarded`), and said on that session's bean before it closes (bin/session.py)
+        'unread': ('PowerShell',),
         # ITS MEMORY, by its own rule (Claude Code 2.1, read from its build): `projects/<folder>/memory` in its
         # configuration folder (CLAUDE_CONFIG_DIR, else ~/.claude), and the folder `autoMemoryDirectory` names in its
         # settings — the user's, and the clone's shared and own; and the variable naming its session to the commands
@@ -600,8 +608,35 @@ def write_of(a):
     return os.path.realpath(path) if path else None
 
 
+UNGUARDED = 'unguarded-{slug}.jsonl'     # beside the claims: each command a shell no adapter reads ran, per session
+
+
+def unguarded(root, ev, tool):
+    """A command of a shell no adapter here reads (the harness's `unread`): no guard can judge it, so it goes through,
+    UNGUARDED — recorded beside the claims for the garden session this harness session works in (`claim`), which
+    bin/session.py's close holds its bean to saying (`details.unguarded`), and the model told so now."""
+    d, sid = _claims(root), _sid(ev.get('session_id'))
+    slug = None
+    if d and sid:
+        try:
+            with open(os.path.join(d, f"claude-code-{sid}.json"), encoding='utf-8') as fh:
+                slug = json.load(fh).get('slug')
+        except (OSError, ValueError, AttributeError):
+            slug = None
+    if d:
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, UNGUARDED.format(slug=_sid(slug) or 'none')), 'a', encoding='utf-8') as fh:
+            fh.write(json.dumps({'tool': tool, 'session': sid, 'slug': slug}) + '\n')
+    print(json.dumps({'systemMessage': f"hook: this {tool} command went UNGUARDED — no adapter here reads its "
+                                       f"grammar, and the gardener's guards read bash's alone; it is recorded, and "
+                                       f"the session's bean says so before it closes (`details.unguarded`)"}))
+
+
 def on_pre(ev, root):
     tool, a = ev.get('tool_name'), ev.get('tool_input') or {}
+    if tool in H.get('unread', ()):
+        unguarded(root, ev, tool)
+        return
     if tool == H['shell']:
         command, cwd = str(a.get('command') or ''), ev_cwd(ev)
         for where, what in git_acts(command, cwd):
@@ -641,6 +676,9 @@ def on_pre(ev, root):
 
 def on_guard(ev, root):
     tool, a = ev.get('tool_name'), ev.get('tool_input') or {}
+    if tool in H.get('unread', ()):
+        unguarded(root, ev, tool)
+        return
     if tool == H['shell']:
         command = str(a.get('command') or '')
         why = guarded(root, command, written(command, ev_cwd(ev)), ev)
