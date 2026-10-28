@@ -103,7 +103,7 @@ verbs:
     home: core
   - verb: meet
     meaning: "to meet a need"
-    roles: { by: { shape: [being, statement] }, of: { shape: statement } }
+    roles: { by: { shape: [being, statement], verb: [reckon] }, of: { shape: statement } }
     required: [by, of]
     replaces: [met_by]
     home: core
@@ -227,7 +227,7 @@ verbs:
     home: core
   - verb: about
     meaning: "to be about a being: what a sayable speaks of — a host, a product, a procedure, a design; a person it speaks of, it concerns (`concern`)"
-    roles: { by: { shape: being, nature: [sayable] }, of: { shape: being, many: true } }
+    roles: { by: { shape: being, nature: [sayable] }, of: { shape: being, many: true, below: reason } }
     required: [of]
     replaces: []
     home: core
@@ -241,7 +241,7 @@ verbs:
   # ---------------------------------------------------------------- failure and its remedy, disagreement
   - verb: fail
     meaning: "a way a being can fail, or is failing: a statement on the necessity square, possible or happening; or a probe failing — a reading of a being's need (its `reckon`, the `by`) that did not read, whether it ran apart from what it reads, which is no failure of the being"
-    roles: { by: { shape: [being, statement] }, as: { shape: text }, through: { shape: [being, statement, text] }, at: { shape: position } }
+    roles: { by: { shape: [being, statement], verb: [reckon] }, as: { shape: text }, through: { shape: [being, statement, text] }, at: { shape: position } }
     required: [by, as]
     replaces: [risks]
     home: core

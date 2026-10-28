@@ -365,6 +365,11 @@ tell only `<bean>[<i>] <verb>` would move each to a coarser place, and a reader 
 attribute again. `at` names the path, keys alone, so a place is still one place a reader can go to; a member that is no
 statement has no place, and none is made up for it.
 
+(core 4.10) A refusal of a bean — a member that is a bean, selected whole — is told at its bean, as the engine tells
+a bean's own refusals, where before it had no place and was told at none; and a refusal's words write a list in its
+order (`{<path>:list}`) beside a set in the order of its characters, since some refusals name beings in the order a
+statement gave them.
+
 ## core/law/lines.yaml: aggregates
 
 (std-vocab 32: `aggregates`)
@@ -405,6 +410,11 @@ not a column: the pairs of one group whose spans overlap, in the order of their 
 place, where it came to overlap one before it — and with `first`, the first holder alone with each later one, as a
 place is held by whoever came first. The span is written as a moment in UTC so that any reader compares two spans by
 their characters' meaning alone, in no zone.
+
+(core 4.10) `describe` gives a position the unit it is written to and a code its scheme. The rule room reads an
+attendance's time only where both its ends are moments, and a span alone cannot tell a day from the hours it holds; the
+rule harm reads a code's scheme, where a value's form told only that it is a code. Each column is read by the one reader
+the engine and the store's SQL share, so a rule that reads one is judged the same at any size.
 
 ## core/law/lines.yaml: comparisons
 
@@ -686,6 +696,11 @@ operator written beside an agent's blanket `make` was known — as the agent's o
 `meet` by a person is known by that person's `say`, which names it or covers it; a `meet` by a document, a tool or a
 release (a checklist's item met by the paper that answers it) is known as any statement is. Measured before the clause:
 in the six gardens of the corpus, no `meet` by a person lacked that person's `say`.
+
+(core 4.10) An act's `of` names a statement of its own bean by its id; a statement of another bean is written
+`<bean>#<id>`, and the act that wrote its own bean's statement so was refused as covering nothing, though it names that
+statement exactly. The gardener's word on the second build run's measure: it covers it, as its id does. One reader of
+what an act covers holds it — the rule, the meet's own word, a reading as known at a moment, a said value's pass.
 
 ## core/law/core.yaml: rules[placeholder]
 
@@ -4328,6 +4343,11 @@ no failure of the being: the audit's dead probes read as no data, not as a fault
 other. So `fail` takes a statement in `by`, the reading, as `meet` already does, and a probe's failure is told as the
 probe's: written once, repaired when it reads again.
 
+(core 4.10) `fail`'s `by` takes a statement where a probe failed — the reading of a need, a `reckon` — and its meaning
+says so; the gate did not check the verb, since no role's spec narrowed a statement filler by its verb. One grammar key,
+`verb` on a role's spec, says it for every role that takes a statement, judged by rule valency as a shape and a nature
+are; `meet`'s `by` takes a reading the same way. A key for `fail` alone would have been a clause no other role could use.
+
 ## core/law/kinds.yaml: kinds
 
 (std-vocab 32: `gene`)
@@ -5110,6 +5130,11 @@ procedure for a product: each is about beings, and none is any person's data. Sa
 record personal that was not, and hid the few that were among them. `about` holds the rest, and derives nothing: a
 person a sayable speaks of, it concerns, and that is said with `concern`.
 
+(core 4.10) `about` takes any being, and `concern` a person; rule harm derives a record's sensitivity from `concern`
+alone. A writer who put a person in `about` would make a personal record read as impersonal. A role's spec already said
+the rung a body filling it reaches (`rung`); `below` says the rung it stays under, so `about` refuses a person and the
+gate points to `concern`. Reading a person in `about` as concerned instead would keep two verbs for one fact.
+
 ## core/law/verbs.yaml: verbs[join]
 
 A MACHINE IS BODIES JOINED IN PAIRS, AND A PART'S TYPE IS A PATTERN OF THEM (core 4.2). Asked for a description of
@@ -5850,7 +5875,6 @@ organisation without a parent, which would take in every supplier; a department 
 company. A record's number is the first 31 bits of the SHA-256 of its model and bean — the same everywhere, and two
 beans that meet are refused by name.
 
-
 ## core/law/crosswalks.yaml: forms.crosswalk.vacant
 
 A GARDEN'S OWN CROSSWALKS (2026-10-12; the operator ratified the draft that proposed them). A crosswalk was the
@@ -5917,7 +5941,6 @@ the reader decides nothing about who may see them, and a reader handed nothing t
 birthday has no statement the law can say yet (a being's coming to be holds no day), and health no scheme the law
 holds for it: neither is carried, rather than bent into a verb that nearly fits.
 
-
 ## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.leave.type]
 
 A KIND OF TIME OFF IS WHAT AN ALLOWANCE HOLDS (2026-10-12; the operator ratified the draft that proposed it). Odoo's
@@ -5941,7 +5964,6 @@ carried: whether a kind needs an allowance (the garden says it of each employmen
 how its absences are approved (the walk's own form), the unit a request is counted in, whether it is paid, its colour
 and its order.
 
-
 ## core/law/crosswalks.yaml: crosswalks[odoo-17.0-hr.leave]
 
 AN ABSENCE IS A HAPPENING OVER DAYS, UNDER AN ALLOWANCE, DECIDED ON A WALK (2026-10-11, the unified-tools design's P5.4;
@@ -5964,7 +5986,6 @@ another verb reads the bean the statement is in, so `use.of/part.of` is the empl
 absence that uses the employment itself, and none of its allowances, is read through the employment's first, as every
 path reads a bean's first statement of a verb: an absence names its allowance to be read whole. One under an allowance
 that holds only an amount has no type, as the garden says none.
-
 
 ## core/law/crosswalks.yaml: forms.crosswalk.format
 
@@ -6150,7 +6171,6 @@ the drawing's `span`, walked by bin/stale.py's `occurrences` — the one functio
 asks for when it next falls due — through the day, in the calendar it is counted in. A browser that walked it again
 would hold a second calendar arithmetic. The week, the month and the list are three readings of one line, and the week
 begins on the day the reader's region begins one (CLDR's `firstDay`), never a day typed for a language.
-
 
 THE WEEK AS DAY TIMELINES (2026-10-14, the operator: "for the week we are going to treat cells as day timelines"). A week
 drawn as seven boxes said what fell on a day and not when: two classes on one day were two strips of one cell, a
@@ -6538,7 +6558,6 @@ there (a share, a payment, what is owed back, what a clause asks), as data the p
 a party owes is read twice — from the books, and from the agreements by bin/ledger.py — and where the two differ the
 table says so, under it: one truth of who owes whom, or a difference shown.
 
-
 ## core/law/lines.yaml: operations[fit]
 
 PATTERNS, CLASSES AND PREVIEWS ARE ONE THING (2026-10-19, programme item 3, the operator's note: a pattern module that
@@ -6885,3 +6904,36 @@ at k, over the latest responses, because a classifier is trusted on what it does
 apart. A suggestion is a `classify` and a response a `respond`, both statements the law already has, so the measure is
 a reading of the ledger and no store of scores; and a classifier's graduation is a need of its bean whose probe reads
 that measure (core 4.3's monitoring as needs), so no new concept is opened — its thresholds are the garden's.
+
+## core/law/lines.yaml: operations[gather]
+
+(core 4.10) A refusal is one member's words, and several of the law's rules say a thing of a group: a name given once
+that names two beings writes both, a decline by others than those offered writes them, a walk's way on to no step writes
+the walk's steps. A reading joins members pairwise and never holds a group's values in one member, so each such clause
+stayed code. `gather` keeps the group whole beside one member that stands for it — its first, or its last where the rule
+tells at the last place — and the words write what was gathered as a set or as a list. It gathers the values each
+member holds at one path, read as the beings they name, every one once, and counts them, so a reading can ask whether a
+group names more than one being; it computes nothing else, so no formula enters the grammar.
+
+## core/law/lines.yaml: operations[either]
+
+(core 4.10) Some statements take their time from another: an attendance with no time of its own is timed by its
+happening's. Two shapes of member — one holding its own time, one holding its happening's — are not read by one
+operation that reads one path, so the rule room stayed code for them. `either` makes one shape of the two: the first of
+its paths that holds a value, in the order written. It takes no default of its own and invents nothing where no path
+holds one.
+
+## core/law/lines.yaml: selection_form.inputs
+
+(core 4.10) `rows`. The rule vacancy asks of every row a garden adds to the law, whatever its table, whether something
+uses it. A reading that named the declared tables one by one would state them a second time and miss a table added
+later, so the garden's own rows are one input of the law, each with its table and its name there, and each told at the
+place it is written, `VOCAB.md <table>`, where its refusal belongs. A store holds none of them, so the store's SQL
+names the input as having no form.
+
+## core/law/lines.yaml: nearest.uses[directions]
+
+(core 4.10) Whether material may come from a layer to a layer at all, whatever method carried it, is asked of each
+method's decision: a grant decides, then a refusal, and a pass no row holds is closed. That was an ordering of its own in
+bin/pass.py beside the four the nearest already held; as a use of the nearest it is ranked by one key and its tie read
+from the law, so the tools hold one ordering.

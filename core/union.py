@@ -65,6 +65,7 @@ CARRIED = ('_src', '_bean', '_verb', '_i', '_place', '_bkind')   # what a statem
 WORD_SIGNS = {'exists', 'absent', 'is', '≠', 'fits'}
 STATEMENT_COLUMNS = reckon.STATEMENT_COLUMNS       # describe's columns of a statement (core 3.2)
 POSITION_COLUMNS = reckon.POSITION_COLUMNS         # describe's columns of a position (core 3.3)
+CODE_COLUMNS = reckon.CODE_COLUMNS                 # describe's columns of a code (core 4.10)
 HEADER = ('title', 'summary', 'tags', 'details')   # a bean's header beside its id and kind (core 3.3)
 
 
@@ -131,6 +132,7 @@ class Union:
                             ('dm_said', 3, self._said_col),        # a statement a value names (core 3.2)
                             ('dm_stmt', 5, self._stmt_col),        # a member's own statement (core 3.2)
                             ('dm_position', 2, self._position_col),    # a position's columns (core 3.3)
+                            ('dm_code', 2, self._code_col),        # a code's columns (core 4.10)
                             ('dm_span', -1, self._span)):          # an overlap's span (core 3.3)
             db.create_function(name, k, self._guarded(fn), deterministic=True)
         self._refused = None
@@ -518,6 +520,10 @@ class Union:
         """`dm_position`: a column of the position a value is (core 3.3, I.2), by the reckoner's one reader."""
         return reckon.position_cols(dec(v), self.J.systems, self.G.zone)[col]
 
+    def _code_col(self, v, col):
+        """`dm_code`: a column of the code a value is (core 4.10), by the reckoner's one reader."""
+        return reckon.code_cols(dec(v), self._rk._schemes())[col]
+
     def _span(self, end, path, *args):
         """`dm_span`: one end of a member's span in milliseconds (core 3.3, I.8), by the reckoner's one reader."""
         found = reckon.walk(None, self._node_of(args), path)
@@ -550,6 +556,8 @@ class Union:
                 continue
             if not (o.get('act') == 'say' and o.get('by') == 'law'):
                 raise NoSQL(f"input {d.get('name') if isinstance(d, dict) else d}: a rule's input is a table of the law")
+            if d.get('name') == 'rows':       # each told at its place in VOCAB.md, which a member's row here has not
+                raise NoSQL("input rows: the garden's own rows, told at their place in VOCAB.md, have no SQL form here")
             self.env[d['name']] = self._law_table(d['name'])
         for s in reading.get('steps') or []:
             fn = getattr(self, '_op_' + str(s.get('op')).replace('-', '_'), None)
@@ -783,11 +791,13 @@ class Union:
             said = ', '.join(f"dm_said(y.{being}, y._bean, {_lit(c)}) AS {q(f'd{n}_{c}')}" for c in STATEMENT_COLUMNS)
             nothing = (f"(y.{kind} IS NULL AND y.{being} IS NOT 'self' AND NOT {self._is_bean('y.' + being)} AND "
                        f"dm_said(y.{being}, y._bean, 'place') IS NULL)")
-            pos = ', '.join(f"CASE WHEN {nothing} THEN dm_position(y.{being}, {_lit(c)}) END AS {q(f'd{n}_{c}')}"
-                            for c in POSITION_COLUMNS)
+            pos = ', '.join([f"CASE WHEN {nothing} THEN dm_position(y.{being}, {_lit(c)}) END AS {q(f'd{n}_{c}')}"
+                             for c in POSITION_COLUMNS] +
+                            [f"CASE WHEN {nothing} THEN dm_code(y.{being}, {_lit(c)}) END AS {q(f'd{n}_{c}')}"
+                             for c in CODE_COLUMNS])
         else:
             said = ', '.join(f"NULL AS {q(f'd{n}_{c}')}" for c in STATEMENT_COLUMNS)
-            pos = ', '.join(f"NULL AS {q(f'd{n}_{c}')}" for c in POSITION_COLUMNS)
+            pos = ', '.join(f"NULL AS {q(f'd{n}_{c}')}" for c in POSITION_COLUMNS + CODE_COLUMNS)
         facets = ''.join(f", k.f_{k} AS {q(f'fac{n}_{k}')}" for k in range(len(self.L.facets)))
         sql = (f"SELECT y.*, k.nature AS nat{n}{facets}, {said}, {pos} FROM "
                f"(SELECT x.*, {kd} AS {kind} FROM ({union}) x) y LEFT JOIN u_kinds k ON k.kind = y.{kind}")
@@ -795,7 +805,7 @@ class Union:
         for key, c in (('kind', kind), ('nature', f"nat{n}"),
                        *((ln, f"fac{n}_{k}") for k, ln in enumerate(self.L.facets))):
             cols[f"{name}.{key}"] = (c, c, None)
-        for c in STATEMENT_COLUMNS + POSITION_COLUMNS:
+        for c in STATEMENT_COLUMNS + POSITION_COLUMNS + CODE_COLUMNS:
             cols[f"{name}.{c}"] = (f"d{n}_{c}", f"d{n}_{c}", None)
         return self._view(sql, cols, st.keys + [dk], st.seq, st.kind, st.lineage + ('describe', s['id']),
                           table=self._shared(s['id']), foreign=st.foreign, nodes=self._described(st, name, cols),
@@ -1117,7 +1127,7 @@ class Union:
         for r in self.db.execute(f"SELECT {', '.join(q(c) for c in cols)} FROM {q(st.name)} "
                                  f"ORDER BY {', '.join(q(c) for c in st.keys)}").fetchall():
             node = self._node_of([x for key, c in st.nodes for x in (key, r[at[c]])])
-            place = None
+            place = node.get('bean') if st.kind == 'bean' and isinstance(node, dict) else None   # a bean's (4.10)
             if st.kind == 'statement':
                 src = r[at['_src']]
                 place = r[at['_place']] if src == 0 else self._place(src, r[at['_bean']], r[at['_verb']], r[at['_i']])
