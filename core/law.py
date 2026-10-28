@@ -225,9 +225,11 @@ def _columns_problems(files):
     return out + (_spelling(systems) if systems else []) + (_checks_problems(checks) if checks is not None else [])
 
 
-FITS = ('namespace', 'type', 'system', 'holds', 'concept')   # what `fits` fits a value to (core/law/lines.yaml
-                                                             # comparisons): a concept's pattern, a being (core 4.2)
-MECH_TABLES = {'compliances': 'compliance', 'pairs': 'pair', 'closures': 'closure'}   # verbs.yaml (core 4.2)
+FITS = ('namespace', 'type', 'system', 'holds', 'concept', 'check')   # what `fits` fits a value to (core/law/lines.yaml
+                                                             # comparisons): a concept's pattern, a being (core 4.2); a
+                                                             # check alone, a designation's (core 4.12)
+MECH_TABLES = {'compliances': 'compliance', 'pairs': 'pair', 'closures': 'closure',   # verbs.yaml (core 4.2)
+               'outlines': 'shape', 'sections': 'section', 'sides': 'side', 'features': 'feature'}     # (core 4.12)
 CHECK_READS = ('name', 'position', 'designation')         # what a check reads (core/law/checks.yaml)
 GENERAL = re.compile(r'^[A-Z][a-z]?$')                    # a Unicode general category, or its major class: `Cc`, `L`
 
@@ -863,13 +865,18 @@ class Law:
                 if isinstance(r, dict) and 'type' in r}
 
     def fits_row(self, spec):
-        """(what, row) the operand of `fits` names — `{namespace: <row>}`, `{type: <row>}`, `{system: <row>}`, or
-        `{holds: <Unicode property>}` (its property as the row) — or ValueError, saying why it names none a value fits."""
+        """(what, row) the operand of `fits` names — `{namespace: <row>}`, `{type: <row>}`, `{system: <row>}`, a check
+        of core/law/checks.yaml alone, `{check: <row>}` (its name as the row), or `{holds: <Unicode property>}` (its
+        property as the row) — or ValueError, saying why it names none a value fits."""
         if not (isinstance(spec, dict) and len(spec) == 1 and next(iter(spec)) in FITS):
             raise ValueError("`fits` takes one of `{namespace: <row>}`, `{type: <row>}`, `{system: <row>}`, "
-                             "`{holds: <Unicode property>}`, `{concept: <code>}`")
+                             "`{check: <row>}`, `{holds: <Unicode property>}`, `{concept: <code>}`")
         what, name = next(iter(spec.items()))
         name = str(name)
+        if what == 'check':
+            if not isinstance(self.checks.get(name), dict):
+                raise ValueError(f"`{name}` is no check of core/law/checks.yaml")
+            return what, name
         if what == 'concept':
             if name not in self.concepts():
                 raise ValueError(f"`{name}` is no concept of the law: a code of a scheme of the form `concept`, "
@@ -890,7 +897,8 @@ class Law:
     def fits(self, spec, value, drawing=None):
         """Whether `value` is in the one form of the row `spec` names (`fits_row`): its pattern, its `holds_no` (but
         what `but` lets through, and a line feed where `lines_in` names a style), and the check its `checked_by` names
-        (core/law/checks.yaml) — or, for `{holds: <property>}`, whether it holds a character of that property; or, for
+        (core/law/checks.yaml) — or, for `{check: <row>}`, whether it holds to that check alone (a designation's pattern,
+        or the function a row calls); or, for `{holds: <property>}`, whether it holds a character of that property; or, for
         `{concept: <code>}`, whether the being `value` names fits the concept in `drawing`, the drawing of its garden
         (core/mechanics.py): said to be of it, or its pattern read of it. One judge of a form, for the reader's typing,
         the readings and the store's SQL. CheckUnavailable where a check's library is not installed here."""
@@ -905,6 +913,11 @@ class Law:
             return holds_property(value, row)
         if not isinstance(value, str):
             return False
+        if what == 'check':
+            got = dmparse.checked(row, value, self.checks)
+            if got is None:
+                raise ValueError(f"`{row}` is no check of core/law/checks.yaml this reader applies")
+            return got
         if row.get('pattern') not in (None, 'none') and not dmparse.law_match(row['pattern'], value):
             return False
         if row.get('holds_no'):
@@ -945,7 +958,9 @@ class Law:
         """The one matcher of the law's concepts (core/mechanics.py), for the gate, the readings and the store."""
         if self._matcher is None:
             from core import mechanics
-            self._matcher = mechanics.Matcher(self.concepts())
+            import parse as dmparse
+            self._matcher = mechanics.Matcher(self.concepts(),
+                                              checked=lambda chk, v: dmparse.checked(chk, v, self.checks))
         return self._matcher
 
     def garden_drawing(self, G):
@@ -1384,6 +1399,13 @@ class Law:
         from core import mechanics
         out, codes = [], set(self.concepts())
         tables = {t: list(self.mech_rows.get(t) or {}) for t in MECH_TABLES}
+        for k in ('outlines', 'sections', 'sides'):                        # with the rows a garden adds (4.12)
+            tables[k] = [str(x) for x in listed(self.tables.get(k))]
+        tables['features'] = dict(self.mech_rows.get('features') or {})       # each kind with what it takes (4.12)
+        for x in listed(self.tables.get('features')):
+            tables['features'].setdefault(str(x), {})                         # a garden's own kind takes no side
+        tables['designations'] = [k for k, r in self.checks.items() if isinstance(r, dict)
+                                  and r.get('reads') == 'designation']
         for r in rows:
             code = str(r.get('code') or '')
             at = f"scheme {scheme} {code or '(no code)'}"

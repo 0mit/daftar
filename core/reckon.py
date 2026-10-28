@@ -751,11 +751,11 @@ def _cond_check(where, conds, env, comps):
             continue
         op = c[cs[0]]
         if cs[0] == 'fits' and not (isinstance(op, dict) and len(op) == 1 and next(iter(op)) in
-                                    ('namespace', 'type', 'system', 'holds', 'concept')
+                                    ('namespace', 'type', 'system', 'check', 'holds', 'concept')
                                     and isinstance(next(iter(op.values())), str)):
-            out.append(('error', f"{w}: `fits` names one row of the law, `{{namespace: <row>}}`, `{{type: <row>}}` or "
-                                 f"`{{system: <row>}}`, a Unicode property, `{{holds: <property>}}`, or a concept, "
-                                 f"`{{concept: <code>}}`"))
+            out.append(('error', f"{w}: `fits` names one row of the law, `{{namespace: <row>}}`, `{{type: <row>}}`, "
+                                 f"`{{system: <row>}}` or a check, `{{check: <row>}}`, a Unicode property, "
+                                 f"`{{holds: <property>}}`, or a concept, `{{concept: <code>}}`"))
             continue
         if isinstance(op, dict) and ('step' in op or 'input' in op):
             if op.get('step', op.get('input')) not in env:

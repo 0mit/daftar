@@ -29,7 +29,8 @@ disagrees with the garden. A lead says what waits, whose it is, and what it is a
              (design §14: leads for what someone can act on). A probe's own failure — a `fail` by a reading of the
              being's need, which did not read — is one too, told as the probe's and not the being's; so is a need
              silent past its `interval` (a `fail` through the need). A failure found `benign` (`respond … as:
-             benign`) is none until the day its review falls due (an `obligatory` of the response, due that day):
+             benign`), or a failure of a need found benign — each crossing of it —, is none until the day its review
+             falls due (an `obligatory` of the response, due that day):
              then it is looked at again, and that clause is an obligation lead as well (core 4.3)
   session    an agent's session left open — a worktree of the garden on a `session/<slug>` branch, as
              bin/session.py lists it (its close retires the worktree; a session bean's own words do not say it,
@@ -209,7 +210,8 @@ def read(root=ROOT):
     # HEALTH: a failure a reading shows, not yet repaired — for whoever keeps the being. A probe's own failure (a `fail`
     # by a reading of the being's need, core 4.3) is one too, told as the probe's and not the being's; so is a need's
     # silence past its interval (a `fail` through the need). A failure found benign (`respond … as: benign`) is none
-    # until the day its review falls due (an `obligatory` of the response), when it is looked at again
+    # until the day its review falls due (an `obligatory` of the response), when it is looked at again; so is each
+    # failure of a need found benign (core 4.12): a crossing's `fail`, `<need>-<moment>`, or one through the need
     def ref(rb, x):
         return str(x) if '#' in str(x) else f"{rb}#{x}"          # a bare id is its own bean's
 
@@ -233,10 +235,31 @@ def read(root=ROOT):
         readings = {str(r.get('id')): r for _i, verb, r in b.items if verb == 'measure' and isinstance(r.get('id'), str)}
         probes = {str(r.get('id')) for _i, verb, r in b.items if verb == 'reckon' and isinstance(r.get('id'), str)}
         needs = {str(r.get('id')) for _i, verb, r in b.items if verb == 'need' and isinstance(r.get('id'), str)}
+        of_need = {n for n in needs if f"{bid}#{n}" in benign}         # a need found benign: each failure of it
+        expected = {}                     # a need's expectation (VII.5): a `possible` of it, its chance of holding
+        for _j, v, a in b.items:
+            if v == 'possible' and 'held' not in a and isinstance(a.get('chance'), dict):
+                for n in listed(a.get('of')):
+                    n = str(n)[len(bid) + 1:] if str(n).startswith(f"{bid}#") else str(n)
+                    if n in needs:
+                        expected[n] = a
+
+        def as_expected(r):
+            a = expected.get(need_of(r))
+            if a is None:
+                return ''
+            c = a['chance']
+            return (f"; expected to hold with a chance of {c.get('count')}{'' if str(c.get('unit', '1')) == '1' else ' ' + str(c.get('unit'))}"
+                    + (f", by {a['through']}" if isinstance(a.get('through'), str) else ''))
+
+        def need_of(r):
+            fid = str(r.get('id'))
+            return str(r.get('through')) if str(r.get('through')) in needs else \
+                next((n for n in needs if fid.startswith(f"{n}-") and r.get('by') in ('self', bid)), None)
         for _i, verb, r in b.items:
             fid = r.get('id')
             if verb != 'fail' or 'held' in r or not isinstance(fid, str) or f"{bid}#{fid}" in repaired \
-                    or f"{bid}#{fid}" in benign:
+                    or f"{bid}#{fid}" in benign or need_of(r) in of_need:
                 continue
             if str(r.get('by')) in probes or str(r.get('through')) in needs and r.get('by') in ('self', bid):
                 probe = str(r['by']) if str(r.get('by')) in probes else None
@@ -246,7 +269,8 @@ def read(root=ROOT):
                                                              and x != 'theone'] or ([gardener] if gardener else []))):
                     leads.append({'for': who, 'kind': 'health', 'about': bid, 'fail': fid, 'since': str(r.get('at') or ''),
                                   **({'probe': probe} if probe else {}),
-                                  'why': f"{bid}: {r.get('as')}" + (f" — its probe's failure, not {bid}'s" if probe else '')})
+                                  'why': f"{bid}: {r.get('as')}" + (f" — its probe's failure, not {bid}'s" if probe else '')
+                                  + ('' if probe else as_expected(r))})
                 continue
             if str(r.get('through')) not in readings:
                 continue
@@ -259,7 +283,8 @@ def read(root=ROOT):
             seen = f"{m.get('as')} {value.get('count', '')} {value.get('unit', '')}".strip()
             for who in sorted(set(keepers or owners or ([gardener] if gardener else []))):
                 leads.append({'for': who, 'kind': 'health', 'about': bid, 'fail': fid, 'since': str(r.get('at') or m.get('at') or ''),
-                              'why': f"{bid}: {r.get('as')} — read as {seen}" + (f" on {m.get('at')}" if m.get('at') else '')})
+                              'why': f"{bid}: {r.get('as')} — read as {seen}" + (f" on {m.get('at')}" if m.get('at') else '')
+                              + as_expected(r)})
 
     # SESSIONS: an agent's work left open — a session's worktree, as bin/session.py lists it
     import subprocess

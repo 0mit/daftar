@@ -143,6 +143,7 @@ verbs:classify	digerere	dis + gerere (to carry apart, to sort): Cicero's ius civ
 verbs:concern	pertinere	per + tenere (to reach through to): pertinere ad aliquem, to concern someone — the person a record is about	proposed	agent (claude opus-5.5), by hand
 verbs:about	agere de	agere de (to treat of): de quo agitur, what a text is about; the person it touches is pertinere	proposed	agent (claude opus-5.5), by hand
 verbs:join	iungere	iungere (to yoke): two bodies yoked at a feature of each; par elementorum, a pair of elements	proposed	agent (claude opus-5.5), by hand
+verbs:specify	definire	de + finis (to set bounds): what a body is by its own make — how it yields, its shape, its section — or the kind of a feature of it	proposed	agent (claude opus-5.5), by hand
 verbs:rate	aestimare	aes (bronze: to put a price on): how much harm a being can do a person if it leaves the garden	proposed	agent (claude opus-5.5), by hand
 verbs:fail	deficere	de + facere (to fall away, to give out): a way a being can fail, or is failing — defectus	proposed	agent (claude opus-5.5), by hand
 verbs:repair	mederi	mederi (to heal, to remedy — remedium): a failure remedied, where the fix lives	proposed	agent (claude opus-5.5), by hand

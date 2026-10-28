@@ -949,15 +949,17 @@ def quoted(n, text):
 
 
 class Trace(tuple):
-    """(verdict, source, method, quoted, decision, distinct): `words` — found in a person's words or instructions, the
+    """(verdict, source, method, quoted, decision, distinct, entry): `words` — found in a person's words or instructions, the
     pass take-down; `granted` — found only where another granted row holds (a run's capture, by `record`); `refused` —
     found, by a distinctive needle, only where the flow law refuses it; `nowhere` — found nowhere quoted, HOPED.
     `distinct` counts the finds by a needle that names one thing (`distinctive`): a `words` found only by a short word
-    or a small number is `distinct: 0`, and the record says the attribution is weak rather than claim it."""
+    or a small number is `distinct: 0`, and the record says the attribution is weak rather than claim it. `entry` is the
+    material's own entry it was found in (its `sha`, its `layer`): the prompt a said value came from, which the session's
+    watermark counts (bin/launch.py `Session.watermark`)."""
     __slots__ = ()
 
-    def __new__(cls, verdict, source, method, n, decision=None, distinct=0):
-        return tuple.__new__(cls, (verdict, source, method, n, decision, distinct))
+    def __new__(cls, verdict, source, method, n, decision=None, distinct=0, entry=None):
+        return tuple.__new__(cls, (verdict, source, method, n, decision, distinct, entry))
 
     verdict = property(lambda s: s[0])
     source = property(lambda s: s[1])
@@ -965,6 +967,7 @@ class Trace(tuple):
     quoted = property(lambda s: s[3])
     decision = property(lambda s: s[4])
     distinct = property(lambda s: s[5])
+    entry = property(lambda s: s[6])
 
 
 def trace(fl, value, origin, materials, skip=(), titles=None):
@@ -986,7 +989,7 @@ def trace(fl, value, origin, materials, skip=(), titles=None):
         if layer in PERSON:
             d = fl.decide(layer, dest, 'take-down')
             if d.granted:
-                return Trace('words', src, 'take-down', n, d, k)
+                return Trace('words', src, 'take-down', n, d, k, e)
         others.append((e, n, k))
     refused = None
     for e, n, k in others:

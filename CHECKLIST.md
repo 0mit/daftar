@@ -35,7 +35,10 @@ show.
 - [ ] **valency** — Each required role is filled (`unknown` where nobody said, and in no role that is not required),
       each filler has the shape and nature its role takes — a statement of a verb the role names (`verb`), a body at a
       rung it names (`rung`) or below one (`below`) —, and no role is filled that the verb does not take; a role takes a
-      list only where its row says `many`.
+      list only where its row says `many`. A body is specified (`specify`) in its own bean, once, and each feature of
+      it, `<its bean>#<feature>`, once — of the body what a body is (its compliance, which a device has none of, its
+      shape, its section, its designation, and `whole: "true"`), of a feature its kind, and a side or a profile only
+      where its kind takes one.
 - [ ] **knowing** — Every statement of a bean is the `of` of a knowing act in it — by its id, or as `<bean>#<id>` —, or
       the bean holds a knowing act with no `of`, which covers every statement no other act names; a need a person meets
       (`meet`) is known by that person's own `say`; a knowing act's `at` is `now` until the save writes the moment, and
@@ -62,8 +65,9 @@ show.
 - [ ] **squares** — Two positions that cannot both stand — contraries or contradictories — on one statement through one
       source are refused; subcontraries may both stand. One observer gives one verdict on one statement (`respond` with
       an `as`) — confirms, disputes or abstains, or of a failure finds it benign —, and a `rule` on statements is given
-      once every speaker of them has responded. A response that finds a statement benign is of a `fail`, and names the
-      day it is looked at again: an `obligatory` of it whose clause falls due.
+      once every speaker of them has responded. A response that finds a statement benign is of a `fail`, or of a `need`
+      — then of each failure of that need, each time it stops holding, until that day —, and names the day it is looked
+      at again: an `obligatory` of it whose clause falls due.
 - [ ] **bearer** — A quantity is stated only of what its dimensions and its kind hold for (`holds_for`): a nature, or a
       position the being's kind holds or is made of — through `made-of` alone, never `possible-on` or `member-of`. A
       mass is a body's (the foundation `weight`), a temperature an ensemble's; information and money are what is carried

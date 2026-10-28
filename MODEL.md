@@ -113,7 +113,7 @@ and the default it derives where it has one.
 - **The face's 21 verbs** (`core/law/core.yaml`): the knowing acts `say` `read` `derive` `make`; the order `be` (where
   a being is), `stand`, `part`, `name`; the four questions `come` `own` `answer` `acquire`; the layers' `pass`; and
   the two squares' eight positions.
-- **The 45 rows** (`core/law/verbs.yaml`):
+- **The 46 rows** (`core/law/verbs.yaml`):
 
   | Group | Verbs |
   |---|---|
@@ -121,7 +121,7 @@ and the default it derives where it has one.
   | what a being needs, does and holds | `need` `meet` `use` `do` `hold` `run` `open` `move` `step` `attend` `produce` |
   | knowing about a being | `measure` `record` `reckon` `pin` `classify` `about` `concern` `rate` `weigh` |
   | failure and remedy, disagreement | `fail` `repair` `respond` `rule` |
-  | the mechanics | `join` |
+  | the mechanics | `join` `specify` |
   | between gardens | `propose` `take` `rehearse` |
   | the network profile | `serve` `carry` `route` `translate` `filter` |
   | the other profiles | `book` `match` (accounting), `renew` (domain), `mark`, `draw` (view) |

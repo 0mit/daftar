@@ -539,6 +539,7 @@ class Judge:
                     seen[r['id']] = i
         for i, verb, r in b.items:
             self.one(b, i, verb, r)
+        self.specified(b)
         self.knowing(b)
 
     def one(self, b, i, verb, r):
@@ -586,6 +587,52 @@ class Judge:
         ch = (v.get('choice') or {}).get('one_of')
         if ch and sum(1 for k in listed(ch) if k in r) != 1:
             self.err('valency', where, f"one of {', '.join(listed(ch))}, and only one")
+
+    BODY_SAYS = ('compliance', 'shape', 'section', 'designation', 'whole')     # what `specify` says of a body (4.12)
+    FEATURE_SAYS = ('feature', 'side', 'profile', 'count')                   # and of a feature of it
+
+    def specified(self, b):
+        """Rule valency, of `specify` (core 4.12): a body is specified in its own bean — `of` is `self`, or a feature of
+        it, `<its bean>#<feature>` —, once each; of the body, what a body is (its compliance — a device has none —,
+        shape, section, designation, `whole: "true"`), of a feature, its kind, and its side and profile only where its
+        kind takes them, and its count."""
+        seen = {}
+        kinds = self.L.mech_rows.get('features') or {}
+        for i, verb, r in b.items:
+            if verb != 'specify' or 'of' not in r:
+                continue
+            where, of = f"{b.id}[{i}] specify", r['of']
+            if not isinstance(of, str):
+                continue
+            frame, _, feat = of.partition('#')
+            if frame not in ('self', b.id) or (feat and frame != b.id):
+                self.err('valency', where, f"`of: {of}` — a body is specified in its own bean: `of` is `self`, or a "
+                                           f"feature of it written by its bean, `{b.id}#<feature>`")
+                continue
+            key = feat or 'self'
+            if key in seen:
+                self.err('valency', where, f"`of: {of}` is specified at [{seen[key]}] already: what a body or a feature "
+                                           f"is is said once")
+            seen.setdefault(key, i)
+            wrong = [k for k in (self.FEATURE_SAYS if not feat else self.BODY_SAYS) if k in r]
+            if wrong:
+                self.err('valency', where, f"{', '.join(f'`{k}`' for k in wrong)}: "
+                                           + (f"a feature's, and `of` names the body; a feature is `{b.id}#<feature>`"
+                                              if not feat else "the body's, and `of` names a feature of it"))
+            if feat:
+                kind = r.get('feature')
+                if kind is None:
+                    self.err('valency', where, "`feature` is required of a feature: its kind, a row of `features`")
+                for k in ('side', 'profile'):
+                    if k in r and isinstance(kind, str) and kind in kinds and str(kinds[kind].get(k)) != 'true':
+                        self.err('valency', where, f"`{k}`: a feature of kind {kind} takes none")
+                continue
+            if 'whole' in r and r['whole'] != 'true':
+                self.err('valency', where, f"`whole: {r['whole']!r}` — a whole is drawn whole, `whole: \"true\"`, or "
+                                           f"nothing is said")
+            if 'compliance' in r and (self.L.kinds.get(b.kind) or {}).get('organisation') == 'device':
+                self.err('valency', where, f"`compliance` — {b.id} is a device, bodies joined, with no compliance of "
+                                           f"its own: each of its bodies says its own")
 
     def _valency(self, v):
         req = listed(v.get('required'))
@@ -744,8 +791,8 @@ class Judge:
     def responses(self):
         """Rule `squares`, on a disagreement (v1 part 12b: today's `answers` and `hearings`): one observer gives one
         verdict on one statement; a `rule` on statements is given once every speaker of them has responded. A response
-        that finds a statement benign is of a `fail`, and names the day it is looked at again: an `obligatory` of it whose
-        clause falls due (core 4.3)."""
+        that finds a statement benign is of a `fail`, or of a `need` (of each failure of it until the day, core 4.12), and
+        names the day it is looked at again: an `obligatory` of it whose clause falls due (core 4.3)."""
         seen, heard = {}, {}
         reviews = {}                               # an `obligatory` whose clause falls due, by the statement it is of
         for b in self.G.beans.values():
@@ -761,9 +808,10 @@ class Judge:
                 if r.get('as') == 'benign':
                     for s in listed(r.get('of')):
                         hit = self.statement(s, b)
-                        if hit and hit[2] != 'fail':
+                        if hit and hit[2] not in ('fail', 'need'):
                             self.err('squares', f"{b.id}[{i}] respond", f"finds `{s}` benign, and it is a `{hit[2]}`: "
-                                                                         f"benign is said of a failure, a `fail`")
+                                                                         f"benign is said of a failure, a `fail`, or of "
+                                                                         f"a `need`, each failure of it")
                     if not (isinstance(r.get('id'), str) and reviews.get(self.norm(r['id'], b))):
                         self.err('squares', f"{b.id}[{i}] respond", "finds a failure benign and names no day it is looked "
                                                                      "at again: give the response an `id`, and write "

@@ -139,6 +139,7 @@ good:
   # monitoring (core 4.3): a probe a reading of a need, its silence the need's interval, a failure benign, a cause
   - { name: "a probe fails: the reading that meets a need did not read, a failure of the reading and not of the machine; the need silent past ten minutes", bean: y50, kind: host, statements: [ { say: { by: sam, at: now } }, { need: { id: up, by: self, of: "every service runs", interval: { of: time, measure: { count: "10", unit: min } } } }, { meet: { by: none-down, of: up } }, { reckon: { id: none-down, reading: { what: "no service is down", inputs: [ { name: down, origin: { act: read, nature: soma, by: nas }, quantity: number } ], steps: [ { id: zero, op: constant, value: { count: "0", unit: "{item}" } }, { id: ok, op: compare, of: down, with: zero, is: at-most } ] } } }, { fail: { id: unread, by: none-down, as: "the probe none-down does not read: no reading of down", at: "2026-10-01 10:00" } } ] }
   - { name: "a failure found benign, looked at again on the day its review falls due", bean: y51, kind: host, statements: [ { say: { by: sam, at: now } }, { fail: { id: errors, by: self, as: "errors in the log", at: "2026-10-01 10:00" } }, { respond: { id: errors-benign, by: sam, of: [errors], as: benign, through: "the filter never sends QUIT: each session ends at its timeout, and nothing is lost" } }, { obligatory: { id: errors-review, of: errors-benign, through: sam, clause: { due: "2026-11-15" } } } ] }
+  - { name: "a need found benign: each failure of it, a defect that recurs, looked at again on the day its review falls due (core 4.12)", bean: y61, kind: host, statements: [ { say: { by: sam, at: now } }, { need: { id: quiet, by: self, of: "the log holds few errors" } }, { respond: { id: quiet-benign, by: sam, of: [quiet], as: benign, through: "the filter never sends QUIT: each session ends at its timeout, and nothing is lost" } }, { obligatory: { id: quiet-review, of: quiet-benign, through: sam, clause: { due: "2026-11-15" } } } ] }
   # core 4.7: four kinds the law holds, and a possible's degree, its chance within an extent
   - { name: "a walk is a procedure of the law's, its steps on a line", bean: y53, kind: procedure, statements: [ { say: { by: sam, at: now } }, { step: { id: asked, as: "asked for", to: [done] } }, { step: { id: done, as: "done", walk: { final: "true" } } } ] }
   - { name: "a site, a built place where work is done, at device: a rack is part of it", bean: y54, kind: site, statements: [ { say: { by: sam, at: now } }, { part: { by: home-rack, of: self } } ] }
@@ -191,6 +192,7 @@ good:
   - { name: "a legal entity by its LEI, and a filer by its codes at four regulators", bean: y58, kind: org, statements: [ { say: { by: sam, at: now } }, { name: { by: lei, of: self, as: "506700GE1G29325QX363" } }, { name: { by: sec-cik, of: self, as: "0000000042" } }, { name: { by: edinet, of: self, as: "E00042" } }, { name: { by: dart, of: self, as: "00000042" } }, { name: { by: twse, of: self, as: "4242" } } ] }
   - { name: "a market by its MIC", bean: y59, kind: org, statements: [ { say: { by: sam, at: now } }, { name: { by: mic, of: self, as: "ABCD" } } ] }
   - { name: "a count of what an annotation names, and prices over a count, a mass and an energy, none a row", bean: y60, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { id: crates, of: self, as: number, value: { count: "300", unit: "{crate}" }, at: "2026-10-01" } }, { measure: { id: per-crate, of: self, as: money, value: { count: "1200", unit: "USD/{crate}" }, at: "2026-10-01" } }, { measure: { id: per-kg, of: self, as: money, value: { count: "3.20", unit: "EUR/kg" }, at: "2026-10-01" } }, { measure: { id: per-kwh, of: self, as: money, value: { count: "0.25", unit: "EUR/kW.h" }, at: "2026-10-01" } } ] }
+  - { name: "a body specified in its own bean: its compliance, shape and designation, and a feature's kind, side, profile and count (core 4.12)", bean: y62, kind: component, statements: [ { say: { by: sam, at: now } }, { specify: { of: self, compliance: rigid, shape: bar, designation: "C45" } }, { specify: { of: "y62#g", feature: groove, side: ext, profile: rect, count: "2" } } ] }
 bad:
   # rule bearer (2026-10-10): what a quantity holds for, reached through `made-of` alone
   - { rule: bearer, name: "one body is no hydraulic cylinder: a device's concept is said of a device", says: "is a device, bodies joined, and this is one body", bean: x12i, kind: component, statements: [ { say: { by: sam, at: now } }, { classify: { of: self, as: "made:hydraulic-cylinder" } } ] }
@@ -204,6 +206,10 @@ bad:
   - { rule: consent,     bean: x60, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { id: a, by: [ada], of: self } }, { decline: { by: ben, of: a } } ] }
   - { rule: consent,     bean: x61, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { by: [ada, ben], of: self } }, { represent: { by: ada, of: ada } } ] }
   - { rule: consent, name: "a proposal of a person's bean to a garden their consent forbids", says: "a garden ben's consent forbids", bean: x110, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { id: a, by: [ben], of: self } }, { can: { id: not-a, by: sam, of: "passing ben's facts to garden-a" } }, { forbidden: { of: not-a, through: a, clause: { gardens: [garden-a] } } }, { propose: { by: sam, of: [ben], to: garden-a } } ] }
+  - { rule: valency, name: "a body specified in another's bean", says: "a body is specified in its own bean", bean: x111, kind: component, statements: [ { say: { by: sam, at: now } }, { specify: { of: sam, compliance: rigid } } ] }
+  - { rule: valency, name: "a side of a feature whose kind takes none", says: "a feature of kind face takes none", bean: x112, kind: component, statements: [ { say: { by: sam, at: now } }, { specify: { of: "x112#f", feature: face, side: ext } } ] }
+  - { rule: valency, name: "a device's compliance", says: "with no compliance of its own", bean: x113, kind: host, statements: [ { say: { by: sam, at: now } }, { specify: { of: self, compliance: rigid } } ] }
+  - { rule: valency, name: "a body specified twice", says: "what a body or a feature is is said once", bean: x114, kind: component, statements: [ { say: { by: sam, at: now } }, { specify: { of: self, compliance: rigid } }, { specify: { of: self, shape: bar } } ] }
   - { rule: consent,     bean: x62, kind: contract, statements: [ { say: { by: sam, at: now } }, { agree: { by: [ada], of: self } }, { represent: { by: ada, of: ben } } ] }
   - { rule: squares,     bean: x63, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { id: m1, by: ada, of: self, as: mass, value: { count: "4", unit: kg } } }, { respond: { by: ben, of: [m1], as: confirms } }, { respond: { by: ben, of: [m1], as: disputes } } ] }
   - { rule: squares,     bean: x64, kind: host, statements: [ { say: { by: sam, at: now } }, { measure: { id: m1, by: ada, of: self, as: mass, value: { count: "4", unit: kg } } }, { measure: { id: m2, by: ben, of: self, as: mass, value: { count: "5", unit: kg } } }, { respond: { by: ada, of: [m1, m2], through: "I weighed it twice" } }, { rule: { by: sam, of: [m1, m2] } } ] }
@@ -370,6 +376,7 @@ clauses:
   valency:
     - { says: "each required role is filled", bad: [x2, x3s, x3u, x3v, x3w, x3x, x3y, x3, x3c, x3d, x3e, x3f, x3f2, x3f3, x3g, x3h, x3t, x3n, x3o, x3p, x3m, x77, x79, x53, x54, x55, x107, x108, x109], good: [y60] }
     - { says: "a role takes a list only where its row says `many`", bad: [x3b] }
+    - { says: "A body is specified (`specify`) in its own bean", bad: [x111, x112, x113, x114], good: [y62] }
   knowing:
     - { says: "every statement of a bean is the `of` of a knowing act", bad: [x4, x5b] }
     - { says: "a need a person meets (`meet`) is known by that person's own `say`", bad: [x5c] }
@@ -396,7 +403,7 @@ clauses:
     - { says: "two positions that cannot both stand", bad: [x11, x11b, x11c] }
     - { says: "subcontraries may both stand", good: [y4] }
     - { says: "One observer gives one verdict", bad: [x63, x64] }
-    - { says: "A response that finds a statement benign is of a `fail`", bad: [x63b, x63c], good: [y51] }
+    - { says: "A response that finds a statement benign is of a `fail`", bad: [x63b, x63c], good: [y51, y61] }
   bearer:
     - { says: "a quantity is stated only of what", bad: [x12c, x12e, x12f, x12h] }
     - { says: "A mass is a body's", bad: [x12, x12b] }
