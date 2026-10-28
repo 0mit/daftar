@@ -28,6 +28,11 @@ omid@0mit.com CHARTER.md  # the steward's address, where a claim about what he p
 held             # the law's own word: a layer (std-vocab `layers`), the key of a sealed entry, and bin/held.py's
                  # name. A garden that names its store root after the layer took the name FROM the law, as
                  # `daftar-sessions` above was taken from a tool.
+agents-work      # the law's own name: the bean of the gardener's standing instructions to agents, which
+                 # seed/agents-work.md.template makes and core/guards.py and core/judge.py read by that name; a
+                 # garden that holds the bean took the name from the law.
+rights@ilo.org seed/knowledge/SOURCES.md  # the International Labour Organization's published address for the
+                 # rights in its works, named where ISCO-08's source says whom it asked.
 smb              # a row of the law's own `net_protocols` registry: a garden that names a bean after the protocol
                  # took the name from the law.
 git@github.com   # GitHub's SSH user and host, the same for every repository there: a remote begins with it and
