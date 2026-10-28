@@ -187,7 +187,10 @@ FORM_CHECKS = {'ipaddress-v4': _ip_form(4), 'ipaddress-v6': _ip_form(6),
                'orcid-checksum': lambda v: _stdnum('iso7064.mod_11_2').is_valid(v.replace('-', '')),
                'uuid-integer': _uuid_integer,
                'gs1-element': _gs1,
-               'tckimlik': lambda v: _stdnum('tr.tckimlik').is_valid(v)}
+               'tckimlik': lambda v: _stdnum('tr.tckimlik').is_valid(v),
+               'lei-checksum': lambda v: _stdnum('lei').is_valid(v),
+               'isin-checksum': lambda v: _stdnum('isin').is_valid(v),
+               'figi-checksum': lambda v: _stdnum('figi').is_valid(v)}
 
 
 _CHECKS, _APPLY = [], {}      # the law's table of checks, read once; each check's applier, made once

@@ -122,7 +122,62 @@ def _core_law():
                     row = dict(zip(head, line.rstrip('\n').split('\t')))
                     if row.get(uf.get('take')) in units:
                         units[row[uf['take']]]['digits'] = row.get(uf['digits'])
-    return units, quantities
+    return Units(units, getattr(L, 'unit_rules', [])), quantities
+
+
+COMPOSED_FORMS = ('count', 'price')       # what a rule of core/law/units.yaml `composed` may make
+
+
+def composed(code, row_of, rules):
+    """The row a rule of the law makes for `code` (core/law/units.yaml `composed`), or None: an annotation alone a count
+    of what it names, a unit of money over a unit of the law a price. `row_of(code)` gives the row of a listed unit or
+    a currency (its quantity `money`), or None; the rules are the law's rows, in order. A count has no factor; a price's
+    is the inverse of its unit's under the line, and it names the currency it is counted in (`currency`)."""
+    import parse as dmparse
+    code = str(code)
+    for rule in rules or []:
+        if not isinstance(rule, dict) or not dmparse.law_match(str(rule.get('pattern')), code):
+            continue
+        if rule.get('form') == 'count':
+            return {'unit': code, 'name': code[1:-1], 'quantity': 'number', 'composed': 'count'}
+        if rule.get('form') == 'price':
+            top, under = code.split('/', 1)
+            a = row_of(top)
+            b = row_of(under) or composed(under, row_of, [r for r in rules if r.get('form') == 'count'])
+            if not a or a.get('quantity') != 'money' or not b or b.get('quantity') == 'money' \
+                    or str(b.get('quantity')).startswith('money/'):
+                return None
+            f = b.get('factor')
+            ok = isinstance(f, list) and len(f) == 2 and all(str(x).isdigit() for x in f) and str(f[0]) != '0'
+            return {'unit': code, 'name': f"{a.get('name') or top}-per-{b.get('name') or under}",
+                    'quantity': f"money/{b['quantity']}", 'factor': [int(f[1]), int(f[0])] if ok else None,
+                    'currency': a.get('per') or top, 'money': top, 'over': under, 'composed': 'price'}
+    return None
+
+
+class Units(dict):
+    """The law's units by code, each listed row and currency; a code no row holds is looked up in the law's rules of
+    composed units (`composed`), and is one of its units where a rule makes it."""
+
+    def __init__(self, rows=(), rules=()):
+        super().__init__(rows)
+        self.rules = list(rules or [])
+
+    def __missing__(self, code):
+        row = composed(code, lambda c: dict.get(self, c), self.rules) if isinstance(code, str) else None
+        if row is None:
+            raise KeyError(code)
+        return row
+
+    def __contains__(self, code):
+        return dict.__contains__(self, code) or (isinstance(code, str) and
+                                                 composed(code, lambda c: dict.get(self, c), self.rules) is not None)
+
+    def get(self, code, default=None):
+        try:
+            return self[code]
+        except KeyError:
+            return default
 
 
 def named(n, units):
@@ -170,6 +225,20 @@ def convert(count, unit, to, rate=None):
     if a['quantity'] != b['quantity']:
         raise ValueError(f"{unit} measures {a['quantity']} and {to} measures {b['quantity']}: nothing converts one into the other")
     x = count if isinstance(count, Fraction) else exact(count)
+    # A PRICE (core/law/units.yaml `composed`): money over a unit, carried at the factor between its units under the
+    # line, then from its currency into the other's as money is: one currency takes no rate, two take one
+    if a.get('composed') == 'price' or b.get('composed') == 'price':
+        if unit == to and rate is None:
+            return x
+        if not (a.get('factor') and b.get('factor')):
+            raise ValueError(f"{unit if not a.get('factor') else to} has no factor in the law under its line: it "
+                             f"converts only into itself")
+        under = x * Fraction(*a['factor']) / Fraction(*b['factor'])
+        if a['money'] == b['money']:
+            if rate is not None:
+                raise ValueError(f"{unit} and {to} are in one currency ({a['money']}): a rate joins two")
+            return under
+        return convert(under, a['money'], b['money'], rate)
     # A UNIT OF A CURRENCY (`per`: the toman, ten rials) is counted against that currency: carried into it, then on
     if a.get('per') or b.get('per'):
         base_a, base_b = a.get('per') or unit, b.get('per') or to

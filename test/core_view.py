@@ -124,7 +124,7 @@ try:
     L = Law.load()
     P = read.data(os.path.join(ROOT, 'core', 'law', 'profiles.yaml'))
     homed = {p: sorted(v for v in L.verbs if L.home(v) == p) for p in L.profiles}
-    SINCE = {'storage'}                       # a profile the core offers since today's law (core 2.19)
+    SINCE = {'storage', 'markets'}            # the profiles the core offers since today's law (core 2.19, 4.8)
     check(f"law: the {len(L.profiles)} profiles are today's, each with the verbs whose home it is, beside those offered "
           f"since, {', '.join(sorted(SINCE))} ({', '.join(f'{p} {len(v)}' for p, v in homed.items())})",
           sorted(set(L.profiles) - SINCE) == sorted(LAW['profiles'])

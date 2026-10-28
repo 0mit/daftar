@@ -53,14 +53,15 @@ def listed(x):
 
 # ------------------------------------------------------------------------------------------------ units, exactly
 def unit_row(L, unit):
-    """The row of `unit` — a UCUM code of the law or the garden — or of a currency (quantity money, factor one)."""
+    """The row of `unit` — a UCUM code of the law or the garden, a currency (quantity money, factor one), or a code a
+    rule of the law makes (a count, a price)."""
     u = str(unit)
     if u in L.units:
         return L.units[u]
     if u in L.std.currencies:
         q = next((n for n, r in L.std.quantities.items() if isinstance(r.get('units_from'), dict)), 'money')
         return {'unit': u, 'quantity': q, 'factor': ['1', '1']}
-    return None
+    return L.unit(u) if hasattr(L, 'unit') else None          # one the law makes by a rule (units.yaml `composed`)
 
 
 def factor(L, unit):

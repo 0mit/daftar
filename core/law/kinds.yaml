@@ -1,5 +1,6 @@
 # The kinds of being a bean records, each with its nature, and the position it holds on each line of the ladder where it
-# holds one: at most one a line, named by the line (core.yaml `lines`).
+# holds one: at most one a line, named by the line (core.yaml `lines`). A kind that names its `home` is that profile's
+# (core/law/profiles.yaml): a being of it is written only where the garden takes the profile (the rule `profile`).
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 kinds:
   - { kind: codebase, nature: sayable }
@@ -31,9 +32,10 @@ kinds:
   - { kind: site, nature: body, organisation: device, meaning: "a built place where work is done, its structure and machines assembled at one place: a plant, a workshop, a data centre, a farm" }
   - { kind: series, nature: sayable, meaning: "a published series of values, one for each period or position: an index, a statistics office's series, a feed's counts; each value a `measure` of it, or a row it `record`s" }
   - { kind: model, nature: sayable, meaning: "a fitted model: its form, its parameters, and what it was fitted on; what it gives is derived through it, never anyone's word" }
+  - { kind: instrument, nature: sayable, home: markets, meaning: "a financial instrument: a contract that is a financial asset of one party and a liability or an equity of another, as a market lists it and deals in it — a share, a bond, a future, an option, a unit of a fund; named by its ISIN, its FIGI and its symbol at each market" }
 
 # The columns of each table of rows above: which every row holds (`required`) and which it may (`optional`); a row holds
 # the required ones and no other (core/law.py, `columns`). A reading names a table they declare as an input said by
 # the law (core/law/lines.yaml `selection_form.inputs`).
 columns:
-  kinds: { kind: required, nature: required, matter: optional, organisation: optional, bios: optional, rung: optional, meaning: optional }
+  kinds: { kind: required, nature: required, matter: optional, organisation: optional, bios: optional, rung: optional, home: optional, meaning: optional }

@@ -27,12 +27,22 @@ namespaces:
   - { namespace: gs1,        once: "true", pattern: '^\([0-9]{2,4}\)[!-~]{1,90}$', checked_by: gs1-element, meaning: "a GS1 identification key (a GTIN, a GLN, an SSCC …) as one element string: its application identifier in brackets, then the key, its check digit checked" }
   - { namespace: tr-tckn,    once: "true", pattern: '^[1-9][0-9]{10}$', checked_by: tckimlik, kept: held, meaning: "a Turkish citizen's identity number (T.C. Kimlik No), its two last digits its check. A government number: kept only in the held store, never in git (MODEL.md, ground rule 7)" }
   - { namespace: ir-national-code, once: "true", pattern: '^[0-9]{10}$', kept: held, meaning: "an Iranian national code (کد ملی), ten digits. Its check digit is not checked here: no well-used validator covers it, and the law writes no copy of one. A government number: kept only in the held store, never in git (MODEL.md, ground rule 7)" }
+  - { namespace: lei,        once: "true", pattern: '^[0-9A-Z]{18}[0-9]{2}$', checked_by: lei-checksum, meaning: "a legal entity's identifier (ISO 17442-1, the LEI): eighteen characters, digits and capital letters, then two digits that are the ISO/IEC 7064 MOD 97-10 check of the whole; given once, by an issuer the Global Legal Entity Identifier Foundation accredits" }
+  - { namespace: mic,        once: "true", pattern: '^[0-9A-Z]{4}$', meaning: "a market's identifier (ISO 10383, the MIC): four characters, digits and capital letters, given to an exchange, a market or a reporting facility — an operating MIC to the entity that runs it, a segment MIC to a section of it — and never changed once given" }
+  - { namespace: sec-cik,    once: "true", pattern: '^[0-9]{10}$', meaning: "a filer's Central Index Key in EDGAR, the U.S. Securities and Exchange Commission's system of filings: ten digits, written as a filing's header writes them, zeros before" }
+  - { namespace: edinet,     once: "true", pattern: '^E[0-9]{5}$', meaning: "a filer's code in EDINET, the system of disclosure of Japan's Financial Services Agency: `E` and five digits" }
+  - { namespace: dart,       once: "true", pattern: '^[0-9]{8}$', meaning: "a company's own number (고유번호) in DART, the system of disclosure of Korea's Financial Supervisory Service, as its open interface gives it: eight digits" }
+  - { namespace: twse,       once: "false", pattern: '^[0-9]{4}$', meaning: "a listed company's code (公司代號) at the Taiwan Stock Exchange, by which its disclosures name the company: four digits. Whether a code is given again once its company leaves the list is not published where the law could read it, so it names and does not establish" }
+  - { namespace: isin,       once: "true", home: markets, pattern: '^[A-Z]{2}[0-9A-Z]{9}[0-9]$', checked_by: isin-checksum, meaning: "a security's International Securities Identification Number (ISO 6166): two letters, a country's or one ISO 6166 gives for a security of no one country, nine characters of its national number, and a check digit; given once, by a national numbering agency" }
+  - { namespace: figi,       once: "true", home: markets, pattern: '^[B-DF-HJ-NP-TV-Z]{2}G[0-9B-DF-HJ-NP-TV-Z]{8}[0-9]$', checked_by: figi-checksum, meaning: "a financial instrument's global identifier (the FIGI, a standard of the Object Management Group): two consonants, `G`, eight consonants or digits, and a check digit; given once, and never given again" }
+  - { namespace: ticker,     once: "false", home: markets, pattern: '^[0-9A-Z]{4}:[0-9A-Z][0-9A-Z./-]{0,31}$', meaning: "an instrument's symbol at a market, qualified by the market's MIC: `<mic>:<symbol>`. A symbol changes with its instrument's name, and is given again once its instrument leaves the market, so it names and does not establish" }
 
 # What a row of `namespaces` may name beside its pattern: `checked_by`, a check of core/law/checks.yaml that reads a
-# name, made completely by a well-used validator (python-stdnum's ISO/IEC 7064 checks, its GS1 element strings and its
-# T.C. Kimlik No, and the standard library's uuid) and run after the pattern; and `kept`, where the names it gives are
-# kept when it is not git: `held`, the held store alone (bin/held.py), so that a name of it written in a bean is refused
-# (the rule `harm`).
+# name, made completely by a well-used validator (python-stdnum's ISO/IEC 7064 checks, its GS1 element strings, its
+# T.C. Kimlik No, its LEI, ISIN and FIGI, and the standard library's uuid) and run after the pattern; `kept`, where the
+# names it gives are kept when it is not git: `held`, the held store alone (bin/held.py), so that a name of it written
+# in a bean is refused (the rule `harm`); and `home`, the profile it is the namespace of (core/law/profiles.yaml): a name
+# it gives is written only where the garden takes the profile (the rule `profile`).
 namespace_shape:
   kept: [held]
 
@@ -40,4 +50,4 @@ namespace_shape:
 # the required ones and no other (core/law.py, `columns`). A reading names a table they declare as an input said by
 # the law (core/law/lines.yaml `selection_form.inputs`).
 columns:
-  namespaces: { namespace: required, once: required, pattern: optional, checked_by: optional, kept: optional, meaning: required }
+  namespaces: { namespace: required, once: required, pattern: optional, checked_by: optional, kept: optional, home: optional, meaning: required }

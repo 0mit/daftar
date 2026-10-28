@@ -251,6 +251,22 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **core 4.8** (2026-10-28, daftar v4.8.0, human-ratified rule-change) — **names of entities and markets, a markets
+  profile, feeds, filings and series, and units made by a rule.** MINOR. The namespaces `lei` (ISO 17442, its check
+  digits held), `mic` (ISO 10383), `sec-cik`, `edinet`, `dart` and `twse` (a listed company's code, which names and does
+  not establish) in the core; the checks `lei-checksum`, `isin-checksum` and `figi-checksum`, each python-stdnum's and
+  held to its publisher's example, with no dependency new. A new profile, `markets`: the kind `instrument` and the
+  namespaces `isin`, `figi` and `ticker` (a symbol at a market, qualified by its MIC), a kind and a namespace a profile's
+  by their row's `home`, as a verb is, and refused by rule `profile` where the garden does not take it. The formats
+  `rss`, `atom`, `json-feed`, `xbrl` (an instance) and `sdmx` (SDMX-ML 2.1's generic data; a structure-specific
+  message refused, saying why), read by core/formats.py with the standard library alone; the readers `feed`,
+  `xbrl-facts` and `sdmx-observations`; and the crosswalks `feed-item` (a feed's item to a document, produced by its
+  site and found at its link), `xbrl-fact` (a filing's fact to a measure of its entity) and `sdmx-observation` (an
+  observation to a measure of its series). A bean field looked up and not found names no being, and its record is
+  listed. Units made by a rule (core/law/units.yaml `composed`): a count of what an annotation names, `{crate}`, and a
+  price, a unit of money over a unit of the law, `USD/{crate}`, `EUR/kg`, converted exactly by bin/units.py and never
+  between currencies without a rate. Parquet's row reads nothing, as before. test/core_markets.py, a new suite. Every
+  other verdict stands.
 - **core 4.7** (2026-10-28, daftar v4.7.0, human-ratified rule-change) — **four kinds, a chance, and its score.** MINOR.
   The kinds `procedure` (a way a thing is done, step by step: a walk), `site` (a built place where work is done, a body at
   device beside host), `series` (a published series of values) and `model` (a fitted model, what it gives derived

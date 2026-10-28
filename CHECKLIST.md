@@ -146,24 +146,24 @@ show.
       counted from its `from` where it strides, by a length of time, or counts its times; a need's `interval` is a
       length of time, with no ends; a possible's `chance` is a ratio from 0 to 1, and its `within` an extent in its
       form.
-- [ ] **profile** — What a profile gives is used only where the garden takes the profile (VOCAB.md `profiles`): a verb
-      whose home it is, and an attribute it adds to a form of the core; and what its forms hold is in its form — a page
-      draws the drawings of its bean, each once and all of them, a drawing's values are named once on its page, and what
-      a drawing or a value names is there: a value of its drawing, a drawing of its page, a reading of its bean; and
-      each attribute in its domain — a unit of the law, a technology of the catalogue, a signal it publishes, a quantity
-      of the kind asked, an extent and a repetition in their forms, a frame that is a line, an order on an axis its row
-      of `orientations` runs on, a verb of the law and only roles it takes; and a sheet, and a being of each kind a
-      drawing makes, shows the facts its page's `fields` names for its kind. A channel (the network profile's) holds its
-      form; a booking (the accounting profile's) rests on what moved, is asked or was measured, and names postable
-      accounts of one chart open on the day it is booked on, or a code of a plan it is booked to, or no side and a day,
-      booking a move in the reverse sense; under one plan its amounts add up to the entity's part of a payment, and to
-      one side of a chart to no more; each being a chart's account stands for is one the garden holds; and a match names
-      payments whose amounts agree, each matched once in an entity's books; a scheme of the knowledge profile holds each
-      row to its form — names' templates (`form: pattern`), classes (`form: class`, with no cycle among its codes'
-      parents), concepts (`form: concept`, each pattern in the core's compliances, pairs and closures, and no two of one
-      signature), policies (`form: keep`) and schemas (`form: schema`) — a garden's own grouping takes a name the law's
-      do not and is read as a reading of the closed list, and a garden's own risk is resolved by ways of keeping
-      properties of the law, held only where it takes the storage profile.
+- [ ] **profile** — What a profile gives is used only where the garden takes the profile (VOCAB.md `profiles`): a verb,
+      a kind and a namespace whose home it is, and an attribute it adds to a form of the core; and what its forms hold
+      is in its form — a page draws the drawings of its bean, each once and all of them, a drawing's values are named
+      once on its page, and what a drawing or a value names is there: a value of its drawing, a drawing of its page, a
+      reading of its bean; and each attribute in its domain — a unit of the law, a technology of the catalogue, a signal
+      it publishes, a quantity of the kind asked, an extent and a repetition in their forms, a frame that is a line, an
+      order on an axis its row of `orientations` runs on, a verb of the law and only roles it takes; and a sheet, and a
+      being of each kind a drawing makes, shows the facts its page's `fields` names for its kind. A channel (the network
+      profile's) holds its form; a booking (the accounting profile's) rests on what moved, is asked or was measured, and
+      names postable accounts of one chart open on the day it is booked on, or a code of a plan it is booked to, or no
+      side and a day, booking a move in the reverse sense; under one plan its amounts add up to the entity's part of a
+      payment, and to one side of a chart to no more; each being a chart's account stands for is one the garden holds;
+      and a match names payments whose amounts agree, each matched once in an entity's books; a scheme of the knowledge
+      profile holds each row to its form — names' templates (`form: pattern`), classes (`form: class`, with no cycle
+      among its codes' parents), concepts (`form: concept`, each pattern in the core's compliances, pairs and closures,
+      and no two of one signature), policies (`form: keep`) and schemas (`form: schema`) — a garden's own grouping takes
+      a name the law's do not and is read as a reading of the closed list, and a garden's own risk is resolved by ways
+      of keeping properties of the law, held only where it takes the storage profile.
 <!-- the end of the rules written from the law -->
 
 **The commit's own rules**, which only a commit can show:

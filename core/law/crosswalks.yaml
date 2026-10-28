@@ -355,3 +355,61 @@ crosswalks:
       content: { from: bean }
       "QuickTime:CreateDate": { from: produce.at, as: { moment: quicktime } }
     meaning: "a video's content was made at the moment its movie header states, in UTC as the format says (QuickTime and the ISO base media file format count it from 1904-01-01T00:00Z); a moment at that epoch, or within a month of one of `clock_epochs`, is a clock never set and carries no moment. The camera is not stated by the movie header, so `produce.by` is `unknown`, filled where a person or another record names it; every other tag is counted, not carried"
+  - crosswalk: feed-item
+    system: feed
+    series: "RSS 2.0, Atom, JSON Feed 1.1"
+    model: item
+    kind: document
+    format: [rss, atom, json-feed]
+    reader: feed
+    act: { verb: read }
+    keep: store
+    fields:
+      id: { from: bean }
+      title: { from: title }
+      summary: { from: summary }
+      link: { from: "be[as=location].at" }
+      published: { from: produce.at, as: { moment: iso } }
+      site: { from: produce.by, as: { named: dns } }
+      author: { drop: "a person is kept here only on their own word (the rule consent): who wrote it is read at its link" }
+      updated: { drop: "the moment it last changed: what a document said before is its publisher's to keep" }
+      categories: { drop: "the site's own words for what it is about, in no scheme: a garden classifies it in its own" }
+      content: { drop: "its text is its publisher's, read at its link and never copied here" }
+    meaning: "an item of a site's feed is a document: produced by the being the domain name system names by its link's site, at the moment it was published, and found at its link (`be` as location, in the `uri` system); its title and its summary are its own. Its author, its text and the site's categories are not carried, each for its reason; a site no being here is named by leaves `unknown`, and is listed for a person to name"
+  - crosswalk: xbrl-fact
+    system: xbrl
+    series: "2.1"
+    model: fact
+    statements: { verb: measure }
+    format: xbrl
+    reader: xbrl-facts
+    act: { verb: read }
+    keep: store
+    compose: { at: "{from}/{to}" }
+    fields:
+      entity: { from: bean, as: { named: given, hint: [scheme] } }
+      scheme: { drop: "the URI the entity's identifier is in: the namespace it is looked up in is the one the import is told" }
+      concept: { from: as, as: coding }
+      at: { from: at }
+      start: { from: at, part: from }
+      end: { from: at, part: to }
+      value: { from: value.count, as: decimal }
+      unit: { from: value.unit }
+      decimals: { drop: "how far the filer rounded it: the value is kept as written" }
+    meaning: "a filing's fact is a reading: one `measure` of the entity its context names — looked up by its identifier in the namespace the import is told (`sec-cik`, `lei`, `edinet` …), and listed with the identifier's scheme where no being has it — its concept the property read, a code of the scheme whose url is the concept's namespace; its value as written, in the law's unit; at its period's instant, or over the days from its start to its end (`<start>/<end>`), as the filing writes them. A fact of words, or of a member of a dimension and not the entity's whole, is listed and not carried"
+  - crosswalk: sdmx-observation
+    system: sdmx
+    series: "2.1"
+    model: observation
+    statements: { verb: measure }
+    format: sdmx
+    reader: sdmx-observations
+    act: { verb: read }
+    keep: store
+    fields:
+      series: { from: bean, as: { named: given } }
+      measure: { from: as, as: coding }
+      at: { from: at }
+      value: { from: value.count, as: decimal }
+      unit: { from: value.unit }
+    meaning: "a series' observation is a reading: one `measure` of the series (a bean of the kind `series`) its key names — looked up in the namespace the import is told, the garden's own for its provider's keys — its measure the property read, a code of the scheme whose url is the structure the message names; its value as written, in its unit where the law has it; at its time period, placed as the reader places it. Every other attribute, an observation's status or its confidentiality, is listed by its name"

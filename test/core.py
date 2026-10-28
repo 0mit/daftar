@@ -126,12 +126,14 @@ check("...and a stand or a bearer another path already gives is refused: a galax
       and any('a copy of what mass holds for' in m for m in twice), twice)
 ns = LAW0.namespaces
 again = Law.load(('VOCAB.md', {'namespaces': [{'namespace': 'dns', 'once': 'true'}]})).problems()
-check(f"the standards' namespaces are the core's ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id and the names a "
-      f"garden gives…), each giving once but a mailbox and a line, which may be shared, and a garden that declares one "
-      f"again is refused",
+check(f"the standards' namespaces are the core's and its profiles' ({len(ns)}: dns, mail, e164, ieee-eui48, a garden's id "
+      f"and the names a garden gives…), each giving once but a mailbox, a line, a listed company's code and a symbol at "
+      f"a market, which may be shared or given again, and a garden that declares one again is refused",
       {'dns', 'mail', 'e164', 'ieee-eui48', 'uuid', 'sha-256', 'blake3', 'openpgp', 'ssh', 'passkey', 'wireguard', 'garden-id',
-       'garden', 'ror', 'wikidata', 'orcid', 'ifc-guid', 'dicom-uid', 'gs1', 'tr-tckn', 'ir-national-code'} == set(ns)
-      and sorted(n for n, r in ns.items() if r.get('once') != 'true') == ['e164', 'mail']
+       'garden', 'ror', 'wikidata', 'orcid', 'ifc-guid', 'dicom-uid', 'gs1', 'tr-tckn', 'ir-national-code', 'lei', 'mic',
+       'sec-cik', 'edinet', 'dart', 'twse', 'isin', 'figi', 'ticker'} == set(ns)
+      and sorted(n for n, r in ns.items() if r.get('once') != 'true') == ['e164', 'mail', 'ticker', 'twse']
+      and sorted(n for n, r in ns.items() if r.get('home')) == ['figi', 'isin', 'ticker']
       and any('`dns` is declared already' in m for _r, _w, m in again),
       (sorted(ns), again))
 import re as _re

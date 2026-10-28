@@ -326,8 +326,9 @@ A name is a statement: the namespace gives it.
   profiles it takes, by their names (`profiles`). A row
   never takes a name the law has: one name, one row. **Every row the garden adds is used** by a statement or a bean, or
   says why it is vacant (`vacant: <why>`), the manifesto's `whole`: a row is added with the first bean that uses it.
-- **Profiles** — network, domain, accounting, storage, view, knowledge, code — stand on the core (`core/law/profiles.yaml`):
-  their verbs are rows of `core/law/verbs.yaml` marked with their `home`, their tables, forms and words their own, and
+- **Profiles** — network, domain, accounting, storage, view, knowledge, code, markets — stand on the core
+  (`core/law/profiles.yaml`): their verbs, kinds and namespaces are rows of `core/law/verbs.yaml`, `kinds.yaml` and
+  `namespaces.yaml` marked with their `home`, their tables, forms and words their own, and
   what one adds to a form of the core (the code profile's attributes of a placement) is named. A garden **takes** a
   profile by its name in `VOCAB.md`'s `profiles`, a RULE-CHANGE, and uses none of a profile it does not take (rule
   `profile`). A profile may bring an **asset**, `assets/<profile>/`, which a garden receives while it takes the profile

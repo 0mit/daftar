@@ -96,6 +96,9 @@ def problems(J, b):
     def take(p):
         return (f"it is the {p} profile's, which this garden does not take: taking it is a line of VOCAB.md, "
                 f"`profiles: [{', '.join(sorted(have | {p}))}]`, a RULE-CHANGE the gardener ratifies")
+    home = L.home_of('kinds', b.kind) if b.kind else None     # a being of a profile's kind
+    if home and home not in have:
+        out.append((f"{b.id}: kind", f"`{b.kind}` — {take(home)}"))
     for i, verb, r in b.items:
         if not isinstance(r, dict) or 'held' in r:
             continue
@@ -103,6 +106,10 @@ def problems(J, b):
         home = L.home(verb)
         if home and home not in have:
             out.append((where, f"`{verb}` — {take(home)}"))
+        ns = r.get('by') if verb == 'name' and isinstance(r.get('by'), str) else None
+        home = L.home_of('namespaces', ns) if ns else None      # a name in a profile's namespace
+        if home and home not in have:
+            out.append((f"{where}.by", f"`{ns}` — {take(home)}"))
         v = L.verbs.get(verb) or {}
         for q, spec in (v.get('qualifiers') or {}).items():
             if isinstance(spec, dict) and spec.get('form') and isinstance(r.get(q), dict):
