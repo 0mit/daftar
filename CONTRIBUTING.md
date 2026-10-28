@@ -63,6 +63,7 @@ parts, changes).
    python3 test/core_held.py
    python3 test/store.py
    python3 test/store_union.py
+   python3 test/store_rows.py
    python3 test/run.py
    python3 test/io.py
    python3 test/group.py

@@ -232,13 +232,19 @@ def checked(name, value, rows=None):
     return fn(value)
 
 
+_LAW_RE = {}
+
+
 def law_match(pattern, value):
     """A value against a pattern OF THE LAW — the one way every tool matches one. ASCII only (std-vocab 16.0: in Python
     `\\d` matches every Unicode digit, and `۲۰۲۶-۰۹-۲۰` is not a second spelling of a date). And a pattern that ends in
     `$` ends at the END OF THE VALUE: Python's `$` also matches before a final newline, so `count: "100\\n"` passed the
     gate while a reader that matched the whole value refused it — two readers of one pattern, disagreeing."""
     p, v = str(pattern), str(value)
-    m = re.match(p, v, re.ASCII)
+    rx = _LAW_RE.get(p)
+    if rx is None:                       # each pattern compiled once: a store's check matches millions of values
+        rx = _LAW_RE[p] = re.compile(p, re.ASCII)
+    m = rx.match(v)
     if m and p.endswith('$') and not p.endswith('\\$') and m.end() != len(v):
         return None
     return m

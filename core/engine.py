@@ -541,10 +541,7 @@ class Judge:
                                     f"proposed and ratified")
             return
         roles, quals = v.get('roles') or {}, v.get('qualifiers') or {}
-        for k in r:
-            if k not in roles and k not in quals and k not in self.L.beside:
-                self.err('form', where, f"`{k}` is no role, qualifier or key `{verb}` takes: it takes "
-                                        f"{', '.join(list(roles) + list(quals))}, and {', '.join(sorted(self.L.beside))}")
+        self.keys(where, verb, v, r)
         for k in ('why', 'note'):
             if k in r and not isinstance(r[k], str):
                 self.err('form', where, f"`{k}` is prose")
@@ -553,16 +550,30 @@ class Judge:
             if not (isinstance(w, str) and (w in self.L.conditions or self.statement(w, b) is not None)):
                 self.err('form', where, f"`while: {w}` matches no condition ({', '.join(sorted(self.L.conditions))}) "
                                         f"and no statement")
+        self.keys(where, verb, v, r, counted=True)
         required = listed(v.get('required'))
-        for k in required:
+        ch = (v.get('choice') or {}).get('one_of')
+        for k, spec in list(roles.items()) + list(quals.items()):
+            if k in r:
+                self.fill(where, k, spec, r[k], k in required or k in listed(ch), b)     # a choice is required too
+
+    def keys(self, where, verb, v, r, counted=False):
+        """What a statement's keys alone decide, whatever fills them: a key its verb's row `v` does not take; with
+        `counted`, a required role left out, and a choice not made once. A store asks it of each set of columns its rows
+        fill (bin/store.py)."""
+        roles, quals = v.get('roles') or {}, v.get('qualifiers') or {}
+        if not counted:
+            for k in r:
+                if k not in roles and k not in quals and k not in self.L.beside:
+                    self.err('form', where, f"`{k}` is no role, qualifier or key `{verb}` takes: it takes "
+                                            f"{', '.join(list(roles) + list(quals))}, and {', '.join(sorted(self.L.beside))}")
+            return
+        for k in listed(v.get('required')):
             if k not in r:
                 self.err('valency', where, f"`{k}` is required: {verb} {self._valency(v)} — `unknown` where nobody said")
         ch = (v.get('choice') or {}).get('one_of')
         if ch and sum(1 for k in listed(ch) if k in r) != 1:
             self.err('valency', where, f"one of {', '.join(listed(ch))}, and only one")
-        for k, spec in list(roles.items()) + list(quals.items()):
-            if k in r:
-                self.fill(where, k, spec, r[k], k in required or k in listed(ch), b)     # a choice is required too
 
     def _valency(self, v):
         req = listed(v.get('required'))
@@ -930,16 +941,14 @@ class Judge:
         given, order = {}, {bid: n for n, bid in enumerate(self.G.beans)}
         for b in self.G.beans.values():
             for i, verb, r in b.items:
-                pat = (self.L.namespaces.get(r.get('by')) or {}).get('pattern') if verb == 'name' and \
-                    isinstance(r.get('by'), str) and 'held' not in r and r.get('as') != 'unknown' else None
-                if verb == 'name' and 'held' not in r and isinstance(r.get('by'), str) and r['by'] in self.L.namespaces \
-                        and dmparse.bidi_said(r.get('as')):     # a name a namespace gives is an identifier: no bidi
-                    self.err('names', f"{b.id}[{i}] name", f"a name {r['by']} gives {dmparse.bidi_said(r['as'])}")
+                if verb != 'name':
                     continue
-                why = self.L.name_why(r['by'], r.get('as')) if pat and r.get('by') not in ('garden-id', 'garden') else ''
-                if why:                                     # its form, then the check a validator makes (`name_why`)
+                why, bidi = self.name_form(r)
+                if why:
                     self.err('names', f"{b.id}[{i}] name", why)
-                if verb == 'name' and isinstance(r.get('by'), str) and r.get('as') != 'unknown' \
+                if bidi:
+                    continue
+                if isinstance(r.get('by'), str) and r.get('as') != 'unknown' \
                         and (self.L.namespaces.get(r['by']) or {}).get('once') == TRUE:     # a name nobody said names nobody
                     given.setdefault((r['by'], r.get('as')), []).append((self.norm(r.get('of'), b), f"{b.id}[{i}] name",
                                                                          (0, order[b.id], i)))
@@ -950,6 +959,18 @@ class Judge:
             if len(beings) > 1:               # TOLD AT THE LAST PLACE IT IS GIVEN, in the garden's order (Garden.read)
                 self.err('names', max(hits, key=lambda h: h[2])[1], f"{ns} gives {nm!r} once, and it names "
                                                                     f"{', '.join(beings)}")
+
+    def name_form(self, r):
+        """(why, bidi) of one `name` statement: why the name it gives is not in its namespace's form ('' where it is) — a
+        bidi control in a name a namespace gives, which is an identifier; else its pattern, then the check a validator
+        makes (`name_why`) — and whether it was a bidi control, which leaves the name given by nobody. The rule `names`
+        asks it of a bean's statement, and a store of a row, at its put and at its check (bin/store.py)."""
+        if 'held' in r or not isinstance(r.get('by'), str):
+            return '', False
+        if r['by'] in self.L.namespaces and dmparse.bidi_said(r.get('as')):
+            return f"a name {r['by']} gives {dmparse.bidi_said(r['as'])}", True
+        pat = (self.L.namespaces.get(r['by']) or {}).get('pattern') if r.get('as') != 'unknown' else None
+        return (self.L.name_why(r['by'], r.get('as')) if pat and r['by'] not in ('garden-id', 'garden') else ''), False
 
     def layers(self):
         for b in self.G.beans.values():
