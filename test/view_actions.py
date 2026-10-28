@@ -157,8 +157,7 @@ try:
     check("a garden of the core grows taking the view profile, kept by Sam", rc == 0, out[-800:])
     run(PY, 'bin/install.py')
     v = get('VOCAB.md')
-    rows = {'kinds': '  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\n',
-            'namespaces': '  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for itself" }\n'}
+    rows = {'namespaces': '  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for itself" }\n'}
     for key, row in rows.items():                # a row of the garden's own: under its key, or the key made
         if re.search(r'^%s: \[\]\n' % key, v, re.M):
             v = re.sub(r'^%s: \[\]\n' % key, key + ':\n' + row, v, count=1, flags=re.M)

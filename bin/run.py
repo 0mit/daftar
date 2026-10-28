@@ -139,10 +139,6 @@ def setup(root, by, owner):
     """The walk in this garden: written where it has none; where it has one, its steps and reasons checked against
     STEPS. Returns (path, what was done)."""
     p = os.path.join(root, 'mappings', 'walk-run.md')
-    vocab = os.path.join(root, 'VOCAB.md')
-    if not re.search(r'kind:\s*procedure\b', open(vocab, encoding='utf-8').read() if os.path.isfile(vocab) else ''):
-        raise Refused('setup needs, first, the kind of a walk in VOCAB.md (a RULE-CHANGE, saved as one): '
-                      'kinds: - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }', 2)
     if not os.path.exists(p):
         os.makedirs(os.path.dirname(p), exist_ok=True)
         with open(p, 'w', encoding='utf-8') as fh:

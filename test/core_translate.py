@@ -490,8 +490,10 @@ try:
           and any(v == 'own' and r.get('by') == {'someone': 'org'} for v, r in site)
           and sum(1 for v, _r in loan if v == 'agree') == 2, (site, web, loan))
     v2 = read.document(os.path.join(C, 'VOCAB.md'))[0]
-    check("VOCAB.md gains the garden's rows: the mapping's kind, and the namespaces its names are given in",
-          {'kind': 'procedure', 'nature': 'sayable'} in v2.get('kinds', [])
+    check("VOCAB.md gains the garden's rows: a mapping's kind the law does not hold (`checklist`; `procedure` is the "
+          "law's), and the namespaces its names are given in",
+          {'kind': 'checklist', 'nature': 'sayable'} in v2.get('kinds', [])
+          and not any(r.get('kind') == 'procedure' for r in v2.get('kinds', []))
           and {'namespace': 'anchor-serial', 'once': 'true'} in v2.get('namespaces', []), v2)
     check("...and its own units: in UCUM where their names are made of the law's (gigabyte-per-day is GBy/d), else the "
           "name kept as the code, saying why, each with the factor it said; a unit the garden said is vacant stays so, "

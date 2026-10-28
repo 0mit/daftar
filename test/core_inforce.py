@@ -50,8 +50,6 @@ def bean(bid, kind, title, *statements, body='A bean.'):
 
 
 VOCAB = '''---
-kinds:
-  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }
 namespaces:
   - { namespace: erp-login, once: "true", pattern: "^[a-z][a-z.]{1,30}$", meaning: "a person's sign-in name in the workshop's ERP" }
   - { namespace: erp-group, once: "true", pattern: "^[a-z]+\\\\.[a-z]+$", meaning: "an ERP group, by its external id" }

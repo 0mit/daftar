@@ -9,6 +9,18 @@
 reasons: [prediction, impossible, out-of-context, universal]
 vacancies:
   - at: "table:kinds"
+    position: site
+    reason: universal
+    why: "a body kind at device beside host, for any garden that keeps a place where work is done: a host is a machine, and a site the built place machines stand at"
+  - at: "table:kinds"
+    position: series
+    reason: universal
+    why: "a sayable kind for any garden that keeps a published series: what it holds is a `record` of it, or `measure`s of it"
+  - at: "table:kinds"
+    position: model
+    reason: universal
+    why: "a sayable kind for any garden that keeps what a fitted model gives: what it derives is known through it"
+  - at: "table:kinds"
     position: component
     reason: universal
     why: "a body kind named by its positions, for any garden that keeps a being at component: what it is beyond its kind is a code of a scheme whose `at` names component"

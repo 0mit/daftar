@@ -22,7 +22,6 @@ currency named), with the reason.
 import datetime
 import json
 import os
-import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -185,10 +184,6 @@ def setup(argv):
     from core import engine
     G = engine.Garden.read(ROOT)
     missing = []
-    vocab = open(os.path.join(ROOT, 'VOCAB.md'), encoding='utf-8').read() if os.path.isfile(
-        os.path.join(ROOT, 'VOCAB.md')) else ''
-    if not re.search(r'kind:\s*procedure\b', vocab):
-        missing.append('kinds: - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }')
     try:
         host = W.this_host()
     except W.Refused as e:

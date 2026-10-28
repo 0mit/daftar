@@ -1887,7 +1887,10 @@ def garden(src, dst):
                 fm = read.document(os.path.join(p, f))[0]
                 if 'mapping' in fm and 'genos' not in fm and isinstance(fm.get('kind'), str):
                     mkinds.add(fm['kind'])
-    rows['kinds'] += [{'kind': k, 'nature': 'sayable'} for k in sorted(mkinds)]
+    from core.law import LAW_DIR                      # a mapping's kind the law holds is the law's (core 4.7, `procedure`)
+    held = {str(r.get('kind')) for r in read.data(os.path.join(LAW_DIR, 'kinds.yaml')).get('kinds') or []
+            if isinstance(r, dict)}
+    rows['kinds'] += [{'kind': k, 'nature': 'sayable'} for k in sorted(mkinds - held)]
     adds = oldv.get('registry_additions') or {}
     tables = {}
     if adds.get('net_protocols'):
@@ -2253,7 +2256,60 @@ def concern_about(root):
     return changed
 
 
-BETWEEN = (('3.2', url_remotes), ('4.0', ladder_vocab), ('4.1', concern_about))
+# THE KINDS THE LAW TOOK (core 4.7): a kind a garden added itself — `procedure`, which every garden
+# that walks wrote in VOCAB.md — is the law's once the law holds it as the garden wrote it, and its row goes, which would
+# declare it twice. A row written another way stays, for the gate to name.
+def law_kinds(root):
+    """[path]: VOCAB.md's own kinds that the law now holds with the same nature and positions — its meaning and a
+    `vacant` aside — taken out, in place."""
+    p = os.path.join(root, 'VOCAB.md')
+    if not os.path.isfile(p):
+        return []
+    with open(p, encoding='utf-8', newline='') as fh:
+        text = fh.read()
+    fm, _body = dmparse.split_front_matter(text)
+    if fm is None:
+        return []
+    start = text.index(fm)
+    try:
+        node = yaml.compose(fm)
+    except yaml.YAMLError:
+        return []
+    if not isinstance(node, yaml.MappingNode):
+        return []
+    from core import read
+    from core.law import LAW_DIR
+    law = {str(r.get('kind')): r for r in read.data(os.path.join(LAW_DIR, 'kinds.yaml')).get('kinds') or []
+           if isinstance(r, dict)}
+    rows = (yaml.safe_load(fm) or {}).get('kinds') or []
+    cuts = []
+    for k, v in node.value:
+        if k.value != 'kinds' or not isinstance(v, yaml.SequenceNode) or v.flow_style:
+            continue                                  # a list written on one line is the gate's to name
+        for item, row in zip(v.value, rows):
+            held = law.get(str(row.get('kind'))) if isinstance(row, dict) else None
+            if held is None or any(str(held.get(c) or '') != str(row.get(c) or '')
+                                   for c in set(held) | set(row) if c not in ('meaning', 'vacant')):
+                continue
+            a = item.start_mark.index
+            line_start = fm.rfind('\n', 0, a) + 1
+            last = item.end_mark.index
+            while last > a and fm[last - 1] in ' \t\r\n':
+                last -= 1
+            end = fm.find('\n', last)
+            cuts.append((line_start, len(fm) if end < 0 else end + 1))
+    if not cuts:
+        return []
+    was = fm
+    for a, b in sorted(cuts, reverse=True):
+        fm = fm[:a] + fm[b:]
+    fm = re.sub(r'(?m)^kinds:[ \t]*\r?\n(?![ \t]*-)', '', fm)       # a list left with no row says nothing
+    with open(p, 'w', encoding='utf-8', newline='') as fh:
+        fh.write(text[:start] + fm + text[start + len(was):])
+    return ['VOCAB.md']
+
+
+BETWEEN = (('3.2', url_remotes), ('4.0', ladder_vocab), ('4.1', concern_about), ('4.7', law_kinds))
 
 
 def between(have, gives, root):

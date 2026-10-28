@@ -159,8 +159,7 @@ try:
     r = grow.garden(REL, G, 'sam', '--gardener-name', 'Sam')
     check("a garden grows, kept by sam", r.returncode == 0, r.out[-600:])
     write(G, 'tools/cert.py', TOOL)
-    write(G, 'VOCAB.md', '---\nkinds:\n  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\n'
-                         'namespaces:\n  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for itself" }\n'
+    write(G, 'VOCAB.md', '---\nnamespaces:\n  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for itself" }\n'
                          '---\n# the garden\'s own rows\n')
     write(G, 'beans/box.md', f'''---
 bean: box

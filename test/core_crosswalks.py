@@ -157,8 +157,7 @@ try:
           and U[0]['work_email'] == 'lale@acme.example', U)
 
     # ---- hr.leave: an absence over an extent of days, using an employment's allowance, decided on a walk
-    write(G, 'VOCAB.md', '---\nkinds:\n  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: '
-          'a walk" }\nnamespaces:\n  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for '
+    write(G, 'VOCAB.md', '---\nnamespaces:\n  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for '
           'itself" }\n---\n# the garden\'s own rows\n')
     write(G, 'mappings/walk-leave.md', '---\nbean: walk-leave\nkind: procedure\ntitle: "walk-leave — how a leave is decided"\n'
           'statements:\n  - say: { by: sam, at: now }\n'

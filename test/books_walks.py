@@ -3,8 +3,8 @@
 what a person gives it (bin/act.py `--start … --input`), its plan a write shown to them, ratified, written as shown and
 read back by the books — in a garden of the core grown from a release made of this tree (test/grow.py).
 
-  setup    the walks and their tool written into the garden as its own, refused until the garden has the kind
-           `procedure` and a host bean naming this machine; in a garden whose path reads as a Windows path, the tool's
+  setup    the walks and their tool written into the garden as its own, refused until the garden has a host bean
+           naming this machine, the walks of the law's kind `procedure`; in a garden whose path reads as a Windows path, the tool's
            place written as the law reads it, and found there
   book     a payment booked to an account and a plan's code; booked again to another while its period is open, the
            earlier booking replaced; after the period closed, what it placed moved by a booking of it on today, the
@@ -206,17 +206,17 @@ files:
 
     # ---- SETUP: the walks and their tool, the garden's own
     r = run(PY, 'assets/accounting/bin/books.py', 'setup', '--by', 'sam')
-    check("setup is refused until the garden has the kind `procedure` and a host bean naming this machine, saying so",
-          r.returncode == 2 and 'kind: procedure' in r.out and HOST in r.out, r.out[-800:])
+    check("setup is refused until the garden has a host bean naming this machine, saying so, and asks no kind of it: "
+          "a walk is of the law's kind `procedure`",
+          r.returncode == 2 and 'kind: procedure' not in r.out and HOST in r.out, r.out[-800:])
     v = open(os.path.join(G, 'VOCAB.md'), encoding='utf-8').read()
-    write('VOCAB.md', v.replace('profiles: [accounting]\n', 'profiles: [accounting]\nkinds:\n  - { kind: procedure, '
-                                'nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\nnamespaces:\n'
+    write('VOCAB.md', v.replace('profiles: [accounting]\n', 'profiles: [accounting]\nnamespaces:\n'
                                 '  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for '
                                 'itself" }\n', 1))
     bean('box', 'host', 'the machine the books are kept on', 'read: { by: sam, at: now }', 'own: { by: sam, of: self }',
          f'name: {{ by: anchor-hostname, of: self, as: {HOST} }}')
-    r = save('RULE-CHANGE: a walk is a procedure; this machine', '- action: RULE-CHANGE — VOCAB.md adds the kind '
-             'procedure and the namespace anchor-hostname; wrote [[box]]', '- ratified_by: sam')
+    r = save('RULE-CHANGE: this machine', '- action: RULE-CHANGE — VOCAB.md adds the namespace anchor-hostname; wrote '
+             '[[box]]', '- ratified_by: sam')
     r = run(PY, 'assets/accounting/bin/books.py', 'setup', '--by', 'sam')
     wrote = sorted(f for f in os.listdir(os.path.join(G, 'mappings')) if f.startswith('walk-books-'))
     check("...then it writes the nine walks and the tool, and saves nothing", r.returncode == 0 and wrote ==

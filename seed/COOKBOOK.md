@@ -481,19 +481,12 @@ two readings, and the rain as what it is — the sum over the hour that began at
 ## Where a case stands on a walk: a course
 
 Ali mends bicycles, and Sam brought her his. A repair goes through the same steps each time — handed over, looked at,
-mended, collected — and a **walk** says so once, in a mapping of the garden's own kind `procedure`. A walk is a line,
+mended, collected — and a **walk** says so once, in a mapping of the law's kind `procedure`. A walk is a line,
 its steps its positions: each step a statement, `step`, named by its `id` — what is done at it (`as`), who acts there
 (`by`, the part a party takes in the case, as its `agree` says it), the steps it leads on to (`to`), and in its `walk`
 how long it usually takes, whether it is a way out (`exit`), a pause the case comes back from (`resumes`) or an end
 nothing follows (`final`), the reasons a move into it may cite, and the words of a way on (`ways`), where it has any. What a case asks for — the papers a form needs — is a set, not a
-walk: a mapping of the kind `checklist` (*A literary agent*, below). A row the garden adds to the law is added with the
-first bean that uses it: the gate refuses one nothing uses, unless it says why it is vacant.
-
-<!-- example-front-matter: VOCAB.md -->
-```yaml
-kinds:
-  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }
-```
+walk: a mapping of the kind `checklist`, which the garden adds itself (*A literary agent*, below).
 
 <!-- example: mappings/walk-bike-repair.md -->
 ```markdown
@@ -691,10 +684,11 @@ garden for it: a clone is the same garden, with the same id, and what it propose
 Sam has written a novel, *The Salt Road*, and an agent, Noor, places it with publishers: at home with Heron Books, and
 its translation with a house abroad. Noor is paid a share of each advance the book earns — one rate at home, another
 abroad — and gives her share back of any advance that is returned. Each placing goes through the same steps, a walk;
-what a house asks to see is a checklist, a kind the garden adds with it. Both are mappings: the walk's steps are `step`
-statements, as the bicycle's were; the checklist is a set and no line: each item is a `need` of it — what is asked for,
-in words, and `from` whom — needed `while` a reading holds where it is not always, met by what `meet`s it, and the
-items of which any one will do share an `as`.
+what a house asks to see is a checklist, a kind the garden adds with it: a row the garden adds to the law is added
+with the first bean that uses it, and the gate refuses one nothing uses, unless it says why it is vacant. Both are
+mappings: the walk's steps are `step` statements, as the bicycle's were; the checklist is a set and no line: each item
+is a `need` of it — what is asked for, in words, and `from` whom — needed `while` a reading holds where it is not
+always, met by what `meet`s it, and the items of which any one will do share an `as`.
 
 <!-- example-front-matter: VOCAB.md -->
 ```yaml
@@ -1836,8 +1830,8 @@ named since fills the `unknown` the first import left.
 ## A job a tool runs
 
 A scan, a copy, a download, a server: each is a run, started through `bin/run.py` and held by its process's identity,
-never found again by a pattern. A garden takes the walk once, `python3 bin/run.py setup --by <session>` (it asks for the
-kind `procedure` first), and saves it. Then:
+never found again by a pattern. A garden takes the walk once, `python3 bin/run.py setup --by <session>`, a mapping of
+the law's kind `procedure`, and saves it. Then:
 
     python3 bin/run.py start --name "scan vol-a" --of vol-a --key index:vol-a -- python3 scan.py vol-a
     python3 bin/run.py list

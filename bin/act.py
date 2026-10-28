@@ -17,7 +17,7 @@ runs the engine from `plan`, all of it saved in the engine's one commit. Every s
 (bin/walktool.py `inputs`), as `apply` is given the plan it was shown.
 
 AN ACTION IS A WALK, AND A RUN IS A COURSE (MODEL.md; nothing here is a second sequence). The action is a mapping of the
-garden's `procedure` kind whose `step`s are its steps; the being it changes is placed on it, `be: { id: <course>, by:
+law's `procedure` kind whose `step`s are its steps; the being it changes is placed on it, `be: { id: <course>, by:
 self, at: <walk>, as: order }`, in its own bean; each step reached is a `move` through that course. Where a run stands
 is read by bin/seq.py `where`, the one reader. The walk every action shares:
 

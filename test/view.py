@@ -333,7 +333,7 @@ if r.returncode != 0:
 run("git", "config", "user.name", "tessa", cwd=G)
 run("git", "config", "user.email", "tessa@example.org", cwd=G)
 _v = get("VOCAB.md")
-put("VOCAB.md", _v.replace("namespaces: []\n", "kinds:\n  - { kind: procedure, nature: sayable }\nnamespaces:\n"
+put("VOCAB.md", _v.replace("namespaces: []\n", "namespaces:\n"
                            "  - { namespace: anchor-identifier, once: 'true' }\n  - { namespace: anchor-serial, once: 'true' }\n", 1))
 for _id, _t in BEANS.items():
     put(f"beans/{_id}.md", "---\n" + _t + "---\n" + _id + ", as the co-operative records it.\n")

@@ -73,7 +73,7 @@ the garden's own, written once by
 
     python3 assets/accounting/bin/books.py setup --by <who>      # then read them, and save them (bin/save.py)
 
-which asks first for the kind `procedure` in VOCAB.md and a host bean naming this machine (the tool runs on it). A run
+which asks first for a host bean naming this machine (the tool runs on it); a walk is of the law's kind `procedure`. A run
 is started on a bean with what the person gives it, at the terminal or from a page's action:
 
     python3 bin/act.py <bean> --start walk-books-<operation> --by <who> --input <name>=<words> …

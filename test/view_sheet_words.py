@@ -73,9 +73,6 @@ try:
                   '--profile', 'view', cwd=T)
     check("a garden of the core grows taking the view profile, kept by Sam", rc == 0, out[-800:])
     run(PY, 'bin/install.py')
-    v = get('VOCAB.md')
-    kind = '  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\n'
-    put('VOCAB.md', v.replace('kinds: []\n', 'kinds:\n' + kind, 1) if 'kinds: []\n' in v else v.replace('---\n', '---\nkinds:\n' + kind, 1))
     put('mappings/walk-repair.md', '''---
 bean: walk-repair
 kind: procedure

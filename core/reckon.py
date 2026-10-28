@@ -2561,6 +2561,115 @@ class Reckoner:
         self.found_axes[s['id']] = rows
         return out
 
+    def op_score(self, s):
+        """Each forecast — a `possible` with a `chance` — against what came: a `necessary` of what it names, 1, or an
+        `impossible`, 0, each said through a source other than the forecast's own. Over those resolved: the Brier and
+        the log score, the base rate with the scores of always saying it and the skill against it, and calibration by
+        bins. One with both is disputed; one with neither is open, or due where its `within` ended before the moment
+        read; neither is scored, and an outcome nobody said is never read as one that did not come."""
+        k = s.get('bins', 10)
+        k = dmseq.exact(str(k)) if not isinstance(k, bool) else None
+        if k is None or k.denominator != 1 or k < 1:
+            raise Refused(f"step {s['id']}: `bins` is a whole number of bins, one or more")
+        k = int(k)
+        at = self.pin.at if self.pin else (self.now or _now())
+        p_at = _pos(at, self.zone, self.notes)
+        now_ms = None if p_at is None else p_at[1] if p_at[0] == 'ms' else p_at[1] * dmcal.DAY_MS
+        ids = {}
+
+        def key(b, x):
+            """What a role names, as (bean, statement id) — (being, None) for a being."""
+            if not isinstance(x, str) or x in ('unknown', 'now'):
+                return None
+            if x == 'self':
+                return (b, None)
+            if '#' in x:
+                bb, _h, i = x.partition('#')
+                return (bb, i or None)
+            if b not in ids:
+                ids[b] = {r['id'] for v in (self.g.fm.get(b) or {}).values() if isinstance(v, list)
+                          for r in v if isinstance(r, dict) and isinstance(r.get('id'), str)}
+            return (b, x) if x in ids[b] else (x, None)
+
+        said = {}                                   # what a forecast names -> [(outcome, through, where)]
+        for verb, o in (('necessary', 1), ('impossible', 0)):
+            for b, fm in self.g.fm.items():
+                for x, w in _flatten(walk(self.g, fm, verb, at=b)):
+                    if isinstance(x, dict) and 'held' not in x and key(b, x.get('of')):
+                        said.setdefault(key(b, x.get('of')), []).append((o, key(b, x.get('through')), w))
+        resolved, groups, own = [], {'open': [], 'due': [], 'disputed': []}, []
+        for m in self.arg(s, 'of', 'set'):
+            r = m.node if isinstance(m.node, dict) else {}
+            if 'chance' not in r or key(m.bean, r.get('of')) is None:
+                raise Refused(f"step {s['id']}: {m.id} is no `possible` with a `chance`: a forecast names what may be "
+                              f"(`of`) and how likely (`chance`)")
+            c = r['chance']
+            c = V(dmseq.exact(c), '1') if isinstance(c, str) else value_of(c, f"{m.id}.chance", self.notes)
+            if c.v is None:
+                raise Refused(f"step {s['id']}: {m.id}.chance is not a count read exactly")
+            p = to_unit(c, '1', f"{m.id}.chance").v
+            if not 0 <= p <= 1:
+                raise Refused(f"step {s['id']}: {m.id}.chance is {dmseq.show(p)}: a chance is from 0 to 1")
+            mine = key(m.bean, r.get('through'))
+            outs = [(o, t, w) for o, t, w in said.get(key(m.bean, r.get('of')), []) if mine is None or t != mine]
+            own += [(r.get('through'), w) for o, t, w in said.get(key(m.bean, r.get('of')), []) if (o, t, w) not in outs]
+            came = {o for o, _t, _w in outs}
+            if len(came) == 2:
+                groups['disputed'].append(m)
+                self.lines.append(f"  {m.id}: disputed — {', '.join(w for _o, _t, w in outs)}")
+                continue
+            if came:
+                resolved.append((m, p, came.pop()))
+                continue
+            w = r.get('within') if isinstance(r.get('within'), dict) else {}
+            end = span_end([(w.get('to'), '')], True, self.zone, self.notes) if w.get('to') is not None else None
+            if end is None and w.get('from') is not None and isinstance(w.get('measure'), dict):
+                start = span_end([(w['from'], '')], False, self.zone, self.notes)
+                lasts = to_unit(value_of(w['measure'], f"{m.id}.within", self.notes), 'ms', f"{m.id}.within").v
+                end = None if start is None else start + lasts
+            groups['due' if end is not None and now_ms is not None and end <= now_ms else 'open'].append(m)
+        for t, w in sorted({(str(t), w) for t, w in own}):
+            self.lines.append(f"  {w}: said through the forecast's own source ({t}), so not read as what came")
+        for g, ms in groups.items():
+            if ms:
+                self.lines.append(f"  {g}: {', '.join(x.id for x in ms[:12])}{' …' if len(ms) > 12 else ''}")
+        out = {'resolved': V(Fraction(len(resolved)), 'item'), **{g: ms for g, ms in groups.items()}}
+        if not resolved:
+            self.lines.append("  no forecast is resolved: nothing is scored")
+            return out
+        n = len(resolved)
+        brier = sum((p - o) ** 2 for _m, p, o in resolved) / n
+        base = Fraction(sum(o for _m, _p, o in resolved), n)
+        ref = base * (1 - base)
+
+        def ln(x):
+            with decimal.localcontext() as ctx:
+                ctx.prec = PREC
+                return F(D(x).ln())
+        missed = [m for m, p, o in resolved if (p if o else 1 - p) == 0]
+        log = None if missed else -sum(ln(p if o else 1 - p) for _m, p, o in resolved) / n
+        ref_log = -sum(x * ln(x) for x in (base, 1 - base) if x)
+        out.update({'came': V(Fraction(sum(o for _m, _p, o in resolved)), 'item'), 'brier': V(brier, 'one'),
+                    'log': V(log, 'one', None, True) if log is not None else V('unbounded'), 'base-rate': V(base, 'one'),
+                    'base-rate-brier': V(ref, 'one'), 'base-rate-log': V(ref_log, 'one', None, True)})
+        if ref:
+            out['skill'] = V(1 - brier / ref, 'one')
+        else:
+            self.lines.append("  skill: not read — every resolved forecast came, or none did, so the base rate's "
+                              "Brier score is 0 and nothing is a share of it")
+        if missed:
+            self.lines.append(f"  log: unbounded — a chance of 0 or 1 given against what came: "
+                              f"{', '.join(m.id for m in missed[:12])}{' …' if len(missed) > 12 else ''}")
+        cells = {}
+        for _m, p, o in resolved:
+            cells.setdefault(min(int(p * k), k - 1), []).append((p, o))
+        for i in sorted(cells):
+            got = cells[i]
+            self.lines.append(f"  calibration {dmseq.show(Fraction(i, k))} to {dmseq.show(Fraction(i + 1, k))}: "
+                              f"{len(got)} forecast(s), mean chance {dmseq.show(sum(p for p, _o in got) / len(got))}, "
+                              f"came {sum(o for _p, o in got)} of {len(got)}")
+        return out
+
     def op_conservation(self, s):
         found = _flatten(walk(self.g, None, s['walk']))
         steps = [x for x, _w in found if isinstance(x, dict)]

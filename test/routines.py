@@ -253,8 +253,7 @@ statements:
 ---
 A depot.
 ''')
-    write(G, 'VOCAB.md', '---\nkinds:\n  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\n'
-                         'namespaces:\n  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for itself" }\n'
+    write(G, 'VOCAB.md', '---\nnamespaces:\n  - { namespace: anchor-hostname, once: "false", meaning: "a machine\'s own name for itself" }\n'
                          '---\n# the garden\'s own rows\n')
     write(G, 'beans/sam.md', text(G, 'beans/sam.md').replace(
         '---\nSam', '  - grant: { id: box-restarts, by: self, to: [box], of: [routine-restart], as: enact }\n'

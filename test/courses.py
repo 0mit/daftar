@@ -47,8 +47,6 @@ try:
     G = os.path.join(T, 'garden')
     r = grow.garden(REL, G, 'sam', '--gardener-name', 'Sam')
     check("a garden grows, kept by sam", r.returncode == 0, r.out[-600:])
-    write(G, 'VOCAB.md', '---\nkinds:\n  - { kind: procedure, nature: sayable, meaning: "a way a thing is done, step by step: a walk" }\n'
-                         '---\n# the garden\'s own rows\n')
     write(G, 'beans/ali.md', '---\nbean: ali\nkind: person\ntitle: "ali"\nstatements:\n'
                              '  - say: { by: ali, at: now }\n  - own: { by: theone, of: self }\n---\nAli.\n')
     write(G, 'mappings/walk-repair.md', '''---
