@@ -362,6 +362,24 @@ draw: a part's contour, a flow, a boundary's thin line. A part whose record the 
 **revision cloud**. The colours are the garden's own (`view.palette`, `file:<path>`: `{ modes: { day, night, print:
 { <token>: <hex colour> } } }`), and the grammar is every garden's.
 
+## The board: a cursor kept while the aspect turns
+
+The archetype `cursor` is a board: one being or several, the cursor, kept still while the aspect around it turns. Its
+aspects are the law's (`aspects`: the verb or grouping each follows, the role the cursor fills, the order it is laid out
+by), of the core and of the profiles the garden takes; `lib/view_board.py` reads each through the cursor over the
+garden's beans and every store its host keeps (`details.stores` on the host's bean), in one snapshot of each store a
+question, and answers groups of neighbours, each before or after the cursor along its order and on the side of one being
+of the cursor or shared between several. What a volume or a folder holds, and what several hold in common by the folders
+it sits in; what carries a content, a folder or a volume, and what a disk is part of; where a content is held and where
+it was copied, and when and from where; the place it was backed up in, with that place's other members by the volume
+each came from; the run of names it is one of (bin/group.py); the dataset a folder's tree is, and every folder holding
+the same tree, and its keepings by risk (the storage asset, where the garden takes the storage profile). An aspect the
+reading does not draw yet is listed as not drawn, and answers no groups.
+
+daftard draws the board as its page `/board?g=<garden>`, three.js beneath the beings, and asks these questions of the
+garden's own release through its worker. `view.py board …` prints the same answers. The board reads: a saved board, a
+page bean whose drawing is this archetype, is written by the sheet's one Save, which this reading does not offer.
+
 ## Surfaces, and what every one must do
 
 Where a page meets a reader is a **surface**, named — as a source adapter is — by the code of the technology catalogue it
@@ -385,6 +403,7 @@ the eye, engraved from its record: where it is shown, what holds it there, and w
     python3 assets/view/bin/view.py render <view> --out <dir> [--member <bean>] [--keep --who <who>]
     python3 assets/view/bin/view.py ics <view> --out <file.ics> --config <file> [--user <name>]
     python3 assets/view/bin/view.py run-scheduled --config <file> [--at <day>]   # what a host's daily timer calls
+    python3 assets/view/bin/view.py board aspects | lens <aspect> <id>… | being <id> | find <text> <id>…   # the board
 
 `check` refuses what the gate cannot: a page term written on a bean that does not carry `view`, a binding on an
 element the drawing does not have, an action on an element that is not a button, `processes` without `pipes`, a race

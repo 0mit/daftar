@@ -457,6 +457,87 @@ def view_style(params):
         return {'css': view_kit.SCHEMA_CSS + pal}
 
 
+# ---------------------------------------------------------------------------------------------------- the board
+# THE BOARD (daftard's page `/board`): one being or several, the cursor, kept still while the aspect around it turns —
+# the view profile's archetype `cursor`, read by THE VIEW'S OWN CODE from the release the garden runs (its own
+# assets/view/lib/view_board.py), over the garden's beans and law and every store this host keeps. daftard draws it;
+# what is read, and through which aspects, is the release's. Only reading: nothing here writes. Its answers are not
+# held (held.go): a store changes without the garden's version moving, so each question is asked here, of the law and
+# the beans read once a version and the stores read in a snapshot each time.
+_BOARD = {'key': None, 'board': None}
+
+
+def _board():
+    lib = ROOT / 'assets' / 'view' / 'lib'
+    if not (lib / 'view_board.py').is_file():
+        raise Refused('این دفتر تخته‌ای ندارد: نمای نسخه‌ای که اجرا می‌کند آن را ندارد.', 409)
+    for p in (str(lib), str(ROOT / 'bin'), str(ROOT)):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+    import view_board
+    key = '|'.join([git('rev-parse', 'HEAD')] + [str(os.stat(ROOT / f).st_mtime_ns) if (ROOT / f).exists() else '-'
+                                                 for f in ('beans', 'VOCAB.md', 'GARDEN.md')])
+    if _BOARD['key'] != key:
+        try:
+            _BOARD['board'], _BOARD['key'] = view_board.Board(str(ROOT)), key
+        except view_board.Refused as e:
+            raise Refused(str(e), 409)
+    return view_board, _BOARD['board']
+
+
+def _board_ids(params):
+    ids = [str(x) for x in (params.get('cursor') or []) if isinstance(x, str)][:8]
+    if not all(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9:._#-]{0,200}', x) for x in ids):
+        raise Refused('این نشانی در این دفتر نیست.', 400)
+    return ids
+
+
+def board_aspects(params):
+    """The aspects this garden's board turns through (the law's `aspects` of the profiles it takes), the law's
+    orientations, and where a blank board may begin."""
+    with LOCK:
+        return _board()[1].aspects()
+
+
+def board_lens(params):
+    """One aspect through a cursor: groups of neighbours, each before or after the cursor and on one being's side."""
+    vb, B = _board()
+    aspect = str(params.get('aspect') or '')
+    if not re.fullmatch(r'[a-z][a-z0-9-]{0,63}', aspect):
+        raise Refused('این نگاه در این دفتر نیست.', 400)
+    with LOCK:
+        try:
+            return B.lens(aspect, _board_ids(params))
+        except vb.Refused as e:
+            raise Refused(str(e), 404)
+
+
+def board_being(params):
+    """One being's sheet: what the store keeps of it and, where a bean is it, its statements — those only for a reader
+    the garden's own grants open the bean to (bin/pass.py may), or its gardener."""
+    vb, B = _board()
+    ids = _board_ids({'cursor': [params.get('id')]})
+    if not ids:
+        raise Refused('این نشانی در این دفتر نیست.', 400)
+    with LOCK:
+        sheet = B.being(ids[0])
+    reader = str(params.get('reader') or '')
+    if sheet.get('garden') and reader != (B.gardener or '') and not (
+            PERSON.fullmatch(reader) and _may(reader, 'read', sheet['garden']['bean']).granted):
+        sheet['garden'] = None
+    return sheet
+
+
+def board_find(params):
+    """What each being of the cursor holds beneath it whose name has the text."""
+    vb, B = _board()
+    with LOCK:
+        try:
+            return B.find(str(params.get('q') or ''), _board_ids(params))
+        except vb.Refused as e:
+            raise Refused(str(e), 400)
+
+
 def view_write(params):
     """A sheet's Save, or a drawing's form of a verb: the statements it adds, changes and takes out, written by the
     view's one write path (view_write.write) as the reader's being — each through bin/safe.py, judged by the gate, one
@@ -2594,7 +2675,8 @@ METHODS = {f.__name__: f for f in (hello, session_info, payload, books, history,
                                    person, clock, may_send, action, courses, act, sync_merge, served_person, served_read,
                                    served_leads, served_forms, served_submit, form_answers, take_form,
                                    served_passkeys, passkey_lay, passkey_laid, take_passkey, odoo_session, odoo_rpc,
-                                   odoo_asof, routines_tick, probe_round, routines_cross)}
+                                   odoo_asof, routines_tick, probe_round, routines_cross, board_aspects,
+                                   board_lens, board_being, board_find)}
 
 
 def answer(rid, ok, value):

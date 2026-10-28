@@ -11,7 +11,8 @@ garden's statements — three disks, two places, one attached, a key held twice,
 `datasets` — two folders holding one tree, its name the BLAKE3 of its manifest; `group` with `gap`. asset:
 assets/storage/bin/storage.py over a store kept here gives the readings `keepings`, `datasets` and `events` the
 store's way; transfer.py writes the walk, keeps a course, refuses a move the walk does not offer, and meets the need
-when the course is done.
+when the course is done. scan.py reads a tree into the index the file-tree reader takes: each file's BLAKE3, the
+names of one inode read once, a checklist b3sum checks, a second scan reading only what changed.
 
 Run: python3 test/storage.py   (0 = green)
 """
@@ -501,6 +502,68 @@ try:
                                                                         (b'one.txt',)).fetchone()
             check("...an encrypted member waits for its passphrase (exit 3), and is read whole once given it",
                   c1 == 3 and c2 == 0 and got and got[0].startswith('6437b3ac'), (c1, c2, got))
+
+    # ---- a scan: a mounted tree read into the index the file-tree reader takes
+    try:
+        import blake3  # noqa: F401
+        have_b3 = True
+    except ImportError:
+        have_b3 = False
+    if have_b3:
+        SC = os.path.join('assets', 'storage', 'bin', 'scan.py')
+        tree = os.path.join(T, 'scanned')
+        os.makedirs(os.path.join(tree, 'sub'))
+        for name, data in ((b'a.txt', b'one'), (b'sub/dup.txt', b'one'), (b'empty', b''), (b'back\\slash', b'x'),
+                           (b'new\nline', b'nl'), (b'lat\xe9n', b'l1')):
+            try:
+                with open(os.path.join(os.fsencode(tree), name), 'wb') as fh:
+                    fh.write(data)
+            except OSError:                       # a system whose filesystem refuses the name: the rest still read
+                pass
+        try:
+            os.link(os.path.join(tree, 'a.txt'), os.path.join(tree, 'sub', 'hard.txt'))
+            os.symlink('a.txt', os.path.join(tree, 'link'))
+        except (OSError, NotImplementedError):
+            pass
+        idx = os.path.join(T, 'scanned.sqlite')
+        rc1, out1 = run(PY, SC, '--root', tree, '--index', idx, '--progress', os.path.join(T, 'scanned.json'))
+        db = sqlite3.connect(idx)
+        rows = {bytes(p): (ty, h) for p, ty, h in db.execute('SELECT path, type, hash FROM entry')}
+        meta = dict(db.execute('SELECT k, v FROM meta'))
+        db.close()
+        one = formats.blake3_hex(b'one')
+        check("scan: every entry of a tree in the index, a file's BLAKE3 the reference implementation's, an empty file "
+              "none, the names of one inode read once, and a symbolic link a link",
+              rc1 == 0 and rows.get(b'a.txt') == ('f', one) and rows.get(b'sub/dup.txt') == ('f', one)
+              and rows.get(b'empty') == ('f', None) and rows.get(b'sub') == ('d', None)
+              and (b'link' not in rows or rows[b'link'][0] == 'l')
+              and (b'sub/hard.txt' not in rows or rows[b'sub/hard.txt'] == ('f', one)), (out1, rows))
+        man = open(os.path.join(T, 'scanned.b3'), encoding='utf-8').read().splitlines()
+        check("...its checklist b3sum's, relative to the root, a name with a backslash or a newline escaped as b3sum "
+              "escapes it, and one that is not UTF-8 counted, not written",
+              f'{one}  a.txt' in man and (b'back\\slash' not in rows or
+                                          '\\' + formats.blake3_hex(b'x') + '  back\\\\slash' in man)
+              and (b'new\nline' not in rows or '\\' + formats.blake3_hex(b'nl') + '  new\\nline' in man)
+              and meta.get('manifest_skipped_non_utf8') == str(int(b'lat\xe9n' in rows)), (man, meta))
+        with open(os.path.join(tree, 'sub', 'dup.txt'), 'wb') as fh:
+            fh.write(b'changed')
+        rc2, out2 = run(PY, SC, '--root', tree, '--index', idx, '--progress', os.path.join(T, 'scanned.json'))
+        prog = json.load(open(os.path.join(T, 'scanned.json'), encoding='utf-8'))
+        db = sqlite3.connect(idx)
+        dup = db.execute('SELECT hash FROM entry WHERE path = ?', (b'sub/dup.txt',)).fetchone()[0]
+        db.close()
+        check("...a second scan keeps each digest whose file is unchanged and reads only the file that changed",
+              rc2 == 0 and prog.get('to_hash_files') == 1 and dup == formats.blake3_hex(b'changed'), (out2, prog))
+        rc3, out3 = run(PY, SC, '--root', os.path.join(T, 'nowhere'), '--index', os.path.join(T, 'n.sqlite'))
+        check("...a root that is not there is refused (exit 2), and nothing is read", rc3 == 2, out3)
+        rc4, out4 = run(PY, 'bin/import.py', 'file-tree', idx, '--volume', 'vol-scan', '--carrier', 'disk-a', '--into',
+                        'store:cat')
+        S = dmstore.Store(sp, root=G)
+        held = [r for v, r, _a in S.get(formats.folder_id('vol-scan', b'sub')) if v == 'hold']
+        S.close()
+        check("...and the index is what `import file-tree` reads: the volume's folders, and each file held by its folder",
+              rc4 == 0 and sorted(str(r.get('as')) for r in held) == ['dup.txt', 'hard.txt'][:len(held)]
+              and len(held) >= 1, (out4, held))
 
     TR = os.path.join('assets', 'storage', 'bin', 'transfer.py')
     rc, out = run(PY, TR, 'setup', '--by', 'sam')

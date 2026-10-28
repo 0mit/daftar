@@ -132,6 +132,12 @@ jobs:
         run: python3 test/group.py
       - name: "storage: what each content's keepings leave open, which folders hold one dataset, the events of a tree, a transfer as a course"
         run: python3 test/storage.py
+      - name: "view_board: the board, a cursor kept while the aspect turns — the law's aspects of the profiles a garden takes, each read over its beans and the stores its host keeps: what is held, held in common, copied, backed up, the series, the dataset, the keepings; a sheet, finding; through daftard's worker, a bean's statements only for whom its grants open it to; nothing written"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/view_board.py
+      - name: "cold_start: a garden met with no memory — the door's first commands read from its own AGENTS.md and run as written, where the work stands and what waits read from the garden alone, a need met with the landing's one action, the home as empty after as before"
+        if: github.event_name == 'workflow_dispatch'   # the whole list: run the workflow by hand
+        run: python3 test/cold_start.py
       - name: "courses: every course of a being in one shape, the one way a course is drawn — a course written, a clause's occurrences, a standing need crossed and repaired, a need's strength on the square, drawn in a table's column and a drawing, right to left"
         run: python3 test/courses.py
       - name: "core_ported: where each of today's suites and each check of today's gate went in v1 — none waiting — and today's words read only from v0.49.0, held to the tree"

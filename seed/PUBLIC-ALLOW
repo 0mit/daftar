@@ -51,3 +51,6 @@ std-vocab@2.1    # the same.
 std-vocab@5.1    # the same.
 13.0.0.0 test/calendars.py  # the Maya long count's 13.0.0.0.0 (2012-12-21): a date, not an address
 marcusolsson-dynamictext-panel@6.3.0 test/view.py  # a published Grafana plugin at a published version, as the view's test fixture names it
+factory daftard/web/vendor/three-0.186.1/three.core.js  # three.js's own words ("Factory method for creating an instance"),
+                 # in its build vendored unchanged beneath the board's page: a library's comment, not a garden's being,
+                 # public in that one file only (the board's move into daftard, ratified 2026-10-28)

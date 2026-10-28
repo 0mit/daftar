@@ -12,6 +12,8 @@
     python3 assets/view/bin/view.py render <view> --out DIR [--member <bean>] [--keep --who WHO]   its documents
     python3 assets/view/bin/view.py ics <view> --out FILE --config FILE [--user NAME]   its calendar, audited as a pass
     python3 assets/view/bin/view.py run-scheduled --config FILE [--at DAY]   the actions whose `every` falls on DAY
+    python3 assets/view/bin/view.py board aspects | lens <aspect> <id>… | being <id> | find <text> <id>…   the board:
+                                                                 a cursor kept while the aspect turns (lib/view_board.py)
 
 Every command takes `--garden PATH` (by default the garden this asset sits in, three directories up) and `--page <bean>`
 (by default the one bean that carries `view`; in a garden of the core, the one whose `draw` holds the form `page`).
@@ -73,6 +75,9 @@ def main():
     page = option(rest, "--page")
     if not os.path.isfile(os.path.join(garden, "GARDEN.md")):
         die("%s is not a garden (no GARDEN.md): run the copy of this tool a garden holds, or pass --garden" % garden)
+    if cmd == "board":                        # the archetype `cursor`, read through no page bean (lib/view_board.py)
+        import view_board
+        return view_board.main(garden, rest)
     probs = vm.init(garden, page)
     if probs:
         die("nothing done:\n  - " + "\n  - ".join(probs))

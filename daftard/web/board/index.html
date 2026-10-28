@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/board/board.css">
+<script src="/toolbox/direction.js"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="cursor">
+    <span class="eyebrow">cursor</span>
+    <div id="chips" class="chips"></div>
+    <span id="who" class="who"></span>
+  </div>
+  <nav id="lenses" class="lenses" aria-label="aspects"></nav>
+  <div class="tools">
+    <input id="find" type="search" placeholder="find on the board · ⏎ inside the cursor" autocomplete="off" spellcheck="false">
+    <button id="fit" type="button" title="show the whole frame (f)">fit</button>
+    <button id="link" type="button" title="copy this cursor and aspect as a link">link</button>
+    <button id="sheetbtn" class="narrow-only" type="button">sheet</button>
+  </div>
+</header>
+<main>
+  <section id="board" class="board" aria-label="board">
+    <div id="labels" class="labels"></div>
+    <p id="note" class="note"></p>
+    <p id="busy" class="busy" hidden>reading…</p>
+    <p class="keys">click: step to it · shift-click: beside the cursor · right-click: its sheet · 1–9: aspect · ←/→: the course · drag, wheel: move</p>
+  </section>
+  <aside id="sheet" class="sheet" aria-label="the sheet of a being"></aside>
+</main>
+<footer class="trail">
+  <span class="eyebrow">course</span>
+  <ol id="trail"></ol>
+</footer>
+<script type="module" src="/board/board.js"></script>
+</body>
+</html>

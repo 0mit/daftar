@@ -191,6 +191,10 @@ def main():
                           'payload': {'params': {'model': 'res.partner', 'method': 'search_read', 'args': [],
                                                  'kwargs': {}}}})
         call('odoo_asof', {'at': 'HEAD'})
+        call('board_aspects')                # the board: refused where the garden takes no view profile
+        call('board_lens', {'aspect': 'holds', 'cursor': [gardener]})
+        call('board_being', {'id': gardener, 'reader': gardener})
+        call('board_find', {'q': 'roof', 'cursor': [gardener]})
         call('routines_tick')
         call('probe_round', {'every': 30})
         os.mkdir(os.path.join(tmp, 'probes'))
