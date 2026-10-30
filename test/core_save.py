@@ -405,6 +405,12 @@ try:
     k = run(PY, '-c', "import sys; sys.path.insert(0, 'bin'); import dmupgrade as d; "
                       "print(repr(d.known_rewrites('.', [], 'sam', 'v9.9.9')))")
     check("...and a move that rewrote nothing adds no line", k.stdout.strip() == "''", k.stdout + k.stderr)
+    vocab = text('VOCAB.md')
+    k = run(PY, '-c', "import sys; sys.path.insert(0, 'bin'); import dmupgrade as d; "
+                      "print(repr(d.known_rewrites('.', ['VOCAB.md'], 'sam', 'v9.9.9')))")
+    check("...and VOCAB.md rewritten (the step of core 4.7 takes a garden's own row of a kind the law holds) is no bean: "
+          "it is left as the translator wrote it, and adds no line", k.returncode == 0 and k.stdout.strip() == "''"
+          and text('VOCAB.md') == vocab, k.stdout + k.stderr)
 finally:
     shutil.rmtree(T, ignore_errors=True)
 

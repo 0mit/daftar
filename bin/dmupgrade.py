@@ -705,7 +705,9 @@ def known_rewrites(root, paths, by, tag):
     the core is judged as any commit (T1 of the second build run). So each bean gains a `make` by `by` at `now` with no
     `of`, which knows every statement this commit changes in it — the form bin/waiting.py migrate writes for its own move
     — and the line names each verb, statement and key the rewrite took out (rule kept). Each edit is proved: the front
-    matter parses to the translator's with one statement added, and nothing else."""
+    matter parses to the translator's with one statement added, and nothing else. A file it rewrote that is no bean —
+    VOCAB.md, whose own row of a kind the law now holds the step of core 4.7 takes out — holds no statement to know, and
+    the entry's `- changed:` names it."""
     load = lambda t: dmparse.loads(t) or {}
     note = (f"rewritten by daftar {tag}'s translator at this move (core/translate.py between): this act knows each "
             f"statement the rewrite changed")
@@ -718,6 +720,8 @@ def known_rewrites(root, paths, by, tag):
         old_fm, _ = dmparse.split_front_matter(run('git', 'show', f'HEAD:{p}', cwd=root, check=False).stdout)
         if fm is None:
             raise RuntimeError(f"{p}: the translator wrote no front matter")
+        if 'bean' not in load(fm):     # VOCAB.md, the garden's own rows (core 4.7's step): no statement to know
+            continue
         lines = fm.split('\n')
         if 'statements:' not in lines:
             raise RuntimeError(f"{p}: the translator rewrote it, and it holds no block `statements:` list to know it in")
@@ -811,7 +815,7 @@ def move(a, rel, sha, source, current):
         gate = recorded(a, gpath, gtext, gform, title, [
             f"- action: **RULE-CHANGE — `bin/dmupgrade.py {a.tag}`** from {source} at {sha}; the core {pin} -> "
             f"{new_pin}; release {current or 'unrecorded'} -> {a.tag}. "
-            + (f"The release's translator rewrote {len(rewritten)} bean(s) for the later core (core/translate.py "
+            + (f"The release's translator rewrote {len(rewritten)} file(s) for the later core (core/translate.py "
                f"`between`): {', '.join(rewritten)}." if rewritten else
                "The beans are as they were: no step rewrites them between these versions of the core.")
             + (f" The profiles it takes: {', '.join(before) or 'none'} -> {', '.join(profiles) or 'none'}"

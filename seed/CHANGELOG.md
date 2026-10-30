@@ -251,6 +251,16 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v4.15.1** (2026-10-30, code, core 4.15) — **a move across core 4.7 commits.** The step of
+  core 4.7 takes out a garden's own VOCAB.md row of a kind the law now holds (`procedure`), and the move then gave each
+  file the translator rewrote a knowing act: VOCAB.md holds no statement, so the move stopped and put every file back,
+  and a garden that writes its own `procedure` row could not move past core 4.6. bin/dmupgrade.py `known_rewrites` now
+  knows the beans alone; VOCAB.md is named under `- changed:`, and the action line counts the files rewritten.
+  test/core_save.py holds it. And an install again — the one every upgrade runs — keeps the guard a clone chose
+  (`hook.py install claude-code --guard`): bin/hook.py `install` wrote the five events in its place, so a main copy
+  that took the gardener's guards lost them at each move until they were installed again. test/guard.py holds it. No
+  file of the law changed.
+
 - **core 4.15** (2026-10-28, daftar v4.15.0, human-ratified rule-change) — **one install and one entry.** MINOR. The
   one installer lays this machine's daftard where it is asked for: `bin/install.py --daftard`, in a garden's main copy,
   lays its binary in the account's daftar state folder — built from the release's own source where Go is, its tag's

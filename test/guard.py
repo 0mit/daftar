@@ -182,6 +182,16 @@ try:
               set_to == path and v and guards.version_of(v) >= (5, 0)
               and not (SYSTEM == 'macos' and set_to == '/bin/bash'), (cfg.get('env'), path, v))
         SHELL_ENV[key] = set_to
+        r1 = run(PY, os.path.join(G, 'bin', 'hook.py'), 'install', 'claude-code', '--guard')
+        r2 = run(PY, os.path.join(G, 'bin', 'hook.py'), 'install', 'claude-code')
+        kept = json.load(open(settings, encoding='utf-8'))
+        cmds = [x.get('command', '') for gs in (kept.get('hooks') or {}).values() for g in gs for x in g.get('hooks', [])]
+        check("an install again — an upgrade's — keeps the guard the clone chose (`--guard`): the start and the guard",
+              r1.returncode == 0 and r2.returncode == 0 and sorted(kept.get('hooks') or {}) == ['PreToolUse', 'SessionStart']
+              and any(c.endswith(' guard') for c in cmds), (r1.out, r2.out, kept))
+        with open(settings, 'w', encoding='utf-8', newline='\n') as fh:   # the five events again, for what follows
+            json.dump(cfg, fh, indent=2)
+            fh.write('\n')
     else:
         r = run(PY, os.path.join(G, 'bin', 'hook.py'), 'install', 'claude-code')
         check(f"K2 ({SYSTEM}): with no bash at the floor here, the install refuses, saying what to install, and sets "
