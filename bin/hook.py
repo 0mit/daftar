@@ -763,6 +763,9 @@ def install(root, harness, on=True, guard=False):
         sys.exit(f"hook: {h['settings']} is not JSON; nothing changed")
     me = os.path.abspath(__file__)
     hooks = cfg.setdefault('hooks', {})
+    if on and not guard and any(re.search(r'\b(?:dm)?hook\.py\b\S* guard\b', str(x.get('command', '')))
+                                for gs in hooks.values() for g in gs for x in g.get('hooks', [])):
+        guard = True                # the guard this clone chose is kept: an install again, an upgrade's, never drops it
     wanted = h['guard_events'] if guard else h['events']
     for event in h['events']:
         keep = [g for g in hooks.get(event, []) if not any(re.search(r'\b(?:dm)?hook\.py\b', str(x.get('command', '')))
