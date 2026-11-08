@@ -169,7 +169,7 @@ def show(v, exact_=False):
         return ', '.join(show(V(x, v.unit, v.u, v.approx), exact_) for x in v.v)
     if not isinstance(v.v, Fraction):
         return f"{v.v}" + (f" {v.unit}" if v.unit else '')
-    unit = f" {v.unit}" if v.unit and v.unit != 'one' else ''
+    unit = f" {v.unit}" if v.unit and v.unit != '1' else ''
     if v.u is not None and v.u > 0 and not exact_:
         p = dmseq.u_places(v.u)
         return f"{'≈ ' if v.approx else ''}{dmseq.rounded(v.v, p)}{unit} (u {dmseq.rounded(v.u, p)}{unit})"
@@ -508,6 +508,8 @@ def value_of(node, where, notes):
         unit = node['unit']
         if isinstance(unit, int) and not isinstance(unit, bool):
             unit = str(unit)                # a unit is a code: `1`, the ratio's, typed a number by the line reader
+        if unit == 'one':
+            unit = '1'                      # the name the law gives that unit, which a reading may write for it
         return V(x, unit, _u_of(node, unit, where, notes))
     if _long(node):
         node = _text(node)                  # a position written long is read as its short form (27.0)
@@ -569,12 +571,39 @@ def _dims(unit):
     return dict(q.get('of') or {}) if 'of' in q else None
 
 
+def _row(unit):
+    """The law's row of `unit`: listed, a currency, or made by a rule of `composed`; None where the law has none."""
+    return law().row_of(unit) if unit is not None else None
+
+
+def _kind(unit):
+    """What a unit is to `multiply` and `divide`: `money`, `count`, `price`, or `quantity` (a listed unit, with
+    dimensions or none); None where the law has no such unit. Read from the whole law: the reader's `units` hold the
+    listed units alone, so what a unit lacks cannot tell a currency from a count or a price."""
+    r = _row(unit)
+    if r is None:
+        return None
+    if r.get('composed'):
+        return r['composed']
+    return 'money' if r.get('quantity') == 'money' else 'quantity'
+
+
+NOT_SCALED = ('money', 'count', 'price')              # the kinds a dimensional product does not read
+
+
+def _number(v, what):
+    """`v`, or refused where it is no number: what reaches arithmetic as text is named, never a traceback."""
+    if not isinstance(v.v, Fraction):
+        raise Refused(f"{what}: {v.v!r} is no number — a count is plain decimal digits, as 0.00000001")
+    return v
+
+
 def _unit_for(dims, what):
     """The coherent unit of the quantity whose dimensions these are — or refused, where the law has none."""
     lw = law()
     dims = {k: v for k, v in dims.items() if v}
     if not dims:
-        return 'one'
+        return '1'
     for qn, q in lw.quantities.items():
         if dict(q.get('of') or {}) == dims:
             c = lw.coherent(qn)
@@ -1025,6 +1054,9 @@ class Reckoner:
         if x is not None:
             unit = law().coherent(decl.get('quantity')) if decl.get('quantity') else None
             return V(x, unit)
+        if decl.get('quantity'):
+            raise Refused(f"the input '{n}': {s!r} is not a count — plain decimal digits, as 0.00000001, "
+                          f"a value in {decl['quantity']}")
         return V(s)
 
     # -- names
@@ -1522,6 +1554,7 @@ class Reckoner:
 
     def op_difference(self, s):
         a, b = self._two(s)
+        _number(a, f"step {s['id']}"), _number(b, f"step {s['id']}")
         b = to_unit(b, a.unit, f"step {s['id']}")
         return V(a.v - b.v, a.unit, self.hyp(a.u, b.u), a.approx or b.approx, {**a.budget, **b.budget} or budget(
             **{s.get('of'): a.u, s.get('with'): b.u}))
@@ -1558,47 +1591,80 @@ class Reckoner:
     def _product(self, a, b, sign, s):
         what = f"step {s['id']}"
         lw = law()
+        _number(a, what)
+        _number(b, what)
 
         def bare(x):                                       # a count or a share: no dimension, and no currency
-            return x.unit in (None, 'one', 'item') or lw.quantity_of(x.unit) in ('ratio', 'number')
+            return x.unit in (None, 'item') or lw.quantity_of(x.unit) in ('ratio', 'number')
+
+        def share(x):                                      # a ratio written in a unit of its own: %, a basis point
+            return x.unit not in (None, 'item') and lw.quantity_of(x.unit) == 'ratio'
         if bare(b) or (bare(a) and sign > 0):
             # a factor with no dimension scales the other and keeps ITS unit: 3 mm × 2 is 6 mm, not 0.006 m
             k, x = (b, a) if bare(b) else (a, b)
-            kv = to_unit(k, 'one', what).v if k.unit not in (None, 'item') and lw.quantity_of(k.unit) == 'ratio' else k.v
-            if sign < 0 and kv == 0:
+            first = x is a
+            ck = to_unit(k, '1', what) if share(k) else k
+            if sign < 0 and ck.v == 0:
                 raise Refused(f"{what}: divided by zero")
-            r = x.v * kv if sign > 0 else x.v / kv
+            x = to_unit(x, '1', what) if share(x) else x   # two shares: 20 % × 50 % is 0.1, each read as what it is
+            r = x.v * ck.v if sign > 0 else x.v / ck.v
             unit = x.unit if not bare(x) else ('item' if sign > 0 and 'item' in (a.unit, b.unit) else
-                                               (None if x.unit is None and k.unit is None else 'one'))
-            kk = V(kv, None, None if k.u is None else (k.u if k.unit in (None, 'item') or lw.quantity_of(k.unit) != 'ratio'
-                                                        else to_unit(k, 'one', what).u))
-            u, parts = self._rel(r, x, kk, s.get('of') if x is a else (s.get('with') or 'count'),
+                                               (None if x.unit is None and k.unit is None else '1'))
+            u, parts = self._rel(r, x, V(ck.v, None, ck.u), s.get('of') if first else (s.get('with') or 'count'),
                                  s.get('with') or s.get('coefficient') or 'count' if k is b else s.get('of'))
             return V(r, unit, u, a.approx or b.approx, parts)
+        if _kind(a.unit) in NOT_SCALED or _kind(b.unit) in NOT_SCALED:
+            return self._priced(a, b, sign, s)
+        for x in (a, b):
+            if x.unit not in (None, 'item') and _kind(x.unit) is None:
+                raise Refused(f"{what}: {x.unit} is no unit of the law")
         ca, cb = _coherent(a, what), _coherent(b, what)
         da, db = _dims(ca.unit), _dims(cb.unit)
-        money = [x for x in (ca, cb) if x.unit and lw.factor(x.unit) is None]
-        if money:
-            other = cb if money[0] is ca else ca
-            if len(money) == 2 and sign > 0 or (other.unit and _dims(other.unit)):
-                if not (sign < 0 and len(money) == 2 and ca.unit == cb.unit):
-                    raise Refused(f"{what}: {a.unit} {'×' if sign > 0 else '÷'} {b.unit} — money is multiplied or divided "
-                                  f"by a count or a share, and one currency by itself")
-            if sign < 0 and len(money) == 2:
-                unit = 'one'
-            else:
-                unit = money[0].unit
-        else:
-            if da is None or db is None:
-                raise Refused(f"{what}: {a.unit} or {b.unit} is no unit of a quantity with dimensions")
-            unit = _unit_for({k: da.get(k, 0) + sign * db.get(k, 0) for k in set(da) | set(db)}, what)
-            if unit == 'one' and (ca.unit in ('item',) or cb.unit in ('item',)) and sign > 0:
-                unit = 'item' if ca.unit == 'item' or cb.unit == 'item' else unit
+        if da is None or db is None:
+            raise Refused(f"{what}: {a.unit} or {b.unit} is no unit of a quantity with dimensions")
+        unit = _unit_for({k: da.get(k, 0) + sign * db.get(k, 0) for k in set(da) | set(db)}, what)
+        if unit == '1' and (ca.unit in ('item',) or cb.unit in ('item',)) and sign > 0:
+            unit = 'item' if ca.unit == 'item' or cb.unit == 'item' else unit
         if sign < 0 and cb.v == 0:
             raise Refused(f"{what}: divided by zero")
         r = ca.v * cb.v if sign > 0 else ca.v / cb.v
         u, parts = self._rel(r, ca, cb, s.get('of'), s.get('with') or s.get('coefficient') or 'count')
         return V(r, unit, u, ca.approx or cb.approx, parts)
+
+    def _priced(self, a, b, sign, s):
+        """`multiply` or `divide` where a side is money, a count or a price (core/law/units.yaml `composed`). A quantity
+        times its price is the money; money over a count or a quantity is its price, and over its price the quantity; a
+        currency, a count or a price over itself is a number. Two currencies meet only through a rate someone observed,
+        counts of different things never convert, and what the law has no unit for is refused by name, never answered in
+        a unit it lost."""
+        what, lw = f"step {s['id']}", law()
+        ka, kb = _kind(a.unit), _kind(b.unit)
+        x, y, unit = a, b, None
+        if sign > 0:
+            p, q = (a, b) if ka == 'price' else (b, a)
+            if _kind(p.unit) == 'price' and _kind(q.unit) in ('count', 'quantity'):
+                over = _row(p.unit)['over']
+                if q.unit == over or (_kind(q.unit) == 'quantity' and lw.factor(q.unit) is not None
+                                      and lw.factor(over) is not None and lw.quantity_of(q.unit) == lw.quantity_of(over)):
+                    q = to_unit(q, over, what)
+                    x, y, unit = (p, q, _row(p.unit)['money']) if p is a else (q, p, _row(p.unit)['money'])
+        elif a.unit == b.unit:
+            unit = '1'
+        elif ka == 'money' and kb in ('count', 'quantity'):
+            made = f"{a.unit}/{b.unit}"
+            unit = made if _kind(made) == 'price' else None
+        elif ka == 'money' and kb == 'price' and _row(b.unit)['money'] == a.unit:
+            unit = _row(b.unit)['over']
+        if unit is None:
+            raise Refused(f"{what}: {a.unit} {'×' if sign > 0 else '÷'} {b.unit} has no unit in the law — money is "
+                          f"multiplied or divided by a count or a share, and one currency by itself; a price meets only "
+                          f"what it is a price of; two currencies meet only through a rate someone observed; counts of "
+                          f"different things never convert")
+        if sign < 0 and y.v == 0:
+            raise Refused(f"{what}: divided by zero")
+        r = x.v * y.v if sign > 0 else x.v / y.v
+        u, parts = self._rel(r, x, y, s.get('of'), s.get('with') or s.get('coefficient') or 'count')
+        return V(r, unit, u, a.approx or b.approx, parts)
 
     def op_divide(self, s):
         a, b = self._two(s)
@@ -1611,6 +1677,12 @@ class Reckoner:
         if e is None:
             raise Refused(f"step {s['id']}: the exponent is a count")
         what = f"step {s['id']}"
+        _number(a, what)
+        kind = _kind(a.unit)
+        if kind in NOT_SCALED or (kind is None and a.unit not in (None, 'item')):
+            if e == 1 and kind:
+                return a
+            raise Refused(f"{what}: {a.unit} to the power {dmseq.show(e)} has no unit in the law")
         ca = _coherent(a, what)
         d = _dims(ca.unit) or {}
         if e.denominator == 1:
@@ -1627,12 +1699,15 @@ class Reckoner:
         dims = {k: v * e for k, v in d.items()}
         if any(Fraction(v).denominator != 1 for v in dims.values()):
             raise Refused(f"{what}: {a.unit} to the power {dmseq.show(e)} has no unit in the law")
-        unit = _unit_for({k: int(v) for k, v in dims.items()}, what) if dims else ca.unit if ca.unit in ('one', None) else 'one'
+        unit = _unit_for({k: int(v) for k, v in dims.items()}, what) if dims else ca.unit if ca.unit in ('1', None) else '1'
         u = abs(e) * ca.u / abs(ca.v) * abs(r) if ca.u is not None and ca.v else None
         return V(r, unit, u, approx)
 
     def op_square_root(self, s):
-        a = _coherent(self.one(self.arg(s, 'of'), s['id'], 'of'), f"step {s['id']}")
+        a = _number(self.one(self.arg(s, 'of'), s['id'], 'of'), f"step {s['id']}")
+        if _kind(a.unit) in NOT_SCALED or (_kind(a.unit) is None and a.unit not in (None, 'item')):
+            raise Refused(f"step {s['id']}: the square root of {a.unit} has no unit in the law")
+        a = _coherent(a, f"step {s['id']}")
         r, ex = sqrt(a.v)
         d = _dims(a.unit) or {}
         if any(v % 2 for v in d.values()):
@@ -1642,17 +1717,17 @@ class Reckoner:
         return V(r, unit, u, a.approx or not ex)
 
     def _dimensionless(self, s):
-        a = self.one(self.arg(s, 'of'), s['id'], 'of')
-        if a.unit not in (None, 'one') and _dims(a.unit) != {}:
+        a = _number(self.one(self.arg(s, 'of'), s['id'], 'of'), f"step {s['id']}")
+        if a.unit not in (None, '1') and _dims(a.unit) != {}:
             raise Refused(f"step {s['id']}: `{s['op']}` reads a number with no dimension, and {a.unit} has one")
-        return to_unit(a, 'one', f"step {s['id']}") if a.unit not in (None, 'one') else a
+        return to_unit(a, '1', f"step {s['id']}") if a.unit not in (None, '1') else a
 
     def op_exp(self, s):
         a = self._dimensionless(s)
         with decimal.localcontext() as c:
             c.prec = PREC
             r = F(D(a.v).exp())
-        return V(r, 'one', a.u * r if a.u is not None else None, True)
+        return V(r, '1', a.u * r if a.u is not None else None, True)
 
     def op_ln(self, s):
         a = self._dimensionless(s)
@@ -1661,10 +1736,11 @@ class Reckoner:
         with decimal.localcontext() as c:
             c.prec = PREC
             r = F(D(a.v).ln())
-        return V(r, 'one', a.u / a.v if a.u is not None else None, True)
+        return V(r, '1', a.u / a.v if a.u is not None else None, True)
 
     def op_convert(self, s):
-        return to_unit(self.one(self.arg(s, 'of'), s['id'], 'of'), s['unit'], f"step {s['id']}")
+        what, unit = f"step {s['id']}", str(s['unit'])     # a unit is a code: `1` is typed a number by the line reader
+        return to_unit(_number(self.one(self.arg(s, 'of'), s['id'], 'of'), what), '1' if unit == 'one' else unit, what)
 
     def _coefficient(self, name, code, sid):
         rows = [r for r in (self.reg('coefficients') or []) if isinstance(r, dict) and r.get('coefficient') == name]
@@ -2627,7 +2703,7 @@ class Reckoner:
             raise Refused(f"step {s['id']}: no weighing '{ref}'")
         crit, w, lam, ci, cr = weights(entry)
         self.lines.append(f"  λmax ≈ {dmseq.rounded(lam, 4)}, CI ≈ {dmseq.rounded(ci, 4)}, CR ≈ {dmseq.rounded(cr, 3)}")
-        return {a: V(w[a], 'one', None, True) for a in crit}
+        return {a: V(w[a], '1', None, True) for a in crit}
 
     def op_axes(self, s):
         """Each member on the three axes (core/courses.py): its needs, what needs it, what it remedies and the failures it
@@ -2784,11 +2860,11 @@ class Reckoner:
         missed = [m for m, p, o in resolved if (p if o else 1 - p) == 0]
         log = None if missed else -sum(ln(p if o else 1 - p) for _m, p, o in resolved) / n
         ref_log = -sum(x * ln(x) for x in (base, 1 - base) if x)
-        out.update({'came': V(Fraction(sum(o for _m, _p, o in resolved)), 'item'), 'brier': V(brier, 'one'),
-                    'log': V(log, 'one', None, True) if log is not None else V('unbounded'), 'base-rate': V(base, 'one'),
-                    'base-rate-brier': V(ref, 'one'), 'base-rate-log': V(ref_log, 'one', None, True)})
+        out.update({'came': V(Fraction(sum(o for _m, _p, o in resolved)), 'item'), 'brier': V(brier, '1'),
+                    'log': V(log, '1', None, True) if log is not None else V('unbounded'), 'base-rate': V(base, '1'),
+                    'base-rate-brier': V(ref, '1'), 'base-rate-log': V(ref_log, '1', None, True)})
         if ref:
-            out['skill'] = V(1 - brier / ref, 'one')
+            out['skill'] = V(1 - brier / ref, '1')
         else:
             self.lines.append("  skill: not read — every resolved forecast came, or none did, so the base rate's "
                               "Brier score is 0 and nothing is a share of it")

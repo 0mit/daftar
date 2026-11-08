@@ -322,6 +322,79 @@ try:
     write('ne.yaml', text('sum.yaml', T).replace('"=": sam', '"≠": sam'), T)
     r = run(PY, 'bin/reckon.py', '--ad-hoc', os.path.join(T, 'ne.yaml'))
     check("reckon: `≠`, a sign today's words lacked, is read", r.returncode == 0 and '= 90 EUR' in r.out, r.out)
+    # THE UNITS OF A PRODUCT. A ratio is written by the law's code; money, a count and a price are told apart by the
+    # whole law, so that each product is in the unit the law gives it or refused by name, never in a unit it lost.
+    q = lambda c, u: '{ count: "%s", unit: "%s" }' % (c, u)
+
+    def adhoc(name, body, *more):
+        write(f'{name}.yaml', 'what: "a case"\n' + body, T)
+        return run(PY, 'bin/reckon.py', '--ad-hoc', os.path.join(T, f'{name}.yaml'), *more)
+
+    def two(name, a, b, op):
+        return adhoc(name, f'steps:\n  - {{ id: a, op: constant, value: {a} }}\n  - {{ id: b, op: constant, value: {b} }}\n'
+                           f'  - {{ id: c, op: {op}, of: a, with: b }}\n')
+
+    def one_step(name, a, op, more=''):
+        return adhoc(name, f'steps:\n  - {{ id: a, op: constant, value: {a} }}\n  - {{ id: c, op: {op}, of: a{more} }}\n')
+
+    def answers(r):
+        return [x[2:] for x in r.out.splitlines() if x.startswith('= ')]
+    for name, a, b, op, want in (
+            ('a-ratio-of-money', q('0.5', '1'), q('10', 'USD'), 'multiply', '5 USD'),
+            ('money-by-percent', q('10', 'USD'), q('20', '%'), 'multiply', '2 USD'),
+            ('basis-points', q('50', '10*-4'), q('200', 'EUR'), 'multiply', '1 EUR'),
+            ('ppm-of-a-mass', q('50', '[ppm]'), q('10', 'kg'), 'multiply', '0.0005 kg'),
+            ('two-shares', q('20', '%'), q('50', '%'), 'multiply', '0.1'),
+            ('money-over-a-ratio', q('10', 'USD'), q('0.5', '1'), 'divide', '20 USD'),
+            ('count-by-its-price', q('2', '{crate}'), q('10', 'USD/{crate}'), 'multiply', '20 USD'),
+            ('price-by-its-count', q('10', 'USD/{crate}'), q('2', '{crate}'), 'multiply', '20 USD'),
+            ('mass-by-its-price', q('500', 'g'), q('10', 'EUR/kg'), 'multiply', '5 EUR'),
+            ('money-over-a-count', q('20', 'USD'), q('2', '{crate}'), 'divide', '10 USD/{crate}'),
+            ('money-over-a-mass', q('20', 'USD'), q('2', 'kg'), 'divide', '10 USD/kg'),
+            ('money-over-its-price', q('20', 'USD'), q('10', 'USD/{crate}'), 'divide', '2 {crate}'),
+            ('a-currency-over-itself', q('10', 'USD'), q('4', 'USD'), 'divide', '2.5'),
+            ('a-count-over-itself', q('6', '{crate}'), q('2', '{crate}'), 'divide', '3'),
+            ('a-price-over-itself', q('10', 'USD/{crate}'), q('2', 'USD/{crate}'), 'divide', '5')):
+        r = two(name, a, b, op)
+        check(f"reckon: {name} is {want}", r.returncode == 0 and answers(r) == [want], r.out)
+    for name, a, b, op in (
+            ('another-count', q('2', '{apple}'), q('10', 'USD/{crate}'), 'multiply'),
+            ('another-quantity', q('2', 'kg'), q('10', 'USD/{crate}'), 'multiply'),
+            ('two-currencies', q('20', 'EUR'), q('10', 'USD'), 'divide'),
+            ('two-prices', q('10', 'USD/{crate}'), q('2', 'EUR/{crate}'), 'divide'),
+            ('two-counts', q('6', '{crate}'), q('2', '{apple}'), 'divide'),
+            ('a-count-squared', q('6', '{crate}'), q('2', '{crate}'), 'multiply'),
+            ('a-count-by-money', q('2', '{crate}'), q('10', 'USD'), 'multiply'),
+            ('a-number-over-money', q('3', 'one'), q('2', 'USD'), 'divide'),
+            ('no-unit-of-the-law', q('3', 'parsec-ish'), q('2', 'kg'), 'multiply')):
+        r = two(name, a, b, op)
+        check(f"reckon: {name} is refused by name, and answered in no unit it lost",
+              r.returncode != 0 and 'refused: step c:' in r.out and 'Traceback' not in r.out, r.out)
+    r = one_step('money-squared', q('3', 'USD'), 'power', ', exponent: 2')
+    check("reckon: money squared has no unit, and is refused", r.returncode != 0 and 'has no unit in the law' in r.out, r.out)
+    r = one_step('percent-to-one', q('20', '%'), 'convert', ', unit: "1"')
+    check("reckon: a percent converts into the law's unit `1`", r.returncode == 0 and answers(r) == ['0.2'], r.out)
+    r = one_step('root-of-a-ratio', q('4', '1'), 'square-root')
+    check("reckon: a ratio prints with no unit", r.returncode == 0 and answers(r) == ['2'], r.out)
+    r = one_step('ln-of-a-percent', q('100', '%'), 'ln')
+    check("reckon: `ln` reads a percent", r.returncode == 0 and answers(r) == ['≈ 0.000000'], r.out)
+    GIVEN = ('inputs:\n  - { name: x, origin: { act: say }%s }\nsteps:\n  - { id: t, op: constant, value: "2" }\n'
+             '  - { id: c, op: multiply, of: x, with: t }\n')
+    r = adhoc('plain-digits', GIVEN % ', quantity: number', '--input', 'x=0.00000001')
+    check("reckon: an input in plain digits is read", r.returncode == 0 and answers(r) == ['0.00000002'], r.out)
+    for name, given, decl in (('e-notation', '1e-8', ', quantity: number'), ('a-word', 'abc', ', quantity: number'),
+                              ('a-comma', '1,5', ', quantity: ratio'), ('no-quantity-declared', '1e-8', '')):
+        r = adhoc(name, GIVEN % decl, '--input', f'x={given}')
+        check(f"reckon: {name} as an input is refused by name, with no traceback",
+              r.returncode != 0 and 'refused:' in r.out and repr(given) in r.out and 'Traceback' not in r.out, r.out)
+    for key, tsv in (('effort', 'item\timportance\tuncertainty\na\t0.5\t0.2\nb\t0.9\t0.1\n'),
+                     ('merge', 'item\tweight\tdelta\tu\na\t0.5\t0.2\t0.1\nb\t0.9\t0.1\t0.1\n'),
+                     ('tests', 'item\tweight\tfailed\tseconds\na\t0.5\t2\t10\nb\t0.9\t1\t5\n'),
+                     ('controls', 'item\tweight\tdistance\na\t0.5\t0.2\nb\t0.9\t0.1\n'),
+                     ('improvements', 'item\tweight\tloss\na\t0.5\t0.2\nb\t0.9\t0.1\n')):
+        write(f'order-{key}.tsv', tsv, T)
+        r = run(PY, 'bin/reckon.py', 'order', key, os.path.join(T, f'order-{key}.tsv'))
+        check(f"reckon: the ordering key `{key}` orders its items", r.returncode == 0 and 'refused' not in r.out, r.out)
     pinned = head()
     write('beans/bike-repair.md', text('beans/bike-repair.md').replace(
         '  - pay:    { id: tool,', '  - move:   { id: mended, by: ali, of: self, through: repair, '
