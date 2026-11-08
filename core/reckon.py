@@ -329,6 +329,17 @@ class Garden:
                           + (f" as known at {_shown_ms(self.known)}" if self.known is not None else ''))
         return self.fm[i]
 
+    def parts(self, bean, key):
+        """A series' parts, `series/<bean>/<key>/*.tsv`, as they stand here."""
+        if self.pin is None:
+            return dmseq.parts_of(self.root, bean, key)
+        out = {}
+        for p in self._git('ls-tree', '-r', '--name-only', self.pin.commit, '--', f"series/{bean}/{key}").split('\n'):
+            if p:
+                n = os.path.basename(p)
+                out[n[:-4] if n.endswith('.tsv') else n] = self._git('show', f"{self.pin.commit}:{p}")
+        return out
+
 
 # A GARDEN AS KNOWN AT A MOMENT (core 4.9, M10): what was said, read, made or derived at or before it, whatever moment
 # its statements speak of. A statement is known at a moment where one of the knowing acts that cover it — those whose
@@ -383,17 +394,6 @@ def known_garden(G, until, knowing):
         if keep:
             beans[bid] = engine.Bean(bid, b.path, dict(b.header, statements=[b.statements[i] for i in sorted(keep)]))
     return engine.Garden(beans, G.zone, files=G.files, root=G.root, manifest=G.manifest, gid=G.gid)
-
-    def parts(self, bean, key):
-        """A series' parts, `series/<bean>/<key>/*.tsv`, as they stand here."""
-        if self.pin is None:
-            return dmseq.parts_of(self.root, bean, key)
-        out = {}
-        for p in self._git('ls-tree', '-r', '--name-only', self.pin.commit, '--', f"series/{bean}/{key}").split('\n'):
-            if p:
-                n = os.path.basename(p)
-                out[n[:-4] if n.endswith('.tsv') else n] = self._git('show', f"{self.pin.commit}:{p}")
-        return out
 
 
 # ============================================================================ paths

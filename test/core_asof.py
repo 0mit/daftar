@@ -13,7 +13,8 @@ read after, and a reading of every document, written last, that names its `known
   - asked now, it reads them all; a pin and `known` together read the commit as known at the moment, the clock that
     moment;
   - `known` given no moment, or a day where a moment is asked, is refused, saying what to give; a reading whose `known`
-    names no input of it is refused by the gate.
+    names no input of it is refused by the gate;
+  - a reading of a series is read, its rows in its bean and in a part, as the garden stands and at a commit.
 
 Invented beings; nothing here is a fact.
 
@@ -146,6 +147,32 @@ try:
     r, got = ask('--input', f'as-of={M}', '--at', head, '--moment', moment(time.time()))
     check("a pin beside it: the commit read as known at the moment, the clock that moment",
           r.returncode == 0 and sorted(got) == ['doc-before', 'report-a'] and f'the clock {M}' in r.out, (got, r.out[-600:]))
+    # A SERIES IS READ THROUGH THE READER'S `Garden.parts`, which the release that brought `known` left outside its
+    # class, below `known_garden`'s return: every reading of a series ended in an AttributeError, and the gate, which
+    # reads a series another way, passed it.
+    GRID = ('      series:\n        grid: { of: time, in: gregorian-civil, every: { count: "1", unit: h }, '
+            'from: "2026-11-01 18:00+01:00" }\n        unit: h\n        holds:\n'
+            '          - { name: height, quantity: length, unit: mm, stands_for: point, between: linear }\n')
+    write('beans/gauge-a.md', '---\nbean: gauge-a\nkind: host\ntitle: "gauge-a"\nstatements:\n'
+          '  - read: { by: sam, at: now }\n  - record:\n      id: inline\n      of: self\n' + GRID
+          + '        rows: |\n          height\n          200\n          191\n          182\n'
+          '  - record:\n      id: parted\n      of: self\n' + GRID + '---\nA gauge.\n')
+    write('series/gauge-a/parted/0.tsv', 'height\n200\n191\n182\n')
+    write('beans/fell.md', '---\nbean: fell\nkind: design\ntitle: "fell"\nstatements:\n  - say: { by: sam, at: now }\n'
+          + ''.join(f'  - reckon: {{ id: {k}, reading: {{ what: "how far it fell", steps: [ '
+                    f'{{ id: first, op: window, series: "gauge-a#{k}", by: first }}, '
+                    f'{{ id: last, op: window, series: "gauge-a#{k}", by: last }}, '
+                    '{ id: fell, op: difference, of: first, with: last } ] } }\n' for k in ('inline', 'parted'))
+          + '---\nA reading.\n')
+    r = save('a gauge, and how far it fell', '- action: wrote [[gauge-a]], [[fell]]')
+    check("a series and a reading of it are saved", r.returncode == 0, r.out[-800:])
+    at = grow.run('git', 'rev-parse', 'HEAD', cwd=G).stdout.strip()
+    for k in ('inline', 'parted'):
+        r = grow.run(PY, 'bin/reckon.py', f'fell:{k}', cwd=G)
+        check(f"a reading of a series is read as the garden stands ({k})",
+              r.returncode == 0 and '18 mm' in r.out and 'Traceback' not in r.out, r.out[-800:])
+        r = grow.run(PY, 'bin/reckon.py', f'fell:{k}', '--at', at, '--moment', moment(time.time()), cwd=G)
+        check(f"...and at a commit ({k})", r.returncode == 0 and '18 mm' in r.out and 'Traceback' not in r.out, r.out[-800:])
     r, _got = ask()
     check("refused: `known` given no moment — it says which input to give", r.returncode != 0 and '--input as-of=' in r.out,
           r.out[-400:])
