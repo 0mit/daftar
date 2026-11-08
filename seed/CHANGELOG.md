@@ -251,6 +251,13 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v4.15.2** (2026-11-09, code, core 4.15) — **a reading can read a series.** Since v4.9.0 `Garden.parts` in
+  core/reckon.py sat below the return of `known_garden`, indented as a method and never reached, so the class had no
+  such method and every reading of a series ended in an AttributeError; the gate, which reads a series another way,
+  passed the reading. The method is back at the end of the class, unchanged. test/core_asof.py holds it: a series read
+  through bin/reckon.py, its rows in its bean and in a part, as the garden stands and at a commit. No file of the law
+  changed.
+
 - **daftar v4.15.1** (2026-10-30, code, core 4.15) — **a move across core 4.7 commits.** The step of
   core 4.7 takes out a garden's own VOCAB.md row of a kind the law now holds (`procedure`), and the move then gave each
   file the translator rewrote a knowing act: VOCAB.md holds no statement, so the move stopped and put every file back,
