@@ -330,7 +330,8 @@ def law_view(L, root=None):
         return got
     law = dmseq.Law(units, keyed(today.get('quantities'), 'quantity'), keyed(today.get('anchor_systems'), 'system'),
                     keyed(today.get('aspects'), 'aspect'), keyed(today.get('figures'), 'figure'), registry)
-    _VIEWS[id(L)] = law
+    law.row_of = L.unit                             # the whole law's row of a unit: a currency, and what its rules
+    _VIEWS[id(L)] = law                             # make (a count, a price), which `units` above do not hold
     return law
 
 

@@ -251,6 +251,17 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v4.15.3** (2026-11-09, code, core 4.15) — **a product in the unit the law gives it, or refused by name.** The
+  reader said `one` where the law's code for that unit is `1`, so a ratio written by the law's codes — `1`, `%`, a basis
+  point, ppm — was refused when multiplied, and four of the five ordering keys with it. It now writes the law's code, and
+  reads `one`, the name the law gives that unit, as the code. Its table of units holds the listed units alone, so what a
+  unit lacked was read as money: a count times its own price was refused, and a quotient of money and a count, or of two
+  currencies, was answered in a unit it had lost. core/reckon.py now reads the whole law's row of a unit (core/lines.py
+  `law_view`): a quantity times its price is the money, money over a count or a quantity is its price and over its price
+  the quantity, and what the law has no unit for — two currencies, counts of different things, money squared, a number
+  over money — is refused by name. An input that is not plain decimal digits is refused by name, where it ended in a
+  traceback. test/core_read.py holds each. No file of the law changed.
+
 - **daftar v4.15.2** (2026-11-09, code, core 4.15) — **a reading can read a series.** Since v4.9.0 `Garden.parts` in
   core/reckon.py sat below the return of `known_garden`, indented as a method and never reached, so the class had no
   such method and every reading of a series ended in an AttributeError; the gate, which reads a series another way,
