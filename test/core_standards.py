@@ -129,6 +129,12 @@ check(f"the standards read from core/law/: {len(S.systems)} systems, {len(S.prot
       and 'Asia/Tehran' in S.zones and {'isco-08', 'isced-f-2013'} <= set(S.knowledge.schemes)
       and not S.code('isco-08:2522'),
       (len(S.systems), len(S.protocols), len(S.quantities), len(S.currencies), len(S.zones), S.code('isco-08:2522')))
+tokens = {r['code'] for r in S._tsv('seed/knowledge/digital-tokens.tsv')}
+iso = {r['code'] for r in S._tsv('seed/knowledge/currencies.tsv')}
+listed = {str(r.get('unit')) for r in S.tables.get('units') or [] if isinstance(r, dict)}
+check("money: the digital tokens are currencies, with their places, and no token's code is a code of ISO 4217 or a unit",
+      tokens and tokens <= set(S.currencies) and S.currency_digits.get('BTC') == 8 and not tokens & iso and not tokens & listed,
+      (tokens & iso, tokens & listed, S.currency_digits.get('BTC')))
 check("...and the release carries no today's law: seed/std-vocab.md is gone",
       not os.path.exists(os.path.join(ROOT, 'seed', 'std-vocab.md')))
 

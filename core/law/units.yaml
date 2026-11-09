@@ -2,7 +2,8 @@
 # attached as its text, and the quantity it measures. Ratified 2026-10-01: "keep UCUM ...
 # with the english complete names as texts attached to them". Every unit of the law has one row here, which the law's
 # proof checks; the codes are UCUM's (https://ucum.org/ucum), and where UCUM writes none the row says so and why.
-# Currencies are ISO 4217's codes, read from seed/knowledge/currencies.tsv with their names, and are not rows here.
+# Currencies are ISO 4217's codes and the digital tokens' (seed/knowledge/currencies.tsv, digital-tokens.tsv), read with
+# their names, and are not rows here.
 # Each unit's `factor` (v1 part 7) is two whole numbers, its size in its quantity's coherent unit as a fraction, so a
 # conversion is exact arithmetic and never a rounded float (bin/units.py). These rows are the law itself: a change to
 # them is a RULE-CHANGE, made here.
@@ -234,6 +235,10 @@ composed:
     pattern: '^\{[a-z][a-z0-9]*(-[a-z0-9]+)*\}$'
     quantity: number
     meaning: "a count of the things its annotation names, as UCUM writes an annotation alone, which is the unity, 1, — `{crate}`, `{share}`, `{seat}`, its word in lowercase, words joined by a hyphen. Counts of different things never convert into one another, so it has no factor; its name is its word"
+  - form: rate
+    pattern: '^[^/{}]+/[^/{}]+$'
+    quantity: "money/money"
+    meaning: "a unit of money over a unit of money of another currency, so much of the first for one of the second: `USD/EUR`, `USDT/BTC`. It is what someone observed, at a moment, from a source: no factor joins two currencies, so a rate converts only into itself, and an amount in the second times it is the amount in the first"
   - form: price
     pattern: '^[^/{}]+/[^/]+$'
     quantity: "money/<the quantity of the unit under the line>"

@@ -241,8 +241,23 @@ try:
     write(G, 'beans/crate-prices.md', bean('crate-prices', 'document',
           'measure: { id: rate, of: self, as: money, value: { count: "1.1", unit: "USD/EUR" }, at: "2026-10-01" }'))
     r, found = gate(G)
-    check("...and a currency over a currency is no price: refused, its message saying what a rule makes",
+    check("...and one currency over another is a rate, which passes", r.returncode == 0 and not found, r.out[-1200:])
+    write(G, 'beans/crate-prices.md', bean('crate-prices', 'document',
+          'measure: { id: rate, of: self, as: money, value: { count: "1", unit: "USD/USD" }, at: "2026-10-01" }'))
+    r, found = gate(G)
+    check("...and a currency over itself is no unit: refused, its message saying what a rule makes",
           r.returncode != 0 and len(found) == 1 and "nor one its rules make" in found[0], found)
+    write(G, 'beans/crate-prices.md', bean('crate-prices', 'document',
+          'measure: { id: held, of: self, as: money, value: { count: "0.12345678", unit: BTC }, at: "2026-10-01" }',
+          'measure: { id: quote, of: self, as: money, value: { count: "65000.5", unit: "USDT/BTC" }, at: "2026-10-01" }',
+          'measure: { id: each, of: self, as: money, value: { count: "3.5", unit: "USDT/{wafer}" }, at: "2026-10-01" }'))
+    r, found = gate(G)
+    check("units: a digital token at its places, a rate between two and a price in one pass the gate",
+          r.returncode == 0 and not found, r.out[-1200:])
+    write(G, 'beans/crate-prices.md', bean('crate-prices', 'document',
+          'measure: { id: held, of: self, as: money, value: { count: "0.123456789", unit: BTC }, at: "2026-10-01" }'))
+    r, found = gate(G)
+    check("...and an amount past the token's places is refused", r.returncode != 0 and len(found) == 1, found)
     os.remove(os.path.join(G, 'beans', 'crate-prices.md'))
 
     def conv(*a):

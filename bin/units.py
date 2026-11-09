@@ -23,7 +23,7 @@ is not an acceleration however the numbers line up. Everything it knows is read 
 in a garden of the core (v1 part 7) the core's units in UCUM (core/law/units.yaml), each with the law's English name
 and its factor attached — a unit is named by its code (`km/h`) or by that name (`kilometre-per-hour`), and is one unit.
 
-MONEY (std-vocab 21.0). A currency is a unit of the `money` quantity, and the currencies are the rows of a registry the
+MONEY (std-vocab 21.0). A currency is a unit of the `money` quantity, and the currencies are the rows of the registries the
 law points at (`units_from`), each with the decimal places it is written in. NO FACTOR JOINS TWO OF THEM — the quantity
 says `crosswalk: observed` — so a conversion between two currencies is REFUSED unless it is given the rate someone
 observed (`--rate R`: units of the target per one of the source, a decimal string). With it the result is exact, and it
@@ -113,9 +113,10 @@ def _core_law():
         for code, name in L.std.currencies.items():
             units.setdefault(code, {'unit': code, 'name': name, 'quantity': qn, 'from_registry': uf.get('registry')})
         files = {r.get('registry'): r.get('file') for r in L.std.tables.get('registry_files') or [] if isinstance(r, dict)}
-        if uf.get('digits') and files.get(uf.get('registry')):
-            with open(os.path.join(ROOT if os.path.isfile(os.path.join(ROOT, files[uf['registry']])) else
-                                   os.path.dirname(os.path.dirname(os.path.abspath(__file__))), files[uf['registry']]),
+        regs = uf.get('registry') if isinstance(uf.get('registry'), list) else [uf.get('registry')]
+        for reg in (r for r in regs if uf.get('digits') and files.get(r)):
+            with open(os.path.join(ROOT if os.path.isfile(os.path.join(ROOT, files[reg])) else
+                                   os.path.dirname(os.path.dirname(os.path.abspath(__file__))), files[reg]),
                       encoding='utf-8') as fh:
                 head = fh.readline().rstrip('\n').split('\t')
                 for line in fh:
@@ -125,12 +126,12 @@ def _core_law():
     return Units(units, getattr(L, 'unit_rules', [])), quantities
 
 
-COMPOSED_FORMS = ('count', 'price')       # what a rule of core/law/units.yaml `composed` may make
+COMPOSED_FORMS = ('count', 'rate', 'price')       # what a rule of core/law/units.yaml `composed` may make
 
 
 def composed(code, row_of, rules):
     """The row a rule of the law makes for `code` (core/law/units.yaml `composed`), or None: an annotation alone a count
-    of what it names, a unit of money over a unit of the law a price. `row_of(code)` gives the row of a listed unit or
+    of what it names, one currency over another a rate, a unit of money over a unit of the law a price. `row_of(code)` gives the row of a listed unit or
     a currency (its quantity `money`), or None; the rules are the law's rows, in order. A count has no factor; a price's
     is the inverse of its unit's under the line, and it names the currency it is counted in (`currency`)."""
     import parse as dmparse
@@ -140,6 +141,14 @@ def composed(code, row_of, rules):
             continue
         if rule.get('form') == 'count':
             return {'unit': code, 'name': code[1:-1], 'quantity': 'number', 'composed': 'count'}
+        if rule.get('form') == 'rate':                  # no factor: what someone observed converts only into itself
+            top, under = code.split('/', 1)
+            a, b = row_of(top), row_of(under)
+            if not a or not b or a.get('quantity') != 'money' or b.get('quantity') != 'money' \
+                    or (a.get('per') or top) == (b.get('per') or under):
+                continue
+            return {'unit': code, 'name': f"{a.get('name') or top}-per-{b.get('name') or under}", 'quantity': 'money/money',
+                    'factor': None, 'currency': a.get('per') or top, 'money': top, 'over': under, 'composed': 'rate'}
         if rule.get('form') == 'price':
             top, under = code.split('/', 1)
             a = row_of(top)

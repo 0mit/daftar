@@ -145,6 +145,35 @@ operations:
       of: { required: "true", in: { type: kebab } }
       unit: { required: "true", in: { registry: units, take: unit } }
     meaning: "the value in another unit of its quantity, exactly"
+  - op: least
+    gives: value
+    exact: "true"
+    u_rule: chosen
+    takes: { of: { required: "true", in: { type: kebab } }, with: { required: "true", in: { type: kebab } } }
+    meaning: "the lesser of two earlier values, compared exactly within one quantity, in the first's unit; of two equal, the first"
+  - op: greatest
+    gives: value
+    exact: "true"
+    u_rule: chosen
+    takes: { of: { required: "true", in: { type: kebab } }, with: { required: "true", in: { type: kebab } } }
+    meaning: "the greater of two earlier values, compared exactly within one quantity, in the first's unit; of two equal, the first"
+  - op: magnitude
+    gives: value
+    exact: "true"
+    u_rule: absolute
+    takes: { of: { required: "true", in: { type: kebab } } }
+    meaning: "the value without its sign, in its unit and with its u"
+  - op: cut
+    gives: value
+    exact: "true"
+    u_rule: resolution
+    takes:
+      of: { required: "true", in: { type: kebab } }
+      places: { in: { type: count }, meaning: "to this many decimal places, a whole number; a negative one is tens, hundreds" }
+      digits: { in: { type: count }, meaning: "to this many significant digits, a whole number above zero" }
+      tick: { in: { type: kebab }, meaning: "to a whole number of this earlier value, above zero and of one quantity with the first" }
+      mode: { required: "true", in: [ties-to-even, ties-to-away, toward-zero, toward-positive, toward-negative], meaning: "the direction, by IEEE 754's five rounding attributes" }
+    meaning: "the value cut, exactly, to one of `places`, `digits` or `tick`, in its unit. A u it has is combined with the cut's own, its step over the square root of twelve (GUM F.2.2.1); an exact value is cut exactly"
   - op: lookup
     gives: value
     exact: "true"

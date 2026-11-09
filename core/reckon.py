@@ -577,7 +577,7 @@ def _row(unit):
 
 
 def _kind(unit):
-    """What a unit is to `multiply` and `divide`: `money`, `count`, `price`, or `quantity` (a listed unit, with
+    """What a unit is to `multiply` and `divide`: `money`, `count`, `price`, `rate`, or `quantity` (a listed unit, with
     dimensions or none); None where the law has no such unit. Read from the whole law: the reader's `units` hold the
     listed units alone, so what a unit lacks cannot tell a currency from a count or a price."""
     r = _row(unit)
@@ -588,7 +588,34 @@ def _kind(unit):
     return 'money' if r.get('quantity') == 'money' else 'quantity'
 
 
-NOT_SCALED = ('money', 'count', 'price')              # the kinds a dimensional product does not read
+NOT_SCALED = ('money', 'count', 'price', 'rate')              # the kinds a dimensional product does not read
+
+
+def _leading(x):
+    """The power of ten of the first significant digit of `x`, exactly; 0 for zero."""
+    x, e = abs(x), 0
+    if not x:
+        return 0
+    while Fraction(10) ** (e + 1) <= x:
+        e += 1
+    while Fraction(10) ** e > x:
+        e -= 1
+    return e
+
+
+def _cut_to(x, mode):
+    """The whole number `x` is cut to in one of IEEE 754's five rounding directions, exactly and with no float."""
+    low = x.numerator // x.denominator
+    if low == x or mode == 'toward-negative':
+        return low
+    if mode == 'toward-positive':
+        return low + 1
+    if mode == 'toward-zero':
+        return low if x > 0 else low + 1
+    half = x - low - Fraction(1, 2)
+    if half:
+        return low + (half > 0)
+    return low + (low % 2) if mode == 'ties-to-even' else low + (x > 0)
 
 
 def _number(v, what):
@@ -1641,8 +1668,8 @@ class Reckoner:
         ka, kb = _kind(a.unit), _kind(b.unit)
         x, y, unit = a, b, None
         if sign > 0:
-            p, q = (a, b) if ka == 'price' else (b, a)
-            if _kind(p.unit) == 'price' and _kind(q.unit) in ('count', 'quantity'):
+            p, q = (a, b) if ka in ('price', 'rate') else (b, a)
+            if _kind(p.unit) in ('price', 'rate') and _kind(q.unit) in ('count', 'quantity', 'money'):
                 over = _row(p.unit)['over']
                 if q.unit == over or (_kind(q.unit) == 'quantity' and lw.factor(q.unit) is not None
                                       and lw.factor(over) is not None and lw.quantity_of(q.unit) == lw.quantity_of(over)):
@@ -1653,18 +1680,63 @@ class Reckoner:
         elif ka == 'money' and kb in ('count', 'quantity'):
             made = f"{a.unit}/{b.unit}"
             unit = made if _kind(made) == 'price' else None
-        elif ka == 'money' and kb == 'price' and _row(b.unit)['money'] == a.unit:
+        elif ka == 'money' and kb in ('price', 'rate') and _row(b.unit)['money'] == a.unit:
             unit = _row(b.unit)['over']
         if unit is None:
             raise Refused(f"{what}: {a.unit} {'×' if sign > 0 else '÷'} {b.unit} has no unit in the law — money is "
-                          f"multiplied or divided by a count or a share, and one currency by itself; a price meets only "
-                          f"what it is a price of; two currencies meet only through a rate someone observed; counts of "
+                          f"multiplied or divided by a count or a share, and one currency by itself; a price or a rate meets "
+                          f"only what it is of; two currencies meet only through a rate someone observed; counts of "
                           f"different things never convert")
         if sign < 0 and y.v == 0:
             raise Refused(f"{what}: divided by zero")
         r = x.v * y.v if sign > 0 else x.v / y.v
         u, parts = self._rel(r, x, y, s.get('of'), s.get('with') or s.get('coefficient') or 'count')
         return V(r, unit, u, a.approx or b.approx, parts)
+
+    def _extreme(self, s, sign):
+        """The less of two earlier values (`sign` 1) or the greater (-1), compared exactly within one quantity, as it was
+        written; of two equal, the first. Where their uncertainty cannot resolve which, the reading says so."""
+        what = f"step {s['id']}"
+        a, b = self._two(s)
+        _number(a, what), _number(b, what)
+        a = to_unit(a, b.unit, what) if a.unit is None and b.unit is not None else a
+        b = to_unit(b, a.unit, what)
+        d = a.v - b.v
+        ud = hyp(a.u, b.u)
+        if ud is not None and abs(d) <= self.k * ud:
+            self.notes.append(f"step {s['id']}: the two differ by no more than their uncertainty resolves: which is "
+                              f"{s['op']} is NOT KNOWN, and the one written so is taken")
+        return a if sign * d <= 0 else b
+
+    def op_least(self, s):
+        return self._extreme(s, 1)
+
+    def op_greatest(self, s):
+        return self._extreme(s, -1)
+
+    def op_magnitude(self, s):
+        a = _number(self.one(self.arg(s, 'of'), s['id'], 'of'), f"step {s['id']}")
+        return V(abs(a.v), a.unit, a.u, a.approx, a.budget)
+
+    def op_cut(self, s):
+        what = f"step {s['id']}"
+        a = _number(self.one(self.arg(s, 'of'), s['id'], 'of'), what)
+        said = [k for k in ('places', 'digits', 'tick') if k in s]
+        if len(said) != 1:
+            raise Refused(f"{what}: `cut` takes one of `places`, `digits` or `tick`, and was given {len(said)}")
+        if said == ['tick']:
+            t = to_unit(_number(self.one(self.arg(s, 'tick'), s['id'], 'tick'), what), a.unit, what)
+            if t.v <= 0:
+                raise Refused(f"{what}: a tick is above zero")
+            q = t.v
+        else:
+            n = s[said[0]]
+            n = Fraction(n) if isinstance(n, int) else dmseq.exact(n)
+            if n is None or n.denominator != 1 or (said == ['digits'] and n < 1):
+                raise Refused(f"{what}: `{said[0]}` is a whole number" + (' above zero' if said == ['digits'] else ''))
+            q = Fraction(10) ** -int(n) if said == ['places'] else Fraction(10) ** (_leading(a.v) - int(n) + 1)
+        u = None if a.u is None else hyp(a.u, q / sqrt(Fraction(12))[0])
+        return V(_cut_to(a.v / q, s.get('mode')) * q, a.unit, u, a.approx, a.budget)
 
     def op_divide(self, s):
         a, b = self._two(s)
@@ -1911,7 +1983,7 @@ class Reckoner:
         out, unit = {}, None
         firsts = {str(r.get('scheme')): ((r.get('levels') or [{}])[0] or {}).get('level')
                   for r in (self.reg('knowledge_schemes') or []) if isinstance(r, dict)}
-        cur = {str(r.get('code')): r for r in (self.reg('currencies') or []) if isinstance(r, dict)}
+        cur = {str(r.get('code')): r for t in ('currencies', 'digital-tokens') for r in (self.reg(t) or []) if isinstance(r, dict)}
         for m in self.arg(s, 'of', 'set'):
             got = [x for x, _w in walk(self.g, m.node, s['amount'], at=m.bean)]
             if len(got) != 1:

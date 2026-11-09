@@ -80,6 +80,16 @@ or derived from recorded evidence, and each file says which.
   concrete topics. Coverage is that standard's domains only (96 unit groups) and grows as other gardens
   classify roles. CC BY 4.0, with daftar's law.
 
+## digital-tokens.tsv — digital tokens, and the decimal places their ledgers write them in
+
+- **Source:** each network's own definition of its smallest unit: `digits` is how many decimal places an amount may be
+  written in. Where a token's ledgers differ it is the most of them: USDT is six on Ethereum and Tron, eighteen on BNB
+  Smart Chain. A code is the one the token's issuer or network publishes. Rows are added as a garden holds them; one the
+  table does not hold is a row of a garden's own `units`, at `quantity: money`.
+- **Not used:** ISO 24165's Digital Token Identifier. Its register is public, but the terms on which its data may be
+  copied were not found where it is published; a `dti` column waits for those.
+- **Licence:** CC0 1.0: facts, compiled here.
+
 ## currencies.tsv — the currencies, their numbers and the decimal places in use
 
 - **Source:** Unicode CLDR 48.2.2, fetched from `unicode-org/cldr-json`: `cldr-core/supplemental/currencyData.json`

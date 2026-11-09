@@ -195,9 +195,11 @@ Four things are asked of every being, each its own statement, never one:
   falls due, how it repeats, when it falls due relative to another position, how long before a reader is told, its
   window, an allowance, what it occurs for, what brings it into force — is its form, `clause` (core/law/measures.yaml),
   on the position on the square (or on a `can`, a clause in its words alone), judged by rule `measured`.
-- **Money is a quantity.** An amount is `{ count, unit }`: the unit a currency of ISO 4217, the count plain decimal
-  digits with no more places than the currency uses. A count or a share is what was written, never converted. No
-  factor joins two currencies: a rate is a `measure` someone made, at a moment, from a source.
+- **Money is a quantity.** An amount is `{ count, unit }`: the unit a currency, of ISO 4217 or a digital token
+  (`seed/knowledge/digital-tokens.tsv`), no sibling above the other, the count plain decimal digits with no more places
+  than the currency uses. A count or a share is what was written, never converted. No factor joins two currencies: a
+  rate is a `measure` someone made, at a moment, from a source, in the unit `USDT/BTC`: so much of the first for one of
+  the second.
 - **Who paid and who bears it** are statements: `pay` (`by` the payer, `of` the whole amount, `to` the payee,
   `through` what it was paid under) and `bear` (`by` each who bears it, `of` the payment, `share` their part). Whoever
   paid bears it alone unless a `bear` says otherwise.

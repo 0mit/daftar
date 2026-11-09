@@ -40,8 +40,8 @@ values:
       exactly (bin/units.py)"
   - value: money
     is: quantity
-    rests_on: [ "quantities.yaml quantity: money (units_from registries.yaml currencies, take code, digits)",
-                "registries.yaml currencies (seed/knowledge/currencies.tsv, ISO 4217)", "MODEL.md, money" ]
+    rests_on: [ "quantities.yaml quantity: money (units_from registries.yaml currencies and digital-tokens, take code, digits)",
+                "registries.yaml currencies (seed/knowledge/currencies.tsv, ISO 4217), digital-tokens (seed/knowledge/digital-tokens.tsv)", "MODEL.md, money" ]
     meaning: "an amount in one currency. Its places are the currency's digits; an amount that does not come out even
       in them is shown as the fraction it is, never rounded, since rounding decides who takes the remainder, which
       is a clause. Two currencies never meet except through a rate someone observed"
