@@ -32,6 +32,9 @@ function labelOf(unit, o) {
   if (how === 'symbol' || how === 'narrowSymbol') return symbolOf(unit, langOf(o), how);
   return unit;
 }
+// ISO 4217 writes at most four places. A digital token's are the most it may be written in, up to eighteen: an amount is
+// shown as it ends, not padded out to them.
+const shownAt = at => at > 4 ? undefined : at;
 export const places = unit => settings.places[unit];
 // the amount at `places`, rounded half away from zero, as the law writes a count; null where it ends there already
 export function rounded(v, places) {
@@ -63,13 +66,13 @@ export function show(v, unit, o = {}) {
     const said = say('uneven', o);
     flag = p && p.uneven ? h`<span class="w-uneven" title="${said}" aria-label="${said}">*</span>` : '';
   }
-  const n = number.show(round ?? value, {...o, places: at});
+  const n = number.show(round ?? value, {...o, places: shownAt(at)});
   const label = labelOf(unit, o);
   return label ? h`<span class="w-money">${n}${flag} <span class="w-unit">${label}</span></span>` : h`<span class="w-money">${n}${flag}</span>`;
 }
 export function text(v, unit, o = {}) {
   const label = labelOf(unit, o), at = o.places ?? settings.places[unit];
-  return number.text((o.exact ? null : rounded(v, at)) ?? v, {...o, places: at}) + (label ? ' ' + label : '');
+  return number.text((o.exact ? null : rounded(v, at)) ?? v, {...o, places: shownAt(at)}) + (label ? ' ' + label : '');
 }
 export const take = (input, unit, o = {}) => number.take(input, {...o, places: settings.places[unit]});
 export const edit = (name, value, unit, o = {}) => number.edit(name, value, o);

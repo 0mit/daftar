@@ -251,6 +251,17 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v4.16.0** (2026-11-09, core 4.16, RULE-CHANGE) — **digital tokens beside currencies, a rate as a unit, and four
+  exact operations.** Money's units now come from two tables, the currencies of ISO 4217 and the digital tokens
+  (`seed/knowledge/digital-tokens.tsv`, registry `digital-tokens`), neither above the other (manifesto: sibling): an amount
+  is `{ count: "0.5", unit: BTC }`, with the row's places. A unit `composed` makes, `rate`, is one currency over another,
+  `USDT/BTC`: what someone observed, with no factor, converting only into itself; an amount in the second times it is the
+  amount in the first, and the reader still refuses to derive one by dividing two currencies. The closed list of
+  `operations` gains `least` and `greatest` of two earlier values, `magnitude`, and `cut`, a value cut to `places`, `digits`
+  or a `tick` in one of IEEE 754's five rounding directions, exactly. A money widget shows an amount of more than four places
+  as it ends, not padded. Nothing that passed before stops passing, but a value in `USD/EUR`, which the gate refused,
+  now passes as a rate. test/core_read.py, test/core_markets.py and test/core_standards.py hold each.
+
 - **daftar v4.15.3** (2026-11-09, code, core 4.15) — **a product in the unit the law gives it, or refused by name.** The
   reader said `one` where the law's code for that unit is `1`, so a ratio written by the law's codes — `1`, `%`, a basis
   point, ppm — was refused when multiplied, and four of the five ordering keys with it. It now writes the law's code, and

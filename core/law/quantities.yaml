@@ -1,5 +1,5 @@
 # The quantities (ISO 80000, SI): the dimensions, what each quantity is of and on which scale, and the kinds of accuracy
-# a maker states (GUM). Their units are core/law/units.yaml's, in UCUM; currencies are ISO 4217's.
+# a maker states (GUM). Their units are core/law/units.yaml's, in UCUM; currencies are ISO 4217's and the digital tokens'.
 # These rows are the law itself: a change to them is a RULE-CHANGE, made here.
 dimensions:
   # WHERE EACH STANDS AND WHAT IT HOLDS FOR: a dimension `stands` on the ladder as a level does — `possible-on`
@@ -72,7 +72,7 @@ quantities:
     meaning: "how many things, counted: seats, stems, units of stock. Dimensionless and its own kind, apart from `ratio`, which is a share"
   - quantity: money
     of: { money: 1 }
-    units_from: { registry: currencies, take: code, digits: digits }
+    units_from: { registry: [currencies, digital-tokens], take: code, digits: digits }
     crosswalk: observed
     meaning: "an amount in one currency. An amount whose source names no currency is written in `XXX`, ISO 4217's code for none: kept, summed and shared exactly, never converted, and its currency asked of whoever can say. Each currency is a unit, and no factor joins two of them: two currencies meet only through a rate someone observed at a moment, from a source — a reading, recorded with its provenance, never a law. So every amount stays in the currency it was paid or owed in, and whatever is computed from amounts — a share, a sum, a balance, a conversion at an observed rate — is computed in fractions and read, never stored."
   # THE KINDS BEYOND THE FIRST ONES: each `of` in the dimensions; one that stands above its dimensions says

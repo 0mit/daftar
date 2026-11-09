@@ -325,6 +325,9 @@ currency of two, `"1250"` in one of none. Where the source names no currency —
 the unit is `XXX`, the table's code for none: the amount is kept and summed exactly, never converted, and which
 currency it is goes to the queue as a question.
 
+A digital token is written the same way, from `seed/knowledge/digital-tokens.tsv`: `{ count: "0.5", unit: BTC }`. What a
+market quotes between two currencies is a rate, `USDT/BTC`: a `measure` someone observed, at a moment, from a source.
+
 ### An id nobody told you
 
 A name that establishes an identity is what makes a thing known to every garden, so one nobody gave you is never made

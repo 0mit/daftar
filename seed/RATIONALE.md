@@ -7025,3 +7025,50 @@ names the input as having no form.
 method's decision: a grant decides, then a refusal, and a pass no row holds is closed. That was an ordering of its own in
 bin/pass.py beside the four the nearest already held; as a use of the nearest it is ranked by one key and its tie read
 from the law, so the tools hold one ordering.
+
+## core/law/lines.yaml: operations[least]
+
+(core 4.16) `min` and `max` read a path over the members of a set, and give the member that holds it, so they take no two
+values a reading has already computed. A stake capped at what is available and floored at zero is one number with a choice
+inside it, and a walk's arms carry that badly: a `compare` no step can act on, and two readings for one number. The names
+are the ones SQL gives this pair beside its aggregates, `LEAST` and `GREATEST` beside `MIN` and `MAX`. They were kept apart
+from `min` and `max`, rather than widening those with a `with`, because a row that means a set in one form and a value in
+another is two operations under one name. A reading still cannot loop: each step names only earlier ones.
+
+## core/law/lines.yaml: operations[greatest]
+
+(core 4.16) See `least`, its sibling.
+
+## core/law/lines.yaml: operations[magnitude]
+
+(core 4.16) An absolute distance to a stop. Squaring and taking the root is no substitute, since money squared has no unit.
+
+## core/law/lines.yaml: operations[cut]
+
+(core 4.16) Prices and amounts on a market are cut to its tick and lot before anything else happens, and so a reading of a
+fee had to stop one step short of the number the market uses. The five directions are IEEE 754's rounding attributes,
+because `up` and `down` mean different things in different libraries: toward infinity in one, away from zero in another.
+`ties-to-even` is the reader's own rule for a printed value (bin/seq.py `rounded`, GUM's), so a cut and a printed value can
+agree on a tie. A cut is defined exactly: what a tick is, is the market's. An exchange library that takes JavaScript's `%`
+sends a negative value a whole tick down when rounding to a tick; the rule here does not follow it. `apportion` with
+`digits` is another rule: it hands out a remainder across a group.
+
+## core/law/registries.yaml: registry_files[digital-tokens]
+
+(core 4.16) A second table of what money is counted in, beside ISO 4217's and not under it (manifesto: sibling). The two
+were weighed against each other and against the neighbours. A token as a count, `{btc}`, says a token is never a currency,
+which a gardener who keeps accounts in both rejects, and leaves nothing to check its places by. Each garden's own `units`
+row leaves every garden deciding alone, and stays open for a token this table does not hold. The profile `markets` holds
+what only markets need, but an amount of a token is money before it is a market, and a currency in a profile would stand
+below the currencies in the core. Rows into ISO 4217's own file would blur what that file's licence and source say of it.
+Its rows are the tokens a garden has held; the mechanism is whole, its rows are occupants. ISO 24165's identifier is left
+out until the terms of its register are read. `digits` is the most places any of a token's ledgers writes it in, because
+it says what an amount may be written in; a page does not pad to it.
+
+## core/law/units.yaml: composed
+
+(core 4.16) `rate`. A market's quote is one currency for another, and until now it could be written only as a bare number,
+so nothing checked that it met its own amount. `USD/EUR` was refused as no price: it is not one, since a price is so much
+money for a thing, and has a factor where its unit under the line has. A rate has none. It is a form of its own, so that
+"no factor joins two currencies" stays exactly as it was: a rate is what someone observed, it converts only into itself, and
+dividing one amount by another in the reader does not make one.

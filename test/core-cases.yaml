@@ -351,7 +351,7 @@ bad:
   - { rule: profile, name: "an instrument, where the garden takes no markets profile", says: "markets profile's", bean: x105, kind: instrument, statements: [ { say: { by: sam, at: now } } ] }
   - { rule: profile, name: "an ISIN, where the garden takes no markets profile", says: "markets profile's", bean: x106, kind: document, statements: [ { say: { by: sam, at: now } }, { name: { by: isin, of: self, as: "US0378331005" } } ] }
   - { rule: valency, name: "a count whose annotation is capitalised", says: "no unit of the law", bean: x107, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: number, value: { count: "3", unit: "{Wafer}" } } } ] }
-  - { rule: valency, name: "a currency over a currency: a rate, no price", says: "no unit of the law", bean: x108, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "1.1", unit: "USD/EUR" } } } ] }
+  - { rule: valency, name: "a currency over itself: no rate and no price", says: "no unit of the law", bean: x108, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "1.1", unit: "USD/USD" } } } ] }
   - { rule: valency, name: "a price in no currency of ISO 4217", says: "no unit of the law", bean: x109, kind: document, statements: [ { say: { by: sam, at: now } }, { measure: { of: self, as: money, value: { count: "1", unit: "XYZ/kg" } } } ] }
 
 # Faults judged only as files: what the gate reads from a bean's own text, which a bean made in memory does not have.

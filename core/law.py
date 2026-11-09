@@ -1033,9 +1033,9 @@ class Law:
                 named = next((u for u, r in self.units.items() if r.get('name') == value), None)
                 if named:
                     return f"{value!r} is the English name of `{named}`: a unit is written in UCUM, its name the law's"
-                return (f"{value!r} is no unit of the law in UCUM (core/law/units.yaml) and no currency of ISO 4217, "
+                return (f"{value!r} is no unit of the law in UCUM (core/law/units.yaml) and no currency (ISO 4217's or a digital token's), "
                         f"nor one its rules make (`composed`): a count, `{{<word>}}` in lowercase; a price, a unit of "
-                        f"money over a unit of the law, `<currency>/<unit>`")
+                        f"money over a unit of the law, `<currency>/<unit>`; a rate, one currency over another")
             if name == 'knowledge':
                 return self.std.code(value)
             if name == 'properties':

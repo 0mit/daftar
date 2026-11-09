@@ -395,6 +395,55 @@ try:
         write(f'order-{key}.tsv', tsv, T)
         r = run(PY, 'bin/reckon.py', 'order', key, os.path.join(T, f'order-{key}.tsv'))
         check(f"reckon: the ordering key `{key}` orders its items", r.returncode == 0 and 'refused' not in r.out, r.out)
+    # DIGITAL TOKENS AND RATES (core 4.16): a rate is met by the currency under its line, and derived by no division.
+    for name, a, b, op, want in (
+            ('an-amount-by-its-rate', q('2', 'BTC'), q('65000', 'USDT/BTC'), 'multiply', '130000 USDT'),
+            ('a-rate-by-its-amount', q('65000', 'USDT/BTC'), q('2', 'BTC'), 'multiply', '130000 USDT'),
+            ('an-amount-over-its-rate', q('130000', 'USDT'), q('65000', 'USDT/BTC'), 'divide', '2 BTC'),
+            ('a-price-in-a-token', q('2', '{wafer}'), q('3.5', 'USDT/{wafer}'), 'multiply', '7 USDT'),
+            ('a-rate-over-itself', q('10', 'USD/EUR'), q('5', 'USD/EUR'), 'divide', '2'),
+            ('a-fee-on-a-token', q('10', '10*-4'), q('2', 'ETH'), 'multiply', '0.002 ETH'),
+            ('less-of-two', q('3', 'USD'), q('5', 'USD'), 'least', '3 USD'),
+            ('greater-of-two', q('3', 'USD'), q('5', 'USD'), 'greatest', '5 USD'),
+            ('less-across-units', q('1500', 'mm'), q('2', 'm'), 'least', '1500 mm'),
+            ('greater-in-the-first-unit', q('1500', 'mm'), q('2', 'm'), 'greatest', '2000 mm')):
+        r = two(name, a, b, op)
+        check(f"reckon: {name} is {want}", r.returncode == 0 and answers(r) == [want], r.out)
+    for name, a, b, op in (('an-amount-by-another-rate', q('1', 'ETH'), q('65000', 'USDT/BTC'), 'multiply'),
+                           ('a-rate-derived-by-dividing', q('130000', 'USDT'), q('2', 'BTC'), 'divide'),
+                           ('least-of-two-currencies', q('3', 'USD'), q('5', 'EUR'), 'least'),
+                           ('greatest-of-money-and-a-mass', q('3', 'USD'), q('5', 'kg'), 'greatest')):
+        r = two(name, a, b, op)
+        check(f"reckon: {name} is refused by name", r.returncode != 0 and 'refused: step c:' in r.out and 'Traceback' not in r.out, r.out)
+    r = one_step('magnitude-of-a-debt', q('-3', 'USD'), 'magnitude')
+    check("reckon: `magnitude` drops the sign and keeps the unit", r.returncode == 0 and answers(r) == ['3 USD'], r.out)
+
+    def cut(name, value, more, tick=None):
+        t = f'  - {{ id: t, op: constant, value: {tick} }}\n' if tick else ''
+        return adhoc(name, f'steps:\n  - {{ id: a, op: constant, value: {value} }}\n{t}  - {{ id: c, op: cut, of: a, {more} }}\n')
+    half = q('0.5', 'USD')
+    for name, value, more, tick, want in (
+            ('a-tie-to-even', q('1.005', 'USD'), 'places: 2, mode: ties-to-even', None, '1 USD'),
+            ('a-tie-away', q('1.005', 'USD'), 'places: 2, mode: ties-to-away', None, '1.01 USD'),
+            ('significant-digits', q('123456', 'kg'), 'digits: 3, mode: toward-zero', None, '123000 kg'),
+            ('digits-of-a-small-one', q('0.0012345', 'BTC'), 'digits: 2, mode: ties-to-even', None, '0.0012 BTC'),
+            ('tens', q('1234', 'USD'), 'places: -1, mode: ties-to-even', None, '1230 USD'),
+            ('toward-zero-below-zero', q('-1.2', 'USD'), 'places: 0, mode: toward-zero', None, '-1 USD'),
+            ('toward-positive-below-zero', q('-1.2', 'USD'), 'places: 0, mode: toward-positive', None, '-1 USD'),
+            ('toward-negative-below-zero', q('-1.2', 'USD'), 'places: 0, mode: toward-negative', None, '-2 USD'),
+            ('a-tick-to-nearest', q('-0.03429208', 'USD'), 'tick: t, mode: ties-to-away', half, '0 USD'),
+            ('a-tick-down', q('-0.03429208', 'USD'), 'tick: t, mode: toward-negative', half, '-0.5 USD'),
+            ('a-tick-in-another-unit', q('1234', 'g'), 'tick: t, mode: toward-zero', q('1', 'kg'), '1000 g'),
+            ('nothing-is-still-nothing', q('0', 'USD'), 'digits: 3, mode: ties-to-even', None, '0 USD')):
+        r = cut(name, value, more, tick)
+        check(f"reckon: cut, {name} is {want}", r.returncode == 0 and answers(r) == [want], r.out)
+    r = cut('a-cut-with-its-uncertainty', '{ count: "1.234", unit: m, u: { count: "0.01", unit: m } }', 'places: 1, mode: ties-to-even')
+    check("reckon: a cut combines a value's u with its own", r.returncode == 0 and '(u 0.031 m)' in r.out, r.out)
+    for name, more, tick in (('two-at-once', 'places: 2, digits: 3, mode: toward-zero', None), ('none-at-all', 'mode: toward-zero', None),
+                             ('a-zero-tick', 'tick: t, mode: toward-zero', q('0', 'USD')), ('another-quantity', 'tick: t, mode: toward-zero', q('1', 'kg')),
+                             ('half-a-place', 'places: 1.5, mode: toward-zero', None), ('no-digits', 'digits: 0, mode: toward-zero', None)):
+        r = cut(name, q('1.5', 'USD'), more, tick)
+        check(f"reckon: cut, {name} is refused by name", r.returncode != 0 and 'refused: step c:' in r.out and 'Traceback' not in r.out, r.out)
     pinned = head()
     write('beans/bike-repair.md', text('beans/bike-repair.md').replace(
         '  - pay:    { id: tool,', '  - move:   { id: mended, by: ali, of: self, through: repair, '

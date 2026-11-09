@@ -13,20 +13,23 @@ function nameOf(code, lang) {
   try { return (names[lang] ||= new Intl.DisplayNames([lang], {type: 'currency'})).of(code); } catch { return code; }
 }
 const labelOf = (unit, o) => !unit || o.label === 'none' ? '' : o.label === 'name' ? nameOf(unit, o.lang || settings.lang) : unit;
+// ISO 4217 writes at most four places. A digital token's are the most it may be written in, up to eighteen: an amount is
+// shown as it ends, not padded out to them.
+const shownAt = at => at > 4 ? undefined : at;
 export const places = unit => settings.places[unit];
 // options: label 'code'|'name'|'none'; abs (no sign); everything number.show takes
 export function show(v, unit, o = {}) {
   const at = o.places ?? settings.places[unit];
   const value = o.abs ? String(v ?? '').trim().replace(/^-/, '') : v;
   const p = number.parts(value, {...o, places: at});
-  const n = number.show(value, {...o, places: at});
+  const n = number.show(value, {...o, places: shownAt(at)});
   const flag = p && p.uneven ? h`<span class="w-uneven" title="${UNEVEN}" aria-label="${UNEVEN}">*</span>` : '';
   const label = labelOf(unit, o);
   return label ? h`<span class="w-money">${n}${flag} <span class="w-unit">${label}</span></span>` : h`<span class="w-money">${n}${flag}</span>`;
 }
 export function text(v, unit, o = {}) {
   const label = labelOf(unit, o);
-  return number.text(v, {...o, places: o.places ?? settings.places[unit]}) + (label ? ' ' + label : '');
+  return number.text(v, {...o, places: shownAt(o.places ?? settings.places[unit])}) + (label ? ' ' + label : '');
 }
 export const take = (input, unit, o = {}) => number.take(input, {...o, places: settings.places[unit]});
 export const edit = (name, value, unit, o = {}) => number.edit(name, value, o);
