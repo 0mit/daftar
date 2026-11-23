@@ -838,6 +838,15 @@ def main(argv):
     if argv[:1] == [] or argv[0] not in verbs:
         sys.exit(f"hook: install [--guard]|uninstall <harness>, or {'|'.join(verbs)} with the event on standard input")
     try:
+        # The harness hands the event over on standard input, with a command's output inside it. A command that cut a
+        # multi-byte character (head -c, cut -c) leaves a half character there; a strict UTF-8 stdin fails to read it,
+        # and a hook that breaks fails closed — one broken byte refuses every tool. Read stdin as UTF-8 with
+        # replacement, as parse.py reads the streams it prints: the event is judged, the half character replaced.
+        if sys.stdin is not None:
+            try:
+                sys.stdin.reconfigure(encoding='utf-8', errors='replace')
+            except (AttributeError, ValueError):
+                pass
         ev = json.loads(sys.stdin.read() or '{}')
         if not isinstance(ev, dict):
             raise ValueError('the event is not an object')
