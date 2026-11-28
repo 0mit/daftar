@@ -135,6 +135,7 @@ parts, changes).
    python3 test/view_places.py
    python3 test/view_details.py
    python3 test/view_tags.py
+   python3 test/view_unsay.py
    python3 test/view_said.py
    python3 test/names.py
    python3 test/view_sheet_words.py
