@@ -64,7 +64,10 @@ G = os.path.join(T, 'g')
 
 class R:
     def __init__(self, p):
-        self.returncode, self.out = p.returncode, p.stdout + p.stderr
+        self.returncode = p.returncode
+        self.out = p.stdout + p.stderr
+        if isinstance(self.out, bytes):
+            self.out = self.out.decode('utf-8', 'replace')
 
 
 def run(*a, cwd=None, stdin=None, env=None):
@@ -496,6 +499,18 @@ try:
           and isinstance(ends, list) and len(ends) == 1 and (ends[0].get('prompts'), ends[0].get('drawn'),
                                                              ends[0].get('untraced')) == (2, 1, 1),
           (r3.out[-600:], r4.out, ends))
+    # A command that cut a multi-byte character (head -c, cut -c) leaves a half character in the output the harness
+    # hands POST. The event is still JSON, so feed its bytes raw: a strict stdin would fail to read them and the
+    # hook, failing closed, would refuse every tool for one broken byte. It must judge the event instead.
+    cut = b'\xe2\x82'                    # the first two bytes of a three-byte UTF-8 character
+    raw = (b'{"session_id":"utf8cut12345","cwd":' + json.dumps(G).encode() +
+           b',"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"head -c 2 file"},'
+           b'"tool_response":{"content":"' + cut + b'"}}')
+    e = dict(os.environ, PYTHONIOENCODING='utf-8')
+    p = subprocess.run([PY, os.path.join(G, 'bin', 'hook.py'), 'post'], input=raw, capture_output=True, cwd=G, env=e)
+    r = R(p)
+    check("POST survives command output with a cut multi-byte character, judging the event instead of failing closed",
+          r.returncode == 0 and 'UnicodeDecodeError' not in r.out, r.out)
     r = run(PY, os.path.join(G, 'bin', 'hook.py'), 'uninstall', 'claude-code')
     cfg = json.load(open(settings, encoding='utf-8'))
     check("uninstall takes the hooks out and keeps the shell it set", r.returncode == 0 and 'hooks' not in cfg
