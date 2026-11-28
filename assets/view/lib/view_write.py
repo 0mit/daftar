@@ -8,7 +8,8 @@ garden's pages (a worker that imports this file from the release the garden runs
 `ops` is a list for one bean, each one of:
     {op: add,    verb, roles, id?, held?, while?, read?}  a statement appended; its id minted where it gives none
     {op: change, key, verb?, roles, held?, while?, read?}  the statement `key` names, rewritten in place
-    {op: remove, key}                                      the statement `key` names, taken out
+    {op: remove, key}                                      the statement `key` names, taken out — and each knowing act
+                                                           that knew only what the write takes out, with it
     {op: change, header: title | summary, value}           a header fact, rewritten (an empty summary is taken out)
     {op: change, header: tags, value: [words]}             the bean's tags, as a set (none: the key taken out)
     {op: held, key, entry}                                 a RECORD held off git the bean points to, on this host's store
@@ -29,8 +30,12 @@ the gardener aside, never by a grant of the whole bean). Each edit goes through 
 a held value is sealed by bin/held.py before its statement is written, so what it says reaches the store and never the
 bean's file. The statements added or changed are known by a `say` of the writer's, at `now` — or, where an op says the
 writer read it from a source (`read: {from, through}`: a place a lookup found, from the map or the gazetteer that has
-it), by a `read` of the writer's from that source, so the ledger says where the value came from (design §12). The bean
-is read again,
+it), by a `read` of the writer's from that source, so the ledger says where the value came from (design §12). A
+statement taken out takes with it each knowing act of the bean whose `of` names only what the write takes out: left, it
+would name what is not there, and emptied of its `of` it would cover every statement no other act names. A knowing act
+that knows a statement that stays, or any other statement that names one taken out, refuses the write before anything
+is written, naming it: a knowing act keeps the moment it was known at — its `of` narrowed, it would be an act of this
+commit's — and what another statement says of one taken out is for its writer to change. The bean is read again,
 each statement written is read back as intended and judged by the one judge, a statement alone (core/judge.py
 `statement`), and
 then bin/save.py saves it — ONE journal entry naming each statement added, changed or removed — and the gate judges the
@@ -101,6 +106,95 @@ def _mint(ids, verb):
     while f"{verb}-{n}" in ids:
         n += 1
     return f"{verb}-{n}"
+
+
+def _named(x, bean):
+    """The statements of `bean` a role's value names, each by its id: `<id>`, or `<bean>#<id>`."""
+    return {v.split('#', 1)[1] if v.startswith(bean + '#') else v for v in _listed(x) if isinstance(v, str)}
+
+
+def _when(r):
+    at = r.get('at')
+    return ', '.join(str(x) for x in at) if isinstance(at, list) else str(at)
+
+
+def _unsaid(L, b, bean, keys, plan, refuse):
+    """{index: (verb, roles, [the keys it knew])} of each knowing act of `b` that goes with what the write takes out: its
+    `of` names only statements taken out — by an op, or, an act with an id, by going itself. Each other statement of the
+    bean that names one taken out (a knowing act's `of` that names one that stays too, any other role a statement fills,
+    a `while`) refuses the op that takes it out. What an op changes or takes out itself is that op's."""
+    gone = {x['id']: (n, key, key) for n, act, key, _v, x in plan if act == 'remove' and isinstance(x.get('id'), str)}
+    if not gone:
+        return {}
+    place = {i: k for k, (i, _v, _r) in keys.items()}
+    by_id = {r['id']: k for k, (_i, _v, r) in keys.items() if isinstance(r.get('id'), str)}
+    own = {keys[key][0] for _n, act, key, _v, _x in plan if act in ('change', 'remove')}
+    rest = [(i, v, r) for i, v, r in b.items if isinstance(r, dict) and i not in own]
+    out, more = {}, True                         # gone: {id: (the op, its key, the key of what goes)}
+    while more:
+        more = False
+        for i, v, r in rest:
+            named = _named(r.get('of'), bean) if v in L.knowing and i not in out else set()
+            if named and named <= set(gone):
+                out[i] = (v, r, sorted(gone[x][2] for x in named))
+                if isinstance(r.get('id'), str):
+                    gone[r['id']] = gone[min(named)][:2] + (place[i],)
+                more = True
+    said = lambda ids: ', '.join(f"`{gone[x][2] if x in gone else by_id.get(x, x)}`" for x in ids)  # noqa: E731
+    for i, v, r in rest:
+        if i in out:
+            continue
+        row = L.verbs.get(v) or {}
+        takes = dict(row.get('roles') or {}, **(row.get('qualifiers') or {}))
+        for role, x in r.items():
+            if role != 'while' and 'statement' not in _listed((takes.get(role) or {}).get('shape')):
+                continue
+            hit = sorted(_named(x, bean) & set(gone))
+            if not hit:
+                continue
+            if v in L.knowing and role == 'of':
+                also = sorted(_named(x, bean) - set(gone))
+                refuse(gone[hit[0]][0], gone[hit[0]][1],
+                       f"{said(hit)} is known by `{place[i]}`, {r.get('by')}'s `{v}` at {_when(r)}, together with "
+                       f"{said(also)}: a knowing act keeps the moment it was known at, so what it knows is taken out "
+                       f"together — take out {said(also)} in this write too, or keep {said(hit)}")
+            else:
+                refuse(gone[hit[0]][0], gone[hit[0]][1],
+                       f"`{place[i]}` names {said(hit)} in its `{role}`: what is taken out is left named by nothing — "
+                       f"change `{place[i]}`, or take it out, in this write too")
+    return out
+
+
+def _unsay(path, acts):
+    """Take the knowing acts `acts` ({index: (verb, roles, …)}) out of the bean at `path`, each read back at its place
+    first, with the comment lines above each, as bin/safe.py takes a statement out — by its place, since an act most
+    often has no id. A statement with no id is keyed by its place among its verb's (`say@2`), so every such place from
+    the first act taken out on is declared; and what is left is read back before it is written: the bean's statements
+    as they were, in their order, but for the acts taken out."""
+    import safe
+    side = safe._side(open(path, encoding='utf-8').read(), path)
+    for i, (v, r, _k) in acts.items():
+        if i >= len(side.items) or side.items[i].verb != v or side.items[i].roles != r:
+            raise safe.UnsafeEdit(f"{path}: its statement {i} is not the `{v}` that was read — nothing taken out")
+    keys = safe.statement_keys([it.value for it in side.items])
+    allow = [f"statements.{keys[i]}" for i in acts]
+    for v in {side.items[i].verb for i in acts if '#' not in keys[i]}:
+        places = [n for n, k in enumerate(keys) if k.startswith(f"{v}@")]
+        first = min(places.index(i) for i in acts if i in places)
+        allow += [f"statements.{v}@{k}" for k in range(first, len(places))]
+    kept = [it.value for n, it in enumerate(side.items) if n not in acts]
+
+    def change(lines, side_):
+        out, prev = [], 0
+        for i in sorted(acts):
+            s_, _d, e = side_.spans[i]
+            out += lines[prev:s_]
+            prev = e
+        out += lines[prev:]
+        if [it.value for it in safe._side('\n'.join(out), path).items] != kept:
+            raise safe.UnsafeEdit(f"{path}: what is left is not its statements but for the acts taken out")
+        return out
+    safe._lines_edit(path, change, allow)
 
 
 def _may_held(may, root, who, bean, part):
@@ -288,6 +382,7 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
                 continue
         plan.append((n, op['op'], key, verb, {'id': sid, 'roles': dict(roles), 'held': bool(op.get('held') or sealed),
                                               'while': wh, 'old': old, 'read': rd}))
+    unsaid = _unsaid(L, b, bean, keys, plan, refuse) if b is not None else {}
     rplan = _records(root, bean, b, asked, refuse, G, L) if asked else []
     if refusals:
         return result(False)
@@ -369,6 +464,8 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
                          ''.join(f"; added `{verb}#{x['id']}`" for _n, act, _k, verb, x in plan if act == 'add') + '.')
         else:
             done = []
+            if unsaid:                           # by their places, as the bean was read: before any other edit moves them
+                _unsay(path, unsaid)
             for n, act, key, verb, x in plan:
                 try:
                     if act == 'header':
@@ -420,6 +517,9 @@ def write(root, who, bean, ops, kind=None, may=None, what=None):
                 except (ValueError, KeyError, dmheld.NotHere) as e:
                     refuse(n, key, f"it cannot be held here, nothing written: {e}")
                     raise
+            for _i, (verb, r_, knew) in sorted(unsaid.items()):
+                done.append(f"took out the `{verb}` by {r_.get('by')} at {_when(r_)}, which knew only "
+                            f"{', '.join(f'`{k}`' for k in knew)}")
             for r_ in rplan:
                 try:
                     done.append(_write_record(root, path, bean, b, r_, made, unseal_after, entry))
