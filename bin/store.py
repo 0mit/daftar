@@ -1927,8 +1927,15 @@ def main(argv):
             act = _arg(rest, '--act')
             s = opened(rest[0] if rest and not path else None)
             n = 0
+            import parse as dmparse            # the rows on standard input read as UTF-8, whatever the code page
+
+            def rows_in():
+                try:
+                    yield from dmparse.stdin_lines('the rows')
+                except dmparse.NotText as e:
+                    raise StoreError(f"{e} — nothing put (one batch: all of it, or none). Write the rows in UTF-8")
             with s.batch():
-                for line in sys.stdin:
+                for line in rows_in():
                     if not line.strip():
                         continue
                     o = json.loads(line)

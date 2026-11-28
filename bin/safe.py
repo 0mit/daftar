@@ -663,25 +663,16 @@ def verify(paths):
 
 
 def decode_block(raw, where):
-    """A block's bytes as text, decoded as bin/journal.py decodes a body: UTF-8 (its byte-order mark dropped), or
-    UTF-16 where its mark says so. Anything else is refused — a guess in the machine's code page writes mojibake into
-    the bean, and nothing downstream can tell."""
-    if raw.startswith(codecs.BOM_UTF8):
-        raw = raw[len(codecs.BOM_UTF8):]
-    elif raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
-        try:
-            return raw.decode('utf-16')
-        except UnicodeDecodeError as e:
-            raise UnsafeEdit(f"{where} begins as UTF-16 and is not ({e.reason}) — nothing written")
-    if b'\x00' in raw:
+    """A block's bytes as text, by the one rule every tool reads what it is handed by (bin/parse.py `decode_text`):
+    UTF-8, its byte-order mark dropped, or UTF-16 where its mark says so. Anything else is refused — a guess in the
+    machine's code page writes mojibake into the bean, and nothing downstream can tell."""
+    if b'\x00' in raw and not raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
         raise UnsafeEdit(f"{where} holds NUL — it looks like UTF-16 without its byte-order mark, a NUL after every "
                          f"letter; nothing written. Save the block as UTF-8 and pass it with --block <file>")
     try:
-        text = raw.decode('utf-8')
-    except UnicodeDecodeError as e:
-        raise UnsafeEdit(f"{where} is not UTF-8 (byte {e.start}: {raw[e.start:e.start + 1]!r}) — nothing written. "
-                         f"Save the block as UTF-8 and pass it with --block <file>")
-    return text
+        return dmparse.decode_text(raw, where)
+    except dmparse.NotText as e:
+        raise UnsafeEdit(f"{e} — nothing written. Save the block as UTF-8 and pass it with --block <file>")
 
 
 def _names_statements(path, target):

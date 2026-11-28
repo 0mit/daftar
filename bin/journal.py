@@ -49,7 +49,6 @@ WHICH WORDS ARE STAMPED IS THE LAW'S THE GARDEN RUNS (v1 part 5). In a garden of
 in what `details` keeps; a `now` anywhere else is the gate's to refuse. In a garden in today's words the positions are
 std-vocab's, as above. (`bin/journal.py`, today's name, runs this too until v1's part 13.)
 """
-import codecs
 import datetime
 import os
 import re
@@ -153,20 +152,13 @@ def stamp(who, what, root=ROOT):
 
 
 def decode_body(raw):
-    """Standard input's bytes as text: UTF-8 (its byte-order mark dropped), or UTF-16 where its mark says so.
-    Anything else is refused — a guess in the machine's code page would write mojibake into an append-only file."""
-    if raw.startswith(codecs.BOM_UTF8):
-        raw = raw[len(codecs.BOM_UTF8):]
-    elif raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
-        try:
-            return raw.decode('utf-16')
-        except UnicodeDecodeError as e:
-            raise SystemExit(f"journal: standard input begins as UTF-16 and is not ({e.reason}); nothing written")
+    """Standard input's bytes as text, by the one rule every tool reads what it is handed by (bin/parse.py
+    `decode_text`): UTF-8, its byte-order mark dropped, or UTF-16 where its mark says so. Anything else is refused — a
+    guess in the machine's code page would write mojibake into an append-only file."""
     try:
-        return raw.decode('utf-8')
-    except UnicodeDecodeError as e:
-        raise SystemExit(f"journal: standard input is not UTF-8 (byte {e.start}: {raw[e.start:e.start + 1]!r}) — "
-                         f"nothing written. Save the entry as UTF-8, or pass it with --body \"…\"")
+        return dmparse.decode_text(raw)
+    except dmparse.NotText as e:
+        raise SystemExit(f"journal: {e} — nothing written. Save the entry as UTF-8, or pass it with --body \"…\"")
 
 
 def refuse_breaks(label, text, line_ends_too=False):

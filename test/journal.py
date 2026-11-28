@@ -20,7 +20,8 @@ cannot be taken back, only answered by another. So the tool is held here to what
      a line break in <who> or <what>: one written line must stay one line to every reader.
 
 And every tool that prints imports parse, which is where the UTF-8 streams are set for all of them; every
-subprocess call that reads a child's output as text, git's included, names UTF-8 rather than the code page; and
+subprocess call that reads a child's output as text, git's included, names UTF-8 rather than the code page; every
+tool that takes text on standard input takes it as bytes through parse, by the rule below; and
 bin/safe.py, which every front-matter edit goes through, reads its block as this tool reads a body — as bytes, UTF-8
 or UTF-16 with its mark, anything else refused — from standard input or from a file with --block, the form PowerShell
 has.
@@ -269,6 +270,57 @@ for _dir in ('bin', 'seed', 'test', 'site', 'assets'):
                     _unnamed.append(f"{os.path.relpath(_p, ROOT)}:{_n.lineno}")
 check("every subprocess call that reads a child's output as text names its encoding, so git's UTF-8 is never read in "
       "a code page", not _unnamed, _unnamed)
+# ...AND EVERY TOOL THAT TAKES TEXT ON STANDARD INPUT TAKES IT AS BYTES, THROUGH PARSE. A text-mode read of standard input
+# decodes in the code page on Windows until Python 3.15, and strictly: the hook failed closed on any event holding `ف`
+# or `”` (0mit/daftar#303). daftard's worker is the one reader left as it reads: daftard starts it in UTF-8 mode.
+import io  # noqa: E402
+
+
+def _is_stdin(n):
+    return isinstance(n, ast.Attribute) and n.attr == 'stdin' and isinstance(n.value, ast.Name) and n.value.id == 'sys'
+
+
+_text_reads = []
+for _dir in ('bin', 'core', 'seed', 'assets'):
+    for _dp, _dn, _fn in os.walk(os.path.join(ROOT, _dir)):
+        for _p in (os.path.join(_dp, f) for f in sorted(_fn) if f.endswith('.py')):
+            for _n in ast.walk(ast.parse(open(_p, encoding='utf-8').read())):
+                if (isinstance(_n, ast.Call) and isinstance(_n.func, ast.Attribute)
+                        and _n.func.attr in ('read', 'readline', 'readlines') and _is_stdin(_n.func.value)) or (
+                        isinstance(_n, (ast.For, ast.comprehension)) and _is_stdin(_n.iter)):
+                    _at = _n.lineno if hasattr(_n, 'lineno') else _n.iter.lineno     # a comprehension has no line
+                    _text_reads.append(f"{os.path.relpath(_p, ROOT)}:{_at}")
+check("every tool that takes text on standard input takes it as bytes through parse — UTF-8, a byte-order mark dropped, "
+      "UTF-16 by its mark — never in the code page", not _text_reads, _text_reads)
+
+
+def _lines(data, **kw):
+    _real, sys.stdin = sys.stdin, io.TextIOWrapper(io.BytesIO(data))
+    try:
+        return list(dmparse.stdin_lines('the rows', **kw))
+    except dmparse.NotText as e:
+        return str(e)
+    finally:
+        sys.stdin = _real
+
+
+def _text(data, **kw):
+    try:
+        return dmparse.decode_text(data, 'the event', **kw)
+    except dmparse.NotText as e:
+        return str(e)
+
+
+_got = [_text(codecs.BOM_UTF8 + 'ف'.encode('utf-8')), _text('ف —'.encode('utf-16')), _text(b'ab\xe2\x82'),
+        _text(b'ab\xe2\x82', errors='replace'), _lines(codecs.BOM_UTF8 + b'a\r\nb\n'), _lines('a\nب'.encode('utf-16')),
+        _lines(b'ok\n\xff\n'), _lines(b'ok\n\xff\n', errors='replace')]
+check("parse reads bytes handed over as text by one rule: a byte-order mark dropped, UTF-16 by its mark, a line at a "
+      "time with its line end as it came; strict refuses naming the byte and the line, 'replace' reads it as U+FFFD",
+      _got == ['ف', 'ف —', "the event is not UTF-8 (byte 2: b'\\xe2')", 'ab\ufffd', ['a\r\n', 'b\n'], ['a\n', 'ب'],
+               "the rows, line 2, is not UTF-8 (byte 0: b'\\xff')", ['ok\n', '\ufffd\n']], _got)
+_wf = dmparse.well_formed({'k\ud83d': ['x\ud83d', 1, '😀'], 'n': None})
+check("...and a value read from JSON is made well-formed: a lone surrogate, in a key or a string, is U+FFFD, and a whole "
+      "pair is kept", _wf == {'k\ufffd': ['x\ufffd', 1, '😀'], 'n': None}, _wf)
 
 # ---- a bean is written WHOLE: judged first, then swapped in, so a crash never leaves half of one --------------------
 sys.path.insert(0, os.path.join(ROOT, 'bin'))
