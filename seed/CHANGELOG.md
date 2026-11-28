@@ -251,6 +251,22 @@ run oldest first and those from 17.0 newest first, as they were written; a new v
   repetitions with no change to the gate. `each` requires `in:`, because a level belongs to its system. An extent may
   name a system too, and then carries a measure where the system is metered and its aspect is not.
 
+- **daftar v4.16.1** (2026-11-28, code, core 4.16) — **standard input read as UTF-8 on every system, and a hook event
+  read whole.** On Windows, outside UTF-8 mode, a Python reads a piped standard input in the ANSI code page, strictly: in
+  cp1252 the bytes of `ف`, `”` and the marks RLM and ZWJ are no letter, so the hook failed closed on any event holding
+  one and a Persian garden's tools were refused; in cp1256 every byte is a letter, and Persian was read as other letters
+  and the person's words kept wrong (#303). bfs2021's change (#305) reads the hook's standard input as UTF-8 with
+  replacement, for a character `head -c` cut, which a harness that passes a command's output on as its bytes leaves in
+  the event. This release builds on it. bin/parse.py takes standard input as bytes by one rule — UTF-8, its byte-order
+  mark dropped, or UTF-16 by its mark; strict where the tool acts on what it read or writes it back, naming the byte,
+  replaced where it only scans — and the journal, safe, group, run, the hub's receive hooks, the store's `put` and the
+  hook read it there; test/journal.py holds every read to it. The hook makes every string of the event well-formed, so
+  a lone surrogate (`\ud83d`, the half of a pair a JavaScript harness cut) is U+FFFD where the material store refused it;
+  refuses a tool whose own input held a byte that is no UTF-8, naming it; and says when what came is no event at all.
+  test/guard.py reads the hook's standard input in cp1252, in cp1256 and in what the system gives, which on Windows' CI
+  is its code page; until now every run named UTF-8, and no system read standard input in a code page. No file of the
+  law changed.
+
 - **daftar v4.16.0** (2026-11-09, core 4.16, RULE-CHANGE) — **digital tokens beside currencies, a rate as a unit, and four
   exact operations.** Money's units now come from two tables, the currencies of ISO 4217 and the digital tokens
   (`seed/knowledge/digital-tokens.tsv`, registry `digital-tokens`), neither above the other (manifesto: sibling): an amount

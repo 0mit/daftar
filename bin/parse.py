@@ -21,6 +21,7 @@ what a value means is its role's to say); a garden in today's words reads YAML 1
 document by the pin of the garden it stands in, which is what the command prints. The readers of today's VOCAB.md below
 (`vocab_read` and the problems it gathers) are today's law's, and go with seed/std-vocab.md at v1's part 13.
 """
+import codecs
 import collections
 import json
 import re
@@ -41,6 +42,83 @@ for _s in (sys.stdout, sys.stderr):
             _s.reconfigure(encoding='utf-8', errors='replace')
     except (AttributeError, ValueError):
         pass
+
+
+# ...AND TAKE STANDARD INPUT AS BYTES. A Python before 3.15 reads a piped standard input in that same code page, and
+# strictly: in cp1252 the bytes of `ف`, of `”` and of the marks RLM and ZWJ are no letter, and the read ends in a
+# traceback; in cp1256 every byte is one, and Persian is read as other letters, with nothing said. So every tool that
+# takes text on standard input takes it here, as bytes decoded by one rule — UTF-8, its byte-order mark dropped, or
+# UTF-16 where its mark says so; never the machine's code page — and test/journal.py holds every read to it. `errors` is
+# the rule above: 'replace' where the tool shows, scans or judges what it read, strict where it acts on it or writes it
+# back, and strict refuses, naming the byte.
+class NotText(ValueError):
+    """What a tool was handed as text and is not: the message says what was found, and at which byte."""
+
+
+def decode_text(raw, where='standard input', errors='strict'):
+    """`raw`, the bytes a tool was handed as text, read as text: UTF-8 with its byte-order mark dropped, or UTF-16 where
+    its mark says so. A byte that is not raises NotText, naming it (`errors='strict'`), or becomes U+FFFD ('replace')."""
+    if raw.startswith(codecs.BOM_UTF8):
+        raw = raw[len(codecs.BOM_UTF8):]
+    elif raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        try:
+            return raw.decode('utf-16', errors)
+        except UnicodeDecodeError as e:
+            raise NotText(f"{where} begins as UTF-16 and is not ({e.reason})") from None
+    try:
+        return raw.decode('utf-8', errors)
+    except UnicodeDecodeError as e:
+        raise NotText(f"{where} is not UTF-8 (byte {e.start}: {raw[e.start:e.start + 1]!r})") from None
+
+
+def stdin_bytes(where='standard input'):
+    """Standard input's byte stream, or NotText where a process has none (a Windows GUI build, `pythonw`)."""
+    stream = getattr(sys.stdin, 'buffer', None)
+    if stream is None:
+        raise NotText(f"there is no standard input to read {where} from")
+    return stream
+
+
+def stdin_text(where='standard input', errors='strict'):
+    """Standard input read whole, as `decode_text` reads bytes."""
+    return decode_text(stdin_bytes(where).read(), where, errors)
+
+
+def stdin_lines(where='standard input', errors='strict'):
+    """Standard input a line at a time, as it comes, each line as `decode_text` reads bytes (its line end kept, CR LF as
+    it came). UTF-16, known by its mark, is read whole first: its line feed is two bytes."""
+    stream = stdin_bytes(where)
+    for n, raw in enumerate(stream, 1):
+        if n == 1 and raw.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+            *lines, last = decode_text(raw + stream.read(), where, errors).split('\n')
+            yield from (line + '\n' for line in lines)
+            if last:
+                yield last
+            return
+        if n == 1 and raw.startswith(codecs.BOM_UTF8):
+            raw = raw[len(codecs.BOM_UTF8):]
+        try:
+            yield raw.decode('utf-8', errors)
+        except UnicodeDecodeError as e:
+            raise NotText(f"{where}, line {n}, is not UTF-8 (byte {e.start}: {raw[e.start:e.start + 1]!r})") from None
+
+
+LONE_SURROGATE = re.compile('[\ud800-\udfff]')
+
+
+def well_formed(value):
+    """`value`, as JSON was read into it, with every lone surrogate made U+FFFD — in its strings, and in its keys. A
+    harness that cuts a string between the two halves of a pair writes the half left as `\\ud83d`, which is valid JSON
+    and which no UTF-8 encoder takes; U+FFFD is what a JavaScript runtime writes for one when it encodes UTF-8."""
+    if isinstance(value, str):
+        return LONE_SURROGATE.sub('\ufffd', value)
+    if isinstance(value, dict):
+        return {well_formed(k): well_formed(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [well_formed(v) for v in value]
+    return value
+
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import form as dmform
 

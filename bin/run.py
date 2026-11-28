@@ -85,6 +85,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 ME = os.path.abspath(__file__)
 sys.path.insert(0, HERE)
+import parse as dmparse  # noqa: E402  UTF-8 on stdout and stderr, and a script on standard input read as UTF-8
 import store as dmstore  # noqa: E402  the registry is the store `runs`
 WALK = 'walk-run'
 STEPS = {   # the walk, as mappings/walk-run.md says it
@@ -1633,7 +1634,14 @@ def command(a):
         cmd = a.command[1:] if a.command[:1] == ['--'] else a.command
         script = None
         if a.script:
-            script = sys.stdin.read() if a.script == '-' else open(a.script).read()
+            try:
+                if a.script == '-':
+                    script = dmparse.stdin_text('the script')
+                else:
+                    with open(a.script, 'rb') as fh:
+                        script = dmparse.decode_text(fh.read(), a.script)
+            except dmparse.NotText as e:
+                raise Refused(f'{e}: not started. Write the script in UTF-8', 2)
         env = dict(kv.split('=', 1) for kv in a.env)
         r = start(cmd or None, script=script, name=a.name, of=a.of, key=a.key, cwd=a.cwd, env=env,
                   pass_env=a.pass_env, clean_env=a.clean_env, user=a.user, timeout=a.timeout, grace=a.grace,

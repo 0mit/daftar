@@ -9,7 +9,7 @@ grown from it, every replay a PreToolUse event on bin/hook.py's standard input.
 
 Run: python3 test/guard.py   (0 = green; under a minute)
 """
-import json, os, re, shlex, shutil, subprocess, sys, tempfile
+import codecs, hashlib, json, os, re, shlex, shutil, subprocess, sys, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -499,9 +499,9 @@ try:
           and isinstance(ends, list) and len(ends) == 1 and (ends[0].get('prompts'), ends[0].get('drawn'),
                                                              ends[0].get('untraced')) == (2, 1, 1),
           (r3.out[-600:], r4.out, ends))
-    # A command that cut a multi-byte character (head -c, cut -c) leaves a half character in the output the harness
-    # hands POST. The event is still JSON, so feed its bytes raw: a strict stdin would fail to read them and the
-    # hook, failing closed, would refuse every tool for one broken byte. It must judge the event instead.
+    # A command that cut a multi-byte character (head -c, cut -c) leaves a half character in its output, and a harness
+    # that passes the output on as its bytes leaves it in the event (0mit/daftar#305). The event is still JSON, so feed
+    # its bytes raw: the hook, failing closed, refused every tool for one broken byte. It judges the event instead.
     cut = b'\xe2\x82'                    # the first two bytes of a three-byte UTF-8 character
     raw = (b'{"session_id":"utf8cut12345","cwd":' + json.dumps(G).encode() +
            b',"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"head -c 2 file"},'
@@ -511,6 +511,64 @@ try:
     r = R(p)
     check("POST survives command output with a cut multi-byte character, judging the event instead of failing closed",
           r.returncode == 0 and 'UnicodeDecodeError' not in r.out, r.out)
+
+    # THE EVENT IS READ AS UTF-8 ON EVERY SYSTEM (0mit/daftar#303). Outside UTF-8 mode, Windows' Python reads a piped
+    # standard input in the ANSI code page, strictly: in cp1252 the bytes of `ف`, `”` and the marks RLM and ZWJ are no
+    # letter, so every event holding one failed closed — a Persian garden's tools refused; in cp1256 every byte is a
+    # letter, so Persian was read as other letters and the person's words kept wrong. run() names UTF-8, which hides both:
+    # these name the code page, or (None) leave standard input to the system, which on Windows' CI is its code page.
+    def raw_hook(verb, data, enc):
+        e = dict(os.environ, **SHELL_ENV)
+        for k in ('PYTHONUTF8', 'PYTHONIOENCODING'):
+            e.pop(k, None)
+        if enc:
+            e['PYTHONIOENCODING'] = enc
+        return R(subprocess.run([PY, os.path.join(G, 'bin', 'hook.py'), verb], input=data, capture_output=True, cwd=G,
+                                env=e))
+
+    def kept(sid, text):
+        """The material the hook kept for `text` in the session of `sid`, or None."""
+        p = os.path.join(dmhook.launch.Session(RG, f'hook-{sid}').dir, 'material',
+                         hashlib.sha256(text.encode('utf-8')).hexdigest())
+        return open(p, encoding='utf-8', newline='').read() if os.path.exists(p) else None
+
+    fa = 'فارسی — “quoted”\u200f'           # ف, ”, RLM: no letter in cp1252; all of them a letter in cp1256
+    for enc, sid in (('cp1252', 'codepage1252'), ('cp1256', 'codepage1256'), (None, 'codepagenone')):
+        said = f'record {fa}'
+        rs = [raw_hook(v, json.dumps(dict({'session_id': sid, 'cwd': G, 'hook_event_name': h}, **x),
+                                     ensure_ascii=False).encode('utf-8'), enc) for v, h, x in (
+            ('pre', 'PreToolUse', {'tool_name': 'Bash', 'tool_input': {'command': f'echo {fa}'}}),
+            ('post', 'PostToolUse', {'tool_name': 'Bash', 'tool_input': {'command': 'cat notes'},
+                                     'tool_response': {'stdout': fa}}),
+            ('prompt', 'UserPromptSubmit', {'prompt': said}))]
+        check(f"PRE, POST and PROMPT judge an event of Persian and curly quotes with standard input in "
+              f"{enc or 'the system default'}, and keep the person's words as they were said",
+              all(r.returncode == 0 for r in rs) and kept(sid, said) == said, [(r.returncode, r.out[-300:]) for r in rs])
+    # a lone surrogate: a JavaScript harness that cuts a string between the halves of a pair writes the half as
+    # `\ud83d` — valid JSON, which json.loads takes and no UTF-8 encoder does; the material store refused it
+    half = b'\\ud83d'
+    rs = [raw_hook('post', b'{"session_id":"surrogate001","cwd":' + json.dumps(G).encode() + b',"hook_event_name":'
+                   b'"PostToolUse","tool_name":"Read","tool_input":{"file_path":' +
+                   json.dumps(os.path.join(G, 'GARDEN.md')).encode() + b'},"tool_response":{"type":"text","file":'
+                   b'{"content":"a' + half + b'"}}}', 'utf-8'),
+          raw_hook('prompt', b'{"session_id":"surrogate001","cwd":' + json.dumps(G).encode() + b',"hook_event_name":'
+                   b'"UserPromptSubmit","prompt":"half an emoji ' + half + b'"}', 'utf-8')]
+    check("a lone surrogate in a Read's content or a prompt is read as U+FFFD, and kept so, where the hook refused",
+          all(r.returncode == 0 for r in rs) and kept('surrogate001', 'a\ufffd') == 'a\ufffd'
+          and kept('surrogate001', 'half an emoji \ufffd') == 'half an emoji \ufffd',
+          [(r.returncode, r.out[-300:]) for r in rs])
+    ev = json.dumps({'session_id': 'utf8bom00001', 'cwd': G, 'hook_event_name': 'PreToolUse', 'tool_name': 'Bash',
+                     'tool_input': {'command': 'echo hi'}}).encode('utf-8')
+    r = raw_hook('pre', codecs.BOM_UTF8 + ev, 'utf-8')
+    check("an event that begins with a byte-order mark is read", r.returncode == 0, r.out)
+    r = raw_hook('pre', b'{"session_id":"badcommand01","cwd":' + json.dumps(G).encode() + b',"hook_event_name":'
+                 b'"PreToolUse","tool_name":"Bash","tool_input":{"command":"echo \xff"}}', 'utf-8')
+    check("...but a byte that is no UTF-8 in the input of the tool PRE is to judge refuses it, naming the byte: a guard "
+          "would read the command otherwise than it runs", r.returncode == 2 and "is not UTF-8 (byte" in r.out
+          and 'in the input of the tool' in r.out, r.out)
+    r = raw_hook('pre', b'not an event', 'utf-8')
+    check("...and what is no event at all is refused, saying the harness's event could not be read",
+          r.returncode == 2 and "could not read the harness's event" in r.out, r.out)
     r = run(PY, os.path.join(G, 'bin', 'hook.py'), 'uninstall', 'claude-code')
     cfg = json.load(open(settings, encoding='utf-8'))
     check("uninstall takes the hooks out and keeps the shell it set", r.returncode == 0 and 'hooks' not in cfg

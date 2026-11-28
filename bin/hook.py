@@ -13,7 +13,9 @@
 name is the other's to remove.) Where daftar does not run the loop (`bin/launch.py` does), the harness that does may call a
 hook before and after each tool. What a hook can see is the harness's to give, so these guards are ADVISORY: a harness
 that skips its hooks skips them, and the gate at the commit is what holds. Where they run, they FAIL CLOSED — a hook that
-cannot read its event, or breaks, refuses (exit 2) rather than let a tool through unjudged.
+cannot read its event, or breaks, refuses (exit 2) rather than let a tool through unjudged. The event is read as UTF-8 on
+every system (bin/parse.py), each string well-formed; a byte that is no UTF-8 is read as U+FFFD where the hook only
+scans, and refuses the tool whose own input held it (`read_event`).
 
   start   the session begins: every standing instruction the gardener gave agents, read from the garden — each clause
           of the agents' work agreement, those a guard checks with whether this harness meets it (the shell it runs
@@ -825,6 +827,24 @@ def shell_setting(root, cfg):
     return None
 
 
+def read_event():
+    """(the event, None) — or (the event, what was not UTF-8 in it) — as the harness hands it over on standard input:
+    JSON, which between systems is UTF-8 (RFC 8259 §8.1), read by bin/parse.py's one rule and never in the machine's
+    code page, with every string made well-formed. Bytes that are no UTF-8 (a harness that passes on a command's output
+    as its bytes, a character cut by `head -c`) are each read as U+FFFD, and what was found is returned beside the event:
+    the hook judges what it only scans, a tool's output and the person's words, and refuses a tool whose own input held
+    them (main). Raises ValueError for what is no event: no standard input, JSON that does not parse, not an object."""
+    raw = dmparse.stdin_bytes('the event').read()
+    try:
+        text, lost = dmparse.decode_text(raw, 'the event'), None
+    except dmparse.NotText as e:
+        text, lost = dmparse.decode_text(raw, 'the event', errors='replace'), str(e)
+    ev = dmparse.well_formed(json.loads(text or '{}'))
+    if not isinstance(ev, dict):
+        raise ValueError('the event is not an object')
+    return ev, lost
+
+
 def main(argv):
     if argv[:1] in (['install'], ['uninstall']):
         root = launch.git(os.getcwd(), 'rev-parse', '--show-toplevel').stdout.strip()
@@ -838,21 +858,19 @@ def main(argv):
     if argv[:1] == [] or argv[0] not in verbs:
         sys.exit(f"hook: install [--guard]|uninstall <harness>, or {'|'.join(verbs)} with the event on standard input")
     try:
-        # The harness hands the event over on standard input, with a command's output inside it. A command that cut a
-        # multi-byte character (head -c, cut -c) leaves a half character there; a strict UTF-8 stdin fails to read it,
-        # and a hook that breaks fails closed — one broken byte refuses every tool. Read stdin as UTF-8 with
-        # replacement, as parse.py reads the streams it prints: the event is judged, the half character replaced.
-        if sys.stdin is not None:
-            try:
-                sys.stdin.reconfigure(encoding='utf-8', errors='replace')
-            except (AttributeError, ValueError):
-                pass
-        ev = json.loads(sys.stdin.read() or '{}')
-        if not isinstance(ev, dict):
-            raise ValueError('the event is not an object')
+        ev, lost = read_event()
+    except ValueError as e:                            # no event: nothing can be judged, so nothing goes through
+        deny(f"the hook could not read the harness's event ({type(e).__name__}: {e}), so the tool is not judged and "
+             f"does not run; if the harness is not sending its event, uninstall the hook: "
+             f"{PY} bin/hook.py uninstall claude-code")
+    try:
         root = top_of(ev.get('cwd') or os.getcwd())
         if not is_garden(root):
             return 0                                   # not a garden: nothing of ours to judge
+        if lost and argv[0] in ('pre', 'guard') and '\ufffd' in json.dumps(ev.get('tool_input'), ensure_ascii=False):
+            deny(f"{lost}, in the input of the tool it is to judge: a guard would read a command or a path otherwise "
+                 f"than it runs, so it is not judged and does not run. Write what the command holds as UTF-8, a byte "
+                 f"that is not by its escape (`printf '\\xe2'`)")
         if argv[0] == 'end':
             on_end(ev, root)
             return 0

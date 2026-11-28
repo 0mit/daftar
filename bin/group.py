@@ -569,7 +569,11 @@ def main(argv):
     if a.command == 'match':
         return cmd_match(L, a.args)
     if a.command == 'line':
-        names = [ln.rstrip('\n') for ln in sys.stdin] if a.stdin or a.args == ['-'] else a.args
+        try:
+            names = ([ln.rstrip('\r\n') for ln in dmparse.stdin_lines('the names')] if a.stdin or a.args == ['-']
+                     else a.args)
+        except dmparse.NotText as e:
+            raise SystemExit(f"group: {e} — nothing read. Give the names in UTF-8")
         return cmd_line(L, names)
     path = a.path or (store_path(a.store) if a.store else None)
     if path is None:

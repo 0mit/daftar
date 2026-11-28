@@ -1151,7 +1151,12 @@ def main(argv):
                   f"garden passes its gate")
         return 1 if refused else 0
     if argv[:1] in (['pre-receive'], ['post-receive']):
-        lines = [tuple(l.split()) for l in sys.stdin.read().split('\n') if len(l.split()) == 3]
+        try:
+            text = dmparse.stdin_text('the refs git hands the hook')
+        except dmparse.NotText as e:
+            print(f"hub: REFUSED {e}: a ref is judged by its name, so a name not read is not taken", file=sys.stderr)
+            return 1
+        lines = [tuple(l.split()) for l in text.split('\n') if len(l.split()) == 3]
         if argv[0] == 'post-receive':
             for r in post_receive(lines):
                 print(r, file=sys.stderr)
